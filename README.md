@@ -1,48 +1,104 @@
-# socialMediaAI-web-ui
+# Social Media AI - Web UI
 
-This template should help get you started developing with Vue 3 in Vite.
+Vue 3 + TypeScript + Vite frontend for the Social Media AI subscription management system.
 
-## Recommended IDE Setup
+## Features
 
-[VS Code](https://code.visualstudio.com/) + [Vue (Official)](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
+- 🔐 **Authentication**: Login and signup with Supabase
+- 💳 **Subscription Management**: Stripe-powered subscription tiers (Free, Pro, Enterprise)
+- 📊 **Usage Tracking**: Real-time usage stats and quota management
+- 🎨 **Image Generation**: AI-powered image generation with Gemini
+- 🛡️ **Route Guards**: Protected routes for authenticated users
+- 💾 **State Management**: Pinia stores for global state
 
-## Recommended Browser Setup
+## Quick Start
 
-- Chromium-based browsers (Chrome, Edge, Brave, etc.):
-  - [Vue.js devtools](https://chromewebstore.google.com/detail/vuejs-devtools/nhdogjmejiglipccpnnnanhbledajbpd) 
-  - [Turn on Custom Object Formatter in Chrome DevTools](http://bit.ly/object-formatters)
-- Firefox:
-  - [Vue.js devtools](https://addons.mozilla.org/en-US/firefox/addon/vue-js-devtools/)
-  - [Turn on Custom Object Formatter in Firefox DevTools](https://fxdx.dev/firefox-devtools-custom-object-formatters/)
+### 1. Install Dependencies
 
-## Type Support for `.vue` Imports in TS
-
-TypeScript cannot handle type information for `.vue` imports by default, so we replace the `tsc` CLI with `vue-tsc` for type checking. In editors, we need [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) to make the TypeScript language service aware of `.vue` types.
-
-## Customize configuration
-
-See [Vite Configuration Reference](https://vite.dev/config/).
-
-## Project Setup
-
-```sh
+```bash
 npm install
 ```
 
-### Compile and Hot-Reload for Development
+### 2. Configure Environment
 
-```sh
+Create a `.env` file:
+
+```env
+VITE_API_URL=http://localhost:3000
+```
+
+### 3. Start Development Server
+
+```bash
 npm run dev
 ```
 
-### Type-Check, Compile and Minify for Production
+Frontend available at `http://localhost:5173`
 
-```sh
-npm run build
+## Project Structure
+
+```
+src/
+├── services/api.ts      # Backend API client
+├── stores/auth.ts       # Authentication state
+├── views/               # Page components
+│   ├── LoginView.vue
+│   ├── DashboardView.vue
+│   └── PlansView.vue
+├── router/index.ts      # Routes and guards
+└── App.vue
 ```
 
-### Lint with [ESLint](https://eslint.org/)
+## Available Routes
 
-```sh
-npm run lint
+- `/login` - Login and signup (guest only)
+- `/dashboard` - User dashboard (requires auth)
+- `/plans` - Subscription plans
+- `/` - Redirects to dashboard
+
+## Scripts
+
+```bash
+npm run dev        # Start dev server
+npm run build      # Build for production
+npm run preview    # Preview production build
+npm run type-check # TypeScript validation
+npm run lint       # Lint and fix code
+npm run format     # Format code
 ```
+
+## Testing
+
+Use these test Stripe cards:
+- **Success**: 4242 4242 4242 4242
+- Any future expiry, any CVC, any ZIP
+
+## Backend Integration
+
+Ensure the backend API is running on `http://localhost:3000` (or configure `VITE_API_URL`).
+
+Required backend endpoints:
+- `POST /api/auth/signup`
+- `POST /api/auth/login`
+- `GET /api/auth/me`
+- `GET /api/subscriptions/plans`
+- `POST /api/subscriptions/checkout`
+- `POST /api/subscriptions/portal`
+- `POST /api/gemini/generate-image`
+
+## Subscription Flow
+
+1. Sign up / Login
+2. View plans on `/plans`
+3. Click "Subscribe Now"
+4. Complete Stripe checkout
+5. Webhook syncs subscription
+6. Dashboard shows updated tier and quota
+
+## Troubleshooting
+
+**CORS Errors**: Ensure backend has CORS enabled for `http://localhost:5173`
+
+**Auth Issues**: Clear localStorage and login again
+
+**Subscription Issues**: Check Stripe webhook listener is running
