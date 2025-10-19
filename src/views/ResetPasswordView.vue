@@ -2,6 +2,10 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { api } from '../services/api'
+import BaseCard from '../components/BaseCard.vue'
+import BaseButton from '../components/BaseButton.vue'
+import BaseAlert from '../components/BaseAlert.vue'
+import BaseInput from '../components/BaseInput.vue'
 
 const router = useRouter()
 const password = ref('')
@@ -75,54 +79,63 @@ function showMessage(msg: string, type: 'success' | 'error' | 'info') {
 
 <template>
   <div class="reset-container">
-    <div class="reset-card">
+    <BaseCard variant="glass-intense" class="reset-card">
       <div class="header">
-        <h1>Reset Password</h1>
-        <p>Enter your new password below</p>
+        <h1 class="title">Reset Password</h1>
+        <p class="subtitle">Enter your new password below</p>
       </div>
 
-      <div v-if="message" :class="`alert alert-${messageType}`">
+      <BaseAlert
+        v-if="message"
+        :type="messageType"
+        :model-value="!!message"
+        @update:model-value="message = ''"
+      >
         {{ message }}
-      </div>
+      </BaseAlert>
 
       <form @submit.prevent="handleSubmit" v-if="accessToken">
-        <div class="form-group">
-          <label for="password">New Password</label>
-          <input
-            id="password"
-            v-model="password"
-            type="password"
-            placeholder="Enter new password"
-            required
-            minlength="6"
-          />
-        </div>
+        <BaseInput
+          v-model="password"
+          type="password"
+          label="New Password"
+          placeholder="Enter new password"
+          required
+        />
 
-        <div class="form-group">
-          <label for="confirmPassword">Confirm Password</label>
-          <input
-            id="confirmPassword"
-            v-model="confirmPassword"
-            type="password"
-            placeholder="Confirm new password"
-            required
-            minlength="6"
-          />
-        </div>
+        <BaseInput
+          v-model="confirmPassword"
+          type="password"
+          label="Confirm Password"
+          placeholder="Confirm new password"
+          required
+        />
 
-        <button type="submit" class="btn-primary" :disabled="loading">
+        <BaseButton
+          type="submit"
+          variant="primary"
+          size="large"
+          full-width
+          :disabled="loading"
+        >
           {{ loading ? 'Updating...' : 'Update Password' }}
-        </button>
+        </BaseButton>
 
-        <button type="button" class="btn-secondary" @click="router.push('/login')">
+        <BaseButton
+          type="button"
+          variant="secondary"
+          size="medium"
+          full-width
+          @click="router.push('/login')"
+        >
           Back to Login
-        </button>
+        </BaseButton>
       </form>
 
       <div v-else class="error-state">
         <p>Redirecting to login page...</p>
       </div>
-    </div>
+    </BaseCard>
   </div>
 </template>
 
@@ -132,121 +145,70 @@ function showMessage(msg: string, type: 'success' | 'error' | 'info') {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  padding: 20px;
+  padding: var(--space-xl);
 }
 
 .reset-card {
-  background: white;
-  padding: 40px;
-  border-radius: 10px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-  max-width: 400px;
+  max-width: 440px;
   width: 100%;
+  animation: fadeInUp 0.6s var(--ease-smooth);
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .header {
   text-align: center;
-  margin-bottom: 30px;
+  margin-bottom: var(--space-3xl);
 }
 
-.header h1 {
-  font-size: 2em;
-  margin-bottom: 10px;
-  color: #333;
+.title {
+  font-family: var(--font-heading);
+  font-size: var(--text-4xl);
+  font-weight: var(--font-bold);
+  color: var(--text-primary);
+  margin-bottom: var(--space-md);
+  background: var(--gradient-gold);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
-.header p {
-  color: #666;
+.subtitle {
+  font-size: var(--text-base);
+  color: var(--text-secondary);
+  font-weight: var(--font-normal);
 }
 
-.form-group {
-  margin-bottom: 20px;
-}
-
-.form-group label {
-  display: block;
-  margin-bottom: 8px;
-  font-weight: 500;
-  color: #333;
-}
-
-.form-group input {
-  width: 100%;
-  padding: 12px;
-  border: 1px solid #ddd;
-  border-radius: 5px;
-  font-size: 1em;
-  box-sizing: border-box;
-}
-
-.form-group input:focus {
-  outline: none;
-  border-color: #667eea;
-}
-
-button {
-  width: 100%;
-  padding: 12px;
-  border: none;
-  border-radius: 5px;
-  font-size: 1em;
-  cursor: pointer;
-  transition: all 0.3s;
-  margin-bottom: 10px;
-}
-
-.btn-primary {
-  background: #667eea;
-  color: white;
-}
-
-.btn-primary:hover {
-  background: #5568d3;
-}
-
-.btn-primary:disabled {
-  background: #ccc;
-  cursor: not-allowed;
-}
-
-.btn-secondary {
-  background: transparent;
-  color: #667eea;
-  border: 1px solid #667eea;
-}
-
-.btn-secondary:hover {
-  background: #f8f9fa;
-}
-
-.alert {
-  padding: 15px;
-  border-radius: 5px;
-  margin-bottom: 20px;
-  font-size: 0.9em;
-}
-
-.alert-success {
-  background: #d4edda;
-  color: #155724;
-  border: 1px solid #c3e6cb;
-}
-
-.alert-error {
-  background: #f8d7da;
-  color: #721c24;
-  border: 1px solid #f5c6cb;
-}
-
-.alert-info {
-  background: #d1ecf1;
-  color: #0c5460;
-  border: 1px solid #bee5eb;
+form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
 }
 
 .error-state {
   text-align: center;
-  color: #666;
+  color: var(--text-muted);
+  padding: var(--space-2xl);
+  font-size: var(--text-base);
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+  .reset-container {
+    padding: var(--space-lg);
+  }
+
+  .title {
+    font-size: var(--text-3xl);
+  }
 }
 </style>

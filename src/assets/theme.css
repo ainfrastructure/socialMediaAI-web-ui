@@ -1,0 +1,247 @@
+/* ========================================
+   PREMIUM DARK THEME - DESIGN SYSTEM
+   Quiet luxury with muted gold accents
+   ======================================== */
+
+:root {
+  /* ===== COLOR PALETTE ===== */
+
+  /* Background Colors - Deep Charcoal Hierarchy */
+  --bg-primary: #0a0a0a;           /* Deepest black for main background */
+  --bg-secondary: #141414;         /* Cards and elevated surfaces */
+  --bg-tertiary: #1a1a1a;          /* Nested elements */
+  --bg-elevated: #222222;          /* Hover states, active elements */
+
+  /* Glass Effect Colors */
+  --glass-bg: rgba(26, 26, 26, 0.6);           /* Semi-transparent dark */
+  --glass-border: rgba(212, 175, 55, 0.15);    /* Subtle gold border */
+  --glass-highlight: rgba(255, 255, 255, 0.05); /* Inner highlight */
+
+  /* Gold Accent Palette - Muted & Elegant */
+  --gold-primary: #D4AF37;         /* Main gold accent */
+  --gold-light: #E5C775;           /* Lighter gold for highlights */
+  --gold-dark: #B8943D;            /* Darker gold for shadows */
+  --gold-muted: #C9A961;           /* Softer gold for secondary uses */
+  --gold-subtle: rgba(212, 175, 55, 0.1);  /* Very subtle gold wash */
+
+  /* Text Colors */
+  --text-primary: #F5F5F5;         /* Main text - off-white */
+  --text-secondary: #B8B8B8;       /* Secondary text - light gray */
+  --text-muted: #808080;           /* Muted text - mid gray */
+  --text-disabled: #4A4A4A;        /* Disabled state */
+  --text-on-gold: #0a0a0a;         /* Text on gold backgrounds */
+
+  /* Semantic Colors - Dark Theme Variants */
+  --success-bg: rgba(52, 168, 83, 0.15);
+  --success-border: rgba(52, 168, 83, 0.3);
+  --success-text: #5FCF80;
+
+  --error-bg: rgba(220, 53, 69, 0.15);
+  --error-border: rgba(220, 53, 69, 0.3);
+  --error-text: #FF6B7A;
+
+  --info-bg: rgba(107, 155, 209, 0.15);
+  --info-border: rgba(107, 155, 209, 0.3);
+  --info-text: #7CB3E8;
+
+  --warning-bg: rgba(212, 175, 55, 0.15);
+  --warning-border: rgba(212, 175, 55, 0.3);
+  --warning-text: #E5C775;
+
+  /* ===== TYPOGRAPHY ===== */
+
+  /* Font Families */
+  --font-heading: 'Playfair Display', Georgia, serif;
+  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+
+  /* Font Sizes */
+  --text-xs: 0.75rem;      /* 12px */
+  --text-sm: 0.875rem;     /* 14px */
+  --text-base: 1rem;       /* 16px */
+  --text-lg: 1.125rem;     /* 18px */
+  --text-xl: 1.25rem;      /* 20px */
+  --text-2xl: 1.5rem;      /* 24px */
+  --text-3xl: 1.875rem;    /* 30px */
+  --text-4xl: 2.25rem;     /* 36px */
+  --text-5xl: 3rem;        /* 48px */
+
+  /* Font Weights */
+  --font-light: 300;
+  --font-normal: 400;
+  --font-medium: 500;
+  --font-semibold: 600;
+  --font-bold: 700;
+
+  /* Line Heights */
+  --leading-tight: 1.25;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.75;
+
+  /* ===== SPACING ===== */
+  --space-xs: 0.25rem;     /* 4px */
+  --space-sm: 0.5rem;      /* 8px */
+  --space-md: 0.75rem;     /* 12px */
+  --space-lg: 1rem;        /* 16px */
+  --space-xl: 1.5rem;      /* 24px */
+  --space-2xl: 2rem;       /* 32px */
+  --space-3xl: 2.5rem;     /* 40px */
+  --space-4xl: 3rem;       /* 48px */
+  --space-5xl: 4rem;       /* 64px */
+
+  /* ===== BORDERS ===== */
+  --border-width: 1px;
+  --border-color: rgba(255, 255, 255, 0.1);
+  --border-hover: rgba(212, 175, 55, 0.3);
+  --border-focus: var(--gold-primary);
+
+  /* Border Radius */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 18px;
+  --radius-2xl: 24px;
+  --radius-full: 9999px;
+
+  /* ===== SHADOWS ===== */
+
+  /* Soft Elegant Shadows */
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.5);
+  --shadow-xl: 0 12px 48px rgba(0, 0, 0, 0.6);
+
+  /* Gold Glow Effects (subtle) */
+  --glow-gold-sm: 0 0 12px rgba(212, 175, 55, 0.15);
+  --glow-gold-md: 0 0 20px rgba(212, 175, 55, 0.2);
+
+  /* Inner Shadows for Depth */
+  --shadow-inner: inset 0 2px 4px rgba(0, 0, 0, 0.3);
+
+  /* ===== EFFECTS ===== */
+
+  /* Backdrop Blur for Glassmorphism */
+  --blur-sm: 8px;
+  --blur-md: 12px;
+  --blur-lg: 16px;
+  --blur-xl: 24px;
+
+  /* Gradients */
+  --gradient-subtle: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+  --gradient-elevated: linear-gradient(135deg, #141414 0%, #222222 100%);
+  --gradient-gold: linear-gradient(135deg, #D4AF37 0%, #C9A961 100%);
+  --gradient-gold-hover: linear-gradient(135deg, #E5C775 0%, #D4AF37 100%);
+
+  /* Overlay for depth */
+  --overlay-light: rgba(255, 255, 255, 0.03);
+  --overlay-dark: rgba(0, 0, 0, 0.2);
+
+  /* ===== TRANSITIONS ===== */
+
+  /* Timing Functions */
+  --ease-smooth: cubic-bezier(0.4, 0.0, 0.2, 1);
+  --ease-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  --ease-sharp: cubic-bezier(0.4, 0.0, 0.6, 1);
+
+  /* Durations */
+  --duration-fast: 150ms;
+  --duration-normal: 250ms;
+  --duration-slow: 350ms;
+
+  /* Combined Transitions */
+  --transition-base: all var(--duration-normal) var(--ease-smooth);
+  --transition-fast: all var(--duration-fast) var(--ease-smooth);
+  --transition-slow: all var(--duration-slow) var(--ease-smooth);
+
+  /* ===== LAYOUT ===== */
+  --max-width-sm: 400px;
+  --max-width-md: 600px;
+  --max-width-lg: 800px;
+  --max-width-xl: 1000px;
+  --max-width-2xl: 1200px;
+
+  /* Z-index Scale */
+  --z-dropdown: 1000;
+  --z-sticky: 1100;
+  --z-fixed: 1200;
+  --z-modal: 1300;
+  --z-popover: 1400;
+  --z-tooltip: 1500;
+}
+
+/* ===== UTILITY CLASSES ===== */
+
+/* Glass Effect Utilities */
+.glass {
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--blur-md));
+  -webkit-backdrop-filter: blur(var(--blur-md));
+  border: var(--border-width) solid var(--glass-border);
+  box-shadow: var(--shadow-lg);
+}
+
+.glass-intense {
+  background: rgba(26, 26, 26, 0.8);
+  backdrop-filter: blur(var(--blur-lg));
+  -webkit-backdrop-filter: blur(var(--blur-lg));
+  border: var(--border-width) solid var(--glass-border);
+}
+
+/* Text Utilities */
+.text-gradient-gold {
+  background: var(--gradient-gold);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Animation Utilities */
+.smooth-transition {
+  transition: var(--transition-base);
+}
+
+.hover-lift {
+  transition: transform var(--duration-normal) var(--ease-smooth),
+              box-shadow var(--duration-normal) var(--ease-smooth);
+}
+
+.hover-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-xl);
+}
+
+/* Focus Ring for Accessibility */
+.focus-ring:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.3);
+}
+
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-secondary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--bg-elevated);
+  border-radius: var(--radius-full);
+  border: 2px solid var(--bg-secondary);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--gold-dark);
+}
+
+/* Selection Styling */
+::selection {
+  background: var(--gold-primary);
+  color: var(--text-on-gold);
+}
+
+::-moz-selection {
+  background: var(--gold-primary);
+  color: var(--text-on-gold);
+}

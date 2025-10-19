@@ -25,6 +25,11 @@ export const useAuthStore = defineStore('auth', () => {
     if (!user.value) return false
     return user.value.usage.remaining_posts > 0
   })
+  const canGenerateVideo = computed(() => {
+    if (!user.value) return false
+    // Video generation costs 5 posts
+    return user.value.usage.remaining_posts >= 5
+  })
 
   // Helper to store session
   function storeSession(session: { access_token: string; refresh_token: string; expires_at?: number; expires_in?: number }) {
@@ -381,6 +386,7 @@ export const useAuthStore = defineStore('auth', () => {
     subscriptionTier,
     usageStats,
     canGenerateContent,
+    canGenerateVideo,
 
     // Actions
     signup,

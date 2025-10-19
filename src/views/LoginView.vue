@@ -3,6 +3,10 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import { api } from '../services/api'
+import BaseCard from '../components/BaseCard.vue'
+import BaseButton from '../components/BaseButton.vue'
+import BaseAlert from '../components/BaseAlert.vue'
+import BaseInput from '../components/BaseInput.vue'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -155,104 +159,145 @@ async function handleForgotPassword() {
 
 <template>
   <div class="login-container">
-    <div class="login-card">
+    <BaseCard variant="glass-intense" class="login-card">
       <div class="header">
-        <h1>🎨 Social Media AI</h1>
-        <p>AI-Powered Content Generation</p>
+        <h1 class="brand-title">Social Media AI</h1>
+        <p class="brand-subtitle">AI-Powered Content Generation</p>
       </div>
 
-      <div v-if="message" :class="`alert alert-${messageType}`">
+      <BaseAlert
+        v-if="message"
+        :type="messageType"
+        :model-value="!!message"
+        @update:model-value="message = ''"
+      >
         {{ message }}
-      </div>
+      </BaseAlert>
 
       <form v-if="!showMagicLink && !showForgotPassword" @submit.prevent="handleSubmit">
-        <div class="form-group">
-          <label for="email">Email</label>
-          <input
-            id="email"
-            v-model="email"
-            type="email"
-            placeholder="your@email.com"
-            required
-          />
-        </div>
+        <BaseInput
+          v-model="email"
+          type="email"
+          label="Email"
+          placeholder="your@email.com"
+          required
+        />
 
-        <div class="form-group">
-          <label for="password">Password</label>
-          <input
-            id="password"
-            v-model="password"
-            type="password"
-            placeholder="••••••••"
-            required
-          />
-        </div>
+        <BaseInput
+          v-model="password"
+          type="password"
+          label="Password"
+          placeholder="••••••••"
+          required
+        />
 
-        <button type="submit" class="btn-primary" :disabled="authStore.loading">
+        <BaseButton
+          type="submit"
+          variant="primary"
+          size="large"
+          full-width
+          :disabled="authStore.loading"
+        >
           {{ isSignup ? 'Sign Up' : 'Login' }}
-        </button>
+        </BaseButton>
 
-        <button type="button" class="btn-secondary" @click="toggleMode">
+        <BaseButton
+          type="button"
+          variant="ghost"
+          size="medium"
+          full-width
+          @click="toggleMode"
+        >
           {{ isSignup ? 'Already have an account? Login' : "Don't have an account? Sign Up" }}
-        </button>
+        </BaseButton>
 
         <div class="divider">
           <span>OR</span>
         </div>
 
-        <button type="button" class="btn-link" @click="toggleMagicLink">
+        <BaseButton
+          type="button"
+          variant="ghost"
+          size="small"
+          full-width
+          @click="toggleMagicLink"
+        >
           Login with Magic Link
-        </button>
+        </BaseButton>
 
-        <button type="button" class="btn-link" @click="toggleForgotPassword">
+        <BaseButton
+          type="button"
+          variant="ghost"
+          size="small"
+          full-width
+          @click="toggleForgotPassword"
+        >
           Forgot Password?
-        </button>
+        </BaseButton>
       </form>
 
       <!-- Magic Link Form -->
       <form v-if="showMagicLink" @submit.prevent="handleMagicLink">
-        <div class="form-group">
-          <label for="magic-email">Email</label>
-          <input
-            id="magic-email"
-            v-model="email"
-            type="email"
-            placeholder="your@email.com"
-            required
-          />
-        </div>
+        <BaseInput
+          v-model="email"
+          type="email"
+          label="Email"
+          placeholder="your@email.com"
+          required
+        />
 
-        <button type="submit" class="btn-primary" :disabled="authStore.loading">
+        <BaseButton
+          type="submit"
+          variant="primary"
+          size="large"
+          full-width
+          :disabled="authStore.loading"
+        >
           Send Magic Link
-        </button>
+        </BaseButton>
 
-        <button type="button" class="btn-secondary" @click="toggleMagicLink">
+        <BaseButton
+          type="button"
+          variant="secondary"
+          size="medium"
+          full-width
+          @click="toggleMagicLink"
+        >
           Back to Login
-        </button>
+        </BaseButton>
       </form>
 
       <!-- Forgot Password Form -->
       <form v-if="showForgotPassword" @submit.prevent="handleForgotPassword">
-        <div class="form-group">
-          <label for="reset-email">Email</label>
-          <input
-            id="reset-email"
-            v-model="email"
-            type="email"
-            placeholder="your@email.com"
-            required
-          />
-        </div>
+        <BaseInput
+          v-model="email"
+          type="email"
+          label="Email"
+          placeholder="your@email.com"
+          required
+        />
 
-        <button type="submit" class="btn-primary" :disabled="authStore.loading">
+        <BaseButton
+          type="submit"
+          variant="primary"
+          size="large"
+          full-width
+          :disabled="authStore.loading"
+        >
           Send Reset Link
-        </button>
+        </BaseButton>
 
-        <button type="button" class="btn-secondary" @click="toggleForgotPassword">
+        <BaseButton
+          type="button"
+          variant="secondary"
+          size="medium"
+          full-width
+          @click="toggleForgotPassword"
+        >
           Back to Login
-        </button>
+        </BaseButton>
       </form>
-    </div>
+    </BaseCard>
   </div>
 </template>
 
@@ -262,148 +307,85 @@ async function handleForgotPassword() {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  padding: 20px;
+  padding: var(--space-xl);
 }
 
 .login-card {
-  background: white;
-  padding: 40px;
-  border-radius: 10px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-  max-width: 400px;
+  max-width: 440px;
   width: 100%;
+  animation: fadeInUp 0.6s var(--ease-smooth);
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .header {
   text-align: center;
-  margin-bottom: 30px;
+  margin-bottom: var(--space-3xl);
 }
 
-.header h1 {
-  font-size: 2em;
-  margin-bottom: 10px;
-  color: #333;
+.brand-title {
+  font-family: var(--font-heading);
+  font-size: var(--text-4xl);
+  font-weight: var(--font-bold);
+  color: var(--text-primary);
+  margin-bottom: var(--space-md);
+  background: var(--gradient-gold);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
-.header p {
-  color: #666;
+.brand-subtitle {
+  font-size: var(--text-base);
+  color: var(--text-secondary);
+  font-weight: var(--font-normal);
 }
 
-.form-group {
-  margin-bottom: 20px;
-}
-
-.form-group label {
-  display: block;
-  margin-bottom: 8px;
-  font-weight: 500;
-  color: #333;
-}
-
-.form-group input {
-  width: 100%;
-  padding: 12px;
-  border: 1px solid #ddd;
-  border-radius: 5px;
-  font-size: 1em;
-  box-sizing: border-box;
-}
-
-.form-group input:focus {
-  outline: none;
-  border-color: #667eea;
-}
-
-button {
-  width: 100%;
-  padding: 12px;
-  border: none;
-  border-radius: 5px;
-  font-size: 1em;
-  cursor: pointer;
-  transition: all 0.3s;
-  margin-bottom: 10px;
-}
-
-.btn-primary {
-  background: #667eea;
-  color: white;
-}
-
-.btn-primary:hover {
-  background: #5568d3;
-}
-
-.btn-primary:disabled {
-  background: #ccc;
-  cursor: not-allowed;
-}
-
-.btn-secondary {
-  background: transparent;
-  color: #667eea;
-  border: 1px solid #667eea;
-}
-
-.btn-secondary:hover {
-  background: #f8f9fa;
-}
-
-.alert {
-  padding: 15px;
-  border-radius: 5px;
-  margin-bottom: 20px;
-  font-size: 0.9em;
-}
-
-.alert-success {
-  background: #d4edda;
-  color: #155724;
-  border: 1px solid #c3e6cb;
-}
-
-.alert-error {
-  background: #f8d7da;
-  color: #721c24;
-  border: 1px solid #f5c6cb;
-}
-
-.alert-info {
-  background: #d1ecf1;
-  color: #0c5460;
-  border: 1px solid #bee5eb;
+form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
 }
 
 .divider {
   display: flex;
   align-items: center;
   text-align: center;
-  margin: 20px 0;
-  color: #999;
+  margin: var(--space-lg) 0;
+  color: var(--text-muted);
 }
 
 .divider::before,
 .divider::after {
   content: '';
   flex: 1;
-  border-bottom: 1px solid #ddd;
+  border-bottom: var(--border-width) solid var(--border-color);
 }
 
 .divider span {
-  padding: 0 10px;
-  font-size: 0.9em;
+  padding: 0 var(--space-lg);
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  letter-spacing: 0.05em;
 }
 
-.btn-link {
-  background: transparent;
-  color: #667eea;
-  border: none;
-  text-decoration: underline;
-  padding: 8px;
-}
+/* Responsive */
+@media (max-width: 480px) {
+  .login-container {
+    padding: var(--space-lg);
+  }
 
-.btn-link:hover {
-  color: #5568d3;
+  .brand-title {
+    font-size: var(--text-3xl);
+  }
 }
 </style>

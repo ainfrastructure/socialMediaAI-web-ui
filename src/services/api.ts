@@ -203,6 +203,70 @@ class ApiService {
     })
     return response.json()
   }
+
+  // Video generation methods
+  async generateVideo(
+    prompt: string,
+    options?: {
+      model?: 'veo-3.1-generate-preview' | 'veo-3.1-fast-generate-preview'
+      duration?: 4 | 6 | 8
+      aspectRatio?: '16:9' | '9:16'
+      resolution?: '720p' | '1080p'
+      negativePrompt?: string
+      enhancePrompt?: boolean
+      generateAudio?: boolean
+      personGeneration?: 'allow_adult' | 'dont_allow'
+    }
+  ): Promise<ApiResponse<{ operationId: string; usage: any }>> {
+    const response = await fetch(`${API_URL}/api/veo/generate-video`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...this.getAuthHeader(),
+      },
+      body: JSON.stringify({ prompt, ...options }),
+    })
+    return response.json()
+  }
+
+  async generateVideoFromImage(
+    prompt: string,
+    imageData: string,
+    imageMimeType: string,
+    options?: {
+      model?: 'veo-3.1-generate-preview' | 'veo-3.1-fast-generate-preview'
+      duration?: 4 | 6 | 8
+      aspectRatio?: '16:9' | '9:16'
+      resolution?: '720p' | '1080p'
+      negativePrompt?: string
+      enhancePrompt?: boolean
+      generateAudio?: boolean
+      personGeneration?: 'allow_adult' | 'dont_allow'
+    }
+  ): Promise<ApiResponse<{ operationId: string; usage: any }>> {
+    const response = await fetch(`${API_URL}/api/veo/generate-video-from-image`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...this.getAuthHeader(),
+      },
+      body: JSON.stringify({ prompt, imageData, imageMimeType, ...options }),
+    })
+    return response.json()
+  }
+
+  async pollVideoOperation(
+    operationId: string,
+    modelId?: string
+  ): Promise<ApiResponse<{ operation: any }>> {
+    const url = modelId
+      ? `${API_URL}/api/veo/operation/${operationId}?modelId=${modelId}`
+      : `${API_URL}/api/veo/operation/${operationId}`
+    const response = await fetch(url, {
+      headers: this.getAuthHeader(),
+    })
+    return response.json()
+  }
 }
 
 export const api = new ApiService()
