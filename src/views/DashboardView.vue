@@ -49,8 +49,8 @@ const videoNegativePrompt = ref('')
 const tierDisplayName = computed(() => authStore.user?.subscription.tier.toUpperCase() || 'FREE')
 const progressPercent = computed(() => {
   if (!authStore.usageStats) return 0
-  const { posts_this_month, monthly_limit } = authStore.usageStats
-  return (posts_this_month / monthly_limit) * 100
+  const { credits_this_month, monthly_limit } = authStore.usageStats
+  return (credits_this_month / monthly_limit) * 100
 })
 
 async function handleLogout() {
@@ -99,7 +99,7 @@ async function generateVideo() {
   }
 
   if (!authStore.canGenerateVideo) {
-    showMessage('Insufficient quota. Video generation requires 5 posts.', 'error')
+    showMessage('Insufficient quota. Video generation requires 5 credits.', 'error')
     return
   }
 
@@ -392,8 +392,8 @@ const estimatedTimeRemaining = computed(() => {
         <div class="info-row">
           <strong>Usage:</strong>
           <span
-            >{{ authStore.usageStats?.posts_this_month }} /
-            {{ authStore.usageStats?.monthly_limit }} posts this month</span
+            >{{ authStore.usageStats?.credits_this_month }} /
+            {{ authStore.usageStats?.monthly_limit }} credits this month</span
           >
         </div>
         <div class="usage-bar">
@@ -401,7 +401,7 @@ const estimatedTimeRemaining = computed(() => {
         </div>
         <div class="info-row">
           <strong>Remaining:</strong>
-          <span>{{ authStore.usageStats?.remaining_posts }} posts</span>
+          <span>{{ authStore.usageStats?.remaining_credits }} credits</span>
         </div>
       </div>
 
@@ -411,13 +411,13 @@ const estimatedTimeRemaining = computed(() => {
           :class="['tab', { active: activeTab === 'image' }]"
           @click="activeTab = 'image'"
         >
-          Image Generation (1 post)
+          Image Generation (1 credit)
         </button>
         <button
           :class="['tab', { active: activeTab === 'video' }]"
           @click="activeTab = 'video'"
         >
-          Video Generation (5 posts)
+          Video Generation (5 credits)
         </button>
       </div>
 
@@ -488,7 +488,7 @@ const estimatedTimeRemaining = computed(() => {
             type="warning"
             :dismissible="false"
           >
-            Video generation requires 5 posts. You have {{ authStore.usageStats?.remaining_posts }} remaining.
+            Video generation requires 5 credits. You have {{ authStore.usageStats?.remaining_credits }} remaining.
             <BaseButton variant="secondary" size="small" @click="router.push('/plans')" style="margin-top: 10px;">
               Upgrade Plan
             </BaseButton>
@@ -645,7 +645,7 @@ const estimatedTimeRemaining = computed(() => {
             :disabled="!authStore.canGenerateVideo || generatingVideo || !videoPrompt.trim() || (useImageForVideo && !selectedImageFile)"
             @click="generateVideo"
           >
-            {{ generatingVideo ? 'Generating... (1-3 min)' : 'Generate Video (5 posts)' }}
+            {{ generatingVideo ? 'Generating... (1-3 min)' : 'Generate Video (5 credits)' }}
           </BaseButton>
 
           <div v-if="generatingVideo && !generatedVideoUrl" class="loading-indicator">

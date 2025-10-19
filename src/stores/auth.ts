@@ -23,12 +23,12 @@ export const useAuthStore = defineStore('auth', () => {
   const usageStats = computed(() => user.value?.usage)
   const canGenerateContent = computed(() => {
     if (!user.value) return false
-    return user.value.usage.remaining_posts > 0
+    return user.value.usage.remaining_credits > 0
   })
   const canGenerateVideo = computed(() => {
     if (!user.value) return false
-    // Video generation costs 5 posts
-    return user.value.usage.remaining_posts >= 5
+    // Video generation costs 5 credits
+    return user.value.usage.remaining_credits >= 5
   })
 
   // Helper to store session

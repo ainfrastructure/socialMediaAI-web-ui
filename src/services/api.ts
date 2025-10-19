@@ -17,9 +17,9 @@ export interface User {
     cancel_at_period_end: boolean
   }
   usage: {
-    posts_this_month: number
+    credits_this_month: number
     monthly_limit: number
-    remaining_posts: number
+    remaining_credits: number
   }
 }
 
