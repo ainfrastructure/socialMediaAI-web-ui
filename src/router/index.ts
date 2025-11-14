@@ -5,6 +5,7 @@ import DashboardView from '../views/DashboardView.vue'
 import PlansView from '../views/PlansView.vue'
 import AuthCallbackView from '../views/AuthCallbackView.vue'
 import ResetPasswordView from '../views/ResetPasswordView.vue'
+import RestaurantSearchView from '../views/RestaurantSearchView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -39,6 +40,12 @@ const router = createRouter({
       path: '/plans',
       name: 'plans',
       component: PlansView,
+    },
+    {
+      path: '/restaurants',
+      name: 'restaurants',
+      component: RestaurantSearchView,
+      meta: { requiresAuth: true },
     },
   ],
 })

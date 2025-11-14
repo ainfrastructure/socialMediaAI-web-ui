@@ -715,6 +715,9 @@ const estimatedTimeRemaining = computed(() => {
       </div>
 
       <div class="actions">
+        <BaseButton variant="secondary" @click="router.push('/restaurants')">
+          Search Restaurants
+        </BaseButton>
         <BaseButton variant="secondary" @click="openManageSubscription">
           Manage Subscription
         </BaseButton>
