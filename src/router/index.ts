@@ -8,6 +8,9 @@ import ResetPasswordView from '../views/ResetPasswordView.vue'
 import RestaurantSearchView from '../views/RestaurantSearchView.vue'
 import SavedRestaurantsView from '../views/SavedRestaurantsView.vue'
 import PlaygroundView from '../views/PlaygroundView.vue'
+import ConnectAccountsView from '../views/ConnectAccountsView.vue'
+import FacebookCallbackView from '../views/FacebookCallbackView.vue'
+import TestPostView from '../views/TestPostView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -26,6 +29,12 @@ const router = createRouter({
       path: '/auth/callback',
       name: 'auth-callback',
       component: AuthCallbackView,
+    },
+    {
+      path: '/auth/facebook/callback',
+      name: 'facebook-callback',
+      component: FacebookCallbackView,
+      meta: { requiresAuth: true },
     },
     {
       path: '/auth/reset-password',
@@ -59,6 +68,18 @@ const router = createRouter({
       path: '/playground',
       name: 'playground',
       component: PlaygroundView,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/connect-accounts',
+      name: 'connect-accounts',
+      component: ConnectAccountsView,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/test-post',
+      name: 'test-post',
+      component: TestPostView,
       meta: { requiresAuth: true },
     },
   ],

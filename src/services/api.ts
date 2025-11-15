@@ -319,6 +319,109 @@ class ApiService {
     })
     return response.json()
   }
+
+  // Facebook OAuth methods
+  async initFacebookAuth(): Promise<ApiResponse<{ authUrl: string; state: string }>> {
+    console.log('[API] Calling Facebook auth init endpoint:', `${API_URL}/api/facebook/auth/init`)
+
+    const response = await fetch(`${API_URL}/api/facebook/auth/init`, {
+      headers: this.getAuthHeader(),
+    })
+
+    console.log('[API] Facebook auth init response status:', response.status)
+
+    if (!response.ok) {
+      console.error('[API] Facebook auth init failed with status:', response.status)
+      const text = await response.text()
+      console.error('[API] Error response:', text)
+      try {
+        return JSON.parse(text)
+      } catch {
+        return {
+          success: false,
+          error: `HTTP ${response.status}: ${text || response.statusText}`
+        }
+      }
+    }
+
+    const data = await response.json()
+    console.log('[API] Facebook auth init response data:', data)
+    return data
+  }
+
+  async completeFacebookAuth(
+    code: string,
+    state: string
+  ): Promise<ApiResponse<{ pages: any[] }>> {
+    const response = await fetch(`${API_URL}/api/facebook/auth/callback`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...this.getAuthHeader(),
+      },
+      body: JSON.stringify({ code, state }),
+    })
+    return response.json()
+  }
+
+  async getFacebookPages(): Promise<ApiResponse<{ pages: any[] }>> {
+    const response = await fetch(`${API_URL}/api/facebook/pages`, {
+      headers: this.getAuthHeader(),
+    })
+    return response.json()
+  }
+
+  async disconnectFacebookPage(pageId: string): Promise<ApiResponse> {
+    const response = await fetch(`${API_URL}/api/facebook/pages/${pageId}`, {
+      method: 'DELETE',
+      headers: this.getAuthHeader(),
+    })
+    return response.json()
+  }
+
+  async postToFacebook(
+    pageId: string,
+    message: string,
+    imageUrl?: string
+  ): Promise<ApiResponse<{ postId: string; postUrl: string }>> {
+    const response = await fetch(`${API_URL}/api/facebook/pages/${pageId}/post`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...this.getAuthHeader(),
+      },
+      body: JSON.stringify({ message, imageUrl }),
+    })
+    return response.json()
+  }
+
+  async uploadFacebookImage(file: File): Promise<ApiResponse<{ imageUrl: string; imageId: string; width: number; height: number }>> {
+    const formData = new FormData()
+    formData.append('image', file)
+
+    const response = await fetch(`${API_URL}/api/facebook/upload-image`, {
+      method: 'POST',
+      headers: {
+        ...this.getAuthHeader(),
+      },
+      body: formData,
+    })
+    return response.json()
+  }
+
+  async getPostHistory(pageId?: string): Promise<ApiResponse<{ posts: any[] }>> {
+    const url = pageId
+      ? `${API_URL}/api/facebook/posts?pageId=${encodeURIComponent(pageId)}`
+      : `${API_URL}/api/facebook/posts`
+
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        ...this.getAuthHeader(),
+      },
+    })
+    return response.json()
+  }
 }
 
 export const api = new ApiService()
