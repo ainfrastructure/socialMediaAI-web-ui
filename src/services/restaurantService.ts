@@ -85,6 +85,19 @@ export interface DeleteRestaurantResponse {
   error?: string
 }
 
+export interface UpdateRestaurantData {
+  website?: string | null
+  opening_hours?: any | null
+  social_media?: any | null
+}
+
+export interface UpdateRestaurantResponse {
+  success: boolean
+  data?: SavedRestaurant
+  message?: string
+  error?: string
+}
+
 class RestaurantService {
   private getAuthHeader(): HeadersInit {
     const token = localStorage.getItem('access_token')
@@ -194,6 +207,46 @@ class RestaurantService {
       return data.data
     } catch (error) {
       console.error('Error getting restaurant by place_id:', error)
+      throw error
+    }
+  }
+
+  /**
+   * Update a saved restaurant's editable fields
+   * @param placeId - The Google Place ID
+   * @param updateData - The fields to update (website, opening_hours, social_media)
+   * @returns Updated restaurant object or error
+   */
+  async updateRestaurant(
+    placeId: string,
+    updateData: UpdateRestaurantData
+  ): Promise<UpdateRestaurantResponse> {
+    if (!placeId || placeId.trim().length === 0) {
+      throw new Error('Place ID is required')
+    }
+
+    try {
+      const response = await fetch(
+        `${API_URL}/api/restaurants/${encodeURIComponent(placeId)}`,
+        {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            ...this.getAuthHeader(),
+          },
+          body: JSON.stringify(updateData),
+        }
+      )
+
+      const data: UpdateRestaurantResponse = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || `HTTP error! status: ${response.status}`)
+      }
+
+      return data
+    } catch (error) {
+      console.error('Error updating restaurant:', error)
       throw error
     }
   }

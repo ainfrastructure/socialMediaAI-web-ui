@@ -33,9 +33,10 @@
           variant="glass"
           hoverable
           class="favorite-card"
+          @click="viewDetails(favorite)"
         >
           <!-- Media Preview -->
-          <div class="media-container">
+          <div class="media-container" @click.stop>
             <img
               v-if="favorite.content_type === 'image'"
               :src="favorite.media_url"
@@ -84,12 +85,9 @@
             </div>
 
             <!-- Actions -->
-            <div class="favorite-actions">
+            <div class="favorite-actions" @click.stop>
               <BaseButton variant="primary" size="small" @click="schedulePost(favorite)">
                 📅 Schedule
-              </BaseButton>
-              <BaseButton variant="ghost" size="small" @click="viewDetails(favorite)">
-                👁️ View
               </BaseButton>
               <BaseButton variant="danger" size="small" @click="deleteFavorite(favorite.id)">
                 🗑️ Delete
@@ -364,6 +362,12 @@ onMounted(() => {
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.favorite-card:hover {
+  transform: translateY(-2px);
 }
 
 .media-container {

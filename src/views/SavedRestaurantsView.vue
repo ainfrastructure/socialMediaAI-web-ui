@@ -43,7 +43,16 @@
           @click="selectRestaurant(restaurant)"
         >
           <div class="card-header">
-            <h3 class="restaurant-name">{{ restaurant.name }}</h3>
+            <div class="card-title-section">
+              <div v-if="restaurant.brand_dna?.logo_url" class="card-logo-container">
+                <img
+                  :src="restaurant.brand_dna.logo_url"
+                  :alt="restaurant.brand_dna.brand_name || restaurant.name"
+                  class="card-logo"
+                />
+              </div>
+              <h3 class="restaurant-name">{{ restaurant.name }}</h3>
+            </div>
             <button class="delete-btn" @click.stop="confirmDelete(restaurant)" title="Delete">
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
@@ -77,7 +86,6 @@
 
           <div class="card-footer">
             <span class="saved-date">Saved {{ formatDate(restaurant.saved_at) }}</span>
-            <span class="view-link">View Details →</span>
           </div>
         </BaseCard>
       </div>
@@ -106,18 +114,26 @@
           <BaseCard variant="glass-intense" class="details-content">
             <div class="details-header">
               <h2 class="details-title">{{ selectedRestaurant.name }}</h2>
-              <button class="close-btn" @click="closeDetails">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <line x1="18" y1="6" x2="6" y2="18"></line>
-                  <line x1="6" y1="6" x2="18" y2="18"></line>
-                </svg>
-              </button>
+              <div class="header-actions">
+                <button class="close-btn" @click="closeDetails">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                  </svg>
+                </button>
+              </div>
             </div>
+
+            <BaseAlert v-if="saveError" type="error" class="save-alert">
+              {{ saveError }}
+            </BaseAlert>
 
             <div class="details-body">
               <!-- Basic Info -->
               <section class="details-section">
-                <h3 class="section-title">Information</h3>
+                <div class="section-header">
+                  <h3 class="section-title">Information</h3>
+                </div>
                 <div class="info-grid">
                   <div class="info-item">
                     <span class="info-label">Address</span>
@@ -129,11 +145,35 @@
                     <span class="info-value">{{ selectedRestaurant.phone_number }}</span>
                   </div>
 
-                  <div v-if="selectedRestaurant.website" class="info-item">
+                  <div class="info-item">
                     <span class="info-label">Website</span>
-                    <a :href="selectedRestaurant.website" target="_blank" class="info-link">
-                      {{ selectedRestaurant.website }}
-                    </a>
+                    <div class="editable-field">
+                      <input
+                        v-if="editingWebsite"
+                        v-model="editedWebsite"
+                        type="url"
+                        class="edit-input"
+                        placeholder="https://example.com"
+                      />
+                      <a v-else-if="selectedRestaurant.website" :href="selectedRestaurant.website" target="_blank" class="info-link">
+                        {{ selectedRestaurant.website }}
+                      </a>
+                      <span v-else class="info-value empty">Not set</span>
+
+                      <div class="field-actions">
+                        <button v-if="!editingWebsite" class="edit-field-btn" @click="startEditWebsite" title="Edit website">
+                          ✏️
+                        </button>
+                        <template v-else>
+                          <BaseButton variant="primary" size="small" @click="saveWebsite" :disabled="saving">
+                            {{ saving ? '...' : '💾' }}
+                          </BaseButton>
+                          <BaseButton variant="ghost" size="small" @click="cancelEditWebsite">
+                            ✕
+                          </BaseButton>
+                        </template>
+                      </div>
+                    </div>
                   </div>
 
                   <div v-if="selectedRestaurant.rating" class="info-item">
@@ -163,7 +203,7 @@
                   <span class="brand-label">Logo</span>
                   <div class="logo-container">
                     <img
-                      :src="`http://localhost:3000${selectedRestaurant.brand_dna.logo_url}`"
+                      :src="selectedRestaurant.brand_dna.logo_url"
                       :alt="selectedRestaurant.brand_dna.brand_name || 'Logo'"
                       class="brand-logo"
                     />
@@ -210,12 +250,46 @@
               </section>
 
               <!-- Opening Hours -->
-              <section v-if="selectedRestaurant.opening_hours" class="details-section">
-                <h3 class="section-title">Opening Hours</h3>
-                <div v-if="selectedRestaurant.opening_hours.open_now !== undefined" class="status-badge" :class="{ 'open': selectedRestaurant.opening_hours.open_now }">
+              <section v-if="selectedRestaurant.opening_hours || editingHours" class="details-section">
+                <div class="section-header">
+                  <h3 class="section-title">Opening Hours</h3>
+                  <button v-if="!editingHours" class="edit-section-btn" @click="startEditHours" title="Edit opening hours">
+                    ✏️ Edit
+                  </button>
+                  <div v-else class="section-actions">
+                    <BaseButton variant="primary" size="small" @click="saveHours" :disabled="saving">
+                      {{ saving ? 'Saving...' : '💾 Save' }}
+                    </BaseButton>
+                    <BaseButton variant="ghost" size="small" @click="cancelEditHours">
+                      Cancel
+                    </BaseButton>
+                  </div>
+                </div>
+
+                <div v-if="selectedRestaurant.opening_hours?.open_now !== undefined && !editingHours" class="status-badge" :class="{ 'open': selectedRestaurant.opening_hours.open_now }">
                   {{ selectedRestaurant.opening_hours.open_now ? '🟢 Open Now' : '🔴 Closed' }}
                 </div>
-                <div v-if="selectedRestaurant.opening_hours.weekday_text" class="hours-list">
+
+                <!-- Edit Mode -->
+                <div v-if="editingHours" class="hours-edit-list">
+                  <div v-for="(day, index) in editedHours" :key="index" class="hours-edit-item">
+                    <input
+                      v-model="editedHours[index]"
+                      type="text"
+                      class="edit-input hours-input"
+                      placeholder="Monday: 9:00 AM – 5:00 PM"
+                    />
+                    <button class="remove-day-btn" @click="editedHours.splice(index, 1)" title="Remove day">
+                      ✕
+                    </button>
+                  </div>
+                  <BaseButton variant="ghost" size="small" @click="editedHours.push('')">
+                    ➕ Add Day
+                  </BaseButton>
+                </div>
+
+                <!-- View Mode -->
+                <div v-else-if="selectedRestaurant.opening_hours?.weekday_text" class="hours-list">
                   <div v-for="(day, index) in selectedRestaurant.opening_hours.weekday_text" :key="index" class="hours-item">
                     {{ day }}
                   </div>
@@ -223,22 +297,105 @@
               </section>
 
               <!-- Social Media -->
-              <section v-if="selectedRestaurant.social_media && hasSocialMedia(selectedRestaurant.social_media)" class="details-section">
-                <h3 class="section-title">Social Media</h3>
-                <div class="social-links">
-                  <a v-if="selectedRestaurant.social_media.facebook" :href="selectedRestaurant.social_media.facebook" target="_blank" class="social-link facebook">
+              <section v-if="(selectedRestaurant.social_media && hasSocialMedia(selectedRestaurant.social_media)) || editingSocial" class="details-section">
+                <div class="section-header">
+                  <h3 class="section-title">Social Media</h3>
+                  <button v-if="!editingSocial" class="edit-section-btn" @click="startEditSocial" title="Edit social media">
+                    ✏️ Edit
+                  </button>
+                  <div v-else class="section-actions">
+                    <BaseButton variant="primary" size="small" @click="saveSocial" :disabled="saving">
+                      {{ saving ? 'Saving...' : '💾 Save' }}
+                    </BaseButton>
+                    <BaseButton variant="ghost" size="small" @click="cancelEditSocial">
+                      Cancel
+                    </BaseButton>
+                  </div>
+                </div>
+
+                <!-- Edit Mode -->
+                <div v-if="editingSocial" class="social-edit-grid">
+                  <div class="social-edit-item">
+                    <label class="social-label">
+                      <span class="social-icon facebook-icon">📘</span>
+                      Facebook
+                    </label>
+                    <input
+                      v-model="editedSocial.facebook"
+                      type="url"
+                      class="edit-input"
+                      placeholder="https://facebook.com/..."
+                    />
+                  </div>
+
+                  <div class="social-edit-item">
+                    <label class="social-label">
+                      <span class="social-icon instagram-icon">📷</span>
+                      Instagram
+                    </label>
+                    <input
+                      v-model="editedSocial.instagram"
+                      type="url"
+                      class="edit-input"
+                      placeholder="https://instagram.com/..."
+                    />
+                  </div>
+
+                  <div class="social-edit-item">
+                    <label class="social-label">
+                      <span class="social-icon twitter-icon">🐦</span>
+                      Twitter/X
+                    </label>
+                    <input
+                      v-model="editedSocial.twitter"
+                      type="url"
+                      class="edit-input"
+                      placeholder="https://twitter.com/..."
+                    />
+                  </div>
+
+                  <div class="social-edit-item">
+                    <label class="social-label">
+                      <span class="social-icon youtube-icon">📺</span>
+                      YouTube
+                    </label>
+                    <input
+                      v-model="editedSocial.youtube"
+                      type="url"
+                      class="edit-input"
+                      placeholder="https://youtube.com/..."
+                    />
+                  </div>
+
+                  <div class="social-edit-item">
+                    <label class="social-label">
+                      <span class="social-icon tiktok-icon">🎵</span>
+                      TikTok
+                    </label>
+                    <input
+                      v-model="editedSocial.tiktok"
+                      type="url"
+                      class="edit-input"
+                      placeholder="https://tiktok.com/..."
+                    />
+                  </div>
+                </div>
+
+                <!-- View Mode -->
+                <div v-else class="social-links">
+                  <a v-if="selectedRestaurant.social_media?.facebook" :href="selectedRestaurant.social_media.facebook" target="_blank" class="social-link facebook">
                     Facebook
                   </a>
-                  <a v-if="selectedRestaurant.social_media.instagram" :href="selectedRestaurant.social_media.instagram" target="_blank" class="social-link instagram">
+                  <a v-if="selectedRestaurant.social_media?.instagram" :href="selectedRestaurant.social_media.instagram" target="_blank" class="social-link instagram">
                     Instagram
                   </a>
-                  <a v-if="selectedRestaurant.social_media.twitter" :href="selectedRestaurant.social_media.twitter" target="_blank" class="social-link twitter">
+                  <a v-if="selectedRestaurant.social_media?.twitter" :href="selectedRestaurant.social_media.twitter" target="_blank" class="social-link twitter">
                     Twitter/X
                   </a>
-                  <a v-if="selectedRestaurant.social_media.youtube" :href="selectedRestaurant.social_media.youtube" target="_blank" class="social-link youtube">
+                  <a v-if="selectedRestaurant.social_media?.youtube" :href="selectedRestaurant.social_media.youtube" target="_blank" class="social-link youtube">
                     YouTube
                   </a>
-                  <a v-if="selectedRestaurant.social_media.tiktok" :href="selectedRestaurant.social_media.tiktok" target="_blank" class="social-link tiktok">
+                  <a v-if="selectedRestaurant.social_media?.tiktok" :href="selectedRestaurant.social_media.tiktok" target="_blank" class="social-link tiktok">
                     TikTok
                   </a>
                 </div>
@@ -277,7 +434,7 @@
                   </span>
                 </h3>
                 <div class="menu-grid">
-                  <div v-for="(item, index) in selectedRestaurant.menu.items" :key="index" class="menu-item">
+                  <div v-for="(item, index) in paginatedMenuItems" :key="index" class="menu-item">
                     <img v-if="item.imageUrl" :src="item.imageUrl" :alt="item.name" class="menu-image" />
                     <div class="menu-item-content">
                       <h4 class="menu-item-name">{{ item.name }}</h4>
@@ -285,6 +442,37 @@
                       <p class="menu-item-price">{{ item.price }}</p>
                     </div>
                   </div>
+                </div>
+
+                <!-- Menu Pagination -->
+                <div v-if="totalMenuPages > 1" class="pagination">
+                  <button
+                    class="pagination-btn"
+                    :disabled="menuCurrentPage === 1"
+                    @click="goToMenuPage(menuCurrentPage - 1)"
+                  >
+                    ← Previous
+                  </button>
+
+                  <div class="pagination-numbers">
+                    <button
+                      v-for="page in totalMenuPages"
+                      :key="page"
+                      class="pagination-number"
+                      :class="{ active: menuCurrentPage === page }"
+                      @click="goToMenuPage(page)"
+                    >
+                      {{ page }}
+                    </button>
+                  </div>
+
+                  <button
+                    class="pagination-btn"
+                    :disabled="menuCurrentPage === totalMenuPages"
+                    @click="goToMenuPage(menuCurrentPage + 1)"
+                  >
+                    Next →
+                  </button>
                 </div>
               </section>
 
@@ -297,8 +485,8 @@
                   </span>
                 </h3>
                 <div class="competitors-list">
-                  <div v-for="(competitor, index) in selectedRestaurant.competitors" :key="index" class="competitor-item">
-                    <div class="competitor-number">{{ index + 1 }}</div>
+                  <div v-for="(competitor, index) in paginatedCompetitors" :key="index" class="competitor-item">
+                    <div class="competitor-number">{{ (competitorsCurrentPage - 1) * competitorsPerPage + index + 1 }}</div>
                     <div class="competitor-info">
                       <h4 class="competitor-name">{{ competitor.name }}</h4>
                       <p class="competitor-address">{{ competitor.address }}</p>
@@ -308,6 +496,37 @@
                       </div>
                     </div>
                   </div>
+                </div>
+
+                <!-- Competitors Pagination -->
+                <div v-if="totalCompetitorsPages > 1" class="pagination">
+                  <button
+                    class="pagination-btn"
+                    :disabled="competitorsCurrentPage === 1"
+                    @click="goToCompetitorsPage(competitorsCurrentPage - 1)"
+                  >
+                    ← Previous
+                  </button>
+
+                  <div class="pagination-numbers">
+                    <button
+                      v-for="page in totalCompetitorsPages"
+                      :key="page"
+                      class="pagination-number"
+                      :class="{ active: competitorsCurrentPage === page }"
+                      @click="goToCompetitorsPage(page)"
+                    >
+                      {{ page }}
+                    </button>
+                  </div>
+
+                  <button
+                    class="pagination-btn"
+                    :disabled="competitorsCurrentPage === totalCompetitorsPages"
+                    @click="goToCompetitorsPage(competitorsCurrentPage + 1)"
+                  >
+                    Next →
+                  </button>
                 </div>
               </section>
             </div>
@@ -319,7 +538,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import GradientBackground from '../components/GradientBackground.vue'
 import BaseCard from '../components/BaseCard.vue'
@@ -336,6 +555,29 @@ const selectedRestaurant = ref<SavedRestaurant | null>(null)
 const showDeleteModal = ref(false)
 const restaurantToDelete = ref<SavedRestaurant | null>(null)
 const deleting = ref(false)
+
+// Edit state
+// Edit state for individual fields
+const editingWebsite = ref(false)
+const editedWebsite = ref('')
+const editingHours = ref(false)
+const editedHours = ref<string[]>([])
+const editingSocial = ref(false)
+const editedSocial = ref({
+  facebook: '',
+  instagram: '',
+  twitter: '',
+  youtube: '',
+  tiktok: ''
+})
+const saving = ref(false)
+const saveError = ref<string | null>(null)
+
+// Pagination state
+const menuCurrentPage = ref(1)
+const menuItemsPerPage = 12
+const competitorsCurrentPage = ref(1)
+const competitorsPerPage = 6
 
 onMounted(async () => {
   await fetchRestaurants()
@@ -356,10 +598,182 @@ const fetchRestaurants = async () => {
 
 const selectRestaurant = (restaurant: SavedRestaurant) => {
   selectedRestaurant.value = restaurant
+  resetEditState()
 }
 
 const closeDetails = () => {
   selectedRestaurant.value = null
+  resetEditState()
+}
+
+const resetEditState = () => {
+  editingWebsite.value = false
+  editedWebsite.value = ''
+  editingHours.value = false
+  editedHours.value = []
+  editingSocial.value = false
+  editedSocial.value = {
+    facebook: '',
+    instagram: '',
+    twitter: '',
+    youtube: '',
+    tiktok: ''
+  }
+  saveError.value = null
+}
+
+// Website editing
+const startEditWebsite = () => {
+  editingWebsite.value = true
+  editedWebsite.value = selectedRestaurant.value?.website || ''
+}
+
+const cancelEditWebsite = () => {
+  editingWebsite.value = false
+  editedWebsite.value = ''
+  saveError.value = null
+}
+
+const saveWebsite = async () => {
+  if (!selectedRestaurant.value) return
+
+  try {
+    saving.value = true
+    saveError.value = null
+
+    const response = await restaurantService.updateRestaurant(selectedRestaurant.value.place_id, {
+      website: editedWebsite.value || null
+    })
+
+    if (response.success && response.data) {
+      selectedRestaurant.value = response.data
+
+      const index = restaurants.value.findIndex(r => r.id === selectedRestaurant.value!.id)
+      if (index !== -1) {
+        restaurants.value[index] = response.data
+      }
+
+      editingWebsite.value = false
+      editedWebsite.value = ''
+    } else {
+      saveError.value = response.error || 'Failed to save website'
+    }
+  } catch (err: any) {
+    console.error('Error saving website:', err)
+    saveError.value = err.message || 'Failed to save website'
+  } finally {
+    saving.value = false
+  }
+}
+
+// Opening hours editing
+const startEditHours = () => {
+  editingHours.value = true
+  editedHours.value = selectedRestaurant.value?.opening_hours?.weekday_text
+    ? [...selectedRestaurant.value.opening_hours.weekday_text]
+    : []
+}
+
+const cancelEditHours = () => {
+  editingHours.value = false
+  editedHours.value = []
+  saveError.value = null
+}
+
+const saveHours = async () => {
+  if (!selectedRestaurant.value) return
+
+  try {
+    saving.value = true
+    saveError.value = null
+
+    const response = await restaurantService.updateRestaurant(selectedRestaurant.value.place_id, {
+      opening_hours: {
+        weekday_text: editedHours.value.filter(h => h.trim() !== '')
+      }
+    })
+
+    if (response.success && response.data) {
+      selectedRestaurant.value = response.data
+
+      const index = restaurants.value.findIndex(r => r.id === selectedRestaurant.value!.id)
+      if (index !== -1) {
+        restaurants.value[index] = response.data
+      }
+
+      editingHours.value = false
+      editedHours.value = []
+    } else {
+      saveError.value = response.error || 'Failed to save opening hours'
+    }
+  } catch (err: any) {
+    console.error('Error saving opening hours:', err)
+    saveError.value = err.message || 'Failed to save opening hours'
+  } finally {
+    saving.value = false
+  }
+}
+
+// Social media editing
+const startEditSocial = () => {
+  editingSocial.value = true
+  editedSocial.value = {
+    facebook: selectedRestaurant.value?.social_media?.facebook || '',
+    instagram: selectedRestaurant.value?.social_media?.instagram || '',
+    twitter: selectedRestaurant.value?.social_media?.twitter || '',
+    youtube: selectedRestaurant.value?.social_media?.youtube || '',
+    tiktok: selectedRestaurant.value?.social_media?.tiktok || ''
+  }
+}
+
+const cancelEditSocial = () => {
+  editingSocial.value = false
+  editedSocial.value = {
+    facebook: '',
+    instagram: '',
+    twitter: '',
+    youtube: '',
+    tiktok: ''
+  }
+  saveError.value = null
+}
+
+const saveSocial = async () => {
+  if (!selectedRestaurant.value) return
+
+  try {
+    saving.value = true
+    saveError.value = null
+
+    const response = await restaurantService.updateRestaurant(selectedRestaurant.value.place_id, {
+      social_media: editedSocial.value
+    })
+
+    if (response.success && response.data) {
+      selectedRestaurant.value = response.data
+
+      const index = restaurants.value.findIndex(r => r.id === selectedRestaurant.value!.id)
+      if (index !== -1) {
+        restaurants.value[index] = response.data
+      }
+
+      editingSocial.value = false
+      editedSocial.value = {
+        facebook: '',
+        instagram: '',
+        twitter: '',
+        youtube: '',
+        tiktok: ''
+      }
+    } else {
+      saveError.value = response.error || 'Failed to save social media'
+    }
+  } catch (err: any) {
+    console.error('Error saving social media:', err)
+    saveError.value = err.message || 'Failed to save social media'
+  } finally {
+    saving.value = false
+  }
 }
 
 const confirmDelete = (restaurant: SavedRestaurant) => {
@@ -411,6 +825,47 @@ const formatDate = (dateString: string): string => {
   if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago`
   if (diffDays < 365) return `${Math.floor(diffDays / 30)} months ago`
   return `${Math.floor(diffDays / 365)} years ago`
+}
+
+// Reset pagination when restaurant changes
+watch(selectedRestaurant, () => {
+  menuCurrentPage.value = 1
+  competitorsCurrentPage.value = 1
+})
+
+// Menu pagination
+const paginatedMenuItems = computed(() => {
+  if (!selectedRestaurant.value?.menu?.items) return []
+  const items = selectedRestaurant.value.menu.items
+  const start = (menuCurrentPage.value - 1) * menuItemsPerPage
+  const end = start + menuItemsPerPage
+  return items.slice(start, end)
+})
+
+const totalMenuPages = computed(() => {
+  if (!selectedRestaurant.value?.menu?.items) return 0
+  return Math.ceil(selectedRestaurant.value.menu.items.length / menuItemsPerPage)
+})
+
+const goToMenuPage = (page: number) => {
+  menuCurrentPage.value = page
+}
+
+// Competitors pagination
+const paginatedCompetitors = computed(() => {
+  if (!selectedRestaurant.value?.competitors) return []
+  const start = (competitorsCurrentPage.value - 1) * competitorsPerPage
+  const end = start + competitorsPerPage
+  return selectedRestaurant.value.competitors.slice(start, end)
+})
+
+const totalCompetitorsPages = computed(() => {
+  if (!selectedRestaurant.value?.competitors) return 0
+  return Math.ceil(selectedRestaurant.value.competitors.length / competitorsPerPage)
+})
+
+const goToCompetitorsPage = (page: number) => {
+  competitorsCurrentPage.value = page
 }
 
 const hasSocialMedia = (socialMedia: any): boolean => {
@@ -516,10 +971,13 @@ const hasSocialMedia = (socialMedia: any): boolean => {
   padding: 1.5rem;
   cursor: pointer;
   transition: all 0.3s ease;
+  position: relative;
 }
 
 .restaurant-card:hover {
   transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(212, 175, 55, 0.2);
+  border-color: rgba(212, 175, 55, 0.4);
 }
 
 .card-header {
@@ -528,6 +986,34 @@ const hasSocialMedia = (socialMedia: any): boolean => {
   align-items: flex-start;
   gap: 1rem;
   margin-bottom: 0.75rem;
+}
+
+.card-title-section {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex: 1;
+}
+
+.card-logo-container {
+  width: 56px;
+  height: 56px;
+  flex-shrink: 0;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem;
+}
+
+.card-logo {
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  object-fit: contain;
 }
 
 .restaurant-name {
@@ -585,7 +1071,7 @@ const hasSocialMedia = (socialMedia: any): boolean => {
 
 .card-footer {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-start;
   align-items: center;
   padding-top: 1rem;
   border-top: 1px solid rgba(212, 175, 55, 0.1);
@@ -594,12 +1080,6 @@ const hasSocialMedia = (socialMedia: any): boolean => {
 .saved-date {
   font-size: 0.75rem;
   color: var(--text-muted);
-}
-
-.view-link {
-  font-size: 0.875rem;
-  color: var(--gold-primary);
-  font-weight: 500;
 }
 
 /* Modal Styles */
@@ -676,6 +1156,12 @@ const hasSocialMedia = (socialMedia: any): boolean => {
   flex: 1;
 }
 
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
 .close-btn {
   background: none;
   border: none;
@@ -705,15 +1191,78 @@ const hasSocialMedia = (socialMedia: any): boolean => {
   border-radius: 12px;
 }
 
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  gap: 1rem;
+}
+
 .section-title {
   font-family: var(--font-heading);
   font-size: 1.25rem;
   color: var(--gold-primary);
-  margin: 0 0 1rem 0;
+  margin: 0;
   display: flex;
   align-items: center;
   gap: 0.75rem;
   flex-wrap: wrap;
+}
+
+.edit-section-btn {
+  padding: 0.5rem 1rem;
+  background: rgba(212, 175, 55, 0.1);
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  border-radius: 6px;
+  color: var(--gold-primary);
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.edit-section-btn:hover {
+  background: rgba(212, 175, 55, 0.2);
+  border-color: var(--gold-primary);
+  transform: translateY(-1px);
+}
+
+.section-actions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.edit-field-btn {
+  padding: 0.375rem 0.75rem;
+  background: rgba(212, 175, 55, 0.1);
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  border-radius: 6px;
+  color: var(--gold-primary);
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-left: 0.5rem;
+}
+
+.edit-field-btn:hover {
+  background: rgba(212, 175, 55, 0.2);
+  border-color: var(--gold-primary);
+}
+
+.editable-field {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 1;
+}
+
+.field-actions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  flex-shrink: 0;
 }
 
 .platform-badge {
@@ -1037,6 +1586,77 @@ const hasSocialMedia = (socialMedia: any): boolean => {
   color: var(--gold-primary);
 }
 
+/* Pagination Styles */
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-md);
+  margin-top: var(--space-2xl);
+  padding-top: var(--space-xl);
+  border-top: var(--border-width) solid var(--border-color);
+}
+
+.pagination-btn {
+  padding: var(--space-sm) var(--space-lg);
+  background: var(--glass-bg);
+  border: var(--border-width) solid var(--border-color);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  cursor: pointer;
+  transition: var(--transition-base);
+  backdrop-filter: blur(var(--blur-md));
+}
+
+.pagination-btn:hover:not(:disabled) {
+  background: var(--gold-subtle);
+  border-color: var(--gold-primary);
+  color: var(--gold-primary);
+  transform: translateY(-1px);
+}
+
+.pagination-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.pagination-numbers {
+  display: flex;
+  gap: var(--space-sm);
+}
+
+.pagination-number {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--glass-bg);
+  border: var(--border-width) solid var(--border-color);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  cursor: pointer;
+  transition: var(--transition-base);
+  backdrop-filter: blur(var(--blur-md));
+}
+
+.pagination-number:hover {
+  background: var(--gold-subtle);
+  border-color: var(--gold-primary);
+  color: var(--gold-primary);
+  transform: translateY(-1px);
+}
+
+.pagination-number.active {
+  background: var(--gold-primary);
+  border-color: var(--gold-primary);
+  color: var(--text-on-gold);
+}
+
 /* Brand DNA Styles */
 .brand-item {
   display: flex;
@@ -1157,6 +1777,109 @@ const hasSocialMedia = (socialMedia: any): boolean => {
   font-weight: 600;
   text-transform: capitalize;
   color: var(--gold-primary);
+}
+
+/* Edit Mode Styles */
+.save-alert {
+  margin-bottom: 1rem;
+}
+
+.edit-actions {
+  display: flex;
+  gap: 1rem;
+  padding: 1rem;
+  background: rgba(212, 175, 55, 0.1);
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  border-radius: 12px;
+  margin-bottom: 1rem;
+}
+
+.edit-input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  border-radius: 8px;
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: 0.875rem;
+  transition: all 0.2s ease;
+}
+
+.edit-input:focus {
+  outline: none;
+  border-color: var(--gold-primary);
+  background: rgba(0, 0, 0, 0.5);
+  box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.1);
+}
+
+.edit-input::placeholder {
+  color: var(--text-muted);
+}
+
+.info-value.empty {
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+/* Opening Hours Edit */
+.hours-edit-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.hours-edit-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.remove-day-btn {
+  padding: 0.375rem 0.75rem;
+  background: rgba(220, 38, 38, 0.1);
+  border: 1px solid rgba(220, 38, 38, 0.3);
+  border-radius: 6px;
+  color: #ef4444;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.remove-day-btn:hover {
+  background: rgba(220, 38, 38, 0.2);
+  border-color: #ef4444;
+}
+
+.hours-input {
+  flex: 1;
+}
+
+/* Social Media Edit */
+.social-edit-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1rem;
+}
+
+.social-edit-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.social-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.social-icon {
+  font-size: 1.25rem;
 }
 
 /* Responsive */

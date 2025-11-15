@@ -41,7 +41,7 @@ onMounted(() => {
       setTimeout(async () => {
         await authStore.loadProfile()
         if (authStore.isAuthenticated) {
-          router.push('/dashboard')
+          router.push('/playground')
         } else {
           showMessage('Please login to continue', 'info')
           window.location.hash = '' // Clear hash

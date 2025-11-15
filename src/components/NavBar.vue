@@ -3,46 +3,37 @@
     <div class="navbar-container">
       <!-- Logo/Brand -->
       <router-link to="/playground" class="brand">
-        <span class="brand-icon">✨</span>
         <span class="brand-text">AI Marketing</span>
       </router-link>
 
       <!-- Navigation Links -->
       <div class="nav-links">
         <router-link to="/playground" class="nav-link" active-class="active">
-          <span class="nav-icon">🎨</span>
-          <span class="nav-text">Playground</span>
+          Playground
         </router-link>
 
         <router-link to="/favorites" class="nav-link" active-class="active">
-          <span class="nav-icon">❤️</span>
-          <span class="nav-text">Favorites</span>
+          Favorites
         </router-link>
 
         <router-link to="/scheduler" class="nav-link" active-class="active">
-          <span class="nav-icon">📅</span>
-          <span class="nav-text">Scheduler</span>
+          Scheduler
         </router-link>
 
         <router-link to="/restaurants" class="nav-link" active-class="active">
-          <span class="nav-icon">🔍</span>
-          <span class="nav-text">Search Restaurants</span>
+          Search
         </router-link>
 
         <router-link to="/saved-restaurants" class="nav-link" active-class="active">
-          <span class="nav-icon">⭐</span>
-          <span class="nav-text">Saved Restaurants</span>
+          Saved
         </router-link>
       </div>
 
       <!-- User Menu -->
       <div class="user-menu">
-        <div v-if="authStore.user" class="user-info">
-          <span class="user-email">{{ authStore.user.email }}</span>
-          <button @click="handleLogout" class="logout-btn">Logout</button>
-        </div>
-        <router-link v-else to="/login" class="nav-link">
-          <span class="nav-text">Login</span>
+        <BurgerMenu v-if="authStore.user" />
+        <router-link v-else to="/login" class="nav-link login-link">
+          Login
         </router-link>
       </div>
     </div>
@@ -50,16 +41,10 @@
 </template>
 
 <script setup lang="ts">
-import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
+import BurgerMenu from './BurgerMenu.vue'
 
-const router = useRouter()
 const authStore = useAuthStore()
-
-const handleLogout = async () => {
-  await authStore.logout()
-  router.push('/login')
-}
 </script>
 
 <style scoped>
@@ -67,9 +52,10 @@ const handleLogout = async () => {
   position: sticky;
   top: 0;
   z-index: 100;
-  background: var(--bg-secondary);
-  border-bottom: var(--border-width) solid var(--border-color);
-  backdrop-filter: blur(var(--blur-lg));
+  background: rgba(10, 10, 10, 0.85);
+  border-bottom: 1px solid rgba(212, 175, 55, 0.15);
+  backdrop-filter: blur(20px);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
 }
 
 .navbar-container {
@@ -79,122 +65,132 @@ const handleLogout = async () => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: var(--space-2xl);
+  gap: var(--space-3xl);
 }
 
 /* Brand */
 .brand {
   display: flex;
   align-items: center;
-  gap: var(--space-md);
   text-decoration: none;
   transition: var(--transition-base);
+  position: relative;
 }
 
-.brand:hover {
-  transform: translateY(-1px);
+.brand::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: var(--gradient-gold);
+  transition: width 0.3s ease;
 }
 
-.brand-icon {
-  font-size: var(--text-2xl);
+.brand:hover::after {
+  width: 100%;
 }
 
 .brand-text {
   font-family: var(--font-heading);
-  font-size: var(--text-xl);
+  font-size: var(--text-2xl);
   font-weight: var(--font-bold);
   background: var(--gradient-gold);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+  letter-spacing: 0.02em;
 }
 
 /* Navigation Links */
 .nav-links {
   display: flex;
   align-items: center;
-  gap: var(--space-lg);
+  gap: var(--space-xs);
   flex: 1;
   justify-content: center;
 }
 
 .nav-link {
-  display: flex;
-  align-items: center;
-  gap: var(--space-sm);
-  padding: var(--space-md) var(--space-lg);
-  border-radius: var(--radius-md);
+  position: relative;
+  padding: var(--space-md) var(--space-xl);
   text-decoration: none;
   color: var(--text-secondary);
   font-family: var(--font-body);
-  font-size: var(--text-sm);
-  font-weight: var(--font-medium);
+  font-size: var(--text-base);
+  font-weight: var(--font-semibold);
   transition: var(--transition-base);
-  border: 1px solid transparent;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.nav-link::before {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 2px;
+  background: var(--gradient-gold);
+  transition: width 0.3s ease;
 }
 
 .nav-link:hover {
-  color: var(--text-primary);
-  background: var(--bg-elevated);
-  border-color: var(--border-color);
+  color: var(--gold-light);
+}
+
+.nav-link:hover::before {
+  width: 60%;
 }
 
 .nav-link.active {
   color: var(--gold-primary);
-  background: var(--gold-subtle);
-  border-color: var(--gold-primary);
 }
 
-.nav-icon {
-  font-size: var(--text-lg);
-}
-
-.nav-text {
-  white-space: nowrap;
+.nav-link.active::before {
+  width: 80%;
 }
 
 /* User Menu */
 .user-menu {
   display: flex;
   align-items: center;
-  gap: var(--space-md);
+  gap: var(--space-lg);
 }
 
-.user-info {
-  display: flex;
-  align-items: center;
-  gap: var(--space-md);
+.login-link {
+  padding: var(--space-md) var(--space-xl);
+  border-radius: var(--radius-full);
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  color: var(--gold-primary);
+  font-weight: var(--font-semibold);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
 }
 
-.user-email {
-  color: var(--text-muted);
-  font-size: var(--text-sm);
+.login-link:hover {
+  background: var(--gradient-gold);
+  color: var(--text-on-gold);
+  border-color: transparent;
+  box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3);
+  transform: translateY(-1px);
+}
+
+.login-link::before {
   display: none;
 }
 
-.logout-btn {
-  padding: var(--space-sm) var(--space-lg);
-  border-radius: var(--radius-md);
-  border: var(--border-width) solid var(--border-color);
-  background: transparent;
-  color: var(--text-secondary);
-  font-family: var(--font-body);
-  font-size: var(--text-sm);
-  font-weight: var(--font-medium);
-  cursor: pointer;
-  transition: var(--transition-base);
-}
-
-.logout-btn:hover {
-  color: var(--gold-primary);
-  border-color: var(--gold-primary);
-  background: var(--gold-subtle);
-}
-
 /* Responsive */
-@media (min-width: 768px) {
-  .user-email {
-    display: block;
+@media (max-width: 1024px) {
+  .nav-links {
+    gap: 0;
+  }
+
+  .nav-link {
+    padding: var(--space-md) var(--space-lg);
+    font-size: var(--text-sm);
   }
 }
 
@@ -204,32 +200,31 @@ const handleLogout = async () => {
     gap: var(--space-lg);
   }
 
+  .brand-text {
+    font-size: var(--text-xl);
+  }
+
   .nav-links {
-    gap: var(--space-sm);
+    gap: 0;
   }
 
   .nav-link {
     padding: var(--space-sm) var(--space-md);
+    font-size: 0.65rem;
   }
 
-  .nav-text {
-    display: none;
-  }
-
-  .nav-icon {
-    font-size: var(--text-xl);
-  }
-
-  .brand-text {
-    display: none;
+  .login-link {
+    padding: var(--space-sm) var(--space-md);
+    font-size: 0.65rem;
   }
 }
 
 /* Reduce motion */
 @media (prefers-reduced-motion: reduce) {
-  .brand:hover,
-  .nav-link {
-    transform: none;
+  .brand::after,
+  .nav-link::before,
+  .login-link {
+    transition: none;
   }
 }
 </style>

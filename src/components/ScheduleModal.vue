@@ -40,7 +40,7 @@
                 id="scheduled_date"
                 v-model="formData.scheduled_date"
                 type="date"
-                class="form-input"
+                class="form-input date-input"
                 :min="today"
                 required
               />
@@ -50,26 +50,46 @@
             </div>
 
             <div class="form-group">
-              <label for="scheduled_time" class="form-label">Time (Optional)</label>
-              <input
-                id="scheduled_time"
-                v-model="formData.scheduled_time"
-                type="time"
-                class="form-input"
-              />
+              <label class="form-label">Time (Optional)</label>
+              <div class="time-picker">
+                <select v-model="selectedHour" class="time-select">
+                  <option v-for="hour in hours" :key="hour" :value="hour">
+                    {{ hour }}
+                  </option>
+                </select>
+                <span class="time-separator">:</span>
+                <select v-model="selectedMinute" class="time-select">
+                  <option v-for="minute in minutes" :key="minute" :value="minute">
+                    {{ minute }}
+                  </option>
+                </select>
+                <select v-model="selectedPeriod" class="period-select">
+                  <option value="AM">AM</option>
+                  <option value="PM">PM</option>
+                </select>
+              </div>
+              <p class="time-hint">Selected: {{ selectedHour }}:{{ selectedMinute }} {{ selectedPeriod }}</p>
             </div>
 
             <div class="form-group">
-              <label for="timezone" class="form-label">Timezone</label>
-              <select id="timezone" v-model="formData.timezone" class="form-select">
-                <option value="UTC">UTC</option>
-                <option value="America/New_York">Eastern (ET)</option>
-                <option value="America/Chicago">Central (CT)</option>
-                <option value="America/Denver">Mountain (MT)</option>
-                <option value="America/Los_Angeles">Pacific (PT)</option>
-                <option value="Europe/London">London (GMT)</option>
-                <option value="Europe/Paris">Paris (CET)</option>
+              <label for="timezone" class="form-label">
+                Timezone
+                <span v-if="formData.timezone === userTimezone" class="detected-badge">
+                  (Auto-detected)
+                </span>
+              </label>
+              <select id="timezone" v-model="formData.timezone" class="form-select timezone-select">
+                <option
+                  v-for="tz in timezoneOptions"
+                  :key="tz.value"
+                  :value="tz.value"
+                >
+                  {{ tz.label }}
+                </option>
               </select>
+              <p class="timezone-hint">
+                🕐 Current time: {{ getCurrentTimeInTimezone(formData.timezone) }}
+              </p>
             </div>
 
             <div class="form-group">
@@ -104,10 +124,13 @@
 
 <script setup lang="ts">
 import { ref, watch, computed } from 'vue'
+import { useRouter } from 'vue-router'
 import BaseCard from './BaseCard.vue'
 import BaseButton from './BaseButton.vue'
 import BaseAlert from './BaseAlert.vue'
 import { api } from '../services/api'
+
+const router = useRouter()
 
 interface Props {
   modelValue: boolean
@@ -130,10 +153,54 @@ const formData = ref({
 
 const scheduling = ref(false)
 const error = ref('')
+const showCalendar = ref(false)
+const selectedHour = ref('12')
+const selectedMinute = ref('00')
+const selectedPeriod = ref<'AM' | 'PM'>('PM')
 
 const today = computed(() => {
   return new Date().toISOString().split('T')[0]
 })
+
+// Detect user's timezone
+const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone
+
+// Generate hour options (1-12)
+const hours = Array.from({ length: 12 }, (_, i) => {
+  const hour = i + 1
+  return hour.toString().padStart(2, '0')
+})
+
+// Generate minute options (00, 15, 30, 45)
+const minutes = ['00', '15', '30', '45']
+
+// Timezone options with current time display
+const timezoneOptions = [
+  { value: 'UTC', label: 'UTC (Coordinated Universal Time)' },
+  { value: 'America/New_York', label: 'Eastern Time (ET)' },
+  { value: 'America/Chicago', label: 'Central Time (CT)' },
+  { value: 'America/Denver', label: 'Mountain Time (MT)' },
+  { value: 'America/Los_Angeles', label: 'Pacific Time (PT)' },
+  { value: 'Europe/London', label: 'London (GMT/BST)' },
+  { value: 'Europe/Paris', label: 'Paris (CET/CEST)' },
+  { value: 'Asia/Tokyo', label: 'Tokyo (JST)' },
+  { value: 'Asia/Dubai', label: 'Dubai (GST)' },
+  { value: 'Australia/Sydney', label: 'Sydney (AEDT/AEST)' },
+]
+
+// Get current time in selected timezone
+const getCurrentTimeInTimezone = (timezone: string): string => {
+  try {
+    return new Date().toLocaleTimeString('en-US', {
+      timeZone: timezone,
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true,
+    })
+  } catch {
+    return ''
+  }
+}
 
 watch(() => props.modelValue, (newValue) => {
   console.log('ScheduleModal modelValue changed to:', newValue)
@@ -141,15 +208,35 @@ watch(() => props.modelValue, (newValue) => {
     console.log('Modal opening, favorite post:', props.favoritePost)
     console.log('Preselected date:', props.preselectedDate)
 
-    // Reset form when modal opens
+    // Reset time selectors first
+    selectedHour.value = '12'
+    selectedMinute.value = '00'
+    selectedPeriod.value = 'PM'
+
+    // Get today's date in YYYY-MM-DD format
+    const todayDate = new Date().toISOString().split('T')[0]
+
+    // Reset form when modal opens (scheduled_time will be set by the watch)
     formData.value = {
-      scheduled_date: props.preselectedDate || '',
-      scheduled_time: '',
-      timezone: 'UTC',
+      scheduled_date: props.preselectedDate || todayDate, // Default to today
+      scheduled_time: '12:00', // Set initial value
+      timezone: userTimezone || 'UTC',
       notes: '',
     }
+
     error.value = ''
   }
+})
+
+// Update formData.scheduled_time when time selectors change
+watch([selectedHour, selectedMinute, selectedPeriod], () => {
+  const hour24 = selectedPeriod.value === 'PM' && selectedHour.value !== '12'
+    ? (parseInt(selectedHour.value) + 12).toString().padStart(2, '0')
+    : selectedPeriod.value === 'AM' && selectedHour.value === '12'
+    ? '00'
+    : selectedHour.value
+
+  formData.value.scheduled_time = `${hour24}:${selectedMinute.value}`
 })
 
 const closeModal = () => {
@@ -191,6 +278,9 @@ const handleSchedule = async () => {
 
     emit('scheduled', response.data?.scheduled_post)
     closeModal()
+
+    // Redirect to scheduler view
+    router.push('/scheduler')
   } catch (err: any) {
     console.error('Error scheduling post:', err)
     error.value = err.message || 'Failed to schedule post'
@@ -348,10 +438,125 @@ const truncateText = (text: string, maxLength: number): string => {
 }
 
 .date-hint {
-  margin-top: var(--space-sm);
+  margin: 0;
   font-size: var(--text-xs);
   color: var(--gold-primary);
   font-weight: 500;
+}
+
+.date-input {
+  cursor: pointer;
+  color: var(--gold-primary);
+  font-weight: var(--font-semibold);
+}
+
+.date-input::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  filter: invert(0.8) sepia(1) saturate(5) hue-rotate(10deg);
+  opacity: 0.9;
+  transition: opacity 0.2s ease;
+}
+
+.date-input::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
+  filter: invert(0.9) sepia(1) saturate(6) hue-rotate(10deg);
+}
+
+/* Time Picker Styles */
+.time-picker {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.time-select {
+  flex: 1;
+  padding: var(--space-md);
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: var(--text-lg);
+  font-weight: var(--font-semibold);
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.time-select:focus {
+  outline: none;
+  border-color: var(--gold-primary);
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.time-select option {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+}
+
+.time-separator {
+  font-size: var(--text-2xl);
+  font-weight: var(--font-bold);
+  color: var(--gold-primary);
+  user-select: none;
+}
+
+.period-select {
+  flex: 0.8;
+  padding: var(--space-md);
+  background: rgba(212, 175, 55, 0.15);
+  border: 1px solid var(--gold-primary);
+  border-radius: var(--radius-md);
+  color: var(--gold-primary);
+  font-family: var(--font-body);
+  font-size: var(--text-lg);
+  font-weight: var(--font-bold);
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.period-select:focus {
+  outline: none;
+  background: rgba(212, 175, 55, 0.25);
+}
+
+.period-select option {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+}
+
+.time-hint {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  font-weight: var(--font-medium);
+}
+
+/* Timezone Styles */
+.timezone-select {
+  cursor: pointer;
+}
+
+.detected-badge {
+  font-size: var(--text-xs);
+  color: var(--gold-primary);
+  font-weight: var(--font-medium);
+  background: rgba(212, 175, 55, 0.15);
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  margin-left: var(--space-sm);
+}
+
+.timezone-hint {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--gold-light);
+  font-weight: var(--font-medium);
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
 }
 
 .form-input,

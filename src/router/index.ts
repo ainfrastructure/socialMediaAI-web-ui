@@ -12,6 +12,7 @@ import FacebookCallbackView from '../views/FacebookCallbackView.vue'
 import TestPostView from '../views/TestPostView.vue'
 import SchedulerView from '../views/SchedulerView.vue'
 import FavoritesView from '../views/FavoritesView.vue'
+import ProfileView from '../views/ProfileView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -87,6 +88,12 @@ const router = createRouter({
       path: '/favorites',
       name: 'favorites',
       component: FavoritesView,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/profile',
+      name: 'profile',
+      component: ProfileView,
       meta: { requiresAuth: true },
     },
   ],

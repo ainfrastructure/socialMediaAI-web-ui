@@ -47,7 +47,7 @@ async function subscribe(tier: string) {
   }
 
   try {
-    const successUrl = `${window.location.origin}/dashboard?success=true`
+    const successUrl = `${window.location.origin}/playground?success=true`
     const cancelUrl = `${window.location.origin}/plans?canceled=true`
 
     const response = await api.createCheckout(tier, successUrl, cancelUrl)
@@ -72,7 +72,7 @@ function showMessage(msg: string, type: 'success' | 'error' | 'info') {
 
 function goBack() {
   if (authStore.isAuthenticated) {
-    router.push('/dashboard')
+    router.push('/playground')
   } else {
     router.push('/login')
   }
@@ -85,7 +85,7 @@ if (urlParams.get('success') === 'true') {
   setTimeout(() => {
     if (authStore.isAuthenticated) {
       authStore.refreshProfile()
-      router.push('/dashboard')
+      router.push('/playground')
     }
   }, 2000)
 } else if (urlParams.get('canceled') === 'true') {

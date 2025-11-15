@@ -48,7 +48,7 @@ onMounted(async () => {
 
       if (authStore.isAuthenticated) {
         message.value = 'Successfully authenticated! Redirecting...'
-        setTimeout(() => router.push('/dashboard'), 1000)
+        setTimeout(() => router.push('/playground'), 1000)
       } else {
         error.value = 'Failed to load profile'
         setTimeout(() => router.push('/login'), 3000)

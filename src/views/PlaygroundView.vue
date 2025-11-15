@@ -32,23 +32,34 @@
         <!-- Restaurant Selector -->
         <BaseCard variant="glass-intense" class="selector-card">
           <h3 class="card-title">Select Restaurant</h3>
-          <select v-model="selectedRestaurantId" class="restaurant-select" @change="onRestaurantChange">
-            <option value="">Choose a restaurant...</option>
-            <option v-for="restaurant in restaurants" :key="restaurant.id" :value="restaurant.id">
-              {{ restaurant.name }}
-            </option>
-          </select>
 
-          <BaseButton
-            v-if="selectedRestaurant"
-            variant="secondary"
-            size="small"
-            full-width
-            @click="selectRandomRestaurant"
-            class="random-btn"
-          >
-            🎲 Pick Random Restaurant
-          </BaseButton>
+          <div class="restaurant-grid">
+            <div
+              v-for="restaurant in restaurants"
+              :key="restaurant.id"
+              class="restaurant-card-selector"
+              :class="{ selected: selectedRestaurantId === restaurant.id }"
+              @click="selectRestaurantById(restaurant.id)"
+            >
+              <div v-if="restaurant.brand_dna?.logo_url" class="restaurant-logo-container">
+                <img
+                  :src="restaurant.brand_dna.logo_url"
+                  :alt="restaurant.brand_dna.brand_name || restaurant.name"
+                  class="restaurant-logo"
+                />
+              </div>
+              <div v-else class="restaurant-logo-placeholder">
+                <span class="placeholder-icon">🍽️</span>
+              </div>
+              <div class="restaurant-info">
+                <h4 class="restaurant-name-select">{{ restaurant.name }}</h4>
+                <p class="restaurant-address-select">{{ restaurant.address }}</p>
+              </div>
+              <div v-if="selectedRestaurantId === restaurant.id" class="selected-indicator">
+                ✓
+              </div>
+            </div>
+          </div>
         </BaseCard>
 
         <!-- Menu Items Reference -->
@@ -58,9 +69,46 @@
               <h3 class="card-title">Menu Items ({{ menuItems.length }})</h3>
               <p class="card-subtitle">Select one or more items to create combo prompts</p>
             </div>
+
+            <!-- Pagination - Top Right -->
+            <div v-if="totalPages > 1" class="pagination-top">
+              <button
+                @click="currentPage--"
+                :disabled="currentPage === 1"
+                class="pagination-btn-compact"
+              >
+                ←
+              </button>
+              <span class="pagination-info-compact">
+                {{ currentPage }} / {{ totalPages }}
+              </span>
+              <button
+                @click="currentPage++"
+                :disabled="currentPage === totalPages"
+                class="pagination-btn-compact"
+              >
+                →
+              </button>
+            </div>
           </div>
 
-          <!-- Prompt Context Input -->
+          <div class="menu-items-grid">
+            <div
+              v-for="(item, index) in paginatedMenuItems"
+              :key="index"
+              :class="['menu-item-card', { 'selected': isItemSelected(item) }]"
+              @click="toggleMenuItem(item)"
+            >
+              <img v-if="item.imageUrl" :src="item.imageUrl" :alt="item.name" class="menu-item-image" />
+              <div class="menu-item-info">
+                <h4 class="menu-item-name">{{ item.name }}</h4>
+                <p v-if="item.price" class="menu-item-price">{{ item.price }}</p>
+              </div>
+              <div v-if="isItemSelected(item)" class="menu-selected-badge">✓</div>
+            </div>
+          </div>
+
+          <!-- Prompt Context Input - Appears after menu selection -->
           <div v-if="selectedMenuItems.length > 0" class="prompt-context-section">
             <div class="context-inputs-grid">
               <div class="context-input-wrapper">
@@ -78,18 +126,27 @@
               </div>
 
               <div class="context-input-wrapper">
-                <label for="platform" class="context-label">
-                  Platform <span class="required">*</span>
+                <label class="context-label">
+                  Platforms <span class="required">*</span>
                 </label>
-                <select id="platform" v-model="selectedPlatform" class="context-select">
-                  <option value="">Select platform...</option>
-                  <option value="instagram">Instagram</option>
-                  <option value="facebook">Facebook</option>
-                  <option value="tiktok">TikTok</option>
-                  <option value="twitter">Twitter/X</option>
-                  <option value="linkedin">LinkedIn</option>
-                </select>
-                <p class="context-hint">Platform for post content optimization</p>
+                <div class="platform-checkboxes">
+                  <label
+                    v-for="platform in availablePlatforms"
+                    :key="platform.value"
+                    class="platform-checkbox-label"
+                    :class="{ selected: selectedPlatforms.includes(platform.value) }"
+                  >
+                    <input
+                      type="checkbox"
+                      :value="platform.value"
+                      v-model="selectedPlatforms"
+                      class="platform-checkbox-input"
+                    />
+                    <span class="platform-checkbox-icon">{{ platform.icon }}</span>
+                    <span class="platform-checkbox-text">{{ platform.label }}</span>
+                  </label>
+                </div>
+                <p class="context-hint">Select platforms where you'll post this content</p>
               </div>
             </div>
 
@@ -170,50 +227,13 @@
 
             <div class="selection-actions">
               <span class="selection-count">{{ selectedMenuItems.length }} item{{ selectedMenuItems.length > 1 ? 's' : '' }} selected</span>
-              <BaseButton variant="primary" size="medium" @click="generatePromptsFromSelection" :disabled="loadingPrompts || !selectedPlatform">
+              <BaseButton variant="primary" size="medium" @click="generatePromptsFromSelection" :disabled="loadingPrompts || selectedPlatforms.length === 0">
                 {{ loadingPrompts ? 'Generating...' : 'Generate Prompts' }}
               </BaseButton>
               <BaseButton variant="ghost" size="small" @click="clearSelection">
                 Clear
               </BaseButton>
             </div>
-          </div>
-
-          <div class="menu-items-grid">
-            <div
-              v-for="(item, index) in paginatedMenuItems"
-              :key="index"
-              :class="['menu-item-card', { 'selected': isItemSelected(item) }]"
-              @click="toggleMenuItem(item)"
-            >
-              <img v-if="item.imageUrl" :src="item.imageUrl" :alt="item.name" class="menu-item-image" />
-              <div class="menu-item-info">
-                <h4 class="menu-item-name">{{ item.name }}</h4>
-                <p v-if="item.price" class="menu-item-price">{{ item.price }}</p>
-              </div>
-              <div v-if="isItemSelected(item)" class="menu-selected-badge">✓</div>
-            </div>
-          </div>
-
-          <!-- Pagination -->
-          <div v-if="totalPages > 1" class="pagination">
-            <button
-              @click="currentPage--"
-              :disabled="currentPage === 1"
-              class="pagination-btn"
-            >
-              ← Previous
-            </button>
-            <span class="pagination-info">
-              Page {{ currentPage }} of {{ totalPages }}
-            </span>
-            <button
-              @click="currentPage++"
-              :disabled="currentPage === totalPages"
-              class="pagination-btn"
-            >
-              Next →
-            </button>
           </div>
         </BaseCard>
 
@@ -343,14 +363,33 @@
                 >
                   📅 Schedule Post
                 </BaseButton>
+                <BaseButton
+                  v-if="(lastSavedFavorite || generatedPostContent) && selectedPlatforms.includes('facebook')"
+                  variant="primary"
+                  size="medium"
+                  @click="publishToFacebook"
+                  :disabled="publishingToFacebook"
+                >
+                  {{ publishingToFacebook ? 'Publishing...' : '📤 Publish to Facebook' }}
+                </BaseButton>
               </div>
             </div>
 
             <!-- Post Content Section -->
             <div v-if="generatedPostContent && generatedImageUrl" class="post-content-section">
-              <h4 class="post-content-title">
-                {{ selectedPlatform.charAt(0).toUpperCase() + selectedPlatform.slice(1) }} Post Content
-              </h4>
+              <div class="post-content-header">
+                <h4 class="post-content-title">Post Content</h4>
+                <div class="platform-badges">
+                  <span
+                    v-for="platformValue in selectedPlatforms"
+                    :key="platformValue"
+                    class="platform-badge"
+                  >
+                    {{ availablePlatforms.find(p => p.value === platformValue)?.icon }}
+                    {{ availablePlatforms.find(p => p.value === platformValue)?.label }}
+                  </span>
+                </div>
+              </div>
 
               <div class="post-content-box">
                 <div class="post-text-wrapper">
@@ -449,14 +488,33 @@
                 >
                   📅 Schedule Post
                 </BaseButton>
+                <BaseButton
+                  v-if="(lastSavedFavorite || generatedPostContent) && selectedPlatforms.includes('facebook')"
+                  variant="primary"
+                  size="medium"
+                  @click="publishToFacebook"
+                  :disabled="publishingToFacebook"
+                >
+                  {{ publishingToFacebook ? 'Publishing...' : '📤 Publish to Facebook' }}
+                </BaseButton>
               </div>
             </div>
 
             <!-- Post Content Section -->
             <div v-if="generatedPostContent && generatedVideoUrl" class="post-content-section">
-              <h4 class="post-content-title">
-                {{ selectedPlatform.charAt(0).toUpperCase() + selectedPlatform.slice(1) }} Post Content
-              </h4>
+              <div class="post-content-header">
+                <h4 class="post-content-title">Post Content</h4>
+                <div class="platform-badges">
+                  <span
+                    v-for="platformValue in selectedPlatforms"
+                    :key="platformValue"
+                    class="platform-badge"
+                  >
+                    {{ availablePlatforms.find(p => p.value === platformValue)?.icon }}
+                    {{ availablePlatforms.find(p => p.value === platformValue)?.label }}
+                  </span>
+                </div>
+              </div>
 
               <div class="post-content-box">
                 <div class="post-text-wrapper">
@@ -483,20 +541,6 @@
               </div>
             </div>
           </div>
-
-          <!-- Usage Stats -->
-          <div class="usage-stats">
-            <div class="stats-item">
-              <span class="stats-label">Remaining Credits:</span>
-              <span class="stats-value">{{ authStore.usageStats?.remaining_credits || 0 }}</span>
-            </div>
-            <div class="stats-item">
-              <span class="stats-label">This Month:</span>
-              <span class="stats-value">
-                {{ authStore.usageStats?.credits_this_month || 0 }} / {{ authStore.usageStats?.monthly_limit || 0 }}
-              </span>
-            </div>
-          </div>
         </BaseCard>
       </div>
     </div>
@@ -515,6 +559,7 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
+import { useFacebookStore } from '../stores/facebook'
 import GradientBackground from '../components/GradientBackground.vue'
 import BaseCard from '../components/BaseCard.vue'
 import BaseButton from '../components/BaseButton.vue'
@@ -526,6 +571,7 @@ import { api } from '../services/api'
 const router = useRouter()
 const route = useRoute()
 const authStore = useAuthStore()
+const facebookStore = useFacebookStore()
 
 // Restaurant selection
 const restaurants = ref<SavedRestaurant[]>([])
@@ -591,6 +637,7 @@ const lastSavedFavorite = ref<any>(null)
 const showScheduleModal = ref(false)
 const favoriteToSchedule = ref<any>(null)
 const preselectedDate = ref<string | null>(null)
+const publishingToFacebook = ref(false)
 
 const canGenerate = computed(() => {
   return true // Disabled credit limits for playground
@@ -606,7 +653,16 @@ const menuItems = computed(() => {
 // Multi-select menu items
 const selectedMenuItems = ref<any[]>([])
 const promptContext = ref('')
-const selectedPlatform = ref<'instagram' | 'facebook' | 'tiktok' | 'twitter' | 'linkedin' | ''>('')
+const selectedPlatforms = ref<string[]>([])
+
+// Available platforms with icons
+const availablePlatforms = [
+  { value: 'instagram', label: 'Instagram', icon: '📷' },
+  { value: 'facebook', label: 'Facebook', icon: '👥' },
+  { value: 'tiktok', label: 'TikTok', icon: '🎵' },
+  { value: 'twitter', label: 'Twitter/X', icon: '🐦' },
+  { value: 'linkedin', label: 'LinkedIn', icon: '💼' },
+]
 
 // Promotional sticker options
 const stickerStyle = ref<'bold' | 'outlined' | 'ribbon' | 'badge' | 'starburst'>('bold')
@@ -646,7 +702,7 @@ const isItemSelected = (item: any) => {
 const clearSelection = () => {
   selectedMenuItems.value = []
   promptContext.value = ''
-  selectedPlatform.value = ''
+  selectedPlatforms.value = []
   stickerStyle.value = 'bold'
   stickerPosition.value = 'top-right'
   includeLogo.value = true
@@ -684,6 +740,11 @@ const fetchRestaurants = async () => {
   } finally {
     loadingRestaurants.value = false
   }
+}
+
+const selectRestaurantById = (restaurantId: string) => {
+  selectedRestaurantId.value = restaurantId
+  onRestaurantChange()
 }
 
 const onRestaurantChange = async () => {
@@ -954,8 +1015,8 @@ const generateImage = async () => {
     // Refresh usage stats
     await authStore.refreshProfile()
 
-    // Generate post content if platform is selected
-    if (selectedPlatform.value && selectedRestaurant.value) {
+    // Generate post content if platforms are selected
+    if (selectedPlatforms.value.length > 0 && selectedRestaurant.value) {
       await generatePostContent('image')
     }
   } catch (error: any) {
@@ -967,7 +1028,7 @@ const generateImage = async () => {
 }
 
 const generatePostContent = async (contentType: 'image' | 'video') => {
-  if (!selectedPlatform.value || !selectedRestaurant.value) return
+  if (selectedPlatforms.value.length === 0 || !selectedRestaurant.value) return
 
   try {
     generatingPostContent.value = true
@@ -975,10 +1036,14 @@ const generatePostContent = async (contentType: 'image' | 'video') => {
       ? selectedMenuItems.value.map(i => i.name)
       : ['Featured dish']
 
-    console.log('Generating post content for', selectedPlatform.value, menuItemNames)
+    console.log('Generating post content for platforms:', selectedPlatforms.value, menuItemNames)
+
+    // Use the first selected platform for content generation
+    // The content will be suitable for all selected platforms
+    const primaryPlatform = selectedPlatforms.value[0]
 
     const response = await api.generatePostContent(
-      selectedPlatform.value,
+      primaryPlatform,
       selectedRestaurant.value.name,
       menuItemNames,
       contentType,
@@ -1099,8 +1164,8 @@ const startVideoPolling = () => {
             showMessage('Video generated successfully!', 'success')
             generatingVideo.value = false
 
-            // Generate post content if platform is selected
-            if (selectedPlatform.value && selectedRestaurant.value) {
+            // Generate post content if platforms are selected
+            if (selectedPlatforms.value.length > 0 && selectedRestaurant.value) {
               await generatePostContent('video')
             }
           } else if (operation.error) {
@@ -1186,7 +1251,7 @@ const saveToFavorites = async () => {
       post_text: generatedPostContent.value?.postText,
       hashtags: generatedPostContent.value?.hashtags,
       call_to_action: generatedPostContent.value?.callToAction,
-      platform: selectedPlatform.value || undefined,
+      platforms: selectedPlatforms.value.length > 0 ? selectedPlatforms.value : undefined,
       prompt: editablePrompt.value,
       menu_items: selectedMenuItems.value.length > 0 ? selectedMenuItems.value : undefined,
       context: promptContext.value || undefined,
@@ -1212,6 +1277,68 @@ const saveToFavorites = async () => {
     showMessage(error.message || 'Failed to save to favorites', 'error')
   } finally {
     savingFavorite.value = false
+  }
+}
+
+const publishToFacebook = async () => {
+  // Check if user has connected Facebook pages
+  await facebookStore.loadConnectedPages()
+
+  if (facebookStore.connectedPages.length === 0) {
+    showMessage('Please connect your Facebook account first', 'error')
+    router.push('/connect-accounts')
+    return
+  }
+
+  // Check if there's content to publish
+  if (!generatedImageUrl.value && !generatedVideoUrl.value) {
+    showMessage('No content to publish', 'error')
+    return
+  }
+
+  if (!generatedPostContent.value) {
+    showMessage('No post content generated', 'error')
+    return
+  }
+
+  try {
+    publishingToFacebook.value = true
+
+    // Prepare the post message
+    const postMessage = `${generatedPostContent.value.postText}\n\n${generatedPostContent.value.hashtags.join(' ')}`
+
+    // Get the media URL (image or video)
+    const mediaUrl = activeTab.value === 'image' ? generatedImageUrl.value : generatedVideoUrl.value
+
+    // Convert the media URL to a file for upload
+    const response = await fetch(mediaUrl)
+    const blob = await response.blob()
+    const file = new File([blob], `content.${activeTab.value === 'image' ? 'jpg' : 'mp4'}`, { type: blob.type })
+
+    // Upload the media to Facebook
+    const uploadResponse = await api.uploadFacebookImage(file)
+
+    if (!uploadResponse.success) {
+      throw new Error(uploadResponse.error || 'Failed to upload media')
+    }
+
+    const uploadedMediaUrl = uploadResponse.data?.imageUrl
+
+    // Post to the first connected page (you can enhance this to allow page selection)
+    const pageId = facebookStore.connectedPages[0].pageId
+
+    const postResponse = await api.postToFacebook(pageId, postMessage, uploadedMediaUrl)
+
+    if (!postResponse.success) {
+      throw new Error(postResponse.error || 'Failed to post to Facebook')
+    }
+
+    showMessage('Successfully published to Facebook!', 'success')
+  } catch (error: any) {
+    console.error('Error publishing to Facebook:', error)
+    showMessage(error.message || 'Failed to publish to Facebook', 'error')
+  } finally {
+    publishingToFacebook.value = false
   }
 }
 
@@ -1336,14 +1463,120 @@ const handleScheduled = (scheduledPost: any) => {
 }
 
 .selector-card {
-  padding: 1.5rem;
+  padding: var(--space-xl);
 }
 
 .card-title {
   font-family: var(--font-heading);
-  font-size: 1.25rem;
+  font-size: var(--text-2xl);
   color: var(--gold-primary);
-  margin: 0 0 1rem 0;
+  margin: 0 0 var(--space-xl) 0;
+}
+
+/* Restaurant Grid Selector */
+.restaurant-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: var(--space-lg);
+}
+
+.restaurant-card-selector {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-lg);
+  background: rgba(0, 0, 0, 0.3);
+  border: 2px solid rgba(212, 175, 55, 0.2);
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  transition: all var(--transition-base);
+}
+
+.restaurant-card-selector:hover {
+  background: rgba(0, 0, 0, 0.4);
+  border-color: rgba(212, 175, 55, 0.5);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
+.restaurant-card-selector.selected {
+  background: rgba(212, 175, 55, 0.15);
+  border-color: var(--gold-primary);
+  box-shadow: 0 0 20px rgba(212, 175, 55, 0.3);
+}
+
+.restaurant-logo-container {
+  flex-shrink: 0;
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.05);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.restaurant-logo {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.restaurant-logo-placeholder {
+  flex-shrink: 0;
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-md);
+  background: rgba(212, 175, 55, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(212, 175, 55, 0.3);
+}
+
+.placeholder-icon {
+  font-size: var(--text-2xl);
+}
+
+.restaurant-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.restaurant-name-select {
+  font-family: var(--font-heading);
+  font-size: var(--text-lg);
+  font-weight: var(--font-semibold);
+  color: var(--text-primary);
+  margin: 0 0 var(--space-xs) 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.restaurant-address-select {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.selected-indicator {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--gold-primary);
+  color: var(--text-on-gold);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--text-xl);
+  font-weight: var(--font-bold);
 }
 
 .card-subtitle {
@@ -1425,33 +1658,6 @@ const handleScheduled = (scheduledPost: any) => {
   font-weight: 600;
 }
 
-.restaurant-select {
-  width: 100%;
-  padding: 0.75rem 1rem;
-  background: rgba(0, 0, 0, 0.3);
-  border: 1px solid rgba(212, 175, 55, 0.3);
-  border-radius: 8px;
-  color: var(--text-primary);
-  font-size: 1rem;
-  font-family: var(--font-body);
-  margin-bottom: 1rem;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.restaurant-select:focus {
-  outline: none;
-  border-color: var(--gold-primary);
-}
-
-.restaurant-select option {
-  background: var(--bg-secondary);
-  color: var(--text-primary);
-}
-
-.random-btn {
-  margin-top: 0.5rem;
-}
 
 .generator-card {
   padding: 2rem;
@@ -1832,6 +2038,53 @@ const handleScheduled = (scheduledPost: any) => {
   flex-wrap: wrap;
 }
 
+/* Compact Pagination (Top Right) */
+.pagination-top {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  background: rgba(0, 0, 0, 0.3);
+  padding: var(--space-xs) var(--space-md);
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(212, 175, 55, 0.2);
+}
+
+.pagination-btn-compact {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(212, 175, 55, 0.1);
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-size: var(--text-lg);
+  font-weight: var(--font-bold);
+  cursor: pointer;
+  transition: all var(--transition-base);
+}
+
+.pagination-btn-compact:hover:not(:disabled) {
+  background: rgba(212, 175, 55, 0.2);
+  border-color: var(--gold-primary);
+  color: var(--gold-primary);
+  transform: scale(1.05);
+}
+
+.pagination-btn-compact:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.pagination-info-compact {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  font-weight: var(--font-medium);
+  min-width: 50px;
+  text-align: center;
+}
+
 .selection-actions {
   display: flex;
   align-items: center;
@@ -1961,6 +2214,83 @@ const handleScheduled = (scheduledPost: any) => {
   font-size: 0.75rem;
   color: var(--text-muted);
   margin: 0;
+}
+
+/* Platform Checkboxes */
+.platform-checkboxes {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: var(--space-sm);
+}
+
+.platform-checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-md);
+  background: rgba(0, 0, 0, 0.3);
+  border: 2px solid rgba(212, 175, 55, 0.2);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all var(--transition-base);
+  user-select: none;
+}
+
+.platform-checkbox-label:hover {
+  background: rgba(0, 0, 0, 0.4);
+  border-color: rgba(212, 175, 55, 0.4);
+}
+
+.platform-checkbox-label.selected {
+  background: rgba(212, 175, 55, 0.15);
+  border-color: var(--gold-primary);
+}
+
+.platform-checkbox-input {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: var(--gold-primary);
+}
+
+.platform-checkbox-icon {
+  font-size: var(--text-lg);
+}
+
+.platform-checkbox-text {
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  color: var(--text-primary);
+}
+
+/* Platform Badges */
+.post-content-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: var(--space-lg);
+  gap: var(--space-md);
+}
+
+.platform-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  align-items: center;
+}
+
+.platform-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: var(--space-xs) var(--space-md);
+  background: rgba(212, 175, 55, 0.15);
+  border: 1px solid var(--gold-primary);
+  border-radius: var(--radius-full);
+  color: var(--gold-primary);
+  font-size: var(--text-xs);
+  font-weight: var(--font-semibold);
+  white-space: nowrap;
 }
 
 .selection-actions {

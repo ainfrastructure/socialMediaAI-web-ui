@@ -1,141 +1,210 @@
 <template>
   <div class="restaurant-search-view">
-    <GradientBackground />
-
     <div class="container">
       <div class="header">
-        <h1 class="title">Restaurant Search</h1>
+        <h1 class="title">Discover Restaurants</h1>
         <p class="subtitle">
-          Search for restaurants using Google Places. Perfect for finding dining options!
+          Search and analyze restaurants using Google Places. Build your database with comprehensive insights.
         </p>
       </div>
 
-      <BaseCard variant="glass-intense" class="search-card">
-        <div class="search-section">
-          <RestaurantAutocomplete
-            v-model="selectedRestaurant"
-            label="Search for a restaurant"
-            placeholder="Try 'pizza oslo' or 'italian restaurant'..."
-            @select="handleRestaurantSelect"
-          />
+      <!-- Search Input - Pill Style -->
+      <div class="search-wrapper">
+        <RestaurantAutocomplete
+          v-model="selectedRestaurant"
+          label=""
+          placeholder="Search restaurants by name or location..."
+          @select="handleRestaurantSelect"
+        />
 
-          <div v-if="selectedRestaurant" class="selected-info">
-            <div class="info-label">Selected Restaurant</div>
-            <BaseCard variant="glass" class="restaurant-card">
-              <div class="restaurant-details">
-                <div class="detail-row">
-                  <span class="detail-label">Name:</span>
-                  <span class="detail-value">{{ selectedRestaurant.name }}</span>
-                </div>
+      </div>
 
-                <div class="detail-row">
-                  <span class="detail-label">Address:</span>
-                  <span class="detail-value">{{ selectedRestaurant.address }}</span>
-                </div>
+      <!-- Quick Overview Stats -->
+      <div v-if="selectedRestaurant && placeDetails" class="quick-overview-section">
+        <BaseCard variant="glass-intense">
+          <h3 class="quick-overview-title">Quick Overview</h3>
 
-                <div class="detail-row">
-                  <span class="detail-label">Place ID:</span>
-                  <span class="detail-value mono">{{ selectedRestaurant.place_id }}</span>
-                </div>
-
-                <div v-if="selectedRestaurant.types && selectedRestaurant.types.length > 0" class="detail-row">
-                  <span class="detail-label">Types:</span>
-                  <div class="type-tags">
-                    <span
-                      v-for="type in selectedRestaurant.types"
-                      :key="type"
-                      class="type-tag"
-                    >
-                      {{ formatType(type) }}
-                    </span>
-                  </div>
-                </div>
-
-                <!-- Opening Hours -->
-                <div v-if="placeDetails" class="detail-row">
-                  <span class="detail-label">Opening Hours:</span>
-                  <div v-if="loadingDetails" class="loading-text">
-                    Loading hours...
-                  </div>
-                  <div v-else-if="placeDetails.opening_hours" class="opening-hours">
-                    <div v-if="placeDetails.opening_hours.open_now !== undefined" class="status-badge" :class="{ 'open': placeDetails.opening_hours.open_now, 'closed': !placeDetails.opening_hours.open_now }">
-                      {{ placeDetails.opening_hours.open_now ? '🟢 Open Now' : '🔴 Closed' }}
-                    </div>
-                    <div v-if="placeDetails.opening_hours.weekday_text && placeDetails.opening_hours.weekday_text.length > 0" class="hours-list">
-                      <div
-                        v-for="(day, index) in placeDetails.opening_hours.weekday_text"
-                        :key="index"
-                        class="hours-item"
-                      >
-                        {{ day }}
-                      </div>
-                    </div>
-                  </div>
-                  <div v-else class="no-hours">
-                    Hours not available
-                  </div>
-                </div>
-
-                <!-- Additional Details -->
-                <div v-if="placeDetails && placeDetails.rating" class="detail-row">
-                  <span class="detail-label">Rating:</span>
-                  <span class="detail-value">
-                    ⭐ {{ placeDetails.rating }} / 5
-                    <span v-if="placeDetails.user_ratings_total" class="rating-count">
+          <div class="stats-grid">
+              <div class="stat-item">
+                <div class="stat-icon">⭐</div>
+                <div class="stat-content">
+                  <div class="stat-label">Rating</div>
+                  <div class="stat-value">
+                    {{ placeDetails.rating || 'N/A' }}
+                    <span v-if="placeDetails.user_ratings_total" class="stat-subtext">
                       ({{ placeDetails.user_ratings_total }} reviews)
                     </span>
+                  </div>
+                </div>
+              </div>
+
+              <div v-if="placeDetails.opening_hours?.open_now !== undefined" class="stat-item">
+                <div class="stat-icon">{{ placeDetails.opening_hours.open_now ? '🟢' : '🔴' }}</div>
+                <div class="stat-content">
+                  <div class="stat-label">Status</div>
+                  <div class="stat-value">{{ placeDetails.opening_hours.open_now ? 'Open Now' : 'Closed' }}</div>
+                </div>
+              </div>
+
+              <div v-if="menuData?.items" class="stat-item">
+                <div class="stat-icon">📋</div>
+                <div class="stat-content">
+                  <div class="stat-label">Menu Items</div>
+                  <div class="stat-value">
+                    {{ menuData.items.length }}
+                    <span class="stat-subtext">({{ menuData.platform }})</span>
+                  </div>
+                </div>
+              </div>
+
+              <div v-if="competitorData?.totalFound" class="stat-item">
+                <div class="stat-icon">🏪</div>
+                <div class="stat-content">
+                  <div class="stat-label">Competitors</div>
+                  <div class="stat-value">
+                    {{ competitorData.totalFound }}
+                    <span class="stat-subtext">({{ competitorData.radiusKm }}km)</span>
+                  </div>
+                </div>
+              </div>
+
+              <div v-if="placeDetails.reviews" class="stat-item">
+                <div class="stat-icon">💬</div>
+                <div class="stat-content">
+                  <div class="stat-label">Reviews</div>
+                  <div class="stat-value">{{ placeDetails.reviews.length }}</div>
+                </div>
+              </div>
+
+              <div v-if="socialMediaData && socialMediaData.searchDetails.totalFound > 0" class="stat-item">
+                <div class="stat-icon">🌐</div>
+                <div class="stat-content">
+                  <div class="stat-label">Social Media</div>
+                  <div class="stat-value">{{ socialMediaData.searchDetails.totalFound }} profiles</div>
+                </div>
+              </div>
+            </div>
+        </BaseCard>
+      </div>
+
+      <!-- Restaurant Details -->
+      <BaseCard v-if="selectedRestaurant" variant="glass-intense" class="restaurant-details-card">
+        <div class="restaurant-header">
+          <div class="restaurant-header-content">
+            <h2 class="restaurant-name">{{ selectedRestaurant.name }}</h2>
+            <p class="restaurant-address">{{ selectedRestaurant.address }}</p>
+          </div>
+        </div>
+
+        <div class="restaurant-content">
+          <!-- Types Tags -->
+          <div v-if="selectedRestaurant.types && selectedRestaurant.types.length > 0" class="detail-section">
+            <div class="type-tags">
+              <span
+                v-for="type in selectedRestaurant.types.slice(0, 5)"
+                :key="type"
+                class="type-tag"
+              >
+                {{ formatType(type) }}
+              </span>
+            </div>
+          </div>
+
+          <!-- Opening Hours -->
+          <div v-if="placeDetails" class="detail-section">
+            <h3 class="section-subtitle">Opening Hours</h3>
+            <div v-if="loadingDetails" class="loading-text">
+              Loading hours...
+            </div>
+            <div v-else-if="placeDetails.opening_hours" class="opening-hours">
+              <div v-if="placeDetails.opening_hours.open_now !== undefined" class="status-badge" :class="{ 'open': placeDetails.opening_hours.open_now, 'closed': !placeDetails.opening_hours.open_now }">
+                {{ placeDetails.opening_hours.open_now ? '🟢 Open Now' : '🔴 Closed' }}
+              </div>
+              <div v-if="placeDetails.opening_hours.weekday_text && placeDetails.opening_hours.weekday_text.length > 0" class="hours-list">
+                <div
+                  v-for="(day, index) in placeDetails.opening_hours.weekday_text"
+                  :key="index"
+                  class="hours-item"
+                >
+                  {{ day }}
+                </div>
+              </div>
+            </div>
+            <div v-else class="no-hours">
+              Hours not available
+            </div>
+          </div>
+
+          <!-- Contact Information -->
+          <div v-if="(placeDetails && placeDetails.rating) || (placeDetails && placeDetails.phone_number) || (placeDetails && placeDetails.website)" class="detail-section">
+            <h3 class="section-subtitle">Contact & Info</h3>
+
+            <div class="info-grid">
+              <div v-if="placeDetails && placeDetails.rating" class="info-item">
+                <span class="info-icon">⭐</span>
+                <div class="info-content">
+                  <span class="info-value">{{ placeDetails.rating }} / 5</span>
+                  <span v-if="placeDetails.user_ratings_total" class="info-meta">
+                    {{ placeDetails.user_ratings_total }} reviews
                   </span>
                 </div>
+              </div>
 
-                <div v-if="placeDetails && placeDetails.phone_number" class="detail-row">
-                  <span class="detail-label">Phone:</span>
-                  <span class="detail-value">{{ placeDetails.phone_number }}</span>
+              <div v-if="placeDetails && placeDetails.phone_number" class="info-item">
+                <span class="info-icon">📞</span>
+                <div class="info-content">
+                  <a :href="`tel:${placeDetails.phone_number}`" class="info-link">{{ placeDetails.phone_number }}</a>
                 </div>
+              </div>
 
-                <div v-if="placeDetails && placeDetails.website" class="detail-row">
-                  <span class="detail-label">Website:</span>
-                  <a :href="placeDetails.website" target="_blank" rel="noopener noreferrer" class="website-link">
-                    {{ placeDetails.website }}
+              <div v-if="placeDetails && placeDetails.website" class="info-item">
+                <span class="info-icon">🌐</span>
+                <div class="info-content">
+                  <a :href="placeDetails.website" target="_blank" rel="noopener noreferrer" class="info-link">
+                    Visit Website
                   </a>
                 </div>
+              </div>
+            </div>
+          </div>
 
-                <!-- Google Photos Gallery with Selection -->
-                <div v-if="placeDetails && placeDetails.photos && placeDetails.photos.length > 0 && placeDetails.photoUrls" class="detail-row photos-section">
-                  <SelectableImageGallery
-                    v-model="selectedPhotoIndices"
-                    :images="placeDetails.photos.map((photo, idx) => ({
-                      url: placeDetails.photoUrls![idx],
-                      name: photo.name,
-                      width: photo.widthPx,
-                      height: photo.heightPx,
-                      authorAttributions: photo.authorAttributions
-                    }))"
-                    title="Google Photos"
-                    :show-select-all="true"
-                  />
-                </div>
+          <!-- Google Photos Gallery with Selection -->
+          <div v-if="placeDetails && placeDetails.photos && placeDetails.photos.length > 0 && placeDetails.photoUrls" class="detail-section">
+            <SelectableImageGallery
+              v-model="selectedPhotoIndices"
+              :images="placeDetails.photos.map((photo, idx) => ({
+                url: placeDetails.photoUrls![idx],
+                name: photo.name,
+                width: photo.widthPx,
+                height: photo.heightPx,
+                authorAttributions: photo.authorAttributions
+              }))"
+              title="Google Photos"
+              :show-select-all="true"
+            />
+          </div>
 
-                <!-- Image Upload Section -->
-                <div class="detail-row upload-section">
-                  <span class="detail-label">Upload Your Own Images:</span>
-                  <ImageUpload
-                    v-model="uploadFiles"
-                    :max-files="10"
-                    :max-size-m-b="5"
-                    @error="uploadError = $event"
-                  />
-                  <BaseAlert v-if="uploadError" type="error" class="upload-alert">
-                    {{ uploadError }}
-                  </BaseAlert>
-                </div>
+          <!-- Image Upload Section -->
+          <div class="detail-section">
+            <h3 class="section-subtitle">Upload Your Own Images</h3>
+            <ImageUpload
+              v-model="uploadFiles"
+              :max-files="10"
+              :max-size-m-b="5"
+              @error="uploadError = $event"
+            />
+            <BaseAlert v-if="uploadError" type="error" class="upload-alert">
+              {{ uploadError }}
+            </BaseAlert>
+          </div>
 
-                <!-- Social Media -->
-                <div class="detail-row">
-                  <span class="detail-label">Social Media:</span>
-                  <div v-if="loadingSocialMedia" class="loading-text">
-                    Finding social media profiles...
-                  </div>
-                  <div v-else-if="socialMediaData && socialMediaData.searchDetails.totalFound > 0" class="social-media-links">
+          <!-- Social Media -->
+          <div class="detail-section">
+            <h3 class="section-subtitle">Social Media</h3>
+            <div v-if="loadingSocialMedia" class="loading-text">
+              Finding social media profiles...
+            </div>
+            <div v-else-if="socialMediaData && socialMediaData.searchDetails.totalFound > 0" class="social-media-links">
                     <a
                       v-if="socialMediaData.socialMedia.facebook"
                       :href="socialMediaData.socialMedia.facebook"
@@ -196,44 +265,43 @@
                         <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z"/>
                       </svg>
                     </a>
-                  </div>
-                  <div v-else-if="socialMediaError" class="no-social-media">
-                    {{ socialMediaError }}
-                  </div>
-                  <div v-else class="no-social-media">
-                    No social media profiles found
-                  </div>
-                </div>
-              </div>
+            </div>
+            <div v-else-if="socialMediaError" class="no-social-media">
+              {{ socialMediaError }}
+            </div>
+            <div v-else class="no-social-media">
+              No social media profiles found
+            </div>
+          </div>
 
-              <!-- Save alerts -->
-              <BaseAlert v-if="saveSuccess" type="success">
-                {{ saveSuccessMessage }}
-              </BaseAlert>
+          <!-- Save Actions -->
+          <div class="detail-section actions-section">
+            <BaseAlert v-if="saveSuccess" type="success">
+              {{ saveSuccessMessage }}
+            </BaseAlert>
 
-              <BaseAlert v-if="saveError" type="error">
-                {{ saveError }}
-              </BaseAlert>
+            <BaseAlert v-if="saveError" type="error">
+              {{ saveError }}
+            </BaseAlert>
 
-              <div class="actions">
-                <BaseButton
-                  variant="secondary"
-                  size="medium"
-                  @click="clearSelection"
-                >
-                  Clear Selection
-                </BaseButton>
+            <div class="actions">
+              <BaseButton
+                variant="ghost"
+                size="medium"
+                @click="clearSelection"
+              >
+                Clear Selection
+              </BaseButton>
 
-                <BaseButton
-                  variant="primary"
-                  size="medium"
-                  :disabled="savingRestaurant || isSaved || !placeDetails || loadingDetails || loadingMenu || loadingCompetitors || loadingSocialMedia"
-                  @click="saveToDatabase"
-                >
-                  {{ savingRestaurant ? 'Saving...' : isSaved ? 'Saved ✓' : 'Save to Database' }}
-                </BaseButton>
-              </div>
-            </BaseCard>
+              <BaseButton
+                variant="primary"
+                size="large"
+                :disabled="savingRestaurant || isSaved || !placeDetails || loadingDetails || loadingMenu || loadingCompetitors || loadingSocialMedia"
+                @click="saveToDatabase"
+              >
+                {{ savingRestaurant ? 'Saving...' : isSaved ? 'Saved ✓' : 'Save to Database' }}
+              </BaseButton>
+            </div>
           </div>
         </div>
       </BaseCard>
@@ -376,25 +444,12 @@
         </div>
 
         <!-- Pagination -->
-        <div v-if="totalPages > 1" class="pagination">
-          <button
-            class="pagination-btn"
-            :disabled="currentPage === 1"
-            @click="currentPage--"
-          >
-            ← Previous
-          </button>
-          <span class="pagination-info">
-            Page {{ currentPage }} of {{ totalPages }}
-          </span>
-          <button
-            class="pagination-btn"
-            :disabled="currentPage === totalPages"
-            @click="currentPage++"
-          >
-            Next →
-          </button>
-        </div>
+        <BasePagination
+          v-if="reviewsTotalPages > 1"
+          v-model:current-page="reviewsPage"
+          :total-pages="reviewsTotalPages"
+          :total-items="placeDetails.reviews.length"
+        />
       </BaseCard>
 
       <!-- Competitors Section -->
@@ -427,11 +482,11 @@
 
           <div class="competitors-list">
             <div
-              v-for="(competitor, index) in competitorData.competitors"
+              v-for="(competitor, index) in paginatedCompetitors"
               :key="competitor.place_id"
               class="competitor-item"
             >
-              <div class="competitor-number">{{ index + 1 }}</div>
+              <div class="competitor-number">{{ (competitorsPage - 1) * competitorsPerPage + index + 1 }}</div>
               <div class="competitor-details">
                 <div class="competitor-header">
                   <h3 class="competitor-name">{{ competitor.name }}</h3>
@@ -458,6 +513,14 @@
               </div>
             </div>
           </div>
+
+          <!-- Pagination -->
+          <BasePagination
+            v-if="competitorsTotalPages > 1"
+            v-model:current-page="competitorsPage"
+            :total-pages="competitorsTotalPages"
+            :total-items="competitorData.competitors.length"
+          />
         </div>
 
         <!-- Empty state -->
@@ -499,11 +562,19 @@
 
           <div class="menu-items">
             <MenuItemCard
-              v-for="(item, index) in menuData.items"
+              v-for="(item, index) in paginatedMenuItems"
               :key="index"
               :item="item"
             />
           </div>
+
+          <!-- Pagination -->
+          <BasePagination
+            v-if="menuTotalPages > 1"
+            v-model:current-page="menuPage"
+            :total-pages="menuTotalPages"
+            :total-items="menuData.items.length"
+          />
         </div>
 
         <!-- Empty state -->
@@ -512,16 +583,6 @@
         </div>
       </BaseCard>
 
-      <BaseCard variant="glass" class="info-card">
-        <h3 class="info-title">How to use</h3>
-        <ul class="info-list">
-          <li>Start typing a restaurant name or cuisine type (e.g., "pizza", "sushi", "italian")</li>
-          <li>You can include a location to narrow results (e.g., "pizza oslo")</li>
-          <li>Use arrow keys to navigate suggestions and Enter to select</li>
-          <li>The search automatically filters to show only restaurants</li>
-          <li>Results are powered by Google Places API</li>
-        </ul>
-      </BaseCard>
     </div>
 
     <!-- Photo Modal -->
@@ -536,10 +597,10 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import GradientBackground from '../components/GradientBackground.vue'
 import BaseCard from '../components/BaseCard.vue'
 import BaseButton from '../components/BaseButton.vue'
 import BaseAlert from '../components/BaseAlert.vue'
+import BasePagination from '../components/BasePagination.vue'
 import RestaurantAutocomplete from '../components/RestaurantAutocomplete.vue'
 import MenuItemCard from '../components/MenuItemCard.vue'
 import ImageUpload from '../components/ImageUpload.vue'
@@ -585,19 +646,51 @@ const photoModalOpen = ref(false)
 const selectedPhotoUrl = ref<string | null>(null)
 
 // Pagination for reviews
-const currentPage = ref(1)
+const reviewsPage = ref(1)
 const reviewsPerPage = 3
 
 const paginatedReviews = computed(() => {
   if (!placeDetails.value?.reviews) return []
-  const start = (currentPage.value - 1) * reviewsPerPage
+  const start = (reviewsPage.value - 1) * reviewsPerPage
   const end = start + reviewsPerPage
   return placeDetails.value.reviews.slice(start, end)
 })
 
-const totalPages = computed(() => {
+const reviewsTotalPages = computed(() => {
   if (!placeDetails.value?.reviews) return 0
   return Math.ceil(placeDetails.value.reviews.length / reviewsPerPage)
+})
+
+// Pagination for menu items
+const menuPage = ref(1)
+const menuItemsPerPage = 9
+
+const paginatedMenuItems = computed(() => {
+  if (!menuData.value?.items) return []
+  const start = (menuPage.value - 1) * menuItemsPerPage
+  const end = start + menuItemsPerPage
+  return menuData.value.items.slice(start, end)
+})
+
+const menuTotalPages = computed(() => {
+  if (!menuData.value?.items) return 0
+  return Math.ceil(menuData.value.items.length / menuItemsPerPage)
+})
+
+// Pagination for competitors
+const competitorsPage = ref(1)
+const competitorsPerPage = 5
+
+const paginatedCompetitors = computed(() => {
+  if (!competitorData.value?.competitors) return []
+  const start = (competitorsPage.value - 1) * competitorsPerPage
+  const end = start + competitorsPerPage
+  return competitorData.value.competitors.slice(start, end)
+})
+
+const competitorsTotalPages = computed(() => {
+  if (!competitorData.value?.competitors) return 0
+  return Math.ceil(competitorData.value.competitors.length / competitorsPerPage)
 })
 
 const handleRestaurantSelect = async (restaurant: RestaurantSuggestion) => {
@@ -616,7 +709,9 @@ const handleRestaurantSelect = async (restaurant: RestaurantSuggestion) => {
   saveError.value = null
   saveSuccess.value = false
   isSaved.value = false
-  currentPage.value = 1 // Reset to first page
+  reviewsPage.value = 1 // Reset to first page
+  menuPage.value = 1
+  competitorsPage.value = 1
   selectedPhotoIndices.value = []
   uploadFiles.value = []
   uploadError.value = null
@@ -746,7 +841,9 @@ const clearSelection = () => {
   saveError.value = null
   saveSuccess.value = false
   isSaved.value = false
-  currentPage.value = 1
+  reviewsPage.value = 1
+  menuPage.value = 1
+  competitorsPage.value = 1
 }
 
 const openPhotoModal = (photoUrl: string) => {
@@ -876,189 +973,230 @@ const handleLogoError = (event: Event) => {
 <style scoped>
 .restaurant-search-view {
   min-height: 100vh;
-  position: relative;
-  padding: 2rem 1rem;
+  padding: var(--space-3xl) var(--space-2xl);
+  background: var(--bg-primary);
 }
 
 .container {
-  max-width: 800px;
+  max-width: var(--max-width-lg);
   margin: 0 auto;
-  position: relative;
-  z-index: 1;
 }
 
 .header {
   text-align: center;
-  margin-bottom: 3rem;
+  margin-bottom: var(--space-4xl);
+  animation: fadeInUp 0.6s var(--ease-smooth);
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .title {
-  font-family: var(--font-display);
-  font-size: 3rem;
-  font-weight: 700;
-  margin: 0 0 1rem 0;
-  background: linear-gradient(135deg, var(--text-primary) 0%, var(--accent-gold) 100%);
+  font-family: var(--font-heading);
+  font-size: var(--text-4xl);
+  font-weight: var(--font-bold);
+  margin: 0 0 var(--space-lg) 0;
+  background: var(--gradient-gold);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
 .subtitle {
-  font-size: 1.125rem;
+  font-size: var(--text-lg);
   color: var(--text-secondary);
   margin: 0;
-  line-height: 1.6;
+  line-height: var(--leading-normal);
 }
 
-.search-card {
-  margin-bottom: 2rem;
-  padding: 2rem;
-  position: relative;
-  z-index: 10;
+/* Search Wrapper - Pill Style */
+.search-wrapper {
+  margin-bottom: var(--space-3xl);
+  animation: fadeInUp 0.6s var(--ease-smooth);
+  animation-delay: 0.1s;
+  animation-fill-mode: both;
 }
 
-.search-section {
+.search-wrapper :deep(.autocomplete-container input) {
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid var(--gold-primary);
+  border-radius: 0;
+  padding: var(--space-lg) 0;
+  font-size: var(--text-xl);
+  color: var(--gold-primary);
+  text-align: center;
+  transition: var(--transition-base);
+}
+
+.search-wrapper :deep(.autocomplete-container input::placeholder) {
+  color: rgba(212, 175, 55, 0.5);
+}
+
+.search-wrapper :deep(.autocomplete-container input:focus) {
+  border-bottom-color: var(--gold-light);
+  outline: none;
+}
+
+.search-wrapper :deep(.autocomplete-container label) {
+  display: none;
+}
+
+/* Quick Overview */
+.quick-overview-section {
+  margin-bottom: var(--space-2xl);
+  animation: fadeInUp 0.6s var(--ease-smooth);
+  animation-delay: 0.15s;
+  animation-fill-mode: both;
+}
+
+/* Restaurant Details Card */
+.restaurant-details-card {
+  margin-bottom: var(--space-2xl);
+  animation: fadeInUp 0.6s var(--ease-smooth);
+  animation-delay: 0.2s;
+  animation-fill-mode: both;
+}
+
+.restaurant-header {
+  padding-bottom: var(--space-2xl);
+  margin-bottom: var(--space-2xl);
+  border-bottom: 1px solid rgba(212, 175, 55, 0.1);
+}
+
+.restaurant-header-content {
   display: flex;
   flex-direction: column;
-  gap: 2rem;
+  gap: var(--space-md);
 }
 
-.selected-info {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.info-label {
-  font-size: 0.875rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--accent-gold);
-}
-
-.restaurant-card {
-  padding: 1.5rem;
-}
-
-.restaurant-details {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  margin-bottom: 1.5rem;
-}
-
-.detail-row {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-}
-
-.detail-label {
-  font-size: 0.75rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--text-secondary);
-}
-
-.detail-value {
-  font-size: 1rem;
+.restaurant-name {
+  font-family: var(--font-heading);
+  font-size: var(--text-3xl);
+  font-weight: var(--font-bold);
   color: var(--text-primary);
+  margin: 0;
 }
 
-.detail-value.mono {
-  font-family: 'Courier New', monospace;
-  font-size: 0.875rem;
-  color: var(--accent-gold);
-  word-break: break-all;
+.restaurant-address {
+  font-size: var(--text-lg);
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.restaurant-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3xl);
+}
+
+.detail-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+
+.section-subtitle {
+  font-family: var(--font-heading);
+  font-size: var(--text-xl);
+  font-weight: var(--font-semibold);
+  color: var(--text-primary);
+  margin: 0;
 }
 
 .type-tags {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
+  gap: var(--space-sm);
 }
 
 .type-tag {
   display: inline-block;
-  padding: 0.25rem 0.75rem;
-  background: rgba(212, 175, 55, 0.15);
+  padding: var(--space-xs) var(--space-md);
+  background: var(--gold-subtle);
   border: 1px solid rgba(212, 175, 55, 0.3);
-  border-radius: 20px;
-  font-size: 0.75rem;
-  font-weight: 500;
-  color: var(--accent-gold);
-  transition: all 0.2s ease;
+  border-radius: var(--radius-full);
+  font-size: var(--text-xs);
+  font-weight: var(--font-medium);
+  color: var(--gold-primary);
+  transition: var(--transition-base);
 }
 
 .type-tag:hover {
-  background: rgba(212, 175, 55, 0.25);
-  border-color: rgba(212, 175, 55, 0.5);
+  background: rgba(212, 175, 55, 0.2);
+  border-color: var(--gold-primary);
 }
 
 .loading-text {
   color: var(--text-secondary);
-  font-size: 0.875rem;
+  font-size: var(--text-sm);
   font-style: italic;
 }
 
 .opening-hours {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: var(--space-md);
 }
 
 .status-badge {
   display: inline-block;
-  padding: 0.5rem 1rem;
-  border-radius: 20px;
-  font-size: 0.875rem;
-  font-weight: 600;
+  padding: var(--space-sm) var(--space-lg);
+  border-radius: var(--radius-full);
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
   align-self: flex-start;
 }
 
 .status-badge.open {
-  background: rgba(34, 197, 94, 0.15);
-  border: 1px solid rgba(34, 197, 94, 0.3);
-  color: #22c55e;
+  background: var(--success-bg);
+  border: 1px solid var(--success-border);
+  color: var(--success-text);
 }
 
 .status-badge.closed {
-  background: rgba(239, 68, 68, 0.15);
-  border: 1px solid rgba(239, 68, 68, 0.3);
-  color: #ef4444;
+  background: var(--error-bg);
+  border: 1px solid var(--error-border);
+  color: var(--error-text);
 }
 
 .hours-list {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: var(--space-sm);
 }
 
 .hours-item {
-  font-size: 0.875rem;
+  font-size: var(--text-sm);
   color: var(--text-secondary);
-  padding: 0.25rem 0;
+  padding: var(--space-xs) 0;
 }
 
 .no-hours {
   color: var(--text-secondary);
-  font-size: 0.875rem;
+  font-size: var(--text-sm);
   font-style: italic;
 }
 
 .website-link {
-  color: var(--accent-gold);
+  color: var(--gold-primary);
   text-decoration: none;
-  font-size: 1rem;
-  transition: all 0.2s ease;
+  font-size: var(--text-base);
+  transition: var(--transition-base);
   word-break: break-all;
 }
 
 .website-link:hover {
   text-decoration: underline;
-  color: var(--text-primary);
+  color: var(--gold-light);
 }
 
 .social-media-links {
@@ -1150,75 +1288,135 @@ const handleLogoError = (event: Event) => {
   font-style: italic;
 }
 
+/* Info Grid */
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--space-lg);
+}
+
+.info-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-lg);
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(212, 175, 55, 0.1);
+  border-radius: var(--radius-md);
+  transition: var(--transition-base);
+}
+
+.info-item:hover {
+  background: rgba(0, 0, 0, 0.3);
+  border-color: rgba(212, 175, 55, 0.3);
+}
+
+.info-icon {
+  font-size: var(--text-2xl);
+  flex-shrink: 0;
+}
+
+.info-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  flex: 1;
+}
+
+.info-value {
+  font-size: var(--text-base);
+  font-weight: var(--font-semibold);
+  color: var(--text-primary);
+}
+
+.info-meta {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+}
+
+.info-link {
+  color: var(--gold-primary);
+  text-decoration: none;
+  font-size: var(--text-base);
+  font-weight: var(--font-medium);
+  transition: var(--transition-base);
+}
+
+.info-link:hover {
+  color: var(--gold-light);
+  text-decoration: underline;
+}
+
+/* Actions Section */
+.actions-section {
+  padding-top: var(--space-2xl);
+  border-top: 1px solid rgba(212, 175, 55, 0.1);
+}
+
 .actions {
   display: flex;
-  gap: 1rem;
-  padding-top: 1rem;
-  border-top: 1px solid rgba(212, 175, 55, 0.1);
+  gap: var(--space-lg);
 }
 
 .actions button {
   flex: 1;
 }
 
-.rating-count {
-  font-size: 0.875rem;
-  color: var(--text-secondary);
-  font-weight: normal;
-  margin-left: 0.5rem;
-}
-
 /* Reviews Section */
 .reviews-card {
-  margin-bottom: 2rem;
-  padding: 2rem;
+  margin-bottom: var(--space-2xl);
+  animation: fadeInUp 0.6s var(--ease-smooth);
+  animation-delay: 0.3s;
+  animation-fill-mode: both;
 }
 
 .reviews-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1.5rem;
-  padding-bottom: 1rem;
-  border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+  margin-bottom: var(--space-xl);
+  padding-bottom: var(--space-lg);
+  border-bottom: 1px solid rgba(212, 175, 55, 0.1);
 }
 
 .reviews-title {
-  font-family: var(--font-display);
-  font-size: 1.75rem;
-  font-weight: 600;
+  font-family: var(--font-heading);
+  font-size: var(--text-2xl);
+  font-weight: var(--font-semibold);
   margin: 0;
-  color: var(--accent-gold);
+  color: var(--text-primary);
 }
 
 .reviews-count {
-  padding: 0.5rem 1rem;
-  background: rgba(212, 175, 55, 0.15);
+  padding: var(--space-sm) var(--space-lg);
+  background: var(--gold-subtle);
   border: 1px solid rgba(212, 175, 55, 0.3);
-  border-radius: 20px;
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: var(--accent-gold);
+  border-radius: var(--radius-full);
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  color: var(--gold-primary);
 }
 
 .reviews-list {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
-  margin-bottom: 1.5rem;
+  gap: var(--space-xl);
+  margin-bottom: var(--space-xl);
 }
 
 .review-item {
-  padding: 1.5rem;
-  background: rgba(0, 0, 0, 0.2);
+  padding: var(--space-xl);
+  background: rgba(0, 0, 0, 0.3);
   border: 1px solid rgba(212, 175, 55, 0.1);
-  border-radius: 12px;
-  transition: all 0.3s ease;
+  border-radius: var(--radius-lg);
+  transition: var(--transition-base);
 }
 
 .review-item:hover {
-  background: rgba(0, 0, 0, 0.3);
+  background: rgba(0, 0, 0, 0.4);
   border-color: rgba(212, 175, 55, 0.3);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
 }
 
 .review-header {
@@ -1335,26 +1533,28 @@ const handleLogoError = (event: Event) => {
 }
 
 .info-card {
-  padding: 1.5rem;
+  animation: fadeInUp 0.6s var(--ease-smooth);
+  animation-delay: 0.6s;
+  animation-fill-mode: both;
 }
 
 .info-title {
-  font-family: var(--font-display);
-  font-size: 1.5rem;
-  font-weight: 600;
-  margin: 0 0 1rem 0;
-  color: var(--accent-gold);
+  font-family: var(--font-heading);
+  font-size: var(--text-xl);
+  font-weight: var(--font-semibold);
+  margin: 0 0 var(--space-lg) 0;
+  color: var(--text-primary);
 }
 
 .info-list {
   margin: 0;
-  padding-left: 1.5rem;
+  padding-left: var(--space-2xl);
   color: var(--text-secondary);
-  line-height: 1.8;
+  line-height: var(--leading-relaxed);
 }
 
 .info-list li {
-  margin-bottom: 0.5rem;
+  margin-bottom: var(--space-sm);
 }
 
 .info-list li:last-child {
@@ -1363,35 +1563,37 @@ const handleLogoError = (event: Event) => {
 
 /* Competitors Section */
 .competitors-card {
-  margin-bottom: 2rem;
-  padding: 2rem;
+  margin-bottom: var(--space-2xl);
+  animation: fadeInUp 0.6s var(--ease-smooth);
+  animation-delay: 0.4s;
+  animation-fill-mode: both;
 }
 
 .competitors-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1.5rem;
-  padding-bottom: 1rem;
-  border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+  margin-bottom: var(--space-xl);
+  padding-bottom: var(--space-lg);
+  border-bottom: 1px solid rgba(212, 175, 55, 0.1);
 }
 
 .competitors-title {
-  font-family: var(--font-display);
-  font-size: 1.75rem;
-  font-weight: 600;
+  font-family: var(--font-heading);
+  font-size: var(--text-2xl);
+  font-weight: var(--font-semibold);
   margin: 0;
-  color: var(--accent-gold);
+  color: var(--text-primary);
 }
 
 .competitors-count {
-  padding: 0.5rem 1rem;
-  background: rgba(212, 175, 55, 0.15);
+  padding: var(--space-sm) var(--space-lg);
+  background: var(--gold-subtle);
   border: 1px solid rgba(212, 175, 55, 0.3);
-  border-radius: 20px;
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: var(--accent-gold);
+  border-radius: var(--radius-full);
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  color: var(--gold-primary);
 }
 
 .competitors-loading {
@@ -1552,36 +1754,39 @@ const handleLogoError = (event: Event) => {
 
 /* Menu Section */
 .menu-card {
-  margin-bottom: 2rem;
-  padding: 2rem;
+  margin-bottom: var(--space-2xl);
+  animation: fadeInUp 0.6s var(--ease-smooth);
+  animation-delay: 0.5s;
+  animation-fill-mode: both;
 }
 
 .menu-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1.5rem;
-  padding-bottom: 1rem;
-  border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+  margin-bottom: var(--space-xl);
+  padding-bottom: var(--space-lg);
+  border-bottom: 1px solid rgba(212, 175, 55, 0.1);
 }
 
 .menu-title {
-  font-family: var(--font-display);
-  font-size: 1.75rem;
-  font-weight: 600;
+  font-family: var(--font-heading);
+  font-size: var(--text-2xl);
+  font-weight: var(--font-semibold);
   margin: 0;
-  color: var(--accent-gold);
+  color: var(--text-primary);
 }
 
 .menu-platform-badge {
-  padding: 0.5rem 1rem;
-  background: rgba(212, 175, 55, 0.2);
-  border: 1px solid rgba(212, 175, 55, 0.4);
-  border-radius: 20px;
-  font-size: 0.75rem;
-  font-weight: 700;
-  color: var(--accent-gold);
+  padding: var(--space-sm) var(--space-lg);
+  background: var(--gold-subtle);
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  border-radius: var(--radius-full);
+  font-size: var(--text-xs);
+  font-weight: var(--font-bold);
+  color: var(--gold-primary);
   letter-spacing: 0.05em;
+  text-transform: uppercase;
 }
 
 .menu-loading {
@@ -1646,7 +1851,8 @@ const handleLogoError = (event: Event) => {
 
 .menu-items {
   display: grid;
-  gap: 1rem;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: var(--space-lg);
 }
 
 .menu-empty {
@@ -1661,35 +1867,37 @@ const handleLogoError = (event: Event) => {
 
 /* Brand DNA Section */
 .brand-dna-card {
-  margin-bottom: 2rem;
-  padding: 2rem;
+  margin-bottom: var(--space-2xl);
+  animation: fadeInUp 0.6s var(--ease-smooth);
+  animation-delay: 0.2s;
+  animation-fill-mode: both;
 }
 
 .brand-dna-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1.5rem;
-  padding-bottom: 1rem;
-  border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+  margin-bottom: var(--space-xl);
+  padding-bottom: var(--space-lg);
+  border-bottom: 1px solid rgba(212, 175, 55, 0.1);
 }
 
 .brand-dna-title {
-  font-family: var(--font-display);
-  font-size: 1.75rem;
-  font-weight: 600;
+  font-family: var(--font-heading);
+  font-size: var(--text-2xl);
+  font-weight: var(--font-semibold);
   margin: 0;
-  color: var(--accent-gold);
+  color: var(--text-primary);
 }
 
 .brand-dna-badge {
-  padding: 0.5rem 1rem;
-  background: rgba(34, 197, 94, 0.15);
-  border: 1px solid rgba(34, 197, 94, 0.3);
-  border-radius: 20px;
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: #22c55e;
+  padding: var(--space-sm) var(--space-lg);
+  background: var(--success-bg);
+  border: 1px solid var(--success-border);
+  border-radius: var(--radius-full);
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  color: var(--success-text);
 }
 
 .brand-dna-loading {
@@ -1846,16 +2054,20 @@ const handleLogoError = (event: Event) => {
 
 /* Responsive Design */
 @media (max-width: 768px) {
+  .restaurant-search-view {
+    padding: var(--space-2xl) var(--space-lg);
+  }
+
+  .header {
+    margin-bottom: var(--space-3xl);
+  }
+
   .title {
-    font-size: 2rem;
+    font-size: var(--text-3xl);
   }
 
   .subtitle {
-    font-size: 1rem;
-  }
-
-  .search-card {
-    padding: 1.5rem;
+    font-size: var(--text-base);
   }
 
   .actions {
@@ -1870,12 +2082,33 @@ const handleLogoError = (event: Event) => {
     grid-template-columns: 1fr;
   }
 
-  .brand-dna-card {
-    padding: 1.5rem;
-  }
-
   .photos-grid {
     grid-template-columns: 1fr;
+  }
+
+  .reviews-header,
+  .competitors-header,
+  .menu-header,
+  .brand-dna-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-md);
+  }
+
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .info-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .restaurant-name {
+    font-size: var(--text-2xl);
+  }
+
+  .restaurant-address {
+    font-size: var(--text-base);
   }
 }
 
@@ -2022,5 +2255,234 @@ const handleLogoError = (event: Event) => {
 
 .upload-alert {
   margin-top: var(--space-md);
+}
+
+/* Quick Stats Card */
+.stats-card {
+  margin-bottom: 2rem;
+  padding: var(--space-2xl);
+}
+
+.stats-title {
+  font-family: var(--font-display);
+  font-size: var(--text-2xl);
+  font-weight: 600;
+  margin: 0 0 var(--space-xl) 0;
+  color: var(--accent-gold);
+  text-align: center;
+}
+
+/* Quick Overview Section - Inside Search Card */
+.quick-overview-section {
+  margin-top: var(--space-2xl);
+  padding-top: var(--space-2xl);
+  border-top: 1px solid rgba(212, 175, 55, 0.1);
+  animation: fadeInUp 0.6s var(--ease-smooth);
+}
+
+.quick-overview-title {
+  font-family: var(--font-heading);
+  font-size: var(--text-2xl);
+  font-weight: var(--font-semibold);
+  margin: 0 0 var(--space-xl) 0;
+  color: var(--text-primary);
+  text-align: center;
+}
+
+.quick-review-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-lg);
+  padding-bottom: var(--space-md);
+  border-bottom: 1px solid rgba(212, 175, 55, 0.15);
+}
+
+.quick-review-title {
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  font-weight: 600;
+  margin: 0;
+  color: var(--text-primary);
+}
+
+.quick-review-rating {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.quick-review-rating .star {
+  font-size: 1.125rem;
+  color: var(--text-secondary);
+}
+
+.quick-review-rating .star.filled {
+  color: var(--accent-gold);
+}
+
+.quick-review-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.quick-review-author {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+}
+
+.quick-author-photo {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid rgba(212, 175, 55, 0.3);
+  flex-shrink: 0;
+}
+
+.quick-author-photo-placeholder {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent-gold) 0%, #b8860b 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--background-primary);
+  border: 2px solid rgba(212, 175, 55, 0.3);
+  flex-shrink: 0;
+}
+
+.quick-author-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.quick-author-name {
+  font-size: var(--text-base);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.quick-review-time {
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+}
+
+.quick-review-text {
+  font-size: var(--text-sm);
+  line-height: 1.6;
+  color: var(--text-secondary);
+  margin: 0;
+  padding-left: 52px;
+  white-space: pre-wrap;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: var(--space-lg);
+}
+
+.stat-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-lg);
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(212, 175, 55, 0.15);
+  border-radius: var(--radius-lg);
+  transition: var(--transition-base);
+}
+
+.stat-item:hover {
+  background: rgba(0, 0, 0, 0.3);
+  border-color: rgba(212, 175, 55, 0.3);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.stat-icon {
+  font-size: 2rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.stat-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.stat-label {
+  font-size: var(--text-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-secondary);
+}
+
+.stat-value {
+  font-size: var(--text-lg);
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.2;
+}
+
+.stat-subtext {
+  font-size: var(--text-xs);
+  font-weight: 500;
+  color: var(--text-secondary);
+  margin-left: 0.25rem;
+}
+
+/* Responsive stats grid */
+@media (max-width: 768px) {
+  .stats-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .stats-card {
+    padding: var(--space-xl);
+  }
+
+  .quick-review-card {
+    padding: var(--space-lg);
+  }
+
+  .quick-review-text {
+    padding-left: 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .quick-review-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-sm);
+  }
+}
+
+/* Reduce motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 </style>
