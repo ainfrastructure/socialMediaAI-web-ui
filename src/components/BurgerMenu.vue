@@ -34,6 +34,11 @@
             <span class="dropdown-icon">💎</span>
             <span>Plans & Billing</span>
           </router-link>
+
+          <router-link to="/connect-accounts" class="dropdown-item" @click="closeMenu">
+            <span class="dropdown-icon">🔗</span>
+            <span>Connect Accounts</span>
+          </router-link>
         </nav>
 
         <div class="dropdown-divider"></div>

@@ -6,6 +6,7 @@
       :label="label"
       :placeholder="placeholder"
       :disabled="disabled"
+      :autofocus="autofocus"
       @input="handleInput"
       @focus="handleFocus"
       @blur="handleBlur"
@@ -53,6 +54,7 @@ interface Props {
   label?: string
   placeholder?: string
   disabled?: boolean
+  autofocus?: boolean
   debounceMs?: number
 }
 
@@ -65,6 +67,7 @@ const props = withDefaults(defineProps<Props>(), {
   label: 'Search Restaurants',
   placeholder: 'Type to search for restaurants...',
   disabled: false,
+  autofocus: false,
   debounceMs: 300,
 })
 

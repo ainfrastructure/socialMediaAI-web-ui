@@ -14,6 +14,7 @@
         :placeholder="placeholder"
         :required="required"
         :disabled="disabled"
+        :autofocus="autofocus"
         :class="['form-input', { 'has-error': error }]"
         @input="handleInput"
         @blur="handleBlur"
@@ -27,6 +28,7 @@
         :placeholder="placeholder"
         :required="required"
         :disabled="disabled"
+        :autofocus="autofocus"
         :rows="rows"
         :class="['form-input', 'form-textarea', { 'has-error': error }]"
         @input="handleInput"
@@ -50,6 +52,7 @@ interface Props {
   placeholder?: string
   required?: boolean
   disabled?: boolean
+  autofocus?: boolean
   error?: string
   hint?: string
   rows?: number
@@ -62,6 +65,7 @@ const props = withDefaults(defineProps<Props>(), {
   placeholder: '',
   required: false,
   disabled: false,
+  autofocus: false,
   error: '',
   hint: '',
   rows: 4

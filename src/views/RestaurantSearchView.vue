@@ -14,6 +14,7 @@
           v-model="selectedRestaurant"
           label=""
           placeholder="Search restaurants by name or location..."
+          autofocus
           @select="handleRestaurantSelect"
         />
 
@@ -283,25 +284,6 @@
             <BaseAlert v-if="saveError" type="error">
               {{ saveError }}
             </BaseAlert>
-
-            <div class="actions">
-              <BaseButton
-                variant="ghost"
-                size="medium"
-                @click="clearSelection"
-              >
-                Clear Selection
-              </BaseButton>
-
-              <BaseButton
-                variant="primary"
-                size="large"
-                :disabled="savingRestaurant || isSaved || !placeDetails || loadingDetails || loadingMenu || loadingCompetitors || loadingSocialMedia"
-                @click="saveToDatabase"
-              >
-                {{ savingRestaurant ? 'Saving...' : isSaved ? 'Saved ✓' : 'Save to Database' }}
-              </BaseButton>
-            </div>
           </div>
         </div>
       </BaseCard>
@@ -585,6 +567,26 @@
 
     </div>
 
+    <!-- Sticky CTA Button -->
+    <div v-if="selectedRestaurant && placeDetails" class="sticky-cta">
+      <div class="sticky-cta-content">
+        <button class="back-button" @click="clearSelection" aria-label="Back to search">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M19 12H5M12 19l-7-7 7-7"/>
+          </svg>
+        </button>
+        <BaseButton
+          variant="primary"
+          size="large"
+          class="continue-button"
+          :disabled="savingRestaurant || loadingDetails || loadingMenu || loadingCompetitors || loadingSocialMedia"
+          @click="saveAndContinue"
+        >
+          {{ savingRestaurant ? 'Saving...' : isSaved ? 'Continue to Content Creation →' : 'Save & Continue to Content Creation →' }}
+        </BaseButton>
+      </div>
+    </div>
+
     <!-- Photo Modal -->
     <div v-if="photoModalOpen" class="photo-modal" @click="closePhotoModal">
       <div class="photo-modal-content" @click.stop>
@@ -592,11 +594,22 @@
         <img v-if="selectedPhotoUrl" :src="selectedPhotoUrl" alt="Restaurant photo" class="modal-photo" />
       </div>
     </div>
+
+    <!-- Progress Modal -->
+    <ProgressModal
+      v-model="showProgressModal"
+      title="Saving Restaurant"
+      :progress="progressPercentage"
+      :current-message="progressMessage"
+      :steps="progressSteps"
+      :current-step-index="currentProgressStep"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
+import { useRouter } from 'vue-router'
 import BaseCard from '../components/BaseCard.vue'
 import BaseButton from '../components/BaseButton.vue'
 import BaseAlert from '../components/BaseAlert.vue'
@@ -605,11 +618,14 @@ import RestaurantAutocomplete from '../components/RestaurantAutocomplete.vue'
 import MenuItemCard from '../components/MenuItemCard.vue'
 import ImageUpload from '../components/ImageUpload.vue'
 import SelectableImageGallery from '../components/SelectableImageGallery.vue'
+import ProgressModal from '../components/ProgressModal.vue'
 import type { RestaurantSuggestion, PlaceDetails, CompetitorSearchResponse } from '../services/placesService'
 import { placesService } from '../services/placesService'
 import { menuService, type MenuData } from '../services/menuService'
 import { socialMediaService, type SocialMediaSearchResult } from '../services/socialMediaService'
 import { restaurantService, type UploadedImage } from '../services/restaurantService'
+
+const router = useRouter()
 import { api } from '../services/api'
 
 const selectedRestaurant = ref<RestaurantSuggestion | null>(null)
@@ -644,6 +660,18 @@ const uploadError = ref<string | null>(null)
 // Photo modal state
 const photoModalOpen = ref(false)
 const selectedPhotoUrl = ref<string | null>(null)
+
+// Progress modal state
+const showProgressModal = ref(false)
+const progressPercentage = ref(0)
+const progressMessage = ref('')
+const progressSteps = ref<string[]>([
+  'Saving restaurant data',
+  'Processing images',
+  'Analyzing menu items',
+  'Finalizing setup'
+])
+const currentProgressStep = ref(0)
 
 // Pagination for reviews
 const reviewsPage = ref(1)
@@ -843,6 +871,17 @@ const clearSelection = () => {
   reviewsPage.value = 1
   menuPage.value = 1
   competitorsPage.value = 1
+
+  // Scroll to top and focus search field
+  window.scrollTo({ top: 0, behavior: 'smooth' })
+
+  // Focus the search input after a short delay to allow for DOM update
+  setTimeout(() => {
+    const searchInput = document.querySelector('.autocomplete-container input') as HTMLInputElement
+    if (searchInput) {
+      searchInput.focus()
+    }
+  }, 300)
 }
 
 const openPhotoModal = (photoUrl: string) => {
@@ -951,6 +990,81 @@ const saveToDatabase = async () => {
   }
 }
 
+// Simulate progress for better UX
+const simulateProgress = async () => {
+  // Reset progress state
+  progressPercentage.value = 0
+  currentProgressStep.value = 0
+
+  const steps = [
+    { step: 0, message: 'Saving restaurant data...', delay: 800, progress: 25 },
+    { step: 1, message: 'Processing images...', delay: 1200, progress: 50 },
+    { step: 2, message: 'Analyzing menu items...', delay: 1000, progress: 75 },
+    { step: 3, message: 'Finalizing setup...', delay: 800, progress: 100 }
+  ]
+
+  for (const stepConfig of steps) {
+    currentProgressStep.value = stepConfig.step
+    progressMessage.value = stepConfig.message
+
+    // Gradually increase progress
+    const targetProgress = stepConfig.progress
+    const currentProgress = progressPercentage.value
+    const increment = (targetProgress - currentProgress) / 10
+
+    for (let i = 0; i < 10; i++) {
+      await new Promise(resolve => setTimeout(resolve, stepConfig.delay / 10))
+      progressPercentage.value = Math.min(currentProgress + (increment * (i + 1)), targetProgress)
+    }
+  }
+}
+
+// Save and navigate to playground with restaurant preselected
+const saveAndContinue = async () => {
+  if (isSaved.value) {
+    // Already saved, show quick animation then navigate
+    showProgressModal.value = true
+    progressMessage.value = 'Redirecting to content creation...'
+    progressPercentage.value = 100
+    currentProgressStep.value = 3
+
+    await new Promise(resolve => setTimeout(resolve, 800))
+
+    showProgressModal.value = false
+
+    router.push({
+      name: 'playground',
+      query: { restaurant: selectedRestaurant.value?.place_id }
+    })
+  } else {
+    // Show progress modal
+    showProgressModal.value = true
+
+    // Start fake progress animation
+    const progressPromise = simulateProgress()
+
+    // Save to database (real operation)
+    await saveToDatabase()
+
+    // Wait for progress animation to complete
+    await progressPromise
+
+    // Keep modal visible for a moment at 100%
+    await new Promise(resolve => setTimeout(resolve, 500))
+
+    // Hide modal
+    showProgressModal.value = false
+
+    // Only navigate if save was successful
+    if (isSaved.value) {
+      router.push({
+        name: 'playground',
+        query: { restaurant: selectedRestaurant.value?.place_id }
+      })
+    }
+  }
+}
+
 const formatType = (type: string): string => {
   return type
     .split('_')
@@ -975,6 +1089,7 @@ const handleLogoError = (event: Event) => {
 .container {
   max-width: var(--max-width-lg);
   margin: 0 auto;
+  padding-bottom: 120px; /* Space for sticky CTA button */
 }
 
 .header {
@@ -2470,7 +2585,81 @@ const handleLogoError = (event: Event) => {
   }
 }
 
+/* Sticky CTA Button */
+.sticky-cta {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(to top, var(--bg-primary) 80%, transparent);
+  backdrop-filter: blur(var(--blur-md));
+  padding: var(--space-xl) var(--space-xl) var(--space-2xl);
+  z-index: 100;
+  animation: slideUp 0.4s var(--ease-smooth);
+}
+
+.sticky-cta-content {
+  max-width: var(--max-width-lg);
+  margin: 0 auto;
+  display: flex;
+  gap: var(--space-lg);
+  align-items: center;
+}
+
+.back-button {
+  flex-shrink: 0;
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-md);
+  background: var(--bg-secondary);
+  border: var(--border-width) solid var(--border-color);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: var(--transition-base);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.back-button:hover {
+  background: var(--bg-elevated);
+  border-color: var(--gold-primary);
+  color: var(--gold-primary);
+  transform: translateX(-2px);
+}
+
+.back-button:active {
+  transform: translateX(-4px);
+}
+
+.continue-button {
+  flex: 1;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 768px) {
+  .sticky-cta {
+    padding: var(--space-lg) var(--space-lg) var(--space-xl);
+  }
+
+  .back-button {
+    width: 44px;
+    height: 44px;
+  }
+}
+
 /* Reduce motion */
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

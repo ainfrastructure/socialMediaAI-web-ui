@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { useFacebookStore } from '../stores/facebook'
 import BaseCard from '../components/BaseCard.vue'
 import BaseButton from '../components/BaseButton.vue'
 import BaseAlert from '../components/BaseAlert.vue'
 
+const router = useRouter()
 const facebookStore = useFacebookStore()
 
 const showSuccessMessage = ref(false)
@@ -13,6 +15,9 @@ const successMessage = ref('')
 
 // Computed property to check if Facebook is connected
 const isConnected = computed(() => facebookStore.connectedPages.length > 0)
+
+// Total connected accounts across all platforms
+const totalConnectedAccounts = computed(() => facebookStore.connectedPages.length)
 
 onMounted(async () => {
   // Load connected Facebook pages on mount
@@ -87,19 +92,39 @@ const comingSoonPlatforms = [
 <template>
   <div class="connect-accounts-view">
     <div class="container">
+      <!-- Back Navigation -->
+      <div class="back-nav">
+        <BaseButton variant="ghost" size="small" @click="router.back()">
+          ← Back
+        </BaseButton>
+      </div>
+
       <header class="page-header">
         <h1>Connect Social Media Accounts</h1>
         <p class="subtitle">
           Connect your social media accounts to start posting content directly from our platform
         </p>
+
+        <!-- Stats Summary -->
+        <div v-if="totalConnectedAccounts > 0" class="stats-summary">
+          <div class="stat-item">
+            <span class="stat-value">{{ totalConnectedAccounts }}</span>
+            <span class="stat-label">Account{{ totalConnectedAccounts === 1 ? '' : 's' }} Connected</span>
+          </div>
+        </div>
       </header>
 
       <!-- Success/Error Messages -->
-      <BaseAlert v-if="showSuccessMessage" variant="success" @close="showSuccessMessage = false">
-        {{ successMessage }}
+      <BaseAlert v-if="showSuccessMessage" type="success" @close="showSuccessMessage = false">
+        <div class="alert-with-action">
+          <p>{{ successMessage }}</p>
+          <BaseButton variant="primary" size="small" @click="router.push('/playground')" style="margin-top: 12px;">
+            Continue to Playground →
+          </BaseButton>
+        </div>
       </BaseAlert>
 
-      <BaseAlert v-if="showErrorMessage" variant="error" @close="showErrorMessage = false">
+      <BaseAlert v-if="showErrorMessage" type="error" @close="showErrorMessage = false">
         {{ facebookStore.error || 'An error occurred. Please try again.' }}
       </BaseAlert>
 
@@ -203,6 +228,10 @@ const comingSoonPlatforms = [
   margin: 0 auto;
 }
 
+.back-nav {
+  margin-bottom: var(--space-xl);
+}
+
 .page-header {
   margin-bottom: var(--space-2xl);
   text-align: center;
@@ -224,6 +253,43 @@ const comingSoonPlatforms = [
   color: var(--text-secondary);
   max-width: 600px;
   margin: 0 auto;
+}
+
+.stats-summary {
+  margin-top: var(--space-xl);
+  display: flex;
+  justify-content: center;
+  gap: var(--space-2xl);
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: var(--space-lg) var(--space-2xl);
+  background: rgba(212, 175, 55, 0.1);
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  border-radius: var(--radius-lg);
+}
+
+.stat-value {
+  font-family: var(--font-heading);
+  font-size: var(--text-3xl);
+  font-weight: var(--font-bold);
+  color: var(--gold-primary);
+}
+
+.stat-label {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.alert-with-action p {
+  margin: 0 0 4px 0;
+  font-weight: var(--font-semibold);
 }
 
 .platform-section {

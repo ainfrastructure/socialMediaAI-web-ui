@@ -9,17 +9,6 @@
         <p>Cooking up your restaurants...</p>
       </div>
 
-      <!-- No Restaurants State -->
-      <BaseCard v-else-if="restaurants.length === 0" variant="glass-intense" class="empty-state">
-        <div class="empty-content">
-          <h3>No Saved Restaurants</h3>
-          <p>Save some restaurants first to start generating marketing content!</p>
-          <BaseButton variant="primary" @click="router.push('/restaurants')">
-            Search Restaurants
-          </BaseButton>
-        </div>
-      </BaseCard>
-
       <!-- Main Content -->
       <div v-else class="playground-content">
         <!-- Step 1: Restaurant Selection (shown when no restaurant is selected) -->
@@ -39,7 +28,6 @@
               variant="glass"
               hoverable
               class="restaurant-card"
-              @click="selectRestaurantById(restaurant.id)"
             >
               <div class="card-header">
                 <div class="card-title-section">
@@ -78,6 +66,16 @@
                   <span>Saved {{ formatDate(restaurant.saved_at) }}</span>
                 </div>
               </div>
+
+              <BaseButton
+                variant="primary"
+                size="medium"
+                full-width
+                class="select-restaurant-btn"
+                @click="selectRestaurantById(restaurant.id)"
+              >
+                Select Restaurant
+              </BaseButton>
             </BaseCard>
           </div>
         </div>
@@ -99,6 +97,23 @@
               <BaseButton variant="ghost" size="small" @click="clearRestaurantSelection">
                 ← Back
               </BaseButton>
+            </div>
+          </BaseCard>
+
+          <!-- Platform Selection - Appears First -->
+          <BaseCard variant="glass" class="platform-selection-card">
+            <h3 class="card-title">Select Platform</h3>
+            <p class="card-subtitle">Choose where you'll post this content</p>
+
+            <div class="platform-grid">
+              <PlatformSelectionCard
+                v-for="platform in availablePlatforms"
+                :key="platform.value"
+                :platform="platform"
+                :selected="selectedPlatforms.includes(platform.value)"
+                @toggle="togglePlatform"
+                @connect="handlePlatformConnected"
+              />
             </div>
           </BaseCard>
 
@@ -163,30 +178,6 @@
                   placeholder="e.g., 20% OFF, COMBO DEAL, LIMITED TIME..."
                 />
                 <p class="context-hint">Add promotional text for sticker overlay</p>
-              </div>
-
-              <div class="context-input-wrapper">
-                <label class="context-label">
-                  Platforms <span class="required">*</span>
-                </label>
-                <div class="platform-checkboxes">
-                  <label
-                    v-for="platform in availablePlatforms"
-                    :key="platform.value"
-                    class="platform-checkbox-label"
-                    :class="{ selected: selectedPlatforms.includes(platform.value) }"
-                  >
-                    <input
-                      type="checkbox"
-                      :value="platform.value"
-                      v-model="selectedPlatforms"
-                      class="platform-checkbox-input"
-                    />
-                    <span class="platform-checkbox-icon">{{ platform.icon }}</span>
-                    <span class="platform-checkbox-text">{{ platform.label }}</span>
-                  </label>
-                </div>
-                <p class="context-hint">Select platforms where you'll post this content</p>
               </div>
             </div>
 
@@ -964,6 +955,32 @@
                 </button>
               </div>
             </section>
+
+            <!-- Delete Restaurant Section -->
+            <section class="details-section delete-section">
+              <h3 class="section-title danger">Delete Restaurant</h3>
+              <p class="delete-warning">
+                This will permanently delete this restaurant and all associated data, including images and menu items. This action cannot be undone.
+              </p>
+
+              <div v-if="!confirmDelete" class="delete-actions">
+                <BaseButton variant="danger" size="medium" @click="confirmDelete = true">
+                  Delete Restaurant
+                </BaseButton>
+              </div>
+
+              <div v-else class="delete-confirm">
+                <p class="confirm-text">Are you sure? This cannot be undone.</p>
+                <div class="confirm-actions">
+                  <BaseButton variant="danger" size="medium" @click="deleteRestaurant" :disabled="deleting">
+                    {{ deleting ? 'Deleting...' : 'Yes, Delete' }}
+                  </BaseButton>
+                  <BaseButton variant="ghost" size="medium" @click="confirmDelete = false" :disabled="deleting">
+                    Cancel
+                  </BaseButton>
+                </div>
+              </div>
+            </section>
           </div>
         </BaseCard>
       </div>
@@ -972,14 +989,16 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import { useFacebookStore } from '../stores/facebook'
+import { useSocialAccounts } from '../composables/useSocialAccounts'
 import GradientBackground from '../components/GradientBackground.vue'
 import BaseCard from '../components/BaseCard.vue'
 import BaseButton from '../components/BaseButton.vue'
 import BaseAlert from '../components/BaseAlert.vue'
+import PlatformSelectionCard from '../components/PlatformSelectionCard.vue'
 import ScheduleModal from '../components/ScheduleModal.vue'
 import { restaurantService, type SavedRestaurant } from '../services/restaurantService'
 import { api } from '../services/api'
@@ -988,6 +1007,7 @@ const router = useRouter()
 const route = useRoute()
 const authStore = useAuthStore()
 const facebookStore = useFacebookStore()
+const socialAccounts = useSocialAccounts()
 
 // Restaurant selection
 const restaurants = ref<SavedRestaurant[]>([])
@@ -1071,14 +1091,61 @@ const selectedMenuItems = ref<any[]>([])
 const promptContext = ref('')
 const selectedPlatforms = ref<string[]>([])
 
-// Available platforms with icons
-const availablePlatforms = [
-  { value: 'instagram', label: 'Instagram', icon: '📷' },
-  { value: 'facebook', label: 'Facebook', icon: '👥' },
-  { value: 'tiktok', label: 'TikTok', icon: '🎵' },
-  { value: 'twitter', label: 'Twitter/X', icon: '🐦' },
-  { value: 'linkedin', label: 'LinkedIn', icon: '💼' },
-]
+// Selected Facebook pages for posting (when multiple pages are connected)
+const selectedFacebookPages = ref<string[]>([])
+
+// Available platforms with connection status
+const availablePlatforms = computed(() => {
+  const platforms = [
+    {
+      value: 'facebook',
+      label: 'Facebook',
+      icon: '👥',
+      isConnected: socialAccounts.isConnected('facebook'),
+      connectedAccounts: socialAccounts.getConnectedAccounts('facebook'),
+      isAvailable: true,
+      comingSoon: false,
+    },
+    {
+      value: 'instagram',
+      label: 'Instagram',
+      icon: '📷',
+      isConnected: false,
+      connectedAccounts: [],
+      isAvailable: false,
+      comingSoon: true,
+    },
+    {
+      value: 'tiktok',
+      label: 'TikTok',
+      icon: '🎵',
+      isConnected: false,
+      connectedAccounts: [],
+      isAvailable: false,
+      comingSoon: true,
+    },
+    {
+      value: 'twitter',
+      label: 'Twitter/X',
+      icon: '🐦',
+      isConnected: false,
+      connectedAccounts: [],
+      isAvailable: false,
+      comingSoon: true,
+    },
+    {
+      value: 'linkedin',
+      label: 'LinkedIn',
+      icon: '💼',
+      isConnected: false,
+      connectedAccounts: [],
+      isAvailable: false,
+      comingSoon: true,
+    },
+  ]
+
+  return platforms
+})
 
 // Promotional sticker options
 const stickerStyle = ref<'bold' | 'outlined' | 'ribbon' | 'badge' | 'starburst'>('bold')
@@ -1115,6 +1182,25 @@ const isItemSelected = (item: any) => {
   return selectedMenuItems.value.some((i) => i.name === item.name)
 }
 
+const togglePlatform = (platformValue: string) => {
+  const index = selectedPlatforms.value.indexOf(platformValue)
+  if (index > -1) {
+    selectedPlatforms.value.splice(index, 1)
+  } else {
+    selectedPlatforms.value.push(platformValue)
+  }
+}
+
+const handlePlatformConnected = async () => {
+  // Refresh the connected pages data after successful connection
+  await facebookStore.loadConnectedPages()
+  // Auto-select the newly connected platform
+  const connectedPlatform = availablePlatforms.value.find(p => p.isConnected && !selectedPlatforms.value.includes(p.value))
+  if (connectedPlatform) {
+    selectedPlatforms.value.push(connectedPlatform.value)
+  }
+}
+
 const clearSelection = () => {
   selectedMenuItems.value = []
   promptContext.value = ''
@@ -1142,6 +1228,27 @@ onMounted(async () => {
 
   await fetchRestaurants()
   await authStore.refreshProfile()
+
+  // Load connected Facebook pages for platform selection
+  await facebookStore.loadConnectedPages()
+
+  // Check for restaurant query parameter and auto-select
+  const restaurantParam = route.query.restaurant
+  if (restaurantParam && typeof restaurantParam === 'string') {
+    const restaurant = restaurants.value.find(r => r.place_id === restaurantParam)
+    if (restaurant) {
+      selectRestaurantById(restaurant.id)
+
+      // Wait for DOM to update, then scroll to content creation view
+      await nextTick()
+      setTimeout(() => {
+        const contentCreationView = document.querySelector('.content-creation-view')
+        if (contentCreationView) {
+          contentCreationView.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        }
+      }, 300)
+    }
+  }
 })
 
 onUnmounted(() => {
@@ -1152,6 +1259,11 @@ const fetchRestaurants = async () => {
   try {
     loadingRestaurants.value = true
     restaurants.value = await restaurantService.getSavedRestaurants()
+
+    // Auto-redirect to search if no restaurants saved
+    if (restaurants.value.length === 0) {
+      router.push('/restaurants')
+    }
   } catch (error: any) {
     showMessage('Failed to load restaurants: ' + error.message, 'error')
   } finally {
@@ -1175,6 +1287,8 @@ const editedSocial = ref({
 })
 const saving = ref(false)
 const saveError = ref<string | null>(null)
+const deleting = ref(false)
+const confirmDelete = ref(false)
 
 // Menu pagination state
 const menuCurrentPage = ref(1)
@@ -1210,6 +1324,40 @@ const resetEditState = () => {
   }
   saveError.value = null
   menuCurrentPage.value = 1
+  confirmDelete.value = false
+}
+
+// Delete restaurant
+const deleteRestaurant = async () => {
+  if (!restaurantToEdit.value) return
+
+  try {
+    deleting.value = true
+    saveError.value = null
+
+    const success = await restaurantService.deleteRestaurant(restaurantToEdit.value.place_id)
+
+    if (success) {
+      // Remove from local restaurants array
+      restaurants.value = restaurants.value.filter(r => r.id !== restaurantToEdit.value!.id)
+
+      // If this was the selected restaurant, clear selection
+      if (selectedRestaurant.value?.id === restaurantToEdit.value.id) {
+        selectedRestaurantId.value = ''
+      }
+
+      // Close the modal
+      closeRestaurantDetails()
+
+      showMessage('Restaurant deleted successfully', 'success')
+    } else {
+      saveError.value = 'Failed to delete restaurant'
+    }
+  } catch (err: any) {
+    saveError.value = err.message || 'Failed to delete restaurant'
+  } finally {
+    deleting.value = false
+  }
 }
 
 // Website editing
@@ -2063,7 +2211,8 @@ const handleScheduled = (scheduledPost: any) => {
   border: 3px solid rgba(212, 175, 55, 0.2);
   border-top-color: var(--gold-primary);
   border-radius: 50%;
-  animation: spin 0.8s linear infinite;
+  animation: spin 1s linear infinite;
+  will-change: transform;
 }
 
 .spinner.cooking {
@@ -2071,65 +2220,26 @@ const handleScheduled = (scheduledPost: any) => {
   border: 3px solid rgba(212, 175, 55, 0.3);
   border-top-color: var(--gold-primary);
   border-right-color: var(--gold-light);
-  border-bottom-color: var(--gold-dark);
-  animation: stir 1.2s cubic-bezier(0.68, -0.55, 0.265, 1.55) infinite;
-}
-
-.spinner.cooking::before {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 6px;
-  height: 6px;
-  background: var(--gold-primary);
-  border-radius: 50%;
-  transform: translate(-50%, -50%);
-  animation: bubble 0.6s ease-in-out infinite alternate;
+  animation: spin 1s linear infinite;
+  will-change: transform;
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
-@keyframes stir {
-  0%, 100% { transform: rotate(0deg) scale(1); }
-  25% { transform: rotate(90deg) scale(1.1); }
-  50% { transform: rotate(180deg) scale(0.9); }
-  75% { transform: rotate(270deg) scale(1.1); }
-}
-
-@keyframes bubble {
-  0% { transform: translate(-50%, -50%) scale(0.8); opacity: 0.6; }
-  100% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .spinner,
+  .spinner.cooking {
+    animation-duration: 2s;
+  }
 }
 
 .loading-container p,
 .loading-prompts p {
-  color: var(--text-secondary);
-  margin: 0;
-}
-
-.empty-state {
-  padding: 4rem 2rem;
-}
-
-.empty-content {
-  text-align: center;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1.5rem;
-}
-
-.empty-content h3 {
-  font-family: var(--font-heading);
-  font-size: 1.5rem;
-  color: var(--text-primary);
-  margin: 0;
-}
-
-.empty-content p {
   color: var(--text-secondary);
   margin: 0;
 }
@@ -2179,14 +2289,19 @@ const handleScheduled = (scheduledPost: any) => {
 
 .restaurant-card {
   padding: var(--space-xl);
-  cursor: pointer;
   transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
 }
 
 .restaurant-card:hover {
   transform: translateY(-4px);
   box-shadow: 0 8px 24px rgba(212, 175, 55, 0.2);
   border-color: rgba(212, 175, 55, 0.4);
+}
+
+.select-restaurant-btn {
+  margin-top: var(--space-lg);
 }
 
 .card-header {
@@ -3088,51 +3203,25 @@ const handleScheduled = (scheduledPost: any) => {
   margin: 0;
 }
 
-/* Platform Checkboxes */
-.platform-checkboxes {
+/* Platform Selection Card */
+.platform-selection-card {
+  margin-bottom: var(--space-2xl);
+}
+
+/* Platform Grid */
+.platform-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-  gap: var(--space-sm);
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: var(--space-md);
+  margin-top: var(--space-lg);
 }
 
-.platform-checkbox-label {
-  display: flex;
-  align-items: center;
-  gap: var(--space-sm);
-  padding: var(--space-md);
-  background: rgba(0, 0, 0, 0.3);
-  border: 2px solid rgba(212, 175, 55, 0.2);
-  border-radius: var(--radius-md);
-  cursor: pointer;
-  transition: all var(--transition-base);
-  user-select: none;
+.alert-content p {
+  margin: 0 0 4px 0;
 }
 
-.platform-checkbox-label:hover {
-  background: rgba(0, 0, 0, 0.4);
-  border-color: rgba(212, 175, 55, 0.4);
-}
-
-.platform-checkbox-label.selected {
-  background: rgba(212, 175, 55, 0.15);
-  border-color: var(--gold-primary);
-}
-
-.platform-checkbox-input {
-  width: 18px;
-  height: 18px;
-  cursor: pointer;
-  accent-color: var(--gold-primary);
-}
-
-.platform-checkbox-icon {
-  font-size: var(--text-lg);
-}
-
-.platform-checkbox-text {
-  font-size: var(--text-sm);
-  font-weight: var(--font-medium);
-  color: var(--text-primary);
+.alert-content p:last-of-type {
+  margin-bottom: 0;
 }
 
 /* Platform Badges */
@@ -4249,5 +4338,47 @@ const handleScheduled = (scheduledPost: any) => {
   .menu-grid {
     grid-template-columns: 1fr;
   }
+}
+
+/* Delete Section Styles */
+.delete-section {
+  margin-top: var(--space-2xl);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  background: rgba(239, 68, 68, 0.05);
+}
+
+.section-title.danger {
+  color: var(--error-text);
+}
+
+.delete-warning {
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  line-height: var(--leading-normal);
+  margin-bottom: var(--space-lg);
+}
+
+.delete-actions {
+  display: flex;
+  gap: var(--space-md);
+}
+
+.delete-confirm {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+
+.confirm-text {
+  color: var(--error-text);
+  font-size: var(--text-base);
+  font-weight: var(--font-semibold);
+  margin: 0;
+}
+
+.confirm-actions {
+  display: flex;
+  gap: var(--space-md);
+  flex-wrap: wrap;
 }
 </style>
