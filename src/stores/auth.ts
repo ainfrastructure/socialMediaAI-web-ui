@@ -234,8 +234,12 @@ export const useAuthStore = defineStore('auth', () => {
       console.log('Loading user profile...')
       const response = await api.getProfile()
 
-      if (!response.success || !response.user) {
+      // Handle both response structures: response.data.user OR response.user
+      const userData = response.data?.user || (response as any).user
+
+      if (!response.success || !userData) {
         console.log('Profile load failed, attempting token refresh...')
+        console.log('Failed response:', response)
         // Token is invalid, try to refresh
         const refreshed = await refreshAccessToken()
         if (refreshed) {
@@ -243,13 +247,19 @@ export const useAuthStore = defineStore('auth', () => {
           // Try loading profile again with new token (but only once to avoid infinite loop)
           loading.value = true
           const retryResponse = await api.getProfile()
-          if (retryResponse.success && retryResponse.user) {
-            user.value = retryResponse.user
+          console.log('Retry response:', retryResponse)
+
+          // Handle both response structures
+          const retryUserData = retryResponse.data?.user || (retryResponse as any).user
+
+          if (retryResponse.success && retryUserData) {
+            user.value = retryUserData
             console.log('Profile loaded successfully after refresh')
             // Sync subscription after successful login
             syncSubscriptionInBackground()
           } else {
             console.error('Profile load failed even after refresh')
+            console.error('Error details:', retryResponse.error || 'No error message')
             await logout()
           }
           return
@@ -261,7 +271,7 @@ export const useAuthStore = defineStore('auth', () => {
         }
       }
 
-      user.value = response.user
+      user.value = userData
       console.log('Profile loaded successfully')
 
       // Sync subscription after successful profile load
@@ -275,8 +285,8 @@ export const useAuthStore = defineStore('auth', () => {
         // Retry profile load after successful refresh
         try {
           const retryResponse = await api.getProfile()
-          if (retryResponse.success && retryResponse.user) {
-            user.value = retryResponse.user
+          if (retryResponse.success && retryResponse.data?.user) {
+            user.value = retryResponse.data.user
             syncSubscriptionInBackground()
           }
         } catch (retryErr) {
@@ -299,8 +309,8 @@ export const useAuthStore = defineStore('auth', () => {
         console.log('Subscription synced successfully')
         // Refresh profile to get updated data
         const profileResponse = await api.getProfile()
-        if (profileResponse.success && profileResponse.user) {
-          user.value = profileResponse.user
+        if (profileResponse.success && profileResponse.data?.user) {
+          user.value = profileResponse.data.user
         }
       } else {
         console.log('Subscription sync returned no changes or error:', response.message)

@@ -219,7 +219,7 @@ const isConnected = computed(() => facebookStore.connectedPages.length > 0)
 
 // Watch for file selection and upload immediately
 watch(selectedFiles, async (newFiles) => {
-  if (newFiles.length > 0) {
+  if (newFiles.length > 0 && newFiles[0]) {
     await uploadImage(newFiles[0])
   } else {
     // Clear image URL if files are removed
@@ -305,7 +305,7 @@ async function handlePost() {
       throw new Error(response.error || 'Failed to post to Facebook')
     }
 
-    const postId = response.postId || 'unknown'
+    const postId = response.data?.postId || 'unknown'
     successMessage.value = `Successfully posted to Facebook! Post ID: ${postId}`
     showSuccess.value = true
 

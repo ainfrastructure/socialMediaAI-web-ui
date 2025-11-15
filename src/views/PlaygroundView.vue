@@ -3,17 +3,10 @@
     <GradientBackground />
 
     <div class="container">
-      <div class="header">
-        <h1 class="title">AI Marketing Playground</h1>
-        <p class="subtitle">
-          Generate stunning marketing content for your restaurants using AI
-        </p>
-      </div>
-
       <!-- Loading State -->
       <div v-if="loadingRestaurants" class="loading-container">
-        <div class="spinner"></div>
-        <p>Loading your restaurants...</p>
+        <div class="spinner cooking"></div>
+        <p>Cooking up your restaurants...</p>
       </div>
 
       <!-- No Restaurants State -->
@@ -27,43 +20,90 @@
         </div>
       </BaseCard>
 
-      <!-- Main Playground -->
+      <!-- Main Content -->
       <div v-else class="playground-content">
-        <!-- Restaurant Selector -->
-        <BaseCard variant="glass-intense" class="selector-card">
-          <h3 class="card-title">Select Restaurant</h3>
+        <!-- Step 1: Restaurant Selection (shown when no restaurant is selected) -->
+        <div v-if="!selectedRestaurant" class="restaurant-selection-view">
+          <div class="selection-header">
+            <h2 class="selection-title">Choose a Restaurant</h2>
+            <p class="selection-subtitle">Select which restaurant to create content for</p>
+            <BaseButton variant="primary" @click="router.push('/restaurants')">
+              + Add New Restaurant
+            </BaseButton>
+          </div>
 
-          <div class="restaurant-grid">
-            <div
+          <div class="restaurants-grid">
+            <BaseCard
               v-for="restaurant in restaurants"
               :key="restaurant.id"
-              class="restaurant-card-selector"
-              :class="{ selected: selectedRestaurantId === restaurant.id }"
+              variant="glass"
+              hoverable
+              class="restaurant-card"
               @click="selectRestaurantById(restaurant.id)"
             >
-              <div v-if="restaurant.brand_dna?.logo_url" class="restaurant-logo-container">
-                <img
-                  :src="restaurant.brand_dna.logo_url"
-                  :alt="restaurant.brand_dna.brand_name || restaurant.name"
-                  class="restaurant-logo"
-                />
+              <div class="card-header">
+                <div class="card-title-section">
+                  <div v-if="restaurant.brand_dna?.logo_url" class="card-logo-container">
+                    <img
+                      :src="restaurant.brand_dna.logo_url"
+                      :alt="restaurant.brand_dna.brand_name || restaurant.name"
+                      class="card-logo"
+                    />
+                  </div>
+                  <h3 class="restaurant-name">{{ restaurant.name }}</h3>
+                </div>
+                <button class="edit-btn" @click.stop="editRestaurant(restaurant)" title="Edit Restaurant">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                  </svg>
+                </button>
               </div>
-              <div v-else class="restaurant-logo-placeholder">
-                <span class="placeholder-icon">🍽️</span>
-              </div>
-              <div class="restaurant-info">
-                <h4 class="restaurant-name-select">{{ restaurant.name }}</h4>
-                <p class="restaurant-address-select">{{ restaurant.address }}</p>
-              </div>
-              <div v-if="selectedRestaurantId === restaurant.id" class="selected-indicator">
-                ✓
-              </div>
-            </div>
-          </div>
-        </BaseCard>
 
-        <!-- Menu Items Reference -->
-        <BaseCard v-if="selectedRestaurant && menuItems.length > 0" variant="glass" class="menu-reference-card">
+              <p class="restaurant-address">{{ restaurant.address }}</p>
+
+              <div class="restaurant-meta">
+                <div v-if="restaurant.rating" class="meta-item">
+                  <span class="meta-icon">⭐</span>
+                  <span>{{ restaurant.rating }} / 5</span>
+                </div>
+
+                <div v-if="restaurant.menu && restaurant.menu.items && restaurant.menu.items.length > 0" class="meta-item">
+                  <span class="meta-icon">📋</span>
+                  <span>{{ restaurant.menu.items.length }} menu items</span>
+                </div>
+
+                <div v-if="restaurant.saved_at" class="meta-item">
+                  <span class="meta-icon">📅</span>
+                  <span>Saved {{ formatDate(restaurant.saved_at) }}</span>
+                </div>
+              </div>
+            </BaseCard>
+          </div>
+        </div>
+
+        <!-- Step 2: Content Creation (shown after restaurant is selected) -->
+        <div v-else class="content-creation-view">
+          <!-- Selected Restaurant Header with Back Button -->
+          <BaseCard variant="glass-intense" class="selected-restaurant-header">
+            <div class="header-content">
+              <div class="selected-restaurant-info">
+                <div v-if="selectedRestaurant.brand_dna?.logo_url" class="header-logo">
+                  <img :src="selectedRestaurant.brand_dna.logo_url" :alt="selectedRestaurant.name" />
+                </div>
+                <div>
+                  <h3 class="header-restaurant-name">{{ selectedRestaurant.name }}</h3>
+                  <p class="header-restaurant-address">{{ selectedRestaurant.address }}</p>
+                </div>
+              </div>
+              <BaseButton variant="ghost" size="small" @click="clearRestaurantSelection">
+                ← Back
+              </BaseButton>
+            </div>
+          </BaseCard>
+
+          <!-- Menu Items Reference -->
+          <BaseCard v-if="menuItems.length > 0" variant="glass" class="menu-reference-card">
           <div class="menu-header">
             <div>
               <h3 class="card-title">Menu Items ({{ menuItems.length }})</h3>
@@ -183,19 +223,6 @@
                   <p class="context-hint">Where to place the sticker on image</p>
                 </div>
               </div>
-
-              <div class="sticker-preview-info">
-                <span class="preview-icon">👁️</span>
-                <span class="preview-text">
-                  <strong>{{ promptContext.toUpperCase() }}</strong> will appear as a
-                  <strong>{{ stickerStyle.replace('-', ' ') }}</strong> sticker in the
-                  <strong>{{ stickerPosition.replace('-', ' ') }}</strong>
-                  <span v-if="selectedRestaurant?.brand_dna?.primary_color" class="brand-color-indicator">
-                    using brand color
-                    <span class="color-swatch" :style="{ backgroundColor: selectedRestaurant.brand_dna.primary_color }"></span>
-                  </span>
-                </span>
-              </div>
             </div>
 
             <!-- Logo Watermark Settings -->
@@ -222,6 +249,46 @@
                   </select>
                   <p class="context-hint">Where to place the logo watermark</p>
                 </div>
+              </div>
+
+              <!-- Live Banner Preview -->
+              <div class="banner-preview-container">
+                <h5 class="preview-label">👁️ Live Preview</h5>
+                <div class="banner-preview-frame">
+                  <!-- Simulated Image Placeholder -->
+                  <div class="preview-image-placeholder">
+                    <div class="preview-food-icon">🍽️</div>
+                    <div class="preview-image-text">Your Generated Image</div>
+                  </div>
+
+                  <!-- Promotional Sticker Overlay -->
+                  <div
+                    v-if="promptContext"
+                    :class="['preview-sticker', `style-${stickerStyle}`, `position-${stickerPosition}`]"
+                    :style="{
+                      backgroundColor: getBrandColor(),
+                      borderColor: getBrandColor(),
+                      transform: stickerStyle === 'ribbon' ? 'rotate(0deg)' : 'rotate(-5deg)'
+                    }"
+                  >
+                    <span class="sticker-text">{{ promptContext.toUpperCase() }}</span>
+                  </div>
+
+                  <!-- Logo Watermark -->
+                  <div
+                    v-if="includeLogo && selectedRestaurant?.brand_dna?.logo_url"
+                    :class="['preview-logo', `logo-${logoPosition}`]"
+                  >
+                    <img
+                      :src="selectedRestaurant.brand_dna.logo_url"
+                      :alt="selectedRestaurant.name"
+                      class="preview-logo-img"
+                    />
+                  </div>
+                </div>
+                <p class="preview-description">
+                  Preview how your sticker and logo will appear
+                </p>
               </div>
             </div>
 
@@ -542,6 +609,7 @@
             </div>
           </div>
         </BaseCard>
+        </div>
       </div>
     </div>
 
@@ -552,6 +620,354 @@
       :preselected-date="preselectedDate"
       @scheduled="handleScheduled"
     />
+
+    <!-- Restaurant Details Modal -->
+    <div v-if="restaurantToEdit" class="modal-overlay" @click="closeRestaurantDetails">
+      <div class="details-modal" @click.stop>
+        <BaseCard variant="glass-intense" class="details-content">
+          <div class="details-header">
+            <h2 class="details-title">{{ restaurantToEdit.name }}</h2>
+            <div class="header-actions">
+              <button class="close-btn" @click="closeRestaurantDetails">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <BaseAlert v-if="saveError" type="error" class="save-alert">
+            {{ saveError }}
+          </BaseAlert>
+
+          <div class="details-body">
+            <!-- Basic Info -->
+            <section class="details-section">
+              <div class="section-header">
+                <h3 class="section-title">Information</h3>
+              </div>
+              <div class="info-grid">
+                <div class="info-item">
+                  <span class="info-label">Address</span>
+                  <span class="info-value">{{ restaurantToEdit.address }}</span>
+                </div>
+
+                <div v-if="restaurantToEdit.phone_number" class="info-item">
+                  <span class="info-label">Phone</span>
+                  <span class="info-value">{{ restaurantToEdit.phone_number }}</span>
+                </div>
+
+                <div class="info-item">
+                  <span class="info-label">Website</span>
+                  <div class="editable-field">
+                    <input
+                      v-if="editingWebsite"
+                      v-model="editedWebsite"
+                      type="url"
+                      class="edit-input"
+                      placeholder="https://example.com"
+                    />
+                    <a v-else-if="restaurantToEdit.website" :href="restaurantToEdit.website" target="_blank" class="info-link">
+                      {{ restaurantToEdit.website }}
+                    </a>
+                    <span v-else class="info-value empty">Not set</span>
+
+                    <div class="field-actions">
+                      <button v-if="!editingWebsite" class="edit-field-btn" @click="startEditWebsite" title="Edit website">
+                        ✏️
+                      </button>
+                      <template v-else>
+                        <BaseButton variant="primary" size="small" @click="saveWebsite" :disabled="saving">
+                          {{ saving ? '...' : '💾' }}
+                        </BaseButton>
+                        <BaseButton variant="ghost" size="small" @click="cancelEditWebsite">
+                          ✕
+                        </BaseButton>
+                      </template>
+                    </div>
+                  </div>
+                </div>
+
+                <div v-if="restaurantToEdit.rating" class="info-item">
+                  <span class="info-label">Rating</span>
+                  <span class="info-value">
+                    ⭐ {{ restaurantToEdit.rating }} / 5
+                    <span v-if="restaurantToEdit.user_ratings_total" class="rating-count">
+                      ({{ restaurantToEdit.user_ratings_total }} reviews)
+                    </span>
+                  </span>
+                </div>
+              </div>
+            </section>
+
+            <!-- Brand DNA -->
+            <section v-if="restaurantToEdit.brand_dna" class="details-section">
+              <h3 class="section-title">Brand Identity</h3>
+
+              <!-- Brand Name -->
+              <div v-if="restaurantToEdit.brand_dna.brand_name" class="brand-item">
+                <span class="brand-label">Brand Name</span>
+                <span class="brand-value brand-name-text">{{ restaurantToEdit.brand_dna.brand_name }}</span>
+              </div>
+
+              <!-- Logo -->
+              <div v-if="restaurantToEdit.brand_dna.logo_url" class="brand-item logo-item">
+                <span class="brand-label">Logo</span>
+                <div class="logo-container">
+                  <img
+                    :src="restaurantToEdit.brand_dna.logo_url"
+                    :alt="restaurantToEdit.brand_dna.brand_name || 'Logo'"
+                    class="brand-logo"
+                  />
+                </div>
+              </div>
+
+              <!-- Brand Colors -->
+              <div class="brand-item colors-item">
+                <span class="brand-label">Brand Colors</span>
+                <div class="colors-display">
+                  <div v-if="restaurantToEdit.brand_dna.primary_color" class="color-box">
+                    <div class="color-swatch-small" :style="{ backgroundColor: restaurantToEdit.brand_dna.primary_color }"></div>
+                    <div class="color-details">
+                      <span class="color-name">Primary</span>
+                      <span class="color-code">{{ restaurantToEdit.brand_dna.primary_color }}</span>
+                    </div>
+                  </div>
+                  <div v-if="restaurantToEdit.brand_dna.secondary_color" class="color-box">
+                    <div class="color-swatch-small" :style="{ backgroundColor: restaurantToEdit.brand_dna.secondary_color }"></div>
+                    <div class="color-details">
+                      <span class="color-name">Secondary</span>
+                      <span class="color-code">{{ restaurantToEdit.brand_dna.secondary_color }}</span>
+                    </div>
+                  </div>
+                  <div
+                    v-for="(color, index) in restaurantToEdit.brand_dna.additional_colors"
+                    :key="index"
+                    class="color-box"
+                  >
+                    <div class="color-swatch-small" :style="{ backgroundColor: color }"></div>
+                    <div class="color-details">
+                      <span class="color-name">Accent {{ index + 1 }}</span>
+                      <span class="color-code">{{ color }}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Font Style -->
+              <div v-if="restaurantToEdit.brand_dna.font_style" class="brand-item">
+                <span class="brand-label">Typography</span>
+                <span class="brand-value font-badge-small">{{ restaurantToEdit.brand_dna.font_style }}</span>
+              </div>
+            </section>
+
+            <!-- Opening Hours -->
+            <section v-if="restaurantToEdit.opening_hours || editingHours" class="details-section">
+              <div class="section-header">
+                <h3 class="section-title">Opening Hours</h3>
+                <button v-if="!editingHours" class="edit-section-btn" @click="startEditHours" title="Edit opening hours">
+                  ✏️ Edit
+                </button>
+                <div v-else class="section-actions">
+                  <BaseButton variant="primary" size="small" @click="saveHours" :disabled="saving">
+                    {{ saving ? 'Saving...' : '💾 Save' }}
+                  </BaseButton>
+                  <BaseButton variant="ghost" size="small" @click="cancelEditHours">
+                    Cancel
+                  </BaseButton>
+                </div>
+              </div>
+
+              <div v-if="restaurantToEdit.opening_hours?.open_now !== undefined && !editingHours" class="status-badge" :class="{ 'open': restaurantToEdit.opening_hours.open_now }">
+                {{ restaurantToEdit.opening_hours.open_now ? '🟢 Open Now' : '🔴 Closed' }}
+              </div>
+
+              <!-- Edit Mode -->
+              <div v-if="editingHours" class="hours-edit-list">
+                <div v-for="(day, index) in editedHours" :key="index" class="hours-edit-item">
+                  <input
+                    v-model="editedHours[index]"
+                    type="text"
+                    class="edit-input hours-input"
+                    placeholder="Monday: 9:00 AM – 5:00 PM"
+                  />
+                  <button class="remove-day-btn" @click="editedHours.splice(index, 1)" title="Remove day">
+                    ✕
+                  </button>
+                </div>
+                <BaseButton variant="ghost" size="small" @click="editedHours.push('')">
+                  ➕ Add Day
+                </BaseButton>
+              </div>
+
+              <!-- View Mode -->
+              <div v-else-if="restaurantToEdit.opening_hours?.weekday_text" class="hours-list">
+                <div v-for="(day, index) in restaurantToEdit.opening_hours.weekday_text" :key="index" class="hours-item">
+                  {{ day }}
+                </div>
+              </div>
+            </section>
+
+            <!-- Social Media -->
+            <section v-if="(restaurantToEdit.social_media && hasSocialMedia(restaurantToEdit.social_media)) || editingSocial" class="details-section">
+              <div class="section-header">
+                <h3 class="section-title">Social Media</h3>
+                <button v-if="!editingSocial" class="edit-section-btn" @click="startEditSocial" title="Edit social media">
+                  ✏️ Edit
+                </button>
+                <div v-else class="section-actions">
+                  <BaseButton variant="primary" size="small" @click="saveSocial" :disabled="saving">
+                    {{ saving ? 'Saving...' : '💾 Save' }}
+                  </BaseButton>
+                  <BaseButton variant="ghost" size="small" @click="cancelEditSocial">
+                    Cancel
+                  </BaseButton>
+                </div>
+              </div>
+
+              <!-- Edit Mode -->
+              <div v-if="editingSocial" class="social-edit-grid">
+                <div class="social-edit-item">
+                  <label class="social-label">
+                    <span class="social-icon facebook-icon">📘</span>
+                    Facebook
+                  </label>
+                  <input
+                    v-model="editedSocial.facebook"
+                    type="url"
+                    class="edit-input"
+                    placeholder="https://facebook.com/..."
+                  />
+                </div>
+
+                <div class="social-edit-item">
+                  <label class="social-label">
+                    <span class="social-icon instagram-icon">📷</span>
+                    Instagram
+                  </label>
+                  <input
+                    v-model="editedSocial.instagram"
+                    type="url"
+                    class="edit-input"
+                    placeholder="https://instagram.com/..."
+                  />
+                </div>
+
+                <div class="social-edit-item">
+                  <label class="social-label">
+                    <span class="social-icon twitter-icon">🐦</span>
+                    Twitter/X
+                  </label>
+                  <input
+                    v-model="editedSocial.twitter"
+                    type="url"
+                    class="edit-input"
+                    placeholder="https://twitter.com/..."
+                  />
+                </div>
+
+                <div class="social-edit-item">
+                  <label class="social-label">
+                    <span class="social-icon youtube-icon">📺</span>
+                    YouTube
+                  </label>
+                  <input
+                    v-model="editedSocial.youtube"
+                    type="url"
+                    class="edit-input"
+                    placeholder="https://youtube.com/..."
+                  />
+                </div>
+
+                <div class="social-edit-item">
+                  <label class="social-label">
+                    <span class="social-icon tiktok-icon">🎵</span>
+                    TikTok
+                  </label>
+                  <input
+                    v-model="editedSocial.tiktok"
+                    type="url"
+                    class="edit-input"
+                    placeholder="https://tiktok.com/..."
+                  />
+                </div>
+              </div>
+
+              <!-- View Mode -->
+              <div v-else class="social-links">
+                <a v-if="restaurantToEdit.social_media?.facebook" :href="restaurantToEdit.social_media.facebook" target="_blank" class="social-link facebook">
+                  Facebook
+                </a>
+                <a v-if="restaurantToEdit.social_media?.instagram" :href="restaurantToEdit.social_media.instagram" target="_blank" class="social-link instagram">
+                  Instagram
+                </a>
+                <a v-if="restaurantToEdit.social_media?.twitter" :href="restaurantToEdit.social_media.twitter" target="_blank" class="social-link twitter">
+                  Twitter/X
+                </a>
+                <a v-if="restaurantToEdit.social_media?.youtube" :href="restaurantToEdit.social_media.youtube" target="_blank" class="social-link youtube">
+                  YouTube
+                </a>
+                <a v-if="restaurantToEdit.social_media?.tiktok" :href="restaurantToEdit.social_media.tiktok" target="_blank" class="social-link tiktok">
+                  TikTok
+                </a>
+              </div>
+            </section>
+
+            <!-- Menu -->
+            <section v-if="restaurantToEdit.menu && restaurantToEdit.menu.items && restaurantToEdit.menu.items.length > 0" class="details-section">
+              <h3 class="section-title">
+                Menu ({{ restaurantToEdit.menu.items.length }} items)
+                <span v-if="restaurantToEdit.menu.platform" class="platform-badge">
+                  {{ restaurantToEdit.menu.platform.toUpperCase() }}
+                </span>
+              </h3>
+              <div class="menu-grid">
+                <div v-for="(item, index) in paginatedEditMenuItems" :key="index" class="menu-item">
+                  <img v-if="item.imageUrl" :src="item.imageUrl" :alt="item.name" class="menu-image" />
+                  <div class="menu-item-content">
+                    <h4 class="menu-item-name">{{ item.name }}</h4>
+                    <p v-if="item.description" class="menu-item-description">{{ item.description }}</p>
+                    <p class="menu-item-price">{{ item.price }}</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Menu Pagination -->
+              <div v-if="totalMenuPages > 1" class="pagination">
+                <button
+                  class="pagination-btn"
+                  :disabled="menuCurrentPage === 1"
+                  @click="goToMenuPage(menuCurrentPage - 1)"
+                >
+                  ← Previous
+                </button>
+
+                <div class="pagination-numbers">
+                  <button
+                    v-for="page in totalMenuPages"
+                    :key="page"
+                    class="pagination-number"
+                    :class="{ active: menuCurrentPage === page }"
+                    @click="goToMenuPage(page)"
+                  >
+                    {{ page }}
+                  </button>
+                </div>
+
+                <button
+                  class="pagination-btn"
+                  :disabled="menuCurrentPage === totalMenuPages"
+                  @click="goToMenuPage(menuCurrentPage + 1)"
+                >
+                  Next →
+                </button>
+              </div>
+            </section>
+          </div>
+        </BaseCard>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -710,6 +1126,12 @@ const clearSelection = () => {
   showMessage('Selection cleared', 'info')
 }
 
+// Get brand color for promotional sticker
+const getBrandColor = () => {
+  const brandColor = selectedRestaurant.value?.brand_dna?.primary_color
+  return brandColor || '#FF4444' // Default to red if no brand color
+}
+
 onMounted(async () => {
   // Check for scheduleDate URL parameter
   const scheduleDateParam = route.query.scheduleDate
@@ -730,11 +1152,6 @@ const fetchRestaurants = async () => {
   try {
     loadingRestaurants.value = true
     restaurants.value = await restaurantService.getSavedRestaurants()
-
-    // Auto-select first restaurant if available
-    if (restaurants.value.length > 0) {
-      selectedRestaurantId.value = restaurants.value[0].id
-    }
   } catch (error: any) {
     showMessage('Failed to load restaurants: ' + error.message, 'error')
   } finally {
@@ -742,9 +1159,259 @@ const fetchRestaurants = async () => {
   }
 }
 
+// Edit restaurant state
+const restaurantToEdit = ref<any>(null)
+const editingWebsite = ref(false)
+const editedWebsite = ref('')
+const editingHours = ref(false)
+const editedHours = ref<string[]>([])
+const editingSocial = ref(false)
+const editedSocial = ref({
+  facebook: '',
+  instagram: '',
+  twitter: '',
+  youtube: '',
+  tiktok: ''
+})
+const saving = ref(false)
+const saveError = ref<string | null>(null)
+
+// Menu pagination state
+const menuCurrentPage = ref(1)
+const menuItemsPerPage = 12
+
 const selectRestaurantById = (restaurantId: string) => {
   selectedRestaurantId.value = restaurantId
   onRestaurantChange()
+}
+
+const editRestaurant = (restaurant: any) => {
+  restaurantToEdit.value = restaurant
+  resetEditState()
+}
+
+const closeRestaurantDetails = () => {
+  restaurantToEdit.value = null
+  resetEditState()
+}
+
+const resetEditState = () => {
+  editingWebsite.value = false
+  editedWebsite.value = ''
+  editingHours.value = false
+  editedHours.value = []
+  editingSocial.value = false
+  editedSocial.value = {
+    facebook: '',
+    instagram: '',
+    twitter: '',
+    youtube: '',
+    tiktok: ''
+  }
+  saveError.value = null
+  menuCurrentPage.value = 1
+}
+
+// Website editing
+const startEditWebsite = () => {
+  editingWebsite.value = true
+  editedWebsite.value = restaurantToEdit.value?.website || ''
+}
+
+const cancelEditWebsite = () => {
+  editingWebsite.value = false
+  editedWebsite.value = ''
+  saveError.value = null
+}
+
+const saveWebsite = async () => {
+  if (!restaurantToEdit.value) return
+
+  try {
+    saving.value = true
+    saveError.value = null
+
+    const response = await restaurantService.updateRestaurant(restaurantToEdit.value.place_id, {
+      website: editedWebsite.value || null
+    })
+
+    if (response.success && response.data) {
+      restaurantToEdit.value = response.data
+
+      const index = restaurants.value.findIndex(r => r.id === restaurantToEdit.value!.id)
+      if (index !== -1) {
+        restaurants.value[index] = response.data
+      }
+
+      editingWebsite.value = false
+      editedWebsite.value = ''
+      showMessage('Website updated successfully', 'success')
+    } else {
+      saveError.value = response.error || 'Failed to save website'
+    }
+  } catch (err: any) {
+    console.error('Error saving website:', err)
+    saveError.value = err.message || 'Failed to save website'
+  } finally {
+    saving.value = false
+  }
+}
+
+// Opening hours editing
+const startEditHours = () => {
+  editingHours.value = true
+  editedHours.value = restaurantToEdit.value?.opening_hours?.weekday_text
+    ? [...restaurantToEdit.value.opening_hours.weekday_text]
+    : []
+}
+
+const cancelEditHours = () => {
+  editingHours.value = false
+  editedHours.value = []
+  saveError.value = null
+}
+
+const saveHours = async () => {
+  if (!restaurantToEdit.value) return
+
+  try {
+    saving.value = true
+    saveError.value = null
+
+    const response = await restaurantService.updateRestaurant(restaurantToEdit.value.place_id, {
+      opening_hours: {
+        weekday_text: editedHours.value.filter(h => h.trim() !== '')
+      }
+    })
+
+    if (response.success && response.data) {
+      restaurantToEdit.value = response.data
+
+      const index = restaurants.value.findIndex(r => r.id === restaurantToEdit.value!.id)
+      if (index !== -1) {
+        restaurants.value[index] = response.data
+      }
+
+      editingHours.value = false
+      editedHours.value = []
+      showMessage('Opening hours updated successfully', 'success')
+    } else {
+      saveError.value = response.error || 'Failed to save opening hours'
+    }
+  } catch (err: any) {
+    console.error('Error saving opening hours:', err)
+    saveError.value = err.message || 'Failed to save opening hours'
+  } finally {
+    saving.value = false
+  }
+}
+
+// Social media editing
+const startEditSocial = () => {
+  editingSocial.value = true
+  editedSocial.value = {
+    facebook: restaurantToEdit.value?.social_media?.facebook || '',
+    instagram: restaurantToEdit.value?.social_media?.instagram || '',
+    twitter: restaurantToEdit.value?.social_media?.twitter || '',
+    youtube: restaurantToEdit.value?.social_media?.youtube || '',
+    tiktok: restaurantToEdit.value?.social_media?.tiktok || ''
+  }
+}
+
+const cancelEditSocial = () => {
+  editingSocial.value = false
+  editedSocial.value = {
+    facebook: '',
+    instagram: '',
+    twitter: '',
+    youtube: '',
+    tiktok: ''
+  }
+  saveError.value = null
+}
+
+const saveSocial = async () => {
+  if (!restaurantToEdit.value) return
+
+  try {
+    saving.value = true
+    saveError.value = null
+
+    const response = await restaurantService.updateRestaurant(restaurantToEdit.value.place_id, {
+      social_media: editedSocial.value
+    })
+
+    if (response.success && response.data) {
+      restaurantToEdit.value = response.data
+
+      const index = restaurants.value.findIndex(r => r.id === restaurantToEdit.value!.id)
+      if (index !== -1) {
+        restaurants.value[index] = response.data
+      }
+
+      editingSocial.value = false
+      editedSocial.value = {
+        facebook: '',
+        instagram: '',
+        twitter: '',
+        youtube: '',
+        tiktok: ''
+      }
+      showMessage('Social media updated successfully', 'success')
+    } else {
+      saveError.value = response.error || 'Failed to save social media'
+    }
+  } catch (err: any) {
+    console.error('Error saving social media:', err)
+    saveError.value = err.message || 'Failed to save social media'
+  } finally {
+    saving.value = false
+  }
+}
+
+const hasSocialMedia = (socialMedia: any): boolean => {
+  if (!socialMedia) return false
+  return !!(socialMedia.facebook || socialMedia.instagram || socialMedia.twitter || socialMedia.youtube || socialMedia.tiktok)
+}
+
+// Menu pagination for edit modal
+const paginatedEditMenuItems = computed(() => {
+  if (!restaurantToEdit.value?.menu?.items) return []
+  const items = restaurantToEdit.value.menu.items
+  const start = (menuCurrentPage.value - 1) * menuItemsPerPage
+  const end = start + menuItemsPerPage
+  return items.slice(start, end)
+})
+
+const totalMenuPages = computed(() => {
+  if (!restaurantToEdit.value?.menu?.items) return 0
+  return Math.ceil(restaurantToEdit.value.menu.items.length / menuItemsPerPage)
+})
+
+const goToMenuPage = (page: number) => {
+  menuCurrentPage.value = page
+}
+
+const clearRestaurantSelection = () => {
+  selectedRestaurantId.value = ''
+  clearAll()
+  selectedMenuItems.value = []
+  currentPage.value = 1
+}
+
+const formatDate = (dateString: string) => {
+  if (!dateString) return ''
+  const date = new Date(dateString)
+  const now = new Date()
+  const diffTime = Math.abs(now.getTime() - date.getTime())
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+
+  if (diffDays === 0) return 'today'
+  if (diffDays === 1) return 'yesterday'
+  if (diffDays < 7) return `${diffDays} days ago`
+  if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago`
+  if (diffDays < 365) return `${Math.floor(diffDays / 30)} months ago`
+  return `${Math.floor(diffDays / 365)} years ago`
 }
 
 const onRestaurantChange = async () => {
@@ -914,7 +1581,7 @@ const generateImage = async () => {
     const watermark = (includeLogo.value && selectedRestaurant.value?.brand_dna?.logo_url)
       ? {
           logoPath: selectedRestaurant.value.brand_dna.logo_url,
-          position: logoPosition.value as const,
+          position: logoPosition.value as 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right' | 'center',
           opacity: 80,
           scale: 15,
           padding: 20,
@@ -957,17 +1624,11 @@ const generateImage = async () => {
     }
 
     // Prepare promotional sticker if campaign context is provided
-    // Use brand DNA primary color if available, otherwise default to red
-    const getBrandColor = () => {
-      const brandColor = selectedRestaurant.value?.brand_dna?.primary_color
-      return brandColor || '#FF4444' // Default to red if no brand color
-    }
-
     const promotionalSticker = promptContext.value
       ? {
           text: promptContext.value.toUpperCase(), // Convert to uppercase for impact
-          position: stickerPosition.value as const,
-          style: stickerStyle.value as const,
+          position: stickerPosition.value as 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right' | 'center',
+          style: stickerStyle.value as 'badge' | 'ribbon' | 'burst' | 'minimal',
           color: getBrandColor(), // Use brand color or default
           textColor: '#FFFFFF', // White text
           size: 'large' as const,
@@ -975,16 +1636,18 @@ const generateImage = async () => {
         }
       : undefined
 
-    console.log('Calling API with:', {
+    console.log('🎨 Calling image generation API with:', {
       prompt: editablePrompt.value,
       hasWatermark: !!watermark,
       hasReferenceImage: !!referenceImage,
       hasPromotionalSticker: !!promotionalSticker,
+      promotionalStickerDetails: promotionalSticker,
     })
 
     const response = await api.generateImage(editablePrompt.value, watermark, referenceImage, promotionalSticker)
 
-    console.log('API response:', response)
+    console.log('✅ API response:', response)
+    console.log('📍 Promotional sticker added:', (response as any).promotionalStickerAdded)
 
     if (!response.success) {
       showMessage(response.error || 'Failed to generate image', 'error')
@@ -1422,8 +2085,42 @@ const handleScheduled = (scheduledPost: any) => {
   animation: spin 0.8s linear infinite;
 }
 
+.spinner.cooking {
+  position: relative;
+  border: 3px solid rgba(212, 175, 55, 0.3);
+  border-top-color: var(--gold-primary);
+  border-right-color: var(--gold-light);
+  border-bottom-color: var(--gold-dark);
+  animation: stir 1.2s cubic-bezier(0.68, -0.55, 0.265, 1.55) infinite;
+}
+
+.spinner.cooking::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 6px;
+  height: 6px;
+  background: var(--gold-primary);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  animation: bubble 0.6s ease-in-out infinite alternate;
+}
+
 @keyframes spin {
   to { transform: rotate(360deg); }
+}
+
+@keyframes stir {
+  0%, 100% { transform: rotate(0deg) scale(1); }
+  25% { transform: rotate(90deg) scale(1.1); }
+  50% { transform: rotate(180deg) scale(0.9); }
+  75% { transform: rotate(270deg) scale(1.1); }
+}
+
+@keyframes bubble {
+  0% { transform: translate(-50%, -50%) scale(0.8); opacity: 0.6; }
+  100% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
 }
 
 .loading-container p,
@@ -1460,6 +2157,201 @@ const handleScheduled = (scheduledPost: any) => {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
+}
+
+/* Restaurant Selection View */
+.restaurant-selection-view {
+  width: 100%;
+}
+
+.selection-header {
+  text-align: center;
+  margin-bottom: var(--space-3xl);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-lg);
+}
+
+.selection-title {
+  font-family: var(--font-heading);
+  font-size: var(--text-4xl);
+  font-weight: 700;
+  margin: 0;
+  background: var(--gradient-gold);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.selection-subtitle {
+  font-size: var(--text-lg);
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.restaurants-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: var(--space-xl);
+}
+
+.restaurant-card {
+  padding: var(--space-xl);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.restaurant-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(212, 175, 55, 0.2);
+  border-color: rgba(212, 175, 55, 0.4);
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.card-title-section {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex: 1;
+}
+
+.card-logo-container {
+  width: 56px;
+  height: 56px;
+  flex-shrink: 0;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem;
+}
+
+.card-logo {
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+}
+
+.restaurant-name {
+  font-family: var(--font-heading);
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+  flex: 1;
+}
+
+.edit-btn {
+  background: rgba(212, 175, 55, 0.1);
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  border-radius: 6px;
+  padding: 0.5rem;
+  cursor: pointer;
+  color: var(--gold-primary);
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.edit-btn:hover {
+  background: var(--gradient-gold);
+  border-color: transparent;
+  color: var(--text-on-gold);
+  transform: scale(1.05);
+}
+
+.restaurant-address {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  margin: 0 0 1rem 0;
+  line-height: 1.5;
+}
+
+.restaurant-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-top: auto;
+}
+
+.meta-item {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+}
+
+.meta-icon {
+  font-size: 1rem;
+}
+
+/* Content Creation View */
+.content-creation-view {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.selected-restaurant-header {
+  padding: var(--space-lg);
+}
+
+.header-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+
+.selected-restaurant-info {
+  display: flex;
+  align-items: center;
+  gap: var(--space-lg);
+}
+
+.header-logo {
+  width: 80px;
+  height: 80px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem;
+}
+
+.header-logo img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.header-restaurant-name {
+  font-family: var(--font-heading);
+  font-size: var(--text-2xl);
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 0.25rem 0;
+}
+
+.header-restaurant-address {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  margin: 0;
 }
 
 .selector-card {
@@ -2443,25 +3335,226 @@ const handleScheduled = (scheduledPost: any) => {
   }
 }
 
-.sticker-preview-info {
-  background: rgba(212, 175, 55, 0.08);
-  border: 1px solid rgba(212, 175, 55, 0.2);
+/* Live Banner Preview */
+.banner-preview-container {
+  margin-top: var(--space-xl);
+}
+
+.preview-label {
+  font-family: var(--font-heading);
+  font-size: var(--text-lg);
+  font-weight: 600;
+  color: var(--gold-primary);
+  margin: 0 0 var(--space-md) 0;
+}
+
+.banner-preview-frame {
+  position: relative;
+  width: 250px;
+  height: 250px;
+  background: linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 100%);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  border: 2px solid rgba(212, 175, 55, 0.3);
+  margin: 0 auto;
+}
+
+.preview-image-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-md);
+  background: radial-gradient(circle at center, rgba(212, 175, 55, 0.05) 0%, transparent 70%);
+}
+
+.preview-food-icon {
+  font-size: 2.5rem;
+  opacity: 0.3;
+  filter: grayscale(1);
+}
+
+.preview-image-text {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  opacity: 0.5;
+  font-weight: 500;
+}
+
+.preview-sticker {
+  position: absolute;
+  padding: 0.5rem 1rem;
+  color: white;
+  font-weight: 700;
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  transition: all 0.3s ease;
+  z-index: 10;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+/* Sticker Styles */
+.preview-sticker.style-bold {
   border-radius: 8px;
-  padding: 1rem;
+}
+
+.preview-sticker.style-outlined {
+  background: transparent !important;
+  border: 3px solid;
+  backdrop-filter: blur(4px);
+  text-shadow: 0 0 8px rgba(0, 0, 0, 0.8);
+}
+
+.preview-sticker.style-ribbon {
+  clip-path: polygon(
+    10% 0%,
+    90% 0%,
+    100% 50%,
+    90% 100%,
+    10% 100%,
+    0% 50%
+  );
+  padding: 0.5rem 1.25rem;
+}
+
+.preview-sticker.style-badge {
+  border-radius: 50%;
+  width: 70px;
+  height: 70px;
+  padding: 0;
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  justify-content: center;
+  text-align: center;
 }
 
-.preview-icon {
-  font-size: 1.5rem;
-  flex-shrink: 0;
+.preview-sticker.style-badge .sticker-text {
+  font-size: 0.65rem;
+  line-height: 1.2;
 }
 
-.preview-text {
-  font-size: 0.875rem;
+.preview-sticker.style-starburst {
+  clip-path: polygon(
+    50% 0%,
+    61% 35%,
+    98% 35%,
+    68% 57%,
+    79% 91%,
+    50% 70%,
+    21% 91%,
+    32% 57%,
+    2% 35%,
+    39% 35%
+  );
+  width: 85px;
+  height: 85px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.preview-sticker.style-starburst .sticker-text {
+  font-size: 0.65rem;
+  line-height: 1.2;
+  margin-top: -0.5rem;
+}
+
+/* Sticker Positions */
+.preview-sticker.position-top-left {
+  top: 1rem;
+  left: 1rem;
+}
+
+.preview-sticker.position-top-right {
+  top: 1rem;
+  right: 1rem;
+}
+
+.preview-sticker.position-top-center {
+  top: 1rem;
+  left: 50%;
+  transform: translateX(-50%) rotate(-5deg);
+}
+
+.preview-sticker.position-top-center.style-ribbon {
+  transform: translateX(-50%) rotate(0deg);
+}
+
+.preview-sticker.position-bottom-left {
+  bottom: 1rem;
+  left: 1rem;
+}
+
+.preview-sticker.position-bottom-right {
+  bottom: 1rem;
+  right: 1rem;
+}
+
+.preview-sticker.position-center {
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(-5deg);
+}
+
+.preview-sticker.position-center.style-ribbon {
+  transform: translate(-50%, -50%) rotate(0deg);
+}
+
+.sticker-text {
+  white-space: nowrap;
+}
+
+/* Logo Watermark Preview */
+.preview-logo {
+  position: absolute;
+  width: 80px;
+  height: 80px;
+  z-index: 5;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 8px;
+  padding: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.preview-logo.logo-top-left {
+  top: 1rem;
+  left: 1rem;
+}
+
+.preview-logo.logo-top-right {
+  top: 1rem;
+  right: 1rem;
+}
+
+.preview-logo.logo-bottom-left {
+  bottom: 1rem;
+  left: 1rem;
+}
+
+.preview-logo.logo-bottom-right {
+  bottom: 1rem;
+  right: 1rem;
+}
+
+.preview-logo-img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.preview-description {
+  margin-top: var(--space-md);
+  font-size: var(--text-sm);
   color: var(--text-secondary);
-  line-height: 1.5;
+  text-align: center;
 }
 
 .preview-text strong {
@@ -2505,5 +3598,676 @@ const handleScheduled = (scheduledPost: any) => {
 
 .checkbox-label:hover {
   color: var(--gold-primary);
+}
+
+/* Restaurant Details Modal Styles */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+}
+
+.details-modal {
+  width: 100%;
+  max-width: 900px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.details-content {
+  padding: 2rem;
+}
+
+.details-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid rgba(212, 175, 55, 0.2);
+}
+
+.details-title {
+  font-family: var(--font-heading);
+  font-size: 2rem;
+  color: var(--gold-primary);
+  margin: 0;
+  flex: 1;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.close-btn:hover {
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.details-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.details-section {
+  padding: 1.5rem;
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(212, 175, 55, 0.1);
+  border-radius: 12px;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  gap: 1rem;
+}
+
+.section-title {
+  font-family: var(--font-heading);
+  font-size: 1.25rem;
+  color: var(--gold-primary);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.edit-section-btn {
+  padding: 0.5rem 1rem;
+  background: rgba(212, 175, 55, 0.1);
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  border-radius: 6px;
+  color: var(--gold-primary);
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.edit-section-btn:hover {
+  background: rgba(212, 175, 55, 0.2);
+  border-color: var(--gold-primary);
+  transform: translateY(-1px);
+}
+
+.section-actions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.edit-field-btn {
+  padding: 0.375rem 0.75rem;
+  background: rgba(212, 175, 55, 0.1);
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  border-radius: 6px;
+  color: var(--gold-primary);
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-left: 0.5rem;
+}
+
+.edit-field-btn:hover {
+  background: rgba(212, 175, 55, 0.2);
+  border-color: var(--gold-primary);
+}
+
+.editable-field {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 1;
+}
+
+.field-actions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.save-alert {
+  margin-bottom: 1rem;
+}
+
+.info-grid {
+  display: grid;
+  gap: 1rem;
+}
+
+.info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.info-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-secondary);
+}
+
+.info-value {
+  font-size: 1rem;
+  color: var(--text-primary);
+}
+
+.info-link {
+  color: var(--gold-primary);
+  text-decoration: none;
+  transition: color 0.2s ease;
+  word-break: break-all;
+}
+
+.info-link:hover {
+  color: var(--text-primary);
+  text-decoration: underline;
+}
+
+.info-value.empty {
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.rating-count {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  font-weight: normal;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #ef4444;
+}
+
+.status-badge.open {
+  background: rgba(34, 197, 94, 0.15);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  color: #22c55e;
+}
+
+.edit-input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  border-radius: 8px;
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: 0.875rem;
+  transition: all 0.2s ease;
+}
+
+.edit-input:focus {
+  outline: none;
+  border-color: var(--gold-primary);
+  background: rgba(0, 0, 0, 0.5);
+  box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.1);
+}
+
+.edit-input::placeholder {
+  color: var(--text-muted);
+}
+
+/* Brand DNA Styles */
+.brand-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.brand-item:last-child {
+  margin-bottom: 0;
+}
+
+.brand-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-secondary);
+}
+
+.brand-value {
+  font-size: 1rem;
+  color: var(--text-primary);
+}
+
+.brand-name-text {
+  font-family: var(--font-heading);
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--gold-primary);
+}
+
+.logo-item {
+  align-items: flex-start;
+}
+
+.logo-container {
+  width: 100%;
+  max-width: 300px;
+  padding: 1.5rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.brand-logo {
+  max-width: 100%;
+  max-height: 120px;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+}
+
+.colors-item {
+  align-items: flex-start;
+}
+
+.colors-display {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  width: 100%;
+}
+
+.color-box {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  border-radius: 8px;
+  flex: 1;
+  min-width: 200px;
+}
+
+.color-swatch-small {
+  width: 48px;
+  height: 48px;
+  border-radius: 8px;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.color-details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  flex: 1;
+}
+
+.color-name {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-secondary);
+}
+
+.color-code {
+  font-size: 0.875rem;
+  font-family: monospace;
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.font-badge-small {
+  display: inline-block;
+  padding: 0.5rem 1rem;
+  background: rgba(212, 175, 55, 0.15);
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  border-radius: 20px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-transform: capitalize;
+  color: var(--gold-primary);
+}
+
+/* Opening Hours Styles */
+.hours-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.hours-item {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  padding: 0.25rem 0;
+}
+
+.hours-edit-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.hours-edit-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.remove-day-btn {
+  padding: 0.375rem 0.75rem;
+  background: rgba(220, 38, 38, 0.1);
+  border: 1px solid rgba(220, 38, 38, 0.3);
+  border-radius: 6px;
+  color: #ef4444;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.remove-day-btn:hover {
+  background: rgba(220, 38, 38, 0.2);
+  border-color: #ef4444;
+}
+
+.hours-input {
+  flex: 1;
+}
+
+/* Social Media Styles */
+.social-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.social-link {
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  text-decoration: none;
+  font-size: 0.875rem;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  border: 2px solid;
+}
+
+.social-link.facebook {
+  background: rgba(66, 103, 178, 0.1);
+  border-color: rgba(66, 103, 178, 0.3);
+  color: #4267B2;
+}
+
+.social-link.facebook:hover {
+  background: rgba(66, 103, 178, 0.2);
+  border-color: #4267B2;
+}
+
+.social-link.instagram {
+  background: rgba(225, 48, 108, 0.1);
+  border-color: rgba(225, 48, 108, 0.3);
+  color: #E1306C;
+}
+
+.social-link.instagram:hover {
+  background: rgba(225, 48, 108, 0.2);
+  border-color: #E1306C;
+}
+
+.social-link.twitter {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.3);
+  color: var(--text-primary);
+}
+
+.social-link.twitter:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.social-link.youtube {
+  background: rgba(255, 0, 0, 0.1);
+  border-color: rgba(255, 0, 0, 0.3);
+  color: #FF0000;
+}
+
+.social-link.youtube:hover {
+  background: rgba(255, 0, 0, 0.2);
+  border-color: #FF0000;
+}
+
+.social-link.tiktok {
+  background: rgba(0, 242, 234, 0.1);
+  border-color: rgba(0, 242, 234, 0.3);
+  color: #00F2EA;
+}
+
+.social-link.tiktok:hover {
+  background: rgba(0, 242, 234, 0.2);
+  border-color: #00F2EA;
+}
+
+.social-edit-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1rem;
+}
+
+.social-edit-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.social-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.social-icon {
+  font-size: 1.25rem;
+}
+
+/* Menu Styles */
+.platform-badge {
+  font-size: 0.75rem;
+  padding: 0.25rem 0.75rem;
+  background: rgba(212, 175, 55, 0.2);
+  border: 1px solid rgba(212, 175, 55, 0.4);
+  border-radius: 12px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+}
+
+.menu-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 1rem;
+}
+
+.menu-item {
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 8px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.menu-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(212, 175, 55, 0.2);
+}
+
+.menu-image {
+  width: 100%;
+  height: 150px;
+  object-fit: cover;
+}
+
+.menu-item-content {
+  padding: 1rem;
+}
+
+.menu-item-name {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 0.5rem 0;
+}
+
+.menu-item-description {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  margin: 0 0 0.5rem 0;
+  line-height: 1.4;
+}
+
+.menu-item-price {
+  font-size: 0.875rem;
+  color: var(--gold-primary);
+  font-weight: 600;
+  margin: 0;
+}
+
+/* Pagination Styles */
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-md);
+  margin-top: var(--space-2xl);
+  padding-top: var(--space-xl);
+  border-top: var(--border-width) solid var(--border-color);
+}
+
+.pagination-btn {
+  padding: var(--space-sm) var(--space-lg);
+  background: var(--glass-bg);
+  border: var(--border-width) solid var(--border-color);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  cursor: pointer;
+  transition: var(--transition-base);
+  backdrop-filter: blur(var(--blur-md));
+}
+
+.pagination-btn:hover:not(:disabled) {
+  background: var(--gold-subtle);
+  border-color: var(--gold-primary);
+  color: var(--gold-primary);
+  transform: translateY(-1px);
+}
+
+.pagination-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.pagination-numbers {
+  display: flex;
+  gap: var(--space-sm);
+}
+
+.pagination-number {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--glass-bg);
+  border: var(--border-width) solid var(--border-color);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  cursor: pointer;
+  transition: var(--transition-base);
+  backdrop-filter: blur(var(--blur-md));
+}
+
+.pagination-number:hover {
+  background: var(--gold-subtle);
+  border-color: var(--gold-primary);
+  color: var(--gold-primary);
+  transform: translateY(-1px);
+}
+
+.pagination-number.active {
+  background: var(--gold-primary);
+  border-color: var(--gold-primary);
+  color: var(--text-on-gold);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .details-modal {
+    max-height: 100vh;
+  }
+
+  .details-content {
+    padding: 1.5rem;
+  }
+
+  .social-edit-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .hours-edit-item {
+    flex-direction: column;
+  }
+
+  .hours-input {
+    width: 100%;
+  }
+
+  .remove-day-btn {
+    width: 100%;
+  }
+
+  .menu-grid {
+    grid-template-columns: 1fr;
+  }
 }
 </style>

@@ -2,30 +2,22 @@
   <nav class="navbar">
     <div class="navbar-container">
       <!-- Logo/Brand -->
-      <router-link to="/playground" class="brand">
-        <span class="brand-text">AI Marketing</span>
+      <router-link to="/dashboard" class="brand">
+        <span class="brand-text">SocialChef</span>
       </router-link>
 
       <!-- Navigation Links -->
       <div class="nav-links">
         <router-link to="/playground" class="nav-link" active-class="active">
-          Playground
+          Cook Up
         </router-link>
 
         <router-link to="/favorites" class="nav-link" active-class="active">
-          Favorites
+          Posts
         </router-link>
 
         <router-link to="/scheduler" class="nav-link" active-class="active">
-          Scheduler
-        </router-link>
-
-        <router-link to="/restaurants" class="nav-link" active-class="active">
-          Search
-        </router-link>
-
-        <router-link to="/saved-restaurants" class="nav-link" active-class="active">
-          Saved
+          Calendar
         </router-link>
       </div>
 

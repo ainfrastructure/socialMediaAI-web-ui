@@ -173,11 +173,11 @@
             <SelectableImageGallery
               v-model="selectedPhotoIndices"
               :images="placeDetails.photos.map((photo, idx) => ({
-                url: placeDetails.photoUrls![idx],
+                url: placeDetails.photoUrls![idx] || '',
                 name: photo.name,
                 width: photo.widthPx,
                 height: photo.heightPx,
-                authorAttributions: photo.authorAttributions
+                authorAttributions: photo.authorAttributions || []
               }))"
               title="Google Photos"
               :show-select-all="true"
@@ -727,8 +727,9 @@ const handleRestaurantSelect = async (restaurant: RestaurantSuggestion) => {
   ]
 
   // Add brand DNA analysis if website is available
-  if (placeDetails.value?.website) {
-    promises.push(fetchBrandDNA(placeDetails.value.website, restaurant.place_id))
+  const website = placeDetails.value?.website
+  if (website) {
+    promises.push(fetchBrandDNA(website, restaurant.place_id))
   }
 
   await Promise.all(promises)

@@ -218,9 +218,9 @@ watch(() => props.modelValue, (newValue) => {
 
     // Reset form when modal opens (scheduled_time will be set by the watch)
     formData.value = {
-      scheduled_date: props.preselectedDate || todayDate, // Default to today
+      scheduled_date: (props.preselectedDate ?? todayDate) as string, // Default to today
       scheduled_time: '12:00', // Set initial value
-      timezone: userTimezone || 'UTC',
+      timezone: (userTimezone || 'UTC') as string,
       notes: '',
     }
 

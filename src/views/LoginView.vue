@@ -161,8 +161,8 @@ async function handleForgotPassword() {
   <div class="login-container">
     <BaseCard variant="glass-intense" class="login-card">
       <div class="header">
-        <h1 class="brand-title">Social Media AI</h1>
-        <p class="brand-subtitle">AI-Powered Content Generation</p>
+        <h1 class="brand-title">SocialChef</h1>
+        <p class="brand-subtitle">AI-Powered Content for Restaurants</p>
       </div>
 
       <BaseAlert

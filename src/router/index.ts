@@ -1,11 +1,11 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import LoginView from '../views/LoginView.vue'
+import DashboardView from '../views/DashboardView.vue'
 import PlansView from '../views/PlansView.vue'
 import AuthCallbackView from '../views/AuthCallbackView.vue'
 import ResetPasswordView from '../views/ResetPasswordView.vue'
 import RestaurantSearchView from '../views/RestaurantSearchView.vue'
-import SavedRestaurantsView from '../views/SavedRestaurantsView.vue'
 import PlaygroundView from '../views/PlaygroundView.vue'
 import ConnectAccountsView from '../views/ConnectAccountsView.vue'
 import FacebookCallbackView from '../views/FacebookCallbackView.vue'
@@ -13,13 +13,20 @@ import TestPostView from '../views/TestPostView.vue'
 import SchedulerView from '../views/SchedulerView.vue'
 import FavoritesView from '../views/FavoritesView.vue'
 import ProfileView from '../views/ProfileView.vue'
+import SavedRestaurantsView from '../views/SavedRestaurantsView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     {
       path: '/',
-      redirect: '/playground',
+      redirect: '/dashboard',
+    },
+    {
+      path: '/dashboard',
+      name: 'dashboard',
+      component: DashboardView,
+      meta: { requiresAuth: true },
     },
     {
       path: '/login',
@@ -52,12 +59,6 @@ const router = createRouter({
       path: '/restaurants',
       name: 'restaurants',
       component: RestaurantSearchView,
-      meta: { requiresAuth: true },
-    },
-    {
-      path: '/saved-restaurants',
-      name: 'saved-restaurants',
-      component: SavedRestaurantsView,
       meta: { requiresAuth: true },
     },
     {
@@ -96,6 +97,12 @@ const router = createRouter({
       component: ProfileView,
       meta: { requiresAuth: true },
     },
+    {
+      path: '/saved-restaurants',
+      name: 'saved-restaurants',
+      component: SavedRestaurantsView,
+      meta: { requiresAuth: true },
+    },
   ],
 })
 
@@ -114,7 +121,7 @@ router.beforeEach(async (to, from, next) => {
 
   // Check if route is for guests only (login/signup)
   if (to.meta.requiresGuest && authStore.isAuthenticated) {
-    next('/playground')
+    next('/dashboard')
     return
   }
 

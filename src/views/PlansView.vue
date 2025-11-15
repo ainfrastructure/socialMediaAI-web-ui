@@ -25,8 +25,8 @@ async function loadPlans() {
   try {
     const response = await api.getPlans()
 
-    if (response.success && response.plans) {
-      plans.value = response.plans
+    if (response.success && response.data?.plans) {
+      plans.value = response.data.plans
     }
   } catch (error) {
     showMessage('Failed to load plans', 'error')
@@ -58,7 +58,7 @@ async function subscribe(tier: string) {
     }
 
     // Redirect to Stripe Checkout
-    window.location.href = response.checkout_url || ''
+    window.location.href = response.data?.checkout_url || ''
   } catch (error: any) {
     showMessage(error.message || 'Network error', 'error')
   }
@@ -96,7 +96,7 @@ if (urlParams.get('success') === 'true') {
 <template>
   <div class="plans-view">
     <div class="header">
-      <h1 class="brand-title">Social Media AI</h1>
+      <h1 class="brand-title">SocialChef</h1>
       <BaseButton variant="ghost" size="small" @click="goBack">
         {{ authStore.isAuthenticated ? 'Back to Dashboard' : 'Back to Login' }}
       </BaseButton>

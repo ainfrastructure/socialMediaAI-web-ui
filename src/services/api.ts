@@ -117,6 +117,25 @@ class ApiService {
     return response.json()
   }
 
+  async createCustomerPortal(returnUrl?: string): Promise<ApiResponse<{ url: string }>> {
+    const response = await fetch(`${API_URL}/api/subscriptions/portal`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...this.getAuthHeader(),
+      },
+      body: JSON.stringify({
+        return_url: returnUrl || `${window.location.origin}/profile`,
+      }),
+    })
+    const data = await response.json()
+    // Map portal_url to url for compatibility
+    if (data.success && data.data?.portal_url) {
+      return { ...data, data: { url: data.data.portal_url } }
+    }
+    return data
+  }
+
   async createPortalSession(returnUrl: string): Promise<ApiResponse<{ portal_url: string }>> {
     const response = await fetch(`${API_URL}/api/subscriptions/portal`, {
       method: 'POST',
