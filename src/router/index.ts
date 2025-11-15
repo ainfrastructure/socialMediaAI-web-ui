@@ -1,20 +1,21 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import LoginView from '../views/LoginView.vue'
-import DashboardView from '../views/DashboardView.vue'
 import PlansView from '../views/PlansView.vue'
 import AuthCallbackView from '../views/AuthCallbackView.vue'
 import ResetPasswordView from '../views/ResetPasswordView.vue'
 import RestaurantSearchView from '../views/RestaurantSearchView.vue'
 import SavedRestaurantsView from '../views/SavedRestaurantsView.vue'
 import PlaygroundView from '../views/PlaygroundView.vue'
+import SchedulerView from '../views/SchedulerView.vue'
+import FavoritesView from '../views/FavoritesView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     {
       path: '/',
-      redirect: '/dashboard',
+      redirect: '/playground',
     },
     {
       path: '/login',
@@ -31,12 +32,6 @@ const router = createRouter({
       path: '/auth/reset-password',
       name: 'reset-password',
       component: ResetPasswordView,
-    },
-    {
-      path: '/dashboard',
-      name: 'dashboard',
-      component: DashboardView,
-      meta: { requiresAuth: true },
     },
     {
       path: '/plans',
@@ -61,6 +56,18 @@ const router = createRouter({
       component: PlaygroundView,
       meta: { requiresAuth: true },
     },
+    {
+      path: '/scheduler',
+      name: 'scheduler',
+      component: SchedulerView,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/favorites',
+      name: 'favorites',
+      component: FavoritesView,
+      meta: { requiresAuth: true },
+    },
   ],
 })
 
@@ -79,7 +86,7 @@ router.beforeEach(async (to, from, next) => {
 
   // Check if route is for guests only (login/signup)
   if (to.meta.requiresGuest && authStore.isAuthenticated) {
-    next('/dashboard')
+    next('/playground')
     return
   }
 

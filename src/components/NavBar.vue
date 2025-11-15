@@ -14,6 +14,16 @@
           <span class="nav-text">Playground</span>
         </router-link>
 
+        <router-link to="/favorites" class="nav-link" active-class="active">
+          <span class="nav-icon">❤️</span>
+          <span class="nav-text">Favorites</span>
+        </router-link>
+
+        <router-link to="/scheduler" class="nav-link" active-class="active">
+          <span class="nav-icon">📅</span>
+          <span class="nav-text">Scheduler</span>
+        </router-link>
+
         <router-link to="/restaurants" class="nav-link" active-class="active">
           <span class="nav-icon">🔍</span>
           <span class="nav-text">Search Restaurants</span>
