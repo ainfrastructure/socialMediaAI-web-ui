@@ -33,10 +33,16 @@ export interface Review {
   profile_photo_url?: string
 }
 
+export interface Location {
+  latitude: number
+  longitude: number
+}
+
 export interface PlaceDetails {
   place_id: string
   name: string
   address: string
+  location?: Location
   phone_number?: string
   website?: string
   rating?: number
@@ -49,6 +55,33 @@ export interface PlaceDetails {
 export interface PlaceDetailsResponse {
   success: boolean
   data?: PlaceDetails
+  error?: string
+}
+
+export interface Competitor {
+  place_id: string
+  name: string
+  address: string
+  location: Location
+  rating?: number
+  user_ratings_total?: number
+  types?: string[]
+  distance: number
+}
+
+export interface CompetitorSearchResponse {
+  competitors: Competitor[]
+  searchCenter: {
+    name: string
+    location: Location
+  }
+  radiusKm: number
+  totalFound: number
+}
+
+export interface CompetitorApiResponse {
+  success: boolean
+  data?: CompetitorSearchResponse
   error?: string
 }
 
@@ -125,6 +158,48 @@ class PlacesService {
       return data.data
     } catch (error) {
       console.error('Error getting place details:', error)
+      throw error
+    }
+  }
+
+  /**
+   * Find competitor restaurants within a radius of a given restaurant
+   * @param placeId - The Google Place ID of the restaurant
+   * @param radiusKm - Search radius in kilometers (default: 1)
+   * @returns List of competitor restaurants sorted by distance
+   */
+  async findCompetitors(
+    placeId: string,
+    radiusKm: number = 1
+  ): Promise<CompetitorSearchResponse | null> {
+    if (!placeId || placeId.trim().length === 0) {
+      return null
+    }
+
+    try {
+      const response = await fetch(
+        `${API_URL}/api/places/${encodeURIComponent(placeId)}/competitors?radius=${radiusKm}`,
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      )
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
+      const data: CompetitorApiResponse = await response.json()
+
+      if (!data.success || !data.data) {
+        throw new Error(data.error || 'Failed to find competitors')
+      }
+
+      return data.data
+    } catch (error) {
+      console.error('Error finding competitors:', error)
       throw error
     }
   }

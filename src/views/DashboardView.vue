@@ -715,8 +715,14 @@ const estimatedTimeRemaining = computed(() => {
       </div>
 
       <div class="actions">
+        <BaseButton variant="primary" @click="router.push('/playground')">
+          🎨 AI Playground
+        </BaseButton>
         <BaseButton variant="secondary" @click="router.push('/restaurants')">
           Search Restaurants
+        </BaseButton>
+        <BaseButton variant="secondary" @click="router.push('/saved-restaurants')">
+          Saved Restaurants
         </BaseButton>
         <BaseButton variant="secondary" @click="openManageSubscription">
           Manage Subscription

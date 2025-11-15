@@ -129,14 +129,18 @@ class ApiService {
     return response.json()
   }
 
-  async generateImage(prompt: string): Promise<ApiResponse<{ imageUrl: string; usage: any }>> {
+  async generateImage(
+    prompt: string,
+    watermark?: { logoPath: string; position?: string; opacity?: number; scale?: number; padding?: number },
+    referenceImage?: { base64Data: string; mimeType: string }
+  ): Promise<ApiResponse<{ imageUrl: string; usage: any; watermarked?: boolean }>> {
     const response = await fetch(`${API_URL}/api/gemini/generate-image`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         ...this.getAuthHeader(),
       },
-      body: JSON.stringify({ prompt }),
+      body: JSON.stringify({ prompt, watermark, referenceImage }),
     })
     return response.json()
   }
@@ -264,6 +268,54 @@ class ApiService {
       : `${API_URL}/api/veo/operation/${operationId}`
     const response = await fetch(url, {
       headers: this.getAuthHeader(),
+    })
+    return response.json()
+  }
+
+  // Prompt generation
+  async generatePrompts(
+    restaurantData: any
+  ): Promise<ApiResponse<{ imagePrompts: string[]; videoPrompts: string[] }>> {
+    const response = await fetch(`${API_URL}/api/prompts/generate`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...this.getAuthHeader(),
+      },
+      body: JSON.stringify({ restaurantData }),
+    })
+    return response.json()
+  }
+
+  // Brand DNA analysis
+  async analyzeBrandDNA(website: string): Promise<ApiResponse<{ brandDNA: any }>> {
+    const response = await fetch(`${API_URL}/api/brand-dna/analyze`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...this.getAuthHeader(),
+      },
+      body: JSON.stringify({ website }),
+    })
+    return response.json()
+  }
+
+  async addVideoWatermark(
+    videoPath: string,
+    logoPath: string,
+    options?: { position?: string; opacity?: number; scale?: number; padding?: number }
+  ): Promise<ApiResponse<{ videoUrl: string }>> {
+    const response = await fetch(`${API_URL}/api/images/add-video-watermark`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...this.getAuthHeader(),
+      },
+      body: JSON.stringify({
+        videoPath,
+        logoPath,
+        ...options,
+      }),
     })
     return response.json()
   }

@@ -6,6 +6,8 @@ import PlansView from '../views/PlansView.vue'
 import AuthCallbackView from '../views/AuthCallbackView.vue'
 import ResetPasswordView from '../views/ResetPasswordView.vue'
 import RestaurantSearchView from '../views/RestaurantSearchView.vue'
+import SavedRestaurantsView from '../views/SavedRestaurantsView.vue'
+import PlaygroundView from '../views/PlaygroundView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -45,6 +47,18 @@ const router = createRouter({
       path: '/restaurants',
       name: 'restaurants',
       component: RestaurantSearchView,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/saved-restaurants',
+      name: 'saved-restaurants',
+      component: SavedRestaurantsView,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/playground',
+      name: 'playground',
+      component: PlaygroundView,
       meta: { requiresAuth: true },
     },
   ],
