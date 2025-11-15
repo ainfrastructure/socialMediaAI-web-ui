@@ -288,14 +288,14 @@ class ApiService {
   }
 
   // Brand DNA analysis
-  async analyzeBrandDNA(website: string): Promise<ApiResponse<{ brandDNA: any }>> {
+  async analyzeBrandDNA(website: string, placeId?: string): Promise<ApiResponse<{ brandDNA: any }>> {
     const response = await fetch(`${API_URL}/api/brand-dna/analyze`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         ...this.getAuthHeader(),
       },
-      body: JSON.stringify({ website }),
+      body: JSON.stringify({ website, placeId }),
     })
     return response.json()
   }

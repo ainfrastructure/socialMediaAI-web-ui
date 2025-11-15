@@ -1,5 +1,16 @@
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000'
 
+export interface UploadedImage {
+  id: string
+  url: string
+  storage_path: string
+  width: number
+  height: number
+  format: string
+  file_size: number
+  uploaded_at: string
+}
+
 export interface SavedRestaurant {
   id: string
   user_id: string
@@ -22,6 +33,9 @@ export interface SavedRestaurant {
   menu: any | null
   social_media: any | null
   brand_dna: any | null
+  photos: any | null
+  uploaded_images: UploadedImage[] | null
+  selected_photo_indices: number[] | null
   saved_at: string
   updated_at: string
 }
@@ -42,6 +56,8 @@ export interface SaveRestaurantData {
   competitor_analysis?: any | null
   menu?: any | null
   social_media?: any | null
+  photos?: any | null
+  selected_photo_indices?: number[] | null
 }
 
 export interface SaveRestaurantResponse {
@@ -229,6 +245,103 @@ class RestaurantService {
     } catch (error) {
       console.error('Error checking if restaurant is saved:', error)
       return false
+    }
+  }
+
+  /**
+   * Upload images for a restaurant
+   * @param placeId - The Google Place ID
+   * @param files - Array of image files to upload
+   * @returns Uploaded images data
+   */
+  async uploadRestaurantImages(
+    placeId: string,
+    files: File[]
+  ): Promise<{ uploaded: UploadedImage[]; count: number }> {
+    if (!placeId || placeId.trim().length === 0) {
+      throw new Error('Place ID is required')
+    }
+
+    if (!files || files.length === 0) {
+      throw new Error('No files provided')
+    }
+
+    try {
+      const formData = new FormData()
+
+      // Append all files to FormData
+      files.forEach((file) => {
+        formData.append('images', file)
+      })
+
+      const response = await fetch(
+        `${API_URL}/api/restaurants/${encodeURIComponent(placeId)}/images`,
+        {
+          method: 'POST',
+          headers: {
+            ...this.getAuthHeader(),
+            // Don't set Content-Type for FormData - browser will set it with boundary
+          },
+          body: formData,
+        }
+      )
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || `HTTP error! status: ${response.status}`)
+      }
+
+      const data = await response.json()
+
+      if (!data.success) {
+        throw new Error(data.error || 'Failed to upload images')
+      }
+
+      return data.data
+    } catch (error) {
+      console.error('Error uploading restaurant images:', error)
+      throw error
+    }
+  }
+
+  /**
+   * Delete a specific uploaded image from a restaurant
+   * @param placeId - The Google Place ID
+   * @param imageId - The image ID or storage_path
+   * @returns Success status
+   */
+  async deleteRestaurantImage(placeId: string, imageId: string): Promise<boolean> {
+    if (!placeId || placeId.trim().length === 0) {
+      throw new Error('Place ID is required')
+    }
+
+    if (!imageId || imageId.trim().length === 0) {
+      throw new Error('Image ID is required')
+    }
+
+    try {
+      const response = await fetch(
+        `${API_URL}/api/restaurants/${encodeURIComponent(placeId)}/images/${encodeURIComponent(imageId)}`,
+        {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+            ...this.getAuthHeader(),
+          },
+        }
+      )
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || `HTTP error! status: ${response.status}`)
+      }
+
+      const data = await response.json()
+
+      return data.success
+    } catch (error) {
+      console.error('Error deleting restaurant image:', error)
+      throw error
     }
   }
 }

@@ -38,6 +38,17 @@ export interface Location {
   longitude: number
 }
 
+export interface PlacePhoto {
+  name: string // Photo resource name from Google Places API
+  widthPx: number
+  heightPx: number
+  authorAttributions?: Array<{
+    displayName: string
+    uri?: string
+    photoUri?: string
+  }>
+}
+
 export interface PlaceDetails {
   place_id: string
   name: string
@@ -50,6 +61,8 @@ export interface PlaceDetails {
   opening_hours?: OpeningHours
   reviews?: Review[]
   types?: string[]
+  photos?: PlacePhoto[]
+  photoUrls?: string[] // Generated URLs for easy access
 }
 
 export interface PlaceDetailsResponse {
@@ -67,6 +80,8 @@ export interface Competitor {
   user_ratings_total?: number
   types?: string[]
   distance: number
+  photos?: PlacePhoto[]
+  photoUrls?: string[]
 }
 
 export interface CompetitorSearchResponse {

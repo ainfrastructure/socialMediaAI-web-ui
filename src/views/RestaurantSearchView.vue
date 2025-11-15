@@ -99,6 +99,36 @@
                   </a>
                 </div>
 
+                <!-- Google Photos Gallery with Selection -->
+                <div v-if="placeDetails && placeDetails.photos && placeDetails.photos.length > 0 && placeDetails.photoUrls" class="detail-row photos-section">
+                  <SelectableImageGallery
+                    v-model="selectedPhotoIndices"
+                    :images="placeDetails.photos.map((photo, idx) => ({
+                      url: placeDetails.photoUrls![idx],
+                      name: photo.name,
+                      width: photo.widthPx,
+                      height: photo.heightPx,
+                      authorAttributions: photo.authorAttributions
+                    }))"
+                    title="Google Photos"
+                    :show-select-all="true"
+                  />
+                </div>
+
+                <!-- Image Upload Section -->
+                <div class="detail-row upload-section">
+                  <span class="detail-label">Upload Your Own Images:</span>
+                  <ImageUpload
+                    v-model="uploadFiles"
+                    :max-files="10"
+                    :max-size-m-b="5"
+                    @error="uploadError = $event"
+                  />
+                  <BaseAlert v-if="uploadError" type="error" class="upload-alert">
+                    {{ uploadError }}
+                  </BaseAlert>
+                </div>
+
                 <!-- Social Media -->
                 <div class="detail-row">
                   <span class="detail-label">Social Media:</span>
@@ -178,7 +208,7 @@
 
               <!-- Save alerts -->
               <BaseAlert v-if="saveSuccess" type="success">
-                Restaurant saved to database successfully!
+                {{ saveSuccessMessage }}
               </BaseAlert>
 
               <BaseAlert v-if="saveError" type="error">
@@ -284,7 +314,7 @@
             <h3 class="section-label">Logo</h3>
             <div class="logo-display">
               <img
-                :src="`http://localhost:3000${brandDNA.logo_url}`"
+                :src="brandDNA.logo_url"
                 :alt="brandDNA.brand_name || 'Restaurant logo'"
                 class="logo-image"
                 @error="handleLogoError"
@@ -493,6 +523,14 @@
         </ul>
       </BaseCard>
     </div>
+
+    <!-- Photo Modal -->
+    <div v-if="photoModalOpen" class="photo-modal" @click="closePhotoModal">
+      <div class="photo-modal-content" @click.stop>
+        <button class="close-button" @click="closePhotoModal">×</button>
+        <img v-if="selectedPhotoUrl" :src="selectedPhotoUrl" alt="Restaurant photo" class="modal-photo" />
+      </div>
+    </div>
   </div>
 </template>
 
@@ -504,11 +542,13 @@ import BaseButton from '../components/BaseButton.vue'
 import BaseAlert from '../components/BaseAlert.vue'
 import RestaurantAutocomplete from '../components/RestaurantAutocomplete.vue'
 import MenuItemCard from '../components/MenuItemCard.vue'
+import ImageUpload from '../components/ImageUpload.vue'
+import SelectableImageGallery from '../components/SelectableImageGallery.vue'
 import type { RestaurantSuggestion, PlaceDetails, CompetitorSearchResponse } from '../services/placesService'
 import { placesService } from '../services/placesService'
 import { menuService, type MenuData } from '../services/menuService'
 import { socialMediaService, type SocialMediaSearchResult } from '../services/socialMediaService'
-import { restaurantService } from '../services/restaurantService'
+import { restaurantService, type UploadedImage } from '../services/restaurantService'
 import { api } from '../services/api'
 
 const selectedRestaurant = ref<RestaurantSuggestion | null>(null)
@@ -531,7 +571,18 @@ const brandDNAError = ref<string | null>(null)
 const savingRestaurant = ref(false)
 const saveError = ref<string | null>(null)
 const saveSuccess = ref(false)
+const saveSuccessMessage = ref<string>('Restaurant saved to database successfully!')
 const isSaved = ref(false)
+
+// Image selection and upload
+const selectedPhotoIndices = ref<number[]>([])
+const uploadFiles = ref<File[]>([])
+const uploadingImages = ref(false)
+const uploadError = ref<string | null>(null)
+
+// Photo modal state
+const photoModalOpen = ref(false)
+const selectedPhotoUrl = ref<string | null>(null)
 
 // Pagination for reviews
 const currentPage = ref(1)
@@ -566,6 +617,9 @@ const handleRestaurantSelect = async (restaurant: RestaurantSuggestion) => {
   saveSuccess.value = false
   isSaved.value = false
   currentPage.value = 1 // Reset to first page
+  selectedPhotoIndices.value = []
+  uploadFiles.value = []
+  uploadError.value = null
 
   // Fetch place details first to get website
   await fetchPlaceDetails(restaurant.place_id)
@@ -579,7 +633,7 @@ const handleRestaurantSelect = async (restaurant: RestaurantSuggestion) => {
 
   // Add brand DNA analysis if website is available
   if (placeDetails.value?.website) {
-    promises.push(fetchBrandDNA(placeDetails.value.website))
+    promises.push(fetchBrandDNA(placeDetails.value.website, restaurant.place_id))
   }
 
   await Promise.all(promises)
@@ -656,13 +710,13 @@ const fetchSocialMedia = async (placeId: string) => {
   }
 }
 
-const fetchBrandDNA = async (website: string) => {
+const fetchBrandDNA = async (website: string, placeId?: string) => {
   try {
     loadingBrandDNA.value = true
     brandDNAError.value = null
 
-    console.log('Analyzing brand DNA for website:', website)
-    const response = await api.analyzeBrandDNA(website)
+    console.log('Analyzing brand DNA for website:', website, 'Place ID:', placeId)
+    const response = await api.analyzeBrandDNA(website, placeId)
 
     if (response.success && (response as any).brandDNA) {
       brandDNA.value = (response as any).brandDNA
@@ -693,6 +747,16 @@ const clearSelection = () => {
   saveSuccess.value = false
   isSaved.value = false
   currentPage.value = 1
+}
+
+const openPhotoModal = (photoUrl: string) => {
+  selectedPhotoUrl.value = photoUrl
+  photoModalOpen.value = true
+}
+
+const closePhotoModal = () => {
+  photoModalOpen.value = false
+  selectedPhotoUrl.value = null
 }
 
 const saveToDatabase = async () => {
@@ -731,6 +795,11 @@ const saveToDatabase = async () => {
       menu: menuData.value || null,
       social_media: socialMediaData.value?.socialMedia || null,
       brand_dna: brandDNA.value || null,
+      photos: placeDetails.value.photos ? {
+        photos: placeDetails.value.photos,
+        photoUrls: placeDetails.value.photoUrls
+      } : null,
+      selected_photo_indices: selectedPhotoIndices.value.length > 0 ? selectedPhotoIndices.value : null,
     }
 
     console.log('Saving restaurant to database:', restaurantData)
@@ -738,6 +807,38 @@ const saveToDatabase = async () => {
     const result = await restaurantService.saveRestaurant(restaurantData)
 
     if (result.success) {
+      // Set success message from backend (includes info about downloaded Google Photos)
+      saveSuccessMessage.value = result.message || 'Restaurant saved to database successfully!'
+
+      // If there are files to upload, upload them now
+      if (uploadFiles.value.length > 0) {
+        try {
+          uploadingImages.value = true
+          uploadError.value = null
+
+          const uploadResult = await restaurantService.uploadRestaurantImages(
+            selectedRestaurant.value.place_id,
+            uploadFiles.value
+          )
+
+          console.log(`Successfully uploaded ${uploadResult.count} images`)
+
+          // Update success message to include uploaded images info
+          if (uploadResult.count > 0) {
+            saveSuccessMessage.value += ` Additionally uploaded ${uploadResult.count} custom image(s).`
+          }
+
+          // Clear uploaded files after successful upload
+          uploadFiles.value = []
+        } catch (uploadErr: any) {
+          console.error('Error uploading images:', uploadErr)
+          uploadError.value = uploadErr.message || 'Failed to upload images'
+          // Don't fail the entire save operation if upload fails
+        } finally {
+          uploadingImages.value = false
+        }
+      }
+
       saveSuccess.value = true
       isSaved.value = true
       console.log('Restaurant saved successfully:', result.data)
@@ -1772,5 +1873,154 @@ const handleLogoError = (event: Event) => {
   .brand-dna-card {
     padding: 1.5rem;
   }
+
+  .photos-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Photos Section */
+.photos-section {
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.photos-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-lg);
+  width: 100%;
+  margin-top: var(--space-md);
+}
+
+.photo-item {
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  cursor: pointer;
+  transition: var(--transition-base);
+  background: var(--bg-tertiary);
+}
+
+.photo-item:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
+.place-photo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.photo-attribution {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: var(--space-xs) var(--space-sm);
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.8), transparent);
+  color: var(--text-primary);
+  font-size: var(--text-xs);
+  opacity: 0;
+  transition: var(--transition-base);
+}
+
+.photo-item:hover .photo-attribution {
+  opacity: 1;
+}
+
+/* Photo Modal */
+.photo-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: var(--space-xl);
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.photo-modal-content {
+  position: relative;
+  max-width: 90vw;
+  max-height: 90vh;
+  animation: scaleIn 0.3s ease-out;
+}
+
+@keyframes scaleIn {
+  from {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.modal-photo {
+  max-width: 100%;
+  max-height: 90vh;
+  width: auto;
+  height: auto;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-xl);
+}
+
+.close-button {
+  position: absolute;
+  top: -3rem;
+  right: 0;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: var(--text-primary);
+  font-size: 2rem;
+  width: 3rem;
+  height: 3rem;
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--transition-base);
+  backdrop-filter: blur(var(--blur-md));
+}
+
+.close-button:hover {
+  background: var(--gold-primary);
+  border-color: var(--gold-primary);
+  color: var(--text-on-gold);
+  transform: rotate(90deg);
+}
+
+/* Image selection and upload sections */
+.photos-section {
+  grid-column: 1 / -1;
+}
+
+.upload-section {
+  grid-column: 1 / -1;
+  margin-top: var(--space-lg);
+}
+
+.upload-alert {
+  margin-top: var(--space-md);
 }
 </style>
