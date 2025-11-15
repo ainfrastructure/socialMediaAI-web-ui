@@ -11,13 +11,9 @@
       <!-- Calendar Navigation -->
       <BaseCard variant="glass-intense" class="calendar-nav-card">
         <div class="calendar-nav">
-          <BaseButton variant="ghost" size="small" @click="previousPeriod">
-            ← Previous
-          </BaseButton>
+          <BaseButton variant="ghost" size="small" @click="previousPeriod"> ← Previous </BaseButton>
           <h2 class="current-month">{{ currentPeriodLabel }}</h2>
-          <BaseButton variant="ghost" size="small" @click="nextPeriod">
-            Next →
-          </BaseButton>
+          <BaseButton variant="ghost" size="small" @click="nextPeriod"> Next → </BaseButton>
         </div>
 
         <!-- View Mode Selector -->
@@ -70,7 +66,7 @@
               'calendar-day',
               {
                 'other-month': day.isOtherMonth && viewMode === 'month',
-                'today': day.isToday,
+                today: day.isToday,
                 'has-posts': day.posts.length > 0,
                 'day-view': viewMode === 'day',
               },
@@ -83,17 +79,11 @@
             <div v-if="viewMode === 'day'" class="day-view-header">
               <h2 class="day-view-title">{{ formatSelectedDate(day) }}</h2>
               <div class="day-view-actions">
-                <button
-                  class="action-button create-btn"
-                  @click.stop="createNewPost(day)"
-                >
+                <button class="action-button create-btn" @click.stop="createNewPost(day)">
                   <span class="btn-icon">+</span>
                   <span class="btn-text">Create Post</span>
                 </button>
-                <button
-                  class="action-button favorite-btn"
-                  @click.stop="pickFavoriteForDate(day)"
-                >
+                <button class="action-button favorite-btn" @click.stop="pickFavoriteForDate(day)">
                   <span class="btn-icon">⭐</span>
                   <span class="btn-text">Add Favorite</span>
                 </button>
@@ -122,15 +112,13 @@
             <div v-if="day.holidays && day.holidays.length > 0" class="day-holidays">
               <!-- Day View: Show all holidays with details -->
               <div v-if="viewMode === 'day'" class="day-view-holidays">
-                <div
-                  v-for="holiday in day.holidays"
-                  :key="holiday.name"
-                  class="day-holiday-card"
-                >
+                <div v-for="holiday in day.holidays" :key="holiday.name" class="day-holiday-card">
                   <div class="holiday-card-icon">{{ getHolidayEmoji(holiday) }}</div>
                   <div class="holiday-card-info">
                     <h4 class="holiday-card-name">{{ holiday.name }}</h4>
-                    <p v-if="holiday.description" class="holiday-card-desc">{{ holiday.description }}</p>
+                    <p v-if="holiday.description" class="holiday-card-desc">
+                      {{ holiday.description }}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -143,7 +131,10 @@
                   class="holiday-indicator"
                   :title="`${holiday.name}${holiday.religion ? ' (' + holiday.religion + ')' : ''}`"
                 >
-                  {{ getHolidayEmoji(holiday) }} {{ holiday.name.length > 20 ? holiday.name.substring(0, 20) + '...' : holiday.name }}
+                  {{ getHolidayEmoji(holiday) }}
+                  {{
+                    holiday.name.length > 20 ? holiday.name.substring(0, 20) + '...' : holiday.name
+                  }}
                 </div>
                 <span v-if="day.holidays.length > 2" class="more-holidays">
                   +{{ day.holidays.length - 2 }} more
@@ -189,13 +180,19 @@
                   <!-- Content Section -->
                   <div class="post-card-content">
                     <div class="post-card-header">
-                      <span v-if="post.platform" :class="['post-card-platform', `platform-${post.platform}`]">
+                      <span
+                        v-if="post.platform"
+                        :class="['post-card-platform', `platform-${post.platform}`]"
+                      >
                         {{ post.platform }}
                       </span>
                       <span class="post-card-type">
                         {{ getContentTypeEmoji(post.content_type) }} {{ post.content_type }}
                       </span>
-                      <span v-if="post.status" :class="['post-card-status', `status-${post.status}`]">
+                      <span
+                        v-if="post.status"
+                        :class="['post-card-status', `status-${post.status}`]"
+                      >
                         {{ post.status }}
                       </span>
                     </div>
@@ -233,28 +230,41 @@
       </BaseCard>
 
       <!-- Selected Day Detail -->
-      <BaseCard v-if="selectedDay && (selectedDay.posts.length > 0 || selectedDay.holidays?.length > 0)" variant="glass-intense" class="day-detail-card">
+      <BaseCard
+        v-if="selectedDay && (selectedDay.posts.length > 0 || selectedDay.holidays?.length > 0)"
+        variant="glass-intense"
+        class="day-detail-card"
+      >
         <h3 class="detail-title">
           {{ formatSelectedDate(selectedDay) }}
-          <span v-if="selectedDay.posts.length > 0" class="post-count">({{ selectedDay.posts.length }} post{{ selectedDay.posts.length > 1 ? 's' : '' }})</span>
+          <span v-if="selectedDay.posts.length > 0" class="post-count"
+            >({{ selectedDay.posts.length }} post{{
+              selectedDay.posts.length > 1 ? 's' : ''
+            }})</span
+          >
         </h3>
 
         <!-- Show holidays if any -->
-        <div v-if="selectedDay.holidays && selectedDay.holidays.length > 0" class="holidays-section">
+        <div
+          v-if="selectedDay.holidays && selectedDay.holidays.length > 0"
+          class="holidays-section"
+        >
           <h4 class="section-subtitle">Holidays</h4>
           <div class="holidays-list">
-            <div
-              v-for="holiday in selectedDay.holidays"
-              :key="holiday.name"
-              class="holiday-card"
-            >
+            <div v-for="holiday in selectedDay.holidays" :key="holiday.name" class="holiday-card">
               <div class="holiday-icon">{{ getHolidayEmoji(holiday) }}</div>
               <div class="holiday-details">
                 <h5 class="holiday-name">{{ holiday.name }}</h5>
-                <p v-if="holiday.description" class="holiday-description">{{ holiday.description }}</p>
+                <p v-if="holiday.description" class="holiday-description">
+                  {{ holiday.description }}
+                </p>
                 <div class="holiday-meta">
-                  <span v-if="holiday.religion" class="holiday-religion">{{ holiday.religion }}</span>
-                  <span v-if="holiday.type && holiday.type.length > 0" class="holiday-type">{{ holiday.type.join(', ') }}</span>
+                  <span v-if="holiday.religion" class="holiday-religion">{{
+                    holiday.religion
+                  }}</span>
+                  <span v-if="holiday.type && holiday.type.length > 0" class="holiday-type">{{
+                    holiday.type.join(', ')
+                  }}</span>
                 </div>
               </div>
             </div>
@@ -262,11 +272,7 @@
         </div>
 
         <div class="posts-list">
-          <div
-            v-for="post in selectedDay.posts"
-            :key="post.id"
-            class="scheduled-post-card"
-          >
+          <div v-for="post in selectedDay.posts" :key="post.id" class="scheduled-post-card">
             <div class="post-media" @click="viewPostDetail(post)">
               <img
                 v-if="post.content_type === 'image' && post.media_url"
@@ -285,7 +291,9 @@
               ></video>
               <div v-else class="post-thumbnail-placeholder">
                 <span class="placeholder-icon">📸</span>
-                <span class="placeholder-text">{{ post.media_url ? 'Failed to load' : 'No media' }}</span>
+                <span class="placeholder-text">{{
+                  post.media_url ? 'Failed to load' : 'No media'
+                }}</span>
               </div>
               <div v-if="post.media_url" class="thumbnail-overlay">
                 <span class="view-icon">👁️ View Details</span>
@@ -362,7 +370,11 @@
     />
 
     <!-- Post Detail Modal -->
-    <div v-if="showPostDetailModal && selectedPostForDetail" class="modal-overlay" @click="closePostDetailModal">
+    <div
+      v-if="showPostDetailModal && selectedPostForDetail"
+      class="modal-overlay"
+      @click="closePostDetailModal"
+    >
       <div class="modal-content" @click.stop>
         <button class="modal-close" @click="closePostDetailModal">×</button>
 
@@ -370,13 +382,17 @@
           <!-- Large Image/Video -->
           <div class="modal-media">
             <img
-              v-if="selectedPostForDetail.content_type === 'image' && selectedPostForDetail.media_url"
+              v-if="
+                selectedPostForDetail.content_type === 'image' && selectedPostForDetail.media_url
+              "
               :src="getMediaUrl(selectedPostForDetail.media_url)"
               alt="Post content"
               class="modal-image"
             />
             <video
-              v-else-if="selectedPostForDetail.content_type === 'video' && selectedPostForDetail.media_url"
+              v-else-if="
+                selectedPostForDetail.content_type === 'video' && selectedPostForDetail.media_url
+              "
               :src="getMediaUrl(selectedPostForDetail.media_url)"
               controls
               class="modal-video"
@@ -412,13 +428,19 @@
             <div class="info-section">
               <div class="info-label">Platform & Status</div>
               <div class="badges-row">
-                <span v-if="selectedPostForDetail.platform" :class="['platform-badge-large', `platform-${selectedPostForDetail.platform}`]">
+                <span
+                  v-if="selectedPostForDetail.platform"
+                  :class="['platform-badge-large', `platform-${selectedPostForDetail.platform}`]"
+                >
                   {{ selectedPostForDetail.platform }}
                 </span>
                 <span :class="['content-type-badge-large']">
                   {{ selectedPostForDetail.content_type === 'image' ? '📸 Image' : '🎥 Video' }}
                 </span>
-                <span v-if="selectedPostForDetail.status" :class="['status-badge-large', `status-${selectedPostForDetail.status}`]">
+                <span
+                  v-if="selectedPostForDetail.status"
+                  :class="['status-badge-large', `status-${selectedPostForDetail.status}`]"
+                >
                   {{ selectedPostForDetail.status }}
                 </span>
               </div>
@@ -438,10 +460,21 @@
 
             <!-- Actions -->
             <div class="modal-actions">
-              <BaseButton variant="ghost" size="medium" @click="editScheduledPost(selectedPostForDetail)">
+              <BaseButton
+                variant="ghost"
+                size="medium"
+                @click="editScheduledPost(selectedPostForDetail)"
+              >
                 ✏️ Edit
               </BaseButton>
-              <BaseButton variant="danger" size="medium" @click="cancelPost(selectedPostForDetail.id); closePostDetailModal()">
+              <BaseButton
+                variant="danger"
+                size="medium"
+                @click="
+                  cancelPost(selectedPostForDetail.id)
+                  closePostDetailModal()
+                "
+              >
                 🗑️ Cancel Post
               </BaseButton>
             </div>
@@ -509,21 +542,19 @@ const displayedCalendarDays = computed(() => {
     const day = currentDate.value.getDate()
     const date = new Date(year, month, day)
     const dateString = date.toISOString().split('T')[0]
-    const postsForDay = scheduledPosts.value.filter(
-      (post) => post.scheduled_date === dateString
-    )
-    const holidaysForDay = holidays.value.filter(
-      (holiday) => holiday.date === dateString
-    )
+    const postsForDay = scheduledPosts.value.filter((post) => post.scheduled_date === dateString)
+    const holidaysForDay = holidays.value.filter((holiday) => holiday.date === dateString)
 
-    return [{
-      day,
-      date,
-      isOtherMonth: false,
-      isToday: isToday(date),
-      posts: postsForDay,
-      holidays: holidaysForDay,
-    }]
+    return [
+      {
+        day,
+        date,
+        isOtherMonth: false,
+        isToday: isToday(date),
+        posts: postsForDay,
+        holidays: holidaysForDay,
+      },
+    ]
   } else if (viewMode.value === 'week') {
     // Return only days in the current week
     return calendarDays.value.filter((day) => {
@@ -553,19 +584,16 @@ const previousPeriod = () => {
     currentDate.value = new Date(
       currentDate.value.getFullYear(),
       currentDate.value.getMonth(),
-      currentDate.value.getDate() - 1
+      currentDate.value.getDate() - 1,
     )
   } else if (viewMode.value === 'week') {
     currentDate.value = new Date(
       currentDate.value.getFullYear(),
       currentDate.value.getMonth(),
-      currentDate.value.getDate() - 7
+      currentDate.value.getDate() - 7,
     )
   } else {
-    currentDate.value = new Date(
-      currentDate.value.getFullYear(),
-      currentDate.value.getMonth() - 1
-    )
+    currentDate.value = new Date(currentDate.value.getFullYear(), currentDate.value.getMonth() - 1)
   }
   fetchScheduledPosts()
   fetchHolidays()
@@ -576,19 +604,16 @@ const nextPeriod = () => {
     currentDate.value = new Date(
       currentDate.value.getFullYear(),
       currentDate.value.getMonth(),
-      currentDate.value.getDate() + 1
+      currentDate.value.getDate() + 1,
     )
   } else if (viewMode.value === 'week') {
     currentDate.value = new Date(
       currentDate.value.getFullYear(),
       currentDate.value.getMonth(),
-      currentDate.value.getDate() + 7
+      currentDate.value.getDate() + 7,
     )
   } else {
-    currentDate.value = new Date(
-      currentDate.value.getFullYear(),
-      currentDate.value.getMonth() + 1
-    )
+    currentDate.value = new Date(currentDate.value.getFullYear(), currentDate.value.getMonth() + 1)
   }
   fetchScheduledPosts()
   fetchHolidays()
@@ -633,12 +658,8 @@ const calendarDays = computed(() => {
   for (let day = 1; day <= lastDay.getDate(); day++) {
     const date = new Date(year, month, day)
     const dateString = date.toISOString().split('T')[0]
-    const postsForDay = scheduledPosts.value.filter(
-      (post) => post.scheduled_date === dateString
-    )
-    const holidaysForDay = holidays.value.filter(
-      (holiday) => holiday.date === dateString
-    )
+    const postsForDay = scheduledPosts.value.filter((post) => post.scheduled_date === dateString)
+    const holidaysForDay = holidays.value.filter((holiday) => holiday.date === dateString)
 
     days.push({
       day,
@@ -676,19 +697,13 @@ const isToday = (date: Date) => {
 }
 
 const previousMonth = () => {
-  currentDate.value = new Date(
-    currentDate.value.getFullYear(),
-    currentDate.value.getMonth() - 1
-  )
+  currentDate.value = new Date(currentDate.value.getFullYear(), currentDate.value.getMonth() - 1)
   fetchScheduledPosts()
   fetchHolidays()
 }
 
 const nextMonth = () => {
-  currentDate.value = new Date(
-    currentDate.value.getFullYear(),
-    currentDate.value.getMonth() + 1
-  )
+  currentDate.value = new Date(currentDate.value.getFullYear(), currentDate.value.getMonth() + 1)
   fetchScheduledPosts()
   fetchHolidays()
 }
@@ -808,12 +823,12 @@ const detectContentTypeFromUrl = (mediaUrl: string): string => {
   const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp', '.svg']
 
   // Check for video extensions
-  if (videoExtensions.some(ext => url.includes(ext))) {
+  if (videoExtensions.some((ext) => url.includes(ext))) {
     return 'video'
   }
 
   // Check for image extensions
-  if (imageExtensions.some(ext => url.includes(ext))) {
+  if (imageExtensions.some((ext) => url.includes(ext))) {
     return 'image'
   }
 
@@ -834,9 +849,7 @@ const fetchScheduledPosts = async () => {
 
       // Fix content_type based on media_url if it's incorrect
       scheduledPosts.value = posts.map((post: any) => {
-
         if (post.favorite_posts) {
-
         }
 
         // Try to find the media URL from various possible fields
@@ -848,7 +861,10 @@ const fetchScheduledPosts = async () => {
 
         // Check if this is a scheduled favorite (has favorite_posts field)
         if (!mediaUrl && post.favorite_posts) {
-          mediaUrl = post.favorite_posts.media_url || post.favorite_posts.image_url || post.favorite_posts.video_url
+          mediaUrl =
+            post.favorite_posts.media_url ||
+            post.favorite_posts.image_url ||
+            post.favorite_posts.video_url
           postText = postText || post.favorite_posts.post_text || post.favorite_posts.caption
           contentType = contentType || post.favorite_posts.content_type
           platform = platform || post.favorite_posts.platform
@@ -865,7 +881,10 @@ const fetchScheduledPosts = async () => {
         }
 
         if (!mediaUrl && post.favorite_post) {
-          mediaUrl = post.favorite_post.media_url || post.favorite_post.image_url || post.favorite_post.video_url
+          mediaUrl =
+            post.favorite_post.media_url ||
+            post.favorite_post.image_url ||
+            post.favorite_post.video_url
           postText = postText || post.favorite_post.post_text || post.favorite_post.caption
           contentType = contentType || post.favorite_post.content_type
           platform = platform || post.favorite_post.platform
@@ -881,12 +900,11 @@ const fetchScheduledPosts = async () => {
           post_text: postText,
           content_type: detectedType,
           platform: platform,
-          restaurant_name: restaurantName
+          restaurant_name: restaurantName,
         }
       })
     }
   } catch (error) {
-
   } finally {
     loading.value = false
   }
@@ -903,7 +921,6 @@ const fetchHolidays = async () => {
       holidays.value = response.data?.holidays || []
     }
   } catch (error) {
-
     // Don't block the UI if holidays fail to load
     holidays.value = []
   }
@@ -911,7 +928,6 @@ const fetchHolidays = async () => {
 
 const editScheduledPost = (post: any) => {
   // TODO: Open edit modal
-
 }
 
 const cancelPost = async (postId: string) => {
@@ -926,9 +942,7 @@ const cancelPost = async (postId: string) => {
       await fetchScheduledPosts()
       selectedDay.value = null
     }
-  } catch (error) {
-
-  }
+  } catch (error) {}
 }
 
 const createNewPost = (day: any) => {
@@ -961,14 +975,19 @@ const closePostDetailModal = () => {
 const getMediaUrl = (url: string): string => {
   if (!url) return ''
 
-  // If it's already a full URL, return it
+  // Replace localhost URLs with production API URL
+  if (url.includes('localhost:3000')) {
+    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000'
+    return url.replace('http://localhost:3000', apiUrl)
+  }
+
+  // If it's already a full URL (Supabase), return it
   if (url.startsWith('http://') || url.startsWith('https://')) {
     return url
   }
 
   // If it's a relative path, construct the full URL
-  // Assuming your backend is running on the same domain or you have an API_BASE_URL
-  const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'
+  const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000'
   return `${baseUrl}${url.startsWith('/') ? '' : '/'}${url}`
 }
 
@@ -983,9 +1002,7 @@ onMounted(async () => {
 
   // Auto-select today's date
   const today = new Date()
-  const todayDay = calendarDays.value.find(day =>
-    !day.isOtherMonth && day.isToday
-  )
+  const todayDay = calendarDays.value.find((day) => !day.isOtherMonth && day.isToday)
 
   if (todayDay) {
     selectedDay.value = todayDay
@@ -1334,13 +1351,13 @@ onMounted(async () => {
 
 .post-card-platform.platform-instagram {
   background: rgba(225, 48, 108, 0.2);
-  color: #E1306C;
+  color: #e1306c;
   border: 1px solid rgba(225, 48, 108, 0.4);
 }
 
 .post-card-platform.platform-facebook {
   background: rgba(66, 103, 178, 0.2);
-  color: #4267B2;
+  color: #4267b2;
   border: 1px solid rgba(66, 103, 178, 0.4);
 }
 
@@ -1372,13 +1389,13 @@ onMounted(async () => {
 
 .post-card-status.status-scheduled {
   background: rgba(59, 130, 246, 0.2);
-  color: #3B82F6;
+  color: #3b82f6;
   border: 1px solid rgba(59, 130, 246, 0.4);
 }
 
 .post-card-status.status-posted {
   background: rgba(34, 197, 94, 0.2);
-  color: #22C55E;
+  color: #22c55e;
   border: 1px solid rgba(34, 197, 94, 0.4);
 }
 
@@ -1605,12 +1622,12 @@ onMounted(async () => {
 
 .post-indicator.platform-instagram {
   background: rgba(225, 48, 108, 0.2);
-  border-left: 3px solid #E1306C;
+  border-left: 3px solid #e1306c;
 }
 
 .post-indicator.platform-facebook {
   background: rgba(66, 103, 178, 0.2);
-  border-left: 3px solid #4267B2;
+  border-left: 3px solid #4267b2;
 }
 
 .post-indicator.platform-tiktok {
@@ -1620,7 +1637,7 @@ onMounted(async () => {
 
 .post-indicator.platform-twitter {
   background: rgba(29, 161, 242, 0.2);
-  border-left: 3px solid #1DA1F2;
+  border-left: 3px solid #1da1f2;
 }
 
 .more-posts {
@@ -1874,12 +1891,12 @@ onMounted(async () => {
 
 .post-platform.platform-instagram {
   background: rgba(225, 48, 108, 0.2);
-  color: #E1306C;
+  color: #e1306c;
 }
 
 .post-platform.platform-facebook {
   background: rgba(66, 103, 178, 0.2);
-  color: #4267B2;
+  color: #4267b2;
 }
 
 .post-text {
@@ -1919,19 +1936,19 @@ onMounted(async () => {
 
 .status-badge.status-scheduled {
   background: rgba(59, 130, 246, 0.2);
-  color: #3B82F6;
+  color: #3b82f6;
   border: 1px solid rgba(59, 130, 246, 0.3);
 }
 
 .status-badge.status-posted {
   background: rgba(34, 197, 94, 0.2);
-  color: #22C55E;
+  color: #22c55e;
   border: 1px solid rgba(34, 197, 94, 0.3);
 }
 
 .status-badge.status-failed {
   background: rgba(239, 68, 68, 0.2);
-  color: #EF4444;
+  color: #ef4444;
   border: 1px solid rgba(239, 68, 68, 0.3);
 }
 
@@ -2299,13 +2316,13 @@ onMounted(async () => {
 
 .platform-badge-large.platform-instagram {
   background: rgba(225, 48, 108, 0.2);
-  color: #E1306C;
+  color: #e1306c;
   border: 1px solid rgba(225, 48, 108, 0.4);
 }
 
 .platform-badge-large.platform-facebook {
   background: rgba(66, 103, 178, 0.2);
-  color: #4267B2;
+  color: #4267b2;
   border: 1px solid rgba(66, 103, 178, 0.4);
 }
 
@@ -2330,19 +2347,19 @@ onMounted(async () => {
 
 .status-badge-large.status-scheduled {
   background: rgba(59, 130, 246, 0.2);
-  color: #3B82F6;
+  color: #3b82f6;
   border: 1px solid rgba(59, 130, 246, 0.4);
 }
 
 .status-badge-large.status-posted {
   background: rgba(34, 197, 94, 0.2);
-  color: #22C55E;
+  color: #22c55e;
   border: 1px solid rgba(34, 197, 94, 0.4);
 }
 
 .status-badge-large.status-failed {
   background: rgba(239, 68, 68, 0.2);
-  color: #EF4444;
+  color: #ef4444;
   border: 1px solid rgba(239, 68, 68, 0.4);
 }
 
