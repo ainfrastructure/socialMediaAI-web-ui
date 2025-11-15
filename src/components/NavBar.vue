@@ -3,6 +3,7 @@
     <div class="navbar-container">
       <!-- Logo/Brand -->
       <router-link to="/dashboard" class="brand">
+        <img src="../assets/socialchef_logo.svg" alt="SocialChef Logo" class="brand-logo" />
         <span class="brand-text">SocialChef</span>
       </router-link>
 
@@ -64,9 +65,16 @@ const authStore = useAuthStore()
 .brand {
   display: flex;
   align-items: center;
+  gap: var(--space-md);
   text-decoration: none;
   transition: var(--transition-base);
   position: relative;
+}
+
+.brand-logo {
+  height: 40px;
+  width: auto;
+  transition: var(--transition-base);
 }
 
 .brand::after {
@@ -190,6 +198,10 @@ const authStore = useAuthStore()
   .navbar-container {
     padding: var(--space-md) var(--space-lg);
     gap: var(--space-lg);
+  }
+
+  .brand-logo {
+    height: 32px;
   }
 
   .brand-text {

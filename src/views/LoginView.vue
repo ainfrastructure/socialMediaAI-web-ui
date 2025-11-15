@@ -161,6 +161,7 @@ async function handleForgotPassword() {
   <div class="login-container">
     <BaseCard variant="glass-intense" class="login-card">
       <div class="header">
+        <img src="../assets/socialchef_logo.svg" alt="SocialChef Logo" class="brand-logo" />
         <h1 class="brand-title">SocialChef</h1>
         <p class="brand-subtitle">AI-Powered Content for Restaurants</p>
       </div>
@@ -332,6 +333,20 @@ async function handleForgotPassword() {
   margin-bottom: var(--space-3xl);
 }
 
+.brand-logo {
+  height: 80px;
+  width: auto;
+  margin: 0 auto var(--space-xl);
+  display: block;
+  filter: drop-shadow(0 4px 12px rgba(212, 175, 55, 0.3));
+  transition: var(--transition-base);
+}
+
+.brand-logo:hover {
+  filter: drop-shadow(0 6px 16px rgba(212, 175, 55, 0.4));
+  transform: scale(1.05);
+}
+
 .brand-title {
   font-family: var(--font-heading);
   font-size: var(--text-4xl);
@@ -382,6 +397,10 @@ form {
 @media (max-width: 480px) {
   .login-container {
     padding: var(--space-lg);
+  }
+
+  .brand-logo {
+    height: 60px;
   }
 
   .brand-title {
