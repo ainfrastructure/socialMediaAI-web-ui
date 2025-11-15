@@ -132,15 +132,24 @@ class ApiService {
   async generateImage(
     prompt: string,
     watermark?: { logoPath: string; position?: string; opacity?: number; scale?: number; padding?: number },
-    referenceImage?: { base64Data: string; mimeType: string }
-  ): Promise<ApiResponse<{ imageUrl: string; usage: any; watermarked?: boolean }>> {
+    referenceImage?: { base64Data: string; mimeType: string },
+    promotionalSticker?: {
+      text: string;
+      position?: string;
+      style?: string;
+      color?: string;
+      textColor?: string;
+      size?: string;
+      rotation?: number
+    }
+  ): Promise<ApiResponse<{ imageUrl: string; usage: any; watermarked?: boolean; promotionalStickerAdded?: boolean }>> {
     const response = await fetch(`${API_URL}/api/gemini/generate-image`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         ...this.getAuthHeader(),
       },
-      body: JSON.stringify({ prompt, watermark, referenceImage }),
+      body: JSON.stringify({ prompt, watermark, referenceImage, promotionalSticker }),
     })
     return response.json()
   }
@@ -274,7 +283,9 @@ class ApiService {
 
   // Prompt generation
   async generatePrompts(
-    restaurantData: any
+    restaurantData: any,
+    menuItems?: any[],
+    context?: string
   ): Promise<ApiResponse<{ imagePrompts: string[]; videoPrompts: string[] }>> {
     const response = await fetch(`${API_URL}/api/prompts/generate`, {
       method: 'POST',
@@ -282,7 +293,7 @@ class ApiService {
         'Content-Type': 'application/json',
         ...this.getAuthHeader(),
       },
-      body: JSON.stringify({ restaurantData }),
+      body: JSON.stringify({ restaurantData, menuItems, context }),
     })
     return response.json()
   }
@@ -419,6 +430,216 @@ class ApiService {
       headers: {
         ...this.getAuthHeader(),
       },
+    })
+    return response.json()
+  }
+
+  // Post content generation
+  async generatePostContent(
+    platform: string,
+    restaurantName: string,
+    menuItems: string[],
+    contentType: 'image' | 'video',
+    context?: string,
+    brandDNA?: any
+  ): Promise<ApiResponse<{ postText: string; hashtags: string[]; callToAction: string }>> {
+    const response = await fetch(`${API_URL}/api/post-content/generate`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...this.getAuthHeader(),
+      },
+      body: JSON.stringify({
+        platform,
+        restaurantName,
+        menuItems,
+        contentType,
+        context,
+        brandDNA,
+      }),
+    })
+    return response.json()
+  }
+
+  // Favorites
+  async getFavorites(): Promise<ApiResponse<{ favorites: any[] }>> {
+    const response = await fetch(`${API_URL}/api/favorites`, {
+      headers: this.getAuthHeader(),
+    })
+    return response.json()
+  }
+
+  async getFavorite(id: string): Promise<ApiResponse<{ favorite: any }>> {
+    const response = await fetch(`${API_URL}/api/favorites/${id}`, {
+      headers: this.getAuthHeader(),
+    })
+    return response.json()
+  }
+
+  async saveFavorite(favoriteData: {
+    restaurant_id?: string
+    content_type: 'image' | 'video'
+    media_url: string
+    post_text?: string
+    hashtags?: string[]
+    call_to_action?: string
+    platform?: string
+    prompt?: string
+    menu_items?: any[]
+    context?: string
+    brand_dna?: any
+  }): Promise<ApiResponse<{ favorite: any }>> {
+    const response = await fetch(`${API_URL}/api/favorites`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...this.getAuthHeader(),
+      },
+      body: JSON.stringify(favoriteData),
+    })
+    return response.json()
+  }
+
+  async updateFavorite(
+    id: string,
+    updates: {
+      post_text?: string
+      hashtags?: string[]
+      call_to_action?: string
+      platform?: string
+    }
+  ): Promise<ApiResponse<{ favorite: any }>> {
+    const response = await fetch(`${API_URL}/api/favorites/${id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        ...this.getAuthHeader(),
+      },
+      body: JSON.stringify(updates),
+    })
+    return response.json()
+  }
+
+  async deleteFavorite(id: string): Promise<ApiResponse> {
+    const response = await fetch(`${API_URL}/api/favorites/${id}`, {
+      method: 'DELETE',
+      headers: this.getAuthHeader(),
+    })
+    return response.json()
+  }
+
+  // Scheduler
+  async getScheduledPosts(filters?: {
+    status?: string
+    month?: number
+    year?: number
+  }): Promise<ApiResponse<{ scheduled_posts: any[] }>> {
+    const params = new URLSearchParams()
+    if (filters?.status) params.append('status', filters.status)
+    if (filters?.month) params.append('month', filters.month.toString())
+    if (filters?.year) params.append('year', filters.year.toString())
+
+    const url = params.toString() ? `${API_URL}/api/scheduler?${params}` : `${API_URL}/api/scheduler`
+    const response = await fetch(url, {
+      headers: this.getAuthHeader(),
+    })
+    return response.json()
+  }
+
+  async getSchedulerCalendar(month: number, year: number): Promise<ApiResponse<{ calendar: any[] }>> {
+    const response = await fetch(
+      `${API_URL}/api/scheduler/calendar?month=${month}&year=${year}`,
+      {
+        headers: this.getAuthHeader(),
+      }
+    )
+    return response.json()
+  }
+
+  async getScheduledPost(id: string): Promise<ApiResponse<{ scheduled_post: any }>> {
+    const response = await fetch(`${API_URL}/api/scheduler/${id}`, {
+      headers: this.getAuthHeader(),
+    })
+    return response.json()
+  }
+
+  async schedulePost(scheduleData: {
+    favorite_post_id: string
+    scheduled_date: string
+    scheduled_time?: string
+    timezone?: string
+    notes?: string
+    platform_settings?: any
+  }): Promise<ApiResponse<{ scheduled_post: any }>> {
+    const response = await fetch(`${API_URL}/api/scheduler`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...this.getAuthHeader(),
+      },
+      body: JSON.stringify(scheduleData),
+    })
+    return response.json()
+  }
+
+  async updateScheduledPost(
+    id: string,
+    updates: {
+      scheduled_date?: string
+      scheduled_time?: string
+      timezone?: string
+      notes?: string
+      platform_settings?: any
+      status?: string
+    }
+  ): Promise<ApiResponse<{ scheduled_post: any }>> {
+    const response = await fetch(`${API_URL}/api/scheduler/${id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        ...this.getAuthHeader(),
+      },
+      body: JSON.stringify(updates),
+    })
+    return response.json()
+  }
+
+  async cancelScheduledPost(id: string): Promise<ApiResponse> {
+    const response = await fetch(`${API_URL}/api/scheduler/${id}`, {
+      method: 'DELETE',
+      headers: this.getAuthHeader(),
+    })
+    return response.json()
+  }
+
+  // Holidays
+  async getHolidays(country: string, year: number): Promise<ApiResponse<{ holidays: any[] }>> {
+    const response = await fetch(
+      `${API_URL}/api/holidays?country=${country}&year=${year}`,
+      {
+        headers: this.getAuthHeader(),
+      }
+    )
+    return response.json()
+  }
+
+  async getHolidaysForMonth(
+    country: string,
+    year: number,
+    month: number
+  ): Promise<ApiResponse<{ holidays: any[] }>> {
+    const response = await fetch(
+      `${API_URL}/api/holidays/month?country=${country}&year=${year}&month=${month}`,
+      {
+        headers: this.getAuthHeader(),
+      }
+    )
+    return response.json()
+  }
+
+  async getSupportedCountries(): Promise<ApiResponse<{ countries: { code: string; name: string }[] }>> {
+    const response = await fetch(`${API_URL}/api/holidays/countries`, {
+      headers: this.getAuthHeader(),
     })
     return response.json()
   }
