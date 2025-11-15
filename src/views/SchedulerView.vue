@@ -470,10 +470,7 @@
               <BaseButton
                 variant="danger"
                 size="medium"
-                @click="
-                  cancelPost(selectedPostForDetail.id)
-                  closePostDetailModal()
-                "
+                @click="cancelPost(selectedPostForDetail.id); closePostDetailModal()"
               >
                 🗑️ Cancel Post
               </BaseButton>
