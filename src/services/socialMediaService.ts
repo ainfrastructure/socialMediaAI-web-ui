@@ -62,7 +62,7 @@ class SocialMediaService {
 
       return data.data
     } catch (error) {
-      console.error('Error getting social media profiles:', error)
+
       throw error
     }
   }
@@ -109,7 +109,7 @@ class SocialMediaService {
 
       return data.data
     } catch (error) {
-      console.error('Error getting social media profiles:', error)
+
       throw error
     }
   }

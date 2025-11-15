@@ -159,7 +159,7 @@ const fetchFavorites = async () => {
       favorites.value = response.data?.favorites || []
     }
   } catch (error) {
-    console.error('Error fetching favorites:', error)
+
   } finally {
     loading.value = false
   }
@@ -199,7 +199,7 @@ const scheduleFavorite = async (favorite: any) => {
       alert(response.error || 'Failed to schedule post')
     }
   } catch (error: any) {
-    console.error('Error scheduling favorite:', error)
+
     alert(error.message || 'Failed to schedule post')
   }
 }

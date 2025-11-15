@@ -95,13 +95,6 @@ if (urlParams.get('success') === 'true') {
 
 <template>
   <div class="plans-view">
-    <div class="header">
-      <h1 class="brand-title">SocialChef</h1>
-      <BaseButton variant="ghost" size="small" @click="goBack">
-        {{ authStore.isAuthenticated ? 'Back to Dashboard' : 'Back to Login' }}
-      </BaseButton>
-    </div>
-
     <BaseAlert
       v-if="message"
       :type="messageType"
@@ -113,6 +106,7 @@ if (urlParams.get('success') === 'true') {
     </BaseAlert>
 
     <div class="content">
+      <h1 class="brand-title">SocialChef</h1>
       <h2 class="section-title">Choose Your Plan</h2>
       <p class="section-subtitle">Unlock the full power of AI-generated content</p>
 
@@ -165,25 +159,6 @@ if (urlParams.get('success') === 'true') {
   padding: var(--space-2xl);
 }
 
-.header {
-  max-width: var(--max-width-2xl);
-  margin: 0 auto var(--space-3xl);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.brand-title {
-  font-family: var(--font-heading);
-  font-size: var(--text-3xl);
-  font-weight: var(--font-bold);
-  background: var(--gradient-gold);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  margin: 0;
-}
-
 .plans-alert {
   max-width: var(--max-width-2xl);
   margin: 0 auto var(--space-2xl);
@@ -192,6 +167,18 @@ if (urlParams.get('success') === 'true') {
 .content {
   max-width: var(--max-width-2xl);
   margin: 0 auto;
+}
+
+.brand-title {
+  text-align: center;
+  font-family: var(--font-heading);
+  font-size: var(--text-3xl);
+  font-weight: var(--font-bold);
+  background: var(--gradient-gold);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin: 0 0 var(--space-2xl) 0;
 }
 
 .section-title {
@@ -388,12 +375,6 @@ if (urlParams.get('success') === 'true') {
 @media (max-width: 768px) {
   .plans-view {
     padding: var(--space-lg);
-  }
-
-  .header {
-    flex-direction: column;
-    gap: var(--space-md);
-    text-align: center;
   }
 
   .brand-title {

@@ -267,7 +267,7 @@ async function loadPostHistory() {
       postHistory.value = response.data.posts || []
     }
   } catch (error: any) {
-    console.error('Failed to load post history:', error)
+
   }
 }
 

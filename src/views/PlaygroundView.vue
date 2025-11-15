@@ -1137,7 +1137,7 @@ onMounted(async () => {
   const scheduleDateParam = route.query.scheduleDate
   if (scheduleDateParam && typeof scheduleDateParam === 'string') {
     preselectedDate.value = scheduleDateParam
-    console.log('Preselected date from URL:', preselectedDate.value)
+
   }
 
   await fetchRestaurants()
@@ -1250,7 +1250,7 @@ const saveWebsite = async () => {
       saveError.value = response.error || 'Failed to save website'
     }
   } catch (err: any) {
-    console.error('Error saving website:', err)
+
     saveError.value = err.message || 'Failed to save website'
   } finally {
     saving.value = false
@@ -1299,7 +1299,7 @@ const saveHours = async () => {
       saveError.value = response.error || 'Failed to save opening hours'
     }
   } catch (err: any) {
-    console.error('Error saving opening hours:', err)
+
     saveError.value = err.message || 'Failed to save opening hours'
   } finally {
     saving.value = false
@@ -1362,7 +1362,7 @@ const saveSocial = async () => {
       saveError.value = response.error || 'Failed to save social media'
     }
   } catch (err: any) {
-    console.error('Error saving social media:', err)
+
     saveError.value = err.message || 'Failed to save social media'
   } finally {
     saving.value = false
@@ -1617,7 +1617,7 @@ const generateImage = async () => {
           mimeType: imageBlob.type,
         }
       } catch (imageError: any) {
-        console.error('Error fetching reference image:', imageError)
+
         showMessage(`Warning: Could not load reference image. Generating without it.`, 'info')
         // Continue without reference image
       }
@@ -1636,18 +1636,13 @@ const generateImage = async () => {
         }
       : undefined
 
-    console.log('🎨 Calling image generation API with:', {
-      prompt: editablePrompt.value,
-      hasWatermark: !!watermark,
-      hasReferenceImage: !!referenceImage,
-      hasPromotionalSticker: !!promotionalSticker,
-      promotionalStickerDetails: promotionalSticker,
-    })
-
-    const response = await api.generateImage(editablePrompt.value, watermark, referenceImage, promotionalSticker)
-
-    console.log('✅ API response:', response)
-    console.log('📍 Promotional sticker added:', (response as any).promotionalStickerAdded)
+    const response = await api.generateImage(
+      editablePrompt.value,
+      watermark,
+      referenceImage,
+      promotionalSticker,
+      selectedRestaurant.value?.place_id
+    )
 
     if (!response.success) {
       showMessage(response.error || 'Failed to generate image', 'error')
@@ -1683,7 +1678,7 @@ const generateImage = async () => {
       await generatePostContent('image')
     }
   } catch (error: any) {
-    console.error('Generate image error:', error)
+
     showMessage(error.message || 'Failed to generate image', 'error')
   } finally {
     generatingImage.value = false
@@ -1699,8 +1694,6 @@ const generatePostContent = async (contentType: 'image' | 'video') => {
       ? selectedMenuItems.value.map(i => i.name)
       : ['Featured dish']
 
-    console.log('Generating post content for platforms:', selectedPlatforms.value, menuItemNames)
-
     // Use the first selected platform for content generation
     // The content will be suitable for all selected platforms
     const primaryPlatform = selectedPlatforms.value[0]
@@ -1715,7 +1708,7 @@ const generatePostContent = async (contentType: 'image' | 'video') => {
     )
 
     if (!response.success) {
-      console.error('Failed to generate post content:', response.error)
+
       return
     }
 
@@ -1725,9 +1718,8 @@ const generatePostContent = async (contentType: 'image' | 'video') => {
       callToAction: (response as any).callToAction || '',
     }
 
-    console.log('Post content generated:', generatedPostContent.value)
   } catch (error: any) {
-    console.error('Generate post content error:', error)
+
   } finally {
     generatingPostContent.value = false
   }
@@ -1839,7 +1831,7 @@ const startVideoPolling = () => {
         }
       }
     } catch (error: any) {
-      console.error('Error polling video operation:', error)
+
     }
   }, 3000)
 }
@@ -1887,14 +1879,10 @@ const copyToClipboard = async (text: string) => {
 }
 
 const saveToFavorites = async () => {
-  console.log('saveToFavorites called')
-  console.log('generatedImageUrl:', generatedImageUrl.value)
-  console.log('generatedVideoUrl:', generatedVideoUrl.value)
-  console.log('lastSavedFavorite:', lastSavedFavorite.value)
 
   // Check if already saved
   if (lastSavedFavorite.value) {
-    console.log('Already saved, skipping')
+
     showMessage('Already saved to favorites!', 'info')
     return
   }
@@ -1921,11 +1909,7 @@ const saveToFavorites = async () => {
       brand_dna: selectedRestaurant.value?.brand_dna,
     }
 
-    console.log('Saving favorite with data:', favoriteData)
-
     const response = await api.saveFavorite(favoriteData)
-
-    console.log('Save favorite response:', response)
 
     if (!response.success) {
       showMessage(response.error || 'Failed to save to favorites', 'error')
@@ -1933,10 +1917,10 @@ const saveToFavorites = async () => {
     }
 
     lastSavedFavorite.value = response.data?.favorite
-    console.log('lastSavedFavorite set to:', lastSavedFavorite.value)
+
     showMessage('Post saved to favorites!', 'success')
   } catch (error: any) {
-    console.error('Error saving favorite:', error)
+
     showMessage(error.message || 'Failed to save to favorites', 'error')
   } finally {
     savingFavorite.value = false
@@ -1998,7 +1982,7 @@ const publishToFacebook = async () => {
 
     showMessage('Successfully published to Facebook!', 'success')
   } catch (error: any) {
-    console.error('Error publishing to Facebook:', error)
+
     showMessage(error.message || 'Failed to publish to Facebook', 'error')
   } finally {
     publishingToFacebook.value = false
@@ -2006,21 +1990,18 @@ const publishToFacebook = async () => {
 }
 
 const openScheduleModal = async () => {
-  console.log('openScheduleModal called')
-  console.log('lastSavedFavorite:', lastSavedFavorite.value)
 
   // If we just saved a favorite, use that. Otherwise, save first
   if (!lastSavedFavorite.value) {
-    console.log('No saved favorite, saving now...')
+
     await saveToFavorites()
     if (!lastSavedFavorite.value) {
       // Save failed
-      console.log('Save failed, not opening modal')
+
       return
     }
   }
 
-  console.log('Opening modal with favorite:', lastSavedFavorite.value)
   favoriteToSchedule.value = lastSavedFavorite.value
   showScheduleModal.value = true
 }
@@ -2549,7 +2530,6 @@ const handleScheduled = (scheduledPost: any) => {
   margin: 0;
   font-weight: 600;
 }
-
 
 .generator-card {
   padding: 2rem;

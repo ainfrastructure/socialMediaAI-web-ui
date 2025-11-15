@@ -589,7 +589,7 @@ const fetchRestaurants = async () => {
     error.value = null
     restaurants.value = await restaurantService.getSavedRestaurants()
   } catch (err: any) {
-    console.error('Error fetching saved restaurants:', err)
+
     error.value = err.message || 'Failed to load saved restaurants'
   } finally {
     loading.value = false
@@ -659,7 +659,7 @@ const saveWebsite = async () => {
       saveError.value = response.error || 'Failed to save website'
     }
   } catch (err: any) {
-    console.error('Error saving website:', err)
+
     saveError.value = err.message || 'Failed to save website'
   } finally {
     saving.value = false
@@ -707,7 +707,7 @@ const saveHours = async () => {
       saveError.value = response.error || 'Failed to save opening hours'
     }
   } catch (err: any) {
-    console.error('Error saving opening hours:', err)
+
     saveError.value = err.message || 'Failed to save opening hours'
   } finally {
     saving.value = false
@@ -769,7 +769,7 @@ const saveSocial = async () => {
       saveError.value = response.error || 'Failed to save social media'
     }
   } catch (err: any) {
-    console.error('Error saving social media:', err)
+
     saveError.value = err.message || 'Failed to save social media'
   } finally {
     saving.value = false
@@ -802,7 +802,7 @@ const deleteRestaurant = async () => {
       error.value = 'Failed to delete restaurant'
     }
   } catch (err: any) {
-    console.error('Error deleting restaurant:', err)
+
     error.value = err.message || 'Failed to delete restaurant'
   } finally {
     deleting.value = false

@@ -41,7 +41,7 @@ onMounted(async () => {
     status.value = `Success! Connected ${facebookStore.connectedPages.length} Facebook page(s)`
     setTimeout(() => router.push('/connect-accounts?connected=true'), 2000)
   } catch (error: any) {
-    console.error('Facebook callback error:', error)
+
     isError.value = true
     status.value = error.message || 'Failed to complete Facebook connection'
     setTimeout(() => router.push('/connect-accounts'), 3000)

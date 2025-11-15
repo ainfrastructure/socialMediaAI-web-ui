@@ -332,7 +332,7 @@ async function openCustomerPortal() {
       alert('Failed to open billing portal')
     }
   } catch (err) {
-    console.error('Failed to open customer portal:', err)
+
     alert('Failed to open billing portal')
   } finally {
     loadingPortal.value = false
@@ -347,7 +347,7 @@ async function confirmCancelSubscription() {
     showCancelModal.value = false
     await authStore.refreshProfile()
   } catch (err) {
-    console.error('Failed to cancel subscription:', err)
+
     alert('Failed to cancel subscription')
   }
 }
@@ -362,7 +362,7 @@ async function confirmDeleteAccount() {
     await authStore.logout()
     router.push('/login')
   } catch (err) {
-    console.error('Failed to delete account:', err)
+
     alert('Failed to delete account')
   }
 }

@@ -150,7 +150,7 @@ const handleSave = async () => {
     emit('updated')
     emit('close')
   } catch (error) {
-    console.error('Error updating restaurant:', error)
+
     alert('Failed to update restaurant')
   } finally {
     saving.value = false

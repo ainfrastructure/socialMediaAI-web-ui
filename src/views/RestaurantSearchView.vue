@@ -694,7 +694,6 @@ const competitorsTotalPages = computed(() => {
 })
 
 const handleRestaurantSelect = async (restaurant: RestaurantSuggestion) => {
-  console.log('Selected restaurant:', restaurant)
 
   // Clear previous data
   menuData.value = null
@@ -741,7 +740,7 @@ const fetchPlaceDetails = async (placeId: string) => {
     const details = await placesService.getPlaceDetails(placeId)
     placeDetails.value = details
   } catch (error: any) {
-    console.error('Error fetching place details:', error)
+
     // Don't show error to user, just log it
   } finally {
     loadingDetails.value = false
@@ -761,7 +760,7 @@ const fetchMenu = async (placeId: string, restaurantName: string) => {
       menuError.value = 'No menu found for this restaurant'
     }
   } catch (error: any) {
-    console.error('Error fetching menu:', error)
+
     menuError.value = error.message || 'Failed to fetch menu. The restaurant may not be available on Wolt or Foodora.'
   } finally {
     loadingMenu.value = false
@@ -780,7 +779,7 @@ const fetchCompetitors = async (placeId: string) => {
       competitorError.value = 'No competitors found within 1 km'
     }
   } catch (error: any) {
-    console.error('Error fetching competitors:', error)
+
     competitorError.value = error.message || 'Failed to find competitors'
   } finally {
     loadingCompetitors.value = false
@@ -799,7 +798,7 @@ const fetchSocialMedia = async (placeId: string) => {
       socialMediaError.value = 'No social media profiles found'
     }
   } catch (error: any) {
-    console.error('Error fetching social media:', error)
+
     socialMediaError.value = error.message || 'Failed to find social media profiles'
   } finally {
     loadingSocialMedia.value = false
@@ -811,17 +810,16 @@ const fetchBrandDNA = async (website: string, placeId?: string) => {
     loadingBrandDNA.value = true
     brandDNAError.value = null
 
-    console.log('Analyzing brand DNA for website:', website, 'Place ID:', placeId)
     const response = await api.analyzeBrandDNA(website, placeId)
 
     if (response.success && (response as any).brandDNA) {
       brandDNA.value = (response as any).brandDNA
-      console.log('Brand DNA extracted:', brandDNA.value)
+
     } else {
       brandDNAError.value = 'Could not extract brand DNA'
     }
   } catch (error: any) {
-    console.error('Error fetching brand DNA:', error)
+
     brandDNAError.value = error.message || 'Failed to analyze brand DNA'
   } finally {
     loadingBrandDNA.value = false
@@ -900,8 +898,6 @@ const saveToDatabase = async () => {
       selected_photo_indices: selectedPhotoIndices.value.length > 0 ? selectedPhotoIndices.value : null,
     }
 
-    console.log('Saving restaurant to database:', restaurantData)
-
     const result = await restaurantService.saveRestaurant(restaurantData)
 
     if (result.success) {
@@ -919,8 +915,6 @@ const saveToDatabase = async () => {
             uploadFiles.value
           )
 
-          console.log(`Successfully uploaded ${uploadResult.count} images`)
-
           // Update success message to include uploaded images info
           if (uploadResult.count > 0) {
             saveSuccessMessage.value += ` Additionally uploaded ${uploadResult.count} custom image(s).`
@@ -929,7 +923,7 @@ const saveToDatabase = async () => {
           // Clear uploaded files after successful upload
           uploadFiles.value = []
         } catch (uploadErr: any) {
-          console.error('Error uploading images:', uploadErr)
+
           uploadError.value = uploadErr.message || 'Failed to upload images'
           // Don't fail the entire save operation if upload fails
         } finally {
@@ -939,7 +933,7 @@ const saveToDatabase = async () => {
 
       saveSuccess.value = true
       isSaved.value = true
-      console.log('Restaurant saved successfully:', result.data)
+
     } else {
       // Handle duplicate error (restaurant already saved)
       if (result.error && result.error.includes('already saved')) {
@@ -950,7 +944,7 @@ const saveToDatabase = async () => {
       }
     }
   } catch (error: any) {
-    console.error('Error saving restaurant:', error)
+
     saveError.value = error.message || 'Failed to save restaurant'
   } finally {
     savingRestaurant.value = false
@@ -967,7 +961,7 @@ const formatType = (type: string): string => {
 const handleLogoError = (event: Event) => {
   const img = event.target as HTMLImageElement
   img.style.display = 'none'
-  console.error('Failed to load logo image:', img.src)
+
 }
 </script>
 

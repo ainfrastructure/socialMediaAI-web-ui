@@ -131,7 +131,7 @@ const performSearch = async (query: string) => {
   } catch (err) {
     error.value = 'Failed to search restaurants. Please try again.'
     suggestions.value = []
-    console.error('Search error:', err)
+
   } finally {
     isLoading.value = false
   }

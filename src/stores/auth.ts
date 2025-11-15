@@ -33,12 +33,6 @@ export const useAuthStore = defineStore('auth', () => {
 
   // Helper to store session
   function storeSession(session: { access_token: string; refresh_token: string; expires_at?: number; expires_in?: number }) {
-    console.log('Storing session:', {
-      hasAccessToken: !!session.access_token,
-      hasRefreshToken: !!session.refresh_token,
-      expires_at: session.expires_at,
-      expires_in: session.expires_in,
-    })
 
     accessToken.value = session.access_token
     refreshToken.value = session.refresh_token
@@ -62,8 +56,6 @@ export const useAuthStore = defineStore('auth', () => {
 
     tokenExpiresAt.value = expiresAt
     localStorage.setItem('token_expires_at', expiresAt.toString())
-
-    console.log('Session stored, expires at:', new Date(expiresAt).toISOString())
 
     // Schedule token refresh
     scheduleTokenRefresh()
@@ -112,17 +104,17 @@ export const useAuthStore = defineStore('auth', () => {
   // Refresh access token
   async function refreshAccessToken() {
     if (!refreshToken.value) {
-      console.log('No refresh token available')
+
       await logout()
       return false
     }
 
     try {
-      console.log('Attempting to refresh token...')
+
       const response = await api.refreshToken(refreshToken.value)
 
       if (!response.success || !response.session) {
-        console.error('Token refresh failed:', response.error || response.message)
+
         // Only logout if it's truly invalid, not on network errors
         if (response.error?.includes('Invalid') || response.error?.includes('expired')) {
           await logout()
@@ -130,11 +122,10 @@ export const useAuthStore = defineStore('auth', () => {
         return false
       }
 
-      console.log('Token refreshed successfully')
       storeSession(response.session)
       return true
     } catch (err: any) {
-      console.error('Token refresh error:', err.message || err)
+
       // Don't logout on network errors, let them retry
       return false
     }
@@ -231,53 +222,49 @@ export const useAuthStore = defineStore('auth', () => {
     error.value = null
 
     try {
-      console.log('Loading user profile...')
+
       const response = await api.getProfile()
 
       // Handle both response structures: response.data.user OR response.user
       const userData = response.data?.user || (response as any).user
 
       if (!response.success || !userData) {
-        console.log('Profile load failed, attempting token refresh...')
-        console.log('Failed response:', response)
+
         // Token is invalid, try to refresh
         const refreshed = await refreshAccessToken()
         if (refreshed) {
-          console.log('Token refreshed, retrying profile load...')
+
           // Try loading profile again with new token (but only once to avoid infinite loop)
           loading.value = true
           const retryResponse = await api.getProfile()
-          console.log('Retry response:', retryResponse)
 
           // Handle both response structures
           const retryUserData = retryResponse.data?.user || (retryResponse as any).user
 
           if (retryResponse.success && retryUserData) {
             user.value = retryUserData
-            console.log('Profile loaded successfully after refresh')
+
             // Sync subscription after successful login
             syncSubscriptionInBackground()
           } else {
-            console.error('Profile load failed even after refresh')
-            console.error('Error details:', retryResponse.error || 'No error message')
+
             await logout()
           }
           return
         } else {
           // Refresh failed, clear auth state
-          console.log('Token refresh failed, logging out')
+
           await logout()
           return
         }
       }
 
       user.value = userData
-      console.log('Profile loaded successfully')
 
       // Sync subscription after successful profile load
       syncSubscriptionInBackground()
     } catch (err: any) {
-      console.error('Profile load error:', err.message)
+
       error.value = err.message || 'Failed to load profile'
       // Try to refresh token on error (but don't logout immediately on network errors)
       const refreshed = await refreshAccessToken()
@@ -290,7 +277,7 @@ export const useAuthStore = defineStore('auth', () => {
             syncSubscriptionInBackground()
           }
         } catch (retryErr) {
-          console.error('Retry failed:', retryErr)
+
         }
       }
     } finally {
@@ -302,22 +289,22 @@ export const useAuthStore = defineStore('auth', () => {
   // Sync subscription in background without blocking
   async function syncSubscriptionInBackground() {
     try {
-      console.log('Syncing subscription in background...')
+
       const response = await api.syncSubscription()
 
       if (response.success) {
-        console.log('Subscription synced successfully')
+
         // Refresh profile to get updated data
         const profileResponse = await api.getProfile()
         if (profileResponse.success && profileResponse.data?.user) {
           user.value = profileResponse.data.user
         }
       } else {
-        console.log('Subscription sync returned no changes or error:', response.message)
+
       }
     } catch (err: any) {
       // Silent fail - don't disrupt user experience
-      console.log('Background subscription sync failed:', err.message)
+
     }
   }
 
@@ -355,14 +342,8 @@ export const useAuthStore = defineStore('auth', () => {
 
   // Initialize auth state on store creation
   if (accessToken.value && refreshToken.value) {
-    console.log('Initializing auth with stored tokens')
-    console.log('Token expires at:', tokenExpiresAt.value ? new Date(tokenExpiresAt.value).toISOString() : 'unknown')
-    console.log('Current time:', new Date().toISOString())
-    console.log('Is expired:', isTokenExpired())
-
     // Only refresh if token is truly expired (less than 1 minute left)
     if (isTokenExpired()) {
-      console.log('Token is expired, refreshing...')
       refreshAccessToken().then((success) => {
         if (success) {
           loadProfile()
@@ -372,13 +353,13 @@ export const useAuthStore = defineStore('auth', () => {
       })
     } else {
       // Token is still valid, just load profile
-      console.log('Token is still valid, loading profile...')
+
       loadProfile()
       scheduleTokenRefresh()
     }
   } else {
     // No tokens, mark as initialized
-    console.log('No tokens found, marking as initialized')
+
     initialized.value = true
   }
 

@@ -160,7 +160,8 @@ class ApiService {
       textColor?: string;
       size?: string;
       rotation?: number
-    }
+    },
+    placeId?: string
   ): Promise<ApiResponse<{ imageUrl: string; usage: any; watermarked?: boolean; promotionalStickerAdded?: boolean }>> {
     const response = await fetch(`${API_URL}/api/gemini/generate-image`, {
       method: 'POST',
@@ -168,7 +169,7 @@ class ApiService {
         'Content-Type': 'application/json',
         ...this.getAuthHeader(),
       },
-      body: JSON.stringify({ prompt, watermark, referenceImage, promotionalSticker }),
+      body: JSON.stringify({ prompt, watermark, referenceImage, promotionalSticker, placeId }),
     })
     return response.json()
   }
@@ -352,18 +353,15 @@ class ApiService {
 
   // Facebook OAuth methods
   async initFacebookAuth(): Promise<ApiResponse<{ authUrl: string; state: string }>> {
-    console.log('[API] Calling Facebook auth init endpoint:', `${API_URL}/api/facebook/auth/init`)
 
     const response = await fetch(`${API_URL}/api/facebook/auth/init`, {
       headers: this.getAuthHeader(),
     })
 
-    console.log('[API] Facebook auth init response status:', response.status)
-
     if (!response.ok) {
-      console.error('[API] Facebook auth init failed with status:', response.status)
+
       const text = await response.text()
-      console.error('[API] Error response:', text)
+
       try {
         return JSON.parse(text)
       } catch {
@@ -375,7 +373,7 @@ class ApiService {
     }
 
     const data = await response.json()
-    console.log('[API] Facebook auth init response data:', data)
+
     return data
   }
 

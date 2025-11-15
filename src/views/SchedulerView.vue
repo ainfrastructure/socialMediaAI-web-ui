@@ -374,7 +374,6 @@
               :src="getMediaUrl(selectedPostForDetail.media_url)"
               alt="Post content"
               class="modal-image"
-              @error="(e) => console.error('Modal image load error:', selectedPostForDetail.media_url)"
             />
             <video
               v-else-if="selectedPostForDetail.content_type === 'video' && selectedPostForDetail.media_url"
@@ -835,13 +834,10 @@ const fetchScheduledPosts = async () => {
 
       // Fix content_type based on media_url if it's incorrect
       scheduledPosts.value = posts.map((post: any) => {
-        console.log('=== Scheduled Post Debug ===')
-        console.log('Post ID:', post.id)
-        console.log('Has favorite_posts?', !!post.favorite_posts)
+
         if (post.favorite_posts) {
-          console.log('favorite_posts data:', post.favorite_posts)
+
         }
-        console.log('===========================')
 
         // Try to find the media URL from various possible fields
         let mediaUrl = post.media_url || post.image_url || post.video_url || post.content_url
@@ -890,7 +886,7 @@ const fetchScheduledPosts = async () => {
       })
     }
   } catch (error) {
-    console.error('Error fetching scheduled posts:', error)
+
   } finally {
     loading.value = false
   }
@@ -907,7 +903,7 @@ const fetchHolidays = async () => {
       holidays.value = response.data?.holidays || []
     }
   } catch (error) {
-    console.error('Error fetching holidays:', error)
+
     // Don't block the UI if holidays fail to load
     holidays.value = []
   }
@@ -915,7 +911,7 @@ const fetchHolidays = async () => {
 
 const editScheduledPost = (post: any) => {
   // TODO: Open edit modal
-  console.log('Edit post:', post)
+
 }
 
 const cancelPost = async (postId: string) => {
@@ -931,7 +927,7 @@ const cancelPost = async (postId: string) => {
       selectedDay.value = null
     }
   } catch (error) {
-    console.error('Error cancelling post:', error)
+
   }
 }
 
@@ -978,13 +974,7 @@ const getMediaUrl = (url: string): string => {
 
 const handleImageError = (event: Event, post: any) => {
   const img = event.target as HTMLImageElement
-  console.error('=== Image Load Error ===')
-  console.error('Failed src:', img.src)
-  console.error('Original media_url:', post.media_url)
-  console.error('Post ID:', post.id)
-  console.error('Post content_type:', post.content_type)
-  console.error('Full post:', post)
-  console.error('=====================')
+
   // Keep the placeholder visible instead of hiding
 }
 

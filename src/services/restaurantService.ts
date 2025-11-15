@@ -128,7 +128,7 @@ class RestaurantService {
 
       return data
     } catch (error) {
-      console.error('Error saving restaurant:', error)
+
       throw error
     }
   }
@@ -163,7 +163,7 @@ class RestaurantService {
 
       return data.data || []
     } catch (error) {
-      console.error('Error getting saved restaurants:', error)
+
       throw error
     }
   }
@@ -206,7 +206,7 @@ class RestaurantService {
 
       return data.data
     } catch (error) {
-      console.error('Error getting restaurant by place_id:', error)
+
       throw error
     }
   }
@@ -246,7 +246,7 @@ class RestaurantService {
 
       return data
     } catch (error) {
-      console.error('Error updating restaurant:', error)
+
       throw error
     }
   }
@@ -281,7 +281,7 @@ class RestaurantService {
 
       return data.success
     } catch (error) {
-      console.error('Error deleting restaurant:', error)
+
       throw error
     }
   }
@@ -296,7 +296,7 @@ class RestaurantService {
       const restaurant = await this.getRestaurantByPlaceId(placeId)
       return restaurant !== null
     } catch (error) {
-      console.error('Error checking if restaurant is saved:', error)
+
       return false
     }
   }
@@ -352,7 +352,7 @@ class RestaurantService {
 
       return data.data
     } catch (error) {
-      console.error('Error uploading restaurant images:', error)
+
       throw error
     }
   }
@@ -393,7 +393,7 @@ class RestaurantService {
 
       return data.success
     } catch (error) {
-      console.error('Error deleting restaurant image:', error)
+
       throw error
     }
   }

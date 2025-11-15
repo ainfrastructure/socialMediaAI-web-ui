@@ -203,10 +203,8 @@ const getCurrentTimeInTimezone = (timezone: string): string => {
 }
 
 watch(() => props.modelValue, (newValue) => {
-  console.log('ScheduleModal modelValue changed to:', newValue)
+
   if (newValue) {
-    console.log('Modal opening, favorite post:', props.favoritePost)
-    console.log('Preselected date:', props.preselectedDate)
 
     // Reset time selectors first
     selectedHour.value = '12'
@@ -244,12 +242,10 @@ const closeModal = () => {
 }
 
 const handleSchedule = async () => {
-  console.log('handleSchedule called')
-  console.log('favoritePost:', props.favoritePost)
 
   if (!props.favoritePost?.id) {
     error.value = 'No favorite post selected'
-    console.error('No favorite post ID found')
+
     return
   }
 
@@ -265,11 +261,7 @@ const handleSchedule = async () => {
       notes: formData.value.notes || undefined,
     }
 
-    console.log('Scheduling post with data:', scheduleData)
-
     const response = await api.schedulePost(scheduleData)
-
-    console.log('Schedule response:', response)
 
     if (!response.success) {
       error.value = response.error || 'Failed to schedule post'
@@ -282,7 +274,7 @@ const handleSchedule = async () => {
     // Redirect to scheduler view
     router.push('/scheduler')
   } catch (err: any) {
-    console.error('Error scheduling post:', err)
+
     error.value = err.message || 'Failed to schedule post'
   } finally {
     scheduling.value = false

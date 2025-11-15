@@ -134,7 +134,7 @@ class PlacesService {
 
       return data.data.suggestions
     } catch (error) {
-      console.error('Error searching restaurants:', error)
+
       throw error
     }
   }
@@ -172,7 +172,7 @@ class PlacesService {
 
       return data.data
     } catch (error) {
-      console.error('Error getting place details:', error)
+
       throw error
     }
   }
@@ -214,7 +214,7 @@ class PlacesService {
 
       return data.data
     } catch (error) {
-      console.error('Error finding competitors:', error)
+
       throw error
     }
   }

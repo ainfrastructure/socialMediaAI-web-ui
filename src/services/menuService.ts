@@ -61,7 +61,7 @@ class MenuService {
 
       return data.data || null
     } catch (error) {
-      console.error('Error getting restaurant menu:', error)
+
       throw error
     }
   }

@@ -22,49 +22,31 @@ export const useFacebookStore = defineStore('facebook', () => {
     error.value = null
 
     try {
-      console.log('[Facebook Store] Initiating Facebook auth...')
 
       // Step 1: Get authorization URL from backend
       const initResponse = await api.initFacebookAuth()
 
-      console.log('[Facebook Store] Init response:', {
-        success: initResponse.success,
-        hasData: !!initResponse.data,
-        error: initResponse.error,
-        fullResponse: initResponse
-      })
-
       if (!initResponse.success) {
         const errorMsg = initResponse.error || 'Failed to initialize Facebook authentication'
-        console.error('[Facebook Store] Backend returned error:', errorMsg)
+
         throw new Error(errorMsg)
       }
 
       if (!initResponse.data) {
-        console.error('[Facebook Store] No data in response:', initResponse)
+
         throw new Error('No data received from server')
       }
 
       const { authUrl, state } = initResponse.data
-      console.log('[Facebook Store] Got auth URL and state:', {
-        authUrl: authUrl.substring(0, 50) + '...',
-        stateLength: state.length
-      })
 
       // Step 2: Store state in localStorage for verification after redirect
       localStorage.setItem('facebook_oauth_state', state)
-      console.log('[Facebook Store] Stored state in localStorage')
 
       // Step 3: Redirect to Facebook (instead of opening popup)
-      console.log('[Facebook Store] Redirecting to Facebook...')
+
       window.location.href = authUrl
     } catch (err: any) {
-      console.error('[Facebook Store] Facebook connection error:', err)
-      console.error('[Facebook Store] Error details:', {
-        message: err.message,
-        stack: err.stack,
-        error: err
-      })
+
       error.value = err.message || 'Failed to connect Facebook account'
       loading.value = false
       throw err
@@ -88,7 +70,7 @@ export const useFacebookStore = defineStore('facebook', () => {
 
       connectedPages.value = response.data?.pages || []
     } catch (err: any) {
-      console.error('Load pages error:', err)
+
       error.value = err.message || 'Failed to load connected pages'
     } finally {
       loading.value = false
@@ -112,7 +94,7 @@ export const useFacebookStore = defineStore('facebook', () => {
       // Remove from local state
       connectedPages.value = connectedPages.value.filter((page) => page.pageId !== pageId)
     } catch (err: any) {
-      console.error('Disconnect page error:', err)
+
       error.value = err.message || 'Failed to disconnect page'
       throw err
     } finally {
@@ -149,7 +131,7 @@ export const useFacebookStore = defineStore('facebook', () => {
       connectedPages.value = callbackResponse.data?.pages || []
       error.value = null
     } catch (err: any) {
-      console.error('Facebook callback error:', err)
+
       error.value = err.message || 'Failed to complete Facebook authentication'
       throw err
     } finally {

@@ -29,7 +29,7 @@ async function openCustomerPortal() {
       window.location.href = (response as any).portal_url
     }
   } catch (error) {
-    console.error('Failed to open portal:', error)
+
   }
 }
 
@@ -38,7 +38,7 @@ onMounted(async () => {
   try {
     await authStore.refreshProfile()
   } catch (error) {
-    console.error('Failed to load profile on dashboard mount:', error)
+
     // Don't block - let the page render anyway
   }
 })

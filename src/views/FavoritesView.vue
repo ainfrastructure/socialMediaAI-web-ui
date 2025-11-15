@@ -200,7 +200,7 @@ const fetchFavorites = async () => {
       favorites.value = response.data?.favorites || []
     }
   } catch (error) {
-    console.error('Error fetching favorites:', error)
+
   } finally {
     loading.value = false
   }
@@ -233,7 +233,7 @@ const deleteFavorite = async (id: string) => {
       await fetchFavorites()
     }
   } catch (error) {
-    console.error('Error deleting favorite:', error)
+
   }
 }
 
@@ -260,7 +260,7 @@ const copyToClipboard = async (text: string) => {
     await navigator.clipboard.writeText(text)
     alert('Copied to clipboard!')
   } catch (error) {
-    console.error('Failed to copy:', error)
+
   }
 }
 
