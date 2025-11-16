@@ -166,7 +166,7 @@ async function handleForgotPassword() {
       <div class="header">
         <img src="../assets/socialchef_logo.svg" alt="SocialChef Logo" class="brand-logo" />
         <h1 class="brand-title">SocialChef</h1>
-        <p class="brand-subtitle">AI-Powered Content for Restaurants</p>
+        <p class="brand-subtitle">{{ $t('auth.brandSubtitle') }}</p>
       </div>
 
       <BaseAlert

@@ -3,7 +3,10 @@ import en from './locales/en'
 import no from './locales/no'
 
 // Get the saved locale from localStorage or default to 'en'
-const savedLocale = localStorage.getItem('userLocale') || 'en'
+// Safe check for localStorage availability (SSR/build-time safe)
+const savedLocale = typeof window !== 'undefined'
+  ? (localStorage.getItem('userLocale') || 'en')
+  : 'en'
 
 export type MessageSchema = typeof en
 
