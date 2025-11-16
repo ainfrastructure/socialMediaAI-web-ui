@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '../stores/auth'
 import { api } from '../services/api'
 import GradientBackground from '../components/GradientBackground.vue'
@@ -9,6 +10,7 @@ import BaseButton from '../components/BaseButton.vue'
 
 const router = useRouter()
 const authStore = useAuthStore()
+const { t } = useI18n()
 
 const tierDisplayName = computed(() => authStore.user?.subscription.tier.toUpperCase() || 'FREE')
 const progressPercent = computed(() => {
@@ -51,77 +53,77 @@ onMounted(async () => {
     <div class="container">
       <!-- Hero Section -->
       <div class="hero-section">
-        <h2 class="hero-title">Welcome to SocialChef</h2>
+        <h2 class="hero-title">{{ $t('dashboard.heroTitle') }}</h2>
         <p class="hero-subtitle">
-          Cook up stunning social media content in three simple steps
+          {{ $t('dashboard.heroSubtitle') }}
         </p>
       </div>
 
       <!-- How It Works Section -->
       <div class="section-header">
-        <h3 class="section-title">How It Works</h3>
-        <p class="section-subtitle">Three simple steps to amazing content</p>
+        <h3 class="section-title">{{ $t('dashboard.howItWorks') }}</h3>
+        <p class="section-subtitle">{{ $t('dashboard.howItWorksSubtitle') }}</p>
       </div>
 
       <div class="steps-grid">
         <BaseCard variant="glass" hoverable class="step-card">
           <div class="step-number">1</div>
-          <h4 class="step-title">Search & Save</h4>
+          <h4 class="step-title">{{ $t('dashboard.step1Title') }}</h4>
           <p class="step-description">
-            Find restaurants using Google Places and save them to your library. Access menus, photos, and brand details instantly.
+            {{ $t('dashboard.step1Description') }}
           </p>
           <BaseButton variant="secondary" size="small" @click="router.push('/restaurants')">
-            Search Now
+            {{ $t('dashboard.step1Button') }}
           </BaseButton>
         </BaseCard>
 
         <BaseCard variant="glass" hoverable class="step-card">
           <div class="step-number">2</div>
-          <h4 class="step-title">Cook Up Content</h4>
+          <h4 class="step-title">{{ $t('dashboard.step2Title') }}</h4>
           <p class="step-description">
-            Generate AI-powered images, videos, and captions. Save your favorites and build a content library for your restaurants.
+            {{ $t('dashboard.step2Description') }}
           </p>
           <BaseButton variant="secondary" size="small" @click="router.push('/playground')">
-            Start Cooking
+            {{ $t('dashboard.step2Button') }}
           </BaseButton>
         </BaseCard>
 
         <BaseCard variant="glass" hoverable class="step-card">
           <div class="step-number">3</div>
-          <h4 class="step-title">Schedule Posts</h4>
+          <h4 class="step-title">{{ $t('dashboard.step3Title') }}</h4>
           <p class="step-description">
-            Plan your content calendar and publish directly to Facebook. Schedule posts in advance and maintain consistent engagement.
+            {{ $t('dashboard.step3Description') }}
           </p>
           <BaseButton variant="secondary" size="small" @click="router.push('/scheduler')">
-            View Calendar
+            {{ $t('dashboard.step3Button') }}
           </BaseButton>
         </BaseCard>
       </div>
 
       <!-- Account Info Section -->
       <BaseCard variant="glass" class="account-card">
-        <h3 class="account-title">Your Account</h3>
+        <h3 class="account-title">{{ $t('dashboard.yourAccount') }}</h3>
 
         <div class="account-info">
           <div class="info-row">
-            <span class="info-label">Email:</span>
+            <span class="info-label">{{ $t('dashboard.email') }}</span>
             <span class="info-value">{{ authStore.user?.email }}</span>
           </div>
 
           <div class="info-row">
-            <span class="info-label">Plan:</span>
+            <span class="info-label">{{ $t('dashboard.plan') }}</span>
             <span class="tier-badge">{{ tierDisplayName }}</span>
           </div>
 
           <div class="info-row">
-            <span class="info-label">Status:</span>
+            <span class="info-label">{{ $t('dashboard.status') }}</span>
             <span class="info-value">{{ authStore.user?.subscription.status }}</span>
           </div>
 
           <div class="info-row">
-            <span class="info-label">Credits Used:</span>
+            <span class="info-label">{{ $t('dashboard.creditsUsed') }}</span>
             <span class="info-value">
-              {{ authStore.usageStats?.credits_this_month }} / {{ authStore.usageStats?.monthly_limit }} this month
+              {{ authStore.usageStats?.credits_this_month }} / {{ authStore.usageStats?.monthly_limit }} {{ $t('dashboard.thisMonth') }}
             </span>
           </div>
 
@@ -129,16 +131,16 @@ onMounted(async () => {
             <div class="usage-bar">
               <div class="usage-progress" :style="{ width: `${progressPercent}%` }"></div>
             </div>
-            <span class="usage-text">{{ authStore.usageStats?.remaining_credits }} credits remaining</span>
+            <span class="usage-text">{{ $t('dashboard.creditsRemaining', { count: authStore.usageStats?.remaining_credits }) }}</span>
           </div>
         </div>
 
         <div class="account-actions">
           <BaseButton variant="secondary" @click="router.push('/plans')">
-            View Plans
+            {{ $t('dashboard.viewPlans') }}
           </BaseButton>
           <BaseButton variant="secondary" @click="openCustomerPortal">
-            Manage Subscription
+            {{ $t('dashboard.manageSubscription') }}
           </BaseButton>
         </div>
       </BaseCard>

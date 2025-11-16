@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '../stores/auth'
 import { api } from '../services/api'
 import BaseCard from '../components/BaseCard.vue'
@@ -10,6 +11,7 @@ import BaseInput from '../components/BaseInput.vue'
 
 const router = useRouter()
 const authStore = useAuthStore()
+const { t } = useI18n()
 
 const isSignup = ref(false)
 const showMagicLink = ref(false)
@@ -53,7 +55,7 @@ onMounted(() => {
 
 async function handleSubmit() {
   if (!email.value || !password.value) {
-    showMessage('Please enter email and password', 'error')
+    showMessage(t('auth.invalidCredentials'), 'error')
     return
   }
 
@@ -61,30 +63,30 @@ async function handleSubmit() {
     const result = await authStore.signup(email.value, password.value)
 
     if (!result.success) {
-      showMessage(result.error || 'Signup failed', 'error')
+      showMessage(result.error || t('errors.generic'), 'error')
       return
     }
 
     if (result.emailConfirmationRequired) {
       showMessage(
-        result.message || 'Account created! Please check your email to confirm.',
+        result.message || t('auth.checkEmail'),
         'info',
       )
       isSignup.value = false
       return
     }
 
-    showMessage('Account created successfully!', 'success')
+    showMessage(t('common.success'), 'success')
     router.push('/dashboard')
   } else {
     const result = await authStore.login(email.value, password.value)
 
     if (!result.success) {
-      showMessage(result.error || 'Login failed', 'error')
+      showMessage(result.error || t('errors.generic'), 'error')
       return
     }
 
-    showMessage('Logged in successfully!', 'success')
+    showMessage(t('common.success'), 'success')
     router.push('/dashboard')
   }
 }
@@ -118,7 +120,7 @@ function toggleForgotPassword() {
 
 async function handleMagicLink() {
   if (!email.value) {
-    showMessage('Please enter your email', 'error')
+    showMessage(t('errors.validationError'), 'error')
     return
   }
 
@@ -126,19 +128,19 @@ async function handleMagicLink() {
     const response = await api.sendMagicLink(email.value)
 
     if (!response.success) {
-      showMessage(response.error || 'Failed to send magic link', 'error')
+      showMessage(response.error || t('errors.generic'), 'error')
       return
     }
 
-    showMessage('Magic link sent! Please check your email.', 'success')
+    showMessage(t('auth.checkEmail'), 'success')
   } catch (err: any) {
-    showMessage(err.message || 'Network error', 'error')
+    showMessage(err.message || t('errors.networkError'), 'error')
   }
 }
 
 async function handleForgotPassword() {
   if (!email.value) {
-    showMessage('Please enter your email', 'error')
+    showMessage(t('errors.validationError'), 'error')
     return
   }
 
@@ -146,13 +148,13 @@ async function handleForgotPassword() {
     const response = await api.requestPasswordReset(email.value)
 
     if (!response.success) {
-      showMessage(response.error || 'Failed to send reset email', 'error')
+      showMessage(response.error || t('errors.generic'), 'error')
       return
     }
 
-    showMessage('Password reset email sent! Please check your email.', 'success')
+    showMessage(t('auth.checkEmail'), 'success')
   } catch (err: any) {
-    showMessage(err.message || 'Network error', 'error')
+    showMessage(err.message || t('errors.networkError'), 'error')
   }
 }
 </script>
@@ -179,16 +181,16 @@ async function handleForgotPassword() {
         <BaseInput
           v-model="email"
           type="email"
-          label="Email"
-          placeholder="your@email.com"
+          :label="$t('auth.email')"
+          :placeholder="$t('auth.emailPlaceholder')"
           required
         />
 
         <BaseInput
           v-model="password"
           type="password"
-          label="Password"
-          placeholder="••••••••"
+          :label="$t('auth.password')"
+          :placeholder="$t('auth.passwordPlaceholder')"
           required
         />
 
@@ -199,7 +201,7 @@ async function handleForgotPassword() {
           full-width
           :disabled="authStore.loading"
         >
-          {{ isSignup ? 'Sign Up' : 'Login' }}
+          {{ isSignup ? $t('auth.signUp') : $t('auth.signIn') }}
         </BaseButton>
 
         <BaseButton
@@ -209,7 +211,7 @@ async function handleForgotPassword() {
           full-width
           @click="toggleMode"
         >
-          {{ isSignup ? 'Already have an account? Login' : "Don't have an account? Sign Up" }}
+          {{ isSignup ? $t('auth.login') : $t('auth.dontHaveAccount') + ' ' + $t('auth.signUp') }}
         </BaseButton>
 
         <div class="divider">
@@ -233,7 +235,7 @@ async function handleForgotPassword() {
           full-width
           @click="toggleForgotPassword"
         >
-          Forgot Password?
+          {{ $t('auth.forgotPassword') }}
         </BaseButton>
       </form>
 
@@ -242,8 +244,8 @@ async function handleForgotPassword() {
         <BaseInput
           v-model="email"
           type="email"
-          label="Email"
-          placeholder="your@email.com"
+          :label="$t('auth.email')"
+          :placeholder="$t('auth.emailPlaceholder')"
           required
         />
 
@@ -264,7 +266,7 @@ async function handleForgotPassword() {
           full-width
           @click="toggleMagicLink"
         >
-          Back to Login
+          {{ $t('auth.backToLogin') }}
         </BaseButton>
       </form>
 
@@ -273,8 +275,8 @@ async function handleForgotPassword() {
         <BaseInput
           v-model="email"
           type="email"
-          label="Email"
-          placeholder="your@email.com"
+          :label="$t('auth.email')"
+          :placeholder="$t('auth.emailPlaceholder')"
           required
         />
 
@@ -285,7 +287,7 @@ async function handleForgotPassword() {
           full-width
           :disabled="authStore.loading"
         >
-          Send Reset Link
+          {{ $t('auth.sendResetLink') }}
         </BaseButton>
 
         <BaseButton
@@ -295,7 +297,7 @@ async function handleForgotPassword() {
           full-width
           @click="toggleForgotPassword"
         >
-          Back to Login
+          {{ $t('auth.backToLogin') }}
         </BaseButton>
       </form>
     </BaseCard>

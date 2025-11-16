@@ -4,16 +4,16 @@
 
     <div class="container">
       <div class="header">
-        <h1 class="title">Content Scheduler</h1>
-        <p class="subtitle">Plan and schedule your social media posts</p>
+        <h1 class="title">{{ $t('scheduler.title') }}</h1>
+        <p class="subtitle">{{ $t('scheduler.subtitle') }}</p>
       </div>
 
       <!-- Calendar Navigation -->
       <BaseCard variant="glass-intense" class="calendar-nav-card">
         <div class="calendar-nav">
-          <BaseButton variant="ghost" size="small" @click="previousPeriod"> ← Previous </BaseButton>
+          <BaseButton variant="ghost" size="small" @click="previousPeriod"> ← {{ $t('scheduler.previous') }} </BaseButton>
           <h2 class="current-month">{{ currentPeriodLabel }}</h2>
-          <BaseButton variant="ghost" size="small" @click="nextPeriod"> Next → </BaseButton>
+          <BaseButton variant="ghost" size="small" @click="nextPeriod"> {{ $t('scheduler.next') }} → </BaseButton>
         </div>
 
         <!-- View Mode Selector -->
@@ -22,19 +22,19 @@
             :class="['view-mode-btn', { active: viewMode === 'month' }]"
             @click="viewMode = 'month'"
           >
-            Month
+            {{ $t('scheduler.month') }}
           </button>
           <button
             :class="['view-mode-btn', { active: viewMode === 'week' }]"
             @click="viewMode = 'week'"
           >
-            Week
+            {{ $t('scheduler.week') }}
           </button>
           <button
             :class="['view-mode-btn', { active: viewMode === 'day' }]"
             @click="viewMode = 'day'"
           >
-            Day
+            {{ $t('scheduler.day') }}
           </button>
         </div>
       </BaseCard>
@@ -42,7 +42,7 @@
       <!-- Loading State -->
       <div v-if="loading" class="loading-container">
         <div class="spinner"></div>
-        <p>Loading schedule...</p>
+        <p>{{ $t('scheduler.loading') }}</p>
       </div>
 
       <!-- Calendar Grid -->
@@ -81,11 +81,11 @@
               <div class="day-view-actions">
                 <button class="action-button create-btn" @click.stop="createNewPost(day)">
                   <span class="btn-icon">+</span>
-                  <span class="btn-text">Create Post</span>
+                  <span class="btn-text">{{ $t('scheduler.createPost') }}</span>
                 </button>
                 <button class="action-button favorite-btn" @click.stop="pickFavoriteForDate(day)">
                   <span class="btn-icon">⭐</span>
-                  <span class="btn-text">Add Favorite</span>
+                  <span class="btn-text">{{ $t('scheduler.addFavorite') }}</span>
                 </button>
               </div>
             </div>
@@ -95,14 +95,14 @@
               <button
                 class="action-btn new-post-btn"
                 @click.stop="createNewPost(day)"
-                title="Create new post for this date"
+                :title="$t('scheduler.createNewPost')"
               >
                 📝
               </button>
               <button
                 class="action-btn pick-favorite-btn"
                 @click.stop="pickFavoriteForDate(day)"
-                title="Schedule a favorite for this date"
+                :title="$t('scheduler.scheduleFavorite')"
               >
                 ⭐
               </button>
@@ -137,7 +137,7 @@
                   }}
                 </div>
                 <span v-if="day.holidays.length > 2" class="more-holidays">
-                  +{{ day.holidays.length - 2 }} more
+                  +{{ day.holidays.length - 2 }} {{ $t('scheduler.moreHolidays') }}
                 </span>
               </template>
             </div>
@@ -173,7 +173,7 @@
 
                   <!-- Time Section -->
                   <div class="post-card-time">
-                    <div class="time-large">{{ formatTime(post.scheduled_time) || 'No time' }}</div>
+                    <div class="time-large">{{ formatTime(post.scheduled_time) || $t('scheduler.noTime') }}</div>
                     <div v-if="post.timezone" class="time-zone">{{ post.timezone }}</div>
                   </div>
 
@@ -215,7 +215,7 @@
                   v-for="post in day.posts.slice(0, 3)"
                   :key="post.id"
                   :class="['post-indicator', `platform-${post.platform}`]"
-                  :title="`${formatTime(post.scheduled_time) || 'No time'} - ${post.post_text || 'Scheduled post'}`"
+                  :title="`${formatTime(post.scheduled_time) || $t('scheduler.noTime')} - ${post.post_text || $t('scheduler.scheduledPosts')}`"
                 >
                   {{ getContentTypeEmoji(post.content_type) }}
                   <span class="post-time-mini">{{ formatTime(post.scheduled_time) }}</span>
@@ -238,9 +238,7 @@
         <h3 class="detail-title">
           {{ formatSelectedDate(selectedDay) }}
           <span v-if="selectedDay.posts.length > 0" class="post-count"
-            >({{ selectedDay.posts.length }} post{{
-              selectedDay.posts.length > 1 ? 's' : ''
-            }})</span
+            >({{ selectedDay.posts.length }} {{ selectedDay.posts.length === 1 ? $t('scheduler.post') : $t('scheduler.posts') }})</span
           >
         </h3>
 
@@ -249,7 +247,7 @@
           v-if="selectedDay.holidays && selectedDay.holidays.length > 0"
           class="holidays-section"
         >
-          <h4 class="section-subtitle">Holidays</h4>
+          <h4 class="section-subtitle">{{ $t('scheduler.holidays') }}</h4>
           <div class="holidays-list">
             <div v-for="holiday in selectedDay.holidays" :key="holiday.name" class="holiday-card">
               <div class="holiday-icon">{{ getHolidayEmoji(holiday) }}</div>
@@ -292,11 +290,11 @@
               <div v-else class="post-thumbnail-placeholder">
                 <span class="placeholder-icon">📸</span>
                 <span class="placeholder-text">{{
-                  post.media_url ? 'Failed to load' : 'No media'
+                  post.media_url ? $t('scheduler.failedToLoad') : $t('scheduler.noMedia')
                 }}</span>
               </div>
               <div v-if="post.media_url" class="thumbnail-overlay">
-                <span class="view-icon">👁️ View Details</span>
+                <span class="view-icon">👁️ {{ $t('scheduler.viewDetails') }}</span>
               </div>
             </div>
 
@@ -304,7 +302,7 @@
               <div class="post-header">
                 <div class="time-info">
                   <span class="post-time">
-                    {{ formatTime(post.scheduled_time) || 'No time set' }}
+                    {{ formatTime(post.scheduled_time) || $t('scheduler.noTimeSet') }}
                   </span>
                   <span v-if="post.timezone" class="post-timezone">
                     {{ post.timezone }}
@@ -330,7 +328,7 @@
 
               <div class="post-meta">
                 <span class="content-type-badge">
-                  {{ post.content_type === 'image' ? '📸 Image' : '🎥 Video' }}
+                  {{ post.content_type === 'image' ? '📸 ' + $t('scheduler.image') : '🎥 ' + $t('scheduler.video') }}
                 </span>
                 <span v-if="post.status" :class="['status-badge', `status-${post.status}`]">
                   {{ post.status }}
@@ -339,10 +337,10 @@
 
               <div class="post-actions">
                 <BaseButton variant="ghost" size="small" @click="editScheduledPost(post)">
-                  ✏️ Edit
+                  ✏️ {{ $t('scheduler.edit') }}
                 </BaseButton>
                 <BaseButton variant="danger" size="small" @click="cancelPost(post.id)">
-                  🗑️ Cancel
+                  🗑️ {{ $t('scheduler.cancel') }}
                 </BaseButton>
               </div>
             </div>
@@ -353,10 +351,10 @@
       <!-- Empty State -->
       <BaseCard v-else-if="selectedDay" variant="glass" class="empty-detail-card">
         <div class="empty-content">
-          <h3>No posts scheduled for this day</h3>
-          <p>Go to the Playground to create and schedule new posts!</p>
+          <h3>{{ $t('scheduler.noPostsScheduled') }}</h3>
+          <p>{{ $t('scheduler.goToPlayground') }}</p>
           <BaseButton variant="primary" @click="router.push('/playground')">
-            Go to Playground
+            {{ $t('scheduler.goToPlaygroundButton') }}
           </BaseButton>
         </div>
       </BaseCard>
@@ -399,22 +397,22 @@
             ></video>
             <div v-else class="modal-no-media">
               <span class="placeholder-icon">📸</span>
-              <span class="placeholder-text">No media available</span>
+              <span class="placeholder-text">{{ $t('scheduler.noMediaAvailable') }}</span>
             </div>
           </div>
 
           <!-- Post Information -->
           <div class="modal-info">
-            <h2 class="modal-title">Post Details</h2>
+            <h2 class="modal-title">{{ $t('scheduler.postDetails') }}</h2>
 
             <!-- Date & Time -->
             <div class="info-section">
-              <div class="info-label">📅 Scheduled For</div>
+              <div class="info-label">📅 {{ $t('scheduler.scheduledFor') }}</div>
               <div class="info-value">
                 {{ formatSelectedDate({ date: new Date(selectedPostForDetail.scheduled_date) }) }}
               </div>
               <div class="info-value time-display">
-                {{ formatTime(selectedPostForDetail.scheduled_time) || 'No time set' }}
+                {{ formatTime(selectedPostForDetail.scheduled_time) || $t('scheduler.noTimeSet') }}
                 <span v-if="selectedPostForDetail.timezone" class="timezone-badge">
                   {{ selectedPostForDetail.timezone }}
                 </span>
@@ -426,7 +424,7 @@
 
             <!-- Platform & Status -->
             <div class="info-section">
-              <div class="info-label">Platform & Status</div>
+              <div class="info-label">{{ $t('scheduler.platformAndStatus') }}</div>
               <div class="badges-row">
                 <span
                   v-if="selectedPostForDetail.platform"
@@ -435,7 +433,7 @@
                   {{ selectedPostForDetail.platform }}
                 </span>
                 <span :class="['content-type-badge-large']">
-                  {{ selectedPostForDetail.content_type === 'image' ? '📸 Image' : '🎥 Video' }}
+                  {{ selectedPostForDetail.content_type === 'image' ? '📸 ' + $t('scheduler.image') : '🎥 ' + $t('scheduler.video') }}
                 </span>
                 <span
                   v-if="selectedPostForDetail.status"
@@ -448,13 +446,13 @@
 
             <!-- Restaurant -->
             <div v-if="selectedPostForDetail.restaurant_name" class="info-section">
-              <div class="info-label">🏪 Restaurant</div>
+              <div class="info-label">🏪 {{ $t('scheduler.restaurant') }}</div>
               <div class="info-value">{{ selectedPostForDetail.restaurant_name }}</div>
             </div>
 
             <!-- Post Text -->
             <div v-if="selectedPostForDetail.post_text" class="info-section">
-              <div class="info-label">📝 Caption</div>
+              <div class="info-label">📝 {{ $t('scheduler.caption') }}</div>
               <div class="info-value post-caption">{{ selectedPostForDetail.post_text }}</div>
             </div>
 
@@ -465,14 +463,14 @@
                 size="medium"
                 @click="editScheduledPost(selectedPostForDetail)"
               >
-                ✏️ Edit
+                ✏️ {{ $t('scheduler.edit') }}
               </BaseButton>
               <BaseButton
                 variant="danger"
                 size="medium"
                 @click="cancelPost(selectedPostForDetail.id); closePostDetailModal()"
               >
-                🗑️ Cancel Post
+                🗑️ {{ $t('scheduler.cancelPost') }}
               </BaseButton>
             </div>
           </div>
@@ -485,6 +483,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import GradientBackground from '../components/GradientBackground.vue'
 import BaseCard from '../components/BaseCard.vue'
 import BaseButton from '../components/BaseButton.vue'
@@ -492,6 +491,7 @@ import PickFavoriteModal from '../components/PickFavoriteModal.vue'
 import { api } from '../services/api'
 
 const router = useRouter()
+const { t } = useI18n()
 
 // Calendar state
 const currentDate = ref(new Date())
@@ -928,7 +928,7 @@ const editScheduledPost = (post: any) => {
 }
 
 const cancelPost = async (postId: string) => {
-  if (!confirm('Are you sure you want to cancel this scheduled post?')) {
+  if (!confirm(t('scheduler.confirmCancel'))) {
     return
   }
 

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { api } from '../services/api'
 import BaseCard from '../components/BaseCard.vue'
 import BaseButton from '../components/BaseButton.vue'
@@ -8,6 +9,7 @@ import BaseAlert from '../components/BaseAlert.vue'
 import BaseInput from '../components/BaseInput.vue'
 
 const router = useRouter()
+const { t } = useI18n()
 const password = ref('')
 const confirmPassword = ref('')
 const message = ref('')
@@ -81,8 +83,8 @@ function showMessage(msg: string, type: 'success' | 'error' | 'info') {
   <div class="reset-container">
     <BaseCard variant="glass-intense" class="reset-card">
       <div class="header">
-        <h1 class="title">Reset Password</h1>
-        <p class="subtitle">Enter your new password below</p>
+        <h1 class="title">{{ $t('auth.resetPasswordTitle') }}</h1>
+        <p class="subtitle">{{ $t('auth.resetPasswordSubtitle') }}</p>
       </div>
 
       <BaseAlert
@@ -98,16 +100,16 @@ function showMessage(msg: string, type: 'success' | 'error' | 'info') {
         <BaseInput
           v-model="password"
           type="password"
-          label="New Password"
-          placeholder="Enter new password"
+          :label="$t('profile.newPassword')"
+          :placeholder="$t('auth.passwordPlaceholder')"
           required
         />
 
         <BaseInput
           v-model="confirmPassword"
           type="password"
-          label="Confirm Password"
-          placeholder="Confirm new password"
+          :label="$t('profile.confirmPassword')"
+          :placeholder="$t('auth.passwordPlaceholder')"
           required
         />
 
@@ -118,7 +120,7 @@ function showMessage(msg: string, type: 'success' | 'error' | 'info') {
           full-width
           :disabled="loading"
         >
-          {{ loading ? 'Updating...' : 'Update Password' }}
+          {{ loading ? $t('profile.updating') : $t('auth.resetPassword') }}
         </BaseButton>
 
         <BaseButton
@@ -128,7 +130,7 @@ function showMessage(msg: string, type: 'success' | 'error' | 'info') {
           full-width
           @click="router.push('/login')"
         >
-          Back to Login
+          {{ $t('auth.backToLogin') }}
         </BaseButton>
       </form>
 

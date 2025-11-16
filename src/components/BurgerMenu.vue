@@ -27,17 +27,17 @@
         <nav class="dropdown-nav">
           <router-link to="/profile" class="dropdown-item" @click="closeMenu">
             <span class="dropdown-icon">👤</span>
-            <span>Profile</span>
+            <span>{{ $t('menu.profile') }}</span>
           </router-link>
 
           <router-link to="/plans" class="dropdown-item" @click="closeMenu">
             <span class="dropdown-icon">💎</span>
-            <span>Plans & Billing</span>
+            <span>{{ $t('menu.plansAndBilling') }}</span>
           </router-link>
 
           <router-link to="/connect-accounts" class="dropdown-item" @click="closeMenu">
             <span class="dropdown-icon">🔗</span>
-            <span>Connect Accounts</span>
+            <span>{{ $t('menu.connectAccounts') }}</span>
           </router-link>
         </nav>
 
@@ -45,7 +45,7 @@
 
         <button @click="handleLogout" class="dropdown-item logout-item">
           <span class="dropdown-icon">🚪</span>
-          <span>Logout</span>
+          <span>{{ $t('menu.logout') }}</span>
         </button>
       </div>
     </Transition>
@@ -55,10 +55,12 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '../stores/auth'
 
 const router = useRouter()
 const authStore = useAuthStore()
+const { t } = useI18n()
 const isOpen = ref(false)
 const menuContainer = ref<HTMLElement | null>(null)
 
@@ -69,7 +71,8 @@ const userInitial = computed(() => {
 
 const planName = computed(() => {
   const tier = authStore.subscriptionTier
-  return tier.charAt(0).toUpperCase() + tier.slice(1) + ' Plan'
+  const tierCapitalized = tier.charAt(0).toUpperCase() + tier.slice(1)
+  return t('menu.plan', { tier: tierCapitalized })
 })
 
 function toggleMenu() {

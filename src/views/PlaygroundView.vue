@@ -6,7 +6,7 @@
       <!-- Loading State -->
       <div v-if="loadingRestaurants" class="loading-container">
         <div class="spinner cooking"></div>
-        <p>Cooking up your restaurants...</p>
+        <p>{{ $t('playground.loadingRestaurants') }}</p>
       </div>
 
       <!-- Main Content -->
@@ -14,10 +14,10 @@
         <!-- Step 1: Restaurant Selection (shown when no restaurant is selected) -->
         <div v-if="!selectedRestaurant" class="restaurant-selection-view">
           <div class="selection-header">
-            <h2 class="selection-title">Choose a Restaurant</h2>
-            <p class="selection-subtitle">Select which restaurant to create content for</p>
+            <h2 class="selection-title">{{ $t('playground.chooseRestaurant') }}</h2>
+            <p class="selection-subtitle">{{ $t('playground.chooseRestaurantSubtitle') }}</p>
             <BaseButton variant="primary" @click="router.push('/restaurants')">
-              + Add New Restaurant
+              {{ $t('playground.addNewRestaurant') }}
             </BaseButton>
           </div>
 
@@ -40,7 +40,7 @@
                   </div>
                   <h3 class="restaurant-name">{{ restaurant.name }}</h3>
                 </div>
-                <button class="edit-btn" @click.stop="editRestaurant(restaurant)" title="Edit Restaurant">
+                <button class="edit-btn" @click.stop="editRestaurant(restaurant)" :title="$t('playground.editRestaurant')">
                   <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
                     <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
@@ -58,12 +58,12 @@
 
                 <div v-if="restaurant.menu && restaurant.menu.items && restaurant.menu.items.length > 0" class="meta-item">
                   <span class="meta-icon">📋</span>
-                  <span>{{ restaurant.menu.items.length }} menu items</span>
+                  <span>{{ restaurant.menu.items.length }} {{ $t('playground.menuItems') }}</span>
                 </div>
 
                 <div v-if="restaurant.saved_at" class="meta-item">
                   <span class="meta-icon">📅</span>
-                  <span>Saved {{ formatDate(restaurant.saved_at) }}</span>
+                  <span>{{ $t('playground.saved') }} {{ formatDate(restaurant.saved_at) }}</span>
                 </div>
               </div>
 
@@ -74,7 +74,7 @@
                 class="select-restaurant-btn"
                 @click="selectRestaurantById(restaurant.id)"
               >
-                Select Restaurant
+                {{ $t('playground.selectRestaurantButton') }}
               </BaseButton>
             </BaseCard>
           </div>
@@ -95,15 +95,15 @@
                 </div>
               </div>
               <BaseButton variant="ghost" size="small" @click="clearRestaurantSelection">
-                ← Back
+                {{ $t('playground.back') }}
               </BaseButton>
             </div>
           </BaseCard>
 
           <!-- Platform Selection - Appears First -->
           <BaseCard variant="glass" class="platform-selection-card">
-            <h3 class="card-title">Select Platform</h3>
-            <p class="card-subtitle">Choose where you'll post this content</p>
+            <h3 class="card-title">{{ $t('playground.selectPlatform') }}</h3>
+            <p class="card-subtitle">{{ $t('playground.selectPlatformSubtitle') }}</p>
 
             <div class="platform-grid">
               <PlatformSelectionCard
@@ -121,8 +121,8 @@
           <BaseCard v-if="menuItems.length > 0" variant="glass" class="menu-reference-card">
           <div class="menu-header">
             <div>
-              <h3 class="card-title">Menu Items ({{ menuItems.length }})</h3>
-              <p class="card-subtitle">Select one or more items to create combo prompts</p>
+              <h3 class="card-title">{{ $t('playground.menuItemsTitle', { count: menuItems.length }) }}</h3>
+              <p class="card-subtitle">{{ $t('playground.menuItemsSubtitle') }}</p>
             </div>
 
             <!-- Pagination - Top Right -->
@@ -168,88 +168,88 @@
             <div class="context-inputs-grid">
               <div class="context-input-wrapper">
                 <label for="promptContext" class="context-label">
-                  Campaign Context (Optional)
+                  {{ $t('playground.campaignContext') }}
                 </label>
                 <input
                   id="promptContext"
                   v-model="promptContext"
                   type="text"
                   class="context-input"
-                  placeholder="e.g., 20% OFF, COMBO DEAL, LIMITED TIME..."
+                  :placeholder="$t('playground.campaignContextPlaceholder')"
                 />
-                <p class="context-hint">Add promotional text for sticker overlay</p>
+                <p class="context-hint">{{ $t('playground.campaignContextHint') }}</p>
               </div>
             </div>
 
             <!-- Sticker Customization (only show if campaign context is entered) -->
             <div v-if="promptContext" class="sticker-customization">
-              <h4 class="sticker-title">📍 Promotional Sticker Settings</h4>
+              <h4 class="sticker-title">{{ $t('playground.stickerSettings') }}</h4>
               <div class="sticker-options-grid">
                 <div class="context-input-wrapper">
                   <label for="stickerStyle" class="context-label">
-                    Sticker Style
+                    {{ $t('playground.stickerStyle') }}
                   </label>
                   <select id="stickerStyle" v-model="stickerStyle" class="context-select">
-                    <option value="bold">Bold Rectangle</option>
-                    <option value="outlined">Outlined Box</option>
-                    <option value="ribbon">Ribbon Banner</option>
-                    <option value="badge">Circular Badge</option>
-                    <option value="starburst">Starburst Star</option>
+                    <option value="bold">{{ $t('playground.stickerStyleBold') }}</option>
+                    <option value="outlined">{{ $t('playground.stickerStyleOutlined') }}</option>
+                    <option value="ribbon">{{ $t('playground.stickerStyleRibbon') }}</option>
+                    <option value="badge">{{ $t('playground.stickerStyleBadge') }}</option>
+                    <option value="starburst">{{ $t('playground.stickerStyleStarburst') }}</option>
                   </select>
-                  <p class="context-hint">Visual style of the promotional sticker</p>
+                  <p class="context-hint">{{ $t('playground.stickerStyleHint') }}</p>
                 </div>
 
                 <div class="context-input-wrapper">
                   <label for="stickerPosition" class="context-label">
-                    Sticker Position
+                    {{ $t('playground.stickerPosition') }}
                   </label>
                   <select id="stickerPosition" v-model="stickerPosition" class="context-select">
-                    <option value="top-left">Top Left</option>
-                    <option value="top-center">Top Center</option>
-                    <option value="top-right">Top Right</option>
-                    <option value="center">Center</option>
-                    <option value="bottom-left">Bottom Left</option>
-                    <option value="bottom-right">Bottom Right</option>
+                    <option value="top-left">{{ $t('playground.positionTopLeft') }}</option>
+                    <option value="top-center">{{ $t('playground.positionTopCenter') }}</option>
+                    <option value="top-right">{{ $t('playground.positionTopRight') }}</option>
+                    <option value="center">{{ $t('playground.positionCenter') }}</option>
+                    <option value="bottom-left">{{ $t('playground.positionBottomLeft') }}</option>
+                    <option value="bottom-right">{{ $t('playground.positionBottomRight') }}</option>
                   </select>
-                  <p class="context-hint">Where to place the sticker on image</p>
+                  <p class="context-hint">{{ $t('playground.stickerPositionHint') }}</p>
                 </div>
               </div>
             </div>
 
             <!-- Logo Watermark Settings -->
             <div v-if="selectedRestaurant?.brand_dna?.logo_url" class="logo-settings">
-              <h4 class="sticker-title">🏷️ Logo Watermark Settings</h4>
+              <h4 class="sticker-title">{{ $t('playground.logoSettings') }}</h4>
               <div class="sticker-options-grid">
                 <div class="context-input-wrapper">
                   <label class="checkbox-label">
                     <input type="checkbox" v-model="includeLogo" class="checkbox-input" />
-                    <span>Include Logo Watermark</span>
+                    <span>{{ $t('playground.includeLogo') }}</span>
                   </label>
-                  <p class="context-hint">Add your restaurant logo to the image</p>
+                  <p class="context-hint">{{ $t('playground.includeLogoHint') }}</p>
                 </div>
 
                 <div v-if="includeLogo" class="context-input-wrapper">
                   <label for="logoPosition" class="context-label">
-                    Logo Position
+                    {{ $t('playground.logoPosition') }}
                   </label>
                   <select id="logoPosition" v-model="logoPosition" class="context-select">
-                    <option value="top-left">Top Left</option>
-                    <option value="top-right">Top Right</option>
-                    <option value="bottom-left">Bottom Left</option>
-                    <option value="bottom-right">Bottom Right</option>
+                    <option value="top-left">{{ $t('playground.positionTopLeft') }}</option>
+                    <option value="top-right">{{ $t('playground.positionTopRight') }}</option>
+                    <option value="bottom-left">{{ $t('playground.positionBottomLeft') }}</option>
+                    <option value="bottom-right">{{ $t('playground.positionBottomRight') }}</option>
                   </select>
-                  <p class="context-hint">Where to place the logo watermark</p>
+                  <p class="context-hint">{{ $t('playground.logoPositionHint') }}</p>
                 </div>
               </div>
 
               <!-- Live Banner Preview -->
               <div class="banner-preview-container">
-                <h5 class="preview-label">👁️ Live Preview</h5>
+                <h5 class="preview-label">{{ $t('playground.livePreview') }}</h5>
                 <div class="banner-preview-frame">
                   <!-- Simulated Image Placeholder -->
                   <div class="preview-image-placeholder">
                     <div class="preview-food-icon">🍽️</div>
-                    <div class="preview-image-text">Your Generated Image</div>
+                    <div class="preview-image-text">{{ $t('playground.yourGeneratedImage') }}</div>
                   </div>
 
                   <!-- Promotional Sticker Overlay -->
@@ -278,18 +278,18 @@
                   </div>
                 </div>
                 <p class="preview-description">
-                  Preview how your sticker and logo will appear
+                  {{ $t('playground.previewDescription') }}
                 </p>
               </div>
             </div>
 
             <div class="selection-actions">
-              <span class="selection-count">{{ selectedMenuItems.length }} item{{ selectedMenuItems.length > 1 ? 's' : '' }} selected</span>
-              <BaseButton variant="primary" size="medium" @click="generatePromptsFromSelection" :disabled="loadingPrompts || selectedPlatforms.length === 0">
-                {{ loadingPrompts ? 'Generating...' : 'Generate Prompts' }}
+              <span class="selection-count">{{ selectedMenuItems.length }} {{ selectedMenuItems.length === 1 ? $t('playground.itemsSelected', { count: selectedMenuItems.length }).split('|')[0].trim() : $t('playground.itemsSelected', { count: selectedMenuItems.length }).split('|')[1].trim() }}</span>
+              <BaseButton variant="primary" size="medium" @click="generatePromptsFromSelection" :disabled="loadingPrompts">
+                {{ loadingPrompts ? $t('playground.generating') : $t('playground.generatePrompts') }}
               </BaseButton>
               <BaseButton variant="ghost" size="small" @click="clearSelection">
-                Clear
+                {{ $t('playground.clear') }}
               </BaseButton>
             </div>
           </div>
@@ -991,6 +991,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '../stores/auth'
 import { useFacebookStore } from '../stores/facebook'
 import { useSocialAccounts } from '../composables/useSocialAccounts'
@@ -1008,6 +1009,7 @@ const route = useRoute()
 const authStore = useAuthStore()
 const facebookStore = useFacebookStore()
 const socialAccounts = useSocialAccounts()
+const { t } = useI18n()
 
 // Restaurant selection
 const restaurants = ref<SavedRestaurant[]>([])
@@ -3133,6 +3135,7 @@ const handleScheduled = (scheduledPost: any) => {
   border: 1px solid rgba(212, 175, 55, 0.2);
   border-radius: 10px;
   padding: 1.5rem;
+  margin-top: 1.5rem;
   margin-bottom: 1.5rem;
   display: flex;
   flex-direction: column;

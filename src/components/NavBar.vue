@@ -10,23 +10,24 @@
       <!-- Navigation Links -->
       <div class="nav-links">
         <router-link to="/playground" class="nav-link" active-class="active">
-          Cook Up
+          {{ $t('nav.cookUp') }}
         </router-link>
 
         <router-link to="/favorites" class="nav-link" active-class="active">
-          Posts
+          {{ $t('nav.posts') }}
         </router-link>
 
         <router-link to="/scheduler" class="nav-link" active-class="active">
-          Calendar
+          {{ $t('nav.calendar') }}
         </router-link>
       </div>
 
       <!-- User Menu -->
       <div class="user-menu">
+        <LanguageSelector />
         <BurgerMenu v-if="authStore.user" />
         <router-link v-else to="/login" class="nav-link login-link">
-          Login
+          {{ $t('nav.login') }}
         </router-link>
       </div>
     </div>
@@ -36,6 +37,7 @@
 <script setup lang="ts">
 import { useAuthStore } from '../stores/auth'
 import BurgerMenu from './BurgerMenu.vue'
+import LanguageSelector from './LanguageSelector.vue'
 
 const authStore = useAuthStore()
 </script>

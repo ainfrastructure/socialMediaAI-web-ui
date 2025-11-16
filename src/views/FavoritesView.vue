@@ -4,23 +4,23 @@
 
     <div class="container">
       <div class="header">
-        <h1 class="title">Favorite Posts</h1>
-        <p class="subtitle">Your saved marketing content</p>
+        <h1 class="title">{{ $t('favorites.title') }}</h1>
+        <p class="subtitle">{{ $t('favorites.subtitle') }}</p>
       </div>
 
       <!-- Loading State -->
       <div v-if="loading" class="loading-container">
         <div class="spinner"></div>
-        <p>Loading favorites...</p>
+        <p>{{ $t('favorites.loading') }}</p>
       </div>
 
       <!-- Empty State -->
       <BaseCard v-else-if="favorites.length === 0" variant="glass-intense" class="empty-state">
         <div class="empty-content">
-          <h3>No favorites yet</h3>
-          <p>Go to the Playground to create and save your first post!</p>
+          <h3>{{ $t('favorites.noFavorites') }}</h3>
+          <p>{{ $t('favorites.noFavoritesDescription') }}</p>
           <BaseButton variant="primary" @click="router.push('/playground')">
-            Go to Playground
+            {{ $t('favorites.goToPlayground') }}
           </BaseButton>
         </div>
       </BaseCard>
@@ -53,7 +53,7 @@
             <!-- Content Type Badge -->
             <span :class="['type-badge', favorite.content_type]">
               {{ favorite.content_type === 'image' ? '📸' : '🎥' }}
-              {{ favorite.content_type }}
+              {{ $t(`favorites.${favorite.content_type}`) }}
             </span>
 
             <!-- Platform Badge -->
@@ -87,10 +87,10 @@
             <!-- Actions -->
             <div class="favorite-actions" @click.stop>
               <BaseButton variant="primary" size="small" @click="schedulePost(favorite)">
-                📅 Schedule
+                📅 {{ $t('favorites.schedule') }}
               </BaseButton>
               <BaseButton variant="danger" size="small" @click="deleteFavorite(favorite.id)">
-                🗑️ Delete
+                🗑️ {{ $t('favorites.delete') }}
               </BaseButton>
             </div>
 
@@ -115,7 +115,7 @@
       <div v-if="showDetailModal" class="modal-overlay" @click.self="closeDetailModal">
         <BaseCard variant="glass-intense" class="detail-modal">
           <div class="modal-header">
-            <h3 class="modal-title">Post Details</h3>
+            <h3 class="modal-title">{{ $t('favorites.postDetails') }}</h3>
             <button class="close-btn" @click="closeDetailModal">&times;</button>
           </div>
 
@@ -136,35 +136,35 @@
 
             <!-- Full Post Text -->
             <div v-if="selectedFavorite.post_text" class="detail-section">
-              <h4>Post Text</h4>
+              <h4>{{ $t('favorites.postText') }}</h4>
               <p class="full-text">{{ selectedFavorite.post_text }}</p>
               <BaseButton variant="ghost" size="small" @click="copyToClipboard(selectedFavorite.post_text)">
-                📋 Copy
+                📋 {{ $t('favorites.copy') }}
               </BaseButton>
             </div>
 
             <!-- Call to Action -->
             <div v-if="selectedFavorite.call_to_action" class="detail-section">
-              <h4>Call to Action</h4>
+              <h4>{{ $t('favorites.callToAction') }}</h4>
               <p>{{ selectedFavorite.call_to_action }}</p>
             </div>
 
             <!-- Hashtags -->
             <div v-if="selectedFavorite.hashtags && selectedFavorite.hashtags.length > 0" class="detail-section">
-              <h4>Hashtags</h4>
+              <h4>{{ $t('favorites.hashtags') }}</h4>
               <div class="hashtags-full">
                 <span v-for="(tag, idx) in selectedFavorite.hashtags" :key="idx" class="hashtag">
                   {{ tag }}
                 </span>
               </div>
               <BaseButton variant="ghost" size="small" @click="copyToClipboard(selectedFavorite.hashtags.join(' '))">
-                📋 Copy All
+                📋 {{ $t('favorites.copyAll') }}
               </BaseButton>
             </div>
 
             <!-- Prompt -->
             <div v-if="selectedFavorite.prompt" class="detail-section">
-              <h4>Original Prompt</h4>
+              <h4>{{ $t('favorites.originalPrompt') }}</h4>
               <p class="prompt-text">{{ selectedFavorite.prompt }}</p>
             </div>
           </div>
@@ -177,6 +177,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import GradientBackground from '../components/GradientBackground.vue'
 import BaseCard from '../components/BaseCard.vue'
 import BaseButton from '../components/BaseButton.vue'
@@ -184,6 +185,7 @@ import ScheduleModal from '../components/ScheduleModal.vue'
 import { api } from '../services/api'
 
 const router = useRouter()
+const { t } = useI18n()
 
 const favorites = ref<any[]>([])
 const loading = ref(false)
@@ -222,7 +224,7 @@ const closeDetailModal = () => {
 }
 
 const deleteFavorite = async (id: string) => {
-  if (!confirm('Are you sure you want to delete this favorite?')) {
+  if (!confirm(t('favorites.confirmDelete'))) {
     return
   }
 
@@ -258,7 +260,7 @@ const formatDate = (dateString: string): string => {
 const copyToClipboard = async (text: string) => {
   try {
     await navigator.clipboard.writeText(text)
-    alert('Copied to clipboard!')
+    alert(t('favorites.copiedToClipboard'))
   } catch (error) {
 
   }
