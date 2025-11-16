@@ -45,7 +45,7 @@ export default {
     loginSubtitle: 'Logg inn på kontoen din',
     brandSubtitle: 'AI-drevet innhold for restauranter',
     email: 'E-post',
-    emailPlaceholder: 'din@epost.no',
+    emailPlaceholder: 'din{\'@\'}epost.no',
     password: 'Passord',
     passwordPlaceholder: 'Skriv inn passordet ditt',
     forgotPassword: 'Glemt passord?',

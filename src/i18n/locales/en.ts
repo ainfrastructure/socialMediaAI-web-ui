@@ -45,7 +45,7 @@ export default {
     loginSubtitle: 'Sign in to your account',
     brandSubtitle: 'AI-Powered Content for Restaurants',
     email: 'Email',
-    emailPlaceholder: 'your@email.com',
+    emailPlaceholder: 'your{\'@\'}email.com',
     password: 'Password',
     passwordPlaceholder: 'Enter your password',
     forgotPassword: 'Forgot password?',
