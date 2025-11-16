@@ -29,7 +29,8 @@ const { t } = useI18n()
         class="status-badge"
         :class="{ 'open': openingHours.open_now, 'closed': !openingHours.open_now }"
       >
-        {{ openingHours.open_now ? `🟢 ${t('restaurantSearch.openNow')}` : `🔴 ${t('restaurantSearch.closed')}` }}
+        <template v-if="openingHours.open_now">🟢 {{ t('restaurantSearch.openNow') }}</template>
+        <template v-else>🔴 {{ t('restaurantSearch.closed') }}</template>
       </div>
 
       <div v-if="openingHours.weekday_text && openingHours.weekday_text.length > 0" class="hours-list">

@@ -328,7 +328,8 @@
 
               <div class="post-meta">
                 <span class="content-type-badge">
-                  {{ post.content_type === 'image' ? '📸 ' + $t('scheduler.image') : '🎥 ' + $t('scheduler.video') }}
+                  <template v-if="post.content_type === 'image'">📸 {{ $t('scheduler.image') }}</template>
+                  <template v-else>🎥 {{ $t('scheduler.video') }}</template>
                 </span>
                 <span v-if="post.status" :class="['status-badge', `status-${post.status}`]">
                   {{ post.status }}
@@ -433,7 +434,8 @@
                   {{ selectedPostForDetail.platform }}
                 </span>
                 <span :class="['content-type-badge-large']">
-                  {{ selectedPostForDetail.content_type === 'image' ? '📸 ' + $t('scheduler.image') : '🎥 ' + $t('scheduler.video') }}
+                  <template v-if="selectedPostForDetail.content_type === 'image'">📸 {{ $t('scheduler.image') }}</template>
+                  <template v-else>🎥 {{ $t('scheduler.video') }}</template>
                 </span>
                 <span
                   v-if="selectedPostForDetail.status"

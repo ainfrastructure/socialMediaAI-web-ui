@@ -213,7 +213,8 @@ async function handleForgotPassword() {
           full-width
           @click="toggleMode"
         >
-          {{ isSignup ? $t('auth.login') : $t('auth.dontHaveAccount') + ' ' + $t('auth.signUp') }}
+          <template v-if="isSignup">{{ $t('auth.login') }}</template>
+          <template v-else>{{ $t('auth.dontHaveAccount') }} {{ $t('auth.signUp') }}</template>
         </BaseButton>
 
         <div v-if="!disableSignup" class="divider">

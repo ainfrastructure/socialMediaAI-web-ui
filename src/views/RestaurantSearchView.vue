@@ -419,7 +419,7 @@ const saveToDatabase = async () => {
           )
 
           if (uploadResult.count > 0) {
-            saveSuccessMessage.value += ' ' + t('restaurantSearch.imagesUploaded', { count: uploadResult.count })
+            saveSuccessMessage.value = `${saveSuccessMessage.value} ${t('restaurantSearch.imagesUploaded', { count: uploadResult.count })}`
           }
 
           uploadFiles.value = []
