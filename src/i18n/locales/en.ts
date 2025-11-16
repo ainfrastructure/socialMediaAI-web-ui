@@ -207,7 +207,7 @@ export default {
     nearbyCompetitors: 'Nearby Competitors',
     competitorsCount: '{count} within {radius} km',
     findingCompetitors: 'Finding nearby competitors...',
-    competitorsFound: 'Found {count} similar restaurant{plural} near {name}',
+    competitorsFound: 'Found {count} similar restaurant near {name} | Found {count} similar restaurants near {name}',
     noCompetitorsFound: 'No competitors found within {radius} km',
 
     // Menu

@@ -207,7 +207,7 @@ export default {
     nearbyCompetitors: 'Konkurrenter i nærheten',
     competitorsCount: '{count} innen {radius} km',
     findingCompetitors: 'Finner konkurrenter i nærheten...',
-    competitorsFound: 'Fant {count} lignende restaurant{plural} nær {name}',
+    competitorsFound: 'Fant {count} lignende restaurant nær {name} | Fant {count} lignende restauranter nær {name}',
     noCompetitorsFound: 'Ingen konkurrenter funnet innen {radius} km',
 
     // Menu
