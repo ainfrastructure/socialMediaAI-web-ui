@@ -305,30 +305,30 @@
           <!-- Tabs -->
           <div class="tabs">
             <button :class="['tab', { active: activeTab === 'image' }]" @click="switchTab('image')">
-              📸 Image
+              {{ $t('playground.tabImage') }}
             </button>
             <button :class="['tab', { active: activeTab === 'video' }]" @click="switchTab('video')">
-              🎥 Video
+              {{ $t('playground.tabVideo') }}
             </button>
           </div>
 
           <!-- Loading Prompts State -->
           <div v-if="loadingPrompts" class="loading-prompts">
             <div class="spinner"></div>
-            <p>Generating creative ideas with AI...</p>
+            <p>{{ $t('playground.generatingIdeas') }}</p>
           </div>
 
           <!-- Prompt Selection Section -->
           <div v-else class="prompt-section">
             <div class="section-header">
-              <h4>AI-Generated Ideas</h4>
+              <h4>{{ $t('playground.aiGeneratedIdeas') }}</h4>
               <BaseButton
                 variant="secondary"
                 size="small"
                 @click="generatePrompts"
                 :disabled="loadingPrompts"
               >
-                ✨ Get New Ideas
+                {{ $t('playground.getNewIdeas') }}
               </BaseButton>
             </div>
 
@@ -343,11 +343,11 @@
                 >
                   <div class="prompt-number">{{ index + 1 }}</div>
                   <div class="prompt-preview">{{ truncateText(prompt, 120) }}</div>
-                  <div v-if="selectedImagePromptIndex === index" class="selected-badge">✓ Selected</div>
+                  <div v-if="selectedImagePromptIndex === index" class="selected-badge">{{ $t('playground.selectedBadge') }}</div>
                 </div>
               </div>
               <div v-else class="prompt-placeholder">
-                <p>Click "Get New Ideas" to generate AI-powered image prompts!</p>
+                <p>{{ $t('playground.clickGetNewIdeasImage') }}</p>
               </div>
             </div>
 
@@ -362,22 +362,22 @@
                 >
                   <div class="prompt-number">{{ index + 1 }}</div>
                   <div class="prompt-preview">{{ truncateText(prompt, 120) }}</div>
-                  <div v-if="selectedVideoPromptIndex === index" class="selected-badge">✓ Selected</div>
+                  <div v-if="selectedVideoPromptIndex === index" class="selected-badge">{{ $t('playground.selectedBadge') }}</div>
                 </div>
               </div>
               <div v-else class="prompt-placeholder">
-                <p>Click "Get New Ideas" to generate AI-powered video prompts!</p>
+                <p>{{ $t('playground.clickGetNewIdeasVideo') }}</p>
               </div>
             </div>
 
             <!-- Selected Prompt Display (Editable) -->
             <div v-if="selectedPrompt" class="selected-prompt">
-              <label>Selected Prompt (editable):</label>
+              <label>{{ $t('playground.selectedPromptLabel') }}</label>
               <textarea
                 v-model="editablePrompt"
                 class="prompt-textarea"
                 rows="5"
-                placeholder="Select a prompt above..."
+                :placeholder="$t('playground.selectPromptPlaceholder')"
               ></textarea>
             </div>
           </div>
@@ -395,15 +395,15 @@
               :disabled="!selectedPrompt || generatingImage || !canGenerate"
               @click="generateImage"
             >
-              {{ generatingImage ? 'Generating Image...' : 'Generate Image (1 credit)' }}
+              {{ generatingImage ? $t('playground.generatingImage') : $t('playground.generateImageButton') }}
             </BaseButton>
 
             <div v-if="generatedImageUrl" class="generated-content">
-              <h4>Generated Image:</h4>
-              <img :src="generatedImageUrl" alt="Generated marketing image" class="generated-image" />
+              <h4>{{ $t('playground.generatedImageTitle') }}</h4>
+              <img :src="generatedImageUrl" :alt="$t('playground.generatedMarketingImageAlt')" class="generated-image" />
               <div class="content-actions">
                 <a :href="generatedImageUrl" download class="download-btn">
-                  ⬇️ Download Image
+                  {{ $t('playground.downloadImage') }}
                 </a>
                 <BaseButton
                   variant="secondary"
@@ -411,7 +411,7 @@
                   @click="saveToFavorites"
                   :disabled="savingFavorite"
                 >
-                  {{ savingFavorite ? 'Saving...' : lastSavedFavorite ? '⭐ Saved' : '⭐ Save to Favorites' }}
+                  {{ savingFavorite ? $t('playground.savingToFavorites') : lastSavedFavorite ? $t('playground.savedToFavorites') : $t('playground.saveToFavorites') }}
                 </BaseButton>
                 <BaseButton
                   v-if="lastSavedFavorite || generatedPostContent"
@@ -419,7 +419,7 @@
                   size="medium"
                   @click="openScheduleModal"
                 >
-                  📅 Schedule Post
+                  {{ $t('playground.schedulePost') }}
                 </BaseButton>
                 <BaseButton
                   v-if="(lastSavedFavorite || generatedPostContent) && selectedPlatforms.includes('facebook')"
@@ -428,7 +428,7 @@
                   @click="publishToFacebook"
                   :disabled="publishingToFacebook"
                 >
-                  {{ publishingToFacebook ? 'Publishing...' : '📤 Publish to Facebook' }}
+                  {{ publishingToFacebook ? $t('playground.publishing') : $t('playground.publishToFacebook') }}
                 </BaseButton>
               </div>
             </div>
@@ -436,7 +436,7 @@
             <!-- Post Content Section -->
             <div v-if="generatedPostContent && generatedImageUrl" class="post-content-section">
               <div class="post-content-header">
-                <h4 class="post-content-title">Post Content</h4>
+                <h4 class="post-content-title">{{ $t('playground.postContentTitle') }}</h4>
                 <div class="platform-badges">
                   <span
                     v-for="platformValue in selectedPlatforms"
@@ -452,13 +452,13 @@
               <div class="post-content-box">
                 <div class="post-text-wrapper">
                   <p class="post-text">{{ generatedPostContent.postText }}</p>
-                  <button @click="copyToClipboard(generatedPostContent.postText)" class="copy-btn" title="Copy post text">
-                    📋 Copy
+                  <button @click="copyToClipboard(generatedPostContent.postText)" class="copy-btn" :title="$t('playground.copyPostTextTitle')">
+                    {{ $t('playground.copyButton') }}
                   </button>
                 </div>
 
                 <div v-if="generatedPostContent.callToAction" class="post-cta">
-                  <strong>Call to Action:</strong> {{ generatedPostContent.callToAction }}
+                  <strong>{{ $t('playground.callToActionLabel') }}</strong> {{ generatedPostContent.callToAction }}
                 </div>
 
                 <div v-if="generatedPostContent.hashtags.length > 0" class="post-hashtags-wrapper">
@@ -467,7 +467,7 @@
                       {{ tag }}
                     </span>
                   </div>
-                  <button @click="copyToClipboard(generatedPostContent.hashtags.join(' '))" class="copy-btn-small" title="Copy hashtags">
+                  <button @click="copyToClipboard(generatedPostContent.hashtags.join(' '))" class="copy-btn-small" :title="$t('playground.copyHashtagsTitle')">
                     📋
                   </button>
                 </div>
@@ -484,27 +484,27 @@
             <!-- Video Options -->
             <div class="video-options">
               <div class="option-group">
-                <label>Duration</label>
+                <label>{{ $t('playground.durationLabel') }}</label>
                 <select v-model="videoDuration" class="option-select">
-                  <option :value="4">4 seconds</option>
-                  <option :value="6">6 seconds</option>
-                  <option :value="8">8 seconds</option>
+                  <option :value="4">{{ $t('playground.seconds4') }}</option>
+                  <option :value="6">{{ $t('playground.seconds6') }}</option>
+                  <option :value="8">{{ $t('playground.seconds8') }}</option>
                 </select>
               </div>
 
               <div class="option-group">
-                <label>Aspect Ratio</label>
+                <label>{{ $t('playground.aspectRatioLabel') }}</label>
                 <select v-model="videoAspectRatio" class="option-select">
-                  <option value="16:9">16:9 (Landscape)</option>
-                  <option value="9:16">9:16 (Portrait)</option>
+                  <option value="16:9">{{ $t('playground.aspectRatio16x9') }}</option>
+                  <option value="9:16">{{ $t('playground.aspectRatio9x16') }}</option>
                 </select>
               </div>
 
               <div class="option-group">
-                <label>Resolution</label>
+                <label>{{ $t('playground.resolutionLabel') }}</label>
                 <select v-model="videoResolution" class="option-select">
-                  <option value="720p">720p</option>
-                  <option value="1080p">1080p</option>
+                  <option value="720p">{{ $t('playground.resolution720p') }}</option>
+                  <option value="1080p">{{ $t('playground.resolution1080p') }}</option>
                 </select>
               </div>
             </div>
@@ -516,7 +516,7 @@
               :disabled="!selectedPrompt || generatingVideo || !canGenerate"
               @click="generateVideo"
             >
-              {{ generatingVideo ? `Generating Video... ${videoProgress}%` : 'Generate Video (5 credits)' }}
+              {{ generatingVideo ? $t('playground.generatingVideoProgress', { progress: videoProgress }) : $t('playground.generateVideoButton') }}
             </BaseButton>
 
             <div v-if="generatingVideo" class="progress-bar">
@@ -524,11 +524,11 @@
             </div>
 
             <div v-if="generatedVideoUrl" class="generated-content">
-              <h4>Generated Video:</h4>
+              <h4>{{ $t('playground.generatedVideoTitle') }}</h4>
               <video :src="generatedVideoUrl" controls class="generated-video"></video>
               <div class="content-actions">
                 <a :href="generatedVideoUrl" download class="download-btn">
-                  ⬇️ Download Video
+                  {{ $t('playground.downloadVideo') }}
                 </a>
                 <BaseButton
                   variant="secondary"
@@ -536,7 +536,7 @@
                   @click="saveToFavorites"
                   :disabled="savingFavorite"
                 >
-                  {{ savingFavorite ? 'Saving...' : lastSavedFavorite ? '⭐ Saved' : '⭐ Save to Favorites' }}
+                  {{ savingFavorite ? $t('playground.savingToFavorites') : lastSavedFavorite ? $t('playground.savedToFavorites') : $t('playground.saveToFavorites') }}
                 </BaseButton>
                 <BaseButton
                   v-if="lastSavedFavorite || generatedPostContent"
@@ -544,7 +544,7 @@
                   size="medium"
                   @click="openScheduleModal"
                 >
-                  📅 Schedule Post
+                  {{ $t('playground.schedulePost') }}
                 </BaseButton>
                 <BaseButton
                   v-if="(lastSavedFavorite || generatedPostContent) && selectedPlatforms.includes('facebook')"
@@ -553,7 +553,7 @@
                   @click="publishToFacebook"
                   :disabled="publishingToFacebook"
                 >
-                  {{ publishingToFacebook ? 'Publishing...' : '📤 Publish to Facebook' }}
+                  {{ publishingToFacebook ? $t('playground.publishing') : $t('playground.publishToFacebook') }}
                 </BaseButton>
               </div>
             </div>
@@ -561,7 +561,7 @@
             <!-- Post Content Section -->
             <div v-if="generatedPostContent && generatedVideoUrl" class="post-content-section">
               <div class="post-content-header">
-                <h4 class="post-content-title">Post Content</h4>
+                <h4 class="post-content-title">{{ $t('playground.postContentTitle') }}</h4>
                 <div class="platform-badges">
                   <span
                     v-for="platformValue in selectedPlatforms"
@@ -577,13 +577,13 @@
               <div class="post-content-box">
                 <div class="post-text-wrapper">
                   <p class="post-text">{{ generatedPostContent.postText }}</p>
-                  <button @click="copyToClipboard(generatedPostContent.postText)" class="copy-btn" title="Copy post text">
-                    📋 Copy
+                  <button @click="copyToClipboard(generatedPostContent.postText)" class="copy-btn" :title="$t('playground.copyPostTextTitle')">
+                    {{ $t('playground.copyButton') }}
                   </button>
                 </div>
 
                 <div v-if="generatedPostContent.callToAction" class="post-cta">
-                  <strong>Call to Action:</strong> {{ generatedPostContent.callToAction }}
+                  <strong>{{ $t('playground.callToActionLabel') }}</strong> {{ generatedPostContent.callToAction }}
                 </div>
 
                 <div v-if="generatedPostContent.hashtags.length > 0" class="post-hashtags-wrapper">
@@ -592,7 +592,7 @@
                       {{ tag }}
                     </span>
                   </div>
-                  <button @click="copyToClipboard(generatedPostContent.hashtags.join(' '))" class="copy-btn-small" title="Copy hashtags">
+                  <button @click="copyToClipboard(generatedPostContent.hashtags.join(' '))" class="copy-btn-small" :title="$t('playground.copyHashtagsTitle')">
                     📋
                   </button>
                 </div>
@@ -636,36 +636,36 @@
             <!-- Basic Info -->
             <section class="details-section">
               <div class="section-header">
-                <h3 class="section-title">Information</h3>
+                <h3 class="section-title">{{ $t('playground.information') }}</h3>
               </div>
               <div class="info-grid">
                 <div class="info-item">
-                  <span class="info-label">Address</span>
+                  <span class="info-label">{{ $t('playground.addressLabel') }}</span>
                   <span class="info-value">{{ restaurantToEdit.address }}</span>
                 </div>
 
                 <div v-if="restaurantToEdit.phone_number" class="info-item">
-                  <span class="info-label">Phone</span>
+                  <span class="info-label">{{ $t('playground.phoneLabel') }}</span>
                   <span class="info-value">{{ restaurantToEdit.phone_number }}</span>
                 </div>
 
                 <div class="info-item">
-                  <span class="info-label">Website</span>
+                  <span class="info-label">{{ $t('playground.websiteLabel') }}</span>
                   <div class="editable-field">
                     <input
                       v-if="editingWebsite"
                       v-model="editedWebsite"
                       type="url"
                       class="edit-input"
-                      placeholder="https://example.com"
+                      :placeholder="$t('playground.websitePlaceholder')"
                     />
                     <a v-else-if="restaurantToEdit.website" :href="restaurantToEdit.website" target="_blank" class="info-link">
                       {{ restaurantToEdit.website }}
                     </a>
-                    <span v-else class="info-value empty">Not set</span>
+                    <span v-else class="info-value empty">{{ $t('playground.notSet') }}</span>
 
                     <div class="field-actions">
-                      <button v-if="!editingWebsite" class="edit-field-btn" @click="startEditWebsite" title="Edit website">
+                      <button v-if="!editingWebsite" class="edit-field-btn" @click="startEditWebsite" :title="$t('playground.editWebsiteTitle')">
                         ✏️
                       </button>
                       <template v-else>
@@ -681,11 +681,11 @@
                 </div>
 
                 <div v-if="restaurantToEdit.rating" class="info-item">
-                  <span class="info-label">Rating</span>
+                  <span class="info-label">{{ $t('playground.ratingLabel') }}</span>
                   <span class="info-value">
                     ⭐ {{ restaurantToEdit.rating }} / 5
                     <span v-if="restaurantToEdit.user_ratings_total" class="rating-count">
-                      ({{ restaurantToEdit.user_ratings_total }} reviews)
+                      {{ $t('playground.reviewsCount', { count: restaurantToEdit.user_ratings_total }) }}
                     </span>
                   </span>
                 </div>
@@ -694,21 +694,21 @@
 
             <!-- Brand DNA -->
             <section v-if="restaurantToEdit.brand_dna" class="details-section">
-              <h3 class="section-title">Brand Identity</h3>
+              <h3 class="section-title">{{ $t('playground.brandIdentity') }}</h3>
 
               <!-- Brand Name -->
               <div v-if="restaurantToEdit.brand_dna.brand_name" class="brand-item">
-                <span class="brand-label">Brand Name</span>
+                <span class="brand-label">{{ $t('playground.brandNameLabel') }}</span>
                 <span class="brand-value brand-name-text">{{ restaurantToEdit.brand_dna.brand_name }}</span>
               </div>
 
               <!-- Logo -->
               <div v-if="restaurantToEdit.brand_dna.logo_url" class="brand-item logo-item">
-                <span class="brand-label">Logo</span>
+                <span class="brand-label">{{ $t('playground.logoLabel') }}</span>
                 <div class="logo-container">
                   <img
                     :src="restaurantToEdit.brand_dna.logo_url"
-                    :alt="restaurantToEdit.brand_dna.brand_name || 'Logo'"
+                    :alt="restaurantToEdit.brand_dna.brand_name || $t('playground.logoAlt')"
                     class="brand-logo"
                   />
                 </div>
@@ -716,19 +716,19 @@
 
               <!-- Brand Colors -->
               <div class="brand-item colors-item">
-                <span class="brand-label">Brand Colors</span>
+                <span class="brand-label">{{ $t('playground.brandColorsLabel') }}</span>
                 <div class="colors-display">
                   <div v-if="restaurantToEdit.brand_dna.primary_color" class="color-box">
                     <div class="color-swatch-small" :style="{ backgroundColor: restaurantToEdit.brand_dna.primary_color }"></div>
                     <div class="color-details">
-                      <span class="color-name">Primary</span>
+                      <span class="color-name">{{ $t('playground.primaryColor') }}</span>
                       <span class="color-code">{{ restaurantToEdit.brand_dna.primary_color }}</span>
                     </div>
                   </div>
                   <div v-if="restaurantToEdit.brand_dna.secondary_color" class="color-box">
                     <div class="color-swatch-small" :style="{ backgroundColor: restaurantToEdit.brand_dna.secondary_color }"></div>
                     <div class="color-details">
-                      <span class="color-name">Secondary</span>
+                      <span class="color-name">{{ $t('playground.secondaryColor') }}</span>
                       <span class="color-code">{{ restaurantToEdit.brand_dna.secondary_color }}</span>
                     </div>
                   </div>
@@ -739,7 +739,7 @@
                   >
                     <div class="color-swatch-small" :style="{ backgroundColor: color }"></div>
                     <div class="color-details">
-                      <span class="color-name">Accent {{ index + 1 }}</span>
+                      <span class="color-name">{{ $t('playground.accentColor', { number: index + 1 }) }}</span>
                       <span class="color-code">{{ color }}</span>
                     </div>
                   </div>
@@ -748,7 +748,7 @@
 
               <!-- Font Style -->
               <div v-if="restaurantToEdit.brand_dna.font_style" class="brand-item">
-                <span class="brand-label">Typography</span>
+                <span class="brand-label">{{ $t('playground.typographyLabel') }}</span>
                 <span class="brand-value font-badge-small">{{ restaurantToEdit.brand_dna.font_style }}</span>
               </div>
             </section>
@@ -756,22 +756,22 @@
             <!-- Opening Hours -->
             <section v-if="restaurantToEdit.opening_hours || editingHours" class="details-section">
               <div class="section-header">
-                <h3 class="section-title">Opening Hours</h3>
-                <button v-if="!editingHours" class="edit-section-btn" @click="startEditHours" title="Edit opening hours">
-                  ✏️ Edit
+                <h3 class="section-title">{{ $t('playground.openingHoursLabel') }}</h3>
+                <button v-if="!editingHours" class="edit-section-btn" @click="startEditHours" :title="$t('playground.editOpeningHoursTitle')">
+                  {{ $t('playground.editButton') }}
                 </button>
                 <div v-else class="section-actions">
                   <BaseButton variant="primary" size="small" @click="saveHours" :disabled="saving">
-                    {{ saving ? 'Saving...' : '💾 Save' }}
+                    {{ saving ? $t('playground.savingButton') : $t('playground.saveButton') }}
                   </BaseButton>
                   <BaseButton variant="ghost" size="small" @click="cancelEditHours">
-                    Cancel
+                    {{ $t('playground.cancelButton') }}
                   </BaseButton>
                 </div>
               </div>
 
               <div v-if="restaurantToEdit.opening_hours?.open_now !== undefined && !editingHours" class="status-badge" :class="{ 'open': restaurantToEdit.opening_hours.open_now }">
-                {{ restaurantToEdit.opening_hours.open_now ? '🟢 Open Now' : '🔴 Closed' }}
+                {{ restaurantToEdit.opening_hours.open_now ? $t('playground.openNowBadge') : $t('playground.closedBadge') }}
               </div>
 
               <!-- Edit Mode -->
@@ -781,14 +781,14 @@
                     v-model="editedHours[index]"
                     type="text"
                     class="edit-input hours-input"
-                    placeholder="Monday: 9:00 AM – 5:00 PM"
+                    :placeholder="$t('playground.hoursPlaceholder')"
                   />
-                  <button class="remove-day-btn" @click="editedHours.splice(index, 1)" title="Remove day">
+                  <button class="remove-day-btn" @click="editedHours.splice(index, 1)" :title="$t('playground.removeDayTitle')">
                     ✕
                   </button>
                 </div>
                 <BaseButton variant="ghost" size="small" @click="editedHours.push('')">
-                  ➕ Add Day
+                  {{ $t('playground.addDayButton') }}
                 </BaseButton>
               </div>
 
@@ -1241,14 +1241,11 @@ onMounted(async () => {
     if (restaurant) {
       selectRestaurantById(restaurant.id)
 
-      // Wait for DOM to update, then scroll to content creation view
+      // Wait for DOM to update, then scroll to top of page
       await nextTick()
       setTimeout(() => {
-        const contentCreationView = document.querySelector('.content-creation-view')
-        if (contentCreationView) {
-          contentCreationView.scrollIntoView({ behavior: 'smooth', block: 'start' })
-        }
-      }, 300)
+        window.scrollTo({ top: 0, left: 0, behavior: 'smooth' })
+      }, 100)
     }
   }
 })
@@ -1299,6 +1296,11 @@ const menuItemsPerPage = 12
 const selectRestaurantById = (restaurantId: string) => {
   selectedRestaurantId.value = restaurantId
   onRestaurantChange()
+
+  // Scroll to top when restaurant is selected
+  nextTick(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'smooth' })
+  })
 }
 
 const editRestaurant = (restaurant: any) => {

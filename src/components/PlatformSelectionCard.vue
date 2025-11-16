@@ -93,7 +93,7 @@ function handleToggle() {
       <span class="platform-icon">{{ platform.icon }}</span>
       <div class="platform-content">
         <span class="platform-name">{{ platform.label }}</span>
-        <span class="platform-status coming-soon">Coming Soon</span>
+        <span class="platform-status coming-soon">{{ $t('connectAccounts.comingSoon') }}</span>
       </div>
     </template>
 

@@ -219,8 +219,7 @@ export default {
 
     // Actions
     backToSearch: 'Back to search',
-    saveAndContinue: 'Save & Continue to Content Creation →',
-    continueToContentCreation: 'Continue to Content Creation →',
+    saveAndContinue: 'Continue →',
     saving: 'Saving...',
 
     // Messages
@@ -302,6 +301,87 @@ export default {
     post: 'Post',
     schedule: 'Schedule',
     saveToDrafts: 'Save to Drafts',
+
+    // Tabs
+    tabImage: '📸 Image',
+    tabVideo: '🎥 Video',
+
+    // AI Prompts
+    generatingIdeas: 'Generating creative ideas with AI...',
+    aiGeneratedIdeas: 'AI-Generated Ideas',
+    getNewIdeas: '✨ Get New Ideas',
+    clickGetNewIdeasImage: 'Click "Get New Ideas" to generate AI-powered image prompts!',
+    clickGetNewIdeasVideo: 'Click "Get New Ideas" to generate AI-powered video prompts!',
+    selectedBadge: '✓ Selected',
+    selectedPromptLabel: 'Selected Prompt (editable):',
+    selectPromptPlaceholder: 'Select a prompt above...',
+
+    // Image Generation
+    generatingImage: 'Generating Image...',
+    generateImageButton: 'Generate Image (1 credit)',
+    generatedImageTitle: 'Generated Image:',
+    generatedMarketingImageAlt: 'Generated marketing image',
+    downloadImage: '⬇️ Download Image',
+    savingToFavorites: 'Saving...',
+    savedToFavorites: '⭐ Saved',
+    saveToFavorites: '⭐ Save to Favorites',
+    schedulePost: '📅 Schedule Post',
+    publishToFacebook: '📤 Publish to Facebook',
+    publishing: 'Publishing...',
+
+    // Post Content
+    postContentTitle: 'Post Content',
+    copyButton: '📋 Copy',
+    copyPostTextTitle: 'Copy post text',
+    callToActionLabel: 'Call to Action:',
+    copyHashtagsTitle: 'Copy hashtags',
+
+    // Video Generation
+    durationLabel: 'Duration',
+    seconds4: '4 seconds',
+    seconds6: '6 seconds',
+    seconds8: '8 seconds',
+    aspectRatioLabel: 'Aspect Ratio',
+    aspectRatio16x9: '16:9 (Landscape)',
+    aspectRatio9x16: '9:16 (Portrait)',
+    resolutionLabel: 'Resolution',
+    resolution720p: '720p',
+    resolution1080p: '1080p',
+    generatingVideoProgress: 'Generating Video... {progress}%',
+    generateVideoButton: 'Generate Video (5 credits)',
+    generatedVideoTitle: 'Generated Video:',
+    downloadVideo: '⬇️ Download Video',
+
+    // Restaurant Details Modal
+    information: 'Information',
+    addressLabel: 'Address',
+    phoneLabel: 'Phone',
+    websiteLabel: 'Website',
+    websitePlaceholder: 'https://example.com',
+    notSet: 'Not set',
+    editWebsiteTitle: 'Edit website',
+    ratingLabel: 'Rating',
+    reviewsCount: '({count} reviews)',
+    brandIdentity: 'Brand Identity',
+    brandNameLabel: 'Brand Name',
+    logoLabel: 'Logo',
+    logoAlt: 'Logo',
+    brandColorsLabel: 'Brand Colors',
+    primaryColor: 'Primary',
+    secondaryColor: 'Secondary',
+    accentColor: 'Accent {number}',
+    typographyLabel: 'Typography',
+    openingHoursLabel: 'Opening Hours',
+    editOpeningHoursTitle: 'Edit opening hours',
+    editButton: '✏️ Edit',
+    savingButton: 'Saving...',
+    saveButton: '💾 Save',
+    cancelButton: 'Cancel',
+    openNowBadge: '🟢 Open Now',
+    closedBadge: '🔴 Closed',
+    hoursPlaceholder: 'Monday: 9:00 AM – 5:00 PM',
+    removeDayTitle: 'Remove day',
+    addDayButton: '➕ Add Day',
   },
 
   // Connect Accounts View

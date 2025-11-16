@@ -562,16 +562,37 @@ const saveAndContinue = async () => {
 }
 
 .search-wrapper {
-  max-width: 900px;
-  margin: 0 auto var(--space-2xl);
+  width: 100%;
   animation: fadeInUp 0.6s var(--ease-smooth) 0.1s both;
 }
 
 .search-wrapper :deep(input) {
-  font-size: var(--text-xl);
-  padding: var(--space-xl) var(--space-2xl);
+  font-size: var(--text-2xl);
+  font-weight: var(--font-medium);
+  padding: var(--space-2xl) var(--space-3xl);
   height: auto;
-  min-height: 64px;
+  min-height: 80px;
+  background: rgba(26, 26, 26, 0.95);
+  border: 2px solid rgba(212, 175, 55, 0.3);
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.4),
+    0 0 24px rgba(212, 175, 55, 0.15),
+    inset 0 1px 0 rgba(212, 175, 55, 0.1);
+  transition: all var(--transition-base);
+}
+
+.search-wrapper :deep(input:focus) {
+  border-color: var(--gold-primary);
+  box-shadow:
+    0 12px 40px rgba(0, 0, 0, 0.5),
+    0 0 32px rgba(212, 175, 55, 0.25),
+    inset 0 1px 0 rgba(212, 175, 55, 0.2);
+  transform: translateY(-2px);
+}
+
+.search-wrapper :deep(input::placeholder) {
+  color: var(--text-muted);
+  font-weight: var(--font-normal);
 }
 
 .search-wrapper :deep(.autocomplete-dropdown) {

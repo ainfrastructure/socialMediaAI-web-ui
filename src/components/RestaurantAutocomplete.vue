@@ -7,6 +7,7 @@
       :placeholder="computedPlaceholder"
       :disabled="disabled"
       :autofocus="autofocus"
+      class="main-search-input"
       @input="handleInput"
       @focus="handleFocus"
       @blur="handleBlur"
@@ -221,6 +222,27 @@ const scrollToActiveItem = () => {
 .autocomplete-container {
   position: relative;
   width: 100%;
+  max-width: var(--max-width-2xl);
+  margin: 0 auto;
+}
+
+/* Make the main search input bigger and more prominent */
+.autocomplete-container :deep(.main-search-input) {
+  width: 100%;
+}
+
+.autocomplete-container :deep(.main-search-input label) {
+  font-size: var(--text-xl);
+  font-weight: var(--font-semibold);
+  margin-bottom: var(--space-lg);
+}
+
+.autocomplete-container :deep(.main-search-input input) {
+  width: 100%;
+  font-size: var(--text-lg);
+  padding: var(--space-xl) var(--space-2xl);
+  border-radius: var(--radius-lg);
+  min-height: 60px;
 }
 
 .autocomplete-dropdown {
@@ -234,7 +256,7 @@ const scrollToActiveItem = () => {
 
   background: rgba(26, 26, 26, 0.98);
   border: 1px solid rgba(212, 175, 55, 0.3);
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
   backdrop-filter: blur(20px);
   box-shadow:
     0 8px 32px rgba(0, 0, 0, 0.4),

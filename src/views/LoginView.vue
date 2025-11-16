@@ -13,6 +13,7 @@ const router = useRouter()
 const authStore = useAuthStore()
 const { t } = useI18n()
 
+const disableSignup = ref(true)
 const isSignup = ref(false)
 const showMagicLink = ref(false)
 const showForgotPassword = ref(false)
@@ -205,6 +206,7 @@ async function handleForgotPassword() {
         </BaseButton>
 
         <BaseButton
+          v-if="!disableSignup"
           type="button"
           variant="ghost"
           size="medium"
@@ -214,11 +216,12 @@ async function handleForgotPassword() {
           {{ isSignup ? $t('auth.login') : $t('auth.dontHaveAccount') + ' ' + $t('auth.signUp') }}
         </BaseButton>
 
-        <div class="divider">
+        <div v-if="!disableSignup" class="divider">
           <span>OR</span>
         </div>
 
         <BaseButton
+          v-if="!disableSignup"
           type="button"
           variant="ghost"
           size="small"
@@ -229,6 +232,7 @@ async function handleForgotPassword() {
         </BaseButton>
 
         <BaseButton
+          v-if="!disableSignup"
           type="button"
           variant="ghost"
           size="small"

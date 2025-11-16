@@ -54,9 +54,7 @@ const handleContinue = () => {
       >
         {{ loading
           ? t('restaurantSearch.saving')
-          : saved
-            ? t('restaurantSearch.continueToContentCreation')
-            : t('restaurantSearch.saveAndContinue')
+          : t('restaurantSearch.saveAndContinue')
         }}
       </BaseButton>
     </div>
