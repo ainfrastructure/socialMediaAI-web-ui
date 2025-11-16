@@ -61,6 +61,7 @@ interface Props {
 interface Emits {
   (e: 'update:modelValue', value: RestaurantSuggestion | null): void
   (e: 'select', value: RestaurantSuggestion): void
+  (e: 'dropdownOpen', value: boolean): void
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -94,6 +95,11 @@ watch(
   },
   { immediate: true }
 )
+
+// Watch dropdown state and emit event
+watch(showDropdown, (isOpen) => {
+  emit('dropdownOpen', isOpen)
+})
 
 const handleInput = () => {
   error.value = null
@@ -218,7 +224,7 @@ const scrollToActiveItem = () => {
   right: 0;
   max-height: 400px;
   overflow-y: auto;
-  z-index: 9999;
+  z-index: 99999;
 
   background: rgba(26, 26, 26, 0.98);
   border: 1px solid rgba(212, 175, 55, 0.3);

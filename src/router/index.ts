@@ -17,6 +17,21 @@ import SavedRestaurantsView from '../views/SavedRestaurantsView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
+  scrollBehavior(to, _from, savedPosition) {
+    // If there's a saved position (browser back/forward), use it
+    if (savedPosition) {
+      return savedPosition
+    }
+    // If navigating to a hash anchor, scroll to it
+    if (to.hash) {
+      return {
+        el: to.hash,
+        behavior: 'smooth',
+      }
+    }
+    // Otherwise, scroll to top
+    return { top: 0, behavior: 'smooth' }
+  },
   routes: [
     {
       path: '/',

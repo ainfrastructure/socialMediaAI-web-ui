@@ -3,26 +3,26 @@
     <div class="profile-container">
       <!-- Header -->
       <div class="profile-header">
-        <h1 class="page-title">Profile Settings</h1>
-        <p class="page-subtitle">Manage your account information and subscription</p>
+        <h1 class="page-title">{{ $t('profile.title') }}</h1>
+        <p class="page-subtitle">{{ $t('profile.subtitleExtended') }}</p>
       </div>
 
       <!-- Personal Information -->
       <BaseCard variant="glass" class="section-card">
         <div class="section-header">
-          <h2 class="section-title">Personal Information</h2>
+          <h2 class="section-title">{{ $t('profile.personalInfo') }}</h2>
           <button v-if="!editingPersonal" @click="editingPersonal = true" class="edit-btn">
-            Edit
+            {{ $t('profile.edit') }}
           </button>
         </div>
 
         <div v-if="!editingPersonal" class="info-display">
           <div class="info-item">
-            <span class="info-label">Email</span>
+            <span class="info-label">{{ $t('profile.email') }}</span>
             <span class="info-value">{{ authStore.user?.email }}</span>
           </div>
           <div class="info-item">
-            <span class="info-label">User ID</span>
+            <span class="info-label">{{ $t('profile.userId') }}</span>
             <span class="info-value info-muted">{{ authStore.user?.id }}</span>
           </div>
         </div>
@@ -31,7 +31,7 @@
           <BaseInput
             v-model="personalForm.email"
             type="email"
-            label="Email Address"
+            :label="$t('profile.emailAddress')"
             placeholder="your@email.com"
             required
             disabled
@@ -42,7 +42,7 @@
           </BaseAlert>
 
           <BaseAlert v-if="personalSuccess" type="success">
-            Profile updated successfully!
+            {{ $t('profile.profileUpdated') }}
           </BaseAlert>
 
           <div class="form-actions">
@@ -51,14 +51,14 @@
               variant="ghost"
               @click="cancelPersonalEdit"
             >
-              Cancel
+              {{ $t('profile.cancel') }}
             </BaseButton>
             <BaseButton
               type="submit"
               variant="primary"
               :disabled="savingPersonal"
             >
-              {{ savingPersonal ? 'Saving...' : 'Save Changes' }}
+              {{ savingPersonal ? $t('profile.saving') : $t('profile.saveChanges') }}
             </BaseButton>
           </div>
         </form>
@@ -67,9 +67,9 @@
       <!-- Subscription & Plan -->
       <BaseCard variant="glass" class="section-card">
         <div class="section-header">
-          <h2 class="section-title">Subscription & Plan</h2>
+          <h2 class="section-title">{{ $t('profile.subscriptionAndPlan') }}</h2>
           <router-link to="/plans" class="upgrade-link">
-            View Plans
+            {{ $t('profile.viewPlans') }}
           </router-link>
         </div>
 
@@ -85,33 +85,33 @@
 
           <div class="plan-details">
             <div class="info-item">
-              <span class="info-label">Monthly Credits</span>
+              <span class="info-label">{{ $t('profile.monthlyCredits') }}</span>
               <span class="info-value">{{ usage?.monthly_limit || 0 }}</span>
             </div>
             <div class="info-item">
-              <span class="info-label">Credits Used This Month</span>
+              <span class="info-label">{{ $t('profile.creditsUsedThisMonth') }}</span>
               <span class="info-value">{{ usage?.credits_this_month || 0 }}</span>
             </div>
             <div class="info-item">
-              <span class="info-label">Remaining Credits</span>
+              <span class="info-label">{{ $t('profile.remainingCredits') }}</span>
               <span class="info-value credits-remaining">{{ usage?.remaining_credits || 0 }}</span>
             </div>
             <div v-if="subscription?.current_period_end" class="info-item">
               <span class="info-label">
-                {{ subscription.cancel_at_period_end ? 'Subscription Ends' : 'Next Billing Date' }}
+                {{ subscription.cancel_at_period_end ? $t('profile.subscriptionEnds') : $t('profile.nextBillingDate') }}
               </span>
               <span class="info-value">{{ formatDate(subscription.current_period_end) }}</span>
             </div>
           </div>
 
           <div v-if="subscription?.cancel_at_period_end" class="cancel-notice">
-            ⚠️ Your subscription will be cancelled at the end of the current billing period.
+            {{ $t('profile.cancelNotice') }}
           </div>
 
           <div v-if="subscription?.tier !== 'free'" class="plan-actions">
             <router-link to="/plans">
               <BaseButton variant="primary">
-                Upgrade Plan
+                {{ $t('profile.upgradePlan') }}
               </BaseButton>
             </router-link>
             <BaseButton
@@ -119,13 +119,13 @@
               variant="ghost"
               @click="showCancelModal = true"
             >
-              Cancel Subscription
+              {{ $t('profile.cancelSubscription') }}
             </BaseButton>
           </div>
           <div v-else class="plan-actions">
             <router-link to="/plans">
               <BaseButton variant="primary">
-                Upgrade to Premium
+                {{ $t('profile.upgradeToPremium') }}
               </BaseButton>
             </router-link>
           </div>
@@ -135,12 +135,12 @@
       <!-- Billing Information -->
       <BaseCard variant="glass" class="section-card">
         <div class="section-header">
-          <h2 class="section-title">Billing Information</h2>
+          <h2 class="section-title">{{ $t('profile.billingInformation') }}</h2>
         </div>
 
         <div class="billing-info">
           <p class="billing-description">
-            Billing is managed through Stripe. Click below to manage your payment methods, view invoices, and update billing information.
+            {{ $t('profile.billingDescription') }}
           </p>
 
           <BaseButton
@@ -148,7 +148,7 @@
             @click="openCustomerPortal"
             :disabled="loadingPortal"
           >
-            {{ loadingPortal ? 'Loading...' : 'Manage Billing' }}
+            {{ loadingPortal ? $t('profile.loading') : $t('profile.manageBilling') }}
           </BaseButton>
         </div>
       </BaseCard>
@@ -156,18 +156,18 @@
       <!-- Account Security -->
       <BaseCard variant="glass" class="section-card danger-section">
         <div class="section-header">
-          <h2 class="section-title">Account Security</h2>
+          <h2 class="section-title">{{ $t('profile.accountSecurity') }}</h2>
         </div>
 
         <div class="security-actions">
           <div class="security-item">
             <div class="security-info">
-              <h3 class="security-title">Password</h3>
-              <p class="security-description">Reset your password via email</p>
+              <h3 class="security-title">{{ $t('profile.password') }}</h3>
+              <p class="security-description">{{ $t('profile.resetPasswordDescription') }}</p>
             </div>
             <router-link to="/auth/reset-password">
               <BaseButton variant="ghost" size="small">
-                Reset Password
+                {{ $t('profile.resetPassword') }}
               </BaseButton>
             </router-link>
           </div>
@@ -176,11 +176,11 @@
 
           <div class="security-item">
             <div class="security-info">
-              <h3 class="security-title danger-text">Delete Account</h3>
-              <p class="security-description">Permanently delete your account and all data</p>
+              <h3 class="security-title danger-text">{{ $t('profile.deleteAccountDanger') }}</h3>
+              <p class="security-description">{{ $t('profile.deleteAccountDescription') }}</p>
             </div>
             <BaseButton variant="danger" size="small" @click="showDeleteModal = true">
-              Delete Account
+              {{ $t('profile.deleteAccount') }}
             </BaseButton>
           </div>
         </div>
@@ -191,16 +191,16 @@
     <Teleport to="body">
       <div v-if="showCancelModal" class="modal-overlay" @click="showCancelModal = false">
         <div class="modal-content" @click.stop>
-          <h3 class="modal-title">Cancel Subscription</h3>
+          <h3 class="modal-title">{{ $t('profile.cancelSubscriptionTitle') }}</h3>
           <p class="modal-text">
-            Are you sure you want to cancel your subscription? You'll still have access until the end of your current billing period.
+            {{ $t('profile.cancelSubscriptionMessage') }}
           </p>
           <div class="modal-actions">
             <BaseButton variant="ghost" @click="showCancelModal = false">
-              Keep Subscription
+              {{ $t('profile.keepSubscription') }}
             </BaseButton>
             <BaseButton variant="danger" @click="confirmCancelSubscription">
-              Cancel Subscription
+              {{ $t('profile.cancelSubscription') }}
             </BaseButton>
           </div>
         </div>
@@ -211,25 +211,25 @@
     <Teleport to="body">
       <div v-if="showDeleteModal" class="modal-overlay" @click="showDeleteModal = false">
         <div class="modal-content" @click.stop>
-          <h3 class="modal-title danger-text">Delete Account</h3>
+          <h3 class="modal-title danger-text">{{ $t('profile.deleteAccountTitle') }}</h3>
           <p class="modal-text">
-            ⚠️ This action cannot be undone. All your data, restaurants, and generated content will be permanently deleted.
+            {{ $t('profile.deleteAccountMessage') }}
           </p>
           <BaseInput
             v-model="deleteConfirmText"
-            label="Type 'DELETE' to confirm"
-            placeholder="DELETE"
+            :label="$t('profile.typeDeleteConfirm')"
+            :placeholder="$t('profile.typeDeletePlaceholder')"
           />
           <div class="modal-actions">
             <BaseButton variant="ghost" @click="showDeleteModal = false">
-              Cancel
+              {{ $t('profile.cancel') }}
             </BaseButton>
             <BaseButton
               variant="danger"
               @click="confirmDeleteAccount"
               :disabled="deleteConfirmText !== 'DELETE'"
             >
-              Delete My Account
+              {{ $t('profile.deleteMyAccount') }}
             </BaseButton>
           </div>
         </div>
@@ -241,6 +241,7 @@
 <script setup lang="ts">
 import { ref, computed, reactive } from 'vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '../stores/auth'
 import { api } from '../services/api'
 import BaseCard from '../components/BaseCard.vue'
@@ -250,6 +251,7 @@ import BaseAlert from '../components/BaseAlert.vue'
 
 const router = useRouter()
 const authStore = useAuthStore()
+const { t } = useI18n()
 
 // Personal Information
 const editingPersonal = ref(false)
@@ -309,7 +311,7 @@ async function updatePersonalInfo() {
       personalSuccess.value = false
     }, 2000)
   } catch (err: any) {
-    personalError.value = err.message || 'Failed to update profile'
+    personalError.value = err.message || t('profile.failedToUpdateProfile')
   } finally {
     savingPersonal.value = false
   }
@@ -329,11 +331,11 @@ async function openCustomerPortal() {
     if (response.success && response.data?.url) {
       window.location.href = response.data.url
     } else {
-      alert('Failed to open billing portal')
+      alert(t('profile.failedToOpenPortal'))
     }
   } catch (err) {
 
-    alert('Failed to open billing portal')
+    alert(t('profile.failedToOpenPortal'))
   } finally {
     loadingPortal.value = false
   }
@@ -348,7 +350,7 @@ async function confirmCancelSubscription() {
     await authStore.refreshProfile()
   } catch (err) {
 
-    alert('Failed to cancel subscription')
+    alert(t('profile.failedToCancelSubscription'))
   }
 }
 
@@ -363,7 +365,7 @@ async function confirmDeleteAccount() {
     router.push('/login')
   } catch (err) {
 
-    alert('Failed to delete account')
+    alert(t('profile.failedToDeleteAccount'))
   }
 }
 </script>

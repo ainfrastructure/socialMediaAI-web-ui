@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { useFacebookStore } from '../stores/facebook'
 import BaseCard from '../components/BaseCard.vue'
 import BaseButton from '../components/BaseButton.vue'
@@ -8,6 +9,7 @@ import BaseAlert from '../components/BaseAlert.vue'
 
 const router = useRouter()
 const facebookStore = useFacebookStore()
+const { t } = useI18n()
 
 const showSuccessMessage = ref(false)
 const showErrorMessage = ref(false)
@@ -29,7 +31,7 @@ onMounted(async () => {
     // Show success message if we have pages (might be from a fresh connection)
     const urlParams = new URLSearchParams(window.location.search)
     if (urlParams.has('connected')) {
-      successMessage.value = `Successfully connected ${facebookStore.connectedPages.length} Facebook page(s)!`
+      successMessage.value = t('connectAccounts.successfullyConnected', { count: facebookStore.connectedPages.length })
       showSuccessMessage.value = true
       // Clean up URL
       window.history.replaceState({}, '', '/connect-accounts')
@@ -43,7 +45,7 @@ async function handleConnectFacebook() {
 
   try {
     await facebookStore.connectFacebook()
-    successMessage.value = `Successfully connected ${facebookStore.connectedPages.length} Facebook page(s)!`
+    successMessage.value = t('connectAccounts.successfullyConnected', { count: facebookStore.connectedPages.length })
     showSuccessMessage.value = true
   } catch (error: any) {
     showErrorMessage.value = true
@@ -51,7 +53,7 @@ async function handleConnectFacebook() {
 }
 
 async function handleDisconnectPage(pageId: string, pageName: string) {
-  if (!confirm(`Are you sure you want to disconnect "${pageName}"?`)) {
+  if (!confirm(t('connectAccounts.confirmDisconnect', { name: pageName }))) {
     return
   }
 
@@ -60,7 +62,7 @@ async function handleDisconnectPage(pageId: string, pageName: string) {
 
   try {
     await facebookStore.disconnectPage(pageId)
-    successMessage.value = `Successfully disconnected "${pageName}"`
+    successMessage.value = t('connectAccounts.successfullyDisconnected', { name: pageName })
     showSuccessMessage.value = true
   } catch (error: any) {
     showErrorMessage.value = true
@@ -72,10 +74,10 @@ function formatDate(dateString: string): string {
   const now = new Date()
   const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000)
 
-  if (diffInSeconds < 60) return 'just now'
-  if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} minutes ago`
-  if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} hours ago`
-  if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)} days ago`
+  if (diffInSeconds < 60) return t('connectAccounts.justNow')
+  if (diffInSeconds < 3600) return t('connectAccounts.minutesAgo', { count: Math.floor(diffInSeconds / 60) })
+  if (diffInSeconds < 86400) return t('connectAccounts.hoursAgo', { count: Math.floor(diffInSeconds / 3600) })
+  if (diffInSeconds < 604800) return t('connectAccounts.daysAgo', { count: Math.floor(diffInSeconds / 86400) })
 
   return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
 }
@@ -95,21 +97,21 @@ const comingSoonPlatforms = [
       <!-- Back Navigation -->
       <div class="back-nav">
         <BaseButton variant="ghost" size="small" @click="router.back()">
-          ← Back
+          ← {{ $t('connectAccounts.back') }}
         </BaseButton>
       </div>
 
       <header class="page-header">
-        <h1>Connect Social Media Accounts</h1>
+        <h1>{{ $t('connectAccounts.pageTitle') }}</h1>
         <p class="subtitle">
-          Connect your social media accounts to start posting content directly from our platform
+          {{ $t('connectAccounts.pageSubtitle') }}
         </p>
 
         <!-- Stats Summary -->
         <div v-if="totalConnectedAccounts > 0" class="stats-summary">
           <div class="stat-item">
             <span class="stat-value">{{ totalConnectedAccounts }}</span>
-            <span class="stat-label">Account{{ totalConnectedAccounts === 1 ? '' : 's' }} Connected</span>
+            <span class="stat-label">{{ $t('connectAccounts.accountsConnected', { count: totalConnectedAccounts }) }}</span>
           </div>
         </div>
       </header>
@@ -119,33 +121,33 @@ const comingSoonPlatforms = [
         <div class="alert-with-action">
           <p>{{ successMessage }}</p>
           <BaseButton variant="primary" size="small" @click="router.push('/playground')" style="margin-top: 12px;">
-            Continue to Playground →
+            {{ $t('connectAccounts.continueToPlayground') }}
           </BaseButton>
         </div>
       </BaseAlert>
 
       <BaseAlert v-if="showErrorMessage" type="error" @close="showErrorMessage = false">
-        {{ facebookStore.error || 'An error occurred. Please try again.' }}
+        {{ facebookStore.error || $t('connectAccounts.errorOccurred') }}
       </BaseAlert>
 
       <!-- Facebook Section -->
       <section class="platform-section">
-        <h2>Facebook</h2>
+        <h2>{{ $t('connectAccounts.facebook') }}</h2>
 
         <BaseCard variant="glass" class="platform-card" :class="{ 'connected': isConnected }">
           <div class="platform-content">
             <div class="platform-icon facebook-icon">f</div>
             <div class="platform-info">
-              <h3>Facebook Pages</h3>
+              <h3>{{ $t('connectAccounts.facebookPages') }}</h3>
               <p>
-                Connect your Facebook account to manage and post to your Facebook pages
+                {{ $t('connectAccounts.facebookDescription') }}
               </p>
               <!-- Connection Status Badge -->
               <div v-if="isConnected" class="connection-status-badge">
                 <svg class="checkmark-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <path d="M9 12L11 14L15 10M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
-                <span>Connected</span>
+                <span>{{ $t('connectAccounts.connected') }}</span>
               </div>
             </div>
             <BaseButton
@@ -154,13 +156,13 @@ const comingSoonPlatforms = [
               :disabled="facebookStore.loading"
               class="connect-button"
             >
-              {{ facebookStore.loading ? 'Connecting...' : (isConnected ? 'Reconnect' : 'Connect to Facebook') }}
+              {{ facebookStore.loading ? $t('connectAccounts.connecting') : (isConnected ? $t('connectAccounts.reconnect') : $t('connectAccounts.connectToFacebook')) }}
             </BaseButton>
           </div>
 
           <!-- Connected Pages List -->
           <div v-if="facebookStore.connectedPages.length > 0" class="connected-pages">
-            <h4>Connected Pages</h4>
+            <h4>{{ $t('connectAccounts.connectedPages') }}</h4>
             <div class="pages-list">
               <div
                 v-for="page in facebookStore.connectedPages"
@@ -171,7 +173,7 @@ const comingSoonPlatforms = [
                   <div class="page-icon">f</div>
                   <div class="page-details">
                     <span class="page-name">{{ page.pageName }}</span>
-                    <span class="page-meta">Connected {{ formatDate(page.connectedAt) }}</span>
+                    <span class="page-meta">{{ $t('connectAccounts.connectedTime', { time: formatDate(page.connectedAt) }) }}</span>
                   </div>
                 </div>
                 <BaseButton
@@ -180,7 +182,7 @@ const comingSoonPlatforms = [
                   size="small"
                   :disabled="facebookStore.loading"
                 >
-                  Disconnect
+                  {{ $t('connectAccounts.disconnect') }}
                 </BaseButton>
               </div>
             </div>
@@ -190,7 +192,7 @@ const comingSoonPlatforms = [
 
       <!-- Coming Soon Section -->
       <section class="platform-section">
-        <h2>Coming Soon</h2>
+        <h2>{{ $t('connectAccounts.comingSoon') }}</h2>
 
         <div class="coming-soon-grid">
           <BaseCard
@@ -206,7 +208,7 @@ const comingSoonPlatforms = [
                 </div>
                 <div class="platform-info">
                   <h3>{{ platform.name }}</h3>
-                  <span class="coming-soon-badge">Coming Soon</span>
+                  <span class="coming-soon-badge">{{ $t('connectAccounts.comingSoon') }}</span>
                 </div>
               </div>
             </div>

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '../stores/auth'
 import { api, type SubscriptionPlan } from '../services/api'
 import BaseCard from '../components/BaseCard.vue'
@@ -9,6 +10,7 @@ import BaseAlert from '../components/BaseAlert.vue'
 
 const router = useRouter()
 const authStore = useAuthStore()
+const { t } = useI18n()
 
 const plans = ref<SubscriptionPlan[]>([])
 const loading = ref(true)
@@ -29,7 +31,7 @@ async function loadPlans() {
       plans.value = response.data.plans
     }
   } catch (error) {
-    showMessage('Failed to load plans', 'error')
+    showMessage(t('plans.failedToLoad'), 'error')
   } finally {
     loading.value = false
   }
@@ -42,7 +44,7 @@ async function subscribe(tier: string) {
   }
 
   if (tier === 'free') {
-    showMessage('You are already on the free plan', 'info')
+    showMessage(t('plans.alreadyOnFreePlan'), 'info')
     return
   }
 
@@ -53,14 +55,14 @@ async function subscribe(tier: string) {
     const response = await api.createCheckout(tier, successUrl, cancelUrl)
 
     if (!response.success) {
-      showMessage(response.error || 'Failed to create checkout', 'error')
+      showMessage(response.error || t('plans.failedToCheckout'), 'error')
       return
     }
 
     // Redirect to Stripe Checkout
     window.location.href = response.data?.checkout_url || ''
   } catch (error: any) {
-    showMessage(error.message || 'Network error', 'error')
+    showMessage(error.message || t('plans.networkError'), 'error')
   }
 }
 
@@ -81,7 +83,7 @@ function goBack() {
 // Check for success/canceled parameters
 const urlParams = new URLSearchParams(window.location.search)
 if (urlParams.get('success') === 'true') {
-  showMessage('Subscription successful! Your account will be updated shortly.', 'success')
+  showMessage(t('plans.subscriptionSuccess'), 'success')
   setTimeout(() => {
     if (authStore.isAuthenticated) {
       authStore.refreshProfile()
@@ -89,7 +91,7 @@ if (urlParams.get('success') === 'true') {
     }
   }, 2000)
 } else if (urlParams.get('canceled') === 'true') {
-  showMessage('Subscription canceled', 'info')
+  showMessage(t('plans.subscriptionCanceled'), 'info')
 }
 </script>
 
@@ -106,13 +108,13 @@ if (urlParams.get('success') === 'true') {
     </BaseAlert>
 
     <div class="content">
-      <h1 class="brand-title">SocialChef</h1>
-      <h2 class="section-title">Choose Your Plan</h2>
-      <p class="section-subtitle">Unlock the full power of AI-generated content</p>
+      <h1 class="brand-title">{{ $t('plans.brandTitle') }}</h1>
+      <h2 class="section-title">{{ $t('plans.chooseYourPlan') }}</h2>
+      <p class="section-subtitle">{{ $t('plans.unlockPower') }}</p>
 
       <div v-if="loading" class="loading">
         <div class="spinner"></div>
-        <p>Loading plans...</p>
+        <p>{{ $t('plans.loading') }}</p>
       </div>
 
       <div v-else class="plans-grid">
@@ -123,8 +125,8 @@ if (urlParams.get('success') === 'true') {
           :class="['plan-card', { featured: plan.tier === 'pro' }]"
           :hoverable="plan.tier !== 'free'"
         >
-          <div v-if="plan.tier === 'pro'" class="featured-badge">Most Popular</div>
-          <div v-if="authStore.subscriptionTier === plan.tier" class="current-badge">Current Plan</div>
+          <div v-if="plan.tier === 'pro'" class="featured-badge">{{ $t('plans.mostPopular') }}</div>
+          <div v-if="authStore.subscriptionTier === plan.tier" class="current-badge">{{ $t('plans.currentPlan') }}</div>
 
           <h3 class="plan-name">{{ plan.name }}</h3>
           <div class="price">{{ plan.formatted_price }}</div>
@@ -144,9 +146,9 @@ if (urlParams.get('success') === 'true') {
             @click="subscribe(plan.tier)"
             :disabled="authStore.subscriptionTier === plan.tier"
           >
-            {{ authStore.subscriptionTier === plan.tier ? 'Current Plan' : 'Subscribe Now' }}
+            {{ authStore.subscriptionTier === plan.tier ? $t('plans.currentPlan') : $t('plans.subscribeNow') }}
           </BaseButton>
-          <div v-else class="free-label">Free Forever</div>
+          <div v-else class="free-label">{{ $t('plans.freeForever') }}</div>
         </BaseCard>
       </div>
     </div>

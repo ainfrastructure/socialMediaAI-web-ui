@@ -16,12 +16,13 @@
           placeholder="Search restaurants by name or location..."
           autofocus
           @select="handleRestaurantSelect"
+          @dropdownOpen="isAutocompleteOpen = $event"
         />
 
       </div>
 
       <!-- Quick Overview Stats -->
-      <div v-if="selectedRestaurant && placeDetails" class="quick-overview-section">
+      <div v-if="selectedRestaurant && placeDetails && !isAutocompleteOpen" class="quick-overview-section">
         <BaseCard variant="glass-intense">
           <h3 class="quick-overview-title">Quick Overview</h3>
 
@@ -89,7 +90,7 @@
       </div>
 
       <!-- Restaurant Details -->
-      <BaseCard v-if="selectedRestaurant" variant="glass-intense" class="restaurant-details-card">
+      <BaseCard v-if="selectedRestaurant && !isAutocompleteOpen" variant="glass-intense" class="restaurant-details-card">
         <div class="restaurant-header">
           <div class="restaurant-header-content">
             <h2 class="restaurant-name">{{ selectedRestaurant.name }}</h2>
@@ -289,7 +290,7 @@
       </BaseCard>
 
       <!-- Brand DNA Section -->
-      <BaseCard v-if="selectedRestaurant && placeDetails?.website" variant="glass-intense" class="brand-dna-card">
+      <BaseCard v-if="selectedRestaurant && placeDetails?.website && !isAutocompleteOpen" variant="glass-intense" class="brand-dna-card">
         <div class="brand-dna-header">
           <h2 class="brand-dna-title">Brand Identity</h2>
           <span v-if="brandDNA" class="brand-dna-badge">✓ Analyzed</span>
@@ -387,7 +388,7 @@
       </BaseCard>
 
       <!-- Reviews Section -->
-      <BaseCard v-if="placeDetails && placeDetails.reviews && placeDetails.reviews.length > 0" variant="glass-intense" class="reviews-card">
+      <BaseCard v-if="placeDetails && placeDetails.reviews && placeDetails.reviews.length > 0 && !isAutocompleteOpen" variant="glass-intense" class="reviews-card">
         <div class="reviews-header">
           <h2 class="reviews-title">Customer Reviews</h2>
           <span class="reviews-count">{{ placeDetails.reviews.length }} reviews</span>
@@ -435,7 +436,7 @@
       </BaseCard>
 
       <!-- Competitors Section -->
-      <BaseCard v-if="selectedRestaurant" variant="glass-intense" class="competitors-card">
+      <BaseCard v-if="selectedRestaurant && !isAutocompleteOpen" variant="glass-intense" class="competitors-card">
         <div class="competitors-header">
           <h2 class="competitors-title">Nearby Competitors</h2>
           <span v-if="competitorData" class="competitors-count">
@@ -512,7 +513,7 @@
       </BaseCard>
 
       <!-- Menu Section -->
-      <BaseCard v-if="selectedRestaurant" variant="glass-intense" class="menu-card">
+      <BaseCard v-if="selectedRestaurant && !isAutocompleteOpen" variant="glass-intense" class="menu-card">
         <div class="menu-header">
           <h2 class="menu-title">Menu</h2>
           <span v-if="menuData" class="menu-platform-badge">
@@ -568,7 +569,7 @@
     </div>
 
     <!-- Sticky CTA Button -->
-    <div v-if="selectedRestaurant && placeDetails" class="sticky-cta">
+    <div v-if="selectedRestaurant && placeDetails && !isAutocompleteOpen" class="sticky-cta">
       <div class="sticky-cta-content">
         <button class="back-button" @click="clearSelection" aria-label="Back to search">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -608,7 +609,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import BaseCard from '../components/BaseCard.vue'
 import BaseButton from '../components/BaseButton.vue'
@@ -660,6 +661,9 @@ const uploadError = ref<string | null>(null)
 // Photo modal state
 const photoModalOpen = ref(false)
 const selectedPhotoUrl = ref<string | null>(null)
+
+// Autocomplete dropdown state
+const isAutocompleteOpen = ref(false)
 
 // Progress modal state
 const showProgressModal = ref(false)
@@ -720,6 +724,15 @@ const competitorsTotalPages = computed(() => {
   if (!competitorData.value?.competitors) return 0
   return Math.ceil(competitorData.value.competitors.length / competitorsPerPage)
 })
+
+// Scroll to top when pagination changes
+const scrollToTop = () => {
+  window.scrollTo({ top: 0, behavior: 'smooth' })
+}
+
+watch(reviewsPage, scrollToTop)
+watch(menuPage, scrollToTop)
+watch(competitorsPage, scrollToTop)
 
 const handleRestaurantSelect = async (restaurant: RestaurantSuggestion) => {
 
