@@ -134,19 +134,110 @@ export default {
 
   // Restaurant Search View
   restaurantSearch: {
-    title: 'Finn Restauranter',
-    searchPlaceholder: 'Søk etter restauranter...',
+    title: 'Oppdag Restauranter',
+    subtitle: 'Søk og analyser restauranter ved hjelp av Google Places. Bygg din database med omfattende innsikt.',
+    searchPlaceholder: 'Søk restauranter etter navn eller sted...',
     searchButton: 'Søk',
     noResults: 'Ingen restauranter funnet',
     results: 'Resultater',
-    viewMenu: 'Vis Meny',
-    saveRestaurant: 'Lagre Restaurant',
-    restaurantSaved: 'Restaurant lagret!',
     filters: 'Filtre',
     cuisine: 'Kjøkken',
     priceRange: 'Prisklasse',
-    rating: 'Vurdering',
     distance: 'Avstand',
+
+    // Autocomplete
+    searchLabel: 'Søk Restauranter',
+    searching: 'Søker...',
+    searchError: 'Kunne ikke søke etter restauranter. Vennligst prøv igjen.',
+
+    // Quick Overview
+    quickOverviewTitle: 'Rask Oversikt',
+    rating: 'Vurdering',
+    reviews: 'anmeldelser',
+    status: 'Status',
+    openNow: 'Åpent Nå',
+    closed: 'Stengt',
+    menuItems: 'Menyelementer',
+    competitors: 'Konkurrenter',
+    socialMedia: 'Sosiale Medier',
+    profiles: 'profiler',
+
+    // Opening Hours
+    openingHours: 'Åpningstider',
+    loadingHours: 'Laster åpningstider...',
+    hoursNotAvailable: 'Åpningstider ikke tilgjengelig',
+
+    // Contact & Info
+    contactInfo: 'Kontakt & Info',
+    visitWebsite: 'Besøk Nettsted',
+
+    // Photos
+    googlePhotos: 'Google Bilder',
+    selectAll: 'Velg Alle',
+    deselectAll: 'Fjern Alle',
+
+    // Image Upload
+    uploadOwnImages: 'Last Opp Dine Egne Bilder',
+
+    // Social Media
+    socialMediaTitle: 'Sosiale Medier',
+    findingSocialMedia: 'Finner sosiale medieprofiler...',
+    noSocialMediaFound: 'Ingen sosiale medieprofiler funnet',
+
+    // Brand Identity
+    brandIdentity: 'Merkevareidentitet',
+    analyzed: '✓ Analysert',
+    analyzingBrand: 'Analyserer merkevarens farger og fonter fra nettstedet...',
+    brandName: 'Merkevarenavn',
+    brandColors: 'Merkevarefarger',
+    typography: 'Typografi',
+    logo: 'Logo',
+    primary: 'Primær',
+    secondary: 'Sekundær',
+    accent: 'Aksent {number}',
+    brandIdentityNote: 'Merkevareidentitet automatisk hentet fra nettstedet',
+    selectRestaurantWithWebsite: 'Velg en restaurant med et nettsted for å analysere merkevareidentiteten',
+
+    // Customer Reviews
+    customerReviews: 'Kundeanmeldelser',
+    reviewsCount: '{count} anmeldelser',
+
+    // Competitors
+    nearbyCompetitors: 'Konkurrenter i Nærheten',
+    competitorsCount: '{count} innen {radius} km',
+    findingCompetitors: 'Finner konkurrenter i nærheten...',
+    competitorsFound: 'Fant {count} lignende restaurant{plural} nær {name}',
+    noCompetitorsFound: 'Ingen konkurrenter funnet innen {radius} km',
+
+    // Menu
+    menu: 'Meny',
+    searchingMenu: 'Søker etter meny på Wolt og Foodora...',
+    menuItemsFound: 'Fant {count} elementer fra',
+    noMenuFound: 'Ingen meny funnet for denne restauranten',
+    selectRestaurantToViewMenu: 'Velg en restaurant for å se menyen',
+    menuNotAvailable: 'Restauranten er kanskje ikke tilgjengelig på Wolt eller Foodora.',
+
+    // Actions
+    backToSearch: 'Tilbake til søk',
+    saveAndContinue: 'Lagre & Fortsett til Innholdsopprettelse →',
+    continueToContentCreation: 'Fortsett til Innholdsopprettelse →',
+    saving: 'Lagrer...',
+
+    // Messages
+    restaurantSaved: 'Restaurant lagret i databasen!',
+    saveRestaurant: 'Lagre Restaurant',
+    restaurantAlreadySaved: 'Denne restauranten er allerede lagret',
+    failedToSave: 'Kunne ikke lagre restaurant',
+    imagesUploaded: 'Lastet opp {count} egendefinerte bilde(r) i tillegg.',
+    failedToUpload: 'Kunne ikke laste opp bilder',
+
+    // Progress Modal
+    savingRestaurant: 'Lagrer Restaurant',
+    savingData: 'Lagrer restaurantdata...',
+    processingImages: 'Behandler bilder...',
+    analyzingMenu: 'Analyserer menyelementer...',
+    finalizingSetup: 'Fullfører oppsett...',
+    redirecting: 'Omdirigerer til innholdsopprettelse...',
   },
 
   // Playground View

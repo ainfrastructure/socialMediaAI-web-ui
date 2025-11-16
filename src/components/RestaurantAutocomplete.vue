@@ -3,8 +3,8 @@
     <BaseInput
       v-model="searchQuery"
       type="text"
-      :label="label"
-      :placeholder="placeholder"
+      :label="computedLabel"
+      :placeholder="computedPlaceholder"
       :disabled="disabled"
       :autofocus="autofocus"
       @input="handleInput"
@@ -16,7 +16,7 @@
     <div v-if="showDropdown" class="autocomplete-dropdown" ref="dropdownRef">
       <div v-if="isLoading" class="dropdown-item loading">
         <div class="spinner"></div>
-        <span>Searching...</span>
+        <span>{{ $t('restaurantSearch.searching') }}</span>
       </div>
 
       <div v-else-if="error" class="dropdown-item error">
@@ -24,7 +24,7 @@
       </div>
 
       <div v-else-if="suggestions.length === 0 && searchQuery.trim()" class="dropdown-item empty">
-        <span>No restaurants found</span>
+        <span>{{ $t('restaurantSearch.noResults') }}</span>
       </div>
 
       <div
@@ -45,7 +45,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { ref, watch, computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import BaseInput from './BaseInput.vue'
 import { placesService, type RestaurantSuggestion } from '../services/placesService'
 
@@ -65,14 +66,19 @@ interface Emits {
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  label: 'Search Restaurants',
-  placeholder: 'Type to search for restaurants...',
+  label: '',
+  placeholder: '',
   disabled: false,
   autofocus: false,
   debounceMs: 300,
 })
 
 const emit = defineEmits<Emits>()
+const { t } = useI18n()
+
+// Computed label and placeholder with i18n fallbacks
+const computedLabel = computed(() => props.label || t('restaurantSearch.searchLabel'))
+const computedPlaceholder = computed(() => props.placeholder || t('restaurantSearch.searchPlaceholder'))
 
 const searchQuery = ref('')
 const suggestions = ref<RestaurantSuggestion[]>([])
@@ -138,7 +144,7 @@ const performSearch = async (query: string) => {
     suggestions.value = results
     activeIndex.value = -1
   } catch (err) {
-    error.value = 'Failed to search restaurants. Please try again.'
+    error.value = t('restaurantSearch.searchError')
     suggestions.value = []
 
   } finally {

@@ -1571,14 +1571,6 @@ const onRestaurantChange = async () => {
   currentPage.value = 1
 }
 
-const selectRandomRestaurant = () => {
-  if (restaurants.value.length === 0) return
-
-  const randomIndex = Math.floor(Math.random() * restaurants.value.length)
-  selectedRestaurantId.value = restaurants.value[randomIndex].id
-  onRestaurantChange()
-}
-
 const generatePrompts = async () => {
   if (!selectedRestaurant.value) return
 

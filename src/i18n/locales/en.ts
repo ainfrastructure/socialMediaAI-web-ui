@@ -134,19 +134,110 @@ export default {
 
   // Restaurant Search View
   restaurantSearch: {
-    title: 'Find Restaurants',
-    searchPlaceholder: 'Search for restaurants...',
+    title: 'Discover Restaurants',
+    subtitle: 'Search and analyze restaurants using Google Places. Build your database with comprehensive insights.',
+    searchPlaceholder: 'Search restaurants by name or location...',
     searchButton: 'Search',
     noResults: 'No restaurants found',
     results: 'Results',
-    viewMenu: 'View Menu',
-    saveRestaurant: 'Save Restaurant',
-    restaurantSaved: 'Restaurant saved!',
     filters: 'Filters',
     cuisine: 'Cuisine',
     priceRange: 'Price Range',
-    rating: 'Rating',
     distance: 'Distance',
+
+    // Autocomplete
+    searchLabel: 'Search Restaurants',
+    searching: 'Searching...',
+    searchError: 'Failed to search restaurants. Please try again.',
+
+    // Quick Overview
+    quickOverviewTitle: 'Quick Overview',
+    rating: 'Rating',
+    reviews: 'reviews',
+    status: 'Status',
+    openNow: 'Open Now',
+    closed: 'Closed',
+    menuItems: 'Menu Items',
+    competitors: 'Competitors',
+    socialMedia: 'Social Media',
+    profiles: 'profiles',
+
+    // Opening Hours
+    openingHours: 'Opening Hours',
+    loadingHours: 'Loading hours...',
+    hoursNotAvailable: 'Hours not available',
+
+    // Contact & Info
+    contactInfo: 'Contact & Info',
+    visitWebsite: 'Visit Website',
+
+    // Photos
+    googlePhotos: 'Google Photos',
+    selectAll: 'Select All',
+    deselectAll: 'Deselect All',
+
+    // Image Upload
+    uploadOwnImages: 'Upload Your Own Images',
+
+    // Social Media
+    socialMediaTitle: 'Social Media',
+    findingSocialMedia: 'Finding social media profiles...',
+    noSocialMediaFound: 'No social media profiles found',
+
+    // Brand Identity
+    brandIdentity: 'Brand Identity',
+    analyzed: '✓ Analyzed',
+    analyzingBrand: 'Analyzing brand colors and fonts from website...',
+    brandName: 'Brand Name',
+    brandColors: 'Brand Colors',
+    typography: 'Typography',
+    logo: 'Logo',
+    primary: 'Primary',
+    secondary: 'Secondary',
+    accent: 'Accent {number}',
+    brandIdentityNote: 'Brand identity automatically extracted from website',
+    selectRestaurantWithWebsite: 'Select a restaurant with a website to analyze brand identity',
+
+    // Customer Reviews
+    customerReviews: 'Customer Reviews',
+    reviewsCount: '{count} reviews',
+
+    // Competitors
+    nearbyCompetitors: 'Nearby Competitors',
+    competitorsCount: '{count} within {radius} km',
+    findingCompetitors: 'Finding nearby competitors...',
+    competitorsFound: 'Found {count} similar restaurant{plural} near {name}',
+    noCompetitorsFound: 'No competitors found within {radius} km',
+
+    // Menu
+    menu: 'Menu',
+    searchingMenu: 'Searching for menu on Wolt and Foodora...',
+    menuItemsFound: 'Found {count} items from',
+    noMenuFound: 'No menu found for this restaurant',
+    selectRestaurantToViewMenu: 'Select a restaurant to view its menu',
+    menuNotAvailable: 'The restaurant may not be available on Wolt or Foodora.',
+
+    // Actions
+    backToSearch: 'Back to search',
+    saveAndContinue: 'Save & Continue to Content Creation →',
+    continueToContentCreation: 'Continue to Content Creation →',
+    saving: 'Saving...',
+
+    // Messages
+    restaurantSaved: 'Restaurant saved to database successfully!',
+    saveRestaurant: 'Save Restaurant',
+    restaurantAlreadySaved: 'This restaurant has already been saved',
+    failedToSave: 'Failed to save restaurant',
+    imagesUploaded: 'Additionally uploaded {count} custom image(s).',
+    failedToUpload: 'Failed to upload images',
+
+    // Progress Modal
+    savingRestaurant: 'Saving Restaurant',
+    savingData: 'Saving restaurant data...',
+    processingImages: 'Processing images...',
+    analyzingMenu: 'Analyzing menu items...',
+    finalizingSetup: 'Finalizing setup...',
+    redirecting: 'Redirecting to content creation...',
   },
 
   // Playground View
