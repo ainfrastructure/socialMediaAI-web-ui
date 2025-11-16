@@ -44,9 +44,9 @@ async function handleConnectFacebook() {
   showErrorMessage.value = false
 
   try {
+    // This will redirect to Facebook - no success message needed here
+    // Success message will be shown after OAuth callback when returning to this page
     await facebookStore.connectFacebook()
-    successMessage.value = t('connectAccounts.successfullyConnected', { count: facebookStore.connectedPages.length })
-    showSuccessMessage.value = true
   } catch (error: any) {
     showErrorMessage.value = true
   }
