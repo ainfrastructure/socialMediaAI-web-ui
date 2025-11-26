@@ -36,13 +36,9 @@
               <label for="scheduled_date" class="form-label">
                 Date <span class="required">*</span>
               </label>
-              <input
-                id="scheduled_date"
+              <DatePicker
                 v-model="formData.scheduled_date"
-                type="date"
-                class="form-input date-input"
-                :min="today"
-                required
+                :min-date="today"
               />
               <p v-if="preselectedDate" class="date-hint">
                 📅 Date pre-filled from calendar selection
@@ -128,6 +124,7 @@ import { useRouter } from 'vue-router'
 import BaseCard from './BaseCard.vue'
 import BaseButton from './BaseButton.vue'
 import BaseAlert from './BaseAlert.vue'
+import DatePicker from './DatePicker.vue'
 import { api } from '../services/api'
 
 const router = useRouter()
@@ -144,10 +141,14 @@ const emit = defineEmits<{
   (e: 'scheduled', scheduledPost: any): void
 }>()
 
+// Auto-detect timezone with fallback
+const detectedTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone
+const defaultTimezone = detectedTimezone || 'America/New_York'
+
 const formData = ref({
   scheduled_date: '',
   scheduled_time: '',
-  timezone: 'UTC',
+  timezone: defaultTimezone,
   notes: '',
 })
 
@@ -162,8 +163,8 @@ const today = computed(() => {
   return new Date().toISOString().split('T')[0]
 })
 
-// Detect user's timezone
-const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone
+// Use the same detected timezone as userTimezone for consistency
+const userTimezone = defaultTimezone
 
 // Generate hour options (1-12)
 const hours = Array.from({ length: 12 }, (_, i) => {

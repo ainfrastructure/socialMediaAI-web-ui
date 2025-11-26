@@ -16,6 +16,7 @@ export default defineConfig({
       '@': fileURLToPath(new URL('./src', import.meta.url))
     },
   },
+<<<<<<< Updated upstream
   define: {
     // Enable full i18n feature set with strict message format validation
     __VUE_I18N_FULL_INSTALL__: true,
@@ -23,5 +24,14 @@ export default defineConfig({
     __INTLIFY_PROD_DEVTOOLS__: false,
     // Enable strict message format checking even in dev
     __INTLIFY_JIT_COMPILATION__: true,
+=======
+  server: {
+    host: true,
+    allowedHosts: [
+      'successive-emogene-unsyncopated.ngrok-free.dev',
+      '.ngrok-free.dev',
+      'localhost',
+    ],
+>>>>>>> Stashed changes
   },
 })

@@ -9,6 +9,7 @@ import RestaurantSearchView from '../views/RestaurantSearchView.vue'
 import PlaygroundView from '../views/PlaygroundView.vue'
 import ConnectAccountsView from '../views/ConnectAccountsView.vue'
 import FacebookCallbackView from '../views/FacebookCallbackView.vue'
+import WoltCallbackView from '../views/WoltCallbackView.vue'
 import TestPostView from '../views/TestPostView.vue'
 import SchedulerView from '../views/SchedulerView.vue'
 import FavoritesView from '../views/FavoritesView.vue'
@@ -71,6 +72,12 @@ const router = createRouter({
       path: '/auth/facebook/callback',
       name: 'facebook-callback',
       component: FacebookCallbackView,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/wolt-callback',
+      name: 'wolt-callback',
+      component: WoltCallbackView,
       meta: { requiresAuth: true },
     },
     {

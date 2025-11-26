@@ -155,6 +155,11 @@ const authStore = useAuthStore()
   width: 80%;
 }
 
+/* Mode Toggle in Nav */
+.mode-toggle-nav {
+  margin-left: var(--space-xl);
+}
+
 /* User Menu */
 .user-menu {
   display: flex;
@@ -217,6 +222,10 @@ const authStore = useAuthStore()
   .nav-link {
     padding: var(--space-sm) var(--space-md);
     font-size: 0.65rem;
+  }
+
+  .mode-toggle-nav {
+    margin-left: var(--space-md);
   }
 
   .login-link {

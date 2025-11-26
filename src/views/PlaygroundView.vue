@@ -28,6 +28,7 @@
               variant="glass"
               hoverable
               class="restaurant-card"
+              @click="selectRestaurantById(restaurant.id)"
             >
               <div class="card-header">
                 <div class="card-title-section">
@@ -66,6 +67,7 @@
                   <span>{{ $t('playground.saved') }} {{ formatDate(restaurant.saved_at) }}</span>
                 </div>
               </div>
+<<<<<<< Updated upstream
 
               <BaseButton
                 variant="primary"
@@ -76,30 +78,53 @@
               >
                 {{ $t('playground.selectRestaurantButton') }}
               </BaseButton>
+=======
+>>>>>>> Stashed changes
             </BaseCard>
           </div>
         </div>
 
         <!-- Step 2: Content Creation (shown after restaurant is selected) -->
         <div v-else class="content-creation-view">
-          <!-- Selected Restaurant Header with Back Button -->
+          <!-- Selected Restaurant Header with Back Button and Mode Toggle -->
           <BaseCard variant="glass-intense" class="selected-restaurant-header">
             <div class="header-content">
-              <div class="selected-restaurant-info">
-                <div v-if="selectedRestaurant.brand_dna?.logo_url" class="header-logo">
-                  <img :src="selectedRestaurant.brand_dna.logo_url" :alt="selectedRestaurant.name" />
-                </div>
-                <div>
-                  <h3 class="header-restaurant-name">{{ selectedRestaurant.name }}</h3>
-                  <p class="header-restaurant-address">{{ selectedRestaurant.address }}</p>
+              <div class="header-left">
+                <button class="back-button" @click="clearRestaurantSelection" title="Back to restaurant selection">
+                  ← Back
+                </button>
+                <div class="selected-restaurant-info">
+                  <div v-if="selectedRestaurant.brand_dna?.logo_url" class="header-logo">
+                    <img :src="selectedRestaurant.brand_dna.logo_url" :alt="selectedRestaurant.name" />
+                  </div>
+                  <div>
+                    <h3 class="header-restaurant-name">{{ selectedRestaurant.name }}</h3>
+                    <p class="header-restaurant-address">{{ selectedRestaurant.address }}</p>
+                  </div>
                 </div>
               </div>
+<<<<<<< Updated upstream
               <BaseButton variant="ghost" size="small" @click="clearRestaurantSelection">
                 {{ $t('playground.back') }}
               </BaseButton>
+=======
+              <ModeToggle class="header-mode-toggle" />
+>>>>>>> Stashed changes
             </div>
           </BaseCard>
 
+          <!-- Easy Mode Creation -->
+          <EasyModeCreation
+            v-if="preferencesStore.creationMode === 'easy'"
+            :restaurant="selectedRestaurant"
+            :menu-items="menuItems"
+            :generating="easyModeGenerating"
+            @back="handleEasyModeBack"
+            @generate="handleEasyModeGenerate"
+          />
+
+          <!-- Advanced Mode (existing flow) -->
+          <div v-else class="advanced-mode-content">
           <!-- Platform Selection - Appears First -->
           <BaseCard variant="glass" class="platform-selection-card">
             <h3 class="card-title">{{ $t('playground.selectPlatform') }}</h3>
@@ -600,9 +625,32 @@
             </div>
           </div>
         </BaseCard>
+          </div>
+          <!-- End Advanced Mode Content -->
         </div>
+        <!-- End Content Creation View -->
       </div>
+      <!-- End Playground Content -->
     </div>
+    <!-- End Container -->
+
+    <!-- Facebook Onboarding Modal -->
+    <FacebookOnboardingModal
+      v-model="showFacebookOnboardingModal"
+      @update:modelValue="handleFacebookOnboardingClose"
+      @connected="handleFacebookOnboardingComplete"
+    />
+
+    <!-- Generation Result Modal -->
+    <GenerationResultModal
+      v-model="showResultModal"
+      :image-url="generatedImageUrl"
+      :post-content="generatedPostContent"
+      @save="handleResultSave"
+      @publish="handleResultPublish"
+      @schedule="handleResultSchedule"
+      @connect-facebook="handleResultConnectFacebook"
+    />
 
     <!-- Schedule Modal -->
     <ScheduleModal
@@ -994,6 +1042,7 @@ import { useRouter, useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '../stores/auth'
 import { useFacebookStore } from '../stores/facebook'
+import { usePreferencesStore } from '../stores/preferences'
 import { useSocialAccounts } from '../composables/useSocialAccounts'
 import GradientBackground from '../components/GradientBackground.vue'
 import BaseCard from '../components/BaseCard.vue'
@@ -1001,6 +1050,10 @@ import BaseButton from '../components/BaseButton.vue'
 import BaseAlert from '../components/BaseAlert.vue'
 import PlatformSelectionCard from '../components/PlatformSelectionCard.vue'
 import ScheduleModal from '../components/ScheduleModal.vue'
+import EasyModeCreation from '../components/EasyModeCreation.vue'
+import FacebookOnboardingModal from '../components/FacebookOnboardingModal.vue'
+import GenerationResultModal from '../components/GenerationResultModal.vue'
+import ModeToggle from '../components/ModeToggle.vue'
 import { restaurantService, type SavedRestaurant } from '../services/restaurantService'
 import { api } from '../services/api'
 
@@ -1008,6 +1061,7 @@ const router = useRouter()
 const route = useRoute()
 const authStore = useAuthStore()
 const facebookStore = useFacebookStore()
+const preferencesStore = usePreferencesStore()
 const socialAccounts = useSocialAccounts()
 const { t } = useI18n()
 
@@ -1076,6 +1130,14 @@ const showScheduleModal = ref(false)
 const favoriteToSchedule = ref<any>(null)
 const preselectedDate = ref<string | null>(null)
 const publishingToFacebook = ref(false)
+
+// Facebook Onboarding Modal
+const showFacebookOnboardingModal = ref(false)
+const pendingAction = ref<'publish' | 'schedule' | null>(null)
+
+// Generation Result Modal (Easy Mode)
+const showResultModal = ref(false)
+const easyModeGenerating = ref(false)
 
 const canGenerate = computed(() => {
   return true // Disabled credit limits for playground
@@ -2154,6 +2216,142 @@ const handleScheduled = (scheduledPost: any) => {
   showMessage(`Post scheduled for ${scheduledPost.scheduled_date}!`, 'success')
   showScheduleModal.value = false
 }
+
+// Easy Mode Functions
+const handleEasyModeGenerate = async (data: {
+  menuItem: any | null
+  context: string
+  styleTemplate: string
+  includeLogo: boolean
+  uploadedImage: File | null
+}) => {
+  try {
+    easyModeGenerating.value = true
+
+    // Set up the generation with values from Easy Mode
+    if (data.menuItem) {
+      selectedMenuItems.value = [data.menuItem]
+    }
+    promptContext.value = data.context
+
+    // Apply style template settings (mapped to existing sticker/prompt styles)
+    const styleMapping = {
+      vibrant: { stickerStyle: 'bold' as const, stickerPosition: 'top-right' as const },
+      elegant: { stickerStyle: 'outlined' as const, stickerPosition: 'top-left' as const },
+      minimal: { stickerStyle: 'bold' as const, stickerPosition: 'center' as const },
+      rustic: { stickerStyle: 'ribbon' as const, stickerPosition: 'bottom-left' as const },
+      luxury: { stickerStyle: 'badge' as const, stickerPosition: 'top-right' as const }
+    }
+
+    const selectedStyle = styleMapping[data.styleTemplate as keyof typeof styleMapping] || styleMapping.vibrant
+
+    stickerStyle.value = selectedStyle.stickerStyle as any
+    stickerPosition.value = selectedStyle.stickerPosition as any
+    includeLogo.value = data.includeLogo
+    logoPosition.value = 'bottom-right' // Default logo position
+
+    // Set facebook as default platform for post content generation
+    selectedPlatforms.value = ['facebook']
+
+    // Generate prompts
+    await generatePromptsFromSelection()
+
+    // Auto-select first image prompt
+    if (imagePrompts.value.length > 0) {
+      selectImagePrompt(0)
+
+      // Wait a tick for editablePrompt to update
+      await nextTick()
+
+      // Generate the image automatically
+      await generateImage()
+
+      // Generate post content (text, hashtags, CTA)
+      await generatePostContent('image')
+
+      // Show result modal when complete
+      easyModeGenerating.value = false
+      showResultModal.value = true
+    } else {
+      easyModeGenerating.value = false
+      showMessage('No prompts were generated', 'error')
+    }
+  } catch (error: any) {
+    easyModeGenerating.value = false
+    showMessage(error.message || 'Failed to generate content', 'error')
+  }
+}
+
+const handleEasyModeBack = () => {
+  clearRestaurantSelection()
+}
+
+// Facebook Onboarding Functions
+const checkFacebookConnectionAndProceed = (action: 'publish' | 'schedule') => {
+  if (facebookStore.connectedPages.length === 0 && !preferencesStore.hasSeenFacebookOnboarding) {
+    // Show onboarding modal
+    pendingAction.value = action
+    showFacebookOnboardingModal.value = true
+  } else {
+    // Proceed with action
+    if (action === 'publish') {
+      publishToFacebook()
+    } else if (action === 'schedule') {
+      openScheduleModal()
+    }
+  }
+}
+
+const handleFacebookOnboardingComplete = () => {
+  showFacebookOnboardingModal.value = false
+  preferencesStore.markFacebookOnboardingSeen()
+
+  // Execute pending action if user connected
+  if (facebookStore.connectedPages.length > 0 && pendingAction.value) {
+    if (pendingAction.value === 'publish') {
+      publishToFacebook()
+    } else if (pendingAction.value === 'schedule') {
+      openScheduleModal()
+    }
+  }
+
+  pendingAction.value = null
+}
+
+const handleFacebookOnboardingClose = () => {
+  showFacebookOnboardingModal.value = false
+  pendingAction.value = null
+}
+
+// Result Modal Functions
+const handleResultSave = async () => {
+  await saveToFavorites()
+  showResultModal.value = false
+}
+
+const handleResultPublish = () => {
+  showResultModal.value = false
+  checkFacebookConnectionAndProceed('publish')
+}
+
+const handleResultSchedule = () => {
+  showResultModal.value = false
+  checkFacebookConnectionAndProceed('schedule')
+}
+
+const handleResultConnectFacebook = async () => {
+  showResultModal.value = false
+  try {
+    await facebookStore.connectFacebook()
+    showMessage('Facebook connected successfully!', 'success')
+    // Reopen the result modal so user can publish/schedule
+    showResultModal.value = true
+  } catch (error: any) {
+    showMessage(error.message || 'Failed to connect Facebook', 'error')
+    // Reopen the result modal even on error so user can try again
+    showResultModal.value = true
+  }
+}
 </script>
 
 <style scoped>
@@ -2288,16 +2486,13 @@ const handleScheduled = (scheduledPost: any) => {
   transition: all 0.3s ease;
   display: flex;
   flex-direction: column;
+  cursor: pointer;
 }
 
 .restaurant-card:hover {
   transform: translateY(-4px);
   box-shadow: 0 8px 24px rgba(212, 175, 55, 0.2);
   border-color: rgba(212, 175, 55, 0.4);
-}
-
-.select-restaurant-btn {
-  margin-top: var(--space-lg);
 }
 
 .card-header {
@@ -2404,14 +2599,49 @@ const handleScheduled = (scheduledPost: any) => {
 
 .header-content {
   display: flex;
-  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-xl);
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
   gap: var(--space-lg);
+  flex: 1;
+}
+
+.back-button {
+  padding: var(--space-sm) var(--space-lg);
+  background: transparent;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  cursor: pointer;
+  transition: var(--transition-base);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.back-button:hover {
+  background: var(--bg-elevated);
+  border-color: var(--gold-primary);
+  color: var(--gold-primary);
+}
+
+.header-mode-toggle {
+  flex-shrink: 0;
 }
 
 .selected-restaurant-info {
   display: flex;
   align-items: center;
   gap: var(--space-lg);
+  flex: 1;
+  min-width: 0;
 }
 
 .header-logo {
@@ -2444,6 +2674,39 @@ const handleScheduled = (scheduledPost: any) => {
   font-size: var(--text-sm);
   color: var(--text-secondary);
   margin: 0;
+}
+
+/* Header Responsive */
+@media (max-width: 768px) {
+  .header-content {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--space-lg);
+  }
+
+  .header-left {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .back-button {
+    align-self: flex-start;
+  }
+
+  .header-mode-toggle {
+    align-self: center;
+  }
+
+  .selected-restaurant-info {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .header-logo {
+    width: 64px;
+    height: 64px;
+  }
 }
 
 .selector-card {

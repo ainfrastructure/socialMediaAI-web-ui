@@ -479,6 +479,13 @@
         </div>
       </div>
     </div>
+
+    <!-- Edit Scheduled Post Modal -->
+    <EditScheduledPostModal
+      v-model="showEditModal"
+      :post="postToEdit"
+      @save="handleSaveEdit"
+    />
   </div>
 </template>
 
@@ -490,6 +497,7 @@ import GradientBackground from '../components/GradientBackground.vue'
 import BaseCard from '../components/BaseCard.vue'
 import BaseButton from '../components/BaseButton.vue'
 import PickFavoriteModal from '../components/PickFavoriteModal.vue'
+import EditScheduledPostModal from '../components/EditScheduledPostModal.vue'
 import { api } from '../services/api'
 
 const router = useRouter()
@@ -506,6 +514,8 @@ const selectedDateForScheduling = ref<string | null>(null)
 const selectedCountry = ref('NO') // Norway as default
 const showPostDetailModal = ref(false)
 const selectedPostForDetail = ref<any>(null)
+const showEditModal = ref(false)
+const postToEdit = ref<any>(null)
 const viewMode = ref<'month' | 'week' | 'day'>('month')
 
 const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
@@ -926,7 +936,33 @@ const fetchHolidays = async () => {
 }
 
 const editScheduledPost = (post: any) => {
-  // TODO: Open edit modal
+  postToEdit.value = post
+  showEditModal.value = true
+  // Close detail modal if open
+  showPostDetailModal.value = false
+}
+
+const handleSaveEdit = async (updates: any) => {
+  if (!postToEdit.value) return
+
+  try {
+    loading.value = true
+    const response = await api.updateScheduledPost(postToEdit.value.id, updates)
+
+    if (response.success) {
+      // Refresh the scheduled posts
+      await fetchScheduledPosts()
+      showEditModal.value = false
+      postToEdit.value = null
+    } else {
+      throw new Error(response.error || 'Failed to update post')
+    }
+  } catch (error: any) {
+    console.error('Error updating post:', error)
+    alert(error.message || 'Failed to update post')
+  } finally {
+    loading.value = false
+  }
 }
 
 const cancelPost = async (postId: string) => {
