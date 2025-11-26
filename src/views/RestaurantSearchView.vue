@@ -1,111 +1,44 @@
 <template>
   <div class="restaurant-search-view">
     <div class="container">
-      <!-- Header -->
       <div class="header">
-        <h1 class="title">{{ $t('restaurantSearch.title') }}</h1>
+        <h1 class="title">Discover Restaurants</h1>
         <p class="subtitle">
-          {{ $t('restaurantSearch.subtitle') }}
+          Search and analyze restaurants using Google Places. Build your database with comprehensive insights.
         </p>
       </div>
 
-      <!-- Search Input -->
+      <!-- Search Input - Pill Style -->
       <div class="search-wrapper">
         <RestaurantAutocomplete
           v-model="selectedRestaurant"
           label=""
-          :placeholder="$t('restaurantSearch.searchPlaceholder')"
+          placeholder="Search restaurants by name or location..."
           autofocus
           @select="handleRestaurantSelect"
-          @dropdownOpen="isAutocompleteOpen = $event"
         />
+
       </div>
 
       <!-- Quick Overview Stats -->
-      <RestaurantQuickOverview
-        v-if="selectedRestaurant && placeDetails && !isAutocompleteOpen"
-        :place-details="placeDetails"
-        :menu-data="menuData"
-        :competitor-data="competitorData"
-        :social-media-data="socialMediaData"
-      />
+      <div v-if="selectedRestaurant && placeDetails" class="quick-overview-section">
+        <BaseCard variant="glass-intense">
+          <h3 class="quick-overview-title">Quick Overview</h3>
 
-      <!-- Restaurant Details Card -->
-      <RestaurantDetailsCard
-        v-if="selectedRestaurant && !isAutocompleteOpen"
-        :restaurant="selectedRestaurant"
-        :place-details="placeDetails"
-        :loading-details="loadingDetails"
-        :social-media-data="socialMediaData"
-        :loading-social-media="loadingSocialMedia"
-        :social-media-error="socialMediaError"
-        v-model:selected-photo-indices="selectedPhotoIndices"
-        v-model:upload-files="uploadFiles"
-        @upload-error="uploadError = $event"
-      />
+          <div class="stats-grid">
+              <div class="stat-item">
+                <div class="stat-icon">⭐</div>
+                <div class="stat-content">
+                  <div class="stat-label">Rating</div>
+                  <div class="stat-value">
+                    {{ placeDetails.rating || 'N/A' }}
+                    <span v-if="placeDetails.user_ratings_total" class="stat-subtext">
+                      ({{ placeDetails.user_ratings_total }} reviews)
+                    </span>
+                  </div>
+                </div>
+              </div>
 
-<<<<<<< Updated upstream
-      <!-- Brand DNA Card -->
-      <BrandDNACard
-        v-if="selectedRestaurant && !isAutocompleteOpen"
-        :brand-d-n-a="brandDNA"
-        :loading="loadingBrandDNA"
-        :error="brandDNAError"
-        :website-url="placeDetails?.website"
-      />
-
-      <!-- Reviews Section -->
-      <ReviewsSection
-        v-if="placeDetails && placeDetails.reviews && placeDetails.reviews.length > 0 && !isAutocompleteOpen"
-        :reviews="placeDetails.reviews"
-        v-model:current-page="reviewsPage"
-        :per-page="reviewsPerPage"
-      />
-
-      <!-- Competitors Section -->
-      <CompetitorsSection
-        v-if="selectedRestaurant && !isAutocompleteOpen"
-        :competitor-data="competitorData"
-        :loading="loadingCompetitors"
-        :error="competitorError"
-        v-model:current-page="competitorsPage"
-        :per-page="competitorsPerPage"
-      />
-
-      <!-- Menu Section -->
-      <MenuSection
-        v-if="selectedRestaurant && !isAutocompleteOpen"
-        :menu-data="menuData"
-        :loading="loadingMenu"
-        :error="menuError"
-        v-model:current-page="menuPage"
-        :per-page="menuItemsPerPage"
-      />
-
-      <!-- Save Actions Alerts -->
-      <div v-if="selectedRestaurant && !isAutocompleteOpen" class="actions-section">
-        <BaseAlert v-if="saveSuccess" type="success">
-          {{ saveSuccessMessage }}
-        </BaseAlert>
-
-        <BaseAlert v-if="saveError" type="error">
-          {{ saveError }}
-        </BaseAlert>
-      </div>
-    </div>
-
-    <!-- Sticky CTA Button -->
-    <StickyCTA
-      v-if="selectedRestaurant && placeDetails && !isAutocompleteOpen"
-      :visible="true"
-      :disabled="savingRestaurant || loadingDetails || loadingMenu || loadingCompetitors || loadingSocialMedia"
-      :loading="savingRestaurant"
-      :saved="isSaved"
-      :restaurant-name="selectedRestaurant.name"
-      @back="clearSelection"
-      @continue="saveAndContinue"
-    />
-=======
               <div v-if="placeDetails.opening_hours?.open_now !== undefined" class="stat-item">
                 <div class="stat-icon">{{ placeDetails.opening_hours.open_now ? '🟢' : '🔴' }}</div>
                 <div class="stat-content">
@@ -514,12 +447,11 @@
         </BaseButton>
       </div>
     </div>
->>>>>>> Stashed changes
 
     <!-- Progress Modal -->
     <ProgressModal
       v-model="showProgressModal"
-      :title="$t('restaurantSearch.savingRestaurant')"
+      title="Saving Restaurant"
       :progress="progressPercentage"
       :current-message="progressMessage"
       :steps="progressSteps"
@@ -529,37 +461,25 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
-import { useI18n } from 'vue-i18n'
+import BaseCard from '../components/BaseCard.vue'
+import BaseButton from '../components/BaseButton.vue'
 import BaseAlert from '../components/BaseAlert.vue'
-<<<<<<< Updated upstream
-import RestaurantAutocomplete from '../components/RestaurantAutocomplete.vue'
-import RestaurantQuickOverview from '../components/RestaurantQuickOverview.vue'
-import RestaurantDetailsCard from '../components/RestaurantDetailsCard.vue'
-import BrandDNACard from '../components/BrandDNACard.vue'
-import ReviewsSection from '../components/ReviewsSection.vue'
-import CompetitorsSection from '../components/CompetitorsSection.vue'
-import MenuSection from '../components/MenuSection.vue'
-import StickyCTA from '../components/StickyCTA.vue'
-=======
 import BasePagination from '../components/BasePagination.vue'
 import BaseTabNav from '../components/BaseTabNav.vue'
 import RestaurantAutocomplete from '../components/RestaurantAutocomplete.vue'
 import MenuItemCard from '../components/MenuItemCard.vue'
->>>>>>> Stashed changes
 import ProgressModal from '../components/ProgressModal.vue'
 import type { RestaurantSuggestion, PlaceDetails, CompetitorSearchResponse } from '../services/placesService'
 import { placesService } from '../services/placesService'
 import { menuService, type MenuData } from '../services/menuService'
 import { socialMediaService, type SocialMediaSearchResult } from '../services/socialMediaService'
-import { restaurantService } from '../services/restaurantService'
-import { api } from '../services/api'
+import { restaurantService, type UploadedImage } from '../services/restaurantService'
 
 const router = useRouter()
-const { t } = useI18n()
+import { api } from '../services/api'
 
-// Restaurant data
 const selectedRestaurant = ref<RestaurantSuggestion | null>(null)
 const placeDetails = ref<PlaceDetails | null>(null)
 const loadingDetails = ref(false)
@@ -580,19 +500,9 @@ const brandDNAError = ref<string | null>(null)
 const savingRestaurant = ref(false)
 const saveError = ref<string | null>(null)
 const saveSuccess = ref(false)
-const saveSuccessMessage = ref<string>(t('restaurantSearch.restaurantSaved'))
+const saveSuccessMessage = ref<string>('Restaurant saved to database successfully!')
 const isSaved = ref(false)
 
-<<<<<<< Updated upstream
-// Image selection and upload
-const selectedPhotoIndices = ref<number[]>([])
-const uploadFiles = ref<File[]>([])
-const uploadingImages = ref(false)
-const uploadError = ref<string | null>(null)
-
-// Autocomplete dropdown state
-const isAutocompleteOpen = ref(false)
-=======
 // Tab navigation
 const activeTab = ref<'about' | 'competitors' | 'menu'>('about')
 const tabs = [
@@ -600,39 +510,69 @@ const tabs = [
   { id: 'competitors', label: 'Competitors', icon: '🏪' },
   { id: 'menu', label: 'Menu', icon: '📋' }
 ]
->>>>>>> Stashed changes
 
 // Progress modal state
 const showProgressModal = ref(false)
 const progressPercentage = ref(0)
 const progressMessage = ref('')
 const progressSteps = ref<string[]>([
-  t('restaurantSearch.savingData'),
-  t('restaurantSearch.processingImages'),
-  t('restaurantSearch.analyzingMenu'),
-  t('restaurantSearch.finalizingSetup')
+  'Saving restaurant data',
+  'Processing images',
+  'Analyzing menu items',
+  'Finalizing setup'
 ])
 const currentProgressStep = ref(0)
 
-// Pagination
+// Pagination for reviews
 const reviewsPage = ref(1)
 const reviewsPerPage = 3
+
+const paginatedReviews = computed(() => {
+  if (!placeDetails.value?.reviews) return []
+  const start = (reviewsPage.value - 1) * reviewsPerPage
+  const end = start + reviewsPerPage
+  return placeDetails.value.reviews.slice(start, end)
+})
+
+const reviewsTotalPages = computed(() => {
+  if (!placeDetails.value?.reviews) return 0
+  return Math.ceil(placeDetails.value.reviews.length / reviewsPerPage)
+})
+
+// Pagination for menu items
 const menuPage = ref(1)
 const menuItemsPerPage = 9
+
+const paginatedMenuItems = computed(() => {
+  if (!menuData.value?.items) return []
+  const start = (menuPage.value - 1) * menuItemsPerPage
+  const end = start + menuItemsPerPage
+  return menuData.value.items.slice(start, end)
+})
+
+const menuTotalPages = computed(() => {
+  if (!menuData.value?.items) return 0
+  return Math.ceil(menuData.value.items.length / menuItemsPerPage)
+})
+
+// Pagination for competitors
 const competitorsPage = ref(1)
 const competitorsPerPage = 5
 
-// Scroll to top when pagination changes
-const scrollToTop = () => {
-  window.scrollTo({ top: 0, behavior: 'smooth' })
-}
+const paginatedCompetitors = computed(() => {
+  if (!competitorData.value?.competitors) return []
+  const start = (competitorsPage.value - 1) * competitorsPerPage
+  const end = start + competitorsPerPage
+  return competitorData.value.competitors.slice(start, end)
+})
 
-watch(reviewsPage, scrollToTop)
-watch(menuPage, scrollToTop)
-watch(competitorsPage, scrollToTop)
+const competitorsTotalPages = computed(() => {
+  if (!competitorData.value?.competitors) return 0
+  return Math.ceil(competitorData.value.competitors.length / competitorsPerPage)
+})
 
-// Restaurant selection handler
 const handleRestaurantSelect = async (restaurant: RestaurantSuggestion) => {
+
   // Clear previous data
   menuData.value = null
   menuError.value = null
@@ -646,7 +586,7 @@ const handleRestaurantSelect = async (restaurant: RestaurantSuggestion) => {
   saveError.value = null
   saveSuccess.value = false
   isSaved.value = false
-  reviewsPage.value = 1
+  reviewsPage.value = 1 // Reset to first page
   menuPage.value = 1
   competitorsPage.value = 1
   activeTab.value = 'about' // Reset to first tab
@@ -676,8 +616,8 @@ const fetchPlaceDetails = async (placeId: string) => {
     const details = await placesService.getPlaceDetails(placeId)
     placeDetails.value = details
   } catch (error: any) {
+
     // Don't show error to user, just log it
-    console.error('Failed to fetch place details:', error)
   } finally {
     loadingDetails.value = false
   }
@@ -688,14 +628,16 @@ const fetchMenu = async (placeId: string, restaurantName: string) => {
     loadingMenu.value = true
     menuError.value = null
 
+    // Pass placeId to automatically include address in search
     const data = await menuService.getRestaurantMenu(placeId, restaurantName)
     menuData.value = data
 
     if (!data || data.items.length === 0) {
-      menuError.value = t('restaurantSearch.noMenuFound')
+      menuError.value = 'No menu found for this restaurant'
     }
   } catch (error: any) {
-    menuError.value = error.message || t('restaurantSearch.menuNotAvailable')
+
+    menuError.value = error.message || 'Failed to fetch menu. The restaurant may not be available on Wolt or Foodora.'
   } finally {
     loadingMenu.value = false
   }
@@ -710,10 +652,11 @@ const fetchCompetitors = async (placeId: string) => {
     competitorData.value = data
 
     if (!data || data.competitors.length === 0) {
-      competitorError.value = t('restaurantSearch.noCompetitorsFound', { radius: 1 })
+      competitorError.value = 'No competitors found within 1 km'
     }
   } catch (error: any) {
-    competitorError.value = error.message || t('restaurantSearch.noCompetitorsFound', { radius: 1 })
+
+    competitorError.value = error.message || 'Failed to find competitors'
   } finally {
     loadingCompetitors.value = false
   }
@@ -728,10 +671,11 @@ const fetchSocialMedia = async (placeId: string) => {
     socialMediaData.value = data
 
     if (!data || data.searchDetails.totalFound === 0) {
-      socialMediaError.value = t('restaurantSearch.noSocialMediaFound')
+      socialMediaError.value = 'No social media profiles found'
     }
   } catch (error: any) {
-    socialMediaError.value = error.message || t('restaurantSearch.noSocialMediaFound')
+
+    socialMediaError.value = error.message || 'Failed to find social media profiles'
   } finally {
     loadingSocialMedia.value = false
   }
@@ -746,10 +690,12 @@ const fetchBrandDNA = async (website: string, placeId?: string) => {
 
     if (response.success && (response as any).brandDNA) {
       brandDNA.value = (response as any).brandDNA
+
     } else {
       brandDNAError.value = 'Could not extract brand DNA'
     }
   } catch (error: any) {
+
     brandDNAError.value = error.message || 'Failed to analyze brand DNA'
   } finally {
     loadingBrandDNA.value = false
@@ -799,6 +745,7 @@ const saveToDatabase = async () => {
     saveSuccess.value = false
 
     // Prepare restaurant data for saving
+    // Limit reviews to 5 as requested
     const reviews = placeDetails.value.reviews ? placeDetails.value.reviews.slice(0, 5) : null
 
     const restaurantData = {
@@ -831,68 +778,46 @@ const saveToDatabase = async () => {
     const result = await restaurantService.saveRestaurant(restaurantData)
 
     if (result.success) {
-<<<<<<< Updated upstream
-      saveSuccessMessage.value = result.message || t('restaurantSearch.restaurantSaved')
-
-      // If there are files to upload, upload them now
-      if (uploadFiles.value.length > 0) {
-        try {
-          uploadingImages.value = true
-          uploadError.value = null
-
-          const uploadResult = await restaurantService.uploadRestaurantImages(
-            selectedRestaurant.value.place_id,
-            uploadFiles.value
-          )
-
-          if (uploadResult.count > 0) {
-            saveSuccessMessage.value = `${saveSuccessMessage.value} ${t('restaurantSearch.imagesUploaded', { count: uploadResult.count })}`
-          }
-
-          uploadFiles.value = []
-        } catch (uploadErr: any) {
-          uploadError.value = uploadErr.message || t('restaurantSearch.failedToUpload')
-        } finally {
-          uploadingImages.value = false
-        }
-      }
-
-=======
       // Set success message from backend
       saveSuccessMessage.value = result.message || 'Restaurant saved to database successfully!'
->>>>>>> Stashed changes
       saveSuccess.value = true
       isSaved.value = true
+
     } else {
+      // Handle duplicate error (restaurant already saved)
       if (result.error && result.error.includes('already saved')) {
-        saveError.value = t('restaurantSearch.restaurantAlreadySaved')
+        saveError.value = 'This restaurant has already been saved'
         isSaved.value = true
       } else {
-        saveError.value = result.error || t('restaurantSearch.failedToSave')
+        saveError.value = result.error || 'Failed to save restaurant'
       }
     }
   } catch (error: any) {
-    saveError.value = error.message || t('restaurantSearch.failedToSave')
+
+    saveError.value = error.message || 'Failed to save restaurant'
   } finally {
     savingRestaurant.value = false
   }
 }
 
+// Simulate progress for better UX
 const simulateProgress = async () => {
+  // Reset progress state
   progressPercentage.value = 0
   currentProgressStep.value = 0
 
   const steps = [
-    { step: 0, message: t('restaurantSearch.savingData'), delay: 800, progress: 25 },
-    { step: 1, message: t('restaurantSearch.processingImages'), delay: 1200, progress: 50 },
-    { step: 2, message: t('restaurantSearch.analyzingMenu'), delay: 1000, progress: 75 },
-    { step: 3, message: t('restaurantSearch.finalizingSetup'), delay: 800, progress: 100 }
+    { step: 0, message: 'Saving restaurant data...', delay: 800, progress: 25 },
+    { step: 1, message: 'Processing images...', delay: 1200, progress: 50 },
+    { step: 2, message: 'Analyzing menu items...', delay: 1000, progress: 75 },
+    { step: 3, message: 'Finalizing setup...', delay: 800, progress: 100 }
   ]
 
   for (const stepConfig of steps) {
     currentProgressStep.value = stepConfig.step
     progressMessage.value = stepConfig.message
 
+    // Gradually increase progress
     const targetProgress = stepConfig.progress
     const currentProgress = progressPercentage.value
     const increment = (targetProgress - currentProgress) / 10
@@ -904,11 +829,12 @@ const simulateProgress = async () => {
   }
 }
 
+// Save and navigate to playground with restaurant preselected
 const saveAndContinue = async () => {
   if (isSaved.value) {
     // Already saved, show quick animation then navigate
     showProgressModal.value = true
-    progressMessage.value = t('restaurantSearch.redirecting')
+    progressMessage.value = 'Redirecting to content creation...'
     progressPercentage.value = 100
     currentProgressStep.value = 3
 
@@ -948,6 +874,19 @@ const saveAndContinue = async () => {
     }
   }
 }
+
+const formatType = (type: string): string => {
+  return type
+    .split('_')
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ')
+}
+
+const handleLogoError = (event: Event) => {
+  const img = event.target as HTMLImageElement
+  img.style.display = 'none'
+
+}
 </script>
 
 <style scoped>
@@ -961,15 +900,23 @@ const saveAndContinue = async () => {
   max-width: var(--max-width-lg);
   margin: 0 auto;
   padding-bottom: 120px; /* Space for sticky CTA button */
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2xl); /* Add spacing between all sections */
 }
 
 .header {
   text-align: center;
-  margin-bottom: var(--space-3xl);
+  margin-bottom: var(--space-4xl);
   animation: fadeInUp 0.6s var(--ease-smooth);
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .title {
@@ -988,9 +935,6 @@ const saveAndContinue = async () => {
   color: var(--text-secondary);
   margin: 0;
   line-height: var(--leading-normal);
-<<<<<<< Updated upstream
-  max-width: 600px;
-=======
 }
 
 /* Search Wrapper - Pill Style */
@@ -2736,61 +2680,43 @@ const saveAndContinue = async () => {
 
 .sticky-cta-content {
   max-width: var(--max-width-lg);
->>>>>>> Stashed changes
   margin: 0 auto;
+  display: flex;
+  gap: var(--space-lg);
+  align-items: center;
 }
 
-.search-wrapper {
-  width: 100%;
-  animation: fadeInUp 0.6s var(--ease-smooth) 0.1s both;
+.back-button {
+  flex-shrink: 0;
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-md);
+  background: var(--bg-secondary);
+  border: var(--border-width) solid var(--border-color);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: var(--transition-base);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.search-wrapper :deep(input) {
-  font-size: var(--text-2xl);
-  font-weight: var(--font-medium);
-  padding: var(--space-2xl) var(--space-3xl);
-  height: auto;
-  min-height: 80px;
-  background: rgba(26, 26, 26, 0.95);
-  border: 2px solid rgba(212, 175, 55, 0.3);
-  box-shadow:
-    0 8px 32px rgba(0, 0, 0, 0.4),
-    0 0 24px rgba(212, 175, 55, 0.15),
-    inset 0 1px 0 rgba(212, 175, 55, 0.1);
-  transition: all var(--transition-base);
-}
-
-.search-wrapper :deep(input:focus) {
+.back-button:hover {
+  background: var(--bg-elevated);
   border-color: var(--gold-primary);
-  box-shadow:
-    0 12px 40px rgba(0, 0, 0, 0.5),
-    0 0 32px rgba(212, 175, 55, 0.25),
-    inset 0 1px 0 rgba(212, 175, 55, 0.2);
-  transform: translateY(-2px);
+  color: var(--gold-primary);
+  transform: translateX(-2px);
 }
 
-.search-wrapper :deep(input::placeholder) {
-  color: var(--text-muted);
-  font-weight: var(--font-normal);
+.back-button:active {
+  transform: translateX(-4px);
 }
 
-.search-wrapper :deep(.autocomplete-dropdown) {
-  font-size: var(--text-lg);
+.continue-button {
+  flex: 1;
 }
 
-.actions-section {
-  margin-top: var(--space-2xl);
-  max-width: var(--max-width-lg);
-  margin-left: auto;
-  margin-right: auto;
-}
-
-.actions-section > * + * {
-  margin-top: var(--space-md);
-}
-
-/* Animations */
-@keyframes fadeInUp {
+@keyframes slideUp {
   from {
     opacity: 0;
     transform: translateY(20px);
@@ -2801,30 +2727,26 @@ const saveAndContinue = async () => {
   }
 }
 
-/* Responsive */
 @media (max-width: 768px) {
-  .restaurant-search-view {
-    padding: var(--space-2xl) var(--space-lg);
+  .sticky-cta {
+    padding: var(--space-lg) var(--space-lg) var(--space-xl);
   }
 
-  .title {
-    font-size: var(--text-3xl);
-  }
-
-  .subtitle {
-    font-size: var(--text-base);
-  }
-
-  .container {
-    padding-bottom: 100px;
+  .back-button {
+    width: 44px;
+    height: 44px;
   }
 }
 
-/* Reduced motion */
+/* Reduce motion */
+
 @media (prefers-reduced-motion: reduce) {
-  .header,
-  .search-wrapper {
-    animation: none;
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }
 </style>
