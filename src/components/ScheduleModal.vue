@@ -89,6 +89,26 @@
             </div>
 
             <div class="form-group">
+              <label for="platform" class="form-label">
+                Platform <span class="required">*</span>
+              </label>
+              <select id="platform" v-model="formData.platform" class="form-select platform-select">
+                <option value="">Select a platform...</option>
+                <option value="facebook">👥 Facebook</option>
+                <option value="instagram">📷 Instagram</option>
+                <option value="tiktok">🎵 TikTok</option>
+                <option value="twitter">🐦 Twitter/X</option>
+                <option value="linkedin">💼 LinkedIn</option>
+              </select>
+              <p v-if="!formData.platform" class="platform-hint error">
+                ⚠️ Please select a platform to publish to
+              </p>
+              <p v-else-if="formData.platform !== 'facebook'" class="platform-hint warning">
+                ⚠️ Only Facebook is currently supported. Other platforms coming soon.
+              </p>
+            </div>
+
+            <div class="form-group">
               <label for="notes" class="form-label">Notes (Optional)</label>
               <textarea
                 id="notes"
@@ -150,6 +170,7 @@ const formData = ref({
   scheduled_time: '',
   timezone: defaultTimezone,
   notes: '',
+  platform: '',
 })
 
 const scheduling = ref(false)
@@ -189,6 +210,7 @@ const timezoneOptions = [
   { value: 'America/Los_Angeles', label: 'Pacific Time (PT)' },
   { value: 'Europe/London', label: 'London (GMT/BST)' },
   { value: 'Europe/Paris', label: 'Paris (CET/CEST)' },
+  { value: 'Europe/Oslo', label: 'Oslo (CET/CEST)' },
   { value: 'Asia/Tokyo', label: 'Tokyo (JST)' },
   { value: 'Asia/Dubai', label: 'Dubai (GST)' },
   { value: 'Australia/Sydney', label: 'Sydney (AEDT/AEST)' },
@@ -227,6 +249,7 @@ watch(() => props.modelValue, (newValue) => {
       scheduled_time: '12:00', // Set initial value
       timezone: (userTimezone || 'UTC') as string,
       notes: '',
+      platform: props.favoritePost?.platform || '', // Pre-fill from favorite if available
     }
 
     error.value = ''
@@ -256,6 +279,18 @@ const handleSchedule = async () => {
     return
   }
 
+  if (!formData.value.platform) {
+    error.value = 'Please select a platform'
+
+    return
+  }
+
+  if (formData.value.platform !== 'facebook') {
+    error.value = 'Only Facebook is currently supported. Other platforms coming soon.'
+
+    return
+  }
+
   try {
     scheduling.value = true
     error.value = ''
@@ -266,6 +301,7 @@ const handleSchedule = async () => {
       scheduled_time: formData.value.scheduled_time || undefined,
       timezone: formData.value.timezone,
       notes: formData.value.notes || undefined,
+      platform: formData.value.platform,
     }
 
     const response = await api.schedulePost(scheduleData)
@@ -531,6 +567,29 @@ const truncateText = (text: string, maxLength: number): string => {
   font-size: var(--text-sm);
   color: var(--text-secondary);
   font-weight: var(--font-medium);
+}
+
+/* Platform Styles */
+.platform-select {
+  cursor: pointer;
+  font-size: var(--text-base);
+}
+
+.platform-hint {
+  margin: 0;
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.platform-hint.error {
+  color: #ef4444;
+}
+
+.platform-hint.warning {
+  color: #f59e0b;
 }
 
 /* Timezone Styles */

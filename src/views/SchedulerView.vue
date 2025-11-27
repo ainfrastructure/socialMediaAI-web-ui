@@ -148,7 +148,7 @@
                 <div
                   v-for="post in day.posts"
                   :key="post.id"
-                  class="day-post-card"
+                  :class="['day-post-card', post.status ? `status-${post.status}` : '']"
                   @click.stop="viewPostDetail(post)"
                 >
                   <!-- Thumbnail Section -->
@@ -202,6 +202,10 @@
                     <div v-if="post.restaurant_name" class="post-card-restaurant">
                       🏪 {{ post.restaurant_name }}
                     </div>
+                    <!-- Error Message (if failed) -->
+                    <div v-if="post.status === 'failed' && post.error_message" class="post-card-error">
+                      ⚠️ {{ truncateText(post.error_message, 80) }}
+                    </div>
                     <div class="post-card-footer">
                       <span class="post-card-timing">{{ getTimeRemaining(post) }}</span>
                     </div>
@@ -214,7 +218,7 @@
                 <div
                   v-for="post in day.posts.slice(0, 3)"
                   :key="post.id"
-                  :class="['post-indicator', `platform-${post.platform}`]"
+                  :class="['post-indicator', post.status ? `status-${post.status}` : `platform-${post.platform}`]"
                   :title="`${formatTime(post.scheduled_time) || $t('scheduler.noTime')} - ${post.post_text || $t('scheduler.scheduledPosts')}`"
                 >
                   {{ getContentTypeEmoji(post.content_type) }}
@@ -270,7 +274,7 @@
         </div>
 
         <div class="posts-list">
-          <div v-for="post in selectedDay.posts" :key="post.id" class="scheduled-post-card">
+          <div v-for="post in selectedDay.posts" :key="post.id" :class="['scheduled-post-card', post.status ? `status-${post.status}` : '']">
             <div class="post-media" @click="viewPostDetail(post)">
               <img
                 v-if="post.content_type === 'image' && post.media_url"
@@ -308,14 +312,23 @@
                     {{ post.timezone }}
                   </span>
                 </div>
-                <span v-if="post.platform" :class="['post-platform', `platform-${post.platform}`]">
+                <!-- Show published badge on top right if published, otherwise show platform -->
+                <span v-if="post.status === 'published'" class="published-badge-compact">
+                  ✅ Posted
+                </span>
+                <span v-else-if="post.platform" :class="['post-platform', `platform-${post.platform}`]">
                   {{ post.platform }}
                 </span>
               </div>
 
-              <!-- Time remaining indicator -->
-              <div class="time-remaining">
+              <!-- Time remaining indicator (only for non-published posts) -->
+              <div v-if="post.status !== 'published'" class="time-remaining">
                 {{ getTimeRemaining(post) }}
+              </div>
+
+              <!-- Published time (for published posts) -->
+              <div v-else class="time-remaining published-info">
+                {{ getPlatformIcon(post.platform) }} {{ capitalizeFirst(post.platform) }} • {{ formatPublishedDate(post.published_at) }}
               </div>
 
               <p v-if="post.post_text" class="post-text">
@@ -336,7 +349,17 @@
                 </span>
               </div>
 
-              <div class="post-actions">
+              <!-- Error Message (if failed) -->
+              <div v-if="post.status === 'failed' && post.error_message" class="post-error">
+                <div class="error-icon">⚠️</div>
+                <div class="error-content">
+                  <div class="error-title">Publishing Failed</div>
+                  <div class="error-message">{{ post.error_message }}</div>
+                </div>
+              </div>
+
+              <!-- Actions (only for scheduled/failed posts, not published) -->
+              <div v-if="post.status !== 'published'" class="post-actions">
                 <BaseButton variant="ghost" size="small" @click="editScheduledPost(post)">
                   ✏️ {{ $t('scheduler.edit') }}
                 </BaseButton>
@@ -458,8 +481,33 @@
               <div class="info-value post-caption">{{ selectedPostForDetail.post_text }}</div>
             </div>
 
-            <!-- Actions -->
-            <div class="modal-actions">
+            <!-- Error Message (if failed) -->
+            <div v-if="selectedPostForDetail.status === 'failed' && selectedPostForDetail.error_message" class="info-section error-section">
+              <div class="info-label error-label">⚠️ Error Details</div>
+              <div class="info-value error-text">
+                {{ selectedPostForDetail.error_message }}
+              </div>
+            </div>
+
+            <!-- Published Info -->
+            <div v-if="selectedPostForDetail.status === 'published'" class="info-section published-section">
+              <div class="published-badge-large">
+                ✅ Successfully Posted
+              </div>
+              <div class="published-details-large">
+                <div v-if="selectedPostForDetail.published_at" class="published-info-item">
+                  <span class="published-info-label">📅 Published:</span>
+                  <span class="published-info-value">{{ formatPublishedDate(selectedPostForDetail.published_at) }}</span>
+                </div>
+                <div v-if="selectedPostForDetail.platform" class="published-info-item">
+                  <span class="published-info-label">📱 Platform:</span>
+                  <span class="published-info-value">{{ getPlatformIcon(selectedPostForDetail.platform) }} {{ capitalizeFirst(selectedPostForDetail.platform) }}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Actions (only for scheduled/failed posts) -->
+            <div v-if="selectedPostForDetail.status !== 'published'" class="modal-actions">
               <BaseButton
                 variant="ghost"
                 size="medium"
@@ -486,6 +534,26 @@
       :post="postToEdit"
       @save="handleSaveEdit"
     />
+
+    <!-- Confirmation Modal -->
+    <ConfirmModal
+      v-model="showConfirmModal"
+      :title="confirmModalConfig.title"
+      :message="confirmModalConfig.message"
+      :confirm-text="confirmModalConfig.confirmText"
+      :cancel-text="confirmModalConfig.cancelText"
+      :type="confirmModalConfig.type"
+      :loading="cancelLoading"
+      @confirm="confirmModalConfig.onConfirm"
+    />
+
+    <!-- Toast Notification -->
+    <Toast
+      v-model="showToast"
+      :message="toastMessage"
+      :type="toastType"
+      :duration="4000"
+    />
   </div>
 </template>
 
@@ -499,6 +567,8 @@ import BaseCard from '../components/BaseCard.vue'
 import BaseButton from '../components/BaseButton.vue'
 import PickFavoriteModal from '../components/PickFavoriteModal.vue'
 import EditScheduledPostModal from '../components/EditScheduledPostModal.vue'
+import Toast from '../components/Toast.vue'
+import ConfirmModal from '../components/ConfirmModal.vue'
 import { api } from '../services/api'
 
 const router = useRouter()
@@ -517,6 +587,22 @@ const showPostDetailModal = ref(false)
 const selectedPostForDetail = ref<any>(null)
 const showEditModal = ref(false)
 const postToEdit = ref<any>(null)
+
+// Toast and confirmation state
+const showToast = ref(false)
+const toastMessage = ref('')
+const toastType = ref<'success' | 'error' | 'info' | 'warning'>('info')
+const showConfirmModal = ref(false)
+const confirmModalConfig = ref({
+  title: '',
+  message: '',
+  confirmText: '',
+  cancelText: '',
+  type: 'info' as 'info' | 'warning' | 'danger' | 'success',
+  onConfirm: () => {},
+})
+const cancelLoading = ref(false)
+const postIdToCancel = ref<string | null>(null)
 const viewMode = ref<'month' | 'week' | 'day'>('month')
 
 const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
@@ -784,6 +870,60 @@ const formatTime = (time: string | null) => {
   return `${displayHour}:${minutes} ${ampm}`
 }
 
+const formatPublishedDate = (dateString: string) => {
+  const date = new Date(dateString)
+  const now = new Date()
+  const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000)
+
+  // Less than a minute
+  if (diffInSeconds < 60) {
+    return 'Just now'
+  }
+
+  // Less than an hour
+  if (diffInSeconds < 3600) {
+    const minutes = Math.floor(diffInSeconds / 60)
+    return `${minutes} minute${minutes > 1 ? 's' : ''} ago`
+  }
+
+  // Less than a day
+  if (diffInSeconds < 86400) {
+    const hours = Math.floor(diffInSeconds / 3600)
+    return `${hours} hour${hours > 1 ? 's' : ''} ago`
+  }
+
+  // Less than a week
+  if (diffInSeconds < 604800) {
+    const days = Math.floor(diffInSeconds / 86400)
+    return `${days} day${days > 1 ? 's' : ''} ago`
+  }
+
+  // Format as date
+  return date.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined,
+    hour: '2-digit',
+    minute: '2-digit'
+  })
+}
+
+const getPlatformIcon = (platform: string) => {
+  const icons: Record<string, string> = {
+    facebook: '👥',
+    instagram: '📷',
+    tiktok: '🎵',
+    twitter: '🐦',
+    linkedin: '💼'
+  }
+  return icons[platform.toLowerCase()] || '📱'
+}
+
+const capitalizeFirst = (str: string) => {
+  if (!str) return ''
+  return str.charAt(0).toUpperCase() + str.slice(1)
+}
+
 const getTimeRemaining = (post: any) => {
   if (!post.scheduled_date || !post.scheduled_time) {
     return '⏱️ No time specified'
@@ -974,34 +1114,122 @@ const handleSaveEdit = async (updates: any) => {
   }
 }
 
-const cancelPost = async (postId: string) => {
-  if (!confirm(t('scheduler.confirmCancel'))) {
-    return
+const showCancelConfirmation = (postId: string) => {
+  postIdToCancel.value = postId
+  confirmModalConfig.value = {
+    title: 'Cancel Scheduled Post',
+    message: 'Are you sure you want to cancel this scheduled post? This action cannot be undone.',
+    confirmText: 'Yes, Cancel Post',
+    cancelText: 'Keep Post',
+    type: 'danger',
+    onConfirm: confirmCancelPost,
   }
-
-  try {
-    const response = await api.cancelScheduledPost(postId)
-
-    if (response.success) {
-      await fetchScheduledPosts()
-      selectedDay.value = null
-    }
-  } catch (error) {}
+  showConfirmModal.value = true
 }
 
+const confirmCancelPost = async () => {
+  if (!postIdToCancel.value) return
+
+  cancelLoading.value = true
+
+  try {
+    const response = await api.cancelScheduledPost(postIdToCancel.value)
+
+    if (response.success) {
+      // Keep the currently selected day to reload its posts
+      const currentSelectedDay = selectedDay.value
+
+      // Refresh posts
+      await fetchScheduledPosts()
+
+      // Re-select the same day if it was selected
+      if (currentSelectedDay) {
+        const dateString = currentSelectedDay.date.toISOString().split('T')[0]
+        const year = currentSelectedDay.date.getFullYear()
+        const month = String(currentSelectedDay.date.getMonth() + 1).padStart(2, '0')
+        const day = String(currentSelectedDay.date.getDate()).padStart(2, '0')
+        const formattedDate = `${year}-${month}-${day}`
+
+        // Find and re-select the day
+        const updatedDay = displayedCalendarDays.value.find(
+          (d: any) => {
+            const dYear = d.date.getFullYear()
+            const dMonth = String(d.date.getMonth() + 1).padStart(2, '0')
+            const dDay = String(d.date.getDate()).padStart(2, '0')
+            return `${dYear}-${dMonth}-${dDay}` === formattedDate
+          }
+        )
+
+        if (updatedDay) {
+          selectedDay.value = updatedDay
+        }
+      }
+
+      // Show success toast
+      toastMessage.value = 'Post canceled successfully'
+      toastType.value = 'success'
+      showToast.value = true
+
+      // Close the confirm modal
+      showConfirmModal.value = false
+      postIdToCancel.value = null
+    } else {
+      throw new Error(response.error || 'Failed to cancel post')
+    }
+  } catch (error: any) {
+    toastMessage.value = error.message || 'Failed to cancel post'
+    toastType.value = 'error'
+    showToast.value = true
+  } finally {
+    cancelLoading.value = false
+  }
+}
+
+const cancelPost = showCancelConfirmation
+
 const createNewPost = (day: any) => {
-  const dateString = day.date.toISOString().split('T')[0]
+  // Use local date string to avoid timezone shifts
+  const year = day.date.getFullYear()
+  const month = String(day.date.getMonth() + 1).padStart(2, '0')
+  const dayNum = String(day.date.getDate()).padStart(2, '0')
+  const dateString = `${year}-${month}-${dayNum}`
   router.push(`/playground?scheduleDate=${dateString}`)
 }
 
 const pickFavoriteForDate = (day: any) => {
-  const dateString = day.date.toISOString().split('T')[0]
+  // Use local date string to avoid timezone shifts
+  const year = day.date.getFullYear()
+  const month = String(day.date.getMonth() + 1).padStart(2, '0')
+  const dayNum = String(day.date.getDate()).padStart(2, '0')
+  const dateString = `${year}-${month}-${dayNum}`
   selectedDateForScheduling.value = dateString
   showPickFavoriteModal.value = true
 }
 
 const handleFavoriteScheduled = async () => {
+  // Keep the currently selected day to reload its posts
+  const currentSelectedDate = selectedDateForScheduling.value
+
+  // Refresh posts
   await fetchScheduledPosts()
+
+  // Re-select the same day if it was selected to show the new post
+  if (currentSelectedDate) {
+    // Find and re-select the day from the updated calendar data
+    const updatedDay = displayedCalendarDays.value.find(
+      (d: any) => {
+        const dYear = d.date.getFullYear()
+        const dMonth = String(d.date.getMonth() + 1).padStart(2, '0')
+        const dDay = String(d.date.getDate()).padStart(2, '0')
+        return `${dYear}-${dMonth}-${dDay}` === currentSelectedDate
+      }
+    )
+
+    if (updatedDay) {
+      selectedDay.value = updatedDay
+    }
+  }
+
   showPickFavoriteModal.value = false
   selectedDateForScheduling.value = null
 }
@@ -1306,6 +1534,7 @@ onMounted(async () => {
   padding: var(--space-lg);
   cursor: pointer;
   transition: var(--transition-base);
+  border-left-width: 4px;
 }
 
 .day-post-card:hover {
@@ -1313,6 +1542,19 @@ onMounted(async () => {
   border-color: rgba(212, 175, 55, 0.5);
   transform: translateX(4px);
   box-shadow: 0 4px 12px rgba(212, 175, 55, 0.2);
+}
+
+/* Status-based border colors for day post cards */
+.day-post-card.status-scheduled {
+  border-left-color: #3b82f6;
+}
+
+.day-post-card.status-published {
+  border-left-color: #22c55e;
+}
+
+.day-post-card.status-failed {
+  border-left-color: #ef4444;
 }
 
 .post-card-thumbnail {
@@ -1437,10 +1679,16 @@ onMounted(async () => {
   border: 1px solid rgba(59, 130, 246, 0.4);
 }
 
-.post-card-status.status-posted {
+.post-card-status.status-published {
   background: rgba(34, 197, 94, 0.2);
   color: #22c55e;
   border: 1px solid rgba(34, 197, 94, 0.4);
+}
+
+.post-card-status.status-failed {
+  background: rgba(239, 68, 68, 0.2);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.4);
 }
 
 .post-card-text {
@@ -1684,6 +1932,22 @@ onMounted(async () => {
   border-left: 3px solid #1da1f2;
 }
 
+/* Status-based coloring for post indicators (overrides platform colors) */
+.post-indicator.status-scheduled {
+  background: rgba(59, 130, 246, 0.2);
+  border-left: 3px solid #3b82f6;
+}
+
+.post-indicator.status-published {
+  background: rgba(34, 197, 94, 0.2);
+  border-left: 3px solid #22c55e;
+}
+
+.post-indicator.status-failed {
+  background: rgba(239, 68, 68, 0.2);
+  border-left: 3px solid #ef4444;
+}
+
 .more-posts {
   font-size: 0.75rem;
   color: var(--gold-primary);
@@ -1808,11 +2072,25 @@ onMounted(async () => {
   border-radius: var(--radius-lg);
   padding: 1.5rem;
   transition: all 0.2s ease;
+  border-left-width: 4px;
 }
 
 .scheduled-post-card:hover {
   border-color: rgba(212, 175, 55, 0.5);
   background: rgba(0, 0, 0, 0.4);
+}
+
+/* Status-based border colors for scheduled post cards */
+.scheduled-post-card.status-scheduled {
+  border-left-color: #3b82f6;
+}
+
+.scheduled-post-card.status-published {
+  border-left-color: #22c55e;
+}
+
+.scheduled-post-card.status-failed {
+  border-left-color: #ef4444;
 }
 
 .post-media {
@@ -1984,7 +2262,7 @@ onMounted(async () => {
   border: 1px solid rgba(59, 130, 246, 0.3);
 }
 
-.status-badge.status-posted {
+.status-badge.status-published {
   background: rgba(34, 197, 94, 0.2);
   color: #22c55e;
   border: 1px solid rgba(34, 197, 94, 0.3);
@@ -2000,6 +2278,92 @@ onMounted(async () => {
   display: flex;
   gap: 0.75rem;
   margin-top: 0.5rem;
+}
+
+/* Published Post Styles */
+.published-badge-compact {
+  padding: var(--space-xs) var(--space-md);
+  background: rgba(34, 197, 94, 0.15);
+  border: 1px solid rgba(34, 197, 94, 0.4);
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  color: #22c55e;
+  white-space: nowrap;
+}
+
+.published-info {
+  color: var(--gold-primary) !important;
+  font-weight: var(--font-medium);
+}
+
+/* Old full-width published styles (keeping for modal if needed) */
+.post-published {
+  margin-top: var(--space-md);
+  padding: var(--space-md);
+  background: rgba(34, 197, 94, 0.1);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  border-radius: var(--radius-md);
+}
+
+.published-badge {
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  color: #22c55e;
+  margin-bottom: var(--space-sm);
+}
+
+.published-details {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.published-time,
+.published-platform {
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+}
+
+.published-section {
+  background: rgba(34, 197, 94, 0.1);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  border-radius: var(--radius-md);
+  padding: var(--space-lg);
+}
+
+.published-badge-large {
+  font-size: var(--text-lg);
+  font-weight: var(--font-bold);
+  color: #22c55e;
+  margin-bottom: var(--space-md);
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.published-details-large {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.published-info-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.published-info-label {
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  color: var(--text-primary);
+  min-width: 100px;
+}
+
+.published-info-value {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
 }
 
 .empty-detail-card {
@@ -2395,7 +2759,7 @@ onMounted(async () => {
   border: 1px solid rgba(59, 130, 246, 0.4);
 }
 
-.status-badge-large.status-posted {
+.status-badge-large.status-published {
   background: rgba(34, 197, 94, 0.2);
   color: #22c55e;
   border: 1px solid rgba(34, 197, 94, 0.4);
@@ -2458,5 +2822,73 @@ onMounted(async () => {
   .modal-actions {
     flex-direction: column;
   }
+}
+
+/* Error Message Styles */
+.post-error {
+  display: flex;
+  gap: var(--space-md);
+  padding: var(--space-md);
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-left: 3px solid #ef4444;
+  border-radius: var(--radius-md);
+  margin-top: var(--space-md);
+}
+
+.post-card-error {
+  padding: var(--space-sm) var(--space-md);
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-xs);
+  color: #ef4444;
+  margin-top: var(--space-sm);
+  line-height: var(--leading-normal);
+}
+
+.error-icon {
+  font-size: var(--text-2xl);
+  flex-shrink: 0;
+}
+
+.error-content {
+  flex: 1;
+}
+
+.error-title {
+  font-weight: var(--font-semibold);
+  color: #ef4444;
+  font-size: var(--text-sm);
+  margin-bottom: var(--space-xs);
+}
+
+.error-message {
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  line-height: var(--leading-normal);
+}
+
+/* Error Section in Modal */
+.error-section {
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-left: 3px solid #ef4444;
+  border-radius: var(--radius-md);
+  padding: var(--space-lg);
+}
+
+.error-label {
+  color: #ef4444 !important;
+  font-weight: var(--font-semibold);
+}
+
+.error-text {
+  color: var(--text-secondary);
+  background: rgba(0, 0, 0, 0.3);
+  padding: var(--space-md);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-body);
+  line-height: var(--leading-normal);
 }
 </style>

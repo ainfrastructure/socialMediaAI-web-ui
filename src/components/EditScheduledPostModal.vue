@@ -27,6 +27,7 @@ const hours = ref('12')
 const minutes = ref('00')
 const ampm = ref('AM')
 const timezone = ref(defaultTimezone)
+const platform = ref('')
 const notes = ref('')
 const error = ref('')
 const saving = ref(false)
@@ -101,6 +102,10 @@ const populateForm = (post: any) => {
     timezone.value = post.timezone
   }
 
+  if (post.platform) {
+    platform.value = post.platform
+  }
+
   if (post.notes) {
     notes.value = post.notes
   }
@@ -140,6 +145,16 @@ const saveChanges = async () => {
     return
   }
 
+  if (!platform.value) {
+    error.value = 'Please select a platform'
+    return
+  }
+
+  if (platform.value !== 'facebook') {
+    error.value = 'Only Facebook is currently supported. Other platforms coming soon.'
+    return
+  }
+
   saving.value = true
 
   try {
@@ -147,6 +162,7 @@ const saveChanges = async () => {
       scheduled_date: scheduledDate.value,
       scheduled_time: get24HourTime(),
       timezone: timezone.value,
+      platform: platform.value,
       notes: notes.value || undefined
     }
 
@@ -266,6 +282,25 @@ const formatDisplayDate = (dateStr: string) => {
             <div class="timezone-hint">
               Detected: {{ detectedTimezone.replace(/_/g, ' ') }}
             </div>
+          </div>
+
+          <!-- Platform Selection -->
+          <div class="form-group">
+            <label class="form-label">📱 Platform <span class="required">*</span></label>
+            <select v-model="platform" class="form-input platform-select">
+              <option value="">Select a platform...</option>
+              <option value="facebook">👥 Facebook</option>
+              <option value="instagram">📷 Instagram</option>
+              <option value="tiktok">🎵 TikTok</option>
+              <option value="twitter">🐦 Twitter/X</option>
+              <option value="linkedin">💼 LinkedIn</option>
+            </select>
+            <p v-if="!platform" class="platform-hint error">
+              ⚠️ Please select a platform to publish to
+            </p>
+            <p v-else-if="platform !== 'facebook'" class="platform-hint warning">
+              ⚠️ Only Facebook is currently supported. Other platforms coming soon.
+            </p>
           </div>
 
           <!-- Notes -->
@@ -588,6 +623,32 @@ const formatDisplayDate = (dateStr: string) => {
   font-size: var(--text-xs);
   color: var(--text-muted);
   font-style: italic;
+}
+
+.platform-select {
+  cursor: pointer;
+}
+
+.platform-hint {
+  margin: 0;
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  margin-top: var(--space-xs);
+}
+
+.platform-hint.error {
+  color: #ef4444;
+}
+
+.platform-hint.warning {
+  color: #f59e0b;
+}
+
+.required {
+  color: #ef4444;
 }
 
 .modal-footer {

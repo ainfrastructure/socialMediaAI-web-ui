@@ -1768,6 +1768,15 @@ const generateImage = async () => {
     message.value = ''
     generatedImageUrl.value = ''
 
+    // Start post content generation in parallel (don't await)
+    // This will run simultaneously with image generation
+    let postContentPromise: Promise<void> | null = null
+    if (selectedPlatforms.value.length > 0 && selectedRestaurant.value) {
+      postContentPromise = generatePostContent('image').catch(error => {
+        console.error('Failed to generate post content:', error)
+      })
+    }
+
     // Prepare watermark if restaurant has logo and user wants it
     const watermark = (includeLogo.value && selectedRestaurant.value?.brand_dna?.logo_url)
       ? {
@@ -1864,13 +1873,8 @@ const generateImage = async () => {
     // Refresh usage stats
     await authStore.refreshProfile()
 
-    // Generate post content in background (don't block image display)
-    if (selectedPlatforms.value.length > 0 && selectedRestaurant.value) {
-      // Don't await - let it run in background so image shows immediately
-      generatePostContent('image').catch(error => {
-        console.error('Failed to generate post content:', error)
-      })
-    }
+    // Note: Post content is already being generated in parallel above
+    // No need to start it again here
   } catch (error: any) {
 
     showMessage(error.message || 'Failed to generate image', 'error')
@@ -1927,6 +1931,14 @@ const generateVideo = async () => {
     message.value = ''
     generatedVideoUrl.value = ''
     videoProgress.value = 0
+
+    // Start post content generation in parallel (don't await)
+    // This will run simultaneously with video generation
+    if (selectedPlatforms.value.length > 0 && selectedRestaurant.value) {
+      generatePostContent('video').catch(error => {
+        console.error('Failed to generate post content:', error)
+      })
+    }
 
     let response
 
@@ -2013,13 +2025,8 @@ const startVideoPolling = () => {
             showMessage('Video generated successfully!', 'success')
             generatingVideo.value = false
 
-            // Generate post content in background (don't block video display)
-            if (selectedPlatforms.value.length > 0 && selectedRestaurant.value) {
-              // Don't await - let it run in background so video shows immediately
-              generatePostContent('video').catch(error => {
-                console.error('Failed to generate post content:', error)
-              })
-            }
+            // Note: Post content is already being generated in parallel from the start
+            // No need to start it again here
           } else if (operation.error) {
             showMessage('Video generation failed: ' + operation.error, 'error')
             generatingVideo.value = false
@@ -2099,7 +2106,7 @@ const saveToFavorites = async () => {
       post_text: generatedPostContent.value?.postText,
       hashtags: generatedPostContent.value?.hashtags,
       call_to_action: generatedPostContent.value?.callToAction,
-      platforms: selectedPlatforms.value.length > 0 ? selectedPlatforms.value : undefined,
+      platform: selectedPlatforms.value.length > 0 ? selectedPlatforms.value[0] : undefined,
       prompt: editablePrompt.value,
       menu_items: selectedMenuItems.value.length > 0 ? selectedMenuItems.value : undefined,
       context: promptContext.value || undefined,

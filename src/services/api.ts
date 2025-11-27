@@ -585,6 +585,7 @@ class ApiService {
     scheduled_date: string
     scheduled_time?: string
     timezone?: string
+    platform?: string
     notes?: string
     platform_settings?: any
   }): Promise<ApiResponse<{ scheduled_post: any }>> {
