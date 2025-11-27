@@ -8,8 +8,18 @@
         </div>
 
         <div class="modal-body">
-          <div v-if="selectedDate" class="date-indicator">
-            Scheduling for: <strong>{{ formatDate(selectedDate) }}</strong>
+          <!-- Date Selection -->
+          <div class="form-group-full">
+            <label for="schedule_date" class="form-label">
+              Date <span class="required">*</span>
+            </label>
+            <DatePicker
+              v-model="scheduleDate"
+              :min-date="today"
+            />
+            <p class="date-preview">
+              Scheduling for: <strong>{{ formatDate(scheduleDate) }}</strong>
+            </p>
           </div>
 
           <!-- Time and Timezone Selection -->
@@ -116,10 +126,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { ref, watch, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import BaseCard from './BaseCard.vue'
 import BaseButton from './BaseButton.vue'
+import DatePicker from './DatePicker.vue'
 import { api } from '../services/api'
 
 interface Props {
@@ -138,6 +149,19 @@ const favorites = ref<any[]>([])
 const loading = ref(false)
 const scheduledTime = ref('')
 const timezone = ref('UTC')
+const scheduleDate = ref(props.selectedDate || '')
+
+const today = computed(() => {
+  const now = new Date()
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
+})
+
+// Update scheduleDate when selectedDate prop changes
+watch(() => props.selectedDate, (newDate) => {
+  if (newDate) {
+    scheduleDate.value = newDate
+  }
+})
 
 // Set default time to current time when modal opens
 watch(() => props.modelValue, async (newValue) => {
@@ -174,7 +198,7 @@ const selectFavorite = (favorite: any) => {
 }
 
 const scheduleFavorite = async (favorite: any) => {
-  if (!props.selectedDate) {
+  if (!scheduleDate.value) {
     alert('No date selected')
     return
   }
@@ -187,13 +211,13 @@ const scheduleFavorite = async (favorite: any) => {
   try {
     const response = await api.schedulePost({
       favorite_post_id: favorite.id,
-      scheduled_date: props.selectedDate,
+      scheduled_date: scheduleDate.value,
       scheduled_time: scheduledTime.value,
       timezone: timezone.value,
     })
 
     if (response.success) {
-      emit('scheduled', { favorite, date: props.selectedDate })
+      emit('scheduled', { favorite, date: scheduleDate.value })
       closeModal()
     } else {
       alert(response.error || 'Failed to schedule post')
@@ -211,7 +235,11 @@ const goToPlayground = () => {
 }
 
 const formatDate = (dateString: string): string => {
-  return new Date(dateString).toLocaleDateString('en-US', {
+  // Parse date string (YYYY-MM-DD) and create date in local timezone
+  const [year, month, day] = dateString.split('-').map(Number)
+  const date = new Date(year, month - 1, day) // month is 0-indexed
+
+  return date.toLocaleDateString('en-US', {
     weekday: 'long',
     month: 'long',
     day: 'numeric',
@@ -311,17 +339,21 @@ const truncateText = (text: string, maxLength: number): string => {
   padding: var(--space-xl);
 }
 
-.date-indicator {
+.form-group-full {
+  margin-bottom: var(--space-xl);
+}
+
+.date-preview {
   text-align: center;
-  padding: var(--space-md);
+  margin-top: var(--space-md);
+  padding: var(--space-sm);
   background: rgba(212, 175, 55, 0.1);
-  border-radius: var(--radius-md);
-  margin-bottom: var(--space-lg);
+  border-radius: var(--radius-sm);
   color: var(--text-secondary);
   font-size: var(--text-sm);
 }
 
-.date-indicator strong {
+.date-preview strong {
   color: var(--gold-primary);
   font-weight: 600;
 }

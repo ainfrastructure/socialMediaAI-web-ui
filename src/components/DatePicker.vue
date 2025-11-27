@@ -7,7 +7,10 @@ interface Props {
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  minDate: () => new Date().toISOString().split('T')[0]
+  minDate: () => {
+    const now = new Date()
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
+  }
 })
 
 const emit = defineEmits<{
@@ -76,13 +79,14 @@ const calendarDays = computed(() => {
     dateString: string
   }> = []
 
-  const minDateValue = props.minDate || new Date().toISOString().split('T')[0]
+  const now = new Date()
+  const minDateValue = props.minDate || `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
 
   // Previous month days
   const firstDayOfWeek = firstDay.getDay()
   for (let i = firstDayOfWeek - 1; i >= 0; i--) {
     const date = new Date(year, month - 1, prevMonthLastDay.getDate() - i)
-    const dateString = date.toISOString().split('T')[0]
+    const dateString = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
     days.push({
       date,
       isCurrentMonth: false,
@@ -94,10 +98,11 @@ const calendarDays = computed(() => {
   }
 
   // Current month days
-  const today = new Date().toISOString().split('T')[0]
+  const todayDate = new Date()
+  const today = `${todayDate.getFullYear()}-${String(todayDate.getMonth() + 1).padStart(2, '0')}-${String(todayDate.getDate()).padStart(2, '0')}`
   for (let day = 1; day <= lastDay.getDate(); day++) {
     const date = new Date(year, month, day)
-    const dateString = date.toISOString().split('T')[0]
+    const dateString = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
 
     days.push({
       date,
@@ -113,7 +118,7 @@ const calendarDays = computed(() => {
   const remainingDays = 42 - days.length // 6 rows * 7 days
   for (let day = 1; day <= remainingDays; day++) {
     const date = new Date(year, month + 1, day)
-    const dateString = date.toISOString().split('T')[0]
+    const dateString = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
     days.push({
       date,
       isCurrentMonth: false,
@@ -150,7 +155,8 @@ const nextMonth = () => {
 
 const goToToday = () => {
   currentMonth.value = new Date()
-  const today = new Date().toISOString().split('T')[0]
+  const now = new Date()
+  const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
   emit('update:modelValue', today)
 }
 </script>

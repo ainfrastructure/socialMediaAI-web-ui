@@ -160,7 +160,12 @@ const selectedMinute = ref('00')
 const selectedPeriod = ref<'AM' | 'PM'>('PM')
 
 const today = computed(() => {
-  return new Date().toISOString().split('T')[0]
+  // Use local date, not UTC, to avoid timezone issues
+  const now = new Date()
+  const year = now.getFullYear()
+  const month = String(now.getMonth() + 1).padStart(2, '0')
+  const day = String(now.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
 })
 
 // Use the same detected timezone as userTimezone for consistency
@@ -212,8 +217,9 @@ watch(() => props.modelValue, (newValue) => {
     selectedMinute.value = '00'
     selectedPeriod.value = 'PM'
 
-    // Get today's date in YYYY-MM-DD format
-    const todayDate = new Date().toISOString().split('T')[0]
+    // Get today's date in YYYY-MM-DD format (using local date)
+    const now = new Date()
+    const todayDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
 
     // Reset form when modal opens (scheduled_time will be set by the watch)
     formData.value = {
