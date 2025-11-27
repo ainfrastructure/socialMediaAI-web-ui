@@ -957,10 +957,12 @@ const handleSaveEdit = async (updates: any) => {
     const response = await api.updateScheduledPost(postToEdit.value.id, updates)
 
     if (response.success) {
-      // Refresh the scheduled posts
-      await fetchScheduledPosts()
+      // Close modal first
       showEditModal.value = false
       postToEdit.value = null
+
+      // Then refresh the scheduled posts to update the calendar
+      await fetchScheduledPosts()
     } else {
       throw new Error(response.error || 'Failed to update post')
     }

@@ -177,8 +177,8 @@ const hours = Array.from({ length: 12 }, (_, i) => {
   return hour.toString().padStart(2, '0')
 })
 
-// Generate minute options (00, 15, 30, 45)
-const minutes = ['00', '15', '30', '45']
+// Generate minute options (00-59)
+const minutes = Array.from({ length: 60 }, (_, i) => i.toString().padStart(2, '0'))
 
 // Timezone options with current time display
 const timezoneOptions = [
