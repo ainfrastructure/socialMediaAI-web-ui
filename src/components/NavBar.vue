@@ -9,7 +9,7 @@
 
       <!-- Navigation Links -->
       <div class="nav-links">
-        <router-link to="/playground" class="nav-link" active-class="active">
+        <router-link to="/cook-up" class="nav-link" active-class="active">
           {{ $t('nav.cookUp') }}
         </router-link>
 

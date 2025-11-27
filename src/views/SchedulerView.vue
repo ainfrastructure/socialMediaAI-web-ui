@@ -8,45 +8,52 @@
         <p class="subtitle">{{ $t('scheduler.subtitle') }}</p>
       </div>
 
-      <!-- Calendar Navigation -->
-      <BaseCard variant="glass-intense" class="calendar-nav-card">
-        <div class="calendar-nav">
-          <BaseButton variant="ghost" size="small" @click="previousPeriod"> ← {{ $t('scheduler.previous') }} </BaseButton>
-          <h2 class="current-month">{{ currentPeriodLabel }}</h2>
-          <BaseButton variant="ghost" size="small" @click="nextPeriod"> {{ $t('scheduler.next') }} → </BaseButton>
+      <!-- Filters Section -->
+      <FilterBar
+        v-model="filters"
+        :restaurants="restaurants"
+        show-platform
+        show-restaurant
+        @change="applyFilters"
+        @clear="resetFilters"
+      />
+
+      <!-- Calendar Grid (always rendered) -->
+      <BaseCard variant="glass" class="calendar-card">
+        <!-- Loading Overlay -->
+        <div v-if="loading" class="loading-overlay">
+          <div class="spinner"></div>
         </div>
+        <!-- Calendar Navigation (moved inside calendar card) -->
+        <div class="calendar-header">
+          <div class="calendar-nav">
+            <BaseButton variant="ghost" size="small" @click="previousPeriod"> ← {{ $t('scheduler.previous') }} </BaseButton>
+            <h2 class="current-month">{{ currentPeriodLabel }}</h2>
+            <BaseButton variant="ghost" size="small" @click="nextPeriod"> {{ $t('scheduler.next') }} → </BaseButton>
+          </div>
 
-        <!-- View Mode Selector -->
-        <div class="view-mode-selector">
-          <button
-            :class="['view-mode-btn', { active: viewMode === 'month' }]"
-            @click="viewMode = 'month'"
-          >
-            {{ $t('scheduler.month') }}
-          </button>
-          <button
-            :class="['view-mode-btn', { active: viewMode === 'week' }]"
-            @click="viewMode = 'week'"
-          >
-            {{ $t('scheduler.week') }}
-          </button>
-          <button
-            :class="['view-mode-btn', { active: viewMode === 'day' }]"
-            @click="viewMode = 'day'"
-          >
-            {{ $t('scheduler.day') }}
-          </button>
+          <!-- View Mode Selector -->
+          <div class="view-mode-selector">
+            <button
+              :class="['view-mode-btn', { active: viewMode === 'month' }]"
+              @click="viewMode = 'month'"
+            >
+              {{ $t('scheduler.month') }}
+            </button>
+            <button
+              :class="['view-mode-btn', { active: viewMode === 'week' }]"
+              @click="viewMode = 'week'"
+            >
+              {{ $t('scheduler.week') }}
+            </button>
+            <button
+              :class="['view-mode-btn', { active: viewMode === 'day' }]"
+              @click="viewMode = 'day'"
+            >
+              {{ $t('scheduler.day') }}
+            </button>
+          </div>
         </div>
-      </BaseCard>
-
-      <!-- Loading State -->
-      <div v-if="loading" class="loading-container">
-        <div class="spinner"></div>
-        <p>{{ $t('scheduler.loading') }}</p>
-      </div>
-
-      <!-- Calendar Grid -->
-      <BaseCard v-else variant="glass" class="calendar-card">
         <div :class="['calendar-grid', `view-${viewMode}`]">
           <!-- Day headers (only show for month and week views) -->
           <div
@@ -77,35 +84,15 @@
 
             <!-- Day View Header -->
             <div v-if="viewMode === 'day'" class="day-view-header">
-              <h2 class="day-view-title">{{ formatSelectedDate(day) }}</h2>
+              <h2 class="day-view-title">
+                {{ formatSelectedDate(day) }}
+                <span v-if="day.posts.length > 0" class="post-count">({{ day.posts.length }} {{ day.posts.length === 1 ? 'post' : 'posts' }})</span>
+              </h2>
               <div class="day-view-actions">
-                <button class="action-button create-btn" @click.stop="createNewPost(day)">
-                  <span class="btn-icon">+</span>
-                  <span class="btn-text">{{ $t('scheduler.createPost') }}</span>
-                </button>
-                <button class="action-button favorite-btn" @click.stop="pickFavoriteForDate(day)">
-                  <span class="btn-icon">⭐</span>
-                  <span class="btn-text">{{ $t('scheduler.addFavorite') }}</span>
-                </button>
+                <BaseButton variant="primary" size="medium" @click.stop="openCreatePostWizard(day)">
+                  ➕ Create Post
+                </BaseButton>
               </div>
-            </div>
-
-            <!-- Quick Action Buttons (Month/Week View) -->
-            <div v-if="!day.isOtherMonth && viewMode !== 'day'" class="day-actions">
-              <button
-                class="action-btn new-post-btn"
-                @click.stop="createNewPost(day)"
-                :title="$t('scheduler.createNewPost')"
-              >
-                📝
-              </button>
-              <button
-                class="action-btn pick-favorite-btn"
-                @click.stop="pickFavoriteForDate(day)"
-                :title="$t('scheduler.scheduleFavorite')"
-              >
-                ⭐
-              </button>
             </div>
 
             <!-- Holidays -->
@@ -146,7 +133,7 @@
               <!-- Day View: Show detailed post cards -->
               <div v-if="viewMode === 'day'" class="day-view-posts">
                 <div
-                  v-for="post in day.posts"
+                  v-for="post in paginatedDayPosts(day.posts)"
                   :key="post.id"
                   :class="['day-post-card', post.status ? `status-${post.status}` : '']"
                   @click.stop="viewPostDetail(post)"
@@ -213,6 +200,27 @@
                 </div>
               </div>
 
+              <!-- Pagination Controls for Day View -->
+              <div v-if="viewMode === 'day' && getTotalPages(day.posts) > 1" class="day-view-pagination">
+                <button
+                  class="pagination-btn"
+                  :disabled="dayViewPage === 1"
+                  @click.stop="dayViewPage--"
+                >
+                  ← Previous
+                </button>
+                <span class="pagination-info">
+                  Page {{ dayViewPage }} of {{ getTotalPages(day.posts) }}
+                </span>
+                <button
+                  class="pagination-btn"
+                  :disabled="dayViewPage === getTotalPages(day.posts)"
+                  @click.stop="dayViewPage++"
+                >
+                  Next →
+                </button>
+              </div>
+
               <!-- Month/Week View: Show compact indicators -->
               <template v-else>
                 <div
@@ -235,25 +243,30 @@
 
       <!-- Selected Day Detail -->
       <BaseCard
-        v-if="selectedDay && (selectedDay.posts.length > 0 || selectedDay.holidays?.length > 0)"
+        v-if="selectedDayWithFilteredPosts && (selectedDayWithFilteredPosts.posts.length > 0 || selectedDayWithFilteredPosts.holidays?.length > 0)"
         variant="glass-intense"
         class="day-detail-card"
       >
-        <h3 class="detail-title">
-          {{ formatSelectedDate(selectedDay) }}
-          <span v-if="selectedDay.posts.length > 0" class="post-count"
-            >({{ selectedDay.posts.length }} {{ selectedDay.posts.length === 1 ? $t('scheduler.post') : $t('scheduler.posts') }})</span
-          >
-        </h3>
+        <div class="detail-header">
+          <h3 class="detail-title">
+            {{ formatSelectedDate(selectedDayWithFilteredPosts) }}
+            <span v-if="selectedDayWithFilteredPosts.posts.length > 0" class="post-count"
+              >({{ selectedDayWithFilteredPosts.posts.length }} {{ selectedDayWithFilteredPosts.posts.length === 1 ? $t('scheduler.post') : $t('scheduler.posts') }})</span
+            >
+          </h3>
+          <BaseButton variant="primary" size="medium" @click="openCreatePostWizard(selectedDayWithFilteredPosts)">
+            ➕ Create Post
+          </BaseButton>
+        </div>
 
         <!-- Show holidays if any -->
         <div
-          v-if="selectedDay.holidays && selectedDay.holidays.length > 0"
+          v-if="selectedDayWithFilteredPosts.holidays && selectedDayWithFilteredPosts.holidays.length > 0"
           class="holidays-section"
         >
           <h4 class="section-subtitle">{{ $t('scheduler.holidays') }}</h4>
           <div class="holidays-list">
-            <div v-for="holiday in selectedDay.holidays" :key="holiday.name" class="holiday-card">
+            <div v-for="holiday in selectedDayWithFilteredPosts.holidays" :key="holiday.name" class="holiday-card">
               <div class="holiday-icon">{{ getHolidayEmoji(holiday) }}</div>
               <div class="holiday-details">
                 <h5 class="holiday-name">{{ holiday.name }}</h5>
@@ -274,101 +287,133 @@
         </div>
 
         <div class="posts-list">
-          <div v-for="post in selectedDay.posts" :key="post.id" :class="['scheduled-post-card', post.status ? `status-${post.status}` : '']">
-            <div class="post-media" @click="viewPostDetail(post)">
-              <img
-                v-if="post.content_type === 'image' && post.media_url"
-                :src="getMediaUrl(post.media_url)"
-                :alt="post.post_text || 'Scheduled post'"
-                class="post-thumbnail clickable"
-                @error="handleImageError($event, post)"
-                loading="lazy"
-              />
-              <video
-                v-else-if="post.content_type === 'video' && post.media_url"
-                :src="getMediaUrl(post.media_url)"
-                class="post-thumbnail clickable"
-                muted
-                preload="metadata"
-              ></video>
-              <div v-else class="post-thumbnail-placeholder">
-                <span class="placeholder-icon">📸</span>
-                <span class="placeholder-text">{{
-                  post.media_url ? $t('scheduler.failedToLoad') : $t('scheduler.noMedia')
-                }}</span>
-              </div>
-              <div v-if="post.media_url" class="thumbnail-overlay">
-                <span class="view-icon">👁️ {{ $t('scheduler.viewDetails') }}</span>
-              </div>
-            </div>
+          <div
+            v-for="post in paginatedDayPosts(selectedDayWithFilteredPosts.posts)"
+            :key="post.id"
+            :class="['scheduled-post-card-new', post.status ? `status-${post.status}` : '']"
+            @click="viewPostDetail(post)"
+          >
+            <!-- Status Indicator Bar -->
+            <div :class="['status-bar', `status-${post.status || 'scheduled'}`]"></div>
 
-            <div class="post-details">
-              <div class="post-header">
-                <div class="time-info">
-                  <span class="post-time">
-                    {{ formatTime(post.scheduled_time) || $t('scheduler.noTimeSet') }}
-                  </span>
-                  <span v-if="post.timezone" class="post-timezone">
-                    {{ post.timezone }}
-                  </span>
+            <!-- Card Content -->
+            <div class="card-content">
+              <!-- Left: Media Section -->
+              <div class="media-section">
+                <img
+                  v-if="post.content_type === 'image' && post.media_url"
+                  :src="getMediaUrl(post.media_url)"
+                  :alt="post.post_text || 'Scheduled post'"
+                  class="post-image"
+                  @error="handleImageError($event, post)"
+                  loading="lazy"
+                />
+                <video
+                  v-else-if="post.content_type === 'video' && post.media_url"
+                  :src="getMediaUrl(post.media_url)"
+                  class="post-image"
+                  muted
+                  preload="metadata"
+                ></video>
+                <div v-else class="post-image-placeholder">
+                  <span class="placeholder-icon">📸</span>
                 </div>
-                <!-- Show published badge on top right if published, otherwise show platform -->
-                <span v-if="post.status === 'published'" class="published-badge-compact">
-                  ✅ Posted
-                </span>
-                <span v-else-if="post.platform" :class="['post-platform', `platform-${post.platform}`]">
-                  {{ post.platform }}
-                </span>
-              </div>
 
-              <!-- Time remaining indicator (only for non-published posts) -->
-              <div v-if="post.status !== 'published'" class="time-remaining">
-                {{ getTimeRemaining(post) }}
-              </div>
-
-              <!-- Published time (for published posts) -->
-              <div v-else class="time-remaining published-info">
-                {{ getPlatformIcon(post.platform) }} {{ capitalizeFirst(post.platform) }} • {{ formatPublishedDate(post.published_at) }}
-              </div>
-
-              <p v-if="post.post_text" class="post-text">
-                {{ truncateText(post.post_text, 150) }}
-              </p>
-
-              <div v-if="post.restaurant_name" class="post-restaurant">
-                🏪 {{ post.restaurant_name }}
-              </div>
-
-              <div class="post-meta">
-                <span class="content-type-badge">
-                  <template v-if="post.content_type === 'image'">📸 {{ $t('scheduler.image') }}</template>
-                  <template v-else>🎥 {{ $t('scheduler.video') }}</template>
-                </span>
-                <span v-if="post.status" :class="['status-badge', `status-${post.status}`]">
-                  {{ post.status }}
-                </span>
-              </div>
-
-              <!-- Error Message (if failed) -->
-              <div v-if="post.status === 'failed' && post.error_message" class="post-error">
-                <div class="error-icon">⚠️</div>
-                <div class="error-content">
-                  <div class="error-title">Publishing Failed</div>
-                  <div class="error-message">{{ post.error_message }}</div>
+                <!-- Content Type Badge on Image -->
+                <div class="media-badge">
+                  {{ post.content_type === 'image' ? '📸' : '🎥' }}
                 </div>
               </div>
 
-              <!-- Actions (only for scheduled/failed posts, not published) -->
-              <div v-if="post.status !== 'published'" class="post-actions">
-                <BaseButton variant="ghost" size="small" @click="editScheduledPost(post)">
-                  ✏️ {{ $t('scheduler.edit') }}
-                </BaseButton>
-                <BaseButton variant="danger" size="small" @click="cancelPost(post.id)">
-                  🗑️ {{ $t('scheduler.cancel') }}
-                </BaseButton>
+              <!-- Right: Content Section -->
+              <div class="content-section">
+                <!-- Header Row -->
+                <div class="content-header">
+                  <div class="time-badge">
+                    <span class="time-icon">🕐</span>
+                    <span class="time-text">{{ formatTime(post.scheduled_time) || 'No time' }}</span>
+                  </div>
+
+                  <div class="status-badges">
+                    <!-- Platform Badge -->
+                    <span v-if="post.platform" :class="['platform-badge-new', `platform-${post.platform}`]">
+                      {{ getPlatformIcon(post.platform) }} {{ capitalizeFirst(post.platform) }}
+                    </span>
+
+                    <!-- Status Badge -->
+                    <span :class="['status-badge-new', `status-${post.status || 'scheduled'}`]">
+                      <template v-if="post.status === 'published'">✅ Posted</template>
+                      <template v-else-if="post.status === 'failed'">❌ Failed</template>
+                      <template v-else>📅 Scheduled</template>
+                    </span>
+                  </div>
+                </div>
+
+                <!-- Post Text / Description -->
+                <div class="post-content">
+                  <p v-if="post.post_text" class="post-description">
+                    {{ truncateText(post.post_text, 180) }}
+                  </p>
+                  <p v-else class="post-description empty">No description provided</p>
+                </div>
+
+                <!-- Restaurant Tag -->
+                <div v-if="post.restaurant_name" class="restaurant-badge">
+                  🏪 {{ post.restaurant_name }}
+                </div>
+
+                <!-- Footer Row -->
+                <div class="content-footer">
+                  <!-- Time Remaining / Published Info -->
+                  <div class="footer-info">
+                    <template v-if="post.status === 'published'">
+                      <span class="published-time">{{ formatPublishedDate(post.published_at) }}</span>
+                    </template>
+                    <template v-else>
+                      <span class="countdown">{{ getTimeRemaining(post) }}</span>
+                    </template>
+                  </div>
+
+                  <!-- Action Buttons -->
+                  <div v-if="post.status !== 'published'" class="action-buttons" @click.stop>
+                    <button class="action-btn edit-btn" @click="editScheduledPost(post)" title="Edit post">
+                      ✏️
+                    </button>
+                    <button class="action-btn delete-btn" @click="cancelPost(post.id)" title="Cancel post">
+                      🗑️
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Error Message (if failed) -->
+                <div v-if="post.status === 'failed' && post.error_message" class="error-banner">
+                  <span class="error-icon">⚠️</span>
+                  <span class="error-text">{{ truncateText(post.error_message, 100) }}</span>
+                </div>
               </div>
             </div>
           </div>
+        </div>
+
+        <!-- Pagination Controls for Selected Day Detail -->
+        <div v-if="selectedDayWithFilteredPosts && getTotalPages(selectedDayWithFilteredPosts.posts) > 1" class="detail-pagination">
+          <button
+            class="pagination-btn"
+            :disabled="dayViewPage === 1"
+            @click="dayViewPage--"
+          >
+            ← Previous
+          </button>
+          <span class="pagination-info">
+            Page {{ dayViewPage }} of {{ getTotalPages(selectedDayWithFilteredPosts.posts) }}
+          </span>
+          <button
+            class="pagination-btn"
+            :disabled="dayViewPage === getTotalPages(selectedDayWithFilteredPosts.posts)"
+            @click="dayViewPage++"
+          >
+            Next →
+          </button>
         </div>
       </BaseCard>
 
@@ -376,9 +421,9 @@
       <BaseCard v-else-if="selectedDay" variant="glass" class="empty-detail-card">
         <div class="empty-content">
           <h3>{{ $t('scheduler.noPostsScheduled') }}</h3>
-          <p>{{ $t('scheduler.goToPlayground') }}</p>
-          <BaseButton variant="primary" @click="router.push('/playground')">
-            {{ $t('scheduler.goToPlaygroundButton') }}
+          <p>{{ $t('scheduler.goToCookUp') }}</p>
+          <BaseButton variant="primary" @click="openCreatePostWizard(selectedDay)">
+            ➕ Create Post
           </BaseButton>
         </div>
       </BaseCard>
@@ -390,6 +435,50 @@
       :selected-date="selectedDateForScheduling"
       @scheduled="handleFavoriteScheduled"
     />
+
+    <!-- Create Post Wizard Modal -->
+    <Teleport to="body">
+      <div v-if="showCreatePostWizard" class="modal-overlay" @click.self="showCreatePostWizard = false">
+        <BaseCard variant="glass-intense" class="wizard-modal">
+          <div class="wizard-header">
+            <h2 class="wizard-title">Create Post for {{ formatWizardDate(selectedDateForScheduling) }}</h2>
+            <button class="wizard-close-btn" @click="showCreatePostWizard = false">&times;</button>
+          </div>
+
+          <div class="wizard-body">
+            <p class="wizard-subtitle">How would you like to create your post?</p>
+
+            <div class="creation-options">
+              <!-- From Favorites Option -->
+              <button
+                class="creation-option-card"
+                @click="selectCreationMethod('favorite')"
+              >
+                <div class="option-icon">✨</div>
+                <h3 class="option-title">From Favorites</h3>
+                <p class="option-description">
+                  Choose from your saved favorite posts
+                </p>
+              </button>
+
+              <!-- Create New Option -->
+              <button
+                class="creation-option-card"
+                @click="selectCreationMethod('new')"
+              >
+                <div class="option-icon-logo">
+                  <img src="/src/assets/socialchef_logo.svg" alt="SocialChef" class="chef-logo-icon" />
+                </div>
+                <h3 class="option-title">Create New</h3>
+                <p class="option-description">
+                  Cook up fresh content
+                </p>
+              </button>
+            </div>
+          </div>
+        </BaseCard>
+      </div>
+    </Teleport>
 
     <!-- Post Detail Modal -->
     <div
@@ -558,13 +647,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { toZonedTime, fromZonedTime } from 'date-fns-tz'
 import GradientBackground from '../components/GradientBackground.vue'
 import BaseCard from '../components/BaseCard.vue'
 import BaseButton from '../components/BaseButton.vue'
+import FilterBar from '../components/FilterBar.vue'
 import PickFavoriteModal from '../components/PickFavoriteModal.vue'
 import EditScheduledPostModal from '../components/EditScheduledPostModal.vue'
 import Toast from '../components/Toast.vue'
@@ -587,6 +677,11 @@ const showPostDetailModal = ref(false)
 const selectedPostForDetail = ref<any>(null)
 const showEditModal = ref(false)
 const postToEdit = ref<any>(null)
+const showCreatePostWizard = ref(false)
+const wizardStep = ref(1) // 1 = Choose Method, 2 = Create/Select Content
+const selectedCreationMethod = ref<'favorite' | 'new' | null>(null)
+const dayViewPage = ref(1)
+const postsPerPage = 3
 
 // Toast and confirmation state
 const showToast = ref(false)
@@ -604,6 +699,13 @@ const confirmModalConfig = ref({
 const cancelLoading = ref(false)
 const postIdToCancel = ref<string | null>(null)
 const viewMode = ref<'month' | 'week' | 'day'>('month')
+
+// Filters (now using arrays for multi-select)
+const filters = ref({
+  platforms: [] as string[],
+  restaurant_ids: [] as string[],
+})
+const restaurants = ref<any[]>([])
 
 const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
@@ -811,6 +913,19 @@ const selectDay = (day: any) => {
   }
 }
 
+// Computed property to get the selected day with current filtered posts
+const selectedDayWithFilteredPosts = computed(() => {
+  if (!selectedDay.value) return null
+
+  // Find the day in the current calendar (which has filtered posts)
+  const currentDay = displayedCalendarDays.value.find((day: any) => {
+    return day.date && selectedDay.value.date &&
+      day.date.getTime() === selectedDay.value.date.getTime()
+  })
+
+  return currentDay || selectedDay.value
+})
+
 const formatSelectedDate = (day: any) => {
   return day.date.toLocaleDateString('en-US', {
     weekday: 'long',
@@ -819,6 +934,37 @@ const formatSelectedDate = (day: any) => {
     year: 'numeric',
   })
 }
+
+const formatWizardDate = (dateString: string | null) => {
+  if (!dateString) return ''
+  const date = new Date(dateString + 'T00:00:00')
+  return date.toLocaleDateString('en-US', {
+    weekday: 'long',
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+  })
+}
+
+// Pagination helpers
+const getTotalPages = (posts: any[]) => {
+  return Math.ceil(posts.length / postsPerPage)
+}
+
+const paginatedDayPosts = (posts: any[]) => {
+  const start = (dayViewPage.value - 1) * postsPerPage
+  const end = start + postsPerPage
+  return posts.slice(start, end)
+}
+
+// Reset pagination when changing views
+watch(viewMode, () => {
+  dayViewPage.value = 1
+})
+
+watch(currentDate, () => {
+  dayViewPage.value = 1
+})
 
 const getContentTypeEmoji = (type: string) => {
   return type === 'image' ? '📸' : '🎥'
@@ -998,7 +1144,12 @@ const fetchScheduledPosts = async () => {
     const month = currentDate.value.getMonth() + 1
     const year = currentDate.value.getFullYear()
 
-    const response = await api.getScheduledPosts({ month, year })
+    const response = await api.getScheduledPosts({
+      month,
+      year,
+      platforms: filters.value.platforms.length > 0 ? filters.value.platforms : undefined,
+      restaurant_ids: filters.value.restaurant_ids.length > 0 ? filters.value.restaurant_ids : undefined,
+    })
 
     if (response.success) {
       const posts = response.data?.scheduled_posts || []
@@ -1187,13 +1338,40 @@ const confirmCancelPost = async () => {
 
 const cancelPost = showCancelConfirmation
 
+// Open the create post wizard
+const openCreatePostWizard = (day: any) => {
+  const year = day.date.getFullYear()
+  const month = String(day.date.getMonth() + 1).padStart(2, '0')
+  const dayNum = String(day.date.getDate()).padStart(2, '0')
+  const dateString = `${year}-${month}-${dayNum}`
+  selectedDateForScheduling.value = dateString
+  wizardStep.value = 1
+  selectedCreationMethod.value = null
+  showCreatePostWizard.value = true
+}
+
+// Select creation method in wizard
+const selectCreationMethod = (method: 'favorite' | 'new') => {
+  selectedCreationMethod.value = method
+
+  if (method === 'new') {
+    // Go to cook up
+    showCreatePostWizard.value = false
+    router.push(`/cook-up?scheduleDate=${selectedDateForScheduling.value}`)
+  } else if (method === 'favorite') {
+    // Open pick favorite modal
+    showCreatePostWizard.value = false
+    showPickFavoriteModal.value = true
+  }
+}
+
 const createNewPost = (day: any) => {
   // Use local date string to avoid timezone shifts
   const year = day.date.getFullYear()
   const month = String(day.date.getMonth() + 1).padStart(2, '0')
   const dayNum = String(day.date.getDate()).padStart(2, '0')
   const dateString = `${year}-${month}-${dayNum}`
-  router.push(`/playground?scheduleDate=${dateString}`)
+  router.push(`/cook-up?scheduleDate=${dateString}`)
 }
 
 const pickFavoriteForDate = (day: any) => {
@@ -1269,8 +1447,34 @@ const handleImageError = (event: Event, post: any) => {
   // Keep the placeholder visible instead of hiding
 }
 
+// Fetch restaurants for filter dropdown
+const fetchRestaurants = async () => {
+  try {
+    const response = await api.getRestaurants()
+    if (response.success) {
+      restaurants.value = response.data || []
+    }
+  } catch (error) {
+    console.error('Error fetching restaurants:', error)
+  }
+}
+
+// Apply filters
+const applyFilters = () => {
+  fetchScheduledPosts()
+}
+
+// Reset filters
+const resetFilters = () => {
+  filters.value = {
+    platforms: [],
+    restaurant_ids: [],
+  }
+  fetchScheduledPosts()
+}
+
 onMounted(async () => {
-  await Promise.all([fetchScheduledPosts(), fetchHolidays()])
+  await Promise.all([fetchScheduledPosts(), fetchHolidays(), fetchRestaurants()])
 
   // Auto-select today's date
   const today = new Date()
@@ -1326,9 +1530,12 @@ onMounted(async () => {
   margin: 0;
 }
 
-.calendar-nav-card {
-  padding: 1.5rem;
-  margin-bottom: 2rem;
+
+/* Calendar Header (navigation + view mode inside calendar card) */
+.calendar-header {
+  padding-bottom: var(--space-xl);
+  margin-bottom: var(--space-xl);
+  border-bottom: 1px solid rgba(212, 175, 55, 0.15);
 }
 
 .calendar-nav {
@@ -1380,12 +1587,30 @@ onMounted(async () => {
   margin: 0;
 }
 
-.loading-container {
+/* Loading Overlay (subtle, doesn't hide calendar) */
+.loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(10, 10, 10, 0.7);
+  backdrop-filter: blur(4px);
   display: flex;
-  flex-direction: column;
   align-items: center;
-  padding: 3rem;
-  gap: 1rem;
+  justify-content: center;
+  z-index: 10;
+  border-radius: var(--radius-lg);
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 .spinner {
@@ -1406,6 +1631,8 @@ onMounted(async () => {
 .calendar-card {
   padding: 2rem;
   margin-bottom: 2rem;
+  position: relative;
+  min-height: 600px;
 }
 
 .calendar-grid {
@@ -1458,6 +1685,17 @@ onMounted(async () => {
   color: var(--text-primary);
   margin: 0 0 var(--space-xl) 0;
   text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-md);
+  flex-wrap: wrap;
+}
+
+.post-count {
+  font-size: var(--text-lg);
+  color: var(--text-secondary);
+  font-weight: var(--font-normal);
 }
 
 .day-view-actions {
@@ -1522,6 +1760,45 @@ onMounted(async () => {
   flex-direction: column;
   gap: var(--space-lg);
   padding: var(--space-xl);
+}
+
+.day-view-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-lg);
+  padding: var(--space-xl);
+  border-top: 1px solid rgba(212, 175, 55, 0.2);
+}
+
+.pagination-btn {
+  padding: var(--space-sm) var(--space-lg);
+  background: rgba(212, 175, 55, 0.15);
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  border-radius: var(--radius-md);
+  color: var(--gold-primary);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.pagination-btn:hover:not(:disabled) {
+  background: rgba(212, 175, 55, 0.25);
+  border-color: var(--gold-primary);
+  transform: translateY(-1px);
+}
+
+.pagination-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.pagination-info {
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
 }
 
 .day-post-card {
@@ -1958,20 +2235,400 @@ onMounted(async () => {
   padding: 2rem;
 }
 
+.detail-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  gap: var(--space-lg);
+}
+
 .detail-title {
   font-family: var(--font-heading);
   font-size: 1.5rem;
   color: var(--gold-primary);
-  margin: 0 0 1.5rem 0;
+  margin: 0;
   display: flex;
   align-items: center;
   gap: 0.75rem;
+}
+
+.detail-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-lg);
+  padding: var(--space-xl);
+  margin-top: var(--space-xl);
+  border-top: 1px solid rgba(212, 175, 55, 0.2);
 }
 
 .post-count {
   font-size: 1rem;
   color: var(--text-secondary);
   font-weight: normal;
+}
+
+/* New Redesigned Post Cards */
+.scheduled-post-card-new {
+  display: flex;
+  background: rgba(0, 0, 0, 0.4);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: 1px solid rgba(212, 175, 55, 0.15);
+  margin-bottom: var(--space-lg);
+  position: relative;
+}
+
+.scheduled-post-card-new:hover {
+  background: rgba(0, 0, 0, 0.5);
+  border-color: rgba(212, 175, 55, 0.4);
+  transform: translateX(4px);
+  box-shadow: 0 8px 24px rgba(212, 175, 55, 0.15);
+}
+
+/* Status Indicator Bar on Left Edge */
+.status-bar {
+  width: 6px;
+  min-height: 100%;
+  flex-shrink: 0;
+}
+
+.status-bar.status-scheduled {
+  background: linear-gradient(180deg, #3b82f6, #2563eb);
+}
+
+.status-bar.status-published {
+  background: linear-gradient(180deg, #22c55e, #16a34a);
+}
+
+.status-bar.status-failed {
+  background: linear-gradient(180deg, #ef4444, #dc2626);
+}
+
+.status-bar.status-pending {
+  background: linear-gradient(180deg, #f59e0b, #d97706);
+}
+
+/* Main Card Content Layout */
+.card-content {
+  display: flex;
+  width: 100%;
+  gap: var(--space-xl);
+  padding: var(--space-lg);
+}
+
+/* Media Section (Left Side) */
+.media-section {
+  position: relative;
+  flex-shrink: 0;
+  width: 180px;
+  height: 180px;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.6);
+  border: 1px solid rgba(212, 175, 55, 0.2);
+}
+
+.post-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.scheduled-post-card-new:hover .post-image {
+  transform: scale(1.05);
+}
+
+.media-badge {
+  position: absolute;
+  top: var(--space-sm);
+  right: var(--space-sm);
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(8px);
+  padding: var(--space-xs) var(--space-sm);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-lg);
+  border: 1px solid rgba(212, 175, 55, 0.3);
+}
+
+/* Content Section (Right Side) */
+.content-section {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  min-width: 0;
+}
+
+/* Content Header (Time + Badges) */
+.content-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--space-md);
+  flex-wrap: wrap;
+}
+
+.time-badge {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  background: rgba(212, 175, 55, 0.15);
+  padding: var(--space-xs) var(--space-md);
+  border-radius: var(--radius-full);
+  border: 1px solid rgba(212, 175, 55, 0.3);
+}
+
+.time-icon {
+  font-size: var(--text-base);
+}
+
+.time-text {
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  color: var(--gold-light);
+}
+
+/* Status Badges Container */
+.status-badges {
+  display: flex;
+  gap: var(--space-sm);
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+/* Platform Badges */
+.platform-badge-new {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: var(--space-xs) var(--space-md);
+  border-radius: var(--radius-full);
+  font-size: var(--text-xs);
+  font-weight: var(--font-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  border: 1px solid;
+}
+
+.platform-badge-new.platform-instagram {
+  background: rgba(225, 48, 108, 0.15);
+  border-color: rgba(225, 48, 108, 0.4);
+  color: #ff6b9d;
+}
+
+.platform-badge-new.platform-facebook {
+  background: rgba(66, 103, 178, 0.15);
+  border-color: rgba(66, 103, 178, 0.4);
+  color: #6b9aec;
+}
+
+.platform-badge-new.platform-tiktok {
+  background: rgba(105, 105, 105, 0.15);
+  border-color: rgba(105, 105, 105, 0.4);
+  color: #a8a8a8;
+}
+
+.platform-badge-new.platform-twitter {
+  background: rgba(29, 161, 242, 0.15);
+  border-color: rgba(29, 161, 242, 0.4);
+  color: #5cb3ff;
+}
+
+/* Status Badges */
+.status-badge-new {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: var(--space-xs) var(--space-md);
+  border-radius: var(--radius-full);
+  font-size: var(--text-xs);
+  font-weight: var(--font-bold);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border: 1px solid;
+}
+
+.status-badge-new.status-scheduled {
+  background: rgba(59, 130, 246, 0.15);
+  border-color: rgba(59, 130, 246, 0.4);
+  color: #60a5fa;
+}
+
+.status-badge-new.status-published {
+  background: rgba(34, 197, 94, 0.15);
+  border-color: rgba(34, 197, 94, 0.4);
+  color: #4ade80;
+}
+
+.status-badge-new.status-failed {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: rgba(239, 68, 68, 0.4);
+  color: #f87171;
+}
+
+.status-badge-new.status-pending {
+  background: rgba(245, 158, 11, 0.15);
+  border-color: rgba(245, 158, 11, 0.4);
+  color: #fbbf24;
+}
+
+/* Post Content (Description) */
+.post-content {
+  flex: 1;
+}
+
+.post-description {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  line-height: var(--leading-relaxed);
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.post-description.empty {
+  color: var(--text-muted);
+  font-style: italic;
+  opacity: 0.6;
+}
+
+/* Restaurant Badge */
+.restaurant-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: var(--space-xs) var(--space-sm);
+  background: rgba(212, 175, 55, 0.1);
+  border: 1px solid rgba(212, 175, 55, 0.25);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-xs);
+  color: var(--gold-light);
+  margin-top: var(--space-xs);
+  width: fit-content;
+}
+
+/* Content Footer (Countdown + Actions) */
+.content-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-md);
+  padding-top: var(--space-sm);
+  border-top: 1px solid rgba(212, 175, 55, 0.1);
+}
+
+.footer-info {
+  flex: 1;
+}
+
+.countdown {
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  color: var(--gold-primary);
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.countdown::before {
+  content: '⏱️';
+  font-size: var(--text-base);
+}
+
+/* Action Buttons */
+.action-buttons {
+  display: flex;
+  gap: var(--space-sm);
+}
+
+.action-btn {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: var(--text-base);
+  padding: 0;
+}
+
+.action-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.edit-btn:hover {
+  background: rgba(59, 130, 246, 0.2);
+  border-color: #3b82f6;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.delete-btn:hover {
+  background: rgba(239, 68, 68, 0.2);
+  border-color: #ef4444;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+/* Error Banner */
+.error-banner {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: var(--radius-sm);
+  padding: var(--space-sm) var(--space-md);
+  margin-top: var(--space-sm);
+}
+
+.error-icon {
+  font-size: var(--text-lg);
+  flex-shrink: 0;
+}
+
+.error-text {
+  font-size: var(--text-xs);
+  color: #f87171;
+  line-height: 1.4;
+}
+
+/* Responsive Design for Post Cards */
+@media (max-width: 768px) {
+  .card-content {
+    flex-direction: column;
+    gap: var(--space-md);
+  }
+
+  .media-section {
+    width: 100%;
+    height: 200px;
+  }
+
+  .content-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .content-footer {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .action-buttons {
+    width: 100%;
+    justify-content: flex-end;
+  }
 }
 
 .section-subtitle {
@@ -2890,5 +3547,152 @@ onMounted(async () => {
   border-radius: var(--radius-sm);
   font-family: var(--font-body);
   line-height: var(--leading-normal);
+}
+
+/* Create Post Wizard Modal */
+.wizard-modal {
+  max-width: 600px;
+  width: 100%;
+  animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.wizard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-2xl);
+  padding-bottom: var(--space-lg);
+  border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+}
+
+.wizard-title {
+  font-family: var(--font-heading);
+  font-size: var(--text-2xl);
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.wizard-close-btn {
+  width: 36px;
+  height: 36px;
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 2rem;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  transition: var(--transition-base);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+.wizard-close-btn:hover {
+  background: rgba(212, 175, 55, 0.1);
+  color: var(--gold-primary);
+  transform: rotate(90deg);
+}
+
+.wizard-body {
+  padding: var(--space-lg) 0;
+}
+
+.wizard-subtitle {
+  font-size: var(--text-lg);
+  color: var(--text-secondary);
+  text-align: center;
+  margin: 0 0 var(--space-2xl) 0;
+}
+
+.creation-options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-xl);
+}
+
+.creation-option-card {
+  background: rgba(0, 0, 0, 0.3);
+  border: 2px solid rgba(212, 175, 55, 0.2);
+  border-radius: var(--radius-lg);
+  padding: var(--space-2xl);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: var(--space-md);
+}
+
+.creation-option-card:hover {
+  background: rgba(212, 175, 55, 0.1);
+  border-color: var(--gold-primary);
+  transform: translateY(-4px);
+  box-shadow: var(--glow-gold-md);
+}
+
+.option-icon {
+  font-size: 3rem;
+  margin-bottom: var(--space-sm);
+}
+
+.option-icon-logo {
+  width: 80px;
+  height: 80px;
+  margin-bottom: var(--space-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.chef-logo-icon {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 0 8px rgba(212, 175, 55, 0.3));
+  transition: all 0.3s ease;
+}
+
+.creation-option-card:hover .chef-logo-icon {
+  filter: drop-shadow(0 0 16px rgba(212, 175, 55, 0.6));
+  transform: scale(1.05);
+}
+
+.option-title {
+  font-family: var(--font-heading);
+  font-size: var(--text-xl);
+  color: var(--text-primary);
+  margin: 0;
+  font-weight: var(--font-semibold);
+}
+
+.option-description {
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  line-height: var(--leading-normal);
+  margin: 0;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .creation-options {
+    grid-template-columns: 1fr;
+  }
+
+  .wizard-modal {
+    max-width: 95%;
+  }
 }
 </style>

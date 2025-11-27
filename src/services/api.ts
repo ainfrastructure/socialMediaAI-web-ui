@@ -10,6 +10,9 @@ export interface ApiResponse<T = any> {
 export interface User {
   id: string
   email: string
+  has_completed_onboarding?: boolean
+  accepted_terms_at?: string | null
+  onboarding_completed_at?: string | null
   subscription: {
     status: string
     tier: string
@@ -87,6 +90,29 @@ class ApiService {
 
   async getProfile(): Promise<ApiResponse<{ user: User }>> {
     const response = await fetch(`${API_URL}/api/auth/me`, {
+      headers: this.getAuthHeader(),
+    })
+    return response.json()
+  }
+
+  async completeOnboarding(): Promise<ApiResponse<{ user: User }>> {
+    const response = await fetch(`${API_URL}/api/auth/onboarding/complete`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...this.getAuthHeader(),
+      },
+    })
+    return response.json()
+  }
+
+  async getStats(): Promise<ApiResponse<{
+    postsCreated: number
+    favoritesSaved: number
+    scheduledPosts: number
+    restaurantsAdded: number
+  }>> {
+    const response = await fetch(`${API_URL}/api/auth/stats`, {
       headers: this.getAuthHeader(),
     })
     return response.json()
@@ -479,8 +505,24 @@ class ApiService {
   }
 
   // Favorites
-  async getFavorites(): Promise<ApiResponse<{ favorites: any[] }>> {
-    const response = await fetch(`${API_URL}/api/favorites`, {
+  async getFavorites(filters?: {
+    platform?: string
+    restaurant_id?: string
+    content_type?: 'image' | 'video'
+    limit?: number
+    offset?: number
+    sort?: 'newest' | 'oldest'
+  }): Promise<ApiResponse<{ favorites: any[]; pagination: { total: number; limit: number; offset: number; totalPages: number } }>> {
+    const params = new URLSearchParams()
+    if (filters?.platform) params.append('platform', filters.platform)
+    if (filters?.restaurant_id) params.append('restaurant_id', filters.restaurant_id)
+    if (filters?.content_type) params.append('content_type', filters.content_type)
+    if (filters?.limit) params.append('limit', filters.limit.toString())
+    if (filters?.offset) params.append('offset', filters.offset.toString())
+    if (filters?.sort) params.append('sort', filters.sort)
+
+    const url = params.toString() ? `${API_URL}/api/favorites?${params}` : `${API_URL}/api/favorites`
+    const response = await fetch(url, {
       headers: this.getAuthHeader(),
     })
     return response.json()
@@ -550,11 +592,21 @@ class ApiService {
     status?: string
     month?: number
     year?: number
+    platforms?: string[]
+    restaurant_ids?: string[]
   }): Promise<ApiResponse<{ scheduled_posts: any[] }>> {
     const params = new URLSearchParams()
     if (filters?.status) params.append('status', filters.status)
     if (filters?.month) params.append('month', filters.month.toString())
     if (filters?.year) params.append('year', filters.year.toString())
+
+    // Handle array parameters - send as comma-separated
+    if (filters?.platforms && filters.platforms.length > 0) {
+      params.append('platforms', filters.platforms.join(','))
+    }
+    if (filters?.restaurant_ids && filters.restaurant_ids.length > 0) {
+      params.append('restaurant_ids', filters.restaurant_ids.join(','))
+    }
 
     const url = params.toString() ? `${API_URL}/api/scheduler?${params}` : `${API_URL}/api/scheduler`
     const response = await fetch(url, {
@@ -657,6 +709,18 @@ class ApiService {
 
   async getSupportedCountries(): Promise<ApiResponse<{ countries: { code: string; name: string }[] }>> {
     const response = await fetch(`${API_URL}/api/holidays/countries`, {
+      headers: this.getAuthHeader(),
+    })
+    return response.json()
+  }
+
+  // Restaurants
+  async getRestaurants(limit?: number): Promise<ApiResponse<any[]>> {
+    const params = new URLSearchParams()
+    if (limit) params.append('limit', limit.toString())
+
+    const url = params.toString() ? `${API_URL}/api/restaurants?${params}` : `${API_URL}/api/restaurants`
+    const response = await fetch(url, {
       headers: this.getAuthHeader(),
     })
     return response.json()

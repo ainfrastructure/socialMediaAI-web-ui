@@ -29,8 +29,12 @@ const ampm = ref('AM')
 const timezone = ref(defaultTimezone)
 const platform = ref('')
 const notes = ref('')
+const postText = ref('')
 const error = ref('')
 const saving = ref(false)
+const showImagePicker = ref(false)
+const availableFavorites = ref<any[]>([])
+const selectedFavoriteId = ref<string | null>(null)
 
 // Time options
 const hourOptions = Array.from({ length: 12 }, (_, i) => ({
@@ -54,9 +58,17 @@ const timezones = [
   'Europe/London',
   'Europe/Paris',
   'Europe/Berlin',
+  'Europe/Oslo',
+  'Europe/Stockholm',
+  'Europe/Copenhagen',
+  'Europe/Amsterdam',
+  'Europe/Rome',
+  'Europe/Madrid',
   'Asia/Tokyo',
   'Asia/Shanghai',
-  'Australia/Sydney'
+  'Asia/Dubai',
+  'Australia/Sydney',
+  'Pacific/Auckland'
 ]
 
 // Watch for post changes and populate form
@@ -109,6 +121,14 @@ const populateForm = (post: any) => {
   if (post.notes) {
     notes.value = post.notes
   }
+
+  if (post.post_text) {
+    postText.value = post.post_text
+  }
+
+  if (post.favorite_post_id) {
+    selectedFavoriteId.value = post.favorite_post_id
+  }
 }
 
 // Format time for display
@@ -135,6 +155,45 @@ const close = () => {
   error.value = ''
 }
 
+// Fetch available favorites for image switching
+const fetchFavorites = async () => {
+  try {
+    const response = await fetch('/api/favorites', {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+      }
+    })
+    if (response.ok) {
+      const data = await response.json()
+      availableFavorites.value = data.data?.favorites || []
+    }
+  } catch (err) {
+    console.error('Failed to fetch favorites:', err)
+  }
+}
+
+// Show image picker
+const openImagePicker = () => {
+  if (availableFavorites.value.length === 0) {
+    fetchFavorites()
+  }
+  showImagePicker.value = true
+}
+
+// Select a different favorite/image
+const selectFavorite = (favorite: any) => {
+  selectedFavoriteId.value = favorite.id
+  showImagePicker.value = false
+}
+
+// Get currently selected favorite
+const currentFavorite = computed(() => {
+  if (selectedFavoriteId.value && availableFavorites.value.length > 0) {
+    return availableFavorites.value.find(f => f.id === selectedFavoriteId.value)
+  }
+  return props.post
+})
+
 // Save changes
 const saveChanges = async () => {
   error.value = ''
@@ -155,6 +214,11 @@ const saveChanges = async () => {
     return
   }
 
+  if (!postText.value.trim()) {
+    error.value = 'Please enter post text'
+    return
+  }
+
   saving.value = true
 
   try {
@@ -163,7 +227,9 @@ const saveChanges = async () => {
       scheduled_time: get24HourTime(),
       timezone: timezone.value,
       platform: platform.value,
-      notes: notes.value || undefined
+      notes: notes.value || undefined,
+      post_text: postText.value,
+      favorite_post_id: selectedFavoriteId.value
     }
 
     emit('save', updates)
@@ -197,18 +263,20 @@ const formatDisplayDate = (dateStr: string) => {
       </div>
 
       <div class="modal-body">
-        <!-- Post Preview -->
-        <div v-if="post" class="post-preview">
+        <BaseAlert v-if="error" type="error">{{ error }}</BaseAlert>
+
+        <!-- Image Preview at Top -->
+        <div v-if="currentFavorite" class="preview-section">
           <div class="preview-media">
             <img
-              v-if="post.content_type === 'image' && post.media_url"
-              :src="post.media_url"
+              v-if="currentFavorite.content_type === 'image' && currentFavorite.media_url"
+              :src="currentFavorite.media_url"
               alt="Post preview"
               class="preview-image"
             />
             <video
-              v-else-if="post.content_type === 'video' && post.media_url"
-              :src="post.media_url"
+              v-else-if="currentFavorite.content_type === 'video' && currentFavorite.media_url"
+              :src="currentFavorite.media_url"
               class="preview-video"
             />
             <div v-else class="preview-placeholder">
@@ -216,29 +284,35 @@ const formatDisplayDate = (dateStr: string) => {
               <span class="placeholder-text">No media</span>
             </div>
           </div>
-
-          <div class="preview-info">
-            <div class="preview-platform">
-              <span :class="['platform-badge', `platform-${post.platform}`]">
-                {{ post.platform }}
-              </span>
-            </div>
-            <div v-if="post.post_text" class="preview-text">
-              {{ post.post_text }}
-            </div>
-            <div class="preview-note">
-              <strong>Note:</strong> To edit the post content or image, please create a new post.
-            </div>
-          </div>
+          <BaseButton
+            variant="secondary"
+            size="small"
+            @click="openImagePicker"
+            class="change-image-btn"
+          >
+            🖼️ Change Image
+          </BaseButton>
         </div>
 
-        <!-- Edit Form -->
+        <!-- Form Fields -->
         <div class="edit-form">
-          <BaseAlert v-if="error" type="error">{{ error }}</BaseAlert>
-
-          <!-- Date Selection -->
+          <!-- Post Text -->
           <div class="form-group">
-            <label class="form-label">📅 Scheduled Date</label>
+            <label class="form-label">✍️ POST TEXT <span class="required">*</span></label>
+            <textarea
+              v-model="postText"
+              class="form-textarea post-text-area"
+              placeholder="Write your post content here..."
+              rows="5"
+            />
+            <div class="char-count" :class="{ warning: postText.length > 5000 }">
+              {{ postText.length }} characters
+            </div>
+          </div>
+
+          <!-- Date -->
+          <div class="form-group">
+            <label class="form-label">📅 SCHEDULED DATE</label>
             <DatePicker
               v-model="scheduledDate"
               :min-date="new Date().toISOString().split('T')[0]"
@@ -248,9 +322,9 @@ const formatDisplayDate = (dateStr: string) => {
             </div>
           </div>
 
-          <!-- Time Selection -->
+          <!-- Time -->
           <div class="form-group">
-            <label class="form-label">⏰ Scheduled Time</label>
+            <label class="form-label">⏰ SCHEDULED TIME</label>
             <div class="time-picker">
               <select v-model="hours" class="time-select">
                 <option v-for="opt in hourOptions" :key="opt.value" :value="opt.value">
@@ -271,47 +345,79 @@ const formatDisplayDate = (dateStr: string) => {
             <div class="time-preview">{{ formattedTime }}</div>
           </div>
 
-          <!-- Timezone Selection -->
-          <div class="form-group">
-            <label class="form-label">🌍 Timezone</label>
-            <select v-model="timezone" class="form-input">
-              <option v-for="tz in timezones" :key="tz" :value="tz">
-                {{ tz.replace(/_/g, ' ') }}
-              </option>
-            </select>
-            <div class="timezone-hint">
-              Detected: {{ detectedTimezone.replace(/_/g, ' ') }}
+          <!-- Platform & Timezone Row -->
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">📱 PLATFORM <span class="required">*</span></label>
+              <select v-model="platform" class="form-input platform-select">
+                <option value="">Select a platform...</option>
+                <option value="facebook">👥 Facebook</option>
+                <option value="instagram">📷 Instagram</option>
+                <option value="tiktok">🎵 TikTok</option>
+                <option value="twitter">🐦 Twitter/X</option>
+                <option value="linkedin">💼 LinkedIn</option>
+              </select>
+              <p v-if="!platform" class="platform-hint error">
+                ⚠️ Please select a platform
+              </p>
+              <p v-else-if="platform !== 'facebook'" class="platform-hint warning">
+                ⚠️ Only Facebook is supported
+              </p>
             </div>
-          </div>
 
-          <!-- Platform Selection -->
-          <div class="form-group">
-            <label class="form-label">📱 Platform <span class="required">*</span></label>
-            <select v-model="platform" class="form-input platform-select">
-              <option value="">Select a platform...</option>
-              <option value="facebook">👥 Facebook</option>
-              <option value="instagram">📷 Instagram</option>
-              <option value="tiktok">🎵 TikTok</option>
-              <option value="twitter">🐦 Twitter/X</option>
-              <option value="linkedin">💼 LinkedIn</option>
-            </select>
-            <p v-if="!platform" class="platform-hint error">
-              ⚠️ Please select a platform to publish to
-            </p>
-            <p v-else-if="platform !== 'facebook'" class="platform-hint warning">
-              ⚠️ Only Facebook is currently supported. Other platforms coming soon.
-            </p>
+            <div class="form-group">
+              <label class="form-label">🌍 TIMEZONE</label>
+              <select v-model="timezone" class="form-input">
+                <option v-for="tz in timezones" :key="tz" :value="tz">
+                  {{ tz.replace(/_/g, ' ') }}
+                </option>
+              </select>
+              <div class="timezone-hint">
+                Detected: {{ detectedTimezone.replace(/_/g, ' ') }}
+              </div>
+            </div>
           </div>
 
           <!-- Notes -->
           <div class="form-group">
-            <label class="form-label">📝 Notes (Optional)</label>
+            <label class="form-label">📝 NOTES (OPTIONAL)</label>
             <textarea
               v-model="notes"
               class="form-textarea"
               placeholder="Add any notes about this post..."
               rows="3"
             />
+          </div>
+        </div>
+
+        <!-- Image Picker Modal -->
+        <div v-if="showImagePicker" class="image-picker-overlay" @click.self="showImagePicker = false">
+          <div class="image-picker-modal">
+            <div class="image-picker-header">
+              <h3 class="image-picker-title">Select a Different Image</h3>
+              <button class="close-button" @click="showImagePicker = false">×</button>
+            </div>
+            <div class="favorites-grid">
+              <div
+                v-for="favorite in availableFavorites"
+                :key="favorite.id"
+                :class="['favorite-card', { selected: selectedFavoriteId === favorite.id }]"
+                @click="selectFavorite(favorite)"
+              >
+                <img
+                  v-if="favorite.content_type === 'image'"
+                  :src="favorite.media_url"
+                  alt="Favorite"
+                  class="favorite-thumbnail"
+                />
+                <video
+                  v-else
+                  :src="favorite.media_url"
+                  class="favorite-thumbnail"
+                />
+                <div v-if="selectedFavoriteId === favorite.id" class="selected-check">✓</div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -435,26 +541,38 @@ const formatDisplayDate = (dateStr: string) => {
   border-radius: var(--radius-sm);
 }
 
-.post-preview {
-  display: grid;
-  grid-template-columns: 200px 1fr;
-  gap: var(--space-xl);
-  padding: var(--space-lg);
-  background: rgba(0, 0, 0, 0.2);
-  border: 1px solid rgba(212, 175, 55, 0.1);
-  border-radius: var(--radius-lg);
-  margin-bottom: var(--space-2xl);
+/* Preview Section at Top */
+.preview-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-md);
+  margin-bottom: var(--space-xl);
+  padding-bottom: var(--space-xl);
+  border-bottom: 1px solid rgba(212, 175, 55, 0.2);
 }
 
 .preview-media {
-  width: 200px;
-  height: 200px;
-  border-radius: var(--radius-md);
+  width: 240px;
+  height: 240px;
+  border-radius: var(--radius-lg);
   overflow: hidden;
-  background: rgba(0, 0, 0, 0.3);
+  background: rgba(0, 0, 0, 0.5);
   display: flex;
   align-items: center;
   justify-content: center;
+  border: 2px solid rgba(212, 175, 55, 0.3);
+  transition: var(--transition-base);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+}
+
+.preview-media:hover {
+  border-color: var(--gold-primary);
+  box-shadow: 0 12px 24px rgba(212, 175, 55, 0.2);
+}
+
+.change-image-btn {
+  min-width: 200px;
 }
 
 .preview-image,
@@ -535,10 +653,17 @@ const formatDisplayDate = (dateStr: string) => {
   border-radius: var(--radius-sm);
 }
 
+/* Edit Form */
 .edit-form {
   display: flex;
   flex-direction: column;
-  gap: var(--space-xl);
+  gap: var(--space-lg);
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-lg);
 }
 
 .form-group {
@@ -565,6 +690,11 @@ const formatDisplayDate = (dateStr: string) => {
   font-size: var(--text-base);
   font-family: var(--font-body);
   transition: var(--transition-base);
+}
+
+.form-input option {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
 }
 
 .form-input:focus,
@@ -601,6 +731,11 @@ const formatDisplayDate = (dateStr: string) => {
   font-size: var(--text-base);
   cursor: pointer;
   transition: var(--transition-base);
+}
+
+.time-select option {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
 }
 
 .time-select:focus {
@@ -651,6 +786,129 @@ const formatDisplayDate = (dateStr: string) => {
   color: #ef4444;
 }
 
+.post-text-area {
+  font-size: var(--text-base);
+  line-height: var(--leading-normal);
+  min-height: 150px;
+}
+
+.char-count {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  text-align: right;
+}
+
+.char-count.warning {
+  color: #f59e0b;
+  font-weight: var(--font-semibold);
+}
+
+/* Image Picker Modal */
+.image-picker-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.9);
+  backdrop-filter: blur(var(--blur-lg));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1001;
+  padding: var(--space-xl);
+  animation: fadeIn 0.2s ease-out;
+}
+
+.image-picker-modal {
+  max-width: 800px;
+  width: 100%;
+  max-height: 80vh;
+  background: rgba(26, 26, 26, 0.95);
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  border-radius: var(--radius-lg);
+  padding: var(--space-2xl);
+  overflow-y: auto;
+  animation: slideUp 0.3s ease-out;
+}
+
+.image-picker-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-2xl);
+  padding-bottom: var(--space-lg);
+  border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+}
+
+.image-picker-title {
+  font-family: var(--font-heading);
+  font-size: var(--text-xl);
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.favorites-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: var(--space-lg);
+}
+
+.favorite-card {
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  cursor: pointer;
+  border: 2px solid rgba(212, 175, 55, 0.2);
+  transition: var(--transition-base);
+}
+
+.favorite-card:hover {
+  border-color: var(--gold-primary);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
+.favorite-card.selected {
+  border-color: var(--gold-primary);
+  box-shadow: var(--glow-gold-md);
+}
+
+.favorite-thumbnail {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.selected-check {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 50px;
+  height: 50px;
+  background: var(--gold-primary);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--text-2xl);
+  color: var(--text-on-gold);
+  font-weight: var(--font-bold);
+  box-shadow: var(--glow-gold-md);
+  animation: scaleIn 0.3s ease;
+}
+
+@keyframes scaleIn {
+  from {
+    transform: translate(-50%, -50%) scale(0);
+  }
+  to {
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
 .modal-footer {
   display: flex;
   justify-content: flex-end;
@@ -666,13 +924,20 @@ const formatDisplayDate = (dateStr: string) => {
     padding: var(--space-lg);
   }
 
-  .post-preview {
+  .edit-modal {
+    max-width: 100%;
+  }
+
+  .form-row {
     grid-template-columns: 1fr;
+    gap: var(--space-md);
   }
 
   .preview-media {
     width: 100%;
-    height: 250px;
+    max-width: 300px;
+    height: auto;
+    aspect-ratio: 1;
   }
 
   .time-picker {

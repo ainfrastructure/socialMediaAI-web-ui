@@ -15,6 +15,7 @@ import SchedulerView from '../views/SchedulerView.vue'
 import FavoritesView from '../views/FavoritesView.vue'
 import ProfileView from '../views/ProfileView.vue'
 import SavedRestaurantsView from '../views/SavedRestaurantsView.vue'
+import OnboardingView from '../views/OnboardingView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -58,6 +59,12 @@ const router = createRouter({
       meta: { requiresAuth: true },
     },
     {
+      path: '/onboarding',
+      name: 'onboarding',
+      component: OnboardingView,
+      meta: { requiresAuth: true },
+    },
+    {
       path: '/login',
       name: 'login',
       component: LoginView,
@@ -97,8 +104,8 @@ const router = createRouter({
       meta: { requiresAuth: true },
     },
     {
-      path: '/playground',
-      name: 'playground',
+      path: '/cook-up',
+      name: 'cook-up',
       component: PlaygroundView,
       meta: { requiresAuth: true },
     },

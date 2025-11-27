@@ -8,6 +8,18 @@
         <p class="subtitle">{{ $t('favorites.subtitle') }}</p>
       </div>
 
+      <!-- Filters Section -->
+      <FilterBar
+        v-model="filters"
+        :restaurants="restaurants"
+        show-platform
+        show-restaurant
+        show-content-type
+        show-sort
+        @change="applyFilters"
+        @clear="resetFilters"
+      />
+
       <!-- Loading State -->
       <div v-if="loading" class="loading-container">
         <div class="spinner"></div>
@@ -19,8 +31,8 @@
         <div class="empty-content">
           <h3>{{ $t('favorites.noFavorites') }}</h3>
           <p>{{ $t('favorites.noFavoritesDescription') }}</p>
-          <BaseButton variant="primary" @click="router.push('/playground')">
-            {{ $t('favorites.goToPlayground') }}
+          <BaseButton variant="primary" @click="router.push('/cook-up')">
+            {{ $t('favorites.goToCookUp') }}
           </BaseButton>
         </div>
       </BaseCard>
@@ -31,12 +43,11 @@
           v-for="favorite in favorites"
           :key="favorite.id"
           variant="glass"
-          hoverable
           class="favorite-card"
           @click="viewDetails(favorite)"
         >
           <!-- Media Preview -->
-          <div class="media-container" @click.stop>
+          <div class="media-container">
             <img
               v-if="favorite.content_type === 'image'"
               :src="favorite.media_url"
@@ -50,15 +61,9 @@
               controls
             ></video>
 
-            <!-- Content Type Badge -->
-            <span :class="['type-badge', favorite.content_type]">
+            <!-- Content Type Icon -->
+            <span :class="['type-icon', favorite.content_type]">
               {{ favorite.content_type === 'image' ? '📸' : '🎥' }}
-              {{ $t(`favorites.${favorite.content_type}`) }}
-            </span>
-
-            <!-- Platform Badge -->
-            <span v-if="favorite.platform" :class="['platform-badge', `platform-${favorite.platform}`]">
-              {{ favorite.platform }}
             </span>
           </div>
 
@@ -84,23 +89,28 @@
               </span>
             </div>
 
-            <!-- Actions -->
-            <div class="favorite-actions" @click.stop>
-              <BaseButton variant="primary" size="small" @click="schedulePost(favorite)">
-                📅 {{ $t('favorites.schedule') }}
-              </BaseButton>
-              <BaseButton variant="danger" size="small" @click="deleteFavorite(favorite.id)">
-                🗑️ {{ $t('favorites.delete') }}
-              </BaseButton>
-            </div>
-
-            <!-- Created Date -->
-            <div class="created-date">
-              {{ formatDate(favorite.created_at) }}
+            <!-- Bottom Info (Created Date & Platform) -->
+            <div class="card-footer">
+              <div class="created-date">
+                {{ formatDate(favorite.created_at) }}
+              </div>
+              <span v-if="favorite.platform" :class="['platform-badge', `platform-${favorite.platform}`]">
+                {{ favorite.platform }}
+              </span>
             </div>
           </div>
         </BaseCard>
       </div>
+
+      <!-- Pagination -->
+      <BasePagination
+        v-if="!loading && favorites.length > 0"
+        v-model:current-page="currentPage"
+        :total-pages="totalPages"
+        :total-items="totalItems"
+        class="pagination-container"
+        @update:current-page="handlePageChange"
+      />
     </div>
 
     <!-- Schedule Modal -->
@@ -108,6 +118,19 @@
       v-model="showScheduleModal"
       :favorite-post="selectedFavorite"
       @scheduled="handleScheduled"
+    />
+
+    <!-- Delete Confirmation Modal -->
+    <ConfirmModal
+      v-model="showDeleteModal"
+      title="Delete Favorite"
+      message="Are you sure you want to delete this favorite post? This action cannot be undone."
+      confirm-text="Delete"
+      cancel-text="Cancel"
+      type="danger"
+      :loading="deletingFavorite"
+      @confirm="handleDeleteConfirm"
+      @cancel="handleDeleteCancel"
     />
 
     <!-- Detail Modal -->
@@ -134,19 +157,34 @@
               controls
             ></video>
 
+            <!-- Restaurant Info -->
+            <div v-if="selectedFavorite.saved_restaurants?.name" class="detail-section">
+              <h4>{{ $t('favorites.restaurant') }}</h4>
+              <p>{{ selectedFavorite.saved_restaurants.name }}</p>
+            </div>
+
             <!-- Full Post Text -->
             <div v-if="selectedFavorite.post_text" class="detail-section">
               <h4>{{ $t('favorites.postText') }}</h4>
-              <p class="full-text">{{ selectedFavorite.post_text }}</p>
-              <BaseButton variant="ghost" size="small" @click="copyToClipboard(selectedFavorite.post_text)">
-                📋 {{ $t('favorites.copy') }}
-              </BaseButton>
+              <textarea
+                v-if="isEditMode"
+                v-model="selectedFavorite.post_text"
+                class="edit-textarea"
+                rows="6"
+              ></textarea>
+              <p v-else class="full-text">{{ selectedFavorite.post_text }}</p>
             </div>
 
             <!-- Call to Action -->
-            <div v-if="selectedFavorite.call_to_action" class="detail-section">
+            <div v-if="selectedFavorite.call_to_action || isEditMode" class="detail-section">
               <h4>{{ $t('favorites.callToAction') }}</h4>
-              <p>{{ selectedFavorite.call_to_action }}</p>
+              <input
+                v-if="isEditMode"
+                v-model="selectedFavorite.call_to_action"
+                type="text"
+                class="edit-input"
+              />
+              <p v-else class="full-text">{{ selectedFavorite.call_to_action }}</p>
             </div>
 
             <!-- Hashtags -->
@@ -157,15 +195,51 @@
                   {{ tag }}
                 </span>
               </div>
-              <BaseButton variant="ghost" size="small" @click="copyToClipboard(selectedFavorite.hashtags.join(' '))">
-                📋 {{ $t('favorites.copyAll') }}
-              </BaseButton>
+            </div>
+
+            <!-- Platform -->
+            <div v-if="selectedFavorite.platform || isEditMode" class="detail-section">
+              <h4>Platform</h4>
+              <select v-if="isEditMode" v-model="selectedFavorite.platform" class="edit-select">
+                <option value="instagram">Instagram</option>
+                <option value="facebook">Facebook</option>
+                <option value="tiktok">TikTok</option>
+                <option value="twitter">Twitter</option>
+                <option value="linkedin">LinkedIn</option>
+              </select>
+              <p v-else class="full-text" style="text-transform: capitalize;">{{ selectedFavorite.platform }}</p>
             </div>
 
             <!-- Prompt -->
             <div v-if="selectedFavorite.prompt" class="detail-section">
               <h4>{{ $t('favorites.originalPrompt') }}</h4>
               <p class="prompt-text">{{ selectedFavorite.prompt }}</p>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="modal-actions">
+              <!-- Edit Mode Buttons -->
+              <template v-if="isEditMode">
+                <BaseButton variant="primary" @click="saveChanges">
+                  💾 Save Changes
+                </BaseButton>
+                <BaseButton variant="ghost" @click="cancelEdit">
+                  ✖ Cancel
+                </BaseButton>
+              </template>
+
+              <!-- View Mode Buttons -->
+              <template v-else>
+                <BaseButton variant="secondary" @click="enableEditMode">
+                  ✏️ Edit
+                </BaseButton>
+                <BaseButton variant="primary" @click="schedulePost(selectedFavorite)">
+                  📅 Schedule Post
+                </BaseButton>
+                <BaseButton variant="danger" @click="confirmDeleteFromModal">
+                  🗑️ Delete
+                </BaseButton>
+              </template>
             </div>
           </div>
         </BaseCard>
@@ -181,62 +255,207 @@ import { useI18n } from 'vue-i18n'
 import GradientBackground from '../components/GradientBackground.vue'
 import BaseCard from '../components/BaseCard.vue'
 import BaseButton from '../components/BaseButton.vue'
+import BasePagination from '../components/BasePagination.vue'
+import ConfirmModal from '../components/ConfirmModal.vue'
 import ScheduleModal from '../components/ScheduleModal.vue'
+import FilterBar from '../components/FilterBar.vue'
 import { api } from '../services/api'
 
 const router = useRouter()
 const { t } = useI18n()
 
+// State
 const favorites = ref<any[]>([])
+const restaurants = ref<any[]>([])
 const loading = ref(false)
 const selectedFavorite = ref<any>(null)
 const showScheduleModal = ref(false)
 const showDetailModal = ref(false)
+const showDeleteModal = ref(false)
+const deletingFavorite = ref(false)
+const favoriteToDelete = ref<string | null>(null)
+const isEditMode = ref(false)
+const originalFavorite = ref<any>(null)
 
+// Filters
+const filters = ref({
+  platform: '',
+  restaurant_id: '',
+  content_type: '',
+  sort: 'newest' as 'newest' | 'oldest',
+})
+
+// Pagination
+const currentPage = ref(1)
+const itemsPerPage = 12
+const totalItems = ref(0)
+const totalPages = ref(0)
+
+// Fetch favorites with filters and pagination
 const fetchFavorites = async () => {
   try {
     loading.value = true
-    const response = await api.getFavorites()
+    const offset = (currentPage.value - 1) * itemsPerPage
+
+    const response = await api.getFavorites({
+      platform: filters.value.platform || undefined,
+      restaurant_id: filters.value.restaurant_id || undefined,
+      content_type: filters.value.content_type as 'image' | 'video' | undefined,
+      limit: itemsPerPage,
+      offset,
+      sort: filters.value.sort,
+    })
 
     if (response.success) {
       favorites.value = response.data?.favorites || []
+      totalItems.value = response.data?.pagination?.total || 0
+      totalPages.value = response.data?.pagination?.totalPages || 0
     }
   } catch (error) {
-
+    console.error('Error fetching favorites:', error)
   } finally {
     loading.value = false
   }
 }
 
+// Fetch restaurants for filter dropdown
+const fetchRestaurants = async () => {
+  try {
+    const response = await api.getRestaurants()
+    if (response.success) {
+      restaurants.value = response.data || []
+    }
+  } catch (error) {
+    console.error('Error fetching restaurants:', error)
+  }
+}
+
+// Filter and pagination handlers
+const applyFilters = () => {
+  currentPage.value = 1 // Reset to first page when filters change
+  fetchFavorites()
+}
+
+const resetFilters = () => {
+  filters.value = {
+    platform: '',
+    restaurant_id: '',
+    content_type: '',
+    sort: 'newest',
+  }
+  applyFilters()
+}
+
+const handlePageChange = (page: number) => {
+  currentPage.value = page
+  fetchFavorites()
+  // Scroll to top of grid
+  window.scrollTo({ top: 0, behavior: 'smooth' })
+}
+
+// Post actions
 const schedulePost = (favorite: any) => {
-  selectedFavorite.value = favorite
+  const favoriteToSchedule = favorite ? { ...favorite } : (selectedFavorite.value ? { ...selectedFavorite.value } : null)
+
+  if (!favoriteToSchedule) {
+    console.error('No favorite post selected')
+    return
+  }
+
+  // Close detail modal if it's open
+  showDetailModal.value = false
+
+  // Set the favorite and open schedule modal
+  selectedFavorite.value = favoriteToSchedule
   showScheduleModal.value = true
 }
 
 const viewDetails = (favorite: any) => {
-  selectedFavorite.value = favorite
+  selectedFavorite.value = { ...favorite }
+  originalFavorite.value = { ...favorite }
+  isEditMode.value = false
   showDetailModal.value = true
 }
 
 const closeDetailModal = () => {
   showDetailModal.value = false
   selectedFavorite.value = null
+  originalFavorite.value = null
+  isEditMode.value = false
 }
 
-const deleteFavorite = async (id: string) => {
-  if (!confirm(t('favorites.confirmDelete'))) {
-    return
+const enableEditMode = () => {
+  isEditMode.value = true
+}
+
+const cancelEdit = () => {
+  if (originalFavorite.value) {
+    selectedFavorite.value = { ...originalFavorite.value }
   }
+  isEditMode.value = false
+}
+
+// Save changes from detail modal
+const saveChanges = async () => {
+  if (!selectedFavorite.value) return
 
   try {
-    const response = await api.deleteFavorite(id)
+    const response = await api.updateFavorite(selectedFavorite.value.id, {
+      post_text: selectedFavorite.value.post_text,
+      hashtags: selectedFavorite.value.hashtags,
+      call_to_action: selectedFavorite.value.call_to_action,
+      platform: selectedFavorite.value.platform,
+    })
 
     if (response.success) {
       await fetchFavorites()
+      isEditMode.value = false
+      originalFavorite.value = { ...selectedFavorite.value }
+      alert('Changes saved successfully!')
     }
   } catch (error) {
-
+    console.error('Error saving changes:', error)
+    alert('Failed to save changes')
   }
+}
+
+// Delete from detail modal
+const confirmDeleteFromModal = () => {
+  if (!selectedFavorite.value) return
+  favoriteToDelete.value = selectedFavorite.value.id
+  showDeleteModal.value = true
+}
+
+// Delete with confirmation modal
+const confirmDelete = (id: string) => {
+  favoriteToDelete.value = id
+  showDeleteModal.value = true
+}
+
+const handleDeleteConfirm = async () => {
+  if (!favoriteToDelete.value) return
+
+  try {
+    deletingFavorite.value = true
+    const response = await api.deleteFavorite(favoriteToDelete.value)
+
+    if (response.success) {
+      showDeleteModal.value = false
+      showDetailModal.value = false
+      favoriteToDelete.value = null
+      selectedFavorite.value = null
+      await fetchFavorites()
+    }
+  } catch (error) {
+    console.error('Error deleting favorite:', error)
+  } finally {
+    deletingFavorite.value = false
+  }
+}
+
+const handleDeleteCancel = () => {
+  showDeleteModal.value = false
+  favoriteToDelete.value = null
 }
 
 const handleScheduled = () => {
@@ -244,6 +463,7 @@ const handleScheduled = () => {
   selectedFavorite.value = null
 }
 
+// Utility functions
 const truncateText = (text: string, maxLength: number): string => {
   if (text.length <= maxLength) return text
   return text.substring(0, maxLength) + '...'
@@ -262,12 +482,14 @@ const copyToClipboard = async (text: string) => {
     await navigator.clipboard.writeText(text)
     alert(t('favorites.copiedToClipboard'))
   } catch (error) {
-
+    console.error('Error copying to clipboard:', error)
   }
 }
 
+// Initialize
 onMounted(() => {
   fetchFavorites()
+  fetchRestaurants()
 })
 </script>
 
@@ -287,7 +509,7 @@ onMounted(() => {
 
 .header {
   text-align: center;
-  margin-bottom: 3rem;
+  margin-bottom: 2rem;
 }
 
 .title {
@@ -306,6 +528,7 @@ onMounted(() => {
   color: var(--text-secondary);
   margin: 0;
 }
+
 
 .loading-container {
   display: flex;
@@ -356,8 +579,9 @@ onMounted(() => {
 
 .favorites-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
   gap: 2rem;
+  margin-bottom: 2rem;
 }
 
 .favorite-card {
@@ -365,11 +589,42 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   cursor: pointer;
-  transition: transform 0.2s ease;
+  position: relative;
+  background: rgba(20, 20, 20, 0.6) !important;
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(212, 175, 55, 0.15);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow:
+    0 4px 16px rgba(0, 0, 0, 0.2),
+    0 0 0 1px rgba(212, 175, 55, 0.1);
 }
 
-.favorite-card:hover {
-  transform: translateY(-2px);
+.favorite-card:hover,
+.favorite-card.card-expanded {
+  transform: translateY(-8px) scale(1.02);
+  border-color: rgba(212, 175, 55, 0.4);
+  box-shadow:
+    0 16px 48px rgba(0, 0, 0, 0.4),
+    0 0 40px rgba(212, 175, 55, 0.15),
+    0 0 0 1px rgba(212, 175, 55, 0.3);
+  background: rgba(20, 20, 20, 0.8) !important;
+}
+
+.favorite-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, transparent, var(--gold-primary), transparent);
+  opacity: 1;
+  transition: opacity 0.4s ease;
+}
+
+.favorite-card:hover::before {
+  opacity: 1;
+  background: linear-gradient(90deg, var(--gold-primary), var(--gold-light), var(--gold-primary));
 }
 
 .media-container {
@@ -385,57 +640,58 @@ onMounted(() => {
   object-fit: cover;
 }
 
-.type-badge {
+.type-icon {
   position: absolute;
-  top: 1rem;
-  left: 1rem;
-  padding: 0.5rem 1rem;
-  background: rgba(0, 0, 0, 0.8);
-  backdrop-filter: blur(10px);
-  border-radius: 6px;
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: var(--text-primary);
-  text-transform: capitalize;
+  top: 0.75rem;
+  left: 0.75rem;
+  font-size: 1.5rem;
+  filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.5));
+  transition: transform 0.3s ease;
 }
 
-.type-badge.image {
-  border-left: 3px solid #4CAF50;
-}
-
-.type-badge.video {
-  border-left: 3px solid #2196F3;
+.favorite-card:hover .type-icon {
+  transform: scale(1.1);
 }
 
 .platform-badge {
-  position: absolute;
-  top: 1rem;
-  right: 1rem;
-  padding: 0.5rem 1rem;
+  padding: 0.4rem 0.875rem;
   border-radius: 6px;
-  font-size: 0.75rem;
+  font-size: 0.6875rem;
   font-weight: 700;
   text-transform: uppercase;
+  letter-spacing: 0.5px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease;
 }
 
 .platform-badge.platform-instagram {
-  background: rgba(225, 48, 108, 0.9);
+  background: linear-gradient(135deg, rgba(225, 48, 108, 0.9), rgba(253, 29, 29, 0.9));
   color: white;
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .platform-badge.platform-facebook {
-  background: rgba(66, 103, 178, 0.9);
+  background: linear-gradient(135deg, rgba(66, 103, 178, 0.9), rgba(24, 119, 242, 0.9));
   color: white;
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .platform-badge.platform-tiktok {
-  background: rgba(0, 0, 0, 0.9);
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.95), rgba(37, 244, 238, 0.3));
   color: white;
+  border: 1px solid rgba(37, 244, 238, 0.5);
 }
 
 .platform-badge.platform-twitter {
-  background: rgba(29, 161, 242, 0.9);
+  background: linear-gradient(135deg, rgba(29, 161, 242, 0.9), rgba(26, 140, 216, 0.9));
   color: white;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.platform-badge.platform-linkedin {
+  background: linear-gradient(135deg, rgba(10, 102, 194, 0.9), rgba(0, 119, 181, 0.9));
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .favorite-details {
@@ -482,18 +738,21 @@ onMounted(() => {
   font-size: 0.75rem;
 }
 
-.favorite-actions {
+
+/* Card Footer */
+.card-footer {
   display: flex;
-  gap: 0.5rem;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
   margin-top: auto;
   padding-top: 1rem;
-  border-top: 1px solid rgba(212, 175, 55, 0.2);
+  border-top: 1px solid rgba(212, 175, 55, 0.15);
 }
 
 .created-date {
   font-size: 0.75rem;
   color: var(--text-muted);
-  text-align: center;
 }
 
 /* Detail Modal */
@@ -610,6 +869,57 @@ onMounted(() => {
   margin-bottom: var(--space-md);
 }
 
+/* Edit inputs in modal */
+.edit-textarea,
+.edit-input,
+.edit-select {
+  width: 100%;
+  background: rgba(10, 10, 10, 0.8);
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  border-radius: var(--radius-md);
+  padding: var(--space-sm) var(--space-md);
+  color: var(--text-primary);
+  font-size: 0.9375rem;
+  font-family: var(--font-body);
+  transition: all 0.3s ease;
+  resize: vertical;
+}
+
+.edit-textarea:focus,
+.edit-input:focus,
+.edit-select:focus {
+  outline: none;
+  border-color: var(--gold-primary);
+  box-shadow: 0 0 15px rgba(212, 175, 55, 0.3);
+}
+
+.edit-select option {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+/* Modal actions */
+.modal-actions {
+  display: flex;
+  gap: var(--space-md);
+  margin-top: var(--space-xl);
+  padding-top: var(--space-xl);
+  border-top: 1px solid rgba(212, 175, 55, 0.2);
+  flex-wrap: wrap;
+}
+
+.modal-actions button {
+  flex: 1;
+  min-width: 150px;
+}
+
+/* Pagination */
+.pagination-container {
+  margin-top: 3rem;
+  display: flex;
+  justify-content: center;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .title {
@@ -618,10 +928,54 @@ onMounted(() => {
 
   .favorites-grid {
     grid-template-columns: 1fr;
+    gap: 1.5rem;
   }
 
-  .favorite-actions {
+  .modal-actions {
     flex-direction: column;
   }
+
+  .modal-actions button {
+    min-width: 100%;
+  }
+}
+
+/* Enhanced media container */
+.media-container {
+  overflow: hidden;
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+}
+
+.favorite-media {
+  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.favorite-card:hover .favorite-media {
+  transform: scale(1.05);
+}
+
+/* Restaurant name enhancement */
+.restaurant-name {
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.1), rgba(212, 175, 55, 0.05));
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+  border-left: 3px solid var(--gold-primary);
+}
+
+/* Hashtag enhancements */
+.hashtag {
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  transition: all 0.2s ease;
+}
+
+.hashtag:hover {
+  background: rgba(212, 175, 55, 0.25);
+  border-color: var(--gold-primary);
+  transform: translateY(-2px);
+}
+
+/* Smooth scroll behavior */
+html {
+  scroll-behavior: smooth;
 }
 </style>

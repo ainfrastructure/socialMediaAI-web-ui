@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '../stores/auth'
+import { useFacebookStore } from '../stores/facebook'
 import { api } from '../services/api'
 import GradientBackground from '../components/GradientBackground.vue'
 import BaseCard from '../components/BaseCard.vue'
@@ -10,19 +10,68 @@ import BaseButton from '../components/BaseButton.vue'
 
 const router = useRouter()
 const authStore = useAuthStore()
-const { t } = useI18n()
+const facebookStore = useFacebookStore()
+
+// Real stats from API
+const stats = ref({
+  postsCreated: 0,
+  favoritesSaved: 0,
+  scheduledPosts: 0,
+  restaurantsAdded: 0
+})
+
+const loading = ref(true)
 
 const tierDisplayName = computed(() => authStore.user?.subscription.tier.toUpperCase() || 'FREE')
+
 const progressPercent = computed(() => {
   if (!authStore.usageStats) return 0
   const { credits_this_month, monthly_limit } = authStore.usageStats
-  return (credits_this_month / monthly_limit) * 100
+  return Math.min((credits_this_month / monthly_limit) * 100, 100)
 })
 
-async function handleLogout() {
-  await authStore.logout()
-  router.push('/login')
-}
+// All available platforms
+const allPlatforms = ref([
+  {
+    name: 'Facebook',
+    icon: '📘',
+    connected: false,
+    route: '/playground',
+    description: 'Share posts and manage your Facebook page'
+  },
+  {
+    name: 'Instagram',
+    icon: '📷',
+    connected: false,
+    route: '/playground',
+    description: 'Post beautiful content to Instagram'
+  },
+  {
+    name: 'TikTok',
+    icon: '🎵',
+    connected: false,
+    route: '/playground',
+    description: 'Create engaging TikTok videos'
+  },
+  {
+    name: 'Twitter/X',
+    icon: '🐦',
+    connected: false,
+    route: '/playground',
+    description: 'Share quick updates and engage followers'
+  },
+  {
+    name: 'LinkedIn',
+    icon: '💼',
+    connected: false,
+    route: '/playground',
+    description: 'Professional networking and business updates'
+  }
+])
+
+const connectedCount = computed(() => {
+  return allPlatforms.value.filter(p => p.connected).length
+})
 
 async function openCustomerPortal() {
   try {
@@ -31,17 +80,34 @@ async function openCustomerPortal() {
       window.location.href = (response as any).portal_url
     }
   } catch (error) {
-
+    console.error('Failed to open customer portal:', error)
   }
 }
 
-// Load user data on mount
+// Load data on mount
 onMounted(async () => {
   try {
+    // Load profile and connected pages
     await authStore.refreshProfile()
-  } catch (error) {
+    await facebookStore.loadConnectedPages()
 
-    // Don't block - let the page render anyway
+    // Load real stats from API
+    const statsResponse = await api.getStats()
+    if (statsResponse.success && statsResponse.data) {
+      stats.value = statsResponse.data
+    }
+
+    // Update Facebook connection status
+    if (facebookStore.connectedPages && facebookStore.connectedPages.length > 0) {
+      const fbPlatform = allPlatforms.value.find(p => p.name === 'Facebook')
+      if (fbPlatform) {
+        fbPlatform.connected = true
+      }
+    }
+  } catch (error) {
+    console.error('Failed to load dashboard data:', error)
+  } finally {
+    loading.value = false
   }
 })
 </script>
@@ -53,94 +119,175 @@ onMounted(async () => {
     <div class="container">
       <!-- Hero Section -->
       <div class="hero-section">
-        <h2 class="hero-title">{{ $t('dashboard.heroTitle') }}</h2>
+        <h1 class="hero-title">Welcome back, {{ authStore.user?.email?.split('@')[0] }}! 👋</h1>
         <p class="hero-subtitle">
-          {{ $t('dashboard.heroSubtitle') }}
+          Ready to create amazing content for your restaurants?
         </p>
       </div>
 
-      <!-- How It Works Section -->
+      <!-- Onboarding Test Button -->
+      <BaseCard variant="glass" class="onboarding-test-card">
+        <div class="test-header">
+          <span class="test-badge">🧪 For Testing</span>
+          <h3 class="test-title">Try the Onboarding Flow</h3>
+        </div>
+        <p class="test-description">
+          Click below to experience the new user onboarding tour and quiz
+        </p>
+        <BaseButton variant="primary" @click="router.push('/onboarding')">
+          Launch Onboarding Experience
+        </BaseButton>
+      </BaseCard>
+
+      <!-- Quick Stats -->
+      <div class="stats-grid">
+        <BaseCard variant="glass" class="stat-card">
+          <div class="stat-icon">🎨</div>
+          <div class="stat-value">{{ stats.postsCreated }}</div>
+          <div class="stat-label">Posts Created</div>
+        </BaseCard>
+
+        <BaseCard variant="glass" class="stat-card">
+          <div class="stat-icon">⭐</div>
+          <div class="stat-value">{{ stats.favoritesSaved }}</div>
+          <div class="stat-label">Favorites Saved</div>
+        </BaseCard>
+
+        <BaseCard variant="glass" class="stat-card">
+          <div class="stat-icon">📅</div>
+          <div class="stat-value">{{ stats.scheduledPosts }}</div>
+          <div class="stat-label">Scheduled Posts</div>
+        </BaseCard>
+
+        <BaseCard variant="glass" class="stat-card">
+          <div class="stat-icon">🍽️</div>
+          <div class="stat-value">{{ stats.restaurantsAdded }}</div>
+          <div class="stat-label">Restaurants</div>
+        </BaseCard>
+      </div>
+
+      <!-- Quick Actions -->
       <div class="section-header">
-        <h3 class="section-title">{{ $t('dashboard.howItWorks') }}</h3>
-        <p class="section-subtitle">{{ $t('dashboard.howItWorksSubtitle') }}</p>
+        <h2 class="section-title">Quick Actions</h2>
+        <p class="section-subtitle">Jump right into what you need</p>
       </div>
 
-      <div class="steps-grid">
-        <BaseCard variant="glass" hoverable class="step-card">
-          <div class="step-number">1</div>
-          <h4 class="step-title">{{ $t('dashboard.step1Title') }}</h4>
-          <p class="step-description">
-            {{ $t('dashboard.step1Description') }}
-          </p>
-          <BaseButton variant="secondary" size="small" @click="router.push('/restaurants')">
-            {{ $t('dashboard.step1Button') }}
-          </BaseButton>
+      <div class="actions-grid">
+        <BaseCard variant="glass" hoverable class="action-card" @click="router.push('/restaurants')">
+          <div class="action-icon">🔍</div>
+          <h3 class="action-title">Add Restaurant</h3>
+          <p class="action-description">Search and add your restaurant to get started</p>
+          <BaseButton variant="secondary" size="small">Get Started →</BaseButton>
         </BaseCard>
 
-        <BaseCard variant="glass" hoverable class="step-card">
-          <div class="step-number">2</div>
-          <h4 class="step-title">{{ $t('dashboard.step2Title') }}</h4>
-          <p class="step-description">
-            {{ $t('dashboard.step2Description') }}
-          </p>
-          <BaseButton variant="secondary" size="small" @click="router.push('/playground')">
-            {{ $t('dashboard.step2Button') }}
-          </BaseButton>
+        <BaseCard variant="glass" hoverable class="action-card" @click="router.push('/playground')">
+          <div class="action-icon">🎨</div>
+          <h3 class="action-title">Cook Up Content</h3>
+          <p class="action-description">Generate stunning posts from your menu items</p>
+          <BaseButton variant="secondary" size="small">Create Now →</BaseButton>
         </BaseCard>
 
-        <BaseCard variant="glass" hoverable class="step-card">
-          <div class="step-number">3</div>
-          <h4 class="step-title">{{ $t('dashboard.step3Title') }}</h4>
-          <p class="step-description">
-            {{ $t('dashboard.step3Description') }}
-          </p>
-          <BaseButton variant="secondary" size="small" @click="router.push('/scheduler')">
-            {{ $t('dashboard.step3Button') }}
-          </BaseButton>
+        <BaseCard variant="glass" hoverable class="action-card" @click="router.push('/scheduler')">
+          <div class="action-icon">📅</div>
+          <h3 class="action-title">Schedule Posts</h3>
+          <p class="action-description">Plan your content calendar in advance</p>
+          <BaseButton variant="secondary" size="small">Open Calendar →</BaseButton>
+        </BaseCard>
+
+        <BaseCard variant="glass" hoverable class="action-card" @click="router.push('/favorites')">
+          <div class="action-icon">⭐</div>
+          <h3 class="action-title">View Favorites</h3>
+          <p class="action-description">Access your saved post library</p>
+          <BaseButton variant="secondary" size="small">Browse Library →</BaseButton>
         </BaseCard>
       </div>
 
-      <!-- Account Info Section -->
-      <BaseCard variant="glass" class="account-card">
-        <h3 class="account-title">{{ $t('dashboard.yourAccount') }}</h3>
+      <!-- Connected Platforms -->
+      <div class="section-header">
+        <h2 class="section-title">Social Media Platforms</h2>
+        <p class="section-subtitle">
+          {{ connectedCount > 0 ? `${connectedCount} of ${allPlatforms.length} platforms connected` : 'Connect your social media accounts to start publishing' }}
+        </p>
+      </div>
 
-        <div class="account-info">
-          <div class="info-row">
-            <span class="info-label">{{ $t('dashboard.email') }}</span>
-            <span class="info-value">{{ authStore.user?.email }}</span>
-          </div>
-
-          <div class="info-row">
-            <span class="info-label">{{ $t('dashboard.plan') }}</span>
-            <span class="tier-badge">{{ tierDisplayName }}</span>
-          </div>
-
-          <div class="info-row">
-            <span class="info-label">{{ $t('dashboard.status') }}</span>
-            <span class="info-value">{{ authStore.user?.subscription.status }}</span>
-          </div>
-
-          <div class="info-row">
-            <span class="info-label">{{ $t('dashboard.creditsUsed') }}</span>
-            <span class="info-value">
-              {{ authStore.usageStats?.credits_this_month }} / {{ authStore.usageStats?.monthly_limit }} {{ $t('dashboard.thisMonth') }}
+      <div class="platforms-grid">
+        <BaseCard
+          v-for="platform in allPlatforms"
+          :key="platform.name"
+          variant="glass"
+          hoverable
+          :class="['platform-card', { connected: platform.connected }]"
+          @click="router.push(platform.route)"
+        >
+          <div class="platform-card-icon">{{ platform.icon }}</div>
+          <h3 class="platform-card-name">{{ platform.name }}</h3>
+          <p class="platform-card-description">{{ platform.description }}</p>
+          <div class="platform-card-status">
+            <span v-if="platform.connected" class="status-badge connected">
+              ✓ Connected
+            </span>
+            <span v-else class="status-badge disconnected">
+              Not Connected
             </span>
           </div>
+          <BaseButton
+            :variant="platform.connected ? 'secondary' : 'primary'"
+            size="small"
+            class="platform-card-button"
+          >
+            {{ platform.connected ? 'Manage' : 'Connect' }}
+          </BaseButton>
+        </BaseCard>
+      </div>
 
-          <div class="usage-bar-container">
+      <!-- Account Overview -->
+      <div class="section-header">
+        <h2 class="section-title">Account Overview</h2>
+      </div>
+
+      <BaseCard variant="glass" class="account-card">
+        <div class="account-grid">
+          <!-- Subscription Info -->
+          <div class="account-section">
+            <h3 class="account-section-title">Subscription</h3>
+            <div class="account-info">
+              <div class="info-row">
+                <span class="info-label">Current Plan</span>
+                <span class="tier-badge">{{ tierDisplayName }}</span>
+              </div>
+              <div class="info-row">
+                <span class="info-label">Status</span>
+                <span class="info-value">{{ authStore.user?.subscription.status }}</span>
+              </div>
+            </div>
+            <BaseButton variant="secondary" size="small" @click="router.push('/plans')">
+              View Plans
+            </BaseButton>
+          </div>
+
+          <!-- Usage Stats -->
+          <div class="account-section">
+            <h3 class="account-section-title">Usage This Month</h3>
+            <div class="usage-stats">
+              <div class="usage-numbers">
+                <span class="usage-current">{{ authStore.usageStats?.credits_this_month }}</span>
+                <span class="usage-separator">/</span>
+                <span class="usage-total">{{ authStore.usageStats?.monthly_limit }}</span>
+              </div>
+              <div class="usage-label">Credits Used</div>
+            </div>
             <div class="usage-bar">
               <div class="usage-progress" :style="{ width: `${progressPercent}%` }"></div>
             </div>
-            <span class="usage-text">{{ $t('dashboard.creditsRemaining', { count: authStore.usageStats?.remaining_credits }) }}</span>
+            <div class="usage-remaining">
+              {{ authStore.usageStats?.remaining_credits }} credits remaining
+            </div>
           </div>
         </div>
 
         <div class="account-actions">
-          <BaseButton variant="secondary" @click="router.push('/plans')">
-            {{ $t('dashboard.viewPlans') }}
-          </BaseButton>
           <BaseButton variant="secondary" @click="openCustomerPortal">
-            {{ $t('dashboard.manageSubscription') }}
+            Manage Subscription
           </BaseButton>
         </div>
       </BaseCard>
@@ -152,7 +299,7 @@ onMounted(async () => {
 .dashboard-view {
   min-height: 100vh;
   position: relative;
-  padding: 2rem 1rem;
+  padding: var(--space-3xl) var(--space-lg);
 }
 
 .container {
@@ -162,272 +309,292 @@ onMounted(async () => {
   z-index: 1;
 }
 
-/* Header */
-.header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 3rem;
-}
-
-.brand-title {
-  font-family: var(--font-heading);
-  font-size: 3rem;
-  font-weight: 700;
-  margin: 0;
-  background: linear-gradient(135deg, var(--text-primary) 0%, var(--gold-primary) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
 /* Hero Section */
 .hero-section {
-  margin-bottom: 4rem;
+  margin-bottom: var(--space-4xl);
   text-align: center;
   animation: fadeInUp 0.6s var(--ease-smooth);
 }
 
 .hero-title {
   font-family: var(--font-heading);
-  font-size: 2.5rem;
-  font-weight: 700;
-  margin: 0 0 1rem 0;
-  color: var(--text-primary);
+  font-size: var(--text-4xl);
+  font-weight: var(--font-bold);
+  margin: 0 0 var(--space-md) 0;
+  background: var(--gradient-gold);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .hero-subtitle {
-  font-size: 1.25rem;
-  color: var(--gold-primary);
-  margin: 0 0 1rem 0;
-  font-weight: 500;
-}
-
-.hero-description {
-  font-size: 1rem;
+  font-size: var(--text-lg);
   color: var(--text-secondary);
   margin: 0;
-  max-width: 600px;
-  margin: 0 auto;
-  line-height: 1.6;
+}
+
+/* Onboarding Test Card */
+.onboarding-test-card {
+  padding: var(--space-2xl);
+  margin-bottom: var(--space-4xl);
+  text-align: center;
+  border: 2px dashed var(--gold-primary);
+  animation: fadeInUp 0.7s var(--ease-smooth);
+}
+
+.test-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-md);
+  margin-bottom: var(--space-lg);
+}
+
+.test-badge {
+  background: var(--gold-subtle);
+  color: var(--gold-primary);
+  padding: var(--space-xs) var(--space-lg);
+  border-radius: var(--radius-full);
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  border: 1px solid var(--gold-primary);
+}
+
+.test-title {
+  font-family: var(--font-heading);
+  font-size: var(--text-2xl);
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.test-description {
+  color: var(--text-secondary);
+  margin: 0 0 var(--space-xl) 0;
+}
+
+/* Stats Grid */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--space-xl);
+  margin-bottom: var(--space-4xl);
+}
+
+.stat-card {
+  padding: var(--space-2xl);
+  text-align: center;
+  animation: fadeInUp 0.6s var(--ease-smooth);
+  animation-fill-mode: both;
+}
+
+.stat-card:nth-child(1) { animation-delay: 0.1s; }
+.stat-card:nth-child(2) { animation-delay: 0.2s; }
+.stat-card:nth-child(3) { animation-delay: 0.3s; }
+.stat-card:nth-child(4) { animation-delay: 0.4s; }
+
+.stat-icon {
+  font-size: var(--text-5xl);
+  margin-bottom: var(--space-md);
+}
+
+.stat-value {
+  font-family: var(--font-heading);
+  font-size: var(--text-4xl);
+  font-weight: var(--font-bold);
+  color: var(--gold-primary);
+  margin-bottom: var(--space-xs);
+}
+
+.stat-label {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 /* Section Headers */
 .section-header {
   text-align: center;
-  margin: 4rem 0 2rem 0;
+  margin: var(--space-5xl) 0 var(--space-3xl) 0;
 }
 
 .section-title {
   font-family: var(--font-heading);
-  font-size: 2rem;
-  font-weight: 700;
-  margin: 0 0 0.5rem 0;
+  font-size: var(--text-3xl);
+  font-weight: var(--font-bold);
+  margin: 0 0 var(--space-sm) 0;
   color: var(--text-primary);
 }
 
 .section-subtitle {
-  font-size: 1rem;
+  font-size: var(--text-base);
   color: var(--text-secondary);
   margin: 0;
 }
 
-/* Steps Grid */
-.steps-grid {
+/* Actions Grid */
+.actions-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 2rem;
-  margin-bottom: 4rem;
-}
-
-.step-card {
-  text-align: center;
-  padding: 2rem;
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  animation: fadeInUp 0.6s var(--ease-smooth);
-  animation-fill-mode: both;
-  cursor: default;
-}
-
-.step-card:nth-child(1) { animation-delay: 0.1s; }
-.step-card:nth-child(2) { animation-delay: 0.2s; }
-.step-card:nth-child(3) { animation-delay: 0.3s; }
-.step-card:nth-child(4) { animation-delay: 0.4s; }
-
-.step-number {
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
-  background: var(--gradient-gold);
-  color: var(--text-on-gold);
-  font-size: 1.5rem;
-  font-weight: 700;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: 0 auto 1rem auto;
-  box-shadow: var(--glow-gold-md);
-}
-
-.step-title {
-  font-family: var(--font-heading);
-  font-size: 1.25rem;
-  color: var(--text-primary);
-  margin: 0;
-}
-
-.step-description {
-  color: var(--text-secondary);
-  line-height: 1.6;
-  margin: 0;
-  flex: 1;
-}
-
-/* Features Grid */
-.features-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 1.5rem;
-  margin-bottom: 4rem;
-}
-
-.feature-card {
-  padding: 2rem;
-  text-align: center;
-  animation: fadeInUp 0.6s var(--ease-smooth);
-  animation-fill-mode: both;
-}
-
-.feature-card:nth-child(1) { animation-delay: 0.1s; }
-.feature-card:nth-child(2) { animation-delay: 0.15s; }
-.feature-card:nth-child(3) { animation-delay: 0.2s; }
-.feature-card:nth-child(4) { animation-delay: 0.25s; }
-.feature-card:nth-child(5) { animation-delay: 0.3s; }
-.feature-card:nth-child(6) { animation-delay: 0.35s; }
-
-.feature-icon {
-  font-size: 3rem;
-  margin-bottom: 1rem;
-}
-
-.feature-title {
-  font-family: var(--font-heading);
-  font-size: 1.125rem;
-  color: var(--text-primary);
-  margin: 0 0 0.75rem 0;
-}
-
-.feature-description {
-  color: var(--text-secondary);
-  line-height: 1.6;
-  margin: 0;
-  font-size: 0.875rem;
-}
-
-/* Quick Actions Grid */
-.quick-actions-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 1.5rem;
-  margin-bottom: 4rem;
+  gap: var(--space-xl);
+  margin-bottom: var(--space-4xl);
 }
 
 .action-card {
-  padding: 2rem;
+  padding: var(--space-2xl);
   text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
   cursor: pointer;
-  transition: all 0.3s ease;
   animation: fadeInUp 0.6s var(--ease-smooth);
   animation-fill-mode: both;
 }
 
 .action-card:nth-child(1) { animation-delay: 0.1s; }
-.action-card:nth-child(2) { animation-delay: 0.15s; }
-.action-card:nth-child(3) { animation-delay: 0.2s; }
-.action-card:nth-child(4) { animation-delay: 0.25s; }
-.action-card:nth-child(5) { animation-delay: 0.3s; }
-.action-card:nth-child(6) { animation-delay: 0.35s; }
-
-.action-card:hover {
-  transform: translateY(-4px);
-  box-shadow: var(--shadow-xl);
-}
+.action-card:nth-child(2) { animation-delay: 0.2s; }
+.action-card:nth-child(3) { animation-delay: 0.3s; }
+.action-card:nth-child(4) { animation-delay: 0.4s; }
 
 .action-icon {
-  font-size: 2.5rem;
-  margin-bottom: 1rem;
+  font-size: 60px;
+  margin-bottom: var(--space-sm);
 }
 
 .action-title {
   font-family: var(--font-heading);
-  font-size: 1.125rem;
+  font-size: var(--text-xl);
   color: var(--text-primary);
-  margin: 0 0 0.5rem 0;
+  margin: 0;
 }
 
 .action-description {
   color: var(--text-secondary);
-  font-size: 0.875rem;
+  font-size: var(--text-sm);
+  line-height: var(--leading-normal);
+  margin: 0;
+  flex: 1;
+}
+
+/* Platforms Grid */
+.platforms-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: var(--space-xl);
+  margin-bottom: var(--space-4xl);
+}
+
+.platform-card {
+  padding: var(--space-2xl);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: var(--space-md);
+  cursor: pointer;
+  transition: all var(--transition-base);
+  animation: fadeInUp 0.6s var(--ease-smooth);
+  animation-fill-mode: both;
+}
+
+.platform-card:nth-child(1) { animation-delay: 0.1s; }
+.platform-card:nth-child(2) { animation-delay: 0.2s; }
+.platform-card:nth-child(3) { animation-delay: 0.3s; }
+.platform-card:nth-child(4) { animation-delay: 0.4s; }
+.platform-card:nth-child(5) { animation-delay: 0.5s; }
+
+.platform-card.connected {
+  border-color: var(--success-border);
+  background: var(--success-bg);
+}
+
+.platform-card-icon {
+  font-size: 64px;
+  margin-bottom: var(--space-sm);
+}
+
+.platform-card-name {
+  font-family: var(--font-heading);
+  font-size: var(--text-xl);
+  color: var(--text-primary);
   margin: 0;
 }
 
-/* CTA Section */
-.cta-card {
-  text-align: center;
-  padding: 3rem 2rem;
-  margin-bottom: 3rem;
-  animation: fadeInUp 0.8s var(--ease-smooth);
-}
-
-.cta-title {
-  font-family: var(--font-heading);
-  font-size: 2rem;
-  color: var(--text-primary);
-  margin: 0 0 1rem 0;
-}
-
-.cta-description {
-  font-size: 1.125rem;
+.platform-card-description {
   color: var(--text-secondary);
-  margin: 0 0 2rem 0;
+  font-size: var(--text-sm);
+  line-height: var(--leading-normal);
+  margin: 0;
+  flex: 1;
 }
 
-.cta-actions {
-  display: flex;
-  gap: 1rem;
-  justify-content: center;
-  flex-wrap: wrap;
+.platform-card-status {
+  margin: var(--space-sm) 0;
 }
 
-/* Account Section */
+.status-badge {
+  font-size: var(--text-xs);
+  font-weight: var(--font-semibold);
+  padding: var(--space-xs) var(--space-md);
+  border-radius: var(--radius-full);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.status-badge.connected {
+  background: var(--success-bg);
+  color: var(--success-text);
+  border: 1px solid var(--success-border);
+}
+
+.status-badge.disconnected {
+  background: var(--bg-tertiary);
+  color: var(--text-muted);
+  border: 1px solid var(--border-color);
+}
+
+.platform-card-button {
+  width: 100%;
+}
+
+/* Account Card */
 .account-card {
-  padding: 2rem;
+  padding: var(--space-3xl);
+  margin-bottom: var(--space-4xl);
   animation: fadeInUp 0.9s var(--ease-smooth);
 }
 
-.account-title {
+.account-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: var(--space-3xl);
+  margin-bottom: var(--space-3xl);
+}
+
+.account-section {
+  background: var(--bg-tertiary);
+  padding: var(--space-2xl);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-color);
+}
+
+.account-section-title {
   font-family: var(--font-heading);
-  font-size: 1.5rem;
+  font-size: var(--text-xl);
   color: var(--text-primary);
-  margin: 0 0 1.5rem 0;
+  margin: 0 0 var(--space-xl) 0;
   text-align: center;
 }
 
 .account-info {
-  background: var(--bg-tertiary);
-  padding: 1.5rem;
-  border-radius: var(--radius-md);
-  margin-bottom: 1.5rem;
-  border: 1px solid var(--border-color);
+  margin-bottom: var(--space-xl);
 }
 
 .info-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0.75rem 0;
+  padding: var(--space-md) 0;
   border-bottom: 1px solid var(--border-color);
 }
 
@@ -436,57 +603,87 @@ onMounted(async () => {
 }
 
 .info-label {
-  font-weight: 600;
+  font-weight: var(--font-semibold);
   color: var(--text-secondary);
-  font-size: 0.875rem;
+  font-size: var(--text-sm);
 }
 
 .info-value {
   color: var(--text-primary);
-  font-size: 0.875rem;
+  font-size: var(--text-sm);
 }
 
 .tier-badge {
   background: var(--gradient-gold);
   color: var(--text-on-gold);
-  padding: 0.25rem 0.75rem;
-  border-radius: 999px;
-  font-weight: 600;
-  font-size: 0.75rem;
+  padding: var(--space-xs) var(--space-lg);
+  border-radius: var(--radius-full);
+  font-weight: var(--font-bold);
+  font-size: var(--text-xs);
 }
 
-.usage-bar-container {
-  margin-top: 1rem;
-  padding-top: 1rem;
-  border-top: 1px solid var(--border-color);
+.usage-stats {
+  text-align: center;
+  margin-bottom: var(--space-xl);
+}
+
+.usage-numbers {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-sm);
+}
+
+.usage-current {
+  font-family: var(--font-heading);
+  font-size: var(--text-4xl);
+  font-weight: var(--font-bold);
+  color: var(--gold-primary);
+}
+
+.usage-separator {
+  font-size: var(--text-2xl);
+  color: var(--text-muted);
+}
+
+.usage-total {
+  font-size: var(--text-2xl);
+  color: var(--text-secondary);
+}
+
+.usage-label {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .usage-bar {
   width: 100%;
-  height: 8px;
+  height: 12px;
   background: var(--bg-primary);
-  border-radius: 999px;
+  border-radius: var(--radius-full);
   overflow: hidden;
-  margin-bottom: 0.5rem;
+  margin-bottom: var(--space-md);
 }
 
 .usage-progress {
   height: 100%;
   background: var(--gradient-gold);
-  transition: width 0.3s ease;
-  border-radius: 999px;
+  transition: width var(--transition-base);
+  border-radius: var(--radius-full);
 }
 
-.usage-text {
-  font-size: 0.75rem;
+.usage-remaining {
+  font-size: var(--text-xs);
   color: var(--text-muted);
-  display: block;
   text-align: center;
 }
 
 .account-actions {
   display: flex;
-  gap: 1rem;
+  gap: var(--space-lg);
   justify-content: center;
   flex-wrap: wrap;
 }
@@ -504,49 +701,40 @@ onMounted(async () => {
 }
 
 /* Responsive */
+@media (max-width: 1024px) {
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .actions-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
 @media (max-width: 768px) {
-  .brand-title {
-    font-size: 2rem;
+  .dashboard-view {
+    padding: var(--space-2xl) var(--space-md);
   }
 
   .hero-title {
-    font-size: 1.75rem;
+    font-size: var(--text-3xl);
   }
 
   .hero-subtitle {
-    font-size: 1rem;
+    font-size: var(--text-base);
   }
 
-  .section-title {
-    font-size: 1.5rem;
-  }
-
-  .steps-grid,
-  .features-grid,
-  .quick-actions-grid {
+  .stats-grid,
+  .actions-grid {
     grid-template-columns: 1fr;
   }
 
-  .cta-title {
-    font-size: 1.5rem;
-  }
-
-  .cta-actions {
-    flex-direction: column;
+  .account-grid {
+    grid-template-columns: 1fr;
   }
 
   .account-actions {
     flex-direction: column;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
   }
 }
 </style>

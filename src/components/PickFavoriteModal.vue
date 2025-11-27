@@ -3,27 +3,162 @@
     <div v-if="modelValue" class="modal-overlay" @click.self="closeModal">
       <BaseCard variant="glass-intense" class="modal-card">
         <div class="modal-header">
-          <h3 class="modal-title">Pick a Favorite Post</h3>
+          <h3 class="modal-title">
+            {{ currentStep === 1 ? 'Pick a Favorite Post' : 'Schedule Your Post' }}
+          </h3>
           <button class="close-btn" @click="closeModal">&times;</button>
         </div>
 
         <div class="modal-body">
-          <!-- Date Selection -->
-          <div class="form-group-full">
-            <label for="schedule_date" class="form-label">
-              Date <span class="required">*</span>
-            </label>
-            <DatePicker
-              v-model="scheduleDate"
-              :min-date="today"
-            />
-            <p class="date-preview">
-              Scheduling for: <strong>{{ formatDate(scheduleDate) }}</strong>
-            </p>
+          <!-- Progress Indicator -->
+          <div class="progress-indicator">
+            <div :class="['step-dot', { active: currentStep === 1, completed: currentStep > 1 }]">1</div>
+            <div class="step-line"></div>
+            <div :class="['step-dot', { active: currentStep === 2 }]">2</div>
           </div>
 
-          <!-- Time, Timezone, and Platform Selection -->
-          <div class="schedule-settings">
+          <!-- STEP 1: Select Favorite -->
+          <div v-if="currentStep === 1" class="wizard-step">
+            <!-- Loading State -->
+            <div v-if="loading" class="loading-container">
+              <div class="spinner"></div>
+              <p>Loading favorites...</p>
+            </div>
+
+            <!-- Empty State -->
+            <div v-else-if="favorites.length === 0" class="empty-state">
+              <p>No favorites yet! Create content in the Playground first.</p>
+              <BaseButton variant="primary" @click="goToPlayground">
+                Go to Playground
+              </BaseButton>
+            </div>
+
+            <!-- Favorites Grid -->
+            <div v-else>
+              <div class="favorites-grid">
+                <div
+                  v-for="favorite in paginatedFavorites"
+                  :key="favorite.id"
+                  :class="['favorite-item', { selected: selectedFavorite?.id === favorite.id }]"
+                  @click="selectFavorite(favorite)"
+                >
+                  <!-- Media Thumbnail -->
+                  <div class="thumbnail-container">
+                    <img
+                      v-if="favorite.content_type === 'image'"
+                      :src="favorite.media_url"
+                      alt="Favorite"
+                      class="thumbnail"
+                    />
+                    <video
+                      v-else
+                      :src="favorite.media_url"
+                      class="thumbnail"
+                    ></video>
+
+                    <!-- Type Badge -->
+                    <span :class="['type-badge', favorite.content_type]">
+                      {{ favorite.content_type === 'image' ? '📸' : '🎥' }}
+                    </span>
+
+                    <!-- Platform Badge -->
+                    <span v-if="favorite.platform" :class="['platform-badge', `platform-${favorite.platform}`]">
+                      {{ favorite.platform }}
+                    </span>
+
+                    <!-- Selection Indicator -->
+                    <div v-if="selectedFavorite?.id === favorite.id" class="selection-check">
+                      ✓
+                    </div>
+                  </div>
+
+                  <!-- Post Info -->
+                  <div class="favorite-info">
+                    <p v-if="favorite.post_text" class="post-preview">
+                      {{ truncateText(favorite.post_text, 80) }}
+                    </p>
+                    <div v-if="favorite.saved_restaurants?.name" class="restaurant-tag">
+                      🏪 {{ favorite.saved_restaurants.name }}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Pagination -->
+              <div v-if="totalPages > 1" class="pagination">
+                <button
+                  class="pagination-btn"
+                  :disabled="currentPage === 1"
+                  @click="currentPage--"
+                >
+                  ← Previous
+                </button>
+                <span class="pagination-info">
+                  Page {{ currentPage }} of {{ totalPages }} ({{ favorites.length }} favorites)
+                </span>
+                <button
+                  class="pagination-btn"
+                  :disabled="currentPage === totalPages"
+                  @click="currentPage++"
+                >
+                  Next →
+                </button>
+              </div>
+
+              <!-- Next Button -->
+              <div class="wizard-actions">
+                <BaseButton
+                  variant="primary"
+                  size="large"
+                  full-width
+                  :disabled="!selectedFavorite"
+                  @click="goToScheduleStep"
+                >
+                  Next: Set Schedule →
+                </BaseButton>
+              </div>
+            </div>
+          </div>
+
+          <!-- STEP 2: Set Schedule -->
+          <div v-if="currentStep === 2" class="wizard-step">
+            <!-- Selected Favorite Preview -->
+            <div v-if="selectedFavorite" class="selected-favorite-preview">
+              <h4 class="preview-title">Selected Post:</h4>
+              <div class="preview-card">
+                <img
+                  v-if="selectedFavorite.content_type === 'image'"
+                  :src="selectedFavorite.media_url"
+                  alt="Selected"
+                  class="preview-thumbnail"
+                />
+                <video
+                  v-else
+                  :src="selectedFavorite.media_url"
+                  class="preview-thumbnail"
+                ></video>
+                <p class="preview-text">
+                  {{ truncateText(selectedFavorite.post_text, 100) }}
+                </p>
+              </div>
+            </div>
+
+            <!-- Date Selection -->
+            <div class="form-group-full">
+              <label for="schedule_date" class="form-label">
+                Date <span class="required">*</span>
+              </label>
+              <DatePicker
+                v-model="scheduleDate"
+                :min-date="today"
+              />
+              <p class="date-preview">
+                Scheduling for: <strong>{{ formatDate(scheduleDate) }}</strong>
+              </p>
+            </div>
+
+            <!-- Time, Timezone, and Platform Selection -->
+            <div class="schedule-settings">
             <div class="form-group">
               <label class="form-label">
                 Time <span class="required">*</span>
@@ -89,100 +224,27 @@
                 ⚠️ Only Facebook is currently supported. Other platforms coming soon.
               </p>
             </div>
-          </div>
+            </div>
 
-          <!-- Loading State -->
-          <div v-if="loading" class="loading-container">
-            <div class="spinner"></div>
-            <p>Loading favorites...</p>
-          </div>
-
-          <!-- Empty State -->
-          <div v-else-if="favorites.length === 0" class="empty-state">
-            <p>No favorites yet! Create content in the Playground first.</p>
-            <BaseButton variant="primary" @click="goToPlayground">
-              Go to Playground
-            </BaseButton>
-          </div>
-
-          <!-- Favorites Grid -->
-          <div v-else>
-            <div class="favorites-grid">
-              <div
-                v-for="favorite in paginatedFavorites"
-                :key="favorite.id"
-                class="favorite-item"
-                @click="selectFavorite(favorite)"
+            <!-- Wizard Actions for Step 2 -->
+            <div class="wizard-actions step-2-actions">
+              <BaseButton
+                variant="ghost"
+                size="medium"
+                @click="goBackToSelection"
               >
-              <!-- Media Thumbnail -->
-              <div class="thumbnail-container">
-                <img
-                  v-if="favorite.content_type === 'image'"
-                  :src="favorite.media_url"
-                  alt="Favorite"
-                  class="thumbnail"
-                />
-                <video
-                  v-else
-                  :src="favorite.media_url"
-                  class="thumbnail"
-                ></video>
-
-                <!-- Type Badge -->
-                <span :class="['type-badge', favorite.content_type]">
-                  {{ favorite.content_type === 'image' ? '📸' : '🎥' }}
-                </span>
-
-                <!-- Platform Badge -->
-                <span v-if="favorite.platform" :class="['platform-badge', `platform-${favorite.platform}`]">
-                  {{ favorite.platform }}
-                </span>
-              </div>
-
-              <!-- Post Info -->
-              <div class="favorite-info">
-                <p v-if="favorite.post_text" class="post-preview">
-                  {{ truncateText(favorite.post_text, 80) }}
-                </p>
-                <div v-if="favorite.saved_restaurants?.name" class="restaurant-tag">
-                  🏪 {{ favorite.saved_restaurants.name }}
-                </div>
-              </div>
-
-              <!-- Schedule Button -->
+                ← Back
+              </BaseButton>
               <BaseButton
                 variant="primary"
-                size="small"
-                full-width
-                @click.stop="scheduleFavorite(favorite)"
+                size="large"
+                @click="scheduleFavorite"
               >
-                Schedule This
+                Schedule Post
               </BaseButton>
             </div>
           </div>
-
-          <!-- Pagination -->
-          <div v-if="totalPages > 1" class="pagination">
-            <button
-              class="pagination-btn"
-              :disabled="currentPage === 1"
-              @click="currentPage--"
-            >
-              ← Previous
-            </button>
-            <span class="pagination-info">
-              Page {{ currentPage }} of {{ totalPages }} ({{ favorites.length }} favorites)
-            </span>
-            <button
-              class="pagination-btn"
-              :disabled="currentPage === totalPages"
-              @click="currentPage++"
-            >
-              Next →
-            </button>
-          </div>
         </div>
-      </div>
       </BaseCard>
     </div>
   </Teleport>
@@ -217,6 +279,10 @@ const selectedMinute = ref('00')
 const selectedPeriod = ref<'AM' | 'PM'>('PM')
 const currentPage = ref(1)
 const itemsPerPage = 6
+
+// Wizard state
+const currentStep = ref(1) // 1 = Select Favorite, 2 = Set Schedule
+const selectedFavorite = ref<any>(null)
 
 // Auto-detect timezone with fallback
 const detectedTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone
@@ -286,6 +352,10 @@ watch(() => props.modelValue, async (newValue) => {
     selectedPlatform.value = ''
     currentPage.value = 1
 
+    // Reset wizard state
+    currentStep.value = 1
+    selectedFavorite.value = null
+
     await fetchFavorites()
   }
 })
@@ -310,10 +380,27 @@ const closeModal = () => {
 }
 
 const selectFavorite = (favorite: any) => {
-  // Just highlight for now, user clicks "Schedule This" button
+  selectedFavorite.value = favorite
 }
 
-const scheduleFavorite = async (favorite: any) => {
+const goToScheduleStep = () => {
+  if (!selectedFavorite.value) {
+    alert('Please select a favorite post first')
+    return
+  }
+  currentStep.value = 2
+}
+
+const goBackToSelection = () => {
+  currentStep.value = 1
+}
+
+const scheduleFavorite = async () => {
+  const favorite = selectedFavorite.value
+  if (!favorite) {
+    alert('No favorite selected')
+    return
+  }
   if (!scheduleDate.value) {
     alert('No date selected')
     return
@@ -464,6 +551,65 @@ const truncateText = (text: string, maxLength: number): string => {
 
 .modal-body {
   padding: var(--space-xl);
+}
+
+/* Progress Indicator */
+.progress-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-lg);
+  margin-bottom: var(--space-2xl);
+  padding: var(--space-lg);
+}
+
+.step-dot {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: var(--font-bold);
+  font-size: var(--text-base);
+  background: rgba(0, 0, 0, 0.4);
+  border: 2px solid rgba(212, 175, 55, 0.3);
+  color: var(--text-muted);
+  transition: all 0.3s ease;
+}
+
+.step-dot.active {
+  background: var(--gold-primary);
+  border-color: var(--gold-primary);
+  color: var(--text-on-gold);
+  box-shadow: var(--glow-gold-sm);
+}
+
+.step-dot.completed {
+  background: rgba(212, 175, 55, 0.2);
+  border-color: var(--gold-primary);
+  color: var(--gold-primary);
+}
+
+.step-line {
+  flex: 1;
+  height: 2px;
+  background: rgba(212, 175, 55, 0.3);
+  max-width: 100px;
+}
+
+/* Wizard Step Container */
+.wizard-step {
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 .form-group-full {
@@ -707,6 +853,12 @@ const truncateText = (text: string, maxLength: number): string => {
   box-shadow: var(--shadow-lg);
 }
 
+.favorite-item.selected {
+  border: 2px solid var(--gold-primary);
+  box-shadow: var(--glow-gold-md);
+  transform: translateY(-2px);
+}
+
 .thumbnail-container {
   position: relative;
   width: 100%;
@@ -792,6 +944,86 @@ const truncateText = (text: string, maxLength: number): string => {
   font-size: 0.75rem;
   color: var(--gold-primary);
   font-weight: 500;
+}
+
+/* Selection Check Indicator */
+.selection-check {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 60px;
+  height: 60px;
+  background: var(--gold-primary);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  color: var(--text-on-gold);
+  font-weight: var(--font-bold);
+  box-shadow: var(--glow-gold-md);
+  animation: scaleIn 0.3s ease;
+}
+
+@keyframes scaleIn {
+  from {
+    transform: translate(-50%, -50%) scale(0);
+  }
+  to {
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+/* Wizard Actions */
+.wizard-actions {
+  margin-top: var(--space-2xl);
+  padding-top: var(--space-xl);
+  border-top: 1px solid rgba(212, 175, 55, 0.2);
+}
+
+.wizard-actions.step-2-actions {
+  display: flex;
+  gap: var(--space-lg);
+  justify-content: space-between;
+}
+
+/* Selected Favorite Preview (Step 2) */
+.selected-favorite-preview {
+  margin-bottom: var(--space-2xl);
+  padding: var(--space-lg);
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(212, 175, 55, 0.2);
+}
+
+.preview-title {
+  font-family: var(--font-heading);
+  font-size: var(--text-lg);
+  color: var(--text-primary);
+  margin: 0 0 var(--space-md) 0;
+}
+
+.preview-card {
+  display: flex;
+  gap: var(--space-lg);
+  align-items: flex-start;
+}
+
+.preview-thumbnail {
+  width: 120px;
+  height: 120px;
+  object-fit: cover;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(212, 175, 55, 0.3);
+}
+
+.preview-text {
+  flex: 1;
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  line-height: 1.5;
+  margin: 0;
 }
 
 /* Pagination Styles */

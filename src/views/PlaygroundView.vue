@@ -153,7 +153,7 @@
             </div>
           </div>
 
-          <div class="menu-items-grid">
+          <div ref="menuGridContainer" class="menu-items-grid">
             <div
               v-for="(item, index) in paginatedMenuItems"
               :key="index"
@@ -1200,17 +1200,46 @@ const logoPosition = ref<'top-left' | 'top-right' | 'bottom-left' | 'bottom-righ
 
 // Pagination
 const currentPage = ref(1)
-const itemsPerPage = 12
+const itemsPerPage = ref(12)
+const menuGridContainer = ref<HTMLElement | null>(null)
 
 const totalPages = computed(() => {
-  return Math.ceil(menuItems.value.length / itemsPerPage)
+  return Math.ceil(menuItems.value.length / itemsPerPage.value)
 })
 
 const paginatedMenuItems = computed(() => {
-  const start = (currentPage.value - 1) * itemsPerPage
-  const end = start + itemsPerPage
+  const start = (currentPage.value - 1) * itemsPerPage.value
+  const end = start + itemsPerPage.value
   return menuItems.value.slice(start, end)
 })
+
+// Dynamic items per page calculation
+const calculateItemsPerPage = () => {
+  if (!menuGridContainer.value) return
+
+  const containerWidth = menuGridContainer.value.offsetWidth
+  const containerHeight = window.innerHeight - menuGridContainer.value.getBoundingClientRect().top - 250 // Reserve space for pagination and other elements
+
+  // Grid settings from CSS
+  const minCardWidth = 280 // matches CSS minmax(280px, 1fr) for advanced mode
+  const gap = 16 // var(--space-lg) = 16px
+
+  // Calculate columns that fit
+  const columns = Math.floor((containerWidth + gap) / (minCardWidth + gap))
+
+  // Card has aspect ratio 1:1 for image + additional height for text
+  // Estimate total card height: image (280px) + padding (32px) + text (~60px) = ~372px
+  const estimatedCardHeight = 372
+
+  // Calculate rows that fit
+  const rows = Math.max(2, Math.floor((containerHeight + gap) / (estimatedCardHeight + gap)))
+
+  // Calculate total items
+  const calculatedItems = columns * rows
+
+  // Set bounds: minimum 8, maximum 20
+  itemsPerPage.value = Math.max(8, Math.min(20, calculatedItems))
+}
 
 const toggleMenuItem = (item: any) => {
   const index = selectedMenuItems.value.findIndex((i) => i.name === item.name)
@@ -1292,10 +1321,20 @@ onMounted(async () => {
       }, 300)
     }
   }
+
+  // Calculate initial items per page for advanced mode grid
+  setTimeout(() => {
+    calculateItemsPerPage()
+  }, 100) // Small delay to ensure DOM is fully rendered
+
+  // Add resize listener
+  window.addEventListener('resize', calculateItemsPerPage)
 })
 
 onUnmounted(() => {
   stopVideoPolling()
+  // Cleanup resize listener
+  window.removeEventListener('resize', calculateItemsPerPage)
 })
 
 const fetchRestaurants = async () => {

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import BaseCard from './BaseCard.vue'
 import BaseButton from './BaseButton.vue'
 import BaseAlert from './BaseAlert.vue'
@@ -50,7 +50,8 @@ const uploadedImagePreview = ref<string | null>(null)
 
 // Pagination for menu items
 const currentPage = ref(1)
-const itemsPerPage = 8
+const itemsPerPage = ref(12)
+const gridContainer = ref<HTMLElement | null>(null)
 
 // Style templates
 const styleTemplates: StyleTemplate[] = [
@@ -93,18 +94,46 @@ const styleTemplates: StyleTemplate[] = [
 
 // Computed
 const paginatedMenuItems = computed(() => {
-  const start = (currentPage.value - 1) * itemsPerPage
-  const end = start + itemsPerPage
+  const start = (currentPage.value - 1) * itemsPerPage.value
+  const end = start + itemsPerPage.value
   return props.menuItems.slice(start, end)
 })
 
 const totalPages = computed(() => {
-  return Math.ceil(props.menuItems.length / itemsPerPage)
+  return Math.ceil(props.menuItems.length / itemsPerPage.value)
 })
 
 const canGenerate = computed(() => {
   return selectedMenuItem.value !== null || uploadedImage.value !== null
 })
+
+// Dynamic items per page calculation
+function calculateItemsPerPage() {
+  if (!gridContainer.value) return
+
+  const containerWidth = gridContainer.value.offsetWidth
+  const containerHeight = window.innerHeight - gridContainer.value.getBoundingClientRect().top - 250 // Reserve space for pagination and other elements
+
+  // Grid settings from CSS
+  const minCardWidth = 180 // matches CSS minmax(180px, 1fr)
+  const gap = 16 // var(--space-lg) = 16px
+
+  // Calculate columns that fit
+  const columns = Math.floor((containerWidth + gap) / (minCardWidth + gap))
+
+  // Card has aspect ratio 1:1 for image + additional height for text
+  // Estimate total card height: image (180px) + padding (32px) + text (~60px) = ~272px
+  const estimatedCardHeight = 272
+
+  // Calculate rows that fit
+  const rows = Math.max(2, Math.floor((containerHeight + gap) / (estimatedCardHeight + gap)))
+
+  // Calculate total items
+  const calculatedItems = columns * rows
+
+  // Set bounds: minimum 8, maximum 20
+  itemsPerPage.value = Math.max(8, Math.min(20, calculatedItems))
+}
 
 // Methods
 function selectMenuItem(item: MenuItem) {
@@ -165,6 +194,22 @@ function handleGenerate() {
     uploadedImage: uploadedImage.value
   })
 }
+
+// Lifecycle hooks
+onMounted(() => {
+  // Calculate initial items per page
+  setTimeout(() => {
+    calculateItemsPerPage()
+  }, 100) // Small delay to ensure DOM is fully rendered
+
+  // Add resize listener
+  window.addEventListener('resize', calculateItemsPerPage)
+})
+
+onUnmounted(() => {
+  // Cleanup resize listener
+  window.removeEventListener('resize', calculateItemsPerPage)
+})
 </script>
 
 <template>
@@ -212,7 +257,7 @@ function handleGenerate() {
 
       <!-- Menu Items Grid with Pagination -->
       <div v-if="menuItems.length > 0">
-        <div class="menu-items-grid-easy">
+        <div ref="gridContainer" class="menu-items-grid-easy">
           <div
             v-for="(item, index) in paginatedMenuItems"
             :key="index"
