@@ -493,6 +493,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
+import { toZonedTime, fromZonedTime } from 'date-fns-tz'
 import GradientBackground from '../components/GradientBackground.vue'
 import BaseCard from '../components/BaseCard.vue'
 import BaseButton from '../components/BaseButton.vue'
@@ -666,7 +667,8 @@ const calendarDays = computed(() => {
   // Current month days
   for (let day = 1; day <= lastDay.getDate(); day++) {
     const date = new Date(year, month, day)
-    const dateString = date.toISOString().split('T')[0]
+    // Format date in local timezone (not UTC) to match stored dates
+    const dateString = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
     const postsForDay = scheduledPosts.value.filter((post) => post.scheduled_date === dateString)
     const holidaysForDay = holidays.value.filter((holiday) => holiday.date === dateString)
 
@@ -788,10 +790,15 @@ const getTimeRemaining = (post: any) => {
   }
 
   try {
-    // Combine date and time
-    const scheduledDateTime = new Date(`${post.scheduled_date}T${post.scheduled_time}`)
+    // Combine date and time with timezone awareness
+    const dateTimeString = `${post.scheduled_date}T${post.scheduled_time}`
+    const userTimezone = post.timezone || 'UTC'
+
+    // Parse the date in the user's timezone, then convert to UTC for comparison
+    const scheduledDateInZone = toZonedTime(dateTimeString, userTimezone)
+    const scheduledDateTimeUTC = fromZonedTime(scheduledDateInZone, userTimezone)
     const now = new Date()
-    const diff = scheduledDateTime.getTime() - now.getTime()
+    const diff = scheduledDateTimeUTC.getTime() - now.getTime()
 
     // If in the past
     if (diff < 0) {
