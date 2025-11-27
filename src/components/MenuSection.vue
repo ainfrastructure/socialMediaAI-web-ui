@@ -55,7 +55,16 @@ const totalPages = computed(() => {
 
 const platformName = computed(() => {
   if (!props.menuData) return ''
-  return props.menuData.platform === 'wolt' ? 'Wolt' : 'Foodora'
+  switch (props.menuData.platform) {
+    case 'wolt':
+      return 'Wolt'
+    case 'foodora':
+      return 'Foodora'
+    case 'okam':
+      return 'Okam'
+    default:
+      return props.menuData.platform
+  }
 })
 
 const handlePageUpdate = (page: number) => {
@@ -86,12 +95,13 @@ const handlePageUpdate = (page: number) => {
 
     <!-- Menu items -->
     <div v-else-if="menuData && menuData.items.length > 0" class="menu-content">
-      <div class="menu-info">
+      <div class="menu-info" :class="{ 'menu-info--okam': menuData.platform === 'okam' }">
         <p class="menu-source">
           {{ t('restaurantSearch.menuItemsFound', { count: menuData.items.length, platform: platformName }) }}
-          <a :href="menuData.url" target="_blank" rel="noopener noreferrer" class="menu-link">
+          <a v-if="menuData.url" :href="menuData.url" target="_blank" rel="noopener noreferrer" class="menu-link">
             {{ platformName }}
           </a>
+          <span v-else class="menu-platform">{{ platformName }}</span>
         </p>
       </div>
 
@@ -150,6 +160,11 @@ const handlePageUpdate = (page: number) => {
   border-radius: var(--radius-md);
 }
 
+.menu-info--okam {
+  background: rgba(76, 175, 80, 0.1);
+  border-color: rgba(76, 175, 80, 0.2);
+}
+
 .menu-source {
   margin: 0;
   font-size: var(--text-sm);
@@ -167,6 +182,12 @@ const handlePageUpdate = (page: number) => {
 .menu-link:hover {
   color: var(--gold-light);
   text-decoration: underline;
+}
+
+.menu-platform {
+  color: var(--gold-primary);
+  font-weight: var(--font-semibold);
+  margin-left: 0.25rem;
 }
 
 .menu-items {

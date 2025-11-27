@@ -383,12 +383,13 @@
             </BaseAlert>
 
             <div v-else-if="menuData && menuData.items.length > 0">
-              <div class="menu-info">
+              <div class="menu-info" :class="{ 'menu-info--okam': menuData.platform === 'okam' }">
                 <p class="menu-source">
                   Found {{ menuData.items.length }} items from
-                  <a :href="menuData.url" target="_blank" rel="noopener noreferrer" class="menu-link">
-                    {{ menuData.platform === 'wolt' ? 'Wolt' : 'Foodora' }}
+                  <a v-if="menuData.url" :href="menuData.url" target="_blank" rel="noopener noreferrer" class="menu-link">
+                    {{ getPlatformName(menuData.platform) }}
                   </a>
+                  <span v-else class="menu-platform">{{ getPlatformName(menuData.platform) }}</span>
                 </p>
               </div>
 
@@ -474,6 +475,7 @@ import ProgressModal from '../components/ProgressModal.vue'
 import type { RestaurantSuggestion, PlaceDetails, CompetitorSearchResponse } from '../services/placesService'
 import { placesService } from '../services/placesService'
 import { menuService, type MenuData } from '../services/menuService'
+import { okamService } from '../services/okamService'
 import { socialMediaService, type SocialMediaSearchResult } from '../services/socialMediaService'
 import { restaurantService, type UploadedImage } from '../services/restaurantService'
 
@@ -555,6 +557,20 @@ const menuTotalPages = computed(() => {
   return Math.ceil(menuData.value.items.length / menuItemsPerPage)
 })
 
+// Helper to get platform display name
+const getPlatformName = (platform: string): string => {
+  switch (platform) {
+    case 'wolt':
+      return 'Wolt'
+    case 'foodora':
+      return 'Foodora'
+    case 'okam':
+      return 'Okam'
+    default:
+      return platform
+  }
+}
+
 // Pagination for competitors
 const competitorsPage = ref(1)
 const competitorsPerPage = 5
@@ -628,7 +644,22 @@ const fetchMenu = async (placeId: string, restaurantName: string) => {
     loadingMenu.value = true
     menuError.value = null
 
-    // Pass placeId to automatically include address in search
+    // First, check if this restaurant has an Okam store
+    const okamData = await okamService.getMenuByPlaceId(placeId)
+
+    if (okamData && okamData.categories.length > 0) {
+      // Convert Okam data to MenuData format
+      const okamItems = okamService.convertToMenuItems(okamData)
+      menuData.value = {
+        restaurantName: okamData.storeName,
+        platform: 'okam',
+        url: '', // Okam doesn't have a direct URL
+        items: okamItems
+      }
+      return // Skip Wolt/Foodora if Okam menu is available
+    }
+
+    // Fallback to Wolt/Foodora
     const data = await menuService.getRestaurantMenu(placeId, restaurantName)
     menuData.value = data
 
@@ -636,7 +667,6 @@ const fetchMenu = async (placeId: string, restaurantName: string) => {
       menuError.value = 'No menu found for this restaurant'
     }
   } catch (error: any) {
-
     menuError.value = error.message || 'Failed to fetch menu. The restaurant may not be available on Wolt or Foodora.'
   } finally {
     loadingMenu.value = false
@@ -2019,6 +2049,17 @@ const handleLogoError = (event: Event) => {
 .menu-link:hover {
   text-decoration: underline;
   color: var(--text-primary);
+}
+
+.menu-info--okam {
+  background: rgba(76, 175, 80, 0.1);
+  border-color: rgba(76, 175, 80, 0.2);
+}
+
+.menu-platform {
+  color: var(--accent-gold);
+  font-weight: 600;
+  margin-left: 0.25rem;
 }
 
 .menu-items {

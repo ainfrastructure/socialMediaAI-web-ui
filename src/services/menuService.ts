@@ -9,7 +9,7 @@ export interface MenuItem {
 
 export interface MenuData {
   restaurantName: string
-  platform: 'wolt' | 'foodora' | 'unknown'
+  platform: 'wolt' | 'foodora' | 'okam' | 'unknown'
   url: string
   items: MenuItem[]
 }
