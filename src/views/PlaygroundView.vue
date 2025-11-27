@@ -1864,9 +1864,12 @@ const generateImage = async () => {
     // Refresh usage stats
     await authStore.refreshProfile()
 
-    // Generate post content if platforms are selected
+    // Generate post content in background (don't block image display)
     if (selectedPlatforms.value.length > 0 && selectedRestaurant.value) {
-      await generatePostContent('image')
+      // Don't await - let it run in background so image shows immediately
+      generatePostContent('image').catch(error => {
+        console.error('Failed to generate post content:', error)
+      })
     }
   } catch (error: any) {
 
@@ -2010,9 +2013,12 @@ const startVideoPolling = () => {
             showMessage('Video generated successfully!', 'success')
             generatingVideo.value = false
 
-            // Generate post content if platforms are selected
+            // Generate post content in background (don't block video display)
             if (selectedPlatforms.value.length > 0 && selectedRestaurant.value) {
-              await generatePostContent('video')
+              // Don't await - let it run in background so video shows immediately
+              generatePostContent('video').catch(error => {
+                console.error('Failed to generate post content:', error)
+              })
             }
           } else if (operation.error) {
             showMessage('Video generation failed: ' + operation.error, 'error')
@@ -2249,10 +2255,8 @@ const handleEasyModeGenerate = async (data: {
       await nextTick()
 
       // Generate the image automatically
+      // Note: generateImage() will automatically call generatePostContent() at the end
       await generateImage()
-
-      // Generate post content (text, hashtags, CTA)
-      await generatePostContent('image')
 
       // Show result modal when complete
       easyModeGenerating.value = false
