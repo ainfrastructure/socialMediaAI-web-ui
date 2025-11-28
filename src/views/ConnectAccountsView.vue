@@ -3,7 +3,6 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useFacebookStore } from '../stores/facebook'
-import { woltService } from '../services/woltService'
 import BaseCard from '../components/BaseCard.vue'
 import BaseButton from '../components/BaseButton.vue'
 import BaseAlert from '../components/BaseAlert.vue'
@@ -15,12 +14,6 @@ const { t } = useI18n()
 const showSuccessMessage = ref(false)
 const showErrorMessage = ref(false)
 const successMessage = ref('')
-
-// Wolt state
-const isWoltConnected = ref(false)
-const woltLoading = ref(false)
-const woltTestResult = ref('')
-const showWoltTestResult = ref(false)
 
 // Computed property to check if Facebook is connected
 const isConnected = computed(() => facebookStore.connectedPages.length > 0)
@@ -44,71 +37,7 @@ onMounted(async () => {
       window.history.replaceState({}, '', '/connect-accounts')
     }
   }
-
-  // Check Wolt connection status
-  checkWoltConnection()
 })
-
-async function checkWoltConnection() {
-  try {
-    woltLoading.value = true
-    const connected = await woltService.isAuthenticated()
-    console.log('🔍 Wolt connection status:', connected)
-    isWoltConnected.value = connected
-  } catch (error: any) {
-    console.error('❌ Failed to check Wolt connection:', error)
-    isWoltConnected.value = false
-  } finally {
-    woltLoading.value = false
-  }
-}
-
-async function handleConnectWolt() {
-  try {
-    woltLoading.value = true
-    await woltService.initiateOAuth()
-  } catch (error: any) {
-    console.error('❌ Failed to connect to Wolt:', error)
-    alert('Failed to connect: ' + error.message)
-    woltLoading.value = false
-  }
-}
-
-async function handleDisconnectWolt() {
-  if (!confirm('Are you sure you want to disconnect your Wolt account?')) {
-    return
-  }
-
-  try {
-    woltLoading.value = true
-    await woltService.logout()
-    isWoltConnected.value = false
-    successMessage.value = 'Successfully disconnected from Wolt'
-    showSuccessMessage.value = true
-  } catch (error: any) {
-    console.error('❌ Failed to disconnect:', error)
-    alert('Failed to disconnect: ' + error.message)
-  } finally {
-    woltLoading.value = false
-  }
-}
-
-async function testWoltConnection() {
-  woltLoading.value = true
-  showWoltTestResult.value = false
-  woltTestResult.value = ''
-
-  try {
-    const menu = await woltService.getMenu()
-    woltTestResult.value = `✅ Success! Retrieved menu with ${menu.items?.length || 0} items and ${menu.categories?.length || 0} categories.`
-    showWoltTestResult.value = true
-  } catch (error: any) {
-    woltTestResult.value = `❌ Error: ${error.message}`
-    showWoltTestResult.value = true
-  } finally {
-    woltLoading.value = false
-  }
-}
 
 async function handleConnectFacebook() {
   showSuccessMessage.value = false
@@ -256,69 +185,6 @@ const comingSoonPlatforms = [
                   {{ $t('connectAccounts.disconnect') }}
                 </BaseButton>
               </div>
-            </div>
-          </div>
-        </BaseCard>
-      </section>
-
-      <!-- Wolt Section -->
-      <section class="platform-section">
-        <h2>Wolt</h2>
-
-        <BaseCard variant="glass" class="platform-card" :class="{ 'connected': isWoltConnected }">
-          <div class="platform-content">
-            <div class="platform-icon wolt-icon">
-              <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M8 12L11 22H13L15 16L17 22H19L22 12H20L18 18L16 12H14L12 18L10 12H8Z" fill="white"/>
-              </svg>
-            </div>
-            <div class="platform-info">
-              <h3>Wolt Venue</h3>
-              <p>
-                Connect your Wolt venue to sync menu items and manage your restaurant
-              </p>
-              <!-- Connection Status Badge -->
-              <div v-if="isWoltConnected" class="connection-status-badge">
-                <svg class="checkmark-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M9 12L11 14L15 10M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-                <span>Connected</span>
-              </div>
-            </div>
-            <BaseButton
-              @click="handleConnectWolt"
-              :variant="isWoltConnected ? 'secondary' : 'primary'"
-              :disabled="woltLoading"
-              class="connect-button"
-            >
-              {{ woltLoading ? 'Connecting...' : (isWoltConnected ? 'Reconnect' : 'Connect to Wolt') }}
-            </BaseButton>
-          </div>
-
-          <!-- Connected Wolt Actions -->
-          <div v-if="isWoltConnected" class="connected-pages">
-            <h4>Wolt Actions</h4>
-
-            <BaseAlert v-if="showWoltTestResult" :type="woltTestResult.includes('✅') ? 'success' : 'error'" @close="showWoltTestResult = false">
-              {{ woltTestResult }}
-            </BaseAlert>
-
-            <div class="wolt-actions">
-              <BaseButton
-                @click="testWoltConnection"
-                variant="secondary"
-                :disabled="woltLoading"
-              >
-                {{ woltLoading ? 'Testing...' : 'Test Connection' }}
-              </BaseButton>
-              <BaseButton
-                @click="handleDisconnectWolt"
-                variant="danger"
-                size="small"
-                :disabled="woltLoading"
-              >
-                Disconnect
-              </BaseButton>
             </div>
           </div>
         </BaseCard>
@@ -484,16 +350,6 @@ const comingSoonPlatforms = [
 
 .facebook-icon {
   background: linear-gradient(135deg, #1877f2, #0d5dbf);
-}
-
-.wolt-icon {
-  background: linear-gradient(135deg, #009DE0, #0077B3);
-}
-
-.wolt-actions {
-  display: flex;
-  gap: var(--space-md);
-  flex-wrap: wrap;
 }
 
 .platform-info {

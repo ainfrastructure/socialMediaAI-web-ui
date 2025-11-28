@@ -6,7 +6,6 @@ import { useFacebookStore } from '../stores/facebook'
 import { api } from '../services/api'
 import { restaurantService } from '../services/restaurantService'
 import { placesService } from '../services/placesService'
-import { menuService } from '../services/menuService'
 import { okamService } from '../services/okamService'
 import BaseButton from './BaseButton.vue'
 import BaseCard from './BaseCard.vue'
@@ -95,14 +94,13 @@ async function fetchRestaurantDetails(restaurant: any) {
 
     placeDetails.value = details
 
-    // Fetch menu data - Try Okam first (instant), fall back to scraping
+    // Fetch menu data from OKAM
     let menuData = null
     let menuSource = 'none'
     let brandDNA = null
 
     try {
-      // Try Okam first
-      console.log('[ONBOARDING] Trying Okam menu for place_id:', restaurant.place_id)
+      console.log('[ONBOARDING] Fetching Okam menu for place_id:', restaurant.place_id)
       const okamMenu = await okamService.getMenuByPlaceId(restaurant.place_id)
 
       if (okamMenu && okamMenu.categories?.length > 0) {
@@ -116,7 +114,7 @@ async function fetchRestaurantDetails(restaurant: any) {
         menuSource = 'okam'
         console.log(`✅ [ONBOARDING] Loaded ${menuData.items.length} items from Okam`)
 
-        // If Okam has a logo, use it for brand DNA (skip website scraping)
+        // If Okam has a logo, use it
         if (okamMenu.logoUrl) {
           console.log(`✅ [ONBOARDING] Using Okam logo: ${okamMenu.logoUrl}`)
           brandDNA = {
@@ -128,27 +126,10 @@ async function fetchRestaurantDetails(restaurant: any) {
           }
         }
       } else {
-        // Fall back to scraping (Wolt/Foodora)
-        console.log('[ONBOARDING] No Okam menu found, falling back to scraping...')
-        menuData = await menuService.getRestaurantMenu(restaurant.place_id, restaurant.name)
-        menuSource = menuData?.platform || 'scraping'
-        console.log(`✅ [ONBOARDING] Loaded ${menuData?.items?.length || 0} items from ${menuSource}`)
+        console.log('[ONBOARDING] No Okam menu found for this restaurant')
       }
     } catch (error) {
       console.log('[ONBOARDING] Menu data not available:', error)
-    }
-
-    // Try to fetch brand DNA, but don't fail if it errors
-    if (details.website && !brandDNA) {
-      try {
-        const brandResponse = await api.analyzeBrandDNA(details.website, restaurant.place_id)
-        if (brandResponse.success && (brandResponse as any).brandDNA) {
-          brandDNA = (brandResponse as any).brandDNA
-        }
-      } catch (error) {
-        console.log('Brand DNA not available, continuing without it:', error)
-        // Continue without brand DNA - it's optional
-      }
     }
 
     // Store the fetched data (don't save to database yet)

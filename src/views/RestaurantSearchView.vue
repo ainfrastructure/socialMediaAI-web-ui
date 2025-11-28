@@ -104,69 +104,6 @@
         <div class="tab-content">
           <!-- About Tab -->
           <div v-if="activeTab === 'about'" class="tab-panel about-panel">
-            <!-- Brand Identity -->
-            <div v-if="placeDetails?.website && (loadingBrandDNA || brandDNA)" class="section-block brand-identity-block">
-              <h3 class="section-title">Brand Identity</h3>
-
-              <div v-if="loadingBrandDNA" class="loading-text">
-                Analyzing brand identity...
-              </div>
-
-              <div v-else-if="brandDNA" class="brand-identity-content">
-                <div class="brand-identity-grid">
-                  <!-- Logo -->
-                  <div v-if="brandDNA.logo_url" class="brand-logo-section">
-                    <img
-                      :src="brandDNA.logo_url"
-                      :alt="brandDNA.brand_name || 'Restaurant logo'"
-                      class="brand-logo"
-                      @error="handleLogoError"
-                    />
-                  </div>
-
-                  <!-- Brand Details -->
-                  <div class="brand-details">
-                    <div v-if="brandDNA.brand_name" class="brand-detail-row">
-                      <span class="detail-label">Name</span>
-                      <span class="detail-value">{{ brandDNA.brand_name }}</span>
-                    </div>
-
-                    <div v-if="brandDNA.font_style" class="brand-detail-row">
-                      <span class="detail-label">Typography</span>
-                      <span class="detail-value font-style">{{ brandDNA.font_style }}</span>
-                    </div>
-
-                    <div v-if="brandDNA.primary_color || brandDNA.secondary_color || brandDNA.additional_colors?.length" class="brand-detail-row">
-                      <span class="detail-label">Colors</span>
-                      <div class="detail-value">
-                        <div class="color-palette">
-                          <div
-                            v-if="brandDNA.primary_color"
-                            class="color-chip"
-                            :style="{ backgroundColor: brandDNA.primary_color }"
-                            :title="brandDNA.primary_color"
-                          />
-                          <div
-                            v-if="brandDNA.secondary_color"
-                            class="color-chip"
-                            :style="{ backgroundColor: brandDNA.secondary_color }"
-                            :title="brandDNA.secondary_color"
-                          />
-                          <div
-                            v-for="(color, index) in brandDNA.additional_colors?.slice(0, 3)"
-                            :key="index"
-                            class="color-chip"
-                            :style="{ backgroundColor: color }"
-                            :title="color"
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
             <!-- Opening Hours -->
             <div class="section-block">
               <h3 class="section-title">Opening Hours</h3>
@@ -470,17 +407,23 @@ import BaseAlert from '../components/BaseAlert.vue'
 import BasePagination from '../components/BasePagination.vue'
 import BaseTabNav from '../components/BaseTabNav.vue'
 import RestaurantAutocomplete from '../components/RestaurantAutocomplete.vue'
-import MenuItemCard from '../components/MenuItemCard.vue'
 import ProgressModal from '../components/ProgressModal.vue'
 import type { RestaurantSuggestion, PlaceDetails, CompetitorSearchResponse } from '../services/placesService'
 import { placesService } from '../services/placesService'
-import { menuService, type MenuData } from '../services/menuService'
 import { okamService } from '../services/okamService'
 import { socialMediaService, type SocialMediaSearchResult } from '../services/socialMediaService'
 import { restaurantService, type UploadedImage } from '../services/restaurantService'
 
 const router = useRouter()
 import { api } from '../services/api'
+
+// Local type definition for menu data
+interface MenuData {
+  restaurantName: string
+  platform: string
+  url: string
+  items: { name: string; description: string; price: string; imageUrl?: string }[]
+}
 
 const selectedRestaurant = ref<RestaurantSuggestion | null>(null)
 const placeDetails = ref<PlaceDetails | null>(null)
@@ -494,9 +437,6 @@ const competitorError = ref<string | null>(null)
 const socialMediaData = ref<SocialMediaSearchResult | null>(null)
 const loadingSocialMedia = ref(false)
 const socialMediaError = ref<string | null>(null)
-const brandDNA = ref<any | null>(null)
-const loadingBrandDNA = ref(false)
-const brandDNAError = ref<string | null>(null)
 
 // Save to database state
 const savingRestaurant = ref(false)
@@ -597,8 +537,6 @@ const handleRestaurantSelect = async (restaurant: RestaurantSuggestion) => {
   competitorError.value = null
   socialMediaData.value = null
   socialMediaError.value = null
-  brandDNA.value = null
-  brandDNAError.value = null
   saveError.value = null
   saveSuccess.value = false
   isSaved.value = false
@@ -610,20 +548,12 @@ const handleRestaurantSelect = async (restaurant: RestaurantSuggestion) => {
   // Fetch place details first to get website
   await fetchPlaceDetails(restaurant.place_id)
 
-  // Then fetch everything else in parallel (including brand DNA if website exists)
-  const promises = [
+  // Then fetch everything else in parallel
+  await Promise.all([
     fetchMenu(restaurant.place_id, restaurant.name),
     fetchCompetitors(restaurant.place_id),
     fetchSocialMedia(restaurant.place_id)
-  ]
-
-  // Add brand DNA analysis if website is available
-  const website = placeDetails.value?.website
-  if (website) {
-    promises.push(fetchBrandDNA(website, restaurant.place_id))
-  }
-
-  await Promise.all(promises)
+  ])
 }
 
 const fetchPlaceDetails = async (placeId: string) => {
@@ -644,7 +574,7 @@ const fetchMenu = async (placeId: string, restaurantName: string) => {
     loadingMenu.value = true
     menuError.value = null
 
-    // First, check if this restaurant has an Okam store
+    // Fetch menu from OKAM
     const okamData = await okamService.getMenuByPlaceId(placeId)
 
     if (okamData && okamData.categories.length > 0) {
@@ -653,21 +583,14 @@ const fetchMenu = async (placeId: string, restaurantName: string) => {
       menuData.value = {
         restaurantName: okamData.storeName,
         platform: 'okam',
-        url: '', // Okam doesn't have a direct URL
+        url: '',
         items: okamItems
       }
-      return // Skip Wolt/Foodora if Okam menu is available
-    }
-
-    // Fallback to Wolt/Foodora
-    const data = await menuService.getRestaurantMenu(placeId, restaurantName)
-    menuData.value = data
-
-    if (!data || data.items.length === 0) {
-      menuError.value = 'No menu found for this restaurant'
+    } else {
+      menuError.value = 'No menu available for this restaurant'
     }
   } catch (error: any) {
-    menuError.value = error.message || 'Failed to fetch menu. The restaurant may not be available on Wolt or Foodora.'
+    menuError.value = error.message || 'Failed to fetch menu'
   } finally {
     loadingMenu.value = false
   }
@@ -711,27 +634,6 @@ const fetchSocialMedia = async (placeId: string) => {
   }
 }
 
-const fetchBrandDNA = async (website: string, placeId?: string) => {
-  try {
-    loadingBrandDNA.value = true
-    brandDNAError.value = null
-
-    const response = await api.analyzeBrandDNA(website, placeId)
-
-    if (response.success && (response as any).brandDNA) {
-      brandDNA.value = (response as any).brandDNA
-
-    } else {
-      brandDNAError.value = 'Could not extract brand DNA'
-    }
-  } catch (error: any) {
-
-    brandDNAError.value = error.message || 'Failed to analyze brand DNA'
-  } finally {
-    loadingBrandDNA.value = false
-  }
-}
-
 const clearSelection = () => {
   selectedRestaurant.value = null
   placeDetails.value = null
@@ -741,8 +643,6 @@ const clearSelection = () => {
   competitorError.value = null
   socialMediaData.value = null
   socialMediaError.value = null
-  brandDNA.value = null
-  brandDNAError.value = null
   saveError.value = null
   saveSuccess.value = false
   isSaved.value = false
@@ -798,7 +698,6 @@ const saveToDatabase = async () => {
       } : null,
       menu: menuData.value || null,
       social_media: socialMediaData.value?.socialMedia || null,
-      brand_dna: brandDNA.value || null,
       photos: placeDetails.value.photos ? {
         photos: placeDetails.value.photos,
         photoUrls: placeDetails.value.photoUrls
