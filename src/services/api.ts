@@ -189,6 +189,13 @@ class ApiService {
     },
     placeId?: string
   ): Promise<ApiResponse<{ imageUrl: string; usage: any; watermarked?: boolean; promotionalStickerAdded?: boolean }>> {
+    console.log('[API] Calling /api/gemini/generate-image with:', {
+      prompt: prompt.substring(0, 50) + '...',
+      hasWatermark: !!watermark,
+      hasReferenceImage: !!referenceImage,
+      hasPromotionalSticker: !!promotionalSticker,
+      placeId
+    })
     const response = await fetch(`${API_URL}/api/gemini/generate-image`, {
       method: 'POST',
       headers: {
@@ -197,7 +204,15 @@ class ApiService {
       },
       body: JSON.stringify({ prompt, watermark, referenceImage, promotionalSticker, placeId }),
     })
-    return response.json()
+    const data = await response.json()
+    console.log('[API] Response from /api/gemini/generate-image:', {
+      success: data.success,
+      hasImageUrl: !!data.imageUrl,
+      hasDataImageUrl: !!data.data?.imageUrl,
+      imageUrl: data.imageUrl || data.data?.imageUrl || 'NOT FOUND',
+      topLevelKeys: Object.keys(data)
+    })
+    return data
   }
 
   async sendMagicLink(email: string): Promise<ApiResponse> {
@@ -484,7 +499,8 @@ class ApiService {
     menuItems: string[],
     contentType: 'image' | 'video',
     context?: string,
-    brandDNA?: any
+    brandDNA?: any,
+    language?: 'en' | 'no'
   ): Promise<ApiResponse<{ postText: string; hashtags: string[]; callToAction: string }>> {
     const response = await fetch(`${API_URL}/api/post-content/generate`, {
       method: 'POST',
@@ -499,6 +515,7 @@ class ApiService {
         contentType,
         context,
         brandDNA,
+        language,
       }),
     })
     return response.json()

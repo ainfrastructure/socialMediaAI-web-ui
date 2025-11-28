@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { api } from '../services/api'
 
 export interface FacebookPage {
@@ -13,6 +13,9 @@ export const useFacebookStore = defineStore('facebook', () => {
   const connectedPages = ref<FacebookPage[]>([])
   const loading = ref(false)
   const error = ref<string | null>(null)
+
+  // Computed property to check if any pages are connected
+  const isConnected = computed(() => connectedPages.value.length > 0)
 
   /**
    * Initialize Facebook OAuth flow with redirect (no popup)
@@ -141,6 +144,7 @@ export const useFacebookStore = defineStore('facebook', () => {
 
   return {
     connectedPages,
+    isConnected,
     loading,
     error,
     connectFacebook,

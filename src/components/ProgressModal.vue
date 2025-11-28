@@ -100,16 +100,17 @@ defineEmits<{
 }
 
 .progress-icon {
-  margin-bottom: var(--space-md);
+  margin-bottom: var(--space-lg);
 }
 
 .spinner.large {
-  width: 60px;
-  height: 60px;
-  border: 4px solid rgba(212, 175, 55, 0.2);
+  width: 80px;
+  height: 80px;
+  border: 5px solid rgba(212, 175, 55, 0.15);
   border-top-color: var(--gold-primary);
   border-radius: 50%;
-  animation: spin 0.8s linear infinite;
+  animation: spin 1s linear infinite;
+  filter: drop-shadow(0 0 15px rgba(212, 175, 55, 0.4));
 }
 
 @keyframes spin {
@@ -136,12 +137,13 @@ defineEmits<{
 
 .progress-bar {
   width: 100%;
-  height: 12px;
+  height: 10px;
   background: rgba(26, 26, 26, 0.8);
   border: 1px solid rgba(212, 175, 55, 0.2);
   border-radius: var(--radius-full);
   overflow: hidden;
   position: relative;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 .progress-bar-fill {
@@ -150,8 +152,8 @@ defineEmits<{
   background-size: 200% 100%;
   animation: shimmer 2s ease-in-out infinite;
   border-radius: var(--radius-full);
-  transition: width 0.5s ease-out;
-  box-shadow: 0 0 20px rgba(212, 175, 55, 0.4);
+  transition: width 0.3s ease-out;
+  box-shadow: 0 0 15px rgba(212, 175, 55, 0.5);
 }
 
 @keyframes shimmer {
@@ -182,79 +184,84 @@ defineEmits<{
   width: 100%;
   display: flex;
   flex-direction: column;
-  gap: var(--space-md);
-  margin-top: var(--space-lg);
+  gap: var(--space-lg);
+  margin-top: var(--space-xl);
 }
 
 .progress-step {
   display: flex;
   align-items: center;
-  gap: var(--space-md);
-  padding: var(--space-md);
-  background: rgba(0, 0, 0, 0.2);
-  border: 1px solid rgba(212, 175, 55, 0.1);
-  border-radius: var(--radius-md);
-  transition: all var(--transition-base);
+  gap: var(--space-lg);
+  padding: var(--space-lg);
+  background: rgba(255, 255, 255, 0.02);
+  border: 2px solid rgba(212, 175, 55, 0.1);
+  border-radius: var(--radius-lg);
+  transition: all 0.3s var(--ease-smooth);
   opacity: 0.5;
 }
 
 .progress-step.active {
   opacity: 1;
-  border-color: rgba(212, 175, 55, 0.4);
-  background: rgba(212, 175, 55, 0.05);
+  border-color: var(--gold-primary);
+  background: rgba(212, 175, 55, 0.1);
+  box-shadow: 0 0 20px rgba(212, 175, 55, 0.2);
+  transform: scale(1.02);
 }
 
 .progress-step.completed {
-  opacity: 0.7;
-  border-color: rgba(46, 213, 115, 0.3);
+  opacity: 0.75;
+  border-color: rgba(46, 213, 115, 0.4);
 }
 
 .step-icon {
-  width: 32px;
-  height: 32px;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: var(--text-sm);
+  font-size: var(--text-lg);
   font-weight: var(--font-bold);
   flex-shrink: 0;
-  background: rgba(26, 26, 26, 0.8);
-  border: 2px solid rgba(212, 175, 55, 0.3);
-  color: var(--text-secondary);
-  transition: all var(--transition-base);
+  background: rgba(26, 26, 26, 0.9);
+  border: 3px solid rgba(212, 175, 55, 0.3);
+  color: var(--text-muted);
+  transition: all 0.3s var(--ease-smooth);
 }
 
 .progress-step.active .step-icon {
   border-color: var(--gold-primary);
+  background: rgba(212, 175, 55, 0.15);
   color: var(--gold-primary);
-  box-shadow: 0 0 12px rgba(212, 175, 55, 0.3);
+  box-shadow: 0 0 16px rgba(212, 175, 55, 0.4);
 }
 
 .progress-step.completed .step-icon {
-  background: var(--success-bg);
-  border-color: var(--success-border);
-  color: var(--success-text);
+  background: rgba(46, 213, 115, 0.15);
+  border-color: #2ed573;
+  color: #2ed573;
+  box-shadow: 0 0 12px rgba(46, 213, 115, 0.3);
 }
 
 .step-spinner {
-  width: 16px;
-  height: 16px;
-  border: 2px solid rgba(212, 175, 55, 0.2);
+  width: 20px;
+  height: 20px;
+  border: 3px solid rgba(212, 175, 55, 0.2);
   border-top-color: var(--gold-primary);
   border-radius: 50%;
-  animation: spin 0.6s linear infinite;
+  animation: spin 0.7s linear infinite;
 }
 
 .step-text {
-  font-size: var(--text-sm);
+  font-size: var(--text-base);
   color: var(--text-secondary);
   flex: 1;
+  font-weight: var(--font-medium);
 }
 
 .progress-step.active .step-text {
   color: var(--text-primary);
-  font-weight: var(--font-medium);
+  font-weight: var(--font-semibold);
 }
 
 .progress-step.completed .step-text {

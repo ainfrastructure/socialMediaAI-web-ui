@@ -53,6 +53,13 @@ export interface PlaceDetails {
   place_id: string
   name: string
   address: string
+  formatted_address?: string
+  vicinity?: string
+  address_components?: Array<{
+    long_name: string
+    short_name: string
+    types: string[]
+  }>
   location?: Location
   phone_number?: string
   website?: string

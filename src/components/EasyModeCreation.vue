@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import BaseCard from './BaseCard.vue'
 import BaseButton from './BaseButton.vue'
 import BaseAlert from './BaseAlert.vue'
@@ -39,6 +40,11 @@ const emit = defineEmits<{
 }>()
 
 const facebookStore = useFacebookStore()
+const { t } = useI18n()
+
+// Wizard State
+const currentStep = ref(1)
+const totalSteps = 3
 
 // State
 const selectedMenuItem = ref<MenuItem | null>(null)
@@ -106,6 +112,13 @@ const totalPages = computed(() => {
 const canGenerate = computed(() => {
   return selectedMenuItem.value !== null || uploadedImage.value !== null
 })
+
+// Step labels for progress indicator
+const stepLabels = computed(() => [
+  { number: 1, label: t('easyMode.steps.menu', 'Menu') },
+  { number: 2, label: t('easyMode.steps.style', 'Style') },
+  { number: 3, label: t('easyMode.steps.review', 'Review') }
+])
 
 // Dynamic items per page calculation
 function calculateItemsPerPage() {
@@ -195,6 +208,26 @@ function handleGenerate() {
   })
 }
 
+// Step navigation
+function nextStep() {
+  if (currentStep.value < totalSteps) {
+    currentStep.value++
+  }
+}
+
+function prevStep() {
+  if (currentStep.value > 1) {
+    currentStep.value--
+  }
+}
+
+function goToStep(step: number) {
+  // Allow jumping to any step
+  if (step >= 1 && step <= totalSteps) {
+    currentStep.value = step
+  }
+}
+
 // Lifecycle hooks
 onMounted(() => {
   // Calculate initial items per page
@@ -214,13 +247,41 @@ onUnmounted(() => {
 
 <template>
   <div class="easy-mode-creation">
+    <!-- Progress Indicator - Horizontal Stepper -->
+    <div class="wizard-progress">
+      <div class="wizard-progress-track">
+        <div
+          v-for="(step, index) in stepLabels"
+          :key="step.number"
+          class="progress-step-wrapper"
+        >
+          <div
+            :class="['progress-step-item', {
+              'active': currentStep === step.number,
+              'completed': currentStep > step.number
+            }]"
+            @click="goToStep(step.number)"
+          >
+            <div class="progress-step-circle">
+              <span v-if="currentStep > step.number" class="checkmark">✓</span>
+              <span v-else>{{ step.number }}</span>
+            </div>
+            <span class="progress-step-label">{{ step.label }}</span>
+          </div>
+          <div
+            v-if="index < stepLabels.length - 1"
+            :class="['progress-line', { 'completed': currentStep > step.number }]"
+          ></div>
+        </div>
+      </div>
+    </div>
+
     <!-- Step 1: Menu Item Selection or Image Upload -->
-    <BaseCard variant="glass" class="step-card">
+    <BaseCard v-show="currentStep === 1" variant="glass" class="step-card">
       <div class="step-header">
-        <div class="step-number">1</div>
         <div class="step-info">
-          <h3 class="step-title">Pick Your Dish or Upload Image</h3>
-          <p class="step-subtitle">Choose a menu item or upload your own image</p>
+          <h3 class="step-title">{{ t('easyMode.step1.title', 'Pick Your Dish or Upload Image') }}</h3>
+          <p class="step-subtitle">{{ t('easyMode.step1.subtitle', 'Choose a menu item or upload your own image') }}</p>
         </div>
       </div>
 
@@ -244,8 +305,8 @@ onUnmounted(() => {
           />
           <div class="upload-content">
             <span class="upload-icon">📤</span>
-            <span class="upload-text">Upload Your Own Image</span>
-            <span class="upload-hint">JPG, PNG, or WebP</span>
+            <span class="upload-text">{{ t('easyMode.upload.button', 'Upload Your Own Image') }}</span>
+            <span class="upload-hint">{{ t('easyMode.upload.hint', 'JPG, PNG, or WebP') }}</span>
           </div>
         </label>
       </div>
@@ -310,17 +371,28 @@ onUnmounted(() => {
       </div>
 
       <div v-else-if="!uploadedImage" class="empty-state">
-        <p class="empty-text">No menu items available. Upload an image to continue.</p>
+        <p class="empty-text">{{ t('easyMode.step1.empty', 'No menu items available. Upload an image to continue.') }}</p>
+      </div>
+
+      <!-- Step 1 Navigation -->
+      <div class="step-navigation">
+        <BaseButton
+          variant="primary"
+          size="large"
+          @click="nextStep"
+          class="next-button"
+        >
+          {{ t('common.continue', 'Continue') }}
+        </BaseButton>
       </div>
     </BaseCard>
 
     <!-- Step 2: Style Template Selection -->
-    <BaseCard variant="glass" class="step-card">
+    <BaseCard v-show="currentStep === 2" variant="glass" class="step-card">
       <div class="step-header">
-        <div class="step-number">2</div>
         <div class="step-info">
-          <h3 class="step-title">Choose Your Style</h3>
-          <p class="step-subtitle">Select the visual aesthetic for your post</p>
+          <h3 class="step-title">{{ t('easyMode.step2.title', 'Choose Your Style') }}</h3>
+          <p class="step-subtitle">{{ t('easyMode.step2.subtitle', 'Select the visual aesthetic for your post') }}</p>
         </div>
       </div>
 
@@ -339,30 +411,50 @@ onUnmounted(() => {
           </div>
         </div>
       </div>
+
+      <!-- Step 2 Navigation -->
+      <div class="step-navigation">
+        <BaseButton
+          variant="secondary"
+          size="large"
+          @click="prevStep"
+          class="prev-button"
+        >
+          {{ t('common.back', 'Back') }}
+        </BaseButton>
+        <BaseButton
+          variant="primary"
+          size="large"
+          @click="nextStep"
+          class="next-button"
+        >
+          {{ t('common.continue', 'Continue') }}
+        </BaseButton>
+      </div>
     </BaseCard>
 
-    <!-- Step 3: Optional Customization -->
-    <BaseCard variant="glass" class="step-card">
+    <!-- Step 3: Review & Generate (Combined Details + Generate) -->
+    <BaseCard v-show="currentStep === 3" variant="glass" class="step-card generate-section">
       <div class="step-header">
-        <div class="step-number">3</div>
         <div class="step-info">
-          <h3 class="step-title">Add Details (Optional)</h3>
-          <p class="step-subtitle">Customize your post with promotional text and branding</p>
+          <h3 class="step-title">{{ t('easyMode.step3.title', 'Review & Generate') }}</h3>
+          <p class="step-subtitle">{{ t('easyMode.step3.subtitle', 'Add final touches and create your post') }}</p>
         </div>
       </div>
 
+      <!-- Optional Customization -->
       <div class="customization-options">
         <!-- Campaign Context -->
         <div class="option-group">
           <label for="context-input" class="option-label">
-            💫 Special Offer or Promotion
+            💫 {{ t('easyMode.step3.promoLabel', 'Special Offer or Promotion (Optional)') }}
           </label>
           <input
             id="context-input"
             v-model="promptContext"
             type="text"
             class="context-input-easy"
-            placeholder="e.g., 20% OFF, COMBO DEAL, NEW ITEM..."
+            :placeholder="t('easyMode.step3.promoPlaceholder', 'e.g., 20% OFF, COMBO DEAL, NEW ITEM...')"
             maxlength="50"
           />
           <p class="input-note">
@@ -380,72 +472,62 @@ onUnmounted(() => {
             />
             <span class="checkbox-text">
               <span class="checkbox-icon">🏷️</span>
-              <span>Include restaurant logo</span>
+              <span>{{ t('easyMode.step3.includeLogo', 'Include restaurant logo') }}</span>
             </span>
           </label>
-          <p class="option-hint">Your logo will be placed on the image automatically</p>
-        </div>
-      </div>
-    </BaseCard>
-
-    <!-- Step 4: Generate -->
-    <BaseCard variant="glass" class="step-card generate-section">
-      <div class="step-header">
-        <div class="step-number">4</div>
-        <div class="step-info">
-          <h3 class="step-title">Create Your Post</h3>
-          <p class="step-subtitle">Generate an AI-designed image with your selections</p>
+          <p class="option-hint">{{ t('easyMode.step3.logoHint', 'Your logo will be placed on the image automatically') }}</p>
         </div>
       </div>
 
-      <div class="generate-features">
-        <div class="feature-item">
-          <span class="feature-icon">🎨</span>
-          <span class="feature-text">{{ styleTemplates.find(t => t.id === selectedStyleTemplate)?.name }} style</span>
-        </div>
-        <div class="feature-item">
-          <span class="feature-icon">📝</span>
-          <span class="feature-text">Engaging post text</span>
-        </div>
-        <div v-if="includeLogo && restaurant.brand_dna?.logo_url" class="feature-item">
-          <span class="feature-icon">🏷️</span>
-          <span class="feature-text">Restaurant branding</span>
-        </div>
-        <div v-if="promptContext" class="feature-item">
-          <span class="feature-icon">💫</span>
-          <span class="feature-text">Promotional sticker</span>
-        </div>
-      </div>
-
-      <BaseButton
-        variant="primary"
-        size="large"
-        full-width
-        :disabled="!canGenerate || props.generating"
-        @click="handleGenerate"
-        class="generate-button"
-      >
-        <span v-if="props.generating" class="generating-content">
-          <span class="spinner"></span>
-          Cooking up your post...
-        </span>
-        <span v-else-if="!selectedMenuItem && !uploadedImage">Select a Dish or Upload Image</span>
-        <span v-else>✨ Generate Picture (1 credit)</span>
-      </BaseButton>
-    </BaseCard>
-
-    <!-- Loading Overlay -->
-    <div v-if="props.generating" class="loading-overlay">
-      <div class="loading-content">
-        <div class="cooking-animation">
-          <img src="../assets/socialchef_logo.svg" alt="SocialChef" class="loading-logo" />
-          <div class="cooking-text">Cooking up your post...</div>
-          <div class="loading-bar">
-            <div class="loading-bar-fill"></div>
+      <!-- Summary of selections -->
+      <div class="generate-summary">
+        <h4 class="summary-title">{{ t('easyMode.step3.summaryTitle', 'Your Selections:') }}</h4>
+        <div class="generate-features">
+          <div class="feature-item">
+            <span class="feature-icon">🎨</span>
+            <span class="feature-text">{{ styleTemplates.find(t => t.id === selectedStyleTemplate)?.name }} {{ t('easyMode.step3.style', 'style') }}</span>
+          </div>
+          <div class="feature-item">
+            <span class="feature-icon">📝</span>
+            <span class="feature-text">{{ t('easyMode.step3.postText', 'Engaging post text') }}</span>
+          </div>
+          <div v-if="includeLogo && restaurant.brand_dna?.logo_url" class="feature-item">
+            <span class="feature-icon">🏷️</span>
+            <span class="feature-text">{{ t('easyMode.step3.branding', 'Restaurant branding') }}</span>
+          </div>
+          <div v-if="promptContext" class="feature-item">
+            <span class="feature-icon">💫</span>
+            <span class="feature-text">{{ t('easyMode.step3.promo', 'Promotional sticker') }}</span>
           </div>
         </div>
       </div>
-    </div>
+
+      <!-- Step 3 Navigation -->
+      <div class="step-navigation">
+        <BaseButton
+          variant="secondary"
+          size="large"
+          @click="prevStep"
+          class="prev-button"
+        >
+          {{ t('common.back', 'Back') }}
+        </BaseButton>
+        <BaseButton
+          variant="primary"
+          size="large"
+          :disabled="!canGenerate || props.generating"
+          @click="handleGenerate"
+          class="generate-button"
+        >
+          <span v-if="props.generating" class="generating-content">
+            <span class="spinner"></span>
+            {{ t('easyMode.step3.generating', 'Cooking up your post...') }}
+          </span>
+          <span v-else>{{ t('easyMode.step3.generateButton', '✨ Generate Picture (1 credit)') }}</span>
+        </BaseButton>
+      </div>
+    </BaseCard>
+
   </div>
 </template>
 
@@ -468,38 +550,113 @@ onUnmounted(() => {
   }
 }
 
+/* Wizard Progress Indicator */
+.wizard-progress {
+  padding: var(--space-2xl) var(--space-xl);
+  margin-bottom: var(--space-2xl);
+}
+
+.wizard-progress-track {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.progress-step-wrapper {
+  display: flex;
+  align-items: center;
+  flex: 1;
+}
+
+.progress-step-wrapper:last-child {
+  flex: 0;
+}
+
+.progress-step-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-sm);
+  cursor: pointer;
+  transition: var(--transition-base);
+  z-index: 2;
+}
+
+.progress-step-circle {
+  width: 56px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-full);
+  background: var(--bg-secondary);
+  border: 3px solid var(--border-color);
+  color: var(--text-muted);
+  font-family: var(--font-heading);
+  font-size: var(--text-xl);
+  font-weight: var(--font-bold);
+  transition: var(--transition-base);
+}
+
+.progress-step-item.active .progress-step-circle {
+  background: var(--gradient-gold);
+  border-color: var(--gold-primary);
+  color: var(--text-on-gold);
+  box-shadow: var(--glow-gold-md);
+  transform: scale(1.05);
+}
+
+.progress-step-item.completed .progress-step-circle {
+  background: var(--gradient-gold);
+  border-color: var(--gold-primary);
+  color: var(--text-on-gold);
+}
+
+.progress-step-label {
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  color: var(--text-secondary);
+  transition: var(--transition-base);
+  white-space: nowrap;
+}
+
+.progress-step-item.active .progress-step-label {
+  color: var(--gold-primary);
+  font-weight: var(--font-bold);
+}
+
+.progress-step-item.completed .progress-step-label {
+  color: var(--text-primary);
+}
+
+/* Connecting Lines */
+.progress-line {
+  flex: 1;
+  height: 3px;
+  background: var(--border-color);
+  margin: 0 var(--space-md);
+  transition: var(--transition-base);
+  position: relative;
+  top: -14px; /* Align with center of circles */
+}
+
+.progress-line.completed {
+  background: var(--gold-primary);
+}
+
 /* Step Card */
 .step-card {
   animation: fadeInUp 0.6s var(--ease-smooth);
   animation-fill-mode: both;
 }
 
-.step-card:nth-child(1) { animation-delay: 0.1s; }
-.step-card:nth-child(2) { animation-delay: 0.2s; }
-.step-card:nth-child(3) { animation-delay: 0.3s; }
-.step-card:nth-child(4) { animation-delay: 0.4s; }
-
 .step-header {
   display: flex;
   align-items: flex-start;
   gap: var(--space-lg);
   margin-bottom: var(--space-xl);
-}
-
-.step-number {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 48px;
-  height: 48px;
-  flex-shrink: 0;
-  border-radius: var(--radius-full);
-  background: var(--gradient-gold);
-  color: var(--text-on-gold);
-  font-family: var(--font-heading);
-  font-size: var(--text-2xl);
-  font-weight: var(--font-bold);
-  box-shadow: var(--glow-gold-sm);
 }
 
 .step-info {
@@ -517,6 +674,30 @@ onUnmounted(() => {
   font-size: var(--text-base);
   color: var(--text-secondary);
   margin: 0;
+}
+
+/* Step Navigation */
+.step-navigation {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-lg);
+  margin-top: var(--space-2xl);
+  padding-top: var(--space-2xl);
+  border-top: 1px solid var(--border-color);
+}
+
+.step-navigation .next-button,
+.step-navigation .prev-button {
+  flex: 1;
+  max-width: 200px;
+}
+
+.step-navigation .next-button:only-child {
+  margin-left: auto;
+}
+
+.step-navigation .generate-button {
+  flex: 1;
 }
 
 /* Menu Items Grid */
@@ -778,11 +959,24 @@ onUnmounted(() => {
 }
 
 /* Generate Section */
+.generate-summary {
+  margin-top: var(--space-2xl);
+  padding-top: var(--space-2xl);
+  border-top: 1px solid var(--border-color);
+}
+
+.summary-title {
+  font-family: var(--font-heading);
+  font-size: var(--text-lg);
+  color: var(--text-primary);
+  margin: 0 0 var(--space-lg) 0;
+  font-weight: var(--font-semibold);
+}
+
 .generate-features {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   gap: var(--space-lg);
-  margin-bottom: var(--space-xl);
 }
 
 .feature-item {
@@ -1042,13 +1236,15 @@ onUnmounted(() => {
   flex-direction: column;
   align-items: center;
   gap: var(--space-xl);
+  max-width: 500px;
 }
 
 .loading-logo {
-  width: 120px;
+  width: 100px;
   height: auto;
   filter: drop-shadow(0 0 20px rgba(212, 175, 55, 0.5));
   animation: bounce 1s ease-in-out infinite;
+  margin-bottom: var(--space-lg);
 }
 
 @keyframes bounce {
@@ -1056,39 +1252,173 @@ onUnmounted(() => {
   50% { transform: translateY(-20px); }
 }
 
-.cooking-text {
-  font-family: var(--font-heading);
-  font-size: var(--text-3xl);
-  color: var(--text-primary);
-  background: var(--gradient-gold);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+/* Progress Steps */
+.progress-steps {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+  width: 100%;
+  margin-bottom: var(--space-xl);
 }
 
+.progress-step {
+  display: flex;
+  align-items: center;
+  gap: var(--space-lg);
+  padding: var(--space-lg);
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: var(--radius-lg);
+  border: 2px solid transparent;
+  transition: all 0.3s var(--ease-smooth);
+  opacity: 0.5;
+}
+
+.progress-step.active {
+  opacity: 1;
+  border-color: var(--gold-primary);
+  background: rgba(212, 175, 55, 0.1);
+  box-shadow: 0 0 20px rgba(212, 175, 55, 0.3);
+}
+
+.progress-step.completed {
+  opacity: 0.8;
+  border-color: rgba(46, 213, 115, 0.5);
+}
+
+.step-icon {
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-full);
+  background: var(--bg-secondary);
+  border: 2px solid var(--border-color);
+  flex-shrink: 0;
+  position: relative;
+}
+
+.progress-step.active .step-icon {
+  border-color: var(--gold-primary);
+  background: rgba(212, 175, 55, 0.2);
+}
+
+.progress-step.completed .step-icon {
+  border-color: #2ed573;
+  background: rgba(46, 213, 115, 0.2);
+}
+
+.step-spinner {
+  width: 24px;
+  height: 24px;
+  border: 3px solid rgba(212, 175, 55, 0.3);
+  border-top-color: var(--gold-primary);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+.checkmark {
+  font-size: var(--text-2xl);
+  color: #2ed573;
+  font-weight: var(--font-bold);
+  animation: checkmarkPop 0.3s var(--ease-smooth);
+}
+
+@keyframes checkmarkPop {
+  0% { transform: scale(0); }
+  50% { transform: scale(1.2); }
+  100% { transform: scale(1); }
+}
+
+.step-waiting {
+  font-size: var(--text-2xl);
+  color: var(--text-muted);
+}
+
+.step-text {
+  flex: 1;
+  text-align: left;
+}
+
+.step-title {
+  font-family: var(--font-heading);
+  font-size: var(--text-lg);
+  color: var(--text-primary);
+  font-weight: var(--font-semibold);
+  margin-bottom: var(--space-xs);
+}
+
+.step-subtitle {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+}
+
+.progress-step.active .step-title {
+  color: var(--gold-primary);
+}
+
+/* Progress Bar */
 .loading-bar {
-  width: 300px;
-  height: 6px;
+  width: 100%;
+  height: 8px;
   background: var(--bg-tertiary);
   border-radius: var(--radius-full);
   overflow: hidden;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 .loading-bar-fill {
   height: 100%;
   background: var(--gradient-gold);
   border-radius: var(--radius-full);
-  animation: loading 2s ease-in-out infinite;
+  transition: width 0.3s ease-out;
+  box-shadow: 0 0 10px rgba(212, 175, 55, 0.5);
 }
 
-@keyframes loading {
-  0% { width: 0%; }
-  50% { width: 70%; }
-  100% { width: 100%; }
+.progress-text {
+  font-family: var(--font-heading);
+  font-size: var(--text-xl);
+  color: var(--gold-primary);
+  font-weight: var(--font-bold);
+  margin-top: var(--space-md);
 }
 
 /* Responsive */
 @media (max-width: 768px) {
+  .wizard-progress {
+    padding: var(--space-lg) var(--space-sm);
+  }
+
+  .wizard-progress-track {
+    gap: 0;
+  }
+
+  .progress-step-circle {
+    width: 44px;
+    height: 44px;
+    font-size: var(--text-base);
+  }
+
+  .progress-step-label {
+    font-size: var(--text-xs);
+  }
+
+  .progress-line {
+    margin: 0 var(--space-xs);
+    top: -12px;
+    height: 2px;
+  }
+
+  .step-navigation {
+    flex-direction: column;
+    gap: var(--space-md);
+  }
+
+  .step-navigation .next-button,
+  .step-navigation .prev-button {
+    max-width: none;
+  }
+
   .menu-items-grid-easy {
     grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
     gap: var(--space-md);
@@ -1100,12 +1430,6 @@ onUnmounted(() => {
 
   .step-header {
     gap: var(--space-md);
-  }
-
-  .step-number {
-    width: 40px;
-    height: 40px;
-    font-size: var(--text-xl);
   }
 
   .step-title {
@@ -1120,12 +1444,39 @@ onUnmounted(() => {
     width: 80px;
   }
 
-  .cooking-text {
-    font-size: var(--text-2xl);
+  .cooking-animation {
+    max-width: 90%;
   }
 
-  .loading-bar {
-    width: 250px;
+  .progress-steps {
+    gap: var(--space-md);
+  }
+
+  .progress-step {
+    padding: var(--space-md);
+    gap: var(--space-md);
+  }
+
+  .step-icon {
+    width: 40px;
+    height: 40px;
+  }
+
+  .step-spinner {
+    width: 20px;
+    height: 20px;
+  }
+
+  .step-title {
+    font-size: var(--text-base);
+  }
+
+  .step-subtitle {
+    font-size: var(--text-xs);
+  }
+
+  .progress-text {
+    font-size: var(--text-lg);
   }
 }
 

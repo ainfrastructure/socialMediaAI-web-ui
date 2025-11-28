@@ -15,116 +15,45 @@
     </div>
 
     <div class="filters-grid">
-      <!-- Platform Filter (Dropdown) -->
-      <div v-if="showPlatform" class="filter-item">
-        <label class="filter-label">
-          <span class="label-icon">📱</span>
-          <span class="label-text">Platforms</span>
-        </label>
-        <div class="dropdown-wrapper" ref="platformDropdownRef">
-          <button class="filter-dropdown-btn" @click="toggleDropdown('platform')">
-            <span class="btn-text">
-              {{ selectedPlatforms.length > 0 ? `${selectedPlatforms.length} Selected` : 'All Platforms' }}
-            </span>
-            <span :class="['btn-arrow', { open: openDropdown === 'platform' }]">▼</span>
-          </button>
-          <Teleport to="body">
-            <div
-              v-if="openDropdown === 'platform' && platformDropdownRef"
-              class="dropdown-menu-portal"
-              :style="getDropdownPosition(platformDropdownRef)"
-            >
-              <label
-                v-for="platform in platforms"
-                :key="platform.value"
-                class="dropdown-item"
-              >
-                <input
-                  type="checkbox"
-                  :value="platform.value"
-                  :checked="isChecked('platforms', platform.value)"
-                  class="checkbox-input"
-                  @change="toggleCheckbox('platforms', platform.value)"
-                />
-                <span class="checkbox-custom"></span>
-                <span class="checkbox-text">{{ platform.label }}</span>
-              </label>
-            </div>
-          </Teleport>
-        </div>
-      </div>
+      <!-- Platform Filter (Modal Button) -->
+      <button v-if="showPlatform" class="filter-btn" @click="showPlatformModal = true">
+        <span class="btn-icon">📱</span>
+        <span class="btn-text">
+          {{ selectedPlatforms.length > 0 ? `Platforms (${selectedPlatforms.length})` : 'Platforms' }}
+        </span>
+        <span class="btn-arrow">→</span>
+      </button>
 
       <!-- Restaurant Filter (Modal Button) -->
-      <div v-if="showRestaurant" class="filter-item">
-        <label class="filter-label">
-          <span class="label-icon">🏪</span>
-          <span class="label-text">Restaurants</span>
-        </label>
-        <button class="restaurant-filter-btn" @click="showRestaurantModal = true">
-          <span class="btn-icon">🏪</span>
-          <span class="btn-text">
-            {{ selectedRestaurants.length > 0 ? `${selectedRestaurants.length} Selected` : 'Select Restaurants' }}
-          </span>
-          <span class="btn-arrow">→</span>
-        </button>
-      </div>
+      <button v-if="showRestaurant" class="filter-btn" @click="showRestaurantModal = true">
+        <span class="btn-icon">🏪</span>
+        <span class="btn-text">
+          {{ selectedRestaurants.length > 0 ? `Restaurants (${selectedRestaurants.length})` : 'Restaurants' }}
+        </span>
+        <span class="btn-arrow">→</span>
+      </button>
 
-      <!-- Content Type Filter (Dropdown) -->
-      <div v-if="showContentType" class="filter-item">
-        <label class="filter-label">
-          <span class="label-icon">📸</span>
-          <span class="label-text">Content Type</span>
-        </label>
-        <div class="dropdown-wrapper" ref="contentDropdownRef">
-          <button class="filter-dropdown-btn" @click="toggleDropdown('content')">
-            <span class="btn-text">
-              {{ selectedContentTypes.length > 0 ? `${selectedContentTypes.length} Selected` : 'All Types' }}
-            </span>
-            <span :class="['btn-arrow', { open: openDropdown === 'content' }]">▼</span>
-          </button>
-          <Teleport to="body">
-            <div
-              v-if="openDropdown === 'content' && contentDropdownRef"
-              class="dropdown-menu-portal"
-              :style="getDropdownPosition(contentDropdownRef)"
-            >
-              <label
-                v-for="type in contentTypes"
-                :key="type.value"
-                class="dropdown-item"
-              >
-                <input
-                  type="checkbox"
-                  :value="type.value"
-                  :checked="isChecked('content_types', type.value)"
-                  class="checkbox-input"
-                  @change="toggleCheckbox('content_types', type.value)"
-                />
-                <span class="checkbox-custom"></span>
-                <span class="checkbox-text">{{ type.label }}</span>
-              </label>
-            </div>
-          </Teleport>
-        </div>
-      </div>
+      <!-- Content Type Filter (Modal Button) -->
+      <button v-if="showContentType" class="filter-btn" @click="showContentTypeModal = true">
+        <span class="btn-icon">📸</span>
+        <span class="btn-text">
+          {{ selectedContentTypes.length > 0 ? `Content Type (${selectedContentTypes.length})` : 'Content Type' }}
+        </span>
+        <span class="btn-arrow">→</span>
+      </button>
 
       <!-- Sort Filter (Single select) -->
-      <div v-if="showSort" class="filter-item">
-        <label class="filter-label">
-          <span class="label-icon">🔃</span>
-          <span class="label-text">Sort By</span>
-        </label>
-        <div class="select-wrapper">
-          <select
-            :value="modelValue.sort"
-            class="filter-select"
-            @change="updateFilter('sort', ($event.target as HTMLSelectElement).value)"
-          >
-            <option value="newest">Newest First</option>
-            <option value="oldest">Oldest First</option>
-          </select>
-          <span class="select-arrow">▼</span>
-        </div>
+      <div v-if="showSort" class="select-wrapper">
+        <span class="select-icon">🔃</span>
+        <select
+          :value="modelValue.sort"
+          class="filter-select"
+          @change="updateFilter('sort', ($event.target as HTMLSelectElement).value)"
+        >
+          <option value="newest">Newest First</option>
+          <option value="oldest">Oldest First</option>
+        </select>
+        <span class="select-arrow">▼</span>
       </div>
     </div>
 
@@ -165,21 +94,35 @@
       </div>
     </div>
 
-    <!-- Restaurant Filter Modal -->
+    <!-- Filter Modals -->
+    <PlatformFilterModal
+      v-model="showPlatformModal"
+      :selected-platforms="selectedPlatforms"
+      @update:selected-platforms="updatePlatforms"
+    />
+
     <RestaurantFilterModal
       v-model="showRestaurantModal"
       :restaurants="restaurants"
       :selected-restaurant-ids="selectedRestaurants"
       @update:selected-restaurant-ids="updateRestaurants"
     />
+
+    <ContentTypeFilterModal
+      v-model="showContentTypeModal"
+      :selected-content-types="selectedContentTypes"
+      @update:selected-content-types="updateContentTypes"
+    />
   </BaseCard>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed } from 'vue'
 import BaseCard from './BaseCard.vue'
 import BaseButton from './BaseButton.vue'
 import RestaurantFilterModal from './RestaurantFilterModal.vue'
+import PlatformFilterModal from './PlatformFilterModal.vue'
+import ContentTypeFilterModal from './ContentTypeFilterModal.vue'
 
 interface Filters {
   platforms?: string[]
@@ -225,9 +168,8 @@ const contentTypes = [
 ]
 
 const showRestaurantModal = ref(false)
-const openDropdown = ref<string | null>(null)
-const platformDropdownRef = ref<HTMLElement | null>(null)
-const contentDropdownRef = ref<HTMLElement | null>(null)
+const showPlatformModal = ref(false)
+const showContentTypeModal = ref(false)
 
 const selectedPlatforms = computed(() => props.modelValue.platforms || [])
 const selectedRestaurants = computed(() => props.modelValue.restaurant_ids || [])
@@ -243,6 +185,18 @@ const hasActiveFilters = computed(() => {
 
 const updateRestaurants = (restaurantIds: string[]) => {
   const newFilters = { ...props.modelValue, restaurant_ids: restaurantIds }
+  emit('update:modelValue', newFilters)
+  emit('change')
+}
+
+const updatePlatforms = (platforms: string[]) => {
+  const newFilters = { ...props.modelValue, platforms }
+  emit('update:modelValue', newFilters)
+  emit('change')
+}
+
+const updateContentTypes = (contentTypes: string[]) => {
+  const newFilters = { ...props.modelValue, content_types: contentTypes }
   emit('update:modelValue', newFilters)
   emit('change')
 }
@@ -283,48 +237,6 @@ const getRestaurantName = (id: string) => {
   return restaurant?.name || 'Restaurant'
 }
 
-const toggleDropdown = (dropdown: string) => {
-  if (openDropdown.value === dropdown) {
-    openDropdown.value = null
-  } else {
-    openDropdown.value = dropdown
-  }
-}
-
-const getDropdownPosition = (element: HTMLElement | null): Record<string, string> => {
-  if (!element) return {}
-
-  const rect = element.getBoundingClientRect()
-  return {
-    position: 'fixed',
-    top: `${rect.bottom + 4}px`,
-    left: `${rect.left}px`,
-    width: `${rect.width}px`,
-  }
-}
-
-const handleClickOutside = (event: MouseEvent) => {
-  const target = event.target as Node
-
-  // Check if click is outside all dropdowns
-  const clickedOutsidePlatform = platformDropdownRef.value && !platformDropdownRef.value.contains(target)
-  const clickedOutsideContent = contentDropdownRef.value && !contentDropdownRef.value.contains(target)
-
-  // Check if click is on a dropdown menu
-  const clickedOnDropdownMenu = (target as HTMLElement).closest('.dropdown-menu-portal')
-
-  if (clickedOutsidePlatform && clickedOutsideContent && !clickedOnDropdownMenu) {
-    openDropdown.value = null
-  }
-}
-
-onMounted(() => {
-  document.addEventListener('click', handleClickOutside)
-})
-
-onUnmounted(() => {
-  document.removeEventListener('click', handleClickOutside)
-})
 </script>
 
 <style scoped>
@@ -388,176 +300,13 @@ onUnmounted(() => {
 .filters-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: var(--space-xl);
+  gap: var(--space-md);
   margin-bottom: var(--space-md);
   overflow: visible;
 }
 
-.filter-item {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-sm);
-}
-
-.filter-label {
-  display: flex;
-  align-items: center;
-  gap: var(--space-xs);
-  font-size: 0.8125rem;
-  font-weight: 600;
-  color: var(--text-secondary);
-  text-transform: uppercase;
-  letter-spacing: 0.8px;
-  margin-bottom: var(--space-xs);
-}
-
-.label-icon {
-  font-size: 1rem;
-  filter: grayscale(0.3);
-}
-
-.label-text {
-  flex: 1;
-}
-
-/* Dropdown Components */
-.dropdown-wrapper {
-  position: relative;
-  overflow: visible;
-}
-
-.filter-dropdown-btn {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-md);
-  padding: var(--space-md);
-  background: rgba(10, 10, 10, 0.9);
-  border: 1px solid rgba(212, 175, 55, 0.25);
-  border-radius: var(--radius-md);
-  color: var(--text-primary);
-  font-size: 0.9375rem;
-  font-family: var(--font-body);
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.filter-dropdown-btn:hover {
-  border-color: var(--gold-primary);
-  background: rgba(10, 10, 10, 1);
-  box-shadow: 0 0 12px rgba(212, 175, 55, 0.15);
-  transform: translateY(-1px);
-}
-
-.filter-dropdown-btn .btn-arrow {
-  color: var(--gold-primary);
-  font-size: 0.75rem;
-  transition: transform 0.3s ease;
-}
-
-.filter-dropdown-btn .btn-arrow.open {
-  transform: rotate(180deg);
-}
-
-.dropdown-menu-portal {
-  position: fixed;
-  background: rgba(20, 20, 20, 0.98);
-  border: 1px solid rgba(212, 175, 55, 0.3);
-  border-radius: var(--radius-md);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4), 0 0 20px rgba(212, 175, 55, 0.1);
-  z-index: 9999;
-  max-height: 250px;
-  overflow-y: auto;
-  padding: var(--space-xs);
-  animation: dropdownSlideDown 0.2s ease;
-}
-
-@keyframes dropdownSlideDown {
-  from {
-    opacity: 0;
-    transform: translateY(-8px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.dropdown-menu-portal::-webkit-scrollbar {
-  width: 6px;
-}
-
-.dropdown-menu-portal::-webkit-scrollbar-track {
-  background: rgba(10, 10, 10, 0.5);
-  border-radius: 3px;
-}
-
-.dropdown-menu-portal::-webkit-scrollbar-thumb {
-  background: rgba(212, 175, 55, 0.3);
-  border-radius: 3px;
-}
-
-.dropdown-menu-portal::-webkit-scrollbar-thumb:hover {
-  background: rgba(212, 175, 55, 0.5);
-}
-
-.dropdown-item {
-  display: flex;
-  align-items: center;
-  gap: var(--space-sm);
-  padding: var(--space-sm) var(--space-md);
-  cursor: pointer;
-  border-radius: var(--radius-sm);
-  transition: background 0.2s ease;
-  position: relative;
-}
-
-.dropdown-item:hover {
-  background: rgba(212, 175, 55, 0.08);
-}
-
-.checkbox-input {
-  position: absolute;
-  opacity: 0;
-  cursor: pointer;
-}
-
-.checkbox-custom {
-  width: 18px;
-  height: 18px;
-  border: 2px solid rgba(212, 175, 55, 0.4);
-  border-radius: var(--radius-sm);
-  position: relative;
-  transition: all 0.2s ease;
-  flex-shrink: 0;
-}
-
-.checkbox-input:checked + .checkbox-custom {
-  background: var(--gradient-gold);
-  border-color: var(--gold-primary);
-}
-
-.checkbox-input:checked + .checkbox-custom::after {
-  content: '✓';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  color: var(--text-on-gold);
-  font-size: 12px;
-  font-weight: bold;
-}
-
-.checkbox-text {
-  font-size: 0.9375rem;
-  color: var(--text-primary);
-  font-weight: 500;
-}
-
-/* Restaurant Filter Button */
-.restaurant-filter-btn {
+/* Filter Button (consistent styling for all filters) */
+.filter-btn {
   width: 100%;
   display: flex;
   align-items: center;
@@ -574,14 +323,14 @@ onUnmounted(() => {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.restaurant-filter-btn:hover {
+.filter-btn:hover {
   border-color: var(--gold-primary);
   background: rgba(10, 10, 10, 1);
   box-shadow: 0 0 12px rgba(212, 175, 55, 0.15);
   transform: translateY(-1px);
 }
 
-.restaurant-filter-btn:active {
+.filter-btn:active {
   transform: translateY(0);
 }
 
@@ -599,13 +348,23 @@ onUnmounted(() => {
   transition: transform 0.3s ease;
 }
 
-.restaurant-filter-btn:hover .btn-arrow {
+.filter-btn:hover .btn-arrow {
   transform: translateX(4px);
 }
 
 /* Select Wrapper (for Sort) */
 .select-wrapper {
   position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.select-icon {
+  position: absolute;
+  left: var(--space-md);
+  font-size: 1.25rem;
+  pointer-events: none;
+  z-index: 1;
 }
 
 .filter-select {
@@ -613,7 +372,7 @@ onUnmounted(() => {
   background: rgba(10, 10, 10, 0.9);
   border: 1px solid rgba(212, 175, 55, 0.25);
   border-radius: var(--radius-md);
-  padding: var(--space-sm) var(--space-lg) var(--space-sm) var(--space-md);
+  padding: var(--space-md) var(--space-xl) var(--space-md) 3.5rem;
   color: var(--text-primary);
   font-size: 0.9375rem;
   font-family: var(--font-body);
@@ -621,6 +380,7 @@ onUnmounted(() => {
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   appearance: none;
+  height: 46px;
 }
 
 .filter-select:hover {

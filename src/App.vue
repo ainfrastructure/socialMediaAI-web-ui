@@ -22,6 +22,7 @@ const showNavbar = computed(() => {
 <style>
 /* Import Premium Dark Theme */
 @import './assets/theme.css';
+@import './assets/fonts.css';
 
 /* Global Reset */
 * {

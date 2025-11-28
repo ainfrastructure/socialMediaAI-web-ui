@@ -2,51 +2,19 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
-import { api } from '../services/api'
 import GradientBackground from '../components/GradientBackground.vue'
 import BaseCard from '../components/BaseCard.vue'
-import BaseAlert from '../components/BaseAlert.vue'
-import OnboardingTour from '../components/OnboardingTour.vue'
-import OnboardingQuiz from '../components/OnboardingQuiz.vue'
+import SimpleOnboarding from '../components/SimpleOnboarding.vue'
 
 const router = useRouter()
 const authStore = useAuthStore()
 
-const currentStep = ref<'tour' | 'quiz'>('tour')
-const completing = ref(false)
-const error = ref('')
+async function handleComplete() {
+  // Update auth store
+  await authStore.refreshProfile()
 
-function startQuiz() {
-  currentStep.value = 'quiz'
-}
-
-function backToTour() {
-  currentStep.value = 'tour'
-}
-
-async function completeOnboarding() {
-  try {
-    completing.value = true
-    error.value = ''
-
-    const response = await api.completeOnboarding()
-
-    if (response.success) {
-      // Update auth store with new user data
-      if (response.data?.user) {
-        await authStore.refreshProfile()
-      }
-
-      // Redirect to dashboard
-      router.push('/dashboard')
-    } else {
-      error.value = response.error || 'Failed to complete onboarding'
-    }
-  } catch (err: any) {
-    error.value = err.message || 'An error occurred'
-  } finally {
-    completing.value = false
-  }
+  // Redirect to playground
+  router.push('/playground')
 }
 </script>
 
@@ -58,33 +26,12 @@ async function completeOnboarding() {
       <!-- Header -->
       <div class="header">
         <h1 class="brand-title">Welcome to SocialChef!</h1>
-        <p class="brand-subtitle">Let's get you started in just a few minutes</p>
+        <p class="brand-subtitle">Let's create your first post together</p>
       </div>
 
       <!-- Main Content -->
       <BaseCard variant="glass-intense" class="onboarding-card">
-        <BaseAlert v-if="error" type="error" @close="error = ''">
-          {{ error }}
-        </BaseAlert>
-
-        <!-- Tour Phase -->
-        <OnboardingTour
-          v-if="currentStep === 'tour'"
-          @complete="startQuiz"
-        />
-
-        <!-- Quiz Phase -->
-        <OnboardingQuiz
-          v-else
-          @back="backToTour"
-          @complete="completeOnboarding"
-        />
-
-        <!-- Loading State -->
-        <div v-if="completing" class="loading-overlay">
-          <div class="spinner"></div>
-          <p>Completing your onboarding...</p>
-        </div>
+        <SimpleOnboarding @complete="handleComplete" />
       </BaseCard>
     </div>
   </div>

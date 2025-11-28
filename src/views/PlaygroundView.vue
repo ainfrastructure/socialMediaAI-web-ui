@@ -627,10 +627,18 @@
       v-model="showResultModal"
       :image-url="generatedImageUrl"
       :post-content="generatedPostContent"
+      :is-generating-image="generatingImage"
+      :is-generating-content="generatingPostContent"
+      :is-saved="!!lastSavedFavorite"
+      :is-publishing="publishingToFacebook"
+      :is-published="publishedToFacebook"
+      :facebook-post-url="facebookPostUrl"
+      :generation-error="generationError"
       @save="handleResultSave"
       @publish="handleResultPublish"
       @schedule="handleResultSchedule"
       @connect-facebook="handleResultConnectFacebook"
+      @retry="handleRetryGeneration"
     />
 
     <!-- Schedule Modal -->
@@ -1023,6 +1031,7 @@ import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import { useFacebookStore } from '../stores/facebook'
 import { usePreferencesStore } from '../stores/preferences'
+import { useLocaleStore } from '../stores/locale'
 import { useSocialAccounts } from '../composables/useSocialAccounts'
 import GradientBackground from '../components/GradientBackground.vue'
 import BaseCard from '../components/BaseCard.vue'
@@ -1042,6 +1051,7 @@ const route = useRoute()
 const authStore = useAuthStore()
 const facebookStore = useFacebookStore()
 const preferencesStore = usePreferencesStore()
+const localeStore = useLocaleStore()
 const socialAccounts = useSocialAccounts()
 
 // Restaurant selection
@@ -1109,6 +1119,10 @@ const showScheduleModal = ref(false)
 const favoriteToSchedule = ref<any>(null)
 const preselectedDate = ref<string | null>(null)
 const publishingToFacebook = ref(false)
+const publishedToFacebook = ref(false)
+const facebookPostUrl = ref<string | undefined>(undefined)
+const generationError = ref<string | null>(null)
+const lastEasyModeData = ref<any>(null) // Store last generation data for retry
 
 // Facebook Onboarding Modal
 const showFacebookOnboardingModal = ref(false)
@@ -1731,14 +1745,16 @@ const generatePromptsFromSelection = async () => {
   }
 }
 
-const selectImagePrompt = (index: number) => {
+const selectImagePrompt = (index: number, skipClear = false) => {
   selectedImagePromptIndex.value = index
   editablePrompt.value = imagePrompts.value[index]
-  // Clear generated content when switching prompts
-  generatedImageUrl.value = ''
-  generatedPostContent.value = null
-  lastSavedFavorite.value = null
-  message.value = ''
+  // Clear generated content when switching prompts (unless skipClear is true for easy mode)
+  if (!skipClear) {
+    generatedImageUrl.value = ''
+    generatedPostContent.value = null
+    lastSavedFavorite.value = null
+    message.value = ''
+  }
 }
 
 const selectVideoPrompt = (index: number) => {
@@ -1884,11 +1900,15 @@ const generateImage = async () => {
     )
 
     if (!response.success) {
-      showMessage(response.error || 'Failed to generate image', 'error')
-      return
+      const errorMessage = response.error || 'Failed to generate image'
+      showMessage(errorMessage, 'error')
+      throw new Error(errorMessage)
     }
 
     generatedImageUrl.value = (response as any).imageUrl || ''
+    console.log('[IMAGE-GEN] Set generatedImageUrl:', generatedImageUrl.value)
+    console.log('[IMAGE-GEN] Full response:', JSON.stringify(response, null, 2))
+
     const watermarked = (response as any).watermarked || false
     const promotionalStickerAdded = (response as any).promotionalStickerAdded || false
     const usedReference = referenceImage !== undefined
@@ -1909,11 +1929,15 @@ const generateImage = async () => {
 
     showMessage(successMessage, 'success')
 
+    // Wait for post content generation to complete if it was started
+    if (postContentPromise) {
+      console.log('[IMAGE-GEN] Waiting for post content generation to complete...')
+      await postContentPromise
+      console.log('[IMAGE-GEN] Post content generation completed')
+    }
+
     // Refresh usage stats
     await authStore.refreshProfile()
-
-    // Note: Post content is already being generated in parallel above
-    // No need to start it again here
   } catch (error: any) {
 
     showMessage(error.message || 'Failed to generate image', 'error')
@@ -1923,10 +1947,15 @@ const generateImage = async () => {
 }
 
 const generatePostContent = async (contentType: 'image' | 'video') => {
-  if (selectedPlatforms.value.length === 0 || !selectedRestaurant.value) return
+  if (selectedPlatforms.value.length === 0 || !selectedRestaurant.value) {
+    console.log('[POST-CONTENT] Skipping - no platforms or restaurant selected')
+    return
+  }
 
   try {
     generatingPostContent.value = true
+    console.log('[POST-CONTENT] Starting post content generation...')
+
     const menuItemNames = selectedMenuItems.value.length > 0
       ? selectedMenuItems.value.map(i => i.name)
       : ['Featured dish']
@@ -1934,6 +1963,7 @@ const generatePostContent = async (contentType: 'image' | 'video') => {
     // Use the first selected platform for content generation
     // The content will be suitable for all selected platforms
     const primaryPlatform = selectedPlatforms.value[0]
+    console.log('[POST-CONTENT] Platform:', primaryPlatform, 'Restaurant:', selectedRestaurant.value.name, 'Items:', menuItemNames)
 
     const response = await api.generatePostContent(
       primaryPlatform,
@@ -1941,24 +1971,41 @@ const generatePostContent = async (contentType: 'image' | 'video') => {
       menuItemNames,
       contentType,
       promptContext.value || undefined,
-      selectedRestaurant.value.brand_dna
+      selectedRestaurant.value.brand_dna,
+      localeStore.currentLocale
     )
 
-    if (!response.success) {
+    console.log('[POST-CONTENT] API response received:', response)
+    console.log('[POST-CONTENT] Response keys:', Object.keys(response))
+    console.log('[POST-CONTENT] Response.data:', (response as any).data)
 
-      return
+    if (!response.success) {
+      console.error('[POST-CONTENT] Generation failed:', response.error)
+      throw new Error(response.error || 'Failed to generate post content')
     }
+
+    // The response might be in response.data instead of response directly
+    const data = (response as any).data || response
+    console.log('[POST-CONTENT] Using data:', data)
+    console.log('[POST-CONTENT] Data keys:', Object.keys(data))
+    console.log('[POST-CONTENT] postText:', data.postText)
+    console.log('[POST-CONTENT] hashtags:', data.hashtags)
+    console.log('[POST-CONTENT] callToAction:', data.callToAction)
 
     generatedPostContent.value = {
-      postText: (response as any).postText || '',
-      hashtags: (response as any).hashtags || [],
-      callToAction: (response as any).callToAction || '',
+      postText: data.postText || '',
+      hashtags: data.hashtags || [],
+      callToAction: data.callToAction || '',
     }
 
-  } catch (error: any) {
+    console.log('[POST-CONTENT] Set generatedPostContent:', generatedPostContent.value)
 
+  } catch (error: any) {
+    console.error('[POST-CONTENT] Error in generatePostContent:', error)
+    throw error
   } finally {
     generatingPostContent.value = false
+    console.log('[POST-CONTENT] Finished (generatingPostContent = false)')
   }
 }
 
@@ -2223,10 +2270,30 @@ const publishToFacebook = async () => {
       throw new Error(postResponse.error || 'Failed to post to Facebook')
     }
 
-    showMessage('Successfully published to Facebook!', 'success')
-  } catch (error: any) {
+    // Capture the Facebook post URL from the API response
+    // Check both root level and data level for backwards compatibility
+    if ((postResponse as any).postUrl) {
+      facebookPostUrl.value = (postResponse as any).postUrl
+    } else if (postResponse.data?.postUrl) {
+      facebookPostUrl.value = postResponse.data.postUrl
+    } else if ((postResponse as any).postId) {
+      // Fallback: construct URL from post ID
+      facebookPostUrl.value = `https://facebook.com/${(postResponse as any).postId}`
+    } else if (postResponse.data?.postId) {
+      facebookPostUrl.value = `https://facebook.com/${postResponse.data.postId}`
+    }
 
+    console.log('Facebook post published:', postResponse) // Debug log
+    console.log('Facebook post URL:', facebookPostUrl.value) // Debug log
+
+    showMessage('🎉 Successfully published to Facebook!', 'success')
+    publishedToFacebook.value = true
+
+    // Keep modal open so user can see the success message
+    // They can close it manually or schedule/save as well
+  } catch (error: any) {
     showMessage(error.message || 'Failed to publish to Facebook', 'error')
+    publishedToFacebook.value = false
   } finally {
     publishingToFacebook.value = false
   }
@@ -2264,6 +2331,8 @@ const handleEasyModeGenerate = async (data: {
 }) => {
   try {
     easyModeGenerating.value = true
+    generationError.value = null // Reset error state
+    lastEasyModeData.value = data // Store for retry
 
     // Set up the generation with values from Easy Mode
     if (data.menuItem) {
@@ -2295,25 +2364,50 @@ const handleEasyModeGenerate = async (data: {
 
     // Auto-select first image prompt
     if (imagePrompts.value.length > 0) {
-      selectImagePrompt(0)
+      // Use skipClear=true to prevent selectImagePrompt from clearing generated content
+      // We'll clear it manually below AFTER opening the modal
+      selectImagePrompt(0, true)
 
       // Wait a tick for editablePrompt to update
       await nextTick()
 
+      // Clear previous content and reset state
+      generatedImageUrl.value = ''
+      generatedPostContent.value = null
+      publishedToFacebook.value = false // Reset published status for new generation
+      facebookPostUrl.value = undefined // Reset Facebook post URL
+      lastSavedFavorite.value = null
+
+      // Show result modal immediately with loading states
+      showResultModal.value = true
+      easyModeGenerating.value = false
+
       // Generate the image automatically
       // Note: generateImage() will automatically call generatePostContent() at the end
-      await generateImage()
-
-      // Show result modal when complete
-      easyModeGenerating.value = false
-      showResultModal.value = true
+      // The modal will show loading states and populate content as it arrives
+      try {
+        await generateImage()
+        generationError.value = null // Clear error on success
+      } catch (imageError: any) {
+        // Capture the specific error for display in modal
+        generationError.value = imageError.message || 'Failed to generate image. Please try again.'
+        console.error('[EasyMode] Image generation error:', imageError)
+      }
     } else {
       easyModeGenerating.value = false
+      generationError.value = 'No prompts were generated'
       showMessage('No prompts were generated', 'error')
     }
   } catch (error: any) {
     easyModeGenerating.value = false
+    generationError.value = error.message || 'Failed to generate content'
     showMessage(error.message || 'Failed to generate content', 'error')
+  }
+}
+
+const handleRetryGeneration = async () => {
+  if (lastEasyModeData.value) {
+    await handleEasyModeGenerate(lastEasyModeData.value)
   }
 }
 
@@ -2361,17 +2455,17 @@ const handleFacebookOnboardingClose = () => {
 // Result Modal Functions
 const handleResultSave = async () => {
   await saveToFavorites()
-  showResultModal.value = false
+  // Don't close the modal - let user continue to schedule or publish
 }
 
-const handleResultPublish = () => {
-  showResultModal.value = false
-  checkFacebookConnectionAndProceed('publish')
+const handleResultPublish = async () => {
+  // Don't close the modal - let user see publishing progress
+  await publishToFacebook()
 }
 
 const handleResultSchedule = () => {
-  showResultModal.value = false
-  checkFacebookConnectionAndProceed('schedule')
+  // Don't close the modal - open schedule modal alongside
+  openScheduleModal()
 }
 
 const handleResultConnectFacebook = async () => {

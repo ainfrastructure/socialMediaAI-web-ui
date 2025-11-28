@@ -54,6 +54,22 @@
             </button>
           </div>
         </div>
+
+        <!-- Color Legend -->
+        <div class="calendar-legend">
+          <div class="legend-item">
+            <div class="legend-dot legend-published"></div>
+            <span>Published</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-dot legend-scheduled"></div>
+            <span>Scheduled</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-dot legend-failed"></div>
+            <span>Failed</span>
+          </div>
+        </div>
         <div :class="['calendar-grid', `view-${viewMode}`]">
           <!-- Day headers (only show for month and week views) -->
           <div
@@ -195,6 +211,17 @@
                     </div>
                     <div class="post-card-footer">
                       <span class="post-card-timing">{{ getTimeRemaining(post) }}</span>
+                      <!-- View Post Link for Published Posts -->
+                      <a
+                        v-if="post.status === 'published' && post.platform_post_url"
+                        :href="post.platform_post_url"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="view-post-link"
+                        @click.stop
+                      >
+                        🔗 View Post
+                      </a>
                     </div>
                   </div>
                 </div>
@@ -382,6 +409,18 @@
                     <button class="action-btn delete-btn" @click="cancelPost(post.id)" title="Cancel post">
                       🗑️
                     </button>
+                  </div>
+
+                  <!-- View Post Link for Published Posts -->
+                  <div v-else-if="post.platform_post_url" class="action-buttons" @click.stop>
+                    <a
+                      :href="post.platform_post_url"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      class="view-post-btn"
+                    >
+                      🔗 View on {{ capitalizeFirst(post.platform || 'Platform') }}
+                    </a>
                   </div>
                 </div>
 
@@ -593,6 +632,19 @@
                   <span class="published-info-value">{{ getPlatformIcon(selectedPostForDetail.platform) }} {{ capitalizeFirst(selectedPostForDetail.platform) }}</span>
                 </div>
               </div>
+
+              <!-- View Post Button -->
+              <a
+                v-if="selectedPostForDetail.platform_post_url"
+                :href="selectedPostForDetail.platform_post_url"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="view-post-button-modal"
+              >
+                <span class="view-post-icon">🔗</span>
+                <span>View Post on {{ capitalizeFirst(selectedPostForDetail.platform || 'Platform') }}</span>
+                <span class="external-icon">↗</span>
+              </a>
             </div>
 
             <!-- Actions (only for scheduled/failed posts) -->
@@ -1534,8 +1586,48 @@ onMounted(async () => {
 /* Calendar Header (navigation + view mode inside calendar card) */
 .calendar-header {
   padding-bottom: var(--space-xl);
-  margin-bottom: var(--space-xl);
+  margin-bottom: var(--space-lg);
   border-bottom: 1px solid rgba(212, 175, 55, 0.15);
+}
+
+/* Calendar Legend */
+.calendar-legend {
+  display: flex;
+  gap: var(--space-xl);
+  justify-content: center;
+  align-items: center;
+  padding: var(--space-md) 0;
+  margin-bottom: var(--space-xl);
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+}
+
+.legend-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.legend-published {
+  background-color: rgba(34, 197, 94, 0.8);
+  box-shadow: 0 0 8px rgba(34, 197, 94, 0.4);
+}
+
+.legend-scheduled {
+  background-color: rgba(59, 130, 246, 0.8);
+  box-shadow: 0 0 8px rgba(59, 130, 246, 0.4);
+}
+
+.legend-failed {
+  background-color: rgba(239, 68, 68, 0.8);
+  box-shadow: 0 0 8px rgba(239, 68, 68, 0.4);
 }
 
 .calendar-nav {
@@ -1984,6 +2076,7 @@ onMounted(async () => {
 .post-card-footer {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: var(--space-md);
   padding-top: var(--space-sm);
   border-top: 1px solid rgba(212, 175, 55, 0.1);
@@ -1999,6 +2092,27 @@ onMounted(async () => {
   font-size: 0.65rem;
   margin-left: 0.25rem;
   opacity: 0.8;
+}
+
+.view-post-link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: var(--space-xs) var(--space-md);
+  background: rgba(212, 175, 55, 0.1);
+  border: 1px solid var(--gold-primary);
+  border-radius: var(--radius-md);
+  color: var(--gold-primary);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  text-decoration: none;
+  transition: var(--transition-base);
+}
+
+.view-post-link:hover {
+  background: rgba(212, 175, 55, 0.2);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(212, 175, 55, 0.3);
 }
 
 .day-view-holidays {
@@ -2580,6 +2694,28 @@ onMounted(async () => {
   box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
 }
 
+.view-post-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-lg);
+  background: rgba(212, 175, 55, 0.15);
+  border: 1px solid var(--gold-primary);
+  border-radius: var(--radius-md);
+  color: var(--gold-primary);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  text-decoration: none;
+  transition: var(--transition-base);
+  cursor: pointer;
+}
+
+.view-post-btn:hover {
+  background: rgba(212, 175, 55, 0.25);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(212, 175, 55, 0.4);
+}
+
 /* Error Banner */
 .error-banner {
   display: flex;
@@ -3021,6 +3157,40 @@ onMounted(async () => {
 .published-info-value {
   font-size: var(--text-sm);
   color: var(--text-secondary);
+}
+
+.view-post-button-modal {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-sm);
+  padding: var(--space-md) var(--space-xl);
+  margin-top: var(--space-lg);
+  background: var(--gradient-gold);
+  border: none;
+  border-radius: var(--radius-md);
+  color: var(--text-on-gold);
+  font-size: var(--text-base);
+  font-weight: var(--font-bold);
+  text-decoration: none;
+  transition: var(--transition-base);
+  cursor: pointer;
+  box-shadow: var(--glow-gold-sm);
+  width: 100%;
+}
+
+.view-post-button-modal:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--glow-gold-md);
+}
+
+.view-post-icon {
+  font-size: var(--text-lg);
+}
+
+.external-icon {
+  font-size: var(--text-sm);
+  opacity: 0.8;
 }
 
 .empty-detail-card {

@@ -1,0 +1,67 @@
+/* ========================================
+   FONT THEMES SYSTEM
+   Easy customizable font switching
+   ======================================== */
+
+/* ===== DEFAULT THEME: Current (Inter + Playfair) ===== */
+:root,
+:root[data-font-theme="current"] {
+  --font-heading: 'Playfair Display', Georgia, serif;
+  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+/* ===== APPLE THEME: SF Pro (System Fonts) ===== */
+:root[data-font-theme="apple"] {
+  --font-heading: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', system-ui, sans-serif;
+  --font-body: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', system-ui, sans-serif;
+}
+
+/* ===== CLASSIC THEME: EB Garamond + Lora ===== */
+:root[data-font-theme="classic"] {
+  --font-heading: 'EB Garamond', Georgia, 'Times New Roman', serif;
+  --font-body: 'Lora', Georgia, serif;
+}
+
+/* ===== MODERN THEME: Outfit + Montserrat ===== */
+:root[data-font-theme="modern"] {
+  --font-heading: 'Outfit', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  --font-body: 'Montserrat', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+}
+
+/* ===== LUXURY THEME: Cormorant Garamond + Raleway ===== */
+:root[data-font-theme="luxury"] {
+  --font-heading: 'Cormorant Garamond', 'Playfair Display', Georgia, serif;
+  --font-body: 'Raleway', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+}
+
+/* ===== ELEGANT THEME: Crimson Pro + Work Sans ===== */
+:root[data-font-theme="elegant"] {
+  --font-heading: 'Crimson Pro', 'Baskerville', Georgia, serif;
+  --font-body: 'Work Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+/* ===== BOUTIQUE THEME: Libre Baskerville + Nunito Sans ===== */
+:root[data-font-theme="boutique"] {
+  --font-heading: 'Libre Baskerville', 'Baskerville', Georgia, serif;
+  --font-body: 'Nunito Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+/* Theme-specific adjustments for optimal readability */
+
+/* Apple theme - slightly tighter spacing */
+:root[data-font-theme="apple"] {
+  --leading-tight: 1.2;
+  --leading-normal: 1.47;
+}
+
+/* Classic theme - more generous spacing for serifs */
+:root[data-font-theme="classic"] {
+  --leading-tight: 1.3;
+  --leading-normal: 1.6;
+}
+
+/* Luxury theme - refined spacing */
+:root[data-font-theme="luxury"] {
+  --leading-tight: 1.25;
+  --leading-normal: 1.6;
+}
