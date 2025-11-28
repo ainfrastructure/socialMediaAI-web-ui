@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { useFacebookStore } from '../stores/facebook'
 import { api } from '../services/api'
 import { restaurantService } from '../services/restaurantService'
 import { placesService } from '../services/placesService'
 import { menuService } from '../services/menuService'
+import { okamService } from '../services/okamService'
 import BaseButton from './BaseButton.vue'
 import BaseCard from './BaseCard.vue'
 import BaseAlert from './BaseAlert.vue'
@@ -16,6 +18,7 @@ import FacebookOnboardingModal from './FacebookOnboardingModal.vue'
 
 const router = useRouter()
 const facebookStore = useFacebookStore()
+const { t } = useI18n()
 
 const emit = defineEmits<{
   (e: 'complete'): void
@@ -32,6 +35,12 @@ const restaurantSaved = ref(false)
 const restaurantError = ref('')
 const placeDetails = ref<any>(null)
 const loadingDetails = ref(false)
+
+// Store fetched data before saving
+const fetchedDetails = ref<any>(null)
+const fetchedMenuData = ref<any>(null)
+const fetchedBrandDNA = ref<any>(null)
+const detailsFetched = ref(false)
 
 // Step 2: Post generation
 const generatingPost = ref(false)
@@ -54,7 +63,7 @@ const showCompletion = ref(false)
 
 const progress = computed(() => (currentStep.value / totalSteps) * 100)
 
-const canProceedStep1 = computed(() => restaurantSaved.value && !!selectedRestaurant.value)
+const canProceedStep1 = computed(() => detailsFetched.value && !!selectedRestaurant.value)
 const canProceedStep2 = computed(() => !!generatedPost.value)
 
 // Step 1: Restaurant Selection and Addition
@@ -63,17 +72,17 @@ async function handleRestaurantSelect(restaurant: any) {
   restaurantError.value = ''
   restaurantSaved.value = false
 
-  // Automatically fetch details and save the restaurant
-  await fetchAndSaveRestaurant(restaurant)
+  // Only fetch details, don't save yet (wait for user to click Continue)
+  await fetchRestaurantDetails(restaurant)
 }
 
-async function fetchAndSaveRestaurant(restaurant: any) {
+async function fetchRestaurantDetails(restaurant: any) {
   try {
     savingRestaurant.value = true
     loadingDetails.value = true
     restaurantError.value = ''
 
-    console.log('Starting fetchAndSaveRestaurant with:', restaurant)
+    console.log('Fetching restaurant details:', restaurant)
 
     // Fetch full place details from Google Places
     const details = await placesService.getPlaceDetails(restaurant.place_id)
@@ -86,17 +95,51 @@ async function fetchAndSaveRestaurant(restaurant: any) {
 
     placeDetails.value = details
 
-    // Fetch menu data
+    // Fetch menu data - Try Okam first (instant), fall back to scraping
     let menuData = null
+    let menuSource = 'none'
+    let brandDNA = null
+
     try {
-      menuData = await menuService.getRestaurantMenu(restaurant.place_id, restaurant.name)
+      // Try Okam first
+      console.log('[ONBOARDING] Trying Okam menu for place_id:', restaurant.place_id)
+      const okamMenu = await okamService.getMenuByPlaceId(restaurant.place_id)
+
+      if (okamMenu && okamMenu.categories?.length > 0) {
+        // Convert Okam format to standard format
+        menuData = {
+          restaurantName: okamMenu.storeName,
+          platform: 'okam' as const,
+          url: '',
+          items: okamService.convertToMenuItems(okamMenu)
+        }
+        menuSource = 'okam'
+        console.log(`✅ [ONBOARDING] Loaded ${menuData.items.length} items from Okam`)
+
+        // If Okam has a logo, use it for brand DNA (skip website scraping)
+        if (okamMenu.logoUrl) {
+          console.log(`✅ [ONBOARDING] Using Okam logo: ${okamMenu.logoUrl}`)
+          brandDNA = {
+            logo_url: okamMenu.logoUrl,
+            brand_name: okamMenu.storeName,
+            primary_color: null,
+            secondary_color: null,
+            font_style: null
+          }
+        }
+      } else {
+        // Fall back to scraping (Wolt/Foodora)
+        console.log('[ONBOARDING] No Okam menu found, falling back to scraping...')
+        menuData = await menuService.getRestaurantMenu(restaurant.place_id, restaurant.name)
+        menuSource = menuData?.platform || 'scraping'
+        console.log(`✅ [ONBOARDING] Loaded ${menuData?.items?.length || 0} items from ${menuSource}`)
+      }
     } catch (error) {
-      console.log('Menu data not available')
+      console.log('[ONBOARDING] Menu data not available:', error)
     }
 
     // Try to fetch brand DNA, but don't fail if it errors
-    let brandDNA = null
-    if (details.website) {
+    if (details.website && !brandDNA) {
       try {
         const brandResponse = await api.analyzeBrandDNA(details.website, restaurant.place_id)
         if (brandResponse.success && (brandResponse as any).brandDNA) {
@@ -107,6 +150,53 @@ async function fetchAndSaveRestaurant(restaurant: any) {
         // Continue without brand DNA - it's optional
       }
     }
+
+    // Store the fetched data (don't save to database yet)
+    fetchedDetails.value = {
+      restaurant,
+      details,
+      menuSource
+    }
+    fetchedMenuData.value = menuData
+    fetchedBrandDNA.value = brandDNA
+    detailsFetched.value = true
+
+    // Set up the selectedRestaurant preview (but not saved yet)
+    selectedRestaurant.value = {
+      id: '', // Will be set when saved
+      place_id: restaurant.place_id,
+      name: details.name,
+      address: details.formatted_address || details.vicinity || restaurant.address || '',
+      city: details.address_components?.find((c: any) => c.types.includes('locality'))?.long_name || '',
+      country: details.address_components?.find((c: any) => c.types.includes('country'))?.long_name || '',
+      brand_dna: brandDNA,
+      menu_items: menuData?.items || [],
+      menu_source: menuSource,
+      google_data: details
+    }
+
+    console.log('✅ Restaurant details fetched and ready to save')
+  } catch (error: any) {
+    console.error('Failed to fetch restaurant details:', error)
+    restaurantError.value = error.message || 'Failed to fetch restaurant details. Please try again.'
+    detailsFetched.value = false
+  } finally {
+    savingRestaurant.value = false
+    loadingDetails.value = false
+  }
+}
+
+async function saveRestaurantToDatabase() {
+  if (!fetchedDetails.value) {
+    throw new Error('No restaurant details to save')
+  }
+
+  try {
+    savingRestaurant.value = true
+
+    const { restaurant, details } = fetchedDetails.value
+    const menuData = fetchedMenuData.value
+    const brandDNA = fetchedBrandDNA.value
 
     // Save restaurant to database
     const restaurantData = {
@@ -124,7 +214,7 @@ async function fetchAndSaveRestaurant(restaurant: any) {
       } : null,
     }
 
-    console.log('Saving restaurant with data:', {
+    console.log('Saving restaurant to database:', {
       place_id: restaurantData.place_id,
       name: restaurantData.name,
       address: restaurantData.address
@@ -138,61 +228,35 @@ async function fetchAndSaveRestaurant(restaurant: any) {
 
     if (result.success) {
       restaurantSaved.value = true
-      selectedRestaurant.value = {
-        id: result.data?.id || '',
-        place_id: restaurant.place_id,
-        name: details.name,
-        address: details.formatted_address || details.vicinity || restaurant.address || '',
-        city: details.address_components?.find((c: any) => c.types.includes('locality'))?.long_name || '',
-        country: details.address_components?.find((c: any) => c.types.includes('country'))?.long_name || '',
-        brand_dna: brandDNA,
-        menu_items: menuData?.items || [],
-        google_data: details
-      }
-
-      // Don't auto-advance - let user click Continue
-      // setTimeout(() => {
-      //   if (canProceedStep1.value) {
-      //     nextStep()
-      //   }
-      // }, 1000)
+      selectedRestaurant.value.id = result.data?.id || ''
+      console.log('✅ Restaurant saved successfully')
     } else {
       if (result.error && result.error.includes('already saved')) {
         // Restaurant already exists, that's fine!
         restaurantSaved.value = true
-        selectedRestaurant.value = {
-          id: result.data?.id || '',
-          place_id: restaurant.place_id,
-          name: details.name,
-          address: details.formatted_address || details.vicinity || restaurant.address || '',
-          city: details.address_components?.find((c: any) => c.types.includes('locality'))?.long_name || '',
-          country: details.address_components?.find((c: any) => c.types.includes('country'))?.long_name || '',
-          brand_dna: brandDNA,
-          menu_items: menuData?.items || [],
-          google_data: details
-        }
-
-        // Don't auto-advance - let user click Continue
-        // setTimeout(() => {
-        //   if (canProceedStep1.value) {
-        //     nextStep()
-        //   }
-        // }, 1000)
+        selectedRestaurant.value.id = result.data?.id || ''
+        console.log('✅ Restaurant already exists')
       } else {
         throw new Error(result.error || 'Failed to save restaurant')
       }
     }
-  } catch (error: any) {
-    console.error('Failed to fetch and save restaurant:', error)
-    restaurantError.value = error.message || 'Failed to add restaurant. Please try again.'
-    restaurantSaved.value = false
   } finally {
     savingRestaurant.value = false
-    loadingDetails.value = false
   }
 }
 
 async function nextStep() {
+  // If moving from step 1, save the restaurant first
+  if (currentStep.value === 1 && detailsFetched.value && !restaurantSaved.value) {
+    try {
+      await saveRestaurantToDatabase()
+    } catch (error: any) {
+      console.error('Failed to save restaurant:', error)
+      restaurantError.value = error.message || 'Failed to save restaurant. Please try again.'
+      return // Don't proceed if save failed
+    }
+  }
+
   if (currentStep.value < totalSteps) {
     currentStep.value++
   } else {
@@ -483,13 +547,13 @@ function handleFacebookConnected() {
       <div v-if="currentStep === 1" class="step-panel">
         <div class="step-header">
           <div class="step-icon">🏪</div>
-          <h2 class="step-title">Add Your Restaurant</h2>
-          <p class="step-description">Search for your restaurant using Google Places</p>
+          <h2 class="step-title">{{ $t('onboarding.simple.selectRestaurant') }}</h2>
+          <p class="step-description">{{ $t('restaurantSearch.searchPlaceholder') }}</p>
         </div>
 
         <!-- Helpful Instructions -->
         <BaseAlert v-if="!selectedRestaurant" type="info" :dismissible="false" class="onboarding-tip">
-          💡 Start by typing your restaurant name or location. We'll automatically fetch all the details for you!
+          {{ $t('onboarding.simple.searchRestaurants') }}
         </BaseAlert>
 
         <BaseAlert v-if="restaurantError" type="error" :dismissible="false">
@@ -498,36 +562,20 @@ function handleFacebookConnected() {
 
         <div class="restaurant-search">
           <RestaurantAutocomplete
-            placeholder="Search for your restaurant..."
+            :placeholder="$t('restaurantSearch.searchPlaceholder')"
             @select="handleRestaurantSelect"
             :disabled="savingRestaurant"
           />
         </div>
 
         <!-- Loading State -->
-        <div v-if="savingRestaurant" class="loading-state">
-          <div class="spinner"></div>
-          <div class="loading-steps">
-            <p class="loading-text">Setting up your restaurant...</p>
-            <div class="loading-progress">
-              <div class="progress-step">
-                <span class="step-check">✓</span> Fetching restaurant details
-              </div>
-              <div class="progress-step">
-                <span class="step-check">{{ loadingDetails ? '⏳' : '✓' }}</span> Loading menu & brand identity
-              </div>
-              <div class="progress-step">
-                <span class="step-check">⏳</span> Saving to database
-              </div>
-            </div>
-          </div>
+        <div v-if="savingRestaurant && !detailsFetched" class="loading-state">
+          <img src="/outline-logo-gold.svg" alt="Loading" class="loading-logo" />
+          <p class="loading-text">{{ $t('common.loading') }}</p>
         </div>
 
-        <!-- Success State -->
-        <div v-if="restaurantSaved && selectedRestaurant" class="selected-restaurant">
-          <BaseAlert type="success" :dismissible="false" class="success-message">
-            ✓ Restaurant added successfully! Moving to next step...
-          </BaseAlert>
+        <!-- Success State - Show when details are fetched -->
+        <div v-if="(detailsFetched || restaurantSaved) && selectedRestaurant" class="selected-restaurant">
           <div class="restaurant-card">
             <div class="restaurant-logo" v-if="selectedRestaurant.brand_dna?.logo_url">
               <img :src="selectedRestaurant.brand_dna.logo_url" :alt="selectedRestaurant.name" />
@@ -535,6 +583,14 @@ function handleFacebookConnected() {
             <div class="restaurant-info">
               <h3>{{ selectedRestaurant.name }}</h3>
               <p v-if="selectedRestaurant.address">{{ selectedRestaurant.address }}</p>
+              <div v-if="selectedRestaurant.menu_items?.length > 0" class="menu-badge-container">
+                <span v-if="selectedRestaurant.menu_source === 'okam'" class="menu-badge okam-badge">
+                  ✓ Okam Menu - {{selectedRestaurant.menu_items.length}} items
+                </span>
+                <span v-else-if="selectedRestaurant.menu_source" class="menu-badge platform-badge">
+                  {{ selectedRestaurant.menu_source }} - {{selectedRestaurant.menu_items.length}} items
+                </span>
+              </div>
             </div>
             <span class="check-icon">✓</span>
           </div>
@@ -545,20 +601,20 @@ function handleFacebookConnected() {
       <div v-else-if="currentStep === 2" class="step-panel">
         <div class="step-header">
           <div class="step-icon">✨</div>
-          <h2 class="step-title">Create Your Post</h2>
-          <p class="step-description">Select menu items and style to generate your post</p>
+          <h2 class="step-title">{{ $t('onboarding.simple.generateFirstPost') }}</h2>
+          <p class="step-description">{{ $t('onboarding.simple.selectMenuItem') }}</p>
         </div>
 
         <!-- Helpful Instructions -->
         <BaseAlert type="info" :dismissible="false" class="onboarding-tip">
-          💡 Choose menu items and a style, then click "Generate Post" to create your content!
+          {{ $t('playground.generatePrompts') }}
         </BaseAlert>
 
         <!-- Generation Loading State -->
         <div v-if="generatingPost" class="generation-loading">
           <div class="loading-spinner-large"></div>
-          <h3 class="loading-title">Creating Your Post...</h3>
-          <p class="loading-description">Our AI is crafting the perfect content for you</p>
+          <h3 class="loading-title">{{ $t('onboarding.simple.generatingPost') }}</h3>
+          <p class="loading-description">{{ $t('alerts.info.generating') }}</p>
         </div>
 
         <!-- Easy Mode Creation Component -->
@@ -574,13 +630,13 @@ function handleFacebookConnected() {
       <div v-else-if="currentStep === 3" class="step-panel">
         <div class="step-header">
           <div class="step-icon">👀</div>
-          <h2 class="step-title">Review Your Post</h2>
-          <p class="step-description">Check out your AI-generated content</p>
+          <h2 class="step-title">{{ $t('onboarding.simple.postGenerated') }}</h2>
+          <p class="step-description">{{ $t('playground.preview') }}</p>
         </div>
 
         <!-- Helpful Instructions -->
         <BaseAlert type="info" :dismissible="false" class="onboarding-tip">
-          💡 This is what your post will look like. You can go back to make changes or continue to connect your accounts!
+          {{ $t('scheduler.postDetails') }}
         </BaseAlert>
 
         <div v-if="generatedPost" class="post-preview">
@@ -630,13 +686,13 @@ function handleFacebookConnected() {
       <div v-else-if="currentStep === 4" class="step-panel">
         <div class="step-header">
           <div class="step-icon">🔗</div>
-          <h2 class="step-title">Connect Your Accounts</h2>
-          <p class="step-description">Link Facebook and Instagram to post and schedule</p>
+          <h2 class="step-title">{{ $t('onboarding.simple.connectFacebook') }}</h2>
+          <p class="step-description">{{ $t('onboarding.simple.connectFacebookDescription') }}</p>
         </div>
 
         <!-- Helpful Instructions -->
         <BaseAlert type="info" :dismissible="false" class="onboarding-tip">
-          💡 Connect your accounts to publish posts and schedule them for later. You can connect one or both!
+          {{ $t('connectAccounts.pageSubtitle') }}
         </BaseAlert>
 
         <div class="connect-accounts">
@@ -1020,12 +1076,36 @@ function handleFacebookConnected() {
 
 /* Restaurant Search */
 .restaurant-search {
-  max-width: 600px;
-  margin: 0 auto;
+  max-width: 900px;
+  width: 100%;
+  margin: 0 auto var(--space-3xl);
+  padding: var(--space-xl);
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--blur-md));
+  border: var(--border-width) solid var(--glass-border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-lg);
+  transition: var(--transition-base);
+}
+
+.restaurant-search:hover {
+  border-color: var(--gold-primary);
+  box-shadow: var(--shadow-xl), 0 0 0 1px rgba(212, 175, 55, 0.1);
+}
+
+/* Make the autocomplete input larger */
+.restaurant-search :deep(input) {
+  font-size: var(--text-lg) !important;
+  padding: var(--space-lg) var(--space-xl) !important;
+  min-height: 56px !important;
+}
+
+.restaurant-search :deep(.autocomplete-container) {
+  width: 100%;
 }
 
 .selected-restaurant {
-  max-width: 600px;
+  max-width: 900px;
   margin: var(--space-2xl) auto 0;
 }
 
@@ -1083,6 +1163,30 @@ function handleFacebookConnected() {
   margin: 0;
 }
 
+.menu-badge-container {
+  margin-top: var(--space-sm);
+}
+
+.menu-badge {
+  display: inline-block;
+  padding: var(--space-xs) var(--space-md);
+  border-radius: var(--radius-md);
+  font-size: var(--text-xs);
+  font-weight: var(--font-semibold);
+}
+
+.okam-badge {
+  background: rgba(34, 197, 94, 0.15);
+  border: 1px solid rgba(34, 197, 94, 0.4);
+  color: #22c55e;
+}
+
+.platform-badge {
+  background: rgba(59, 130, 246, 0.15);
+  border: 1px solid rgba(59, 130, 246, 0.4);
+  color: #3b82f6;
+}
+
 .check-icon {
   font-size: var(--text-3xl);
   color: var(--gold-primary);
@@ -1117,6 +1221,23 @@ function handleFacebookConnected() {
   gap: var(--space-lg);
   padding: var(--space-5xl);
   text-align: center;
+}
+
+.loading-logo {
+  width: 120px;
+  height: 120px;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 0.6;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
 }
 
 .loading-steps {

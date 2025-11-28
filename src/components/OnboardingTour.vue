@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import BaseButton from './BaseButton.vue'
+
+const { t } = useI18n()
 
 const emit = defineEmits<{
   (e: 'complete'): void
@@ -19,85 +22,55 @@ const secondsRemaining = ref(0)
 const canProceed = ref(false)
 let readTimer: ReturnType<typeof setInterval> | null = null
 
-const tourSteps: TourStep[] = [
+const tourSteps = computed<TourStep[]>(() => [
   {
-    title: 'Welcome to SocialChef! 👋',
+    title: t('onboarding.tour.welcomeTitle'),
     icon: '🎉',
-    description: 'Your AI-powered social media assistant for restaurants',
+    description: t('onboarding.tour.welcomeDescription'),
     readTime: 5,
-    details: [
-      'Create stunning social media posts in seconds',
-      'AI-powered content generation tailored to your brand',
-      'Save time while maintaining consistent quality',
-      'Schedule posts and manage multiple platforms'
-    ]
+    details: t('onboarding.tour.welcomeDetails') as unknown as string[]
   },
   {
-    title: 'Connect Your Platforms',
-    icon: '🔗',
-    description: 'Link your social media accounts to start posting',
-    readTime: 4,
-    details: [
-      'Connect Facebook, Instagram, and more',
-      'Manage all platforms from one dashboard',
-      'Auto-publish or schedule posts',
-      'Track engagement across channels'
-    ]
-  },
-  {
-    title: 'Search Your Restaurant',
+    title: t('onboarding.tour.searchTitle'),
     icon: '🔍',
-    description: 'Add your restaurant to get started with AI-generated content',
+    description: t('onboarding.tour.searchDescription'),
     readTime: 4,
-    details: [
-      'Search for your restaurant by name',
-      'We\'ll automatically fetch your menu and photos',
-      'AI analyzes your brand identity and style',
-      'Generate content that matches your vibe'
-    ]
+    details: t('onboarding.tour.searchDetails') as unknown as string[]
   },
   {
-    title: 'Generate Posts with Cook Up',
+    title: t('onboarding.tour.createTitle'),
     icon: '🎨',
-    description: 'Create beautiful posts from your menu items',
+    description: t('onboarding.tour.createDescription'),
     readTime: 4,
-    details: [
-      'Pick a dish or upload your own image',
-      'Choose from multiple style templates',
-      'AI generates eye-catching captions and hashtags',
-      'Preview and customize before posting'
-    ]
+    details: t('onboarding.tour.createDetails') as unknown as string[]
   },
   {
-    title: 'Save Your Favorites',
-    icon: '⭐',
-    description: 'Build a library of your best content',
-    readTime: 3,
-    details: [
-      'Save posts you love for later',
-      'Organize by campaign or theme',
-      'Reuse successful content',
-      'Access your library anytime'
-    ]
-  },
-  {
-    title: 'Schedule with Calendar',
+    title: t('onboarding.tour.scheduleTitle'),
     icon: '📅',
-    description: 'Plan your content strategy in advance',
+    description: t('onboarding.tour.scheduleDescription'),
     readTime: 4,
-    details: [
-      'Visual calendar view of all scheduled posts',
-      'Drag and drop to reschedule',
-      'Set posting times for maximum engagement',
-      'Never miss a posting opportunity'
-    ]
+    details: t('onboarding.tour.scheduleDetails') as unknown as string[]
+  },
+  {
+    title: t('onboarding.tour.connectTitle'),
+    icon: '🔗',
+    description: t('onboarding.tour.connectDescription'),
+    readTime: 4,
+    details: t('onboarding.tour.connectDetails') as unknown as string[]
+  },
+  {
+    title: t('onboarding.tour.readyTitle'),
+    icon: '🚀',
+    description: t('onboarding.tour.readyDescription'),
+    readTime: 3,
+    details: t('onboarding.tour.readyDetails') as unknown as string[]
   }
-]
+])
 
 // Start read timer when step changes
 function startReadTimer() {
   canProceed.value = false
-  secondsRemaining.value = tourSteps[currentStep.value].readTime
+  secondsRemaining.value = tourSteps.value[currentStep.value].readTime
 
   if (readTimer) {
     clearInterval(readTimer)
@@ -126,12 +99,12 @@ onMounted(() => {
 })
 
 const progress = computed(() => {
-  return ((currentStep.value + 1) / tourSteps.length) * 100
+  return ((currentStep.value + 1) / tourSteps.value.length) * 100
 })
 
-const canGoNext = computed(() => currentStep.value < tourSteps.length - 1)
+const canGoNext = computed(() => currentStep.value < tourSteps.value.length - 1)
 const canGoPrev = computed(() => currentStep.value > 0)
-const isLastStep = computed(() => currentStep.value === tourSteps.length - 1)
+const isLastStep = computed(() => currentStep.value === tourSteps.value.length - 1)
 
 function nextStep() {
   if (canGoNext.value) {
@@ -179,7 +152,7 @@ function prevStep() {
         variant="ghost"
         @click="prevStep"
       >
-        ← Previous
+        ← {{ $t('onboarding.tour.previous') }}
       </BaseButton>
       <div v-else></div>
 
@@ -189,10 +162,10 @@ function prevStep() {
           :disabled="!canProceed"
           @click="nextStep"
         >
-          {{ isLastStep ? 'Start Quiz →' : 'Next →' }}
+          {{ isLastStep ? $t('onboarding.tour.finish') + ' →' : $t('onboarding.tour.next') + ' →' }}
         </BaseButton>
         <p v-if="!canProceed" class="timer-text">
-          Please read for {{ secondsRemaining }}s...
+          {{ $t('common.loading') }}
         </p>
       </div>
     </div>

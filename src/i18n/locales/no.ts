@@ -67,6 +67,8 @@ export default {
   dashboard: {
     title: 'Dashbord',
     welcome: 'Velkommen tilbake, {name}!',
+    welcomeBack: 'Velkommen tilbake, {name}! 👋',
+    readyToCreate: 'Klar til å lage fantastisk innhold for restaurantene dine?',
     overview: 'Oversikt',
     recentActivity: 'Nylig aktivitet',
     stats: 'Statistikk',
@@ -93,6 +95,59 @@ export default {
     creditsRemaining: '{count} kreditter gjenstår',
     viewPlans: 'Vis planer',
     manageSubscription: 'Administrer abonnement',
+
+    // Testing section
+    forTesting: '🧪 For testing',
+    tryOnboarding: 'Prøv introduksjonsflyten',
+    tryOnboardingDescription: 'Klikk nedenfor for å oppleve den nye brukerintroduksjonen og quizen',
+    launchOnboarding: 'Start introduksjonsopplevelse',
+
+    // Stats
+    postsCreated: 'Innlegg opprettet',
+    favoritesSaved: 'Favoritter lagret',
+    scheduledPosts: 'Planlagte innlegg',
+    restaurants: 'Restauranter',
+
+    // Quick actions
+    quickActionsSubtitle: 'Gå rett til det du trenger',
+    addRestaurant: 'Legg til restaurant',
+    addRestaurantDescription: 'Søk og legg til restauranten din for å komme i gang',
+    getStarted: 'Kom i gang →',
+    cookUpContent: 'Lag innhold',
+    cookUpContentDescription: 'Generer fantastiske innlegg fra menyelementene dine',
+    createNow: 'Lag nå →',
+    schedulePosts: 'Planlegg innlegg',
+    schedulePostsDescription: 'Planlegg innholdskalenderen din på forhånd',
+    openCalendar: 'Åpne kalender →',
+    viewFavorites: 'Vis favoritter',
+    viewFavoritesDescription: 'Få tilgang til ditt lagrede innleggsbibliotek',
+    browseLibrary: 'Bla gjennom bibliotek →',
+
+    // Social platforms
+    socialPlatforms: 'Sosiale medieplattformer',
+    platformsConnected: '{count} plattform tilkoblet | {count} plattformer tilkoblet',
+    connectPlatformsPrompt: 'Koble til dine sosiale mediekontoer for å starte publisering',
+
+    // Platform descriptions
+    facebookDescription: 'Koble til for å publisere direkte til Facebook-sidene dine og nå publikummet ditt',
+    instagramDescription: 'Del fantastiske bilder og historier med Instagram-følgerne dine',
+    tiktokDescription: 'Lag engasjerende kortvideoer for TikToks kreative fellesskap',
+    twitterDescription: 'Del raske oppdateringer og delta i sanntidssamtaler',
+    linkedinDescription: 'Bygg ditt profesjonelle nettverk og del forretningsoppdateringer',
+
+    // Connection status
+    connected: '✓ Tilkoblet',
+    notConnected: 'Ikke tilkoblet',
+    manage: 'Administrer',
+    connect: 'Koble til',
+
+    // Account overview
+    accountOverview: 'Kontooversikt',
+    subscription: 'Abonnement',
+    currentPlan: 'Nåværende plan',
+    usageThisMonth: 'Bruk denne måneden',
+    creditsUsedLabel: 'Kreditter brukt',
+    remainingCreditsLabel: '{count} kreditt gjenstår | {count} kreditter gjenstår',
   },
 
   // Plans View
@@ -240,6 +295,120 @@ export default {
     redirecting: 'Omdirigerer til innholdsopprettelse...',
   },
 
+  // Onboarding
+  onboarding: {
+    // Tour steps
+    tour: {
+      welcomeTitle: 'Velkommen til SocialChef! 👋',
+      welcomeDescription: 'Din AI-drevne assistent for sosiale medier for restauranter',
+      welcomeDetails: [
+        'Lag fantastiske innlegg for sosiale medier på sekunder',
+        'AI-drevet innholdsgenerering tilpasset merkevaren din',
+        'Spar tid mens du opprettholder konsistent kvalitet',
+        'Planlegg innlegg og administrer flere plattformer',
+      ],
+
+      searchTitle: 'Finn din restaurant 🔍',
+      searchDescription: 'Oppdag og lagre restaurantprofiler',
+      searchDetails: [
+        'Søk etter restauranter ved hjelp av Google Places',
+        'Importer automatisk menyer, bilder og merkevaredetaljer',
+        'Bygg din restaurantdatabase',
+        'Få tilgang til omfattende forretningsinformasjon',
+      ],
+
+      createTitle: 'Lag innhold 🎨',
+      createDescription: 'AI-drevet innholdsopprettelse',
+      createDetails: [
+        'Generer bilder og videoer med AI',
+        'Lag overbevisende bildetekster og hashtags',
+        'Tilpass med din merkevareidentitet',
+        'Lagre favoritter for senere bruk',
+      ],
+
+      scheduleTitle: 'Planlegg og publiser 📅',
+      scheduleDescription: 'Planlegg innholdskalenderen din',
+      scheduleDetails: [
+        'Planlegg innlegg på forhånd',
+        'Publiser direkte til Facebook',
+        'Administrer flere restauranter',
+        'Spor innholdets ytelse',
+      ],
+
+      connectTitle: 'Koble til kontoene dine 🔗',
+      connectDescription: 'Koble til dine sosiale medieplattformer',
+      connectDetails: [
+        'Koble til Facebook, Instagram, TikTok og mer',
+        'Publiser direkte fra plattformen vår',
+        'Administrer alle kontoene dine på ett sted',
+        'Sikker OAuth-autentisering',
+      ],
+
+      readyTitle: 'Du er klar! 🚀',
+      readyDescription: 'Klar til å lage fantastisk innhold?',
+      readyDetails: [
+        'Start med å søke etter restauranten din',
+        'Generer ditt første innlegg på minutter',
+        'Lagre favorittene dine og bygg biblioteket ditt',
+        'Planlegg innhold for å opprettholde konsistens',
+      ],
+
+      // Navigation
+      next: 'Neste',
+      previous: 'Forrige',
+      skip: 'Hopp over tur',
+      finish: 'Kom i gang',
+    },
+
+    // Quiz
+    quiz: {
+      title: 'Rask quiz 🧠',
+      subtitle: 'Test kunnskapen din!',
+      checkAnswer: 'Sjekk svar',
+      nextQuestion: 'Neste spørsmål',
+      finishQuiz: 'Fullfør quiz',
+      correctAnswer: 'Riktig! 🎉',
+      wrongAnswer: 'Ikke helt!',
+      score: 'Din poengsum: {score}/{total}',
+
+      // Questions
+      q1Question: 'Hva er det første steget for å begynne å lage innhold på SocialChef?',
+      q1Options: ['Koble til sosiale mediekontoer', 'Søk og lagre en restaurant', 'Generer AI-innhold', 'Planlegg innlegg'],
+      q1Explanation: 'Du må søke og lagre en restaurant først for å få tilgang til menyelementer og merkevaredetaljer for innholdsopprettelse.',
+
+      q2Question: 'Hvilke AI-funksjoner tilbyr SocialChef?',
+      q2Options: ['Kun bildegenerering', 'Kun bildetekstskriving', 'Bilder, videoer og bildetekster', 'Kun menydesign'],
+      q2Explanation: 'SocialChef tilbyr omfattende AI-drevet innholdsgenerering inkludert bilder, videoer og overbevisende bildetekster med hashtags.',
+
+      q3Question: 'Hvor får SocialChef restaurantinformasjon fra?',
+      q3Options: ['Kun manuell registrering', 'Google Places og leveringsplattformer', 'Kun sosiale medier', 'Egendefinerte databaser'],
+      q3Explanation: 'SocialChef integreres med Google Places for grunnleggende informasjon og skanner Wolt/Foodora for menyelementer, og gir omfattende restaurantdata.',
+
+      q4Question: 'Hva kan du gjøre med generert innhold på SocialChef?',
+      q4Options: ['Kun laste ned', 'Kun planlegge', 'Lagre, planlegge og publisere til Facebook', 'Kun e-post'],
+      q4Explanation: 'Du kan lagre favoritter, planlegge innlegg på forhånd og publisere direkte til Facebook—alt fra én plattform.',
+    },
+
+    // Simple onboarding flow
+    simple: {
+      welcome: 'Velkommen til SocialChef!',
+      letsGetStarted: 'La oss sette deg opp for å lage fantastisk innhold',
+      selectRestaurant: 'Først, velg en restaurant for å komme i gang',
+      noRestaurantsYet: 'Ingen restauranter ennå',
+      searchRestaurants: 'Søk restauranter',
+      generateFirstPost: 'Flott! Nå skal vi generere ditt første innlegg',
+      selectMenuItem: 'Velg et menyelement og plattform nedenfor',
+      generatingPost: 'Genererer ditt første innlegg...',
+      postGenerated: 'Innlegget ditt er klart!',
+      connectFacebook: 'Koble til Facebook for å publisere',
+      connectFacebookDescription: 'Koble til Facebook-kontoen din for å begynne å publisere innlegg',
+      skipForNow: 'Hopp over for nå',
+      allSet: 'Du er klar!',
+      startCreating: 'Begynn å lage fantastisk innhold',
+      goToDashboard: 'Gå til dashbord',
+    },
+  },
+
   // Playground View
   playground: {
     title: 'Lag innhold',
@@ -383,6 +552,42 @@ export default {
     hoursPlaceholder: 'Mandag: 09:00 – 17:00',
     removeDayTitle: 'Fjern dag',
     addDayButton: '➕ Legg til dag',
+
+    // Style Templates (Easy Mode)
+    styleTemplates: {
+      vibrant: {
+        name: 'Livlig',
+        description: 'Sterke farger og energisk design',
+        preview: 'Lys, iøynefallende med høy kontrast',
+      },
+      elegant: {
+        name: 'Elegant',
+        description: 'Sofistikert og raffinert estetikk',
+        preview: 'Ren, minimalistisk med subtile toner',
+      },
+      rustic: {
+        name: 'Rustikk',
+        description: 'Varm og autentisk følelse',
+        preview: 'Jordfarger med naturlige teksturer',
+      },
+      modern: {
+        name: 'Moderne',
+        description: 'Moderne og elegant design',
+        preview: 'Fet typografi med geometriske former',
+      },
+      playful: {
+        name: 'Leken',
+        description: 'Morsom og kreativ stemning',
+        preview: 'Fargerike mønstre og fantasifulle elementer',
+      },
+    },
+
+    // Additional messages
+    loadingText: 'Henter restaurantene dine...',
+    chooseRestaurantToStart: 'Velg en restaurant for å komme i gang',
+    selectPlatformToContinue: 'Velg en plattform for å fortsette',
+    noMenuItems: 'Ingen menyelementer tilgjengelig',
+    menuItemsCount: '{count} menyelement | {count} menyelementer',
   },
 
   // Connect Accounts View
@@ -604,6 +809,72 @@ export default {
     serverError: 'Serverfeil. Vennligst prøv igjen senere.',
     validationError: 'Vennligst sjekk inndata',
     sessionExpired: 'Økten din har utløpt. Vennligst logg inn igjen.',
+  },
+
+  // Alerts & Toasts
+  alerts: {
+    success: {
+      saved: 'Lagret!',
+      deleted: 'Slettet!',
+      updated: 'Oppdatert!',
+      created: 'Opprettet!',
+      uploaded: 'Lastet opp!',
+      connected: 'Tilkoblet!',
+      disconnected: 'Frakoblet!',
+      scheduled: 'Planlagt!',
+      published: 'Publisert!',
+      copied: 'Kopiert til utklippstavle!',
+    },
+    error: {
+      saveFailed: 'Kunne ikke lagre',
+      deleteFailed: 'Kunne ikke slette',
+      updateFailed: 'Kunne ikke oppdatere',
+      createFailed: 'Kunne ikke opprette',
+      uploadFailed: 'Kunne ikke laste opp',
+      connectFailed: 'Kunne ikke koble til',
+      disconnectFailed: 'Kunne ikke frakoble',
+      scheduleFailed: 'Kunne ikke planlegge',
+      publishFailed: 'Kunne ikke publisere',
+      loadFailed: 'Kunne ikke laste',
+      invalidInput: 'Ugyldig inndata',
+      requiredField: 'Dette feltet er påkrevd',
+    },
+    warning: {
+      unsavedChanges: 'Du har ulagrede endringer',
+      confirmDelete: 'Er du sikker på at du vil slette dette?',
+      confirmCancel: 'Er du sikker på at du vil avbryte?',
+      confirmDisconnect: 'Er du sikker på at du vil frakoble?',
+      lowCredits: 'Få kreditter gjenstår',
+      noInternet: 'Ingen internettforbindelse',
+    },
+    info: {
+      processing: 'Behandler...',
+      loading: 'Laster...',
+      uploading: 'Laster opp...',
+      generating: 'Genererer...',
+      saving: 'Lagrer...',
+      connecting: 'Kobler til...',
+    },
+  },
+
+  // Form Validation
+  validation: {
+    required: 'Dette feltet er påkrevd',
+    email: 'Vennligst skriv inn en gyldig e-postadresse',
+    url: 'Vennligst skriv inn en gyldig URL',
+    minLength: 'Minimum {min} tegn påkrevd',
+    maxLength: 'Maksimum {max} tegn tillatt',
+    minValue: 'Minimumsverdi er {min}',
+    maxValue: 'Maksimumsverdi er {max}',
+    invalidFormat: 'Ugyldig format',
+    passwordMismatch: 'Passordene stemmer ikke overens',
+    passwordTooWeak: 'Passordet er for svakt',
+    invalidPhone: 'Vennligst skriv inn et gyldig telefonnummer',
+    fileTooBig: 'Filstørrelsen overskrider maksimum tillatt',
+    fileTypeInvalid: 'Ugyldig filtype',
+    dateInvalid: 'Vennligst skriv inn en gyldig dato',
+    futureDate: 'Datoen må være i fremtiden',
+    pastDate: 'Datoen må være i fortiden',
   },
 
   // Languages

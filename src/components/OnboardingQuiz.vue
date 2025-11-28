@@ -1,7 +1,10 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import BaseButton from './BaseButton.vue'
 import BaseAlert from './BaseAlert.vue'
+
+const { t } = useI18n()
 
 const emit = defineEmits<{
   (e: 'complete'): void
@@ -15,61 +18,41 @@ interface QuizQuestion {
   explanation: string
 }
 
-const quizQuestions: QuizQuestion[] = [
+const quizQuestions = computed<QuizQuestion[]>(() => [
   {
-    question: 'What is the first step to start creating content on SocialChef?',
-    options: [
-      'Generate a post immediately',
-      'Connect your social media platforms',
-      'Upload random images',
-      'Set up billing'
-    ],
+    question: t('onboarding.quiz.q1Question'),
+    options: t('onboarding.quiz.q1Options') as unknown as string[],
     correctAnswer: 1,
-    explanation: 'You should first connect your social media platforms so you can publish your generated content!'
+    explanation: t('onboarding.quiz.q1Explanation')
   },
   {
-    question: 'How does SocialChef help you create posts?',
-    options: [
-      'You must write everything manually',
-      'It only provides templates',
-      'AI generates content based on your menu and brand',
-      'It copies content from other restaurants'
-    ],
+    question: t('onboarding.quiz.q2Question'),
+    options: t('onboarding.quiz.q2Options') as unknown as string[],
     correctAnswer: 2,
-    explanation: 'SocialChef uses AI to generate unique content tailored to your restaurant\'s menu items and brand identity.'
+    explanation: t('onboarding.quiz.q2Explanation')
   },
   {
-    question: 'What can you do with your favorite posts?',
-    options: [
-      'They disappear after creation',
-      'Save them to reuse and schedule later',
-      'They can only be used once',
-      'Nothing, they are just for show'
-    ],
-    correctAnswer: 1,
-    explanation: 'You can save favorite posts to build a content library and schedule them for publishing later!'
+    question: t('onboarding.quiz.q3Question'),
+    options: t('onboarding.quiz.q3Options') as unknown as string[],
+    correctAnswer: 2,
+    explanation: t('onboarding.quiz.q3Explanation')
   },
   {
-    question: 'What is the "Cook Up" feature used for?',
-    options: [
-      'Cooking recipes',
-      'Creating AI-generated posts from menu items or images',
-      'Ordering food',
-      'Managing restaurant operations'
-    ],
-    correctAnswer: 1,
-    explanation: 'Cook Up is where you create stunning AI-generated social media posts from your menu items or custom images!'
+    question: t('onboarding.quiz.q4Question'),
+    options: t('onboarding.quiz.q4Options') as unknown as string[],
+    correctAnswer: 2,
+    explanation: t('onboarding.quiz.q4Explanation')
   }
-]
+])
 
 const currentQuestion = ref(0)
-const selectedAnswers = ref<(number | null)[]>(Array(quizQuestions.length).fill(null))
+const selectedAnswers = ref<(number | null)[]>(Array(quizQuestions.value.length).fill(null))
 const showResult = ref(false)
 const acceptedTerms = ref(false)
 const showTermsError = ref(false)
 
 const progress = computed(() => {
-  return ((currentQuestion.value + 1) / quizQuestions.length) * 100
+  return ((currentQuestion.value + 1) / quizQuestions.value.length) * 100
 })
 
 const isAnswerSelected = computed(() => {
@@ -79,28 +62,28 @@ const isAnswerSelected = computed(() => {
 const isAnswerCorrect = computed(() => {
   const selected = selectedAnswers.value[currentQuestion.value]
   if (selected === null) return false
-  return selected === quizQuestions[currentQuestion.value].correctAnswer
+  return selected === quizQuestions.value[currentQuestion.value].correctAnswer
 })
 
 const canGoNext = computed(() => {
   // Can only proceed if answer is correct
-  return isAnswerCorrect.value && currentQuestion.value < quizQuestions.length - 1
+  return isAnswerCorrect.value && currentQuestion.value < quizQuestions.value.length - 1
 })
 
 const canGoPrev = computed(() => currentQuestion.value > 0)
 
 const isLastQuestion = computed(() => {
-  return currentQuestion.value === quizQuestions.length - 1
+  return currentQuestion.value === quizQuestions.value.length - 1
 })
 
 const score = computed(() => {
   return selectedAnswers.value.filter((answer, index) => {
-    return answer === quizQuestions[index].correctAnswer
+    return answer === quizQuestions.value[index].correctAnswer
   }).length
 })
 
 const scorePercentage = computed(() => {
-  return (score.value / quizQuestions.length) * 100
+  return (score.value / quizQuestions.value.length) * 100
 })
 
 const passedQuiz = computed(() => {
@@ -127,7 +110,7 @@ function prevQuestion() {
 
 function retakeQuiz() {
   currentQuestion.value = 0
-  selectedAnswers.value = Array(quizQuestions.length).fill(null)
+  selectedAnswers.value = Array(quizQuestions.value.length).fill(null)
   showResult.value = false
   acceptedTerms.value = false
   showTermsError.value = false

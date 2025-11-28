@@ -60,43 +60,43 @@ const itemsPerPage = ref(12)
 const gridContainer = ref<HTMLElement | null>(null)
 
 // Style templates
-const styleTemplates: StyleTemplate[] = [
+const styleTemplates = computed<StyleTemplate[]>(() => [
   {
     id: 'vibrant',
-    name: 'Vibrant',
-    description: 'Bold colors and energetic design',
+    name: t('playground.styleTemplates.vibrant.name'),
+    description: t('playground.styleTemplates.vibrant.description'),
     icon: '🎨',
-    preview: 'Bright, eye-catching with high contrast'
+    preview: t('playground.styleTemplates.vibrant.preview')
   },
   {
     id: 'elegant',
-    name: 'Elegant',
-    description: 'Sophisticated and refined aesthetic',
+    name: t('playground.styleTemplates.elegant.name'),
+    description: t('playground.styleTemplates.elegant.description'),
     icon: '✨',
-    preview: 'Classy, premium feel with subtle touches'
-  },
-  {
-    id: 'minimal',
-    name: 'Minimal',
-    description: 'Clean and modern simplicity',
-    icon: '⚪',
-    preview: 'Simple, focused on the food'
+    preview: t('playground.styleTemplates.elegant.preview')
   },
   {
     id: 'rustic',
-    name: 'Rustic',
-    description: 'Warm and homestyle appeal',
+    name: t('playground.styleTemplates.rustic.name'),
+    description: t('playground.styleTemplates.rustic.description'),
     icon: '🏡',
-    preview: 'Natural, cozy, farm-to-table vibe'
+    preview: t('playground.styleTemplates.rustic.preview')
   },
   {
-    id: 'luxury',
-    name: 'Luxury',
-    description: 'Premium high-end presentation',
+    id: 'modern',
+    name: t('playground.styleTemplates.modern.name'),
+    description: t('playground.styleTemplates.modern.description'),
+    icon: '⚪',
+    preview: t('playground.styleTemplates.modern.preview')
+  },
+  {
+    id: 'playful',
+    name: t('playground.styleTemplates.playful.name'),
+    description: t('playground.styleTemplates.playful.description'),
     icon: '👑',
-    preview: 'Upscale, exclusive fine-dining feel'
+    preview: t('playground.styleTemplates.playful.preview')
   }
-]
+])
 
 // Computed
 const paginatedMenuItems = computed(() => {

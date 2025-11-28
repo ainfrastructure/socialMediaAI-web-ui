@@ -67,6 +67,8 @@ export default {
   dashboard: {
     title: 'Dashboard',
     welcome: 'Welcome back, {name}!',
+    welcomeBack: 'Welcome back, {name}! 👋',
+    readyToCreate: 'Ready to create amazing content for your restaurants?',
     overview: 'Overview',
     recentActivity: 'Recent Activity',
     stats: 'Statistics',
@@ -93,6 +95,59 @@ export default {
     creditsRemaining: '{count} credits remaining',
     viewPlans: 'View Plans',
     manageSubscription: 'Manage Subscription',
+
+    // Testing section
+    forTesting: '🧪 For Testing',
+    tryOnboarding: 'Try the Onboarding Flow',
+    tryOnboardingDescription: 'Click below to experience the new user onboarding tour and quiz',
+    launchOnboarding: 'Launch Onboarding Experience',
+
+    // Stats
+    postsCreated: 'Posts Created',
+    favoritesSaved: 'Favorites Saved',
+    scheduledPosts: 'Scheduled Posts',
+    restaurants: 'Restaurants',
+
+    // Quick actions
+    quickActionsSubtitle: 'Jump right into what you need',
+    addRestaurant: 'Add Restaurant',
+    addRestaurantDescription: 'Search and add your restaurant to get started',
+    getStarted: 'Get Started →',
+    cookUpContent: 'Cook Up Content',
+    cookUpContentDescription: 'Generate stunning posts from your menu items',
+    createNow: 'Create Now →',
+    schedulePosts: 'Schedule Posts',
+    schedulePostsDescription: 'Plan your content calendar in advance',
+    openCalendar: 'Open Calendar →',
+    viewFavorites: 'View Favorites',
+    viewFavoritesDescription: 'Access your saved post library',
+    browseLibrary: 'Browse Library →',
+
+    // Social platforms
+    socialPlatforms: 'Social Media Platforms',
+    platformsConnected: '{count} platform connected | {count} platforms connected',
+    connectPlatformsPrompt: 'Connect your social media accounts to start publishing',
+
+    // Platform descriptions
+    facebookDescription: 'Connect to post directly to your Facebook pages and reach your audience',
+    instagramDescription: 'Share stunning visuals and stories with your Instagram followers',
+    tiktokDescription: 'Create engaging short-form videos for TikTok\'s creative community',
+    twitterDescription: 'Share quick updates and engage in real-time conversations',
+    linkedinDescription: 'Build your professional network and share business updates',
+
+    // Connection status
+    connected: '✓ Connected',
+    notConnected: 'Not Connected',
+    manage: 'Manage',
+    connect: 'Connect',
+
+    // Account overview
+    accountOverview: 'Account Overview',
+    subscription: 'Subscription',
+    currentPlan: 'Current Plan',
+    usageThisMonth: 'Usage This Month',
+    creditsUsedLabel: 'Credits Used',
+    remainingCreditsLabel: '{count} credit remaining | {count} credits remaining',
   },
 
   // Plans View
@@ -240,6 +295,120 @@ export default {
     redirecting: 'Redirecting to content creation...',
   },
 
+  // Onboarding
+  onboarding: {
+    // Tour steps
+    tour: {
+      welcomeTitle: 'Welcome to SocialChef! 👋',
+      welcomeDescription: 'Your AI-powered social media assistant for restaurants',
+      welcomeDetails: [
+        'Create stunning social media posts in seconds',
+        'AI-powered content generation tailored to your brand',
+        'Save time while maintaining consistent quality',
+        'Schedule posts and manage multiple platforms',
+      ],
+
+      searchTitle: 'Find Your Restaurant 🔍',
+      searchDescription: 'Discover and save restaurant profiles',
+      searchDetails: [
+        'Search restaurants using Google Places',
+        'Automatically import menus, photos, and brand details',
+        'Build your restaurant database',
+        'Access comprehensive business information',
+      ],
+
+      createTitle: 'Cook Up Content 🎨',
+      createDescription: 'AI-powered post creation',
+      createDetails: [
+        'Generate images and videos with AI',
+        'Create compelling captions and hashtags',
+        'Customize with your brand identity',
+        'Save favorites for later use',
+      ],
+
+      scheduleTitle: 'Schedule & Publish 📅',
+      scheduleDescription: 'Plan your content calendar',
+      scheduleDetails: [
+        'Schedule posts in advance',
+        'Publish directly to Facebook',
+        'Manage multiple restaurants',
+        'Track your content performance',
+      ],
+
+      connectTitle: 'Connect Your Accounts 🔗',
+      connectDescription: 'Link your social media platforms',
+      connectDetails: [
+        'Connect Facebook, Instagram, TikTok, and more',
+        'Post directly from our platform',
+        'Manage all your accounts in one place',
+        'Secure OAuth authentication',
+      ],
+
+      readyTitle: 'You\'re All Set! 🚀',
+      readyDescription: 'Ready to create amazing content?',
+      readyDetails: [
+        'Start by searching for your restaurant',
+        'Generate your first post in minutes',
+        'Save your favorites and build your library',
+        'Schedule content to maintain consistency',
+      ],
+
+      // Navigation
+      next: 'Next',
+      previous: 'Previous',
+      skip: 'Skip Tour',
+      finish: 'Get Started',
+    },
+
+    // Quiz
+    quiz: {
+      title: 'Quick Quiz 🧠',
+      subtitle: 'Test your knowledge!',
+      checkAnswer: 'Check Answer',
+      nextQuestion: 'Next Question',
+      finishQuiz: 'Finish Quiz',
+      correctAnswer: 'Correct! 🎉',
+      wrongAnswer: 'Not quite!',
+      score: 'Your Score: {score}/{total}',
+
+      // Questions
+      q1Question: 'What is the first step to start creating content on SocialChef?',
+      q1Options: ['Connect social media accounts', 'Search and save a restaurant', 'Generate AI content', 'Schedule posts'],
+      q1Explanation: 'You need to search and save a restaurant first to access its menu items and brand details for content creation.',
+
+      q2Question: 'Which AI capabilities does SocialChef offer?',
+      q2Options: ['Image generation only', 'Caption writing only', 'Images, videos, and captions', 'Menu design only'],
+      q2Explanation: 'SocialChef provides comprehensive AI-powered content generation including images, videos, and compelling captions with hashtags.',
+
+      q3Question: 'Where does SocialChef get restaurant information from?',
+      q3Options: ['Manual entry only', 'Google Places and delivery platforms', 'Social media only', 'Custom databases'],
+      q3Explanation: 'SocialChef integrates with Google Places for basic info and scans Wolt/Foodora for menu items, providing comprehensive restaurant data.',
+
+      q4Question: 'What can you do with generated content on SocialChef?',
+      q4Options: ['Download only', 'Schedule only', 'Save, schedule, and publish to Facebook', 'Email only'],
+      q4Explanation: 'You can save favorites, schedule posts in advance, and publish directly to Facebook—all from one platform.',
+    },
+
+    // Simple onboarding flow
+    simple: {
+      welcome: 'Welcome to SocialChef!',
+      letsGetStarted: 'Let\'s get you set up to create amazing content',
+      selectRestaurant: 'First, select a restaurant to get started',
+      noRestaurantsYet: 'No restaurants yet',
+      searchRestaurants: 'Search Restaurants',
+      generateFirstPost: 'Great! Now let\'s generate your first post',
+      selectMenuItem: 'Select a menu item and platform below',
+      generatingPost: 'Generating your first post...',
+      postGenerated: 'Your post is ready!',
+      connectFacebook: 'Connect Facebook to publish',
+      connectFacebookDescription: 'Connect your Facebook account to start publishing posts',
+      skipForNow: 'Skip for now',
+      allSet: 'You\'re all set!',
+      startCreating: 'Start creating amazing content',
+      goToDashboard: 'Go to Dashboard',
+    },
+  },
+
   // Playground View
   playground: {
     title: 'Cook Up',
@@ -383,6 +552,42 @@ export default {
     hoursPlaceholder: 'Monday: 9:00 AM – 5:00 PM',
     removeDayTitle: 'Remove day',
     addDayButton: '➕ Add Day',
+
+    // Style Templates (Easy Mode)
+    styleTemplates: {
+      vibrant: {
+        name: 'Vibrant',
+        description: 'Bold colors and energetic design',
+        preview: 'Bright, eye-catching with high contrast',
+      },
+      elegant: {
+        name: 'Elegant',
+        description: 'Sophisticated and refined aesthetic',
+        preview: 'Clean, minimalist with subtle tones',
+      },
+      rustic: {
+        name: 'Rustic',
+        description: 'Warm and authentic feel',
+        preview: 'Earthy colors with natural textures',
+      },
+      modern: {
+        name: 'Modern',
+        description: 'Contemporary and sleek design',
+        preview: 'Bold typography with geometric shapes',
+      },
+      playful: {
+        name: 'Playful',
+        description: 'Fun and creative vibe',
+        preview: 'Colorful patterns and whimsical elements',
+      },
+    },
+
+    // Additional messages
+    loadingText: 'Cooking up your restaurants...',
+    chooseRestaurantToStart: 'Choose a restaurant to get started',
+    selectPlatformToContinue: 'Select a platform to continue',
+    noMenuItems: 'No menu items available',
+    menuItemsCount: '{count} menu item | {count} menu items',
   },
 
   // Connect Accounts View
@@ -604,6 +809,72 @@ export default {
     serverError: 'Server error. Please try again later.',
     validationError: 'Please check your input',
     sessionExpired: 'Your session has expired. Please log in again.',
+  },
+
+  // Alerts & Toasts
+  alerts: {
+    success: {
+      saved: 'Saved successfully!',
+      deleted: 'Deleted successfully!',
+      updated: 'Updated successfully!',
+      created: 'Created successfully!',
+      uploaded: 'Uploaded successfully!',
+      connected: 'Connected successfully!',
+      disconnected: 'Disconnected successfully!',
+      scheduled: 'Scheduled successfully!',
+      published: 'Published successfully!',
+      copied: 'Copied to clipboard!',
+    },
+    error: {
+      saveFailed: 'Failed to save',
+      deleteFailed: 'Failed to delete',
+      updateFailed: 'Failed to update',
+      createFailed: 'Failed to create',
+      uploadFailed: 'Failed to upload',
+      connectFailed: 'Failed to connect',
+      disconnectFailed: 'Failed to disconnect',
+      scheduleFailed: 'Failed to schedule',
+      publishFailed: 'Failed to publish',
+      loadFailed: 'Failed to load',
+      invalidInput: 'Invalid input',
+      requiredField: 'This field is required',
+    },
+    warning: {
+      unsavedChanges: 'You have unsaved changes',
+      confirmDelete: 'Are you sure you want to delete this?',
+      confirmCancel: 'Are you sure you want to cancel?',
+      confirmDisconnect: 'Are you sure you want to disconnect?',
+      lowCredits: 'Low credits remaining',
+      noInternet: 'No internet connection',
+    },
+    info: {
+      processing: 'Processing...',
+      loading: 'Loading...',
+      uploading: 'Uploading...',
+      generating: 'Generating...',
+      saving: 'Saving...',
+      connecting: 'Connecting...',
+    },
+  },
+
+  // Form Validation
+  validation: {
+    required: 'This field is required',
+    email: 'Please enter a valid email address',
+    url: 'Please enter a valid URL',
+    minLength: 'Minimum {min} characters required',
+    maxLength: 'Maximum {max} characters allowed',
+    minValue: 'Minimum value is {min}',
+    maxValue: 'Maximum value is {max}',
+    invalidFormat: 'Invalid format',
+    passwordMismatch: 'Passwords do not match',
+    passwordTooWeak: 'Password is too weak',
+    invalidPhone: 'Please enter a valid phone number',
+    fileTooBig: 'File size exceeds maximum allowed',
+    fileTypeInvalid: 'Invalid file type',
+    dateInvalid: 'Please enter a valid date',
+    futureDate: 'Date must be in the future',
+    pastDate: 'Date must be in the past',
   },
 
   // Languages

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '../stores/auth'
 import { useFacebookStore } from '../stores/facebook'
 import { api } from '../services/api'
@@ -11,6 +12,7 @@ import BaseButton from '../components/BaseButton.vue'
 const router = useRouter()
 const authStore = useAuthStore()
 const facebookStore = useFacebookStore()
+const { t } = useI18n()
 
 // Real stats from API
 const stats = ref({
@@ -31,41 +33,41 @@ const progressPercent = computed(() => {
 })
 
 // All available platforms
-const allPlatforms = ref([
+const allPlatforms = computed(() => [
   {
     name: 'Facebook',
     icon: '📘',
     connected: false,
     route: '/playground',
-    description: 'Share posts and manage your Facebook page'
+    description: t('dashboard.facebookDescription')
   },
   {
     name: 'Instagram',
     icon: '📷',
     connected: false,
     route: '/playground',
-    description: 'Post beautiful content to Instagram'
+    description: t('dashboard.instagramDescription')
   },
   {
     name: 'TikTok',
     icon: '🎵',
     connected: false,
     route: '/playground',
-    description: 'Create engaging TikTok videos'
+    description: t('dashboard.tiktokDescription')
   },
   {
     name: 'Twitter/X',
     icon: '🐦',
     connected: false,
     route: '/playground',
-    description: 'Share quick updates and engage followers'
+    description: t('dashboard.twitterDescription')
   },
   {
     name: 'LinkedIn',
     icon: '💼',
     connected: false,
     route: '/playground',
-    description: 'Professional networking and business updates'
+    description: t('dashboard.linkedinDescription')
   }
 ])
 
@@ -119,23 +121,23 @@ onMounted(async () => {
     <div class="container">
       <!-- Hero Section -->
       <div class="hero-section">
-        <h1 class="hero-title">Welcome back, {{ authStore.user?.email?.split('@')[0] }}! 👋</h1>
+        <h1 class="hero-title">{{ $t('dashboard.welcomeBack', { name: authStore.user?.email?.split('@')[0] }) }}</h1>
         <p class="hero-subtitle">
-          Ready to create amazing content for your restaurants?
+          {{ $t('dashboard.readyToCreate') }}
         </p>
       </div>
 
       <!-- Onboarding Test Button -->
       <BaseCard variant="glass" class="onboarding-test-card">
         <div class="test-header">
-          <span class="test-badge">🧪 For Testing</span>
-          <h3 class="test-title">Try the Onboarding Flow</h3>
+          <span class="test-badge">{{ $t('dashboard.forTesting') }}</span>
+          <h3 class="test-title">{{ $t('dashboard.tryOnboarding') }}</h3>
         </div>
         <p class="test-description">
-          Click below to experience the new user onboarding tour and quiz
+          {{ $t('dashboard.tryOnboardingDescription') }}
         </p>
         <BaseButton variant="primary" @click="router.push('/onboarding')">
-          Launch Onboarding Experience
+          {{ $t('dashboard.launchOnboarding') }}
         </BaseButton>
       </BaseCard>
 
@@ -144,69 +146,69 @@ onMounted(async () => {
         <BaseCard variant="glass" class="stat-card">
           <div class="stat-icon">🎨</div>
           <div class="stat-value">{{ stats.postsCreated }}</div>
-          <div class="stat-label">Posts Created</div>
+          <div class="stat-label">{{ $t('dashboard.postsCreated') }}</div>
         </BaseCard>
 
         <BaseCard variant="glass" class="stat-card">
           <div class="stat-icon">⭐</div>
           <div class="stat-value">{{ stats.favoritesSaved }}</div>
-          <div class="stat-label">Favorites Saved</div>
+          <div class="stat-label">{{ $t('dashboard.favoritesSaved') }}</div>
         </BaseCard>
 
         <BaseCard variant="glass" class="stat-card">
           <div class="stat-icon">📅</div>
           <div class="stat-value">{{ stats.scheduledPosts }}</div>
-          <div class="stat-label">Scheduled Posts</div>
+          <div class="stat-label">{{ $t('dashboard.scheduledPosts') }}</div>
         </BaseCard>
 
         <BaseCard variant="glass" class="stat-card">
           <div class="stat-icon">🍽️</div>
           <div class="stat-value">{{ stats.restaurantsAdded }}</div>
-          <div class="stat-label">Restaurants</div>
+          <div class="stat-label">{{ $t('dashboard.restaurants') }}</div>
         </BaseCard>
       </div>
 
       <!-- Quick Actions -->
       <div class="section-header">
-        <h2 class="section-title">Quick Actions</h2>
-        <p class="section-subtitle">Jump right into what you need</p>
+        <h2 class="section-title">{{ $t('dashboard.quickActions') }}</h2>
+        <p class="section-subtitle">{{ $t('dashboard.quickActionsSubtitle') }}</p>
       </div>
 
       <div class="actions-grid">
         <BaseCard variant="glass" hoverable class="action-card" @click="router.push('/restaurants')">
           <div class="action-icon">🔍</div>
-          <h3 class="action-title">Add Restaurant</h3>
-          <p class="action-description">Search and add your restaurant to get started</p>
-          <BaseButton variant="secondary" size="small">Get Started →</BaseButton>
+          <h3 class="action-title">{{ $t('dashboard.addRestaurant') }}</h3>
+          <p class="action-description">{{ $t('dashboard.addRestaurantDescription') }}</p>
+          <BaseButton variant="secondary" size="small">{{ $t('dashboard.getStarted') }}</BaseButton>
         </BaseCard>
 
         <BaseCard variant="glass" hoverable class="action-card" @click="router.push('/playground')">
           <div class="action-icon">🎨</div>
-          <h3 class="action-title">Cook Up Content</h3>
-          <p class="action-description">Generate stunning posts from your menu items</p>
-          <BaseButton variant="secondary" size="small">Create Now →</BaseButton>
+          <h3 class="action-title">{{ $t('dashboard.cookUpContent') }}</h3>
+          <p class="action-description">{{ $t('dashboard.cookUpContentDescription') }}</p>
+          <BaseButton variant="secondary" size="small">{{ $t('dashboard.createNow') }}</BaseButton>
         </BaseCard>
 
         <BaseCard variant="glass" hoverable class="action-card" @click="router.push('/scheduler')">
           <div class="action-icon">📅</div>
-          <h3 class="action-title">Schedule Posts</h3>
-          <p class="action-description">Plan your content calendar in advance</p>
-          <BaseButton variant="secondary" size="small">Open Calendar →</BaseButton>
+          <h3 class="action-title">{{ $t('dashboard.schedulePosts') }}</h3>
+          <p class="action-description">{{ $t('dashboard.schedulePostsDescription') }}</p>
+          <BaseButton variant="secondary" size="small">{{ $t('dashboard.openCalendar') }}</BaseButton>
         </BaseCard>
 
         <BaseCard variant="glass" hoverable class="action-card" @click="router.push('/favorites')">
           <div class="action-icon">⭐</div>
-          <h3 class="action-title">View Favorites</h3>
-          <p class="action-description">Access your saved post library</p>
-          <BaseButton variant="secondary" size="small">Browse Library →</BaseButton>
+          <h3 class="action-title">{{ $t('dashboard.viewFavorites') }}</h3>
+          <p class="action-description">{{ $t('dashboard.viewFavoritesDescription') }}</p>
+          <BaseButton variant="secondary" size="small">{{ $t('dashboard.browseLibrary') }}</BaseButton>
         </BaseCard>
       </div>
 
       <!-- Connected Platforms -->
       <div class="section-header">
-        <h2 class="section-title">Social Media Platforms</h2>
+        <h2 class="section-title">{{ $t('dashboard.socialPlatforms') }}</h2>
         <p class="section-subtitle">
-          {{ connectedCount > 0 ? `${connectedCount} of ${allPlatforms.length} platforms connected` : 'Connect your social media accounts to start publishing' }}
+          {{ connectedCount > 0 ? $t('dashboard.platformsConnected', connectedCount) : $t('dashboard.connectPlatformsPrompt') }}
         </p>
       </div>
 
@@ -224,10 +226,10 @@ onMounted(async () => {
           <p class="platform-card-description">{{ platform.description }}</p>
           <div class="platform-card-status">
             <span v-if="platform.connected" class="status-badge connected">
-              ✓ Connected
+              {{ $t('dashboard.connected') }}
             </span>
             <span v-else class="status-badge disconnected">
-              Not Connected
+              {{ $t('dashboard.notConnected') }}
             </span>
           </div>
           <BaseButton
@@ -235,59 +237,59 @@ onMounted(async () => {
             size="small"
             class="platform-card-button"
           >
-            {{ platform.connected ? 'Manage' : 'Connect' }}
+            {{ platform.connected ? $t('dashboard.manage') : $t('dashboard.connect') }}
           </BaseButton>
         </BaseCard>
       </div>
 
       <!-- Account Overview -->
       <div class="section-header">
-        <h2 class="section-title">Account Overview</h2>
+        <h2 class="section-title">{{ $t('dashboard.accountOverview') }}</h2>
       </div>
 
       <BaseCard variant="glass" class="account-card">
         <div class="account-grid">
           <!-- Subscription Info -->
           <div class="account-section">
-            <h3 class="account-section-title">Subscription</h3>
+            <h3 class="account-section-title">{{ $t('dashboard.subscription') }}</h3>
             <div class="account-info">
               <div class="info-row">
-                <span class="info-label">Current Plan</span>
+                <span class="info-label">{{ $t('dashboard.currentPlan') }}</span>
                 <span class="tier-badge">{{ tierDisplayName }}</span>
               </div>
               <div class="info-row">
-                <span class="info-label">Status</span>
+                <span class="info-label">{{ $t('dashboard.status') }}</span>
                 <span class="info-value">{{ authStore.user?.subscription.status }}</span>
               </div>
             </div>
             <BaseButton variant="secondary" size="small" @click="router.push('/plans')">
-              View Plans
+              {{ $t('dashboard.viewPlans') }}
             </BaseButton>
           </div>
 
           <!-- Usage Stats -->
           <div class="account-section">
-            <h3 class="account-section-title">Usage This Month</h3>
+            <h3 class="account-section-title">{{ $t('dashboard.usageThisMonth') }}</h3>
             <div class="usage-stats">
               <div class="usage-numbers">
                 <span class="usage-current">{{ authStore.usageStats?.credits_this_month }}</span>
                 <span class="usage-separator">/</span>
                 <span class="usage-total">{{ authStore.usageStats?.monthly_limit }}</span>
               </div>
-              <div class="usage-label">Credits Used</div>
+              <div class="usage-label">{{ $t('dashboard.creditsUsedLabel') }}</div>
             </div>
             <div class="usage-bar">
               <div class="usage-progress" :style="{ width: `${progressPercent}%` }"></div>
             </div>
             <div class="usage-remaining">
-              {{ authStore.usageStats?.remaining_credits }} credits remaining
+              {{ $t('dashboard.remainingCreditsLabel', authStore.usageStats?.remaining_credits || 0) }}
             </div>
           </div>
         </div>
 
         <div class="account-actions">
           <BaseButton variant="secondary" @click="openCustomerPortal">
-            Manage Subscription
+            {{ $t('dashboard.manageSubscription') }}
           </BaseButton>
         </div>
       </BaseCard>

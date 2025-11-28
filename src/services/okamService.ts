@@ -19,6 +19,7 @@ export interface OkamCategory {
 export interface OkamMenuData {
   storeId: number
   storeName: string
+  logoUrl?: string
   categories: OkamCategory[]
   generatedAt: string
 }

@@ -2354,7 +2354,7 @@ const handleEasyModeGenerate = async (data: {
     stickerStyle.value = selectedStyle.stickerStyle as any
     stickerPosition.value = selectedStyle.stickerPosition as any
     includeLogo.value = data.includeLogo
-    logoPosition.value = 'bottom-right' // Default logo position
+    logoPosition.value = 'bottom-right' // Restaurant logo position
 
     // Set facebook as default platform for post content generation
     selectedPlatforms.value = ['facebook']
