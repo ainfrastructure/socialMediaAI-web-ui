@@ -50,15 +50,36 @@ const generatedPost = ref<{
   callToAction: string
 } | null>(null)
 const savingFavorite = ref(false)
-const savedFavorite = ref(false)
+const savedFavoriteId = ref<string | null>(null)
 
 // Step 4: Social media connection
 const showFacebookOnboarding = ref(false)
 const showInstagramOnboarding = ref(false)
 const publishing = ref(false)
 
-// Step 5: Completion
+// Step 5: Publish options
 const showCompletion = ref(false)
+const publishMode = ref<'now' | 'schedule'>('now')
+const selectedPages = ref<string[]>([])
+const scheduleDate = ref('')
+const scheduleTime = ref('12:00')
+const schedulePlatform = ref('facebook')
+const publishError = ref('')
+const publishSuccess = ref('')
+
+// Computed: minimum date for scheduling (today)
+const minScheduleDate = computed(() => {
+  const today = new Date()
+  return today.toISOString().split('T')[0]
+})
+
+// Initialize schedule date to tomorrow
+const initScheduleDate = () => {
+  const tomorrow = new Date()
+  tomorrow.setDate(tomorrow.getDate() + 1)
+  scheduleDate.value = tomorrow.toISOString().split('T')[0]
+}
+initScheduleDate()
 
 const progress = computed(() => (currentStep.value / totalSteps) * 100)
 
@@ -394,37 +415,119 @@ async function convertFileToBase64(file: File): Promise<{ base64Data: string; mi
 }
 
 
-// Step 4: Publishing
-async function handlePublish() {
-  if (facebookStore.connectedPages.length === 0) {
-    // Show Facebook onboarding modal
-    showFacebookOnboarding.value = true
+// Step 5: Publishing
+async function handlePublishOrSchedule() {
+  publishError.value = ''
+  publishSuccess.value = ''
+
+  if (!generatedPost.value) {
+    publishError.value = 'No post to publish'
+    return
+  }
+
+  // Check if user is connected
+  if (!facebookStore.isConnected) {
+    // Skip publishing and complete onboarding
+    showCompletion.value = true
+    return
+  }
+
+  if (publishMode.value === 'now') {
+    await publishNow()
   } else {
-    await publishPost()
+    await schedulePost()
   }
 }
 
-async function publishPost() {
+async function publishNow() {
   if (!generatedPost.value) return
+
+  // Validate page selection
+  if (selectedPages.value.length === 0) {
+    publishError.value = 'Please select at least one page to publish to'
+    return
+  }
 
   try {
     publishing.value = true
+    publishError.value = ''
 
-    // TODO: Implement multi-platform publishing
-    // For now, just complete the onboarding
-    // Users can publish from the main app
-    console.log('Publishing post:', {
-      platforms: ['facebook', 'instagram'],
-      content: generatedPost.value.postText,
-      imageUrl: generatedPost.value.imageUrl,
-      hashtags: generatedPost.value.hashtags,
-      restaurantId: selectedRestaurant.value?.id
+    const postText = generatedPost.value.postText +
+      (generatedPost.value.hashtags?.length > 0 ? '\n\n' + generatedPost.value.hashtags.join(' ') : '')
+
+    // Publish to each selected page
+    const results = await Promise.allSettled(
+      selectedPages.value.map(pageId =>
+        api.postToFacebook(pageId, postText, generatedPost.value?.imageUrl)
+      )
+    )
+
+    const successes = results.filter(r => r.status === 'fulfilled' && (r.value as any).success)
+    const failures = results.filter(r => r.status === 'rejected' || !(r as any).value?.success)
+
+    if (successes.length > 0) {
+      publishSuccess.value = `Successfully published to ${successes.length} page(s)!`
+
+      // Show completion modal after a short delay
+      setTimeout(() => {
+        showCompletion.value = true
+      }, 1500)
+    }
+
+    if (failures.length > 0) {
+      publishError.value = `Failed to publish to ${failures.length} page(s)`
+    }
+  } catch (error: any) {
+    console.error('Failed to publish:', error)
+    publishError.value = error.message || 'Failed to publish post'
+  } finally {
+    publishing.value = false
+  }
+}
+
+async function schedulePost() {
+  // Validate date/time
+  if (!scheduleDate.value) {
+    publishError.value = 'Please select a date'
+    return
+  }
+
+  try {
+    publishing.value = true
+    publishError.value = ''
+
+    // Need to save as favorite first before scheduling if not already saved
+    if (!savedFavoriteId.value) {
+      await saveToFavorites()
+    }
+
+    if (!savedFavoriteId.value) {
+      publishError.value = 'Failed to save post. Please try again.'
+      return
+    }
+
+    // Create a scheduled post with the favorite
+    const response = await api.schedulePost({
+      favorite_post_id: savedFavoriteId.value,
+      scheduled_date: scheduleDate.value,
+      scheduled_time: scheduleTime.value,
+      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+      platform: schedulePlatform.value,
     })
 
-    // Complete onboarding
-    completeOnboarding()
-  } catch (error) {
-    console.error('Failed to publish:', error)
+    if (response.success) {
+      publishSuccess.value = `Post scheduled for ${scheduleDate.value} at ${scheduleTime.value}!`
+
+      // Show completion modal after a short delay
+      setTimeout(() => {
+        showCompletion.value = true
+      }, 1500)
+    } else {
+      throw new Error(response.error || 'Failed to schedule post')
+    }
+  } catch (error: any) {
+    console.error('Failed to schedule:', error)
+    publishError.value = error.message || 'Failed to schedule post'
   } finally {
     publishing.value = false
   }
@@ -441,16 +544,16 @@ async function saveToFavorites() {
       content_type: 'image' as const,
       media_url: generatedPost.value.imageUrl,
       post_text: generatedPost.value.postText,
-      hashtags: generatedPost.value.hashtags, // Keep as array
+      hashtags: generatedPost.value.hashtags,
       call_to_action: generatedPost.value.callToAction
     }
 
     console.log('[ONBOARDING] Saving to favorites:', favoriteData)
     const response = await api.saveFavorite(favoriteData)
 
-    if (response.success) {
-      savedFavorite.value = true
-      console.log('[ONBOARDING] Saved to favorites successfully')
+    if (response.success && response.data?.favorite?.id) {
+      savedFavoriteId.value = response.data.favorite.id
+      console.log('[ONBOARDING] Saved to favorites successfully, ID:', savedFavoriteId.value)
     } else {
       throw new Error(response.error || 'Failed to save')
     }
@@ -490,7 +593,10 @@ async function completeOnboarding() {
 
 function handleFacebookConnected() {
   showFacebookOnboarding.value = false
-  publishPost()
+  // Pre-select the first connected page
+  if (facebookStore.connectedPages.length > 0) {
+    selectedPages.value = [facebookStore.connectedPages[0].pageId]
+  }
 }
 </script>
 
@@ -510,7 +616,7 @@ function handleFacebookConnected() {
             step === 2 ? 'Create' :
             step === 3 ? 'Review' :
             step === 4 ? 'Connect' :
-            'Schedule'
+            'Publish'
           }}
         </div>
         <div v-if="step < totalSteps" class="step-connector"></div>
@@ -654,9 +760,9 @@ function handleFacebookConnected() {
                 size="large"
                 full-width
                 @click="saveToFavorites"
-                :disabled="savingFavorite || savedFavorite"
+                :disabled="savingFavorite || !!savedFavoriteId"
               >
-                {{ savedFavorite ? '⭐ Saved to Favorites' : (savingFavorite ? 'Saving...' : '⭐ Add to Favorites') }}
+                {{ savedFavoriteId ? '⭐ Saved to Favorites' : (savingFavorite ? 'Saving...' : '⭐ Add to Favorites') }}
               </BaseButton>
             </div>
           </BaseCard>
@@ -718,77 +824,136 @@ function handleFacebookConnected() {
         </div>
       </div>
 
-      <!-- Step 5: Schedule Explanation -->
+      <!-- Step 5: Publish Options -->
       <div v-else-if="currentStep === 5" class="step-panel">
         <div class="step-header">
-          <div class="step-icon">📅</div>
-          <h2 class="step-title">Schedule Your Posts</h2>
-          <p class="step-description">Plan your content in advance with our calendar</p>
+          <div class="step-icon">🚀</div>
+          <h2 class="step-title">Publish Your Post</h2>
+          <p class="step-description">Choose how you want to share your content</p>
         </div>
 
-        <!-- Helpful Instructions -->
-        <BaseAlert type="success" :dismissible="false" class="onboarding-tip">
-          ✨ With connected accounts, you can schedule posts for optimal engagement times!
+        <!-- Connection Warning -->
+        <BaseAlert v-if="!facebookStore.isConnected" type="warning" :dismissible="false" class="onboarding-tip">
+          ⚠️ You haven't connected any social accounts yet. Go back to connect Facebook/Instagram first, or skip to continue without publishing.
         </BaseAlert>
 
-        <!-- Calendar Example Image -->
-        <BaseCard variant="glass" class="calendar-example-card">
-          <img
-            src="/calendar.png"
-            alt="Calendar example showing scheduled posts"
-            class="calendar-example-image"
-          />
-        </BaseCard>
+        <!-- Publish Options -->
+        <div class="publish-choice-container">
+          <!-- Option 1: Publish Now -->
+          <BaseCard
+            variant="glass"
+            :class="['publish-option-card', { selected: publishMode === 'now' }]"
+            hoverable
+            @click="publishMode = 'now'"
+          >
+            <div class="option-header">
+              <div class="option-icon">⚡</div>
+              <div class="option-radio">
+                <div :class="['radio-dot', { active: publishMode === 'now' }]"></div>
+              </div>
+            </div>
+            <h3 class="option-title">Publish Now</h3>
+            <p class="option-description">Post immediately to your connected social accounts</p>
 
-        <!-- Color Legend -->
-        <div class="calendar-legend">
-          <div class="legend-item">
-            <div class="legend-dot legend-published"></div>
-            <span>Already Posted</span>
-          </div>
-          <div class="legend-item">
-            <div class="legend-dot legend-scheduled"></div>
-            <span>Scheduled Post</span>
-          </div>
-          <div class="legend-item">
-            <div class="legend-dot legend-failed"></div>
-            <span>Something Went Wrong</span>
-          </div>
+            <!-- Platform Selection for Publish Now -->
+            <div v-if="publishMode === 'now' && facebookStore.isConnected" class="platform-selection">
+              <h4 class="platform-label">Select platforms:</h4>
+              <div class="platform-checkboxes">
+                <label v-for="page in facebookStore.connectedPages" :key="page.pageId" class="platform-checkbox">
+                  <input
+                    type="checkbox"
+                    :value="page.pageId"
+                    v-model="selectedPages"
+                  />
+                  <span class="checkbox-custom"></span>
+                  <span class="platform-name">{{ page.pageName }}</span>
+                </label>
+              </div>
+            </div>
+          </BaseCard>
+
+          <!-- Option 2: Schedule -->
+          <BaseCard
+            variant="glass"
+            :class="['publish-option-card', { selected: publishMode === 'schedule' }]"
+            hoverable
+            @click="publishMode = 'schedule'"
+          >
+            <div class="option-header">
+              <div class="option-icon">📅</div>
+              <div class="option-radio">
+                <div :class="['radio-dot', { active: publishMode === 'schedule' }]"></div>
+              </div>
+            </div>
+            <h3 class="option-title">Schedule for Later</h3>
+            <p class="option-description">Pick a date and time for your post to go live</p>
+
+            <!-- Date/Time Selection for Schedule -->
+            <div v-if="publishMode === 'schedule'" class="schedule-selection">
+              <div class="datetime-inputs">
+                <div class="input-group">
+                  <label>Date</label>
+                  <input
+                    type="date"
+                    v-model="scheduleDate"
+                    :min="minScheduleDate"
+                    class="datetime-input"
+                  />
+                </div>
+                <div class="input-group">
+                  <label>Time</label>
+                  <input
+                    type="time"
+                    v-model="scheduleTime"
+                    class="datetime-input"
+                  />
+                </div>
+              </div>
+
+              <!-- Platform Selection for Schedule -->
+              <div v-if="facebookStore.isConnected" class="platform-selection">
+                <h4 class="platform-label">Select platform:</h4>
+                <div class="platform-checkboxes">
+                  <label class="platform-checkbox">
+                    <input
+                      type="radio"
+                      value="facebook"
+                      v-model="schedulePlatform"
+                    />
+                    <span class="checkbox-custom radio"></span>
+                    <span class="platform-name">Facebook</span>
+                  </label>
+                  <label class="platform-checkbox">
+                    <input
+                      type="radio"
+                      value="instagram"
+                      v-model="schedulePlatform"
+                    />
+                    <span class="checkbox-custom radio"></span>
+                    <span class="platform-name">Instagram</span>
+                  </label>
+                </div>
+              </div>
+            </div>
+          </BaseCard>
         </div>
 
-        <BaseCard variant="glass" class="schedule-explanation">
-          <div class="schedule-feature">
-            <div class="feature-icon">🗓️</div>
-            <div class="feature-content">
-              <h4>Visual Calendar</h4>
-              <p>See all your scheduled posts in a beautiful calendar view</p>
-            </div>
-          </div>
-
-          <div class="schedule-feature">
-            <div class="feature-icon">⏰</div>
-            <div class="feature-content">
-              <h4>Pick Your Time</h4>
-              <p>Choose exactly when you want your posts to go live</p>
-            </div>
-          </div>
-
-          <div class="schedule-feature">
-            <div class="feature-icon">🎯</div>
-            <div class="feature-content">
-              <h4>Best Times</h4>
-              <p>Get suggestions for optimal posting times based on your audience</p>
-            </div>
-          </div>
-
-          <div class="schedule-feature">
-            <div class="feature-icon">♻️</div>
-            <div class="feature-content">
-              <h4>Auto-Publish</h4>
-              <p>Posts are automatically published at the scheduled time</p>
-            </div>
+        <!-- Post Preview Summary -->
+        <BaseCard v-if="generatedPost" variant="glass" class="post-summary">
+          <h4 class="summary-title">Post Preview</h4>
+          <div class="summary-content">
+            <img v-if="generatedPost.imageUrl" :src="generatedPost.imageUrl" alt="Post" class="summary-image" />
+            <p class="summary-text">{{ generatedPost.postText.substring(0, 100) }}{{ generatedPost.postText.length > 100 ? '...' : '' }}</p>
           </div>
         </BaseCard>
+
+        <!-- Publishing Status -->
+        <BaseAlert v-if="publishError" type="error" :dismissible="false">
+          {{ publishError }}
+        </BaseAlert>
+        <BaseAlert v-if="publishSuccess" type="success" :dismissible="false">
+          {{ publishSuccess }}
+        </BaseAlert>
       </div>
     </div>
 
@@ -835,13 +1000,23 @@ function handleFacebookConnected() {
         {{ facebookStore.isConnected ? 'Next →' : 'Skip for Now →' }}
       </BaseButton>
 
-      <!-- Step 5: Complete Onboarding -->
+      <!-- Step 5: Publish or Schedule -->
       <BaseButton
-        v-if="currentStep === 5"
+        v-if="currentStep === 5 && facebookStore.isConnected"
+        variant="primary"
+        @click="handlePublishOrSchedule"
+        :disabled="publishing || (publishMode === 'now' && selectedPages.length === 0) || (publishMode === 'schedule' && !scheduleDate)"
+      >
+        {{ publishing ? 'Publishing...' : (publishMode === 'now' ? 'Publish Now ⚡' : 'Schedule Post 📅') }}
+      </BaseButton>
+
+      <!-- Step 5: Skip if not connected -->
+      <BaseButton
+        v-if="currentStep === 5 && !facebookStore.isConnected"
         variant="primary"
         @click="showCompletion = true"
       >
-        Get Started! 🚀
+        Skip & Continue →
       </BaseButton>
     </div>
 
@@ -1743,5 +1918,253 @@ function handleFacebookConnected() {
   .completion-title {
     font-size: var(--text-2xl);
   }
+
+  .publish-choice-container {
+    grid-template-columns: 1fr;
+  }
+
+  .datetime-inputs {
+    flex-direction: column;
+  }
+}
+
+/* Publish Choice Container */
+.publish-choice-container {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-2xl);
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.publish-option-card {
+  padding: var(--space-2xl);
+  cursor: pointer;
+  transition: var(--transition-base);
+  border: 2px solid transparent;
+}
+
+.publish-option-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-xl);
+}
+
+.publish-option-card.selected {
+  border-color: var(--gold-primary);
+  box-shadow: var(--glow-gold-md);
+}
+
+.option-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: var(--space-lg);
+}
+
+.option-icon {
+  font-size: 48px;
+}
+
+.option-radio {
+  width: 24px;
+  height: 24px;
+  border: 2px solid var(--border-color);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--transition-base);
+}
+
+.publish-option-card.selected .option-radio {
+  border-color: var(--gold-primary);
+}
+
+.radio-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: transparent;
+  transition: var(--transition-base);
+}
+
+.radio-dot.active {
+  background: var(--gold-primary);
+}
+
+.option-title {
+  font-family: var(--font-heading);
+  font-size: var(--text-xl);
+  color: var(--text-primary);
+  margin: 0 0 var(--space-sm) 0;
+}
+
+.option-description {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  margin: 0;
+  line-height: var(--leading-normal);
+}
+
+/* Platform Selection */
+.platform-selection {
+  margin-top: var(--space-xl);
+  padding-top: var(--space-xl);
+  border-top: 1px solid var(--border-color);
+}
+
+.platform-label {
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  color: var(--text-secondary);
+  margin: 0 0 var(--space-md) 0;
+}
+
+.platform-checkboxes {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.platform-checkbox {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  cursor: pointer;
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-md);
+  transition: var(--transition-base);
+}
+
+.platform-checkbox:hover {
+  background: var(--bg-elevated);
+}
+
+.platform-checkbox input {
+  display: none;
+}
+
+.checkbox-custom {
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--transition-base);
+  flex-shrink: 0;
+}
+
+.checkbox-custom.radio {
+  border-radius: 50%;
+}
+
+.platform-checkbox input:checked + .checkbox-custom {
+  background: var(--gold-primary);
+  border-color: var(--gold-primary);
+}
+
+.platform-checkbox input:checked + .checkbox-custom::after {
+  content: '✓';
+  color: var(--text-on-gold);
+  font-size: var(--text-xs);
+  font-weight: var(--font-bold);
+}
+
+.platform-checkbox input:checked + .checkbox-custom.radio::after {
+  content: '';
+  width: 8px;
+  height: 8px;
+  background: var(--text-on-gold);
+  border-radius: 50%;
+}
+
+.platform-name {
+  font-size: var(--text-sm);
+  color: var(--text-primary);
+}
+
+/* Schedule Selection */
+.schedule-selection {
+  margin-top: var(--space-xl);
+  padding-top: var(--space-xl);
+  border-top: 1px solid var(--border-color);
+}
+
+.datetime-inputs {
+  display: flex;
+  gap: var(--space-lg);
+  margin-bottom: var(--space-xl);
+}
+
+.input-group {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.input-group label {
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  color: var(--text-secondary);
+}
+
+.datetime-input {
+  padding: var(--space-md) var(--space-lg);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-size: var(--text-base);
+  transition: var(--transition-base);
+}
+
+.datetime-input:focus {
+  outline: none;
+  border-color: var(--gold-primary);
+  box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.2);
+}
+
+.datetime-input::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+  cursor: pointer;
+}
+
+/* Post Summary */
+.post-summary {
+  max-width: 500px;
+  margin: var(--space-2xl) auto 0;
+  padding: var(--space-xl);
+}
+
+.summary-title {
+  font-family: var(--font-heading);
+  font-size: var(--text-lg);
+  color: var(--gold-primary);
+  margin: 0 0 var(--space-lg) 0;
+  text-align: center;
+}
+
+.summary-content {
+  display: flex;
+  gap: var(--space-lg);
+  align-items: flex-start;
+}
+
+.summary-image {
+  width: 80px;
+  height: 80px;
+  object-fit: cover;
+  border-radius: var(--radius-md);
+  flex-shrink: 0;
+}
+
+.summary-text {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  margin: 0;
+  line-height: var(--leading-normal);
 }
 </style>
