@@ -1,9 +1,12 @@
 <script setup lang="ts">
 import { computed, watch, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import BaseButton from './BaseButton.vue'
 import BaseCard from './BaseCard.vue'
 import { useFacebookStore } from '@/stores/facebook'
 import SocialChefLogo from '@/assets/socialchef_logo.svg'
+
+const { t } = useI18n()
 
 const props = defineProps<{
   modelValue: boolean
@@ -19,6 +22,7 @@ const props = defineProps<{
   isPublished?: boolean
   facebookPostUrl?: string
   generationError?: string | null
+  facebookReconnectRequired?: boolean
 }>()
 
 // Debug logging
@@ -317,8 +321,21 @@ function handleRetry() {
 
         <!-- Action Buttons (only show when generation is complete and no error) -->
         <div v-else-if="isGenerationComplete" class="modal-actions">
+          <!-- Facebook reconnection required - show reconnect button -->
+          <div v-if="facebookReconnectRequired" class="reconnect-section">
+            <p class="reconnect-message">{{ t('contentCreate.facebookReconnectMessage') }}</p>
+            <BaseButton
+              variant="primary"
+              size="large"
+              full-width
+              @click="handleConnectFacebook"
+            >
+              🔗 {{ t('contentCreate.reconnectFacebook') }}
+            </BaseButton>
+          </div>
+
           <!-- Post is auto-saved, show publish/schedule options -->
-          <div v-if="hasConnectedFacebook" class="action-row">
+          <div v-else-if="hasConnectedFacebook" class="action-row">
             <BaseButton
               variant="primary"
               size="medium"
@@ -830,6 +847,23 @@ function handleRetry() {
 
 .action-button {
   width: 100%;
+}
+
+.reconnect-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  padding: var(--space-lg);
+  background: var(--warning-bg);
+  border: 1px solid var(--warning-border);
+  border-radius: var(--radius-md);
+}
+
+.reconnect-message {
+  color: var(--warning-text);
+  font-size: var(--text-sm);
+  text-align: center;
+  margin: 0;
 }
 
 /* Transitions */

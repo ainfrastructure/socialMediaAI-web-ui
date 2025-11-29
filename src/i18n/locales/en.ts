@@ -872,6 +872,10 @@ export default {
     generateError: 'Failed to generate content',
     publishError: 'Failed to publish to Facebook',
     connectError: 'Failed to connect Facebook',
+    noFacebookPage: 'No Facebook page connected',
+    facebookReconnectRequired: 'Your Facebook connection has expired. Please reconnect to continue.',
+    facebookReconnectMessage: 'Your Facebook connection has expired. Please reconnect to publish or schedule posts.',
+    reconnectFacebook: 'Reconnect Facebook',
   },
 
   // Restaurant Selector Modal

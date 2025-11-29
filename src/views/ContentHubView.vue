@@ -175,6 +175,7 @@
       :current-id="selectedRestaurant?.id"
       @select="handleRestaurantChange"
       @add-new="goToAddRestaurant"
+      @delete="handleDeleteRestaurant"
     />
 
     <!-- Schedule Modal -->

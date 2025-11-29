@@ -872,6 +872,10 @@ export default {
     generateError: 'Kunne ikke generere innhold',
     publishError: 'Kunne ikke publisere til Facebook',
     connectError: 'Kunne ikke koble til Facebook',
+    noFacebookPage: 'Ingen Facebook-side tilkoblet',
+    facebookReconnectRequired: 'Facebook-tilkoblingen din har utløpt. Koble til på nytt for å fortsette.',
+    facebookReconnectMessage: 'Facebook-tilkoblingen din har utløpt. Koble til på nytt for å publisere eller planlegge innlegg.',
+    reconnectFacebook: 'Koble til Facebook på nytt',
   },
 
   // Restaurant Selector Modal

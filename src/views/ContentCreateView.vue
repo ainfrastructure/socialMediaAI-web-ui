@@ -58,6 +58,7 @@ const facebookPostUrl = ref<string | undefined>(undefined)
 const lastSavedPost = ref<any>(null)
 const postToSchedule = ref<any>(null)
 const preselectedDate = ref<string | null>(null)
+const facebookReconnectRequired = ref(false)
 
 // Prompt state (for image generation)
 const editablePrompt = ref('')
@@ -447,6 +448,7 @@ async function publishToFacebook() {
 
   try {
     publishingToFacebook.value = true
+    facebookReconnectRequired.value = false
 
     // Build the message with post text and hashtags
     const hashtags = generatedPostContent.value?.hashtags || []
@@ -456,7 +458,7 @@ async function publishToFacebook() {
       : postText
 
     const response = await api.postToFacebook(
-      selectedPage.id,
+      selectedPage.pageId,
       message,
       generatedImageUrl.value
     )
@@ -464,6 +466,12 @@ async function publishToFacebook() {
     if (response.success && response.data) {
       publishedToFacebook.value = true
       facebookPostUrl.value = response.data.postUrl
+    } else if ((response as any).code === 'FACEBOOK_RECONNECT_REQUIRED') {
+      // Facebook connection expired, need to reconnect
+      facebookReconnectRequired.value = true
+      generationError.value = t('contentCreate.facebookReconnectRequired', 'Your Facebook connection has expired. Please reconnect to continue.')
+    } else {
+      generationError.value = response.error || t('contentCreate.publishError', 'Failed to publish to Facebook')
     }
   } catch (err: any) {
     console.error('Failed to publish to Facebook:', err)
@@ -614,6 +622,7 @@ function handleContentUpdated(updatedContent: { postText: string; hashtags: stri
       :is-published="publishedToFacebook"
       :facebook-post-url="facebookPostUrl"
       :generation-error="generationError"
+      :facebook-reconnect-required="facebookReconnectRequired"
       @publish="handleResultPublish"
       @schedule="handleResultSchedule"
       @connect-facebook="handleResultConnectFacebook"
