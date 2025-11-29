@@ -20,7 +20,6 @@
 
       <!-- User Menu -->
       <div class="user-menu">
-        <FontSelector />
         <LanguageSelector />
         <BurgerMenu v-if="authStore.user" />
         <router-link v-else to="/login" class="nav-link login-link">
@@ -35,7 +34,6 @@
 import { useAuthStore } from '../stores/auth'
 import BurgerMenu from './BurgerMenu.vue'
 import LanguageSelector from './LanguageSelector.vue'
-import FontSelector from './FontSelector.vue'
 
 const authStore = useAuthStore()
 </script>

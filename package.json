@@ -18,6 +18,7 @@
     "format": "prettier --write src/"
   },
   "dependencies": {
+    "@vuepic/vue-datepicker": "^12.0.5",
     "date-fns": "^4.1.0",
     "date-fns-tz": "^3.2.0",
     "pinia": "^3.0.3",

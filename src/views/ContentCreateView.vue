@@ -9,6 +9,7 @@ import BaseCard from '@/components/BaseCard.vue'
 import BaseButton from '@/components/BaseButton.vue'
 import BaseAlert from '@/components/BaseAlert.vue'
 import EasyModeCreation from '@/components/EasyModeCreation.vue'
+import AdvancedModeCreation from '@/components/AdvancedModeCreation.vue'
 import ModeToggle from '@/components/ModeToggle.vue'
 import GenerationResultModal from '@/components/GenerationResultModal.vue'
 import FacebookOnboardingModal from '@/components/FacebookOnboardingModal.vue'
@@ -32,7 +33,7 @@ const menuItems = computed(() => {
   return restaurant.value.menu.items.filter((item: any) => item.imageUrl)
 })
 
-// Generation state
+// Generation state (Easy Mode)
 const easyModeGenerating = ref(false)
 const generatingImage = ref(false)
 const generatingPostContent = ref(false)
@@ -44,6 +45,16 @@ const generatedPostContent = ref<{
 } | null>(null)
 const generationError = ref<string | null>(null)
 const lastEasyModeData = ref<any>(null)
+
+// Advanced Mode state (completely separate from easy mode)
+const advancedModeData = ref<{
+  imageUrl: string
+  postText: string
+  hashtags: string[]
+  menuItems: any[]
+  customization: any
+  selectedVariation: any
+} | null>(null)
 
 // Modal state
 const showResultModal = ref(false)
@@ -73,9 +84,12 @@ const promptContext = ref('')
 const selectedMenuItems = ref<any[]>([])
 const selectedPlatforms = ref<string[]>(['facebook'])
 
-// Load restaurant on mount
+// Load restaurant and Facebook pages on mount
 onMounted(async () => {
-  await loadRestaurant()
+  await Promise.all([
+    loadRestaurant(),
+    facebookStore.loadConnectedPages()
+  ])
 })
 
 async function loadRestaurant() {
@@ -113,6 +127,157 @@ async function loadRestaurant() {
 
 function goBack() {
   router.push('/content')
+}
+
+// Easy Mode Publish/Schedule Handler
+async function handleEasyModePublish(data: {
+  platform: string
+  publishType: 'now' | 'schedule'
+  scheduleDate?: string
+  scheduleTime?: string
+}) {
+  try {
+    if (!generatedImageUrl.value || !generatedPostContent.value) {
+      generationError.value = 'No content to publish. Please generate content first.'
+      return
+    }
+
+    // Use existing saved post if available (from autoSavePost), otherwise save new
+    let favoritePostId: string
+
+    if (lastSavedPost.value?.id) {
+      // Reuse the already saved post from autoSavePost()
+      favoritePostId = lastSavedPost.value.id
+      console.log('Using existing saved post ID:', favoritePostId)
+    } else {
+      // No existing saved post, save a new one
+      console.log('Saving post as favorite...')
+      const saveResponse = await api.saveFavorite({
+        restaurant_id: restaurant.value?.id,
+        content_type: 'image',
+        media_url: generatedImageUrl.value,
+        post_text: generatedPostContent.value.postText,
+        hashtags: generatedPostContent.value.hashtags,
+        call_to_action: generatedPostContent.value.callToAction,
+        platform: data.platform,
+        prompt: editablePrompt.value,
+        menu_items: selectedMenuItems.value,
+        context: promptContext.value,
+        brand_dna: restaurant.value?.brand_dna
+      })
+
+      if (!saveResponse.success || !saveResponse.data?.favorite?.id) {
+        throw new Error('Failed to save post')
+      }
+
+      favoritePostId = saveResponse.data.favorite.id
+      lastSavedPost.value = saveResponse.data.favorite
+      console.log('Post saved with ID:', favoritePostId)
+    }
+
+    if (data.publishType === 'schedule') {
+      // Schedule the post
+      console.log('Scheduling post for:', data.scheduleDate, data.scheduleTime)
+
+      const scheduleResponse = await api.schedulePost({
+        favorite_post_id: favoritePostId,
+        scheduled_date: data.scheduleDate!,
+        scheduled_time: data.scheduleTime,
+        platform: data.platform,
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
+      })
+
+      if (!scheduleResponse.success) {
+        throw new Error('Failed to schedule post')
+      }
+
+      console.log('Post scheduled successfully!')
+
+      // Navigate to calendar view
+      router.push({
+        path: '/scheduler',
+        query: {
+          date: data.scheduleDate
+        }
+      })
+    } else {
+      // Publish now to Facebook
+      console.log('Publishing now to:', data.platform)
+
+      if (data.platform === 'facebook') {
+        // Get the first connected Facebook page
+        console.log('Connected Facebook pages:', facebookStore.connectedPages)
+        const selectedPage = facebookStore.connectedPages[0]
+        if (!selectedPage) {
+          console.error('No Facebook page connected')
+          generationError.value = t('contentCreate.noFacebookPage', 'No Facebook page connected')
+          return
+        }
+
+        console.log('Publishing to page:', selectedPage.pageId, selectedPage.pageName)
+        publishingToFacebook.value = true
+        facebookReconnectRequired.value = false
+
+        // Build the message with post text and hashtags
+        const hashtags = generatedPostContent.value?.hashtags || []
+        const postText = generatedPostContent.value?.postText || ''
+        const message = hashtags.length > 0
+          ? `${postText}\n\n${hashtags.join(' ')}`
+          : postText
+
+        console.log('Calling API to post to Facebook...')
+        const response = await api.postToFacebook(
+          selectedPage.pageId,
+          message,
+          generatedImageUrl.value
+        )
+        console.log('Facebook API response:', response)
+
+        publishingToFacebook.value = false
+
+        // API returns postUrl directly on response, not inside data
+        const postUrl = (response as any).postUrl || response.data?.postUrl
+        if (response.success && postUrl) {
+          publishedToFacebook.value = true
+          facebookPostUrl.value = postUrl
+          console.log('Published to Facebook successfully:', postUrl)
+
+          // Save to calendar as "published" so it shows in the overview
+          if (favoritePostId) {
+            const now = new Date()
+            try {
+              await api.schedulePost({
+                favorite_post_id: favoritePostId,
+                scheduled_date: now.toISOString().split('T')[0],
+                scheduled_time: now.toTimeString().slice(0, 5),
+                platform: data.platform,
+                timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+                notes: 'Published immediately'
+              })
+              // Update status to published
+              // The backend should handle marking it as published based on the notes or a status field
+              console.log('Post saved to calendar')
+            } catch (calendarErr) {
+              console.warn('Failed to save to calendar:', calendarErr)
+              // Don't fail the whole operation if calendar save fails
+            }
+          }
+        } else if ((response as any).code === 'FACEBOOK_RECONNECT_REQUIRED') {
+          facebookReconnectRequired.value = true
+          generationError.value = t('contentCreate.facebookReconnectRequired', 'Your Facebook connection has expired. Please reconnect to continue.')
+        } else {
+          console.error('Facebook publish failed:', response.error)
+          generationError.value = response.error || t('contentCreate.publishError', 'Failed to publish to Facebook')
+        }
+      } else {
+        // For other platforms (Instagram, TikTok), show not implemented message
+        generationError.value = t('contentCreate.platformNotSupported', 'Publishing to this platform is not yet supported')
+      }
+    }
+  } catch (err: any) {
+    console.error('Error publishing/scheduling:', err)
+    generationError.value = err.message || 'Failed to publish post'
+  }
 }
 
 // Easy Mode Generation Handler
@@ -170,9 +335,9 @@ async function handleEasyModeGenerate(data: {
       facebookPostUrl.value = undefined
       lastSavedPost.value = null
 
-      // Show result modal with loading states
-      showResultModal.value = true
-      easyModeGenerating.value = false
+      // Don't show modal for Easy Mode - content will show in preview step
+      // Keep generating state true while generating
+      easyModeGenerating.value = true
 
       // Generate the image
       try {
@@ -180,21 +345,39 @@ async function handleEasyModeGenerate(data: {
         await generateImage(data.uploadedLogo)
         console.log('[EasyMode] Image generated successfully:', generatedImageUrl.value)
         generationError.value = null
+        easyModeGenerating.value = false // Generation complete
       } catch (imageError: any) {
         generationError.value = imageError.message || t('contentCreate.imageError', 'Failed to generate image. Please try again.')
         console.error('[EasyMode] Image generation error:', imageError)
+        easyModeGenerating.value = false // Generation failed
       }
     } else {
-      // No prompts generated - show error in modal
+      // No prompts generated - show error
       console.warn('[EasyMode] No prompts were generated')
       easyModeGenerating.value = false
       generationError.value = t('contentCreate.noPrompts', 'No prompts were generated. Please try again.')
-      showResultModal.value = true
     }
   } catch (err: any) {
     easyModeGenerating.value = false
     generationError.value = err.message || t('contentCreate.generateError', 'Failed to generate content')
   }
+}
+
+// Easy Mode Reset Handler - called when user clicks "Create Another Post"
+function handleEasyModeReset() {
+  // Reset all generation state
+  generatedImageUrl.value = ''
+  generatedPostContent.value = null
+  generationError.value = null
+  lastSavedPost.value = null
+  publishedToFacebook.value = false
+  facebookPostUrl.value = undefined
+  publishingToFacebook.value = false
+  easyModeGenerating.value = false
+  selectedMenuItems.value = []
+  promptContext.value = ''
+  editablePrompt.value = ''
+  imagePrompts.value = []
 }
 
 async function generatePromptsFromSelection() {
@@ -287,8 +470,8 @@ async function generateImage(uploadedLogo: File | null = null) {
             mimeType: imageBlob.type,
           }
         }
-      } catch (imageError) {
-        console.error('Warning: Could not load reference image', imageError)
+      } catch {
+        // Reference image failed to load (likely CORS), continue without it
       }
     }
 
@@ -414,6 +597,179 @@ async function autoSavePost() {
 async function handleRetryGeneration() {
   if (lastEasyModeData.value) {
     await handleEasyModeGenerate(lastEasyModeData.value)
+  }
+}
+
+// Advanced Mode Handler (completely separate from easy mode)
+async function handleAdvancedModeComplete(data: {
+  imageUrl: string
+  postText: string
+  hashtags: string[]
+  callToAction?: string
+  menuItems: any[]
+  customization: any
+  selectedVariation: any
+  postType: 'single' | 'combo' | 'weekly'
+  weekLength?: 5 | 7
+  includeWeeklyPrices?: boolean
+  weeklyMenuData?: Array<{
+    day: string
+    dayKey: string
+    dishName: string
+    price?: string
+    imageUrl?: string
+  }>
+  platform?: 'facebook' | 'instagram'
+  publishNow?: boolean
+  scheduledTime?: string
+  onResult?: (result: { success: boolean; postUrl?: string; error?: string }) => void
+}) {
+  try {
+    // Store advanced mode data
+    advancedModeData.value = data
+
+    // Set up state
+    generatedImageUrl.value = data.imageUrl
+    generatedPostContent.value = {
+      postText: data.postText,
+      hashtags: data.hashtags,
+      callToAction: data.callToAction || '',
+    }
+    selectedMenuItems.value = data.menuItems
+    generationError.value = null
+    publishedToFacebook.value = false
+    facebookPostUrl.value = undefined
+
+    // Auto-save the advanced mode post
+    await autoSaveAdvancedPost()
+
+    // If platform and publish options provided, handle publishing directly
+    if (data.platform && data.onResult) {
+      if (data.publishNow) {
+        // Publish now to Facebook
+        if (data.platform === 'facebook') {
+          const selectedPage = facebookStore.connectedPages[0]
+          if (!selectedPage) {
+            data.onResult({ success: false, error: t('contentCreate.noFacebookPage', 'No Facebook page connected') })
+            return
+          }
+
+          publishingToFacebook.value = true
+
+          // Build the message with post text and hashtags
+          const hashtags = data.hashtags || []
+          const message = hashtags.length > 0
+            ? `${data.postText}\n\n${hashtags.map(h => `#${h}`).join(' ')}`
+            : data.postText
+
+          const response = await api.postToFacebook(
+            selectedPage.pageId,
+            message,
+            data.imageUrl
+          )
+
+          publishingToFacebook.value = false
+
+          const postUrl = (response as any).postUrl || response.data?.postUrl
+          if (response.success && postUrl) {
+            publishedToFacebook.value = true
+            facebookPostUrl.value = postUrl
+
+            // Save to calendar as "published" so it shows in the overview
+            if (lastSavedPost.value?.id) {
+              const now = new Date()
+              try {
+                await api.schedulePost({
+                  favorite_post_id: lastSavedPost.value.id,
+                  scheduled_date: now.toISOString().split('T')[0],
+                  scheduled_time: now.toTimeString().slice(0, 5),
+                  platform: data.platform,
+                  timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+                  notes: 'Published immediately'
+                })
+                console.log('Post saved to calendar')
+              } catch (calendarErr) {
+                console.warn('Failed to save to calendar:', calendarErr)
+              }
+            }
+
+            data.onResult({ success: true, postUrl })
+          } else if ((response as any).code === 'FACEBOOK_RECONNECT_REQUIRED') {
+            data.onResult({ success: false, error: t('contentCreate.facebookReconnectRequired', 'Your Facebook connection has expired. Please reconnect to continue.') })
+          } else {
+            data.onResult({ success: false, error: response.error || t('contentCreate.publishError', 'Failed to publish to Facebook') })
+          }
+        } else {
+          // Instagram not yet supported
+          data.onResult({ success: false, error: t('contentCreate.platformNotSupported', 'Publishing to this platform is not yet supported') })
+        }
+      } else if (data.scheduledTime && lastSavedPost.value?.id) {
+        // Schedule the post
+        const scheduledDate = new Date(data.scheduledTime)
+        const scheduleResponse = await api.schedulePost({
+          favorite_post_id: lastSavedPost.value.id,
+          scheduled_date: scheduledDate.toISOString().split('T')[0],
+          scheduled_time: scheduledDate.toTimeString().slice(0, 5),
+          platform: data.platform,
+          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
+        })
+
+        if (scheduleResponse.success) {
+          data.onResult({ success: true })
+          // Navigate to calendar view
+          router.push({
+            path: '/scheduler',
+            query: {
+              date: scheduledDate.toISOString().split('T')[0]
+            }
+          })
+        } else {
+          data.onResult({ success: false, error: 'Failed to schedule post' })
+        }
+      } else {
+        data.onResult({ success: true })
+      }
+    } else {
+      // Fallback: Show result modal (old behavior)
+      showResultModal.value = true
+    }
+  } catch (err: any) {
+    if (data.onResult) {
+      data.onResult({ success: false, error: err.message || 'Failed to publish' })
+    } else {
+      generationError.value = err.message || t('contentCreate.generateError', 'Failed to complete advanced mode')
+      showResultModal.value = true
+    }
+  }
+}
+
+async function autoSaveAdvancedPost() {
+  if (!advancedModeData.value || !restaurant.value) return
+
+  try {
+    const favoriteData = {
+      restaurant_id: restaurant.value.id,
+      content_type: 'image' as const,
+      media_url: advancedModeData.value.imageUrl,
+      post_text: advancedModeData.value.postText,
+      hashtags: advancedModeData.value.hashtags,
+      call_to_action: '',
+      prompt: advancedModeData.value.selectedVariation?.prompt || '',
+      platform: selectedPlatforms.value[0] || 'facebook',
+      menu_items: advancedModeData.value.menuItems.map(item => ({
+        name: item.name,
+        price: item.price,
+      })),
+      context: '',
+      brand_dna: restaurant.value.brand_dna,
+    }
+
+    const response = await api.saveFavorite(favoriteData)
+    if (response.success && response.data) {
+      lastSavedPost.value = response.data.favorite
+    }
+  } catch (err) {
+    console.error('Failed to auto-save advanced post:', err)
   }
 }
 
@@ -594,20 +950,28 @@ function handleContentUpdated(updatedContent: { postText: string; hashtags: stri
           :restaurant="restaurant"
           :menu-items="menuItems"
           :generating="easyModeGenerating"
+          :generated-image-url="generatedImageUrl"
+          :post-text="generatedPostContent?.postText"
+          :call-to-action="generatedPostContent?.callToAction"
+          :hashtags="generatedPostContent?.hashtags"
+          :publishing="publishingToFacebook"
+          :published="publishedToFacebook"
+          :facebook-post-url="facebookPostUrl"
+          :error="generationError"
           @back="goBack"
           @generate="handleEasyModeGenerate"
+          @publish="handleEasyModePublish"
+          @reset="handleEasyModeReset"
         />
 
-        <!-- Advanced Mode Placeholder -->
-        <BaseCard v-else variant="glass" class="advanced-mode-card">
-          <div class="advanced-placeholder">
-            <h3>{{ t('contentCreate.advancedMode', 'Advanced Mode') }}</h3>
-            <p>{{ t('contentCreate.advancedDescription', 'Advanced mode with full customization options is coming soon.') }}</p>
-            <BaseButton variant="secondary" @click="preferencesStore.setCreationMode('easy')">
-              {{ t('contentCreate.switchToEasy', 'Switch to Easy Mode') }}
-            </BaseButton>
-          </div>
-        </BaseCard>
+        <!-- Advanced Mode Creation -->
+        <AdvancedModeCreation
+          v-else
+          :restaurant="restaurant"
+          :menu-items="menuItems"
+          @back="goBack"
+          @complete="handleAdvancedModeComplete"
+        />
       </div>
     </div>
 
@@ -762,31 +1126,6 @@ function handleContentUpdated(updatedContent: { postText: string; hashtags: stri
   font-size: var(--text-sm);
   color: var(--text-secondary);
   margin: 0;
-}
-
-/* Advanced Mode Placeholder */
-.advanced-mode-card {
-  animation: fadeInUp 0.5s var(--ease-smooth);
-}
-
-.advanced-placeholder {
-  text-align: center;
-  padding: var(--space-3xl) var(--space-xl);
-}
-
-.advanced-placeholder h3 {
-  font-family: var(--font-heading);
-  font-size: var(--text-2xl);
-  color: var(--text-primary);
-  margin: 0 0 var(--space-md) 0;
-}
-
-.advanced-placeholder p {
-  color: var(--text-secondary);
-  margin: 0 0 var(--space-xl) 0;
-  max-width: 400px;
-  margin-left: auto;
-  margin-right: auto;
 }
 
 /* Animation */

@@ -4,6 +4,8 @@ import { useI18n } from 'vue-i18n'
 import BaseCard from './BaseCard.vue'
 import BaseButton from './BaseButton.vue'
 import BaseAlert from './BaseAlert.vue'
+import { VueDatePicker } from '@vuepic/vue-datepicker'
+import '@vuepic/vue-datepicker/dist/main.css'
 import { useFacebookStore } from '@/stores/facebook'
 import type { SavedRestaurant } from '@/services/restaurantService'
 
@@ -26,6 +28,14 @@ const props = defineProps<{
   restaurant: SavedRestaurant
   menuItems: MenuItem[]
   generating?: boolean
+  generatedImageUrl?: string
+  postText?: string
+  callToAction?: string
+  hashtags?: string[]
+  publishing?: boolean
+  published?: boolean
+  facebookPostUrl?: string
+  error?: string | null
 }>()
 
 const emit = defineEmits<{
@@ -38,6 +48,13 @@ const emit = defineEmits<{
     uploadedImage: File | null
     uploadedLogo: File | null
   }): void
+  (e: 'publish', data: {
+    platform: string
+    publishType: 'now' | 'schedule'
+    scheduleDate?: string
+    scheduleTime?: string
+  }): void
+  (e: 'reset'): void
 }>()
 
 const facebookStore = useFacebookStore()
@@ -45,7 +62,7 @@ const { t } = useI18n()
 
 // Wizard State
 const currentStep = ref(1)
-const totalSteps = 2
+const totalSteps = 4
 
 // State
 const selectedMenuItem = ref<MenuItem | null>(null)
@@ -58,6 +75,14 @@ const uploadedImagePreview = ref<string | null>(null)
 // Logo upload state
 const uploadedLogo = ref<File | null>(null)
 const uploadedLogoPreview = ref<string | null>(null)
+
+// Step 3: Publishing state
+const selectedPlatform = ref<string>('instagram')
+const publishType = ref<'now' | 'schedule'>('now')
+const scheduleDateTime = ref<Date | null>(null)
+
+// Validation state
+const step1Error = ref<string>('')
 
 // Pagination for menu items
 const currentPage = ref(1)
@@ -131,7 +156,9 @@ const currentLogoUrl = computed(() => {
 // Step labels for progress indicator
 const stepLabels = computed(() => [
   { number: 1, label: t('easyMode.steps.menu', 'Menu') },
-  { number: 2, label: t('easyMode.steps.customize', 'Customize') }
+  { number: 2, label: t('easyMode.steps.customize', 'Customize') },
+  { number: 3, label: t('easyMode.steps.preview', 'Preview') },
+  { number: 4, label: t('easyMode.steps.publish', 'Publish') }
 ])
 
 // Dynamic items per page calculation
@@ -165,6 +192,7 @@ function calculateItemsPerPage() {
 // Methods
 function selectMenuItem(item: MenuItem) {
   selectedMenuItem.value = item
+  step1Error.value = '' // Clear error when item is selected
   // Clear uploaded image if menu item is selected
   uploadedImage.value = null
   uploadedImagePreview.value = null
@@ -181,6 +209,7 @@ function handleImageUpload(event: Event) {
   if (file) {
     // Clear menu item selection if image is uploaded
     selectedMenuItem.value = null
+    step1Error.value = '' // Clear error when image is uploaded
 
     uploadedImage.value = file
 
@@ -235,6 +264,9 @@ function prevPage() {
 function handleGenerate() {
   if (!selectedMenuItem.value && !uploadedImage.value) return
 
+  // Move to preview step immediately
+  currentStep.value = 3
+
   emit('generate', {
     menuItem: selectedMenuItem.value,
     context: promptContext.value.trim(),
@@ -245,8 +277,63 @@ function handleGenerate() {
   })
 }
 
+function handlePublish() {
+  let scheduleDate: string | undefined
+  let scheduleTime: string | undefined
+
+  if (publishType.value === 'schedule' && scheduleDateTime.value) {
+    // Format date as YYYY-MM-DD
+    const year = scheduleDateTime.value.getFullYear()
+    const month = String(scheduleDateTime.value.getMonth() + 1).padStart(2, '0')
+    const day = String(scheduleDateTime.value.getDate()).padStart(2, '0')
+    scheduleDate = `${year}-${month}-${day}`
+
+    // Format time as HH:mm
+    const hours = String(scheduleDateTime.value.getHours()).padStart(2, '0')
+    const minutes = String(scheduleDateTime.value.getMinutes()).padStart(2, '0')
+    scheduleTime = `${hours}:${minutes}`
+  }
+
+  emit('publish', {
+    platform: selectedPlatform.value,
+    publishType: publishType.value,
+    scheduleDate,
+    scheduleTime
+  })
+}
+
+function resetAndCreateNew() {
+  // Reset all state
+  currentStep.value = 1
+  selectedMenuItem.value = null
+  promptContext.value = ''
+  selectedStyleTemplate.value = 'vibrant'
+  includeLogo.value = true
+  uploadedImage.value = null
+  uploadedImagePreview.value = null
+  uploadedLogo.value = null
+  uploadedLogoPreview.value = null
+  selectedPlatform.value = 'instagram'
+  publishType.value = 'now'
+  scheduleDateTime.value = null
+  step1Error.value = ''
+  currentPage.value = 1
+
+  // Emit reset event to parent
+  emit('reset')
+}
+
 // Step navigation
 function nextStep() {
+  // Validate step 1: image is required
+  if (currentStep.value === 1) {
+    if (!selectedMenuItem.value && !uploadedImage.value) {
+      step1Error.value = t('easyMode.step1.imageRequired', 'Please select a menu item or upload an image to continue')
+      return
+    }
+    step1Error.value = ''
+  }
+
   if (currentStep.value < totalSteps) {
     currentStep.value++
   }
@@ -264,6 +351,8 @@ function goToStep(step: number) {
     currentStep.value = step
   }
 }
+
+// No need to watch for generation completion since we move to step 3 immediately when generate is clicked
 
 // Lifecycle hooks
 onMounted(() => {
@@ -319,8 +408,14 @@ onUnmounted(() => {
         <div class="step-info">
           <h3 class="step-title">{{ t('easyMode.step1.title', 'Pick Your Dish or Upload Image') }}</h3>
           <p class="step-subtitle">{{ t('easyMode.step1.subtitle', 'Choose a menu item or upload your own image') }}</p>
+          <p class="step-description">{{ t('easyMode.step1.description', 'An image is required to create your post. Select a dish from your menu or upload your own photo.') }}</p>
         </div>
       </div>
+
+      <!-- Error Alert -->
+      <BaseAlert v-if="step1Error" type="error" :dismissible="false" class="step-error">
+        {{ step1Error }}
+      </BaseAlert>
 
       <!-- Image Upload Option -->
       <div class="image-upload-section">
@@ -419,7 +514,7 @@ onUnmounted(() => {
           @click="nextStep"
           class="next-button"
         >
-          {{ t('common.continue', 'Continue') }}
+          {{ t('easyMode.step1.nextButton', 'Customize Post') }}
         </BaseButton>
       </div>
     </BaseCard>
@@ -558,17 +653,240 @@ onUnmounted(() => {
         <BaseButton
           variant="primary"
           size="large"
-          :disabled="!canGenerate || props.generating"
+          :disabled="!canGenerate || generating"
           @click="handleGenerate"
-          class="generate-button"
+          class="next-button"
         >
-          <span v-if="props.generating" class="generating-content">
-            <span class="spinner"></span>
-            {{ t('easyMode.step2.generating', 'Cooking up your post...') }}
-          </span>
-          <span v-else>{{ t('easyMode.step2.generateButton', '✨ Generate Picture (1 credit)') }}</span>
+          {{ generating ? t('easyMode.step2.generating', 'Cooking up your post...') : t('easyMode.step2.generateButton', 'Generate Image') }}
         </BaseButton>
       </div>
+    </BaseCard>
+
+    <!-- Step 3: Preview Generated Content -->
+    <BaseCard v-show="currentStep === 3" variant="glass" class="step-card">
+      <div class="step-header">
+        <div class="step-info">
+          <h3 class="step-title">{{ t('easyMode.step3.title', 'Preview Your Post') }}</h3>
+          <p class="step-subtitle">{{ t('easyMode.step3.subtitle', 'Review your generated content') }}</p>
+        </div>
+      </div>
+
+      <!-- Generated Content Preview -->
+      <div class="preview-section">
+        <!-- Consistent Layout: Image top, Content bottom -->
+        <div class="preview-content">
+          <!-- Generated Image -->
+          <div class="preview-image-container">
+            <!-- Loading State for Image -->
+            <div v-if="props.generating && !props.generatedImageUrl" class="image-loading">
+              <img src="/socialchef_logo.svg" alt="Social Chef" class="loading-logo" />
+              <p class="loading-title">{{ t('easyMode.step2.generating', 'Cooking up your post...') }}</p>
+              <p class="loading-subtitle">{{ t('common.pleaseWait', 'Please wait...') }}</p>
+            </div>
+            <!-- Generated Image (when ready) -->
+            <img v-else-if="props.generatedImageUrl" :src="props.generatedImageUrl" alt="Generated post image" class="preview-image-display" />
+          </div>
+
+          <!-- Post Content -->
+          <div class="preview-post-content">
+            <h4 class="preview-content-label">{{ t('playground.postContentTitle', 'Post Content') }}</h4>
+
+            <!-- Post Text -->
+            <div v-if="props.postText" class="preview-text-section">
+              <label class="preview-label">{{ t('posts.postText', 'Post Text') }}</label>
+              <p class="preview-text">{{ props.postText }}</p>
+            </div>
+
+            <!-- Call to Action -->
+            <div v-if="props.callToAction" class="preview-text-section">
+              <label class="preview-label">{{ t('playground.callToActionLabel', 'Call to Action') }}</label>
+              <p class="preview-text">{{ props.callToAction }}</p>
+            </div>
+
+            <!-- Hashtags -->
+            <div v-if="props.hashtags && props.hashtags.length > 0" class="preview-text-section">
+              <label class="preview-label">{{ t('posts.hashtags', 'Hashtags') }}</label>
+              <div class="preview-hashtags">
+                <span v-for="(tag, index) in props.hashtags" :key="index" class="preview-hashtag">
+                  #{{ tag }}
+                </span>
+              </div>
+            </div>
+
+            <!-- Loading placeholder for content -->
+            <div v-if="props.generating && !props.postText" class="content-loading">
+              <p class="loading-text">{{ t('common.generatingContent', 'Generating content...') }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 3 Navigation -->
+      <div class="step-navigation">
+        <BaseButton
+          variant="secondary"
+          size="large"
+          @click="prevStep"
+          class="prev-button"
+        >
+          {{ t('common.back', 'Back') }}
+        </BaseButton>
+        <BaseButton
+          variant="primary"
+          size="large"
+          @click="nextStep"
+          class="next-button"
+          :disabled="!props.generatedImageUrl"
+        >
+          {{ t('easyMode.step3.nextButton', 'Publish Post') }}
+        </BaseButton>
+      </div>
+    </BaseCard>
+
+    <!-- Step 4: Platform Selection and Scheduling -->
+    <BaseCard v-show="currentStep === 4" variant="glass" class="step-card">
+      <!-- Success State -->
+      <div v-if="props.published" class="publish-success">
+        <div class="success-icon">🎉</div>
+        <h3 class="success-title">{{ t('easyMode.step4.successTitle', 'Congratulations!') }}</h3>
+        <p class="success-message">{{ t('easyMode.step4.successMessage', 'Your post has been published successfully!') }}</p>
+        <a
+          v-if="props.facebookPostUrl"
+          :href="props.facebookPostUrl"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="view-post-link"
+        >
+          {{ t('easyMode.step4.viewPost', 'View your post on Facebook') }} →
+        </a>
+        <div class="success-actions">
+          <BaseButton variant="primary" size="large" @click="resetAndCreateNew">
+            {{ t('easyMode.step4.createAnother', 'Create Another Post') }}
+          </BaseButton>
+        </div>
+      </div>
+
+      <!-- Normal publish flow -->
+      <template v-else>
+        <div class="step-header">
+          <div class="step-info">
+            <h3 class="step-title">{{ t('easyMode.step4.title', 'Publish Your Post') }}</h3>
+            <p class="step-subtitle">{{ t('easyMode.step4.subtitle', 'Choose platform and when to publish') }}</p>
+          </div>
+        </div>
+
+        <!-- Platform Selection -->
+      <div class="customization-section">
+        <h4 class="section-label">📱 {{ t('easyMode.step4.platformLabel', 'Select Platform') }}</h4>
+        <div class="platform-grid">
+          <div
+            :class="['platform-card', { 'selected': selectedPlatform === 'instagram' }]"
+            @click="selectedPlatform = 'instagram'"
+          >
+            <div class="platform-icon">📸</div>
+            <span class="platform-name">Instagram</span>
+            <div v-if="selectedPlatform === 'instagram'" class="platform-selected-badge">
+              <span class="badge-icon">✓</span>
+            </div>
+          </div>
+          <div
+            :class="['platform-card', { 'selected': selectedPlatform === 'facebook' }]"
+            @click="selectedPlatform = 'facebook'"
+          >
+            <div class="platform-icon">👥</div>
+            <span class="platform-name">Facebook</span>
+            <div v-if="selectedPlatform === 'facebook'" class="platform-selected-badge">
+              <span class="badge-icon">✓</span>
+            </div>
+          </div>
+          <div
+            :class="['platform-card', { 'selected': selectedPlatform === 'tiktok' }]"
+            @click="selectedPlatform = 'tiktok'"
+          >
+            <div class="platform-icon">🎵</div>
+            <span class="platform-name">TikTok</span>
+            <div v-if="selectedPlatform === 'tiktok'" class="platform-selected-badge">
+              <span class="badge-icon">✓</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Publish Type -->
+      <div class="customization-section">
+        <h4 class="section-label">⏰ {{ t('easyMode.step4.publishTypeLabel', 'When to Publish') }}</h4>
+        <div class="publish-type-buttons">
+          <button
+            :class="['publish-type-btn', { 'active': publishType === 'now' }]"
+            @click="publishType = 'now'"
+          >
+            <span class="publish-type-icon">🚀</span>
+            <span class="publish-type-text">{{ t('easyMode.step4.publishNow', 'Publish Now') }}</span>
+          </button>
+          <button
+            :class="['publish-type-btn', { 'active': publishType === 'schedule' }]"
+            @click="publishType = 'schedule'"
+          >
+            <span class="publish-type-icon">📅</span>
+            <span class="publish-type-text">{{ t('easyMode.step4.scheduleLater', 'Schedule for Later') }}</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Schedule Date/Time (shown only when scheduling) -->
+      <div v-if="publishType === 'schedule'" class="customization-section">
+        <h4 class="section-label">📆 {{ t('easyMode.step4.scheduleLabel', 'Choose Date & Time') }}</h4>
+        <div class="date-picker-container">
+          <VueDatePicker
+            v-model="scheduleDateTime"
+            :dark="true"
+            :enable-time-picker="true"
+            :min-date="new Date()"
+            :format="'MMM dd, yyyy - HH:mm'"
+            :preview-format="'MMM dd, yyyy - HH:mm'"
+            placeholder="Select date and time"
+            auto-apply
+            :clearable="false"
+            :required="true"
+          />
+        </div>
+      </div>
+
+        <!-- Error Alert -->
+        <BaseAlert v-if="props.error" type="error" class="publish-error">
+          {{ props.error }}
+        </BaseAlert>
+
+        <!-- Step 4 Navigation -->
+        <div class="step-navigation">
+          <BaseButton
+            variant="secondary"
+            size="large"
+            @click="prevStep"
+            class="prev-button"
+          >
+            {{ t('common.back', 'Back') }}
+          </BaseButton>
+          <BaseButton
+            variant="primary"
+            size="large"
+            :disabled="props.publishing || (publishType === 'schedule' && !scheduleDateTime)"
+            @click="handlePublish"
+            class="generate-button"
+          >
+            <span v-if="props.publishing" class="generating-content">
+              <span class="spinner"></span>
+              {{ t('easyMode.step4.publishing', 'Publishing your post...') }}
+            </span>
+            <span v-else>
+              {{ publishType === 'now'
+                ? t('easyMode.step4.publishButton', 'Publish Now')
+                : t('easyMode.step4.scheduleButton', 'Schedule Post')
+              }}
+            </span>
+          </BaseButton>
+        </div>
+      </template>
     </BaseCard>
 
   </div>
@@ -718,6 +1036,174 @@ onUnmounted(() => {
   color: var(--text-secondary);
   margin: 0;
 }
+
+.step-description {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  margin: var(--space-md) 0 0 0;
+  padding: var(--space-md);
+  background: var(--bg-elevated);
+  border-left: 3px solid var(--gold-primary);
+  border-radius: var(--radius-sm);
+}
+
+.step-error {
+  margin-top: var(--space-lg);
+}
+
+/* Preview Section */
+.preview-section {
+  margin-top: var(--space-2xl);
+}
+
+.preview-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2xl);
+}
+
+.preview-image-container {
+  width: 100%;
+  min-height: 400px;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  border: 2px solid var(--gold-primary);
+  box-shadow: var(--glow-gold-md);
+  background: var(--bg-tertiary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.preview-image-display {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.image-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-5xl) var(--space-2xl);
+  width: 100%;
+}
+
+.loading-logo {
+  width: 120px;
+  height: 120px;
+  margin-bottom: var(--space-xl);
+  animation: bounce 2s ease-in-out infinite;
+  filter: drop-shadow(0 4px 20px rgba(212, 175, 55, 0.4));
+}
+
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-20px);
+  }
+}
+
+.loading-title {
+  font-family: var(--font-heading);
+  font-size: var(--text-2xl);
+  color: var(--gold-primary);
+  margin: 0 0 var(--space-sm) 0;
+  font-weight: var(--font-semibold);
+}
+
+.loading-subtitle {
+  font-size: var(--text-base);
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.content-loading {
+  padding: var(--space-2xl);
+  text-align: center;
+  background: var(--bg-elevated);
+  border-radius: var(--radius-md);
+  border: 1px dashed var(--border-color);
+}
+
+.loading-text {
+  font-size: var(--text-base);
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.preview-post-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+
+.preview-content-label {
+  font-family: var(--font-heading);
+  font-size: var(--text-xl);
+  color: var(--text-primary);
+  margin: 0 0 var(--space-md) 0;
+}
+
+.preview-text-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.preview-label {
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  color: var(--gold-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.preview-text {
+  font-size: var(--text-base);
+  color: var(--text-secondary);
+  line-height: var(--leading-relaxed);
+  padding: var(--space-md);
+  background: var(--bg-elevated);
+  border-radius: var(--radius-md);
+  border-left: 3px solid var(--gold-primary);
+  margin: 0;
+}
+
+.preview-hashtags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+}
+
+.preview-hashtag {
+  display: inline-block;
+  padding: var(--space-xs) var(--space-md);
+  background: rgba(212, 175, 55, 0.1);
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  border-radius: var(--radius-full);
+  color: var(--gold-light);
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+}
+
+.preview-placeholder {
+  padding: var(--space-5xl) var(--space-2xl);
+  text-align: center;
+  background: var(--bg-elevated);
+  border-radius: var(--radius-lg);
+  border: 2px dashed var(--border-color);
+}
+
+.preview-info {
+  font-size: var(--text-lg);
+  color: var(--text-muted);
+  margin: 0;
+}
+
 
 /* Step Navigation */
 .step-navigation {
@@ -1634,6 +2120,282 @@ onUnmounted(() => {
   .progress-text {
     font-size: var(--text-lg);
   }
+}
+
+/* Step 3: Platform Selection */
+.platform-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: var(--space-lg);
+}
+
+.platform-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-xl);
+  background: rgba(26, 26, 26, 0.6);
+  border: 2px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.platform-card:hover {
+  border-color: rgba(212, 175, 55, 0.4);
+  background: rgba(26, 26, 26, 0.8);
+  transform: translateY(-2px);
+}
+
+.platform-card.selected {
+  border-color: var(--gold-primary);
+  background: rgba(212, 175, 55, 0.1);
+}
+
+.platform-icon {
+  font-size: 3rem;
+}
+
+.platform-name {
+  font-size: var(--text-lg);
+  font-weight: var(--font-semibold);
+  color: var(--text-primary);
+}
+
+.platform-selected-badge {
+  position: absolute;
+  top: var(--space-sm);
+  right: var(--space-sm);
+  width: 28px;
+  height: 28px;
+  background: var(--gold-primary);
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Publish Type Buttons */
+.publish-type-buttons {
+  display: flex;
+  gap: var(--space-lg);
+  flex-wrap: wrap;
+}
+
+.publish-type-btn {
+  flex: 1;
+  min-width: 200px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-xl);
+  background: rgba(26, 26, 26, 0.6);
+  border: 2px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  color: var(--text-secondary);
+}
+
+.publish-type-btn:hover {
+  border-color: rgba(212, 175, 55, 0.4);
+  background: rgba(26, 26, 26, 0.8);
+}
+
+.publish-type-btn.active {
+  border-color: var(--gold-primary);
+  background: rgba(212, 175, 55, 0.1);
+  color: var(--text-primary);
+}
+
+.publish-type-icon {
+  font-size: 2.5rem;
+}
+
+.publish-type-text {
+  font-size: var(--text-base);
+  font-weight: var(--font-semibold);
+}
+
+/* Publish Success State */
+.publish-success {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: var(--space-3xl) var(--space-xl);
+  animation: fadeInUp 0.5s var(--ease-smooth);
+}
+
+.success-icon {
+  font-size: 4rem;
+  margin-bottom: var(--space-xl);
+  animation: bounce 0.6s ease-out;
+}
+
+@keyframes bounce {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.2); }
+}
+
+.success-title {
+  font-family: var(--font-heading);
+  font-size: var(--text-3xl);
+  background: var(--gradient-gold);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin: 0 0 var(--space-md) 0;
+}
+
+.success-message {
+  font-size: var(--text-lg);
+  color: var(--text-secondary);
+  margin: 0 0 var(--space-xl) 0;
+}
+
+.view-post-link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-md) var(--space-xl);
+  background: var(--gold-subtle);
+  border: 1px solid var(--gold-primary);
+  border-radius: var(--radius-md);
+  color: var(--gold-light);
+  font-weight: var(--font-semibold);
+  text-decoration: none;
+  transition: var(--transition-base);
+  margin-bottom: var(--space-2xl);
+}
+
+.view-post-link:hover {
+  background: rgba(212, 175, 55, 0.2);
+  transform: translateY(-2px);
+  box-shadow: var(--glow-gold-sm);
+}
+
+.success-actions {
+  display: flex;
+  gap: var(--space-lg);
+}
+
+/* Publish Error */
+.publish-error {
+  margin-bottom: var(--space-xl);
+}
+
+/* Date Picker Container */
+.date-picker-container {
+  width: 100%;
+}
+
+/* VueDatePicker Custom Styling */
+.date-picker-container :deep(.dp__theme_dark) {
+  --dp-background-color: rgba(26, 26, 26, 0.9);
+  --dp-text-color: var(--text-primary);
+  --dp-hover-color: rgba(212, 175, 55, 0.1);
+  --dp-hover-text-color: var(--gold-light);
+  --dp-hover-icon-color: var(--gold-light);
+  --dp-primary-color: var(--gold-primary);
+  --dp-primary-disabled-color: rgba(212, 175, 55, 0.3);
+  --dp-primary-text-color: var(--text-on-gold);
+  --dp-secondary-color: var(--text-muted);
+  --dp-border-color: var(--border-color);
+  --dp-menu-border-color: var(--gold-primary);
+  --dp-border-color-hover: var(--gold-primary);
+  --dp-disabled-color: rgba(128, 128, 128, 0.3);
+  --dp-scroll-bar-background: var(--bg-elevated);
+  --dp-scroll-bar-color: var(--gold-primary);
+  --dp-success-color: var(--gold-primary);
+  --dp-success-color-disabled: rgba(212, 175, 55, 0.3);
+  --dp-icon-color: var(--text-muted);
+  --dp-danger-color: var(--error-text);
+  --dp-marker-color: var(--gold-primary);
+  --dp-tooltip-color: var(--bg-elevated);
+  --dp-disabled-color-text: var(--text-muted);
+  --dp-highlight-color: rgba(212, 175, 55, 0.2);
+  --dp-range-between-dates-background-color: rgba(212, 175, 55, 0.1);
+  --dp-range-between-dates-text-color: var(--text-primary);
+  --dp-range-between-border-color: var(--gold-primary);
+}
+
+.date-picker-container :deep(.dp__input) {
+  background: rgba(26, 26, 26, 0.6);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-size: var(--text-base);
+  font-family: var(--font-body);
+  padding: var(--space-md) var(--space-lg);
+  transition: all 0.3s ease;
+  height: auto;
+  min-height: 48px;
+}
+
+.date-picker-container :deep(.dp__input:hover) {
+  border-color: rgba(212, 175, 55, 0.4);
+}
+
+.date-picker-container :deep(.dp__input:focus) {
+  outline: none;
+  border-color: var(--gold-primary);
+  box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.15);
+}
+
+.date-picker-container :deep(.dp__input::placeholder) {
+  color: var(--text-muted);
+}
+
+.date-picker-container :deep(.dp__menu) {
+  background: rgba(26, 26, 26, 0.95);
+  border: 2px solid var(--gold-primary);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--glow-gold-md);
+  backdrop-filter: blur(20px);
+}
+
+.date-picker-container :deep(.dp__calendar_header_item) {
+  color: var(--gold-primary);
+  font-weight: var(--font-semibold);
+}
+
+.date-picker-container :deep(.dp__today) {
+  border: 1px solid var(--gold-primary);
+}
+
+.date-picker-container :deep(.dp__active_date),
+.date-picker-container :deep(.dp__overlay_cell_active) {
+  background: var(--gradient-gold);
+  color: var(--text-on-gold);
+  font-weight: var(--font-semibold);
+}
+
+.date-picker-container :deep(.dp__time_input) {
+  background: rgba(26, 26, 26, 0.6);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+}
+
+.date-picker-container :deep(.dp__time_input:hover) {
+  border-color: var(--gold-primary);
+}
+
+.date-picker-container :deep(.dp__arrow_top),
+.date-picker-container :deep(.dp__arrow_bottom) {
+  color: var(--gold-primary);
+}
+
+.date-picker-container :deep(.dp__button) {
+  color: var(--gold-primary);
+  transition: var(--transition-base);
+}
+
+.date-picker-container :deep(.dp__button:hover) {
+  background: rgba(212, 175, 55, 0.1);
 }
 
 /* Reduced Motion */

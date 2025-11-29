@@ -85,25 +85,12 @@
               </div>
 
               <!-- Pagination -->
-              <div v-if="totalPages > 1" class="pagination">
-                <button
-                  class="pagination-btn"
-                  :disabled="currentPage === 1"
-                  @click="currentPage--"
-                >
-                  ← Previous
-                </button>
-                <span class="pagination-info">
-                  Page {{ currentPage }} of {{ totalPages }} ({{ posts.length }} posts)
-                </span>
-                <button
-                  class="pagination-btn"
-                  :disabled="currentPage === totalPages"
-                  @click="currentPage++"
-                >
-                  Next →
-                </button>
-              </div>
+              <BasePagination
+                v-model:current-page="currentPage"
+                :total-pages="totalPages"
+                :total-items="posts.length"
+                @update:current-page="handlePageChange"
+              />
 
               <!-- Next Button -->
               <div class="wizard-actions">
@@ -329,6 +316,7 @@ import { ref, watch, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import BaseCard from './BaseCard.vue'
 import BaseButton from './BaseButton.vue'
+import BasePagination from './BasePagination.vue'
 import DatePicker from './DatePicker.vue'
 import { api } from '../services/api'
 
@@ -606,6 +594,10 @@ const saveEdits = async () => {
   } finally {
     savingEdits.value = false
   }
+}
+
+const handlePageChange = (page: number) => {
+  currentPage.value = page
 }
 </script>
 
@@ -1305,50 +1297,6 @@ const saveEdits = async () => {
   border-top: 1px solid rgba(212, 175, 55, 0.1);
 }
 
-/* Pagination Styles */
-.pagination {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-md);
-  margin-top: var(--space-xl);
-  padding: var(--space-lg);
-  background: rgba(0, 0, 0, 0.3);
-  border-radius: var(--radius-lg);
-  border: 1px solid rgba(212, 175, 55, 0.2);
-}
-
-.pagination-btn {
-  padding: var(--space-sm) var(--space-lg);
-  background: rgba(212, 175, 55, 0.15);
-  border: 1px solid rgba(212, 175, 55, 0.3);
-  border-radius: var(--radius-md);
-  color: var(--gold-primary);
-  font-family: var(--font-body);
-  font-size: var(--text-sm);
-  font-weight: var(--font-semibold);
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.pagination-btn:hover:not(:disabled) {
-  background: rgba(212, 175, 55, 0.25);
-  border-color: var(--gold-primary);
-  transform: translateY(-1px);
-}
-
-.pagination-btn:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-
-.pagination-info {
-  color: var(--text-secondary);
-  font-size: var(--text-sm);
-  font-weight: var(--font-medium);
-  white-space: nowrap;
-}
-
 /* Responsive */
 @media (max-width: 768px) {
   .modal-card {
@@ -1361,15 +1309,6 @@ const saveEdits = async () => {
 
   .posts-grid {
     grid-template-columns: 1fr;
-  }
-
-  .pagination {
-    flex-direction: column;
-    gap: var(--space-sm);
-  }
-
-  .pagination-info {
-    order: -1;
   }
 }
 </style>

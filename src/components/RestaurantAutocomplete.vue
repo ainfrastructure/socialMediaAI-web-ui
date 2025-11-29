@@ -32,13 +32,17 @@
         v-else
         v-for="(suggestion, index) in suggestions"
         :key="suggestion.place_id"
-        :class="['dropdown-item', { active: index === activeIndex }]"
+        :class="['dropdown-item', { active: index === activeIndex, saved: isRestaurantSaved(suggestion) }]"
         @mousedown.prevent="selectSuggestion(suggestion)"
         @mouseenter="activeIndex = index"
       >
         <div class="restaurant-info">
           <div class="restaurant-name">{{ suggestion.name }}</div>
           <div class="restaurant-address">{{ suggestion.address }}</div>
+        </div>
+        <div v-if="isRestaurantSaved(suggestion)" class="saved-badge">
+          <span class="checkmark">✓</span>
+          <span class="saved-text">{{ $t('restaurantSearch.alreadyAdded') }}</span>
         </div>
       </div>
     </div>
@@ -58,6 +62,7 @@ interface Props {
   disabled?: boolean
   autofocus?: boolean
   debounceMs?: number
+  savedRestaurants?: Array<{ place_id: string; name: string }>
 }
 
 interface Emits {
@@ -72,6 +77,7 @@ const props = withDefaults(defineProps<Props>(), {
   disabled: false,
   autofocus: false,
   debounceMs: 300,
+  savedRestaurants: () => []
 })
 
 const emit = defineEmits<Emits>()
@@ -154,6 +160,11 @@ const performSearch = async (query: string) => {
 }
 
 const selectSuggestion = (suggestion: RestaurantSuggestion) => {
+  // Prevent selecting already saved restaurants
+  if (isRestaurantSaved(suggestion)) {
+    return
+  }
+
   searchQuery.value = suggestion.name
   emit('update:modelValue', suggestion)
   emit('select', suggestion)
@@ -216,6 +227,10 @@ const scrollToActiveItem = () => {
     activeItem.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
   }
 }
+
+const isRestaurantSaved = (suggestion: RestaurantSuggestion): boolean => {
+  return props.savedRestaurants?.some(saved => saved.place_id === suggestion.place_id) || false
+}
 </script>
 
 <style scoped>
@@ -268,6 +283,10 @@ const scrollToActiveItem = () => {
   cursor: pointer;
   border-bottom: 1px solid rgba(212, 175, 55, 0.1);
   transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
 }
 
 .dropdown-item:last-child {
@@ -277,6 +296,18 @@ const scrollToActiveItem = () => {
 .dropdown-item:hover,
 .dropdown-item.active {
   background: rgba(212, 175, 55, 0.1);
+}
+
+.dropdown-item.saved {
+  background: rgba(76, 175, 80, 0.05);
+  border-left: 3px solid rgba(76, 175, 80, 0.5);
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.dropdown-item.saved:hover {
+  background: rgba(76, 175, 80, 0.05);
+  transform: none;
 }
 
 .dropdown-item.loading,
@@ -314,6 +345,7 @@ const scrollToActiveItem = () => {
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
+  flex: 1;
 }
 
 .restaurant-name {
@@ -325,6 +357,30 @@ const scrollToActiveItem = () => {
 .restaurant-address {
   font-size: 0.875rem;
   color: var(--text-secondary);
+}
+
+.saved-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem 0.75rem;
+  background: rgba(76, 175, 80, 0.15);
+  border: 1px solid rgba(76, 175, 80, 0.3);
+  border-radius: var(--radius-full);
+  flex-shrink: 0;
+}
+
+.checkmark {
+  font-size: 0.875rem;
+  font-weight: bold;
+  color: #4CAF50;
+}
+
+.saved-text {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #4CAF50;
+  white-space: nowrap;
 }
 
 /* Scrollbar styling */

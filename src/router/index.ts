@@ -5,7 +5,6 @@ import DashboardView from '../views/DashboardView.vue'
 import PlansView from '../views/PlansView.vue'
 import AuthCallbackView from '../views/AuthCallbackView.vue'
 import ResetPasswordView from '../views/ResetPasswordView.vue'
-import RestaurantSearchView from '../views/RestaurantSearchView.vue'
 import PlaygroundView from '../views/PlaygroundView.vue'
 import ConnectAccountsView from '../views/ConnectAccountsView.vue'
 import FacebookCallbackView from '../views/FacebookCallbackView.vue'
@@ -13,7 +12,6 @@ import TestPostView from '../views/TestPostView.vue'
 import SchedulerView from '../views/SchedulerView.vue'
 import PostsView from '../views/PostsView.vue'
 import ProfileView from '../views/ProfileView.vue'
-import SavedRestaurantsView from '../views/SavedRestaurantsView.vue'
 import OnboardingView from '../views/OnboardingView.vue'
 import ContentHubView from '../views/ContentHubView.vue'
 import ContentCreateView from '../views/ContentCreateView.vue'
@@ -93,12 +91,6 @@ const router = createRouter({
       component: PlansView,
     },
     {
-      path: '/restaurants',
-      name: 'restaurants',
-      component: RestaurantSearchView,
-      meta: { requiresAuth: true },
-    },
-    {
       path: '/content',
       name: 'content',
       component: ContentHubView,
@@ -140,12 +132,6 @@ const router = createRouter({
       path: '/profile',
       name: 'profile',
       component: ProfileView,
-      meta: { requiresAuth: true },
-    },
-    {
-      path: '/saved-restaurants',
-      name: 'saved-restaurants',
-      component: SavedRestaurantsView,
       meta: { requiresAuth: true },
     },
   ],

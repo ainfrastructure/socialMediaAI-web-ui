@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { ref, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { SavedRestaurant } from '@/services/restaurantService'
 import BaseCard from './BaseCard.vue'
 import BaseButton from './BaseButton.vue'
+import AddRestaurantModal from './AddRestaurantModal.vue'
 
 interface Props {
   modelValue: boolean
@@ -16,11 +17,13 @@ const props = defineProps<Props>()
 const emit = defineEmits<{
   (e: 'update:modelValue', value: boolean): void
   (e: 'select', restaurant: SavedRestaurant): void
-  (e: 'add-new'): void
+  (e: 'restaurant-added'): void
   (e: 'delete', restaurant: SavedRestaurant): void
 }>()
 
 const { t } = useI18n()
+
+const showAddModal = ref(false)
 
 const isOpen = computed({
   get: () => props.modelValue,
@@ -37,8 +40,12 @@ function selectRestaurant(restaurant: SavedRestaurant) {
 }
 
 function handleAddNew() {
-  emit('add-new')
-  close()
+  showAddModal.value = true
+}
+
+function handleRestaurantAdded(restaurant: any) {
+  // Emit event to parent to refresh restaurant list
+  emit('restaurant-added')
 }
 
 function handleDelete(event: Event, restaurant: SavedRestaurant) {
@@ -103,6 +110,13 @@ function handleDelete(event: Event, restaurant: SavedRestaurant) {
       </div>
     </Transition>
   </Teleport>
+
+  <!-- Add Restaurant Modal -->
+  <AddRestaurantModal
+    v-model="showAddModal"
+    :saved-restaurants="restaurants"
+    @restaurant-added="handleRestaurantAdded"
+  />
 </template>
 
 <style scoped>

@@ -12,25 +12,27 @@
       <!-- Main Content -->
       <div v-else class="content-hub">
         <!-- Restaurant Header -->
-        <BaseCard variant="glass-intense" class="restaurant-header">
+        <div class="restaurant-header">
           <div class="header-content">
-            <div class="restaurant-info">
+            <div class="logo-container">
               <div v-if="selectedRestaurant?.brand_dna?.logo_url" class="restaurant-logo">
                 <img :src="selectedRestaurant.brand_dna.logo_url" :alt="selectedRestaurant.name" />
               </div>
               <div v-else class="restaurant-logo placeholder">
                 <span class="placeholder-icon">🏪</span>
               </div>
-              <div class="restaurant-details">
-                <h1 class="restaurant-name">{{ selectedRestaurant?.name }}</h1>
-                <p class="restaurant-address">{{ selectedRestaurant?.address }}</p>
-              </div>
             </div>
-            <BaseButton variant="ghost" size="small" @click="showRestaurantSelector = true">
-              {{ $t('contentHub.changeRestaurant') }}
-            </BaseButton>
+            <div class="restaurant-info">
+              <h1 class="restaurant-name">{{ selectedRestaurant?.name }}</h1>
+              <p class="restaurant-address">{{ selectedRestaurant?.address }}</p>
+            </div>
+            <div class="header-actions">
+              <BaseButton variant="secondary" size="medium" @click="showRestaurantSelector = true">
+                {{ $t('contentHub.changeRestaurant') }}
+              </BaseButton>
+            </div>
           </div>
-        </BaseCard>
+        </div>
 
         <!-- Create Content Card -->
         <BaseCard variant="glass" hoverable class="create-card" @click="goToCreate">
@@ -174,7 +176,7 @@
       :restaurants="restaurants"
       :current-id="selectedRestaurant?.id"
       @select="handleRestaurantChange"
-      @add-new="goToAddRestaurant"
+      @restaurant-added="handleRestaurantAdded"
       @delete="handleDeleteRestaurant"
     />
 
@@ -455,8 +457,17 @@ function goToCreate() {
   router.push('/content/create')
 }
 
-function goToAddRestaurant() {
-  router.push('/restaurants')
+// Handle restaurant added
+async function handleRestaurantAdded() {
+  try {
+    // Refresh restaurants list
+    const response = await api.getRestaurants()
+    if (response.success) {
+      restaurants.value = response.data || []
+    }
+  } catch (error) {
+    console.error('Failed to fetch restaurants:', error)
+  }
 }
 
 // Handle restaurant deletion
@@ -678,67 +689,86 @@ function formatDate(dateString: string): string {
 
 /* Restaurant Header */
 .restaurant-header {
-  margin-bottom: var(--space-2xl);
+  margin-bottom: var(--space-3xl);
+  padding-bottom: var(--space-2xl);
+  border-bottom: 1px solid rgba(212, 175, 55, 0.15);
 }
 
 .header-content {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  gap: var(--space-xl);
+  justify-content: center;
+  gap: var(--space-2xl);
+  flex-wrap: wrap;
 }
 
-.restaurant-info {
-  display: flex;
-  align-items: center;
-  gap: var(--space-lg);
-}
-
-.restaurant-logo {
-  width: 64px;
-  height: 64px;
-  border-radius: var(--radius-md);
-  overflow: hidden;
-  background: var(--bg-tertiary);
+.logo-container {
+  flex-shrink: 0;
+  width: 100%;
+  max-width: 280px;
   display: flex;
   align-items: center;
   justify-content: center;
-  flex-shrink: 0;
+}
+
+.restaurant-logo {
+  width: 100%;
+  min-height: 80px;
+  max-height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  padding: var(--space-md);
 }
 
 .restaurant-logo img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+  max-width: 100%;
+  max-height: 120px;
+  width: auto;
+  height: auto;
+  object-fit: contain;
 }
 
 .restaurant-logo.placeholder {
   background: rgba(212, 175, 55, 0.1);
+  border-radius: var(--radius-lg);
+  min-height: 120px;
 }
 
 .placeholder-icon {
-  font-size: var(--text-2xl);
+  font-size: 4rem;
 }
 
-.restaurant-details {
-  min-width: 0;
+.restaurant-info {
+  text-align: center;
 }
 
 .restaurant-name {
   font-family: var(--font-heading);
-  font-size: var(--text-2xl);
+  font-size: var(--text-4xl);
+  font-weight: var(--font-bold);
   color: var(--text-primary);
-  margin: 0 0 var(--space-xs) 0;
+  margin: 0 0 var(--space-sm) 0;
   background: var(--gradient-gold);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+  line-height: 1.2;
 }
 
 .restaurant-address {
-  font-size: var(--text-sm);
+  font-size: var(--text-base);
   color: var(--text-secondary);
   margin: 0;
+  font-weight: var(--font-normal);
+}
+
+.header-actions {
+  flex-shrink: 0;
+  width: 100%;
+  display: flex;
+  justify-content: center;
 }
 
 /* Create Card */
@@ -1222,10 +1252,30 @@ function formatDate(dateString: string): string {
     padding: 1rem;
   }
 
-  .header-content {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: var(--space-md);
+  .restaurant-header {
+    margin-bottom: var(--space-2xl);
+    padding-bottom: var(--space-xl);
+  }
+
+  .restaurant-logo {
+    width: 100px;
+    height: 100px;
+  }
+
+  .restaurant-name {
+    font-size: var(--text-3xl);
+  }
+
+  .restaurant-address {
+    font-size: var(--text-sm);
+  }
+
+  .header-actions {
+    width: 100%;
+  }
+
+  .header-actions button {
+    width: 100%;
   }
 
   .create-content {

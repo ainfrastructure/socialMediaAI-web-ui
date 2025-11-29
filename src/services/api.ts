@@ -359,6 +359,88 @@ class ApiService {
     return response.json()
   }
 
+  // Advanced mode: Generate 4 style variations
+  async generateStyleVariations(
+    restaurantData: any,
+    menuItems: any[],
+    customization?: any,
+    postTypeOptions?: {
+      postType: 'single' | 'combo' | 'weekly'
+      weekLength?: 5 | 7
+      includeWeeklyPrices?: boolean
+      weeklyMenuData?: Array<{
+        day: string
+        dayKey: string
+        dishName: string
+        price?: string
+        imageUrl?: string
+      }>
+      weeklyCustomization?: {
+        layout: 'verticalStack' | 'gridWithHeader' | 'calendarGrid' | 'filmstrip'
+        showDates: boolean
+        dateFormat: 'full' | 'short' | 'dayOnly'
+        showWeekNumber: boolean
+        showMonthName: boolean
+        startDate?: string
+        endDate?: string
+        theme: string
+        customThemeText?: string
+      }
+    }
+  ): Promise<{ success: boolean; variations?: any[]; error?: string }> {
+    const response = await fetch(`${API_URL}/api/prompts/generate-style-variations`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...this.getAuthHeader(),
+      },
+      body: JSON.stringify({ restaurantData, menuItems, customization, postTypeOptions }),
+    })
+    return response.json()
+  }
+
+  // Advanced mode: Generate image with advanced customization
+  async generateAdvancedImage(
+    prompt: string,
+    customization: any,
+    menuItems: any[],
+    restaurantLogoPath?: string,
+    placeId?: string,
+    postTypeOptions?: {
+      postType: 'single' | 'combo' | 'weekly'
+      weekLength?: 5 | 7
+      includeWeeklyPrices?: boolean
+      weeklyMenuData?: Array<{
+        day: string
+        dayKey: string
+        dishName: string
+        price?: string
+        imageUrl?: string
+      }>
+      weeklyCustomization?: {
+        layout: 'verticalStack' | 'gridWithHeader' | 'calendarGrid' | 'filmstrip'
+        showDates: boolean
+        dateFormat: 'full' | 'short' | 'dayOnly'
+        showWeekNumber: boolean
+        showMonthName: boolean
+        startDate?: string
+        endDate?: string
+        theme: string
+        customThemeText?: string
+      }
+    }
+  ): Promise<ApiResponse<{ imageUrl: string; textOverlayAdded: boolean; customization: any }>> {
+    const response = await fetch(`${API_URL}/api/images/generate-advanced`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...this.getAuthHeader(),
+      },
+      body: JSON.stringify({ prompt, customization, menuItems, restaurantLogoPath, placeId, postTypeOptions }),
+    })
+    return response.json()
+  }
+
   async addVideoWatermark(
     videoPath: string,
     logoPath: string,

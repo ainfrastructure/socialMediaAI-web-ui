@@ -1,12 +1,13 @@
 <template>
-  <div class="pagination-container">
+  <!-- Hide pagination if only 1 page -->
+  <div v-if="totalPages > 1" class="pagination-container">
     <div class="pagination">
       <button
         class="pagination-btn"
         :disabled="currentPage === 1"
         @click="$emit('update:currentPage', currentPage - 1)"
       >
-        ← Previous
+        {{ $t('common.pagination.previous') }}
       </button>
 
       <div class="pagination-pages">
@@ -53,12 +54,12 @@
         :disabled="currentPage === totalPages"
         @click="$emit('update:currentPage', currentPage + 1)"
       >
-        Next →
+        {{ $t('common.pagination.next') }}
       </button>
     </div>
 
     <div class="pagination-info">
-      Page {{ currentPage }} of {{ totalPages }} ({{ totalItems }} total)
+      {{ $t('common.pagination.pageInfo', { current: currentPage, total: totalPages, count: totalItems }) }}
     </div>
   </div>
 </template>

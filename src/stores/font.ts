@@ -4,9 +4,9 @@ import { ref, watch } from 'vue'
 export type FontTheme = 'current' | 'apple' | 'classic' | 'modern' | 'luxury' | 'elegant' | 'boutique'
 
 export const useFontStore = defineStore('font', () => {
-  // Get saved font theme from localStorage or default to 'current'
+  // Get saved font theme from localStorage or default to 'elegant'
   const savedTheme = localStorage.getItem('fontTheme') as FontTheme | null
-  const currentTheme = ref<FontTheme>(savedTheme || 'current')
+  const currentTheme = ref<FontTheme>(savedTheme || 'elegant')
 
   /**
    * Set the current font theme and persist to localStorage

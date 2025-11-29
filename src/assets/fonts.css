@@ -3,8 +3,14 @@
    Easy customizable font switching
    ======================================== */
 
-/* ===== DEFAULT THEME: Current (Inter + Playfair) ===== */
+/* ===== DEFAULT THEME: Elegant (Crimson Pro + Work Sans) ===== */
 :root,
+:root[data-font-theme="elegant"] {
+  --font-heading: 'Crimson Pro', 'Baskerville', Georgia, serif;
+  --font-body: 'Work Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+/* ===== CURRENT THEME: Inter + Playfair ===== */
 :root[data-font-theme="current"] {
   --font-heading: 'Playfair Display', Georgia, serif;
   --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
@@ -32,12 +38,6 @@
 :root[data-font-theme="luxury"] {
   --font-heading: 'Cormorant Garamond', 'Playfair Display', Georgia, serif;
   --font-body: 'Raleway', 'Helvetica Neue', Helvetica, Arial, sans-serif;
-}
-
-/* ===== ELEGANT THEME: Crimson Pro + Work Sans ===== */
-:root[data-font-theme="elegant"] {
-  --font-heading: 'Crimson Pro', 'Baskerville', Georgia, serif;
-  --font-body: 'Work Sans', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
 /* ===== BOUTIQUE THEME: Libre Baskerville + Nunito Sans ===== */
