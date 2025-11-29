@@ -3,6 +3,7 @@ import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useFacebookStore } from '../stores/facebook'
+import { usePreferencesStore } from '../stores/preferences'
 import { api } from '../services/api'
 import { restaurantService } from '../services/restaurantService'
 import { placesService } from '../services/placesService'
@@ -17,6 +18,7 @@ import FacebookOnboardingModal from './FacebookOnboardingModal.vue'
 
 const router = useRouter()
 const facebookStore = useFacebookStore()
+const preferencesStore = usePreferencesStore()
 const { t } = useI18n()
 
 const emit = defineEmits<{
@@ -591,12 +593,19 @@ function handleCompletionClick() {
 async function completeOnboarding() {
   try {
     await api.completeOnboarding()
-    // Redirect to cook-up (easy mode)
-    router.push('/cook-up')
+    // Save selected restaurant to preferences
+    if (selectedRestaurant.value?.id) {
+      preferencesStore.setSelectedRestaurant(selectedRestaurant.value.id)
+    }
+    // Redirect to content hub
+    router.push('/content')
   } catch (error) {
     console.error('Failed to complete onboarding:', error)
-    // Redirect anyway to improve UX
-    router.push('/cook-up')
+    // Save restaurant and redirect anyway to improve UX
+    if (selectedRestaurant.value?.id) {
+      preferencesStore.setSelectedRestaurant(selectedRestaurant.value.id)
+    }
+    router.push('/content')
   }
 }
 
@@ -621,11 +630,11 @@ function handleFacebookConnected() {
         <div class="step-number">{{ step }}</div>
         <div class="step-label">
           {{
-            step === 1 ? 'Restaurant' :
-            step === 2 ? 'Create' :
-            step === 3 ? 'Review' :
-            step === 4 ? 'Connect' :
-            'Publish'
+            step === 1 ? $t('onboarding.simple.stepRestaurant') :
+            step === 2 ? $t('onboarding.simple.stepCreate') :
+            step === 3 ? $t('onboarding.simple.stepReview') :
+            step === 4 ? $t('onboarding.simple.stepConnect') :
+            $t('onboarding.simple.stepPublish')
           }}
         </div>
         <div v-if="step < totalSteps" class="step-connector"></div>
@@ -744,12 +753,12 @@ function handleFacebookConnected() {
           <!-- Content Preview -->
           <BaseCard variant="glass" class="content-preview">
             <div class="preview-section">
-              <h4>POST TEXT</h4>
+              <h4>{{ $t('posts.postText').toUpperCase() }}</h4>
               <p class="post-text">{{ generatedPost.postText }}</p>
             </div>
 
             <div v-if="generatedPost.hashtags && generatedPost.hashtags.length > 0" class="preview-section">
-              <h4>HASHTAGS</h4>
+              <h4>{{ $t('posts.hashtags').toUpperCase() }}</h4>
               <div class="hashtags">
                 <span v-for="(tag, idx) in generatedPost.hashtags" :key="idx" class="hashtag">
                   {{ tag }}
@@ -758,7 +767,7 @@ function handleFacebookConnected() {
             </div>
 
             <div v-if="generatedPost.callToAction" class="preview-section">
-              <h4>CALL TO ACTION</h4>
+              <h4>{{ $t('posts.callToAction').toUpperCase() }}</h4>
               <p class="cta-text">{{ generatedPost.callToAction }}</p>
             </div>
           </BaseCard>
@@ -784,8 +793,8 @@ function handleFacebookConnected() {
             <div class="account-header">
               <div class="account-icon facebook">📘</div>
               <div class="account-info">
-                <h3 class="account-name">Facebook</h3>
-                <p class="account-description">Post to your Facebook pages</p>
+                <h3 class="account-name">{{ $t('platforms.facebook') }}</h3>
+                <p class="account-description">{{ $t('onboarding.simple.facebookDescription') }}</p>
               </div>
             </div>
             <BaseButton
@@ -794,7 +803,7 @@ function handleFacebookConnected() {
               full-width
               @click="showFacebookOnboarding = true"
             >
-              {{ facebookStore.isConnected ? '✓ Connected' : 'Connect Facebook' }}
+              {{ facebookStore.isConnected ? $t('onboarding.simple.connectedStatus') : $t('connectAccounts.connectToFacebook') }}
             </BaseButton>
           </BaseCard>
 
@@ -803,8 +812,8 @@ function handleFacebookConnected() {
             <div class="account-header">
               <div class="account-icon instagram">📸</div>
               <div class="account-info">
-                <h3 class="account-name">Instagram</h3>
-                <p class="account-description">Post to your Instagram business account</p>
+                <h3 class="account-name">{{ $t('platforms.instagram') }}</h3>
+                <p class="account-description">{{ $t('onboarding.simple.instagramDescription') }}</p>
               </div>
             </div>
             <BaseButton
@@ -813,9 +822,9 @@ function handleFacebookConnected() {
               full-width
               @click="showFacebookOnboarding = true"
             >
-              {{ facebookStore.isConnected ? '✓ Connected via Facebook' : 'Connect Instagram' }}
+              {{ facebookStore.isConnected ? $t('onboarding.simple.connectedViaFacebook') : $t('onboarding.simple.connectInstagram') }}
             </BaseButton>
-            <p class="account-note">Instagram requires Facebook connection</p>
+            <p class="account-note">{{ $t('onboarding.simple.instagramRequiresFacebook') }}</p>
           </BaseCard>
         </div>
       </div>
@@ -824,13 +833,13 @@ function handleFacebookConnected() {
       <div v-else-if="currentStep === 5" class="step-panel">
         <div class="step-header">
           <div class="step-icon">🚀</div>
-          <h2 class="step-title">Publish Your Post</h2>
-          <p class="step-description">Choose how you want to share your content</p>
+          <h2 class="step-title">{{ $t('onboarding.simple.publishTitle') }}</h2>
+          <p class="step-description">{{ $t('onboarding.simple.publishSubtitle') }}</p>
         </div>
 
         <!-- Connection Warning -->
         <BaseAlert v-if="!facebookStore.isConnected" type="warning" :dismissible="false" class="onboarding-tip">
-          ⚠️ You haven't connected any social accounts yet. Go back to connect Facebook/Instagram first, or skip to continue without publishing.
+          {{ $t('onboarding.simple.connectionWarning') }}
         </BaseAlert>
 
         <!-- Publish Options -->
@@ -848,12 +857,12 @@ function handleFacebookConnected() {
                 <div :class="['radio-dot', { active: publishMode === 'now' }]"></div>
               </div>
             </div>
-            <h3 class="option-title">Publish Now</h3>
-            <p class="option-description">Post immediately to your connected social accounts</p>
+            <h3 class="option-title">{{ $t('onboarding.simple.publishNow') }}</h3>
+            <p class="option-description">{{ $t('onboarding.simple.publishNowDescription') }}</p>
 
             <!-- Platform Selection for Publish Now -->
             <div v-if="publishMode === 'now' && facebookStore.isConnected" class="platform-selection">
-              <h4 class="platform-label">Select platforms:</h4>
+              <h4 class="platform-label">{{ $t('onboarding.simple.selectPlatforms') }}</h4>
               <div class="platform-checkboxes">
                 <label v-for="page in facebookStore.connectedPages" :key="page.pageId" class="platform-checkbox">
                   <input
@@ -881,14 +890,14 @@ function handleFacebookConnected() {
                 <div :class="['radio-dot', { active: publishMode === 'schedule' }]"></div>
               </div>
             </div>
-            <h3 class="option-title">Schedule for Later</h3>
-            <p class="option-description">Pick a date and time for your post to go live</p>
+            <h3 class="option-title">{{ $t('onboarding.simple.scheduleForLater') }}</h3>
+            <p class="option-description">{{ $t('onboarding.simple.scheduleDescription') }}</p>
 
             <!-- Date/Time Selection for Schedule -->
             <div v-if="publishMode === 'schedule'" class="schedule-selection">
               <div class="datetime-inputs">
                 <div class="input-group">
-                  <label>Date</label>
+                  <label>{{ $t('common.date') }}</label>
                   <input
                     type="date"
                     v-model="scheduleDate"
@@ -897,7 +906,7 @@ function handleFacebookConnected() {
                   />
                 </div>
                 <div class="input-group">
-                  <label>Time</label>
+                  <label>{{ $t('common.time') }}</label>
                   <input
                     type="time"
                     v-model="scheduleTime"
@@ -908,7 +917,7 @@ function handleFacebookConnected() {
 
               <!-- Platform Selection for Schedule -->
               <div v-if="facebookStore.isConnected" class="platform-selection">
-                <h4 class="platform-label">Select platform:</h4>
+                <h4 class="platform-label">{{ $t('onboarding.simple.selectPlatformSingle') }}</h4>
                 <div class="platform-checkboxes">
                   <label class="platform-checkbox">
                     <input
@@ -917,7 +926,7 @@ function handleFacebookConnected() {
                       v-model="schedulePlatform"
                     />
                     <span class="checkbox-custom radio"></span>
-                    <span class="platform-name">Facebook</span>
+                    <span class="platform-name">{{ $t('platforms.facebook') }}</span>
                   </label>
                   <label class="platform-checkbox">
                     <input
@@ -926,7 +935,7 @@ function handleFacebookConnected() {
                       v-model="schedulePlatform"
                     />
                     <span class="checkbox-custom radio"></span>
-                    <span class="platform-name">Instagram</span>
+                    <span class="platform-name">{{ $t('platforms.instagram') }}</span>
                   </label>
                 </div>
               </div>
@@ -936,7 +945,7 @@ function handleFacebookConnected() {
 
         <!-- Post Preview Summary -->
         <BaseCard v-if="generatedPost" variant="glass" class="post-summary">
-          <h4 class="summary-title">Post Preview</h4>
+          <h4 class="summary-title">{{ $t('onboarding.simple.postPreview') }}</h4>
           <div class="summary-content">
             <img v-if="generatedPost.imageUrl" :src="generatedPost.imageUrl" alt="Post" class="summary-image" />
             <p class="summary-text">{{ generatedPost.postText.substring(0, 100) }}{{ generatedPost.postText.length > 100 ? '...' : '' }}</p>
@@ -961,7 +970,7 @@ function handleFacebookConnected() {
         @click="prevStep"
         :disabled="savingRestaurant || generatingPost"
       >
-        ← Back
+        {{ $t('onboarding.simple.backButton') }}
       </BaseButton>
       <div v-else></div>
 
@@ -972,7 +981,7 @@ function handleFacebookConnected() {
         @click="nextStep"
         :disabled="!canProceedStep1 || savingRestaurant"
       >
-        Continue to Create →
+        {{ $t('onboarding.simple.continueToCreate') }}
       </BaseButton>
 
       <!-- Step 2: No continue button - EasyModeCreation handles generation -->
@@ -984,7 +993,7 @@ function handleFacebookConnected() {
         @click="nextStep"
         :disabled="!canProceedStep2"
       >
-        Connect Accounts →
+        {{ $t('onboarding.simple.connectAccountsButton') }}
       </BaseButton>
 
       <!-- Step 4: Continue to Schedule Info (can skip connecting) -->
@@ -993,7 +1002,7 @@ function handleFacebookConnected() {
         variant="primary"
         @click="nextStep"
       >
-        {{ facebookStore.isConnected ? 'Next →' : 'Skip for Now →' }}
+        {{ facebookStore.isConnected ? $t('onboarding.simple.nextButton') : $t('onboarding.simple.skipForNow') + ' →' }}
       </BaseButton>
 
       <!-- Step 5: Publish or Schedule -->
@@ -1003,7 +1012,7 @@ function handleFacebookConnected() {
         @click="handlePublishOrSchedule"
         :disabled="publishing || (publishMode === 'now' && selectedPages.length === 0) || (publishMode === 'schedule' && !scheduleDate)"
       >
-        {{ publishing ? 'Publishing...' : (publishMode === 'now' ? 'Publish Now ⚡' : 'Schedule Post 📅') }}
+        {{ publishing ? $t('onboarding.simple.publishing') : (publishMode === 'now' ? $t('onboarding.simple.publishNowButton') : $t('onboarding.simple.schedulePostButton')) }}
       </BaseButton>
 
       <!-- Step 5: Skip if not connected -->
@@ -1012,7 +1021,7 @@ function handleFacebookConnected() {
         variant="primary"
         @click="showCompletion = true"
       >
-        Skip & Continue →
+        {{ $t('onboarding.simple.skipAndContinue') }}
       </BaseButton>
     </div>
 
@@ -1029,22 +1038,22 @@ function handleFacebookConnected() {
       <BaseCard variant="glass-intense" class="completion-modal" @click.stop>
         <div class="completion-content">
           <div class="completion-icon">🎉</div>
-          <h2 class="completion-title">Congratulations!</h2>
+          <h2 class="completion-title">{{ $t('onboarding.simple.congratulations') }}</h2>
           <p class="completion-message">
-            You're all set up! You can now create amazing social media posts for your restaurant.
+            {{ $t('onboarding.simple.completionMessage') }}
           </p>
           <div class="completion-features">
             <div class="feature-item">
               <span class="feature-check">✓</span>
-              <span>Restaurant added</span>
+              <span>{{ $t('onboarding.simple.restaurantAdded') }}</span>
             </div>
             <div class="feature-item">
               <span class="feature-check">✓</span>
-              <span>First post created</span>
+              <span>{{ $t('onboarding.simple.firstPostCreated') }}</span>
             </div>
             <div v-if="facebookStore.isConnected" class="feature-item">
               <span class="feature-check">✓</span>
-              <span>Accounts connected</span>
+              <span>{{ $t('onboarding.simple.accountsConnected') }}</span>
             </div>
           </div>
           <BaseButton
@@ -1053,7 +1062,7 @@ function handleFacebookConnected() {
             full-width
             @click="completeOnboarding"
           >
-            Start Creating Posts!
+            {{ $t('onboarding.simple.startCreatingPosts') }}
           </BaseButton>
         </div>
       </BaseCard>

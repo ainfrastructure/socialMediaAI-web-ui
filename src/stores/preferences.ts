@@ -19,6 +19,11 @@ export const usePreferencesStore = defineStore('preferences', () => {
     localStorage.getItem('isFirstTimeUser') !== 'false' // default true
   )
 
+  // Selected restaurant ID with localStorage persistence
+  const selectedRestaurantId = ref<string | null>(
+    localStorage.getItem('selectedRestaurantId')
+  )
+
   // Set creation mode
   function setCreationMode(mode: CreationMode) {
     creationMode.value = mode
@@ -47,18 +52,39 @@ export const usePreferencesStore = defineStore('preferences', () => {
   function resetOnboarding() {
     hasSeenFacebookOnboarding.value = false
     isFirstTimeUser.value = true
+    selectedRestaurantId.value = null
     localStorage.removeItem('hasSeenFacebookOnboarding')
     localStorage.removeItem('isFirstTimeUser')
+    localStorage.removeItem('selectedRestaurantId')
+  }
+
+  // Set selected restaurant
+  function setSelectedRestaurant(restaurantId: string | null) {
+    selectedRestaurantId.value = restaurantId
+    if (restaurantId) {
+      localStorage.setItem('selectedRestaurantId', restaurantId)
+    } else {
+      localStorage.removeItem('selectedRestaurantId')
+    }
+  }
+
+  // Clear selected restaurant
+  function clearSelectedRestaurant() {
+    selectedRestaurantId.value = null
+    localStorage.removeItem('selectedRestaurantId')
   }
 
   return {
     creationMode,
     hasSeenFacebookOnboarding,
     isFirstTimeUser,
+    selectedRestaurantId,
     setCreationMode,
     toggleMode,
     markFacebookOnboardingSeen,
     markUserExperienced,
-    resetOnboarding
+    resetOnboarding,
+    setSelectedRestaurant,
+    clearSelectedRestaurant
   }
 })

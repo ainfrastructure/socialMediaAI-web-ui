@@ -1,63 +1,65 @@
 <template>
-  <div class="pagination">
-    <button
-      class="pagination-btn"
-      :disabled="currentPage === 1"
-      @click="$emit('update:currentPage', currentPage - 1)"
-    >
-      ← Previous
-    </button>
-
-    <div class="pagination-pages">
-      <!-- First page -->
+  <div class="pagination-container">
+    <div class="pagination">
       <button
-        v-if="showFirstPage"
-        class="pagination-page"
-        :class="{ active: currentPage === 1 }"
-        @click="$emit('update:currentPage', 1)"
+        class="pagination-btn"
+        :disabled="currentPage === 1"
+        @click="$emit('update:currentPage', currentPage - 1)"
       >
-        1
+        ← Previous
       </button>
 
-      <!-- First ellipsis -->
-      <span v-if="showFirstEllipsis" class="pagination-ellipsis">...</span>
+      <div class="pagination-pages">
+        <!-- First page -->
+        <button
+          v-if="showFirstPage"
+          class="pagination-page"
+          :class="{ active: currentPage === 1 }"
+          @click="$emit('update:currentPage', 1)"
+        >
+          1
+        </button>
 
-      <!-- Page numbers around current page -->
+        <!-- First ellipsis -->
+        <span v-if="showFirstEllipsis" class="pagination-ellipsis">...</span>
+
+        <!-- Page numbers around current page -->
+        <button
+          v-for="page in visiblePages"
+          :key="page"
+          class="pagination-page"
+          :class="{ active: currentPage === page }"
+          @click="$emit('update:currentPage', page)"
+        >
+          {{ page }}
+        </button>
+
+        <!-- Last ellipsis -->
+        <span v-if="showLastEllipsis" class="pagination-ellipsis">...</span>
+
+        <!-- Last page -->
+        <button
+          v-if="showLastPage"
+          class="pagination-page"
+          :class="{ active: currentPage === totalPages }"
+          @click="$emit('update:currentPage', totalPages)"
+        >
+          {{ totalPages }}
+        </button>
+      </div>
+
       <button
-        v-for="page in visiblePages"
-        :key="page"
-        class="pagination-page"
-        :class="{ active: currentPage === page }"
-        @click="$emit('update:currentPage', page)"
+        class="pagination-btn"
+        :disabled="currentPage === totalPages"
+        @click="$emit('update:currentPage', currentPage + 1)"
       >
-        {{ page }}
-      </button>
-
-      <!-- Last ellipsis -->
-      <span v-if="showLastEllipsis" class="pagination-ellipsis">...</span>
-
-      <!-- Last page -->
-      <button
-        v-if="showLastPage"
-        class="pagination-page"
-        :class="{ active: currentPage === totalPages }"
-        @click="$emit('update:currentPage', totalPages)"
-      >
-        {{ totalPages }}
+        Next →
       </button>
     </div>
 
-    <button
-      class="pagination-btn"
-      :disabled="currentPage === totalPages"
-      @click="$emit('update:currentPage', currentPage + 1)"
-    >
-      Next →
-    </button>
-  </div>
-
-  <div class="pagination-info">
-    Page {{ currentPage }} of {{ totalPages }} ({{ totalItems }} total)
+    <div class="pagination-info">
+      Page {{ currentPage }} of {{ totalPages }} ({{ totalItems }} total)
+    </div>
   </div>
 </template>
 

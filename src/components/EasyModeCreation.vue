@@ -36,6 +36,7 @@ const emit = defineEmits<{
     styleTemplate: string
     includeLogo: boolean
     uploadedImage: File | null
+    uploadedLogo: File | null
   }): void
 }>()
 
@@ -44,7 +45,7 @@ const { t } = useI18n()
 
 // Wizard State
 const currentStep = ref(1)
-const totalSteps = 3
+const totalSteps = 2
 
 // State
 const selectedMenuItem = ref<MenuItem | null>(null)
@@ -53,6 +54,10 @@ const selectedStyleTemplate = ref<string>('vibrant')
 const includeLogo = ref(true)
 const uploadedImage = ref<File | null>(null)
 const uploadedImagePreview = ref<string | null>(null)
+
+// Logo upload state
+const uploadedLogo = ref<File | null>(null)
+const uploadedLogoPreview = ref<string | null>(null)
 
 // Pagination for menu items
 const currentPage = ref(1)
@@ -113,11 +118,20 @@ const canGenerate = computed(() => {
   return selectedMenuItem.value !== null || uploadedImage.value !== null
 })
 
+// Check if has logo (existing or uploaded)
+const hasLogo = computed(() => {
+  return props.restaurant.brand_dna?.logo_url || uploadedLogoPreview.value
+})
+
+// Get current logo URL (uploaded preview takes priority)
+const currentLogoUrl = computed(() => {
+  return uploadedLogoPreview.value || props.restaurant.brand_dna?.logo_url
+})
+
 // Step labels for progress indicator
 const stepLabels = computed(() => [
   { number: 1, label: t('easyMode.steps.menu', 'Menu') },
-  { number: 2, label: t('easyMode.steps.style', 'Style') },
-  { number: 3, label: t('easyMode.steps.review', 'Review') }
+  { number: 2, label: t('easyMode.steps.customize', 'Customize') }
 ])
 
 // Dynamic items per page calculation
@@ -184,6 +198,28 @@ function removeUploadedImage() {
   uploadedImagePreview.value = null
 }
 
+// Handle logo upload
+function handleLogoUpload(event: Event) {
+  const target = event.target as HTMLInputElement
+  const file = target.files?.[0]
+
+  if (file) {
+    uploadedLogo.value = file
+
+    // Create preview
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      uploadedLogoPreview.value = e.target?.result as string
+    }
+    reader.readAsDataURL(file)
+  }
+}
+
+function removeUploadedLogo() {
+  uploadedLogo.value = null
+  uploadedLogoPreview.value = null
+}
+
 function nextPage() {
   if (currentPage.value < totalPages.value) {
     currentPage.value++
@@ -204,7 +240,8 @@ function handleGenerate() {
     context: promptContext.value.trim(),
     styleTemplate: selectedStyleTemplate.value,
     includeLogo: includeLogo.value,
-    uploadedImage: uploadedImage.value
+    uploadedImage: uploadedImage.value,
+    uploadedLogo: uploadedLogo.value
   })
 }
 
@@ -387,122 +424,128 @@ onUnmounted(() => {
       </div>
     </BaseCard>
 
-    <!-- Step 2: Style Template Selection -->
-    <BaseCard v-show="currentStep === 2" variant="glass" class="step-card">
+    <!-- Step 2: Customize (Style + Promo + Logo) -->
+    <BaseCard v-show="currentStep === 2" variant="glass" class="step-card generate-section">
       <div class="step-header">
         <div class="step-info">
-          <h3 class="step-title">{{ t('easyMode.step2.title', 'Choose Your Style') }}</h3>
-          <p class="step-subtitle">{{ t('easyMode.step2.subtitle', 'Select the visual aesthetic for your post') }}</p>
+          <h3 class="step-title">{{ t('easyMode.step2.title', 'Customize Your Post') }}</h3>
+          <p class="step-subtitle">{{ t('easyMode.step2.subtitle', 'Choose style, add promotions, and branding') }}</p>
         </div>
       </div>
 
-      <div class="style-templates-grid">
-        <div
-          v-for="template in styleTemplates"
-          :key="template.id"
-          :class="['style-template-card', { 'selected': selectedStyleTemplate === template.id }]"
-          @click="selectStyleTemplate(template.id)"
-        >
-          <div class="template-icon">{{ template.icon }}</div>
-          <h4 class="template-name">{{ template.name }}</h4>
-          <p class="template-description">{{ template.description }}</p>
-          <div v-if="selectedStyleTemplate === template.id" class="template-selected-badge">
-            <span class="badge-icon">✓</span>
+      <!-- Style Selection -->
+      <div class="customization-section">
+        <h4 class="section-label">🎨 {{ t('easyMode.step2.styleLabel', 'Visual Style') }}</h4>
+        <div class="style-templates-grid">
+          <div
+            v-for="template in styleTemplates"
+            :key="template.id"
+            :class="['style-template-card', { 'selected': selectedStyleTemplate === template.id }]"
+            @click="selectStyleTemplate(template.id)"
+          >
+            <div class="template-icon">{{ template.icon }}</div>
+            <h4 class="template-name">{{ template.name }}</h4>
+            <p class="template-description">{{ template.description }}</p>
+            <div v-if="selectedStyleTemplate === template.id" class="template-selected-badge">
+              <span class="badge-icon">✓</span>
+            </div>
           </div>
         </div>
       </div>
 
-      <!-- Step 2 Navigation -->
-      <div class="step-navigation">
-        <BaseButton
-          variant="secondary"
-          size="large"
-          @click="prevStep"
-          class="prev-button"
-        >
-          {{ t('common.back', 'Back') }}
-        </BaseButton>
-        <BaseButton
-          variant="primary"
-          size="large"
-          @click="nextStep"
-          class="next-button"
-        >
-          {{ t('common.continue', 'Continue') }}
-        </BaseButton>
-      </div>
-    </BaseCard>
-
-    <!-- Step 3: Review & Generate (Combined Details + Generate) -->
-    <BaseCard v-show="currentStep === 3" variant="glass" class="step-card generate-section">
-      <div class="step-header">
-        <div class="step-info">
-          <h3 class="step-title">{{ t('easyMode.step3.title', 'Review & Generate') }}</h3>
-          <p class="step-subtitle">{{ t('easyMode.step3.subtitle', 'Add final touches and create your post') }}</p>
-        </div>
+      <!-- Campaign Context / Promo -->
+      <div class="customization-section">
+        <h4 class="section-label">💫 {{ t('easyMode.step2.promoLabel', 'Special Offer (Optional)') }}</h4>
+        <input
+          id="context-input"
+          v-model="promptContext"
+          type="text"
+          class="context-input-easy"
+          :placeholder="t('easyMode.step2.promoPlaceholder', 'e.g., 20% OFF, COMBO DEAL, NEW ITEM...')"
+          maxlength="50"
+        />
+        <p class="input-note">
+          {{ promptContext.length }}/50 {{ t('common.characters', 'characters') }}
+        </p>
       </div>
 
-      <!-- Optional Customization -->
-      <div class="customization-options">
-        <!-- Campaign Context -->
-        <div class="option-group">
-          <label for="context-input" class="option-label">
-            💫 {{ t('easyMode.step3.promoLabel', 'Special Offer or Promotion (Optional)') }}
+      <!-- Logo Section -->
+      <div class="customization-section">
+        <h4 class="section-label">🏷️ {{ t('easyMode.step2.logoLabel', 'Restaurant Logo') }}</h4>
+
+        <div class="logo-management">
+          <!-- Current Logo Preview -->
+          <div v-if="currentLogoUrl" class="current-logo">
+            <div class="logo-preview-container">
+              <img :src="currentLogoUrl" :alt="restaurant.name" class="logo-preview-image" />
+              <button
+                v-if="uploadedLogoPreview"
+                class="remove-logo-btn"
+                @click="removeUploadedLogo"
+                :title="t('easyMode.step2.removeLogo', 'Remove uploaded logo')"
+              >
+                ✕
+              </button>
+            </div>
+            <span class="logo-status">
+              {{ uploadedLogoPreview ? t('easyMode.step2.newLogo', 'New logo') : t('easyMode.step2.currentLogo', 'Current logo') }}
+            </span>
+          </div>
+
+          <!-- Upload New Logo -->
+          <label class="upload-logo-btn">
+            <input
+              type="file"
+              accept="image/*"
+              @change="handleLogoUpload"
+              class="upload-input"
+            />
+            <span class="upload-logo-content">
+              <span class="upload-logo-icon">📤</span>
+              <span class="upload-logo-text">
+                {{ currentLogoUrl ? t('easyMode.step2.changeLogo', 'Change logo') : t('easyMode.step2.uploadLogo', 'Upload logo') }}
+              </span>
+            </span>
           </label>
-          <input
-            id="context-input"
-            v-model="promptContext"
-            type="text"
-            class="context-input-easy"
-            :placeholder="t('easyMode.step3.promoPlaceholder', 'e.g., 20% OFF, COMBO DEAL, NEW ITEM...')"
-            maxlength="50"
-          />
-          <p class="input-note">
-            {{ promptContext.length }}/50 characters
-          </p>
-        </div>
 
-        <!-- Logo Toggle -->
-        <div class="option-group" v-if="restaurant.brand_dna?.logo_url">
-          <label class="checkbox-label-easy">
+          <!-- Include Logo Toggle -->
+          <label v-if="hasLogo" class="checkbox-label-easy">
             <input
               type="checkbox"
               v-model="includeLogo"
               class="checkbox-input-easy"
             />
             <span class="checkbox-text">
-              <span class="checkbox-icon">🏷️</span>
-              <span>{{ t('easyMode.step3.includeLogo', 'Include restaurant logo') }}</span>
+              <span>{{ t('easyMode.step2.includeLogo', 'Include logo on image') }}</span>
             </span>
           </label>
-          <p class="option-hint">{{ t('easyMode.step3.logoHint', 'Your logo will be placed on the image automatically') }}</p>
         </div>
       </div>
 
       <!-- Summary of selections -->
       <div class="generate-summary">
-        <h4 class="summary-title">{{ t('easyMode.step3.summaryTitle', 'Your Selections:') }}</h4>
+        <h4 class="summary-title">{{ t('easyMode.step2.summaryTitle', 'Your Selections:') }}</h4>
         <div class="generate-features">
           <div class="feature-item">
             <span class="feature-icon">🎨</span>
-            <span class="feature-text">{{ styleTemplates.find(t => t.id === selectedStyleTemplate)?.name }} {{ t('easyMode.step3.style', 'style') }}</span>
+            <span class="feature-text">{{ styleTemplates.find(t => t.id === selectedStyleTemplate)?.name }} {{ t('easyMode.step2.style', 'style') }}</span>
           </div>
           <div class="feature-item">
             <span class="feature-icon">📝</span>
-            <span class="feature-text">{{ t('easyMode.step3.postText', 'Engaging post text') }}</span>
+            <span class="feature-text">{{ t('easyMode.step2.postText', 'Engaging post text') }}</span>
           </div>
-          <div v-if="includeLogo && restaurant.brand_dna?.logo_url" class="feature-item">
+          <div v-if="includeLogo && hasLogo" class="feature-item">
             <span class="feature-icon">🏷️</span>
-            <span class="feature-text">{{ t('easyMode.step3.branding', 'Restaurant branding') }}</span>
+            <span class="feature-text">{{ t('easyMode.step2.branding', 'Restaurant branding') }}</span>
           </div>
           <div v-if="promptContext" class="feature-item">
             <span class="feature-icon">💫</span>
-            <span class="feature-text">{{ t('easyMode.step3.promo', 'Promotional sticker') }}</span>
+            <span class="feature-text">{{ t('easyMode.step2.promo', 'Promotional sticker') }}</span>
           </div>
         </div>
       </div>
 
-      <!-- Step 3 Navigation -->
+      <!-- Step 2 Navigation -->
       <div class="step-navigation">
         <BaseButton
           variant="secondary"
@@ -521,9 +564,9 @@ onUnmounted(() => {
         >
           <span v-if="props.generating" class="generating-content">
             <span class="spinner"></span>
-            {{ t('easyMode.step3.generating', 'Cooking up your post...') }}
+            {{ t('easyMode.step2.generating', 'Cooking up your post...') }}
           </span>
-          <span v-else>{{ t('easyMode.step3.generateButton', '✨ Generate Picture (1 credit)') }}</span>
+          <span v-else>{{ t('easyMode.step2.generateButton', '✨ Generate Picture (1 credit)') }}</span>
         </BaseButton>
       </div>
     </BaseCard>
@@ -862,6 +905,119 @@ onUnmounted(() => {
   background: var(--gradient-gold);
   border-radius: var(--radius-full);
   box-shadow: var(--shadow-md);
+}
+
+/* Customization Sections */
+.customization-section {
+  margin-bottom: var(--space-2xl);
+  padding-bottom: var(--space-2xl);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.customization-section:last-of-type {
+  border-bottom: none;
+  margin-bottom: var(--space-xl);
+  padding-bottom: 0;
+}
+
+.section-label {
+  font-family: var(--font-heading);
+  font-size: var(--text-lg);
+  color: var(--text-primary);
+  margin: 0 0 var(--space-lg) 0;
+  font-weight: var(--font-semibold);
+}
+
+/* Logo Management */
+.logo-management {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-xl);
+}
+
+.current-logo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.logo-preview-container {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  border: 2px solid var(--gold-primary);
+  background: var(--bg-secondary);
+}
+
+.logo-preview-image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.remove-logo-btn {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--error-bg);
+  border: none;
+  border-radius: var(--radius-full);
+  color: var(--error-text);
+  font-size: var(--text-sm);
+  cursor: pointer;
+  transition: var(--transition-base);
+}
+
+.remove-logo-btn:hover {
+  background: var(--error-border);
+  transform: scale(1.1);
+}
+
+.logo-status {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+}
+
+.upload-logo-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-lg) var(--space-xl);
+  background: var(--bg-secondary);
+  border: 2px dashed var(--border-color);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: var(--transition-base);
+}
+
+.upload-logo-btn:hover {
+  border-color: var(--gold-primary);
+  background: var(--gold-subtle);
+}
+
+.upload-logo-content {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.upload-logo-icon {
+  font-size: var(--text-xl);
+}
+
+.upload-logo-text {
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  color: var(--text-primary);
 }
 
 /* Customization Options */

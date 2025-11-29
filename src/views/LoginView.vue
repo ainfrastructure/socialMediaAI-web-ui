@@ -218,7 +218,7 @@ async function handleForgotPassword() {
         </BaseButton>
 
         <div v-if="!disableSignup" class="divider">
-          <span>OR</span>
+          <span>{{ $t('common.or') }}</span>
         </div>
 
         <BaseButton
@@ -229,7 +229,7 @@ async function handleForgotPassword() {
           full-width
           @click="toggleMagicLink"
         >
-          Login with Magic Link
+          {{ $t('auth.loginWithMagicLink') }}
         </BaseButton>
 
         <BaseButton
@@ -261,7 +261,7 @@ async function handleForgotPassword() {
           full-width
           :disabled="authStore.loading"
         >
-          Send Magic Link
+          {{ $t('auth.sendMagicLink') }}
         </BaseButton>
 
         <BaseButton

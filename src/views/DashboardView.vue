@@ -133,19 +133,14 @@ onMounted(async () => {
         </p>
       </div>
 
-      <!-- Onboarding Test Button -->
-      <BaseCard variant="glass" class="onboarding-test-card">
-        <div class="test-header">
-          <span class="test-badge">{{ $t('dashboard.forTesting') }}</span>
-          <h3 class="test-title">{{ $t('dashboard.tryOnboarding') }}</h3>
-        </div>
-        <p class="test-description">
-          {{ $t('dashboard.tryOnboardingDescription') }}
-        </p>
+      <div class="hero-section">
         <BaseButton variant="primary" @click="router.push('/onboarding')">
           {{ $t('dashboard.launchOnboarding') }}
         </BaseButton>
-      </BaseCard>
+      </div>
+
+      <!-- Onboarding Test Button -->
+     
 
       <!-- Quick Stats -->
       <div class="stats-grid">
@@ -202,7 +197,7 @@ onMounted(async () => {
           <BaseButton variant="secondary" size="small">{{ $t('dashboard.openCalendar') }}</BaseButton>
         </BaseCard>
 
-        <BaseCard variant="glass" hoverable class="action-card" @click="router.push('/posts')">
+        <BaseCard variant="glass" hoverable class="action-card" @click="router.push('/content')">
           <div class="action-icon">📝</div>
           <h3 class="action-title">{{ $t('dashboard.viewPosts') }}</h3>
           <p class="action-description">{{ $t('dashboard.viewPostsDescription') }}</p>

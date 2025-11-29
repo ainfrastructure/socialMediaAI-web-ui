@@ -25,7 +25,7 @@ async function handleComplete() {
     <div class="container">
       <!-- Header -->
       <div class="header">
-        <h1 class="brand-title">Welcome to SocialChef!</h1>
+        <h1 class="brand-title">{{ $t('onboarding.tour.welcomeTitle') }}</h1>
         <p class="brand-subtitle">Let's create your first post together</p>
       </div>
 

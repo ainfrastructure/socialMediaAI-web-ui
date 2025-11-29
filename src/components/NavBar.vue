@@ -9,12 +9,8 @@
 
       <!-- Navigation Links -->
       <div class="nav-links">
-        <router-link to="/cook-up" class="nav-link" active-class="active">
-          {{ $t('nav.cookUp') }}
-        </router-link>
-
-        <router-link to="/posts" class="nav-link" active-class="active">
-          {{ $t('nav.posts') }}
+        <router-link to="/content" class="nav-link" active-class="active">
+          {{ $t('nav.content') }}
         </router-link>
 
         <router-link to="/scheduler" class="nav-link" active-class="active">

@@ -51,7 +51,7 @@
             <img
               v-if="post.content_type === 'image'"
               :src="post.media_url"
-              alt="Post"
+              :alt="$t('posts.postAlt')"
               class="post-media"
             />
             <video
@@ -123,10 +123,10 @@
     <!-- Delete Confirmation Modal -->
     <ConfirmModal
       v-model="showDeleteModal"
-      title="Delete Post"
-      message="Are you sure you want to delete this post? This action cannot be undone."
-      confirm-text="Delete"
-      cancel-text="Cancel"
+      :title="$t('posts.deleteModalTitle')"
+      :message="$t('posts.deleteModalMessage')"
+      :confirm-text="$t('common.delete')"
+      :cancel-text="$t('common.cancel')"
       type="danger"
       :loading="deletingPost"
       @confirm="handleDeleteConfirm"
@@ -147,7 +147,7 @@
             <img
               v-if="selectedPost.content_type === 'image'"
               :src="selectedPost.media_url"
-              alt="Post"
+              :alt="$t('posts.postAlt')"
               class="detail-media"
             />
             <video
@@ -206,7 +206,7 @@
                   v-model="newHashtag"
                   @keydown.enter.prevent="addHashtag"
                   @keydown.,.prevent="addHashtag"
-                  placeholder="Add hashtag and press Enter..."
+                  :placeholder="$t('posts.addHashtagPlaceholder')"
                   class="hashtag-input"
                 />
               </div>
@@ -220,13 +220,13 @@
 
             <!-- Platform -->
             <div v-if="selectedPost.platform || isEditMode" class="detail-section">
-              <h4>Platform</h4>
+              <h4>{{ $t('posts.platformSection') }}</h4>
               <select v-if="isEditMode" v-model="selectedPost.platform" class="edit-select">
-                <option value="instagram">Instagram</option>
-                <option value="facebook">Facebook</option>
-                <option value="tiktok">TikTok</option>
-                <option value="twitter">Twitter</option>
-                <option value="linkedin">LinkedIn</option>
+                <option value="instagram">{{ $t('platforms.instagram') }}</option>
+                <option value="facebook">{{ $t('platforms.facebook') }}</option>
+                <option value="tiktok">{{ $t('platforms.tiktok') }}</option>
+                <option value="twitter">{{ $t('platforms.twitter') }}</option>
+                <option value="linkedin">{{ $t('platforms.linkedin') }}</option>
               </select>
               <p v-else class="full-text" style="text-transform: capitalize;">{{ selectedPost.platform }}</p>
             </div>
@@ -242,23 +242,23 @@
               <!-- Edit Mode Buttons -->
               <template v-if="isEditMode">
                 <BaseButton variant="primary" @click="saveChanges">
-                  💾 Save Changes
+                  {{ $t('posts.saveChangesButton') }}
                 </BaseButton>
                 <BaseButton variant="ghost" @click="cancelEdit">
-                  ✖ Cancel
+                  {{ $t('posts.cancelChangesButton') }}
                 </BaseButton>
               </template>
 
               <!-- View Mode Buttons -->
               <template v-else>
                 <BaseButton variant="secondary" @click="enableEditMode">
-                  ✏️ Edit
+                  {{ $t('posts.editButton') }}
                 </BaseButton>
                 <BaseButton variant="primary" @click="schedulePost(selectedPost)">
-                  📅 Schedule Post
+                  {{ $t('posts.scheduleButton') }}
                 </BaseButton>
                 <BaseButton variant="danger" @click="confirmDeleteFromModal">
-                  🗑️ Delete
+                  {{ $t('posts.deleteButton') }}
                 </BaseButton>
               </template>
             </div>

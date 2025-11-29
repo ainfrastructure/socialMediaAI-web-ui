@@ -44,7 +44,7 @@ function handleClose() {
     <div v-if="modelValue" class="modal-overlay" @click.self="handleClose">
       <BaseCard variant="glass-intense" class="modal-card">
         <!-- Close button -->
-        <button class="close-button" @click="handleClose" title="Close">
+        <button class="close-button" @click="handleClose" :title="$t('common.close')">
           ✕
         </button>
 
@@ -62,33 +62,33 @@ function handleClose() {
         </div>
 
         <!-- Title -->
-        <h2 class="modal-title">Connect to Facebook</h2>
+        <h2 class="modal-title">{{ $t('facebookOnboarding.title') }}</h2>
 
         <!-- Description -->
         <p class="modal-description">
-          To publish or schedule posts to your Facebook pages, you'll need to connect your Facebook account first.
+          {{ $t('facebookOnboarding.description') }}
         </p>
 
         <!-- Benefits list -->
         <ul class="benefits-list">
           <li class="benefit-item">
             <span class="benefit-icon">✓</span>
-            <span>Publish directly to your pages</span>
+            <span>{{ $t('facebookOnboarding.benefit1') }}</span>
           </li>
           <li class="benefit-item">
             <span class="benefit-icon">✓</span>
-            <span>Schedule posts in advance</span>
+            <span>{{ $t('facebookOnboarding.benefit2') }}</span>
           </li>
           <li class="benefit-item">
             <span class="benefit-icon">✓</span>
-            <span>Manage multiple pages from one place</span>
+            <span>{{ $t('facebookOnboarding.benefit3') }}</span>
           </li>
         </ul>
 
         <!-- Security note -->
         <div class="security-note">
           <span class="security-icon">🔒</span>
-          <span class="security-text">Your credentials are secured with industry-standard encryption</span>
+          <span class="security-text">{{ $t('facebookOnboarding.securityNote') }}</span>
         </div>
 
         <!-- Action buttons -->
@@ -100,7 +100,7 @@ function handleClose() {
             :disabled="connecting"
             @click="handleConnect"
           >
-            {{ connecting ? 'Connecting...' : 'Connect Facebook' }}
+            {{ connecting ? $t('facebookOnboarding.connecting') : $t('facebookOnboarding.connectButton') }}
           </BaseButton>
 
           <BaseButton
@@ -109,7 +109,7 @@ function handleClose() {
             full-width
             @click="handleRemindLater"
           >
-            Remind Me Later
+            {{ $t('facebookOnboarding.remindLater') }}
           </BaseButton>
         </div>
       </BaseCard>

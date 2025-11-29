@@ -3,6 +3,7 @@ export default {
   nav: {
     cookUp: 'Lag innhold',
     posts: 'Innlegg',
+    content: 'Innhold',
     calendar: 'Kalender',
     login: 'Logg inn',
   },
@@ -36,12 +37,52 @@ export default {
     submit: 'Send',
     selectAll: 'Velg alle',
     deselectAll: 'Fjern alle',
+    or: 'ELLER',
+    date: 'Dato',
+    time: 'Tid',
+    am: 'AM',
+    pm: 'PM',
+    processing: 'Behandler...',
+    pleaseWait: 'Vennligst vent...',
+    redirecting: 'Omdirigerer...',
+    characters: 'tegn',
+    continue: 'Fortsett',
+    retry: 'Prøv igjen',
+  },
+
+  // Platforms
+  platforms: {
+    facebook: 'Facebook',
+    instagram: 'Instagram',
+    tiktok: 'TikTok',
+    twitter: 'Twitter/X',
+    linkedin: 'LinkedIn',
+    facebookWithIcon: '👥 Facebook',
+    instagramWithIcon: '📷 Instagram',
+    tiktokWithIcon: '🎵 TikTok',
+    twitterWithIcon: '🐦 Twitter/X',
+    linkedinWithIcon: '💼 LinkedIn',
+  },
+
+  // Timezones
+  timezones: {
+    utc: 'UTC (Koordinert universaltid)',
+    eastern: 'Eastern Time (ET)',
+    central: 'Central Time (CT)',
+    mountain: 'Mountain Time (MT)',
+    pacific: 'Pacific Time (PT)',
+    london: 'London (GMT/BST)',
+    paris: 'Paris (CET/CEST)',
+    oslo: 'Oslo (CET/CEST)',
+    tokyo: 'Tokyo (JST)',
+    dubai: 'Dubai (GST)',
+    sydney: 'Sydney (AEDT/AEST)',
   },
 
   // Auth / Login View
   auth: {
     login: 'Logg inn',
-    loginTitle: 'Velkommen tilbake',
+    loginTitle: 'Velkommen',
     loginSubtitle: 'Logg inn på kontoen din',
     brandSubtitle: 'AI-drevet innhold for restauranter',
     email: 'E-post',
@@ -61,13 +102,15 @@ export default {
     backToLogin: 'Tilbake til innlogging',
     checkEmail: 'Sjekk e-posten din for en tilbakestillingslenke',
     invalidCredentials: 'Ugyldige påloggingsdetaljer',
+    loginWithMagicLink: 'Logg inn med Magic Link',
+    sendMagicLink: 'Send Magic Link',
   },
 
   // Dashboard View
   dashboard: {
     title: 'Dashbord',
-    welcome: 'Velkommen tilbake, {name}!',
-    welcomeBack: 'Velkommen tilbake, {name}! 👋',
+    welcome: 'Velkommen, {name}!',
+    welcomeBack: 'Velkommen, {name}! 👋',
     readyToCreate: 'Klar til å lage fantastisk innhold for restaurantene dine?',
     overview: 'Oversikt',
     recentActivity: 'Nylig aktivitet',
@@ -96,11 +139,7 @@ export default {
     viewPlans: 'Vis planer',
     manageSubscription: 'Administrer abonnement',
 
-    // Testing section
-    forTesting: '🧪 For testing',
-    tryOnboarding: 'Prøv introduksjonsflyten',
-    tryOnboardingDescription: 'Klikk nedenfor for å oppleve den nye brukerintroduksjonen og quizen',
-    launchOnboarding: 'Start introduksjonsopplevelse',
+    launchOnboarding: 'Start',
 
     // Stats
     postsCreated: 'Innlegg opprettet',
@@ -406,6 +445,46 @@ export default {
       allSet: 'Du er klar!',
       startCreating: 'Begynn å lage fantastisk innhold',
       goToDashboard: 'Gå til dashbord',
+      // Stepper labels
+      stepRestaurant: 'Restaurant',
+      stepCreate: 'Lag',
+      stepReview: 'Gjennomgang',
+      stepConnect: 'Koble til',
+      stepPublish: 'Publiser',
+      // Platform descriptions
+      facebookDescription: 'Publiser til Facebook-sidene dine',
+      instagramDescription: 'Publiser til din Instagram-bedriftskonto',
+      instagramRequiresFacebook: 'Instagram krever Facebook-tilkobling',
+      connectedStatus: '✓ Tilkoblet',
+      connectedViaFacebook: '✓ Tilkoblet via Facebook',
+      connectInstagram: 'Koble til Instagram',
+      // Publish step
+      publishTitle: 'Publiser innlegget ditt',
+      publishSubtitle: 'Velg hvordan du vil dele innholdet ditt',
+      publishNow: 'Publiser nå',
+      publishNowDescription: 'Publiser umiddelbart til dine tilkoblede sosiale kontoer',
+      scheduleForLater: 'Planlegg for senere',
+      scheduleDescription: 'Velg en dato og tid for når innlegget skal publiseres',
+      selectPlatforms: 'Velg plattformer:',
+      selectPlatformSingle: 'Velg plattform:',
+      postPreview: 'Forhåndsvisning av innlegg',
+      connectionWarning: '⚠️ Du har ikke koblet til noen sosiale kontoer ennå. Gå tilbake for å koble til Facebook/Instagram først, eller hopp over for å fortsette uten publisering.',
+      // Completion modal
+      congratulations: 'Gratulerer!',
+      completionMessage: 'Du er klar! Du kan nå lage fantastiske innlegg for sosiale medier for restauranten din.',
+      restaurantAdded: 'Restaurant lagt til',
+      firstPostCreated: 'Første innlegg opprettet',
+      accountsConnected: 'Kontoer tilkoblet',
+      startCreatingPosts: 'Begynn å lage innlegg!',
+      // Navigation buttons
+      backButton: '← Tilbake',
+      continueToCreate: 'Fortsett til opprettelse →',
+      connectAccountsButton: 'Koble til kontoer →',
+      nextButton: 'Neste →',
+      skipAndContinue: 'Hopp over & fortsett →',
+      publishing: 'Publiserer...',
+      publishNowButton: 'Publiser nå ⚡',
+      schedulePostButton: 'Planlegg innlegg 📅',
     },
   },
 
@@ -587,6 +666,44 @@ export default {
     menuItemsCount: '{count} menyelement | {count} menyelementer',
   },
 
+  // Easy Mode Creation
+  easyMode: {
+    steps: {
+      menu: 'Meny',
+      customize: 'Tilpass',
+    },
+    step1: {
+      title: 'Velg rett eller last opp bilde',
+      subtitle: 'Velg et menyelement eller last opp ditt eget bilde',
+      empty: 'Ingen menyelementer tilgjengelig. Last opp et bilde for å fortsette.',
+    },
+    step2: {
+      title: 'Tilpass innlegget ditt',
+      subtitle: 'Velg stil, legg til kampanjer og merkevarebygging',
+      styleLabel: 'Visuell stil',
+      promoLabel: 'Spesialtilbud (valgfritt)',
+      promoPlaceholder: 'f.eks. 20% RABATT, KOMBOTILBUD, NY RETT...',
+      logoLabel: 'Restaurant logo',
+      currentLogo: 'Nåværende logo',
+      newLogo: 'Ny logo',
+      uploadLogo: 'Last opp logo',
+      changeLogo: 'Bytt logo',
+      removeLogo: 'Fjern opplastet logo',
+      includeLogo: 'Inkluder logo på bildet',
+      summaryTitle: 'Dine valg:',
+      style: 'stil',
+      postText: 'Engasjerende innleggstekst',
+      branding: 'Restaurant merkevare',
+      promo: 'Kampanjeklistremerke',
+      generating: 'Lager innlegget ditt...',
+      generateButton: '✨ Generer bilde (1 kreditt)',
+    },
+    upload: {
+      button: 'Last opp ditt eget bilde',
+      hint: 'JPG, PNG eller WebP',
+    },
+  },
+
   // Connect Accounts View
   connectAccounts: {
     title: 'Koble sosiale kontoer',
@@ -708,6 +825,62 @@ export default {
     image: 'bilde',
     video: 'video',
     restaurant: 'Restaurant',
+    // Additional post actions
+    deleteModalTitle: 'Slett innlegg',
+    deleteModalMessage: 'Er du sikker på at du vil slette dette innlegget? Denne handlingen kan ikke angres.',
+    addHashtagPlaceholder: 'Legg til hashtag og trykk Enter...',
+    platformSection: 'Plattform',
+    saveChangesButton: '💾 Lagre endringer',
+    cancelChangesButton: '✖ Avbryt',
+    editButton: '✏️ Rediger',
+    scheduleButton: '📅 Planlegg innlegg',
+    deleteButton: '🗑️ Slett',
+    postAlt: 'Innlegg',
+  },
+
+  // Content Hub View
+  contentHub: {
+    title: 'Innhold',
+    loading: 'Laster innholdet ditt...',
+    createNew: 'Lag nytt innhold',
+    createDescription: 'Generer bilder og innlegg for restauranten din',
+    startCreating: 'Start å lage',
+    yourPosts: 'Dine innlegg',
+    changeRestaurant: 'Endre restaurant',
+    noPosts: 'Ingen innlegg ennå',
+    noPostsDescription: 'Lag ditt første innlegg for å komme i gang!',
+    loadError: 'Kunne ikke laste innhold',
+    noRestaurant: 'Ingen restaurant valgt',
+    filterAll: 'Alle',
+    filterPlatform: 'Plattform',
+    filterContentType: 'Innholdstype',
+    sortNewest: 'Nyeste først',
+    sortOldest: 'Eldste først',
+    menuItems: '{count} menyelementer',
+  },
+
+  // Content Create View
+  contentCreate: {
+    title: 'Lag innhold',
+    loading: 'Laster...',
+    loadError: 'Kunne ikke laste restaurant',
+    advancedMode: 'Avansert modus',
+    advancedDescription: 'Avansert modus med full tilpasning kommer snart.',
+    switchToEasy: 'Bytt til enkel modus',
+    imageError: 'Kunne ikke generere bilde. Prøv igjen.',
+    noPrompts: 'Ingen ledetekster ble generert',
+    generateError: 'Kunne ikke generere innhold',
+    publishError: 'Kunne ikke publisere til Facebook',
+    connectError: 'Kunne ikke koble til Facebook',
+  },
+
+  // Restaurant Selector Modal
+  restaurantSelector: {
+    title: 'Velg restaurant',
+    addNew: '+ Legg til ny restaurant',
+    menuItems: '{count} menyelementer',
+    delete: 'Fjern restaurant',
+    confirmDelete: 'Er du sikker på at du vil fjerne "{name}" fra dine lagrede restauranter?',
   },
 
   // Profile View
@@ -878,5 +1051,64 @@ export default {
     en: 'Engelsk',
     no: 'Norsk',
     selectLanguage: 'Velg språk',
+  },
+
+  // Schedule Modal
+  scheduleModal: {
+    title: 'Planlegg innlegg',
+    preview: 'Forhåndsvisning',
+    dateLabel: 'Dato',
+    dateHint: '📅 Dato forhåndsutfylt fra kalendervalg',
+    timeLabel: 'Tid (Valgfritt)',
+    selectedTime: 'Valgt: {time}',
+    timezoneLabel: 'Tidssone',
+    autoDetected: '(Automatisk oppdaget)',
+    currentTime: '🕐 Nåværende tid: {time}',
+    platformLabel: 'Plattform',
+    selectPlatform: 'Velg en plattform...',
+    platformWarning: '⚠️ Vennligst velg en plattform å publisere til',
+    platformLimited: '⚠️ Kun Facebook støttes for øyeblikket. Andre plattformer kommer snart.',
+    notesLabel: 'Notater (Valgfritt)',
+    notesPlaceholder: 'Legg til notater om dette planlagte innlegget...',
+    scheduling: 'Planlegger...',
+  },
+
+  // Facebook Onboarding Modal
+  facebookOnboarding: {
+    title: 'Koble til Facebook',
+    description: 'For å publisere eller planlegge innlegg til Facebook-sidene dine, må du først koble til Facebook-kontoen din.',
+    benefit1: 'Publiser direkte til sidene dine',
+    benefit2: 'Planlegg innlegg på forhånd',
+    benefit3: 'Administrer flere sider fra ett sted',
+    securityNote: 'Påloggingsinformasjonen din er sikret med industristandard kryptering',
+    connecting: 'Kobler til...',
+    connectButton: 'Koble til Facebook',
+    remindLater: 'Minn meg på senere',
+  },
+
+  // Confirm Modal
+  confirmModal: {
+    defaultTitle: 'Bekreft handling',
+    defaultConfirm: 'Bekreft',
+    defaultCancel: 'Avbryt',
+    defaultLoading: 'Behandler...',
+  },
+
+  // Pick Post Modal
+  pickPostModal: {
+    pickTitle: 'Velg et lagret innlegg',
+    scheduleTitle: 'Planlegg innlegget ditt',
+    loadingPosts: 'Laster innlegg...',
+    noPostsYet: 'Ingen innlegg ennå! Lag innhold i Playground først.',
+    goToPlayground: 'Gå til Playground',
+    previous: '← Forrige',
+    pageInfo: 'Side {current} av {total} ({count} innlegg)',
+  },
+
+  // Generation Result Modal
+  generationModal: {
+    failedTitle: 'Generering mislyktes',
+    successTitle: 'Innlegget ditt er klart!',
+    loadingTitle: 'Lager innlegget ditt...',
   },
 }

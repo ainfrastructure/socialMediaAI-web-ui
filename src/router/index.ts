@@ -15,6 +15,8 @@ import PostsView from '../views/PostsView.vue'
 import ProfileView from '../views/ProfileView.vue'
 import SavedRestaurantsView from '../views/SavedRestaurantsView.vue'
 import OnboardingView from '../views/OnboardingView.vue'
+import ContentHubView from '../views/ContentHubView.vue'
+import ContentCreateView from '../views/ContentCreateView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -97,10 +99,20 @@ const router = createRouter({
       meta: { requiresAuth: true },
     },
     {
-      path: '/cook-up',
-      name: 'cook-up',
-      component: PlaygroundView,
+      path: '/content',
+      name: 'content',
+      component: ContentHubView,
       meta: { requiresAuth: true },
+    },
+    {
+      path: '/content/create',
+      name: 'content-create',
+      component: ContentCreateView,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/cook-up',
+      redirect: '/content',
     },
     {
       path: '/connect-accounts',
@@ -122,9 +134,7 @@ const router = createRouter({
     },
     {
       path: '/posts',
-      name: 'posts',
-      component: PostsView,
-      meta: { requiresAuth: true },
+      redirect: '/content',
     },
     {
       path: '/profile',

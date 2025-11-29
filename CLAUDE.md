@@ -3,15 +3,96 @@
 This document explains how to create new components, views, and features while maintaining the premium, elegant dark aesthetic of this application.
 
 ## Table of Contents
-1. [Design Philosophy](#design-philosophy)
-2. [Architecture Overview](#architecture-overview)
-3. [Using Existing Components](#using-existing-components)
-4. [Creating New Components](#creating-new-components)
-5. [Color Usage Guidelines](#color-usage-guidelines)
-6. [Typography Guidelines](#typography-guidelines)
-7. [Spacing & Layout](#spacing--layout)
-8. [Animation Guidelines](#animation-guidelines)
-9. [Common Patterns](#common-patterns)
+1. [Internationalization (i18n)](#internationalization-i18n)
+2. [Design Philosophy](#design-philosophy)
+3. [Architecture Overview](#architecture-overview)
+4. [Using Existing Components](#using-existing-components)
+5. [Creating New Components](#creating-new-components)
+6. [Color Usage Guidelines](#color-usage-guidelines)
+7. [Typography Guidelines](#typography-guidelines)
+8. [Spacing & Layout](#spacing--layout)
+9. [Animation Guidelines](#animation-guidelines)
+10. [Common Patterns](#common-patterns)
+
+---
+
+## Internationalization (i18n)
+
+**IMPORTANT: NEVER hardcode user-facing text in components.**
+
+All text visible to users MUST be placed in the translation files and accessed via `$t()` or `t()`.
+
+### Translation Files
+- English: `src/i18n/locales/en.ts`
+- Norwegian: `src/i18n/locales/no.ts`
+
+### How to Add New Text
+
+1. **Add the key to both language files:**
+```typescript
+// en.ts
+mySection: {
+  myLabel: 'My Label',
+  myButton: 'Click Me',
+}
+
+// no.ts
+mySection: {
+  myLabel: 'Min etikett',
+  myButton: 'Klikk meg',
+}
+```
+
+2. **Use in templates with `$t()`:**
+```vue
+<template>
+  <h1>{{ $t('mySection.myLabel') }}</h1>
+  <button>{{ $t('mySection.myButton') }}</button>
+</template>
+```
+
+3. **Use in scripts with `useI18n()`:**
+```typescript
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
+const message = t('mySection.myLabel')
+```
+
+4. **For dynamic values, use interpolation:**
+```typescript
+// en.ts
+greeting: 'Hello, {name}!'
+
+// Component
+{{ $t('greeting', { name: userName }) }}
+```
+
+### Existing Key Sections
+- `common` - Shared UI terms (cancel, save, delete, etc.)
+- `platforms` - Platform names (Facebook, Instagram, etc.)
+- `timezones` - Timezone labels
+- `auth` - Login/authentication
+- `dashboard` - Dashboard view
+- `posts` - Posts management
+- `scheduler` - Scheduler view
+- `onboarding` - Onboarding flows
+- `scheduleModal` - Schedule modal
+- `facebookOnboarding` - Facebook connection modal
+
+### What to NEVER Do
+- ❌ Hardcode text directly in templates: `<h1>Welcome</h1>`
+- ❌ Hardcode text in placeholders: `placeholder="Enter email"`
+- ❌ Hardcode button labels: `<button>Submit</button>`
+- ❌ Hardcode error messages in scripts
+- ❌ Hardcode alt text for images
+
+### What to ALWAYS Do
+- ✅ Use `$t('key')` in templates
+- ✅ Use `t('key')` in scripts after importing `useI18n`
+- ✅ Add keys to BOTH `en.ts` and `no.ts`
+- ✅ Use interpolation for dynamic content
+- ✅ Reuse existing keys from `common` when possible
 
 ---
 

@@ -3,14 +3,14 @@
     <div v-if="modelValue" class="modal-overlay" @click.self="closeModal">
       <BaseCard variant="glass-intense" class="modal-card">
         <div class="modal-header">
-          <h3 class="modal-title">Schedule Post</h3>
+          <h3 class="modal-title">{{ $t('scheduleModal.title') }}</h3>
           <button class="close-btn" @click="closeModal">&times;</button>
         </div>
 
         <div class="modal-body">
           <!-- Preview -->
           <div v-if="favoritePost" class="preview-section">
-            <h4 class="section-title">Preview</h4>
+            <h4 class="section-title">{{ $t('scheduleModal.preview') }}</h4>
             <div class="preview-content">
               <img
                 v-if="favoritePost.content_type === 'image'"
@@ -34,19 +34,19 @@
           <form @submit.prevent="handleSchedule" class="schedule-form">
             <div class="form-group">
               <label for="scheduled_date" class="form-label">
-                Date <span class="required">*</span>
+                {{ $t('scheduleModal.dateLabel') }} <span class="required">*</span>
               </label>
               <DatePicker
                 v-model="formData.scheduled_date"
                 :min-date="today"
               />
               <p v-if="preselectedDate" class="date-hint">
-                📅 Date pre-filled from calendar selection
+                {{ $t('scheduleModal.dateHint') }}
               </p>
             </div>
 
             <div class="form-group">
-              <label class="form-label">Time (Optional)</label>
+              <label class="form-label">{{ $t('scheduleModal.timeLabel') }}</label>
               <div class="time-picker">
                 <select v-model="selectedHour" class="time-select">
                   <option v-for="hour in hours" :key="hour" :value="hour">
@@ -60,18 +60,18 @@
                   </option>
                 </select>
                 <select v-model="selectedPeriod" class="period-select">
-                  <option value="AM">AM</option>
-                  <option value="PM">PM</option>
+                  <option value="AM">{{ $t('common.am') }}</option>
+                  <option value="PM">{{ $t('common.pm') }}</option>
                 </select>
               </div>
-              <p class="time-hint">Selected: {{ selectedHour }}:{{ selectedMinute }} {{ selectedPeriod }}</p>
+              <p class="time-hint">{{ $t('scheduleModal.selectedTime', { time: `${selectedHour}:${selectedMinute} ${selectedPeriod}` }) }}</p>
             </div>
 
             <div class="form-group">
               <label for="timezone" class="form-label">
-                Timezone
+                {{ $t('scheduleModal.timezoneLabel') }}
                 <span v-if="formData.timezone === userTimezone" class="detected-badge">
-                  (Auto-detected)
+                  {{ $t('scheduleModal.autoDetected') }}
                 </span>
               </label>
               <select id="timezone" v-model="formData.timezone" class="form-select timezone-select">
@@ -84,38 +84,38 @@
                 </option>
               </select>
               <p class="timezone-hint">
-                🕐 Current time: {{ getCurrentTimeInTimezone(formData.timezone) }}
+                {{ $t('scheduleModal.currentTime', { time: getCurrentTimeInTimezone(formData.timezone) }) }}
               </p>
             </div>
 
             <div class="form-group">
               <label for="platform" class="form-label">
-                Platform <span class="required">*</span>
+                {{ $t('scheduleModal.platformLabel') }} <span class="required">*</span>
               </label>
               <select id="platform" v-model="formData.platform" class="form-select platform-select">
-                <option value="">Select a platform...</option>
-                <option value="facebook">👥 Facebook</option>
-                <option value="instagram">📷 Instagram</option>
-                <option value="tiktok">🎵 TikTok</option>
-                <option value="twitter">🐦 Twitter/X</option>
-                <option value="linkedin">💼 LinkedIn</option>
+                <option value="">{{ $t('scheduleModal.selectPlatform') }}</option>
+                <option value="facebook">{{ $t('platforms.facebookWithIcon') }}</option>
+                <option value="instagram">{{ $t('platforms.instagramWithIcon') }}</option>
+                <option value="tiktok">{{ $t('platforms.tiktokWithIcon') }}</option>
+                <option value="twitter">{{ $t('platforms.twitterWithIcon') }}</option>
+                <option value="linkedin">{{ $t('platforms.linkedinWithIcon') }}</option>
               </select>
               <p v-if="!formData.platform" class="platform-hint error">
-                ⚠️ Please select a platform to publish to
+                {{ $t('scheduleModal.platformWarning') }}
               </p>
               <p v-else-if="formData.platform !== 'facebook'" class="platform-hint warning">
-                ⚠️ Only Facebook is currently supported. Other platforms coming soon.
+                {{ $t('scheduleModal.platformLimited') }}
               </p>
             </div>
 
             <div class="form-group">
-              <label for="notes" class="form-label">Notes (Optional)</label>
+              <label for="notes" class="form-label">{{ $t('scheduleModal.notesLabel') }}</label>
               <textarea
                 id="notes"
                 v-model="formData.notes"
                 class="form-textarea"
                 rows="3"
-                placeholder="Add any notes about this scheduled post..."
+                :placeholder="$t('scheduleModal.notesPlaceholder')"
               ></textarea>
             </div>
 
@@ -125,10 +125,10 @@
 
             <div class="modal-actions">
               <BaseButton variant="ghost" type="button" @click="closeModal">
-                Cancel
+                {{ $t('common.cancel') }}
               </BaseButton>
               <BaseButton variant="primary" type="submit" :disabled="scheduling">
-                {{ scheduling ? 'Scheduling...' : 'Schedule Post' }}
+                {{ scheduling ? $t('scheduleModal.scheduling') : $t('scheduleModal.title') }}
               </BaseButton>
             </div>
           </form>
@@ -141,11 +141,14 @@
 <script setup lang="ts">
 import { ref, watch, computed } from 'vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import BaseCard from './BaseCard.vue'
 import BaseButton from './BaseButton.vue'
 import BaseAlert from './BaseAlert.vue'
 import DatePicker from './DatePicker.vue'
 import { api } from '../services/api'
+
+const { t } = useI18n()
 
 const router = useRouter()
 
@@ -202,19 +205,19 @@ const hours = Array.from({ length: 12 }, (_, i) => {
 const minutes = Array.from({ length: 60 }, (_, i) => i.toString().padStart(2, '0'))
 
 // Timezone options with current time display
-const timezoneOptions = [
-  { value: 'UTC', label: 'UTC (Coordinated Universal Time)' },
-  { value: 'America/New_York', label: 'Eastern Time (ET)' },
-  { value: 'America/Chicago', label: 'Central Time (CT)' },
-  { value: 'America/Denver', label: 'Mountain Time (MT)' },
-  { value: 'America/Los_Angeles', label: 'Pacific Time (PT)' },
-  { value: 'Europe/London', label: 'London (GMT/BST)' },
-  { value: 'Europe/Paris', label: 'Paris (CET/CEST)' },
-  { value: 'Europe/Oslo', label: 'Oslo (CET/CEST)' },
-  { value: 'Asia/Tokyo', label: 'Tokyo (JST)' },
-  { value: 'Asia/Dubai', label: 'Dubai (GST)' },
-  { value: 'Australia/Sydney', label: 'Sydney (AEDT/AEST)' },
-]
+const timezoneOptions = computed(() => [
+  { value: 'UTC', label: t('timezones.utc') },
+  { value: 'America/New_York', label: t('timezones.eastern') },
+  { value: 'America/Chicago', label: t('timezones.central') },
+  { value: 'America/Denver', label: t('timezones.mountain') },
+  { value: 'America/Los_Angeles', label: t('timezones.pacific') },
+  { value: 'Europe/London', label: t('timezones.london') },
+  { value: 'Europe/Paris', label: t('timezones.paris') },
+  { value: 'Europe/Oslo', label: t('timezones.oslo') },
+  { value: 'Asia/Tokyo', label: t('timezones.tokyo') },
+  { value: 'Asia/Dubai', label: t('timezones.dubai') },
+  { value: 'Australia/Sydney', label: t('timezones.sydney') },
+])
 
 // Get current time in selected timezone
 const getCurrentTimeInTimezone = (timezone: string): string => {

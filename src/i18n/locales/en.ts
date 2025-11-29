@@ -3,6 +3,7 @@ export default {
   nav: {
     cookUp: 'Cook Up',
     posts: 'Posts',
+    content: 'Content',
     calendar: 'Calendar',
     login: 'Login',
   },
@@ -36,12 +37,52 @@ export default {
     submit: 'Submit',
     selectAll: 'Select All',
     deselectAll: 'Deselect All',
+    or: 'OR',
+    date: 'Date',
+    time: 'Time',
+    am: 'AM',
+    pm: 'PM',
+    processing: 'Processing...',
+    pleaseWait: 'Please wait...',
+    redirecting: 'Redirecting...',
+    characters: 'characters',
+    continue: 'Continue',
+    retry: 'Retry',
+  },
+
+  // Platforms
+  platforms: {
+    facebook: 'Facebook',
+    instagram: 'Instagram',
+    tiktok: 'TikTok',
+    twitter: 'Twitter/X',
+    linkedin: 'LinkedIn',
+    facebookWithIcon: '👥 Facebook',
+    instagramWithIcon: '📷 Instagram',
+    tiktokWithIcon: '🎵 TikTok',
+    twitterWithIcon: '🐦 Twitter/X',
+    linkedinWithIcon: '💼 LinkedIn',
+  },
+
+  // Timezones
+  timezones: {
+    utc: 'UTC (Coordinated Universal Time)',
+    eastern: 'Eastern Time (ET)',
+    central: 'Central Time (CT)',
+    mountain: 'Mountain Time (MT)',
+    pacific: 'Pacific Time (PT)',
+    london: 'London (GMT/BST)',
+    paris: 'Paris (CET/CEST)',
+    oslo: 'Oslo (CET/CEST)',
+    tokyo: 'Tokyo (JST)',
+    dubai: 'Dubai (GST)',
+    sydney: 'Sydney (AEDT/AEST)',
   },
 
   // Auth / Login View
   auth: {
     login: 'Login',
-    loginTitle: 'Welcome Back',
+    loginTitle: 'Welcome',
     loginSubtitle: 'Sign in to your account',
     brandSubtitle: 'AI-Powered Content for Restaurants',
     email: 'Email',
@@ -61,13 +102,15 @@ export default {
     backToLogin: 'Back to Login',
     checkEmail: 'Check your email for a password reset link',
     invalidCredentials: 'Invalid credentials',
+    loginWithMagicLink: 'Login with Magic Link',
+    sendMagicLink: 'Send Magic Link',
   },
 
   // Dashboard View
   dashboard: {
     title: 'Dashboard',
-    welcome: 'Welcome back, {name}!',
-    welcomeBack: 'Welcome back, {name}! 👋',
+    welcome: 'Welcome, {name}!',
+    welcomeBack: 'Welcome, {name}! 👋',
     readyToCreate: 'Ready to create amazing content for your restaurants?',
     overview: 'Overview',
     recentActivity: 'Recent Activity',
@@ -96,11 +139,7 @@ export default {
     viewPlans: 'View Plans',
     manageSubscription: 'Manage Subscription',
 
-    // Testing section
-    forTesting: '🧪 For Testing',
-    tryOnboarding: 'Try the Onboarding Flow',
-    tryOnboardingDescription: 'Click below to experience the new user onboarding tour and quiz',
-    launchOnboarding: 'Launch Onboarding Experience',
+    launchOnboarding: 'Start',
 
     // Stats
     postsCreated: 'Posts Created',
@@ -406,6 +445,46 @@ export default {
       allSet: 'You\'re all set!',
       startCreating: 'Start creating amazing content',
       goToDashboard: 'Go to Dashboard',
+      // Stepper labels
+      stepRestaurant: 'Restaurant',
+      stepCreate: 'Create',
+      stepReview: 'Review',
+      stepConnect: 'Connect',
+      stepPublish: 'Publish',
+      // Platform descriptions
+      facebookDescription: 'Post to your Facebook pages',
+      instagramDescription: 'Post to your Instagram business account',
+      instagramRequiresFacebook: 'Instagram requires Facebook connection',
+      connectedStatus: '✓ Connected',
+      connectedViaFacebook: '✓ Connected via Facebook',
+      connectInstagram: 'Connect Instagram',
+      // Publish step
+      publishTitle: 'Publish Your Post',
+      publishSubtitle: 'Choose how you want to share your content',
+      publishNow: 'Publish Now',
+      publishNowDescription: 'Post immediately to your connected social accounts',
+      scheduleForLater: 'Schedule for Later',
+      scheduleDescription: 'Pick a date and time for your post to go live',
+      selectPlatforms: 'Select platforms:',
+      selectPlatformSingle: 'Select platform:',
+      postPreview: 'Post Preview',
+      connectionWarning: '⚠️ You haven\'t connected any social accounts yet. Go back to connect Facebook/Instagram first, or skip to continue without publishing.',
+      // Completion modal
+      congratulations: 'Congratulations!',
+      completionMessage: 'You\'re all set up! You can now create amazing social media posts for your restaurant.',
+      restaurantAdded: 'Restaurant added',
+      firstPostCreated: 'First post created',
+      accountsConnected: 'Accounts connected',
+      startCreatingPosts: 'Start Creating Posts!',
+      // Navigation buttons
+      backButton: '← Back',
+      continueToCreate: 'Continue to Create →',
+      connectAccountsButton: 'Connect Accounts →',
+      nextButton: 'Next →',
+      skipAndContinue: 'Skip & Continue →',
+      publishing: 'Publishing...',
+      publishNowButton: 'Publish Now ⚡',
+      schedulePostButton: 'Schedule Post 📅',
     },
   },
 
@@ -587,6 +666,44 @@ export default {
     menuItemsCount: '{count} menu item | {count} menu items',
   },
 
+  // Easy Mode Creation
+  easyMode: {
+    steps: {
+      menu: 'Menu',
+      customize: 'Customize',
+    },
+    step1: {
+      title: 'Pick Your Dish or Upload Image',
+      subtitle: 'Choose a menu item or upload your own image',
+      empty: 'No menu items available. Upload an image to continue.',
+    },
+    step2: {
+      title: 'Customize Your Post',
+      subtitle: 'Choose style, add promotions, and branding',
+      styleLabel: 'Visual Style',
+      promoLabel: 'Special Offer (Optional)',
+      promoPlaceholder: 'e.g., 20% OFF, COMBO DEAL, NEW ITEM...',
+      logoLabel: 'Restaurant Logo',
+      currentLogo: 'Current logo',
+      newLogo: 'New logo',
+      uploadLogo: 'Upload logo',
+      changeLogo: 'Change logo',
+      removeLogo: 'Remove uploaded logo',
+      includeLogo: 'Include logo on image',
+      summaryTitle: 'Your Selections:',
+      style: 'style',
+      postText: 'Engaging post text',
+      branding: 'Restaurant branding',
+      promo: 'Promotional sticker',
+      generating: 'Cooking up your post...',
+      generateButton: '✨ Generate Picture (1 credit)',
+    },
+    upload: {
+      button: 'Upload Your Own Image',
+      hint: 'JPG, PNG, or WebP',
+    },
+  },
+
   // Connect Accounts View
   connectAccounts: {
     title: 'Connect Social Accounts',
@@ -708,6 +825,62 @@ export default {
     image: 'image',
     video: 'video',
     restaurant: 'Restaurant',
+    // Additional post actions
+    deleteModalTitle: 'Delete Post',
+    deleteModalMessage: 'Are you sure you want to delete this post? This action cannot be undone.',
+    addHashtagPlaceholder: 'Add hashtag and press Enter...',
+    platformSection: 'Platform',
+    saveChangesButton: '💾 Save Changes',
+    cancelChangesButton: '✖ Cancel',
+    editButton: '✏️ Edit',
+    scheduleButton: '📅 Schedule Post',
+    deleteButton: '🗑️ Delete',
+    postAlt: 'Post',
+  },
+
+  // Content Hub View
+  contentHub: {
+    title: 'Content',
+    loading: 'Loading your content...',
+    createNew: 'Create New Content',
+    createDescription: 'Generate images and posts for your restaurant',
+    startCreating: 'Start Creating',
+    yourPosts: 'Your Posts',
+    changeRestaurant: 'Change Restaurant',
+    noPosts: 'No posts yet',
+    noPostsDescription: 'Create your first post to get started!',
+    loadError: 'Failed to load content',
+    noRestaurant: 'No restaurant selected',
+    filterAll: 'All',
+    filterPlatform: 'Platform',
+    filterContentType: 'Content Type',
+    sortNewest: 'Newest First',
+    sortOldest: 'Oldest First',
+    menuItems: '{count} menu items',
+  },
+
+  // Content Create View
+  contentCreate: {
+    title: 'Create Content',
+    loading: 'Loading...',
+    loadError: 'Failed to load restaurant',
+    advancedMode: 'Advanced Mode',
+    advancedDescription: 'Advanced mode with full customization options is coming soon.',
+    switchToEasy: 'Switch to Easy Mode',
+    imageError: 'Failed to generate image. Please try again.',
+    noPrompts: 'No prompts were generated',
+    generateError: 'Failed to generate content',
+    publishError: 'Failed to publish to Facebook',
+    connectError: 'Failed to connect Facebook',
+  },
+
+  // Restaurant Selector Modal
+  restaurantSelector: {
+    title: 'Select Restaurant',
+    addNew: '+ Add New Restaurant',
+    menuItems: '{count} menu items',
+    delete: 'Remove restaurant',
+    confirmDelete: 'Are you sure you want to remove "{name}" from your saved restaurants?',
   },
 
   // Profile View
@@ -878,5 +1051,64 @@ export default {
     en: 'English',
     no: 'Norwegian',
     selectLanguage: 'Select Language',
+  },
+
+  // Schedule Modal
+  scheduleModal: {
+    title: 'Schedule Post',
+    preview: 'Preview',
+    dateLabel: 'Date',
+    dateHint: '📅 Date pre-filled from calendar selection',
+    timeLabel: 'Time (Optional)',
+    selectedTime: 'Selected: {time}',
+    timezoneLabel: 'Timezone',
+    autoDetected: '(Auto-detected)',
+    currentTime: '🕐 Current time: {time}',
+    platformLabel: 'Platform',
+    selectPlatform: 'Select a platform...',
+    platformWarning: '⚠️ Please select a platform to publish to',
+    platformLimited: '⚠️ Only Facebook is currently supported. Other platforms coming soon.',
+    notesLabel: 'Notes (Optional)',
+    notesPlaceholder: 'Add any notes about this scheduled post...',
+    scheduling: 'Scheduling...',
+  },
+
+  // Facebook Onboarding Modal
+  facebookOnboarding: {
+    title: 'Connect to Facebook',
+    description: 'To publish or schedule posts to your Facebook pages, you\'ll need to connect your Facebook account first.',
+    benefit1: 'Publish directly to your pages',
+    benefit2: 'Schedule posts in advance',
+    benefit3: 'Manage multiple pages from one place',
+    securityNote: 'Your credentials are secured with industry-standard encryption',
+    connecting: 'Connecting...',
+    connectButton: 'Connect Facebook',
+    remindLater: 'Remind Me Later',
+  },
+
+  // Confirm Modal
+  confirmModal: {
+    defaultTitle: 'Confirm Action',
+    defaultConfirm: 'Confirm',
+    defaultCancel: 'Cancel',
+    defaultLoading: 'Processing...',
+  },
+
+  // Pick Post Modal
+  pickPostModal: {
+    pickTitle: 'Pick a Saved Post',
+    scheduleTitle: 'Schedule Your Post',
+    loadingPosts: 'Loading posts...',
+    noPostsYet: 'No posts yet! Create content in the Playground first.',
+    goToPlayground: 'Go to Playground',
+    previous: '← Previous',
+    pageInfo: 'Page {current} of {total} ({count} posts)',
+  },
+
+  // Generation Result Modal
+  generationModal: {
+    failedTitle: 'Generation Failed',
+    successTitle: 'Your Post is Ready!',
+    loadingTitle: 'Cooking Up Your Post...',
   },
 }
