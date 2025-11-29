@@ -19,16 +19,9 @@ export default defineConfig({
   server: {
     host: true,
     allowedHosts: [
-      'successive-emogene-unsyncopated.ngrok-free.dev',
-      '.ngrok-free.dev',
-      '.ngrok-free.app',
       'localhost',
+      'baofrontend.socialchef.ai',
+      '.socialchef.ai'
     ],
-    proxy: {
-      '/api': {
-        target: 'http://localhost:3000',
-        changeOrigin: true,
-      },
-    },
   },
 })
