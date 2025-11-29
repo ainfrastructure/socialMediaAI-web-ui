@@ -800,6 +800,73 @@ class ApiService {
     return response.json()
   }
 
+  // Instagram OAuth methods
+  async initInstagramAuth(): Promise<ApiResponse<{ authUrl: string; state: string }>> {
+    const response = await fetch(`${API_URL}/api/instagram/auth/init`, {
+      headers: this.getAuthHeader(),
+    })
+
+    if (!response.ok) {
+      const text = await response.text()
+      try {
+        return JSON.parse(text)
+      } catch {
+        return {
+          success: false,
+          error: `HTTP ${response.status}: ${text || response.statusText}`
+        }
+      }
+    }
+
+    return response.json()
+  }
+
+  async completeInstagramAuth(
+    code: string,
+    state: string
+  ): Promise<ApiResponse<{ accounts: any[] }>> {
+    const response = await fetch(`${API_URL}/api/instagram/auth/callback`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...this.getAuthHeader(),
+      },
+      body: JSON.stringify({ code, state }),
+    })
+    return response.json()
+  }
+
+  async getInstagramAccounts(): Promise<ApiResponse<{ accounts: any[] }>> {
+    const response = await fetch(`${API_URL}/api/instagram/accounts`, {
+      headers: this.getAuthHeader(),
+    })
+    return response.json()
+  }
+
+  async disconnectInstagramAccount(accountId: string): Promise<ApiResponse> {
+    const response = await fetch(`${API_URL}/api/instagram/accounts/${accountId}`, {
+      method: 'DELETE',
+      headers: this.getAuthHeader(),
+    })
+    return response.json()
+  }
+
+  async postToInstagram(
+    accountId: string,
+    caption: string,
+    imageUrl: string
+  ): Promise<ApiResponse<{ postId: string; postUrl: string }>> {
+    const response = await fetch(`${API_URL}/api/instagram/accounts/${accountId}/post`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...this.getAuthHeader(),
+      },
+      body: JSON.stringify({ caption, imageUrl }),
+    })
+    return response.json()
+  }
+
   // Restaurants
   async getRestaurants(limit?: number): Promise<ApiResponse<any[]>> {
     const params = new URLSearchParams()

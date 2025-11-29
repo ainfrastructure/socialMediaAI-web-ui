@@ -1050,6 +1050,7 @@ export default {
     successfullyConnected: 'Successfully connected {count} Facebook page(s)!',
     successfullyDisconnected: 'Successfully disconnected "{name}"',
     confirmDisconnect: 'Are you sure you want to disconnect "{name}"?',
+    disconnectTitle: 'Disconnect Account',
   },
 
   // Scheduler View
@@ -1144,6 +1145,10 @@ export default {
     scheduleButton: '📅 Schedule Post',
     deleteButton: '🗑️ Delete',
     postAlt: 'Post',
+    publishToInstagram: 'Publish to Instagram',
+    publishing: 'Publishing...',
+    publishSuccess: 'Successfully published to Instagram!',
+    publishError: 'Failed to publish to Instagram',
   },
 
   // Content Hub View

@@ -1050,6 +1050,7 @@ export default {
     successfullyConnected: 'Koblet til {count} Facebook-side(r)!',
     successfullyDisconnected: 'Frakoblet "{name}"',
     confirmDisconnect: 'Er du sikker på at du vil frakoble "{name}"?',
+    disconnectTitle: 'Frakoble konto',
   },
 
   // Scheduler View
@@ -1144,6 +1145,10 @@ export default {
     scheduleButton: '📅 Planlegg innlegg',
     deleteButton: '🗑️ Slett',
     postAlt: 'Innlegg',
+    publishToInstagram: 'Publiser til Instagram',
+    publishing: 'Publiserer...',
+    publishSuccess: 'Publisert til Instagram!',
+    publishError: 'Kunne ikke publisere til Instagram',
   },
 
   // Content Hub View

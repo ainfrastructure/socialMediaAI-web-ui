@@ -292,6 +292,14 @@
               <p v-else class="full-text" style="text-transform: capitalize;">{{ selectedPost.platform }}</p>
             </div>
 
+            <!-- Publish Feedback -->
+            <BaseAlert v-if="publishSuccess" type="success" @close="publishSuccess = false">
+              {{ $t('posts.publishSuccess') }}
+            </BaseAlert>
+            <BaseAlert v-if="publishError" type="error" @close="publishError = ''">
+              {{ publishError }}
+            </BaseAlert>
+
             <!-- Action Buttons -->
             <div class="modal-actions">
               <!-- Edit Mode Buttons -->
@@ -315,6 +323,9 @@
                 <BaseButton variant="danger" @click="confirmDeleteFromModal">
                   {{ $t('posts.deleteButton') }}
                 </BaseButton>
+                <BaseButton variant="primary" @click="publishToInstagram" :disabled="isPublishing">
+                  {{ isPublishing ? $t('posts.publishing') : $t('posts.publishToInstagram') }}
+                </BaseButton>
               </template>
             </div>
           </div>
@@ -329,11 +340,13 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { usePreferencesStore } from '@/stores/preferences'
+import { useInstagramStore } from '@/stores/instagram'
 import { api } from '@/services/api'
 import { restaurantService, type SavedRestaurant } from '@/services/restaurantService'
 import GradientBackground from '@/components/GradientBackground.vue'
 import BaseCard from '@/components/BaseCard.vue'
 import BaseButton from '@/components/BaseButton.vue'
+import BaseAlert from '@/components/BaseAlert.vue'
 import BasePagination from '@/components/BasePagination.vue'
 import ConfirmModal from '@/components/ConfirmModal.vue'
 import ScheduleModal from '@/components/ScheduleModal.vue'
@@ -342,6 +355,7 @@ import RestaurantSelectorModal from '@/components/RestaurantSelectorModal.vue'
 const router = useRouter()
 const { t } = useI18n()
 const preferencesStore = usePreferencesStore()
+const instagramStore = useInstagramStore()
 
 // State
 const loading = ref(true)
@@ -361,6 +375,11 @@ const postToDelete = ref<string | null>(null)
 const isEditMode = ref(false)
 const originalPost = ref<any>(null)
 const newHashtag = ref('')
+
+// Instagram publish state
+const isPublishing = ref(false)
+const publishError = ref('')
+const publishSuccess = ref(false)
 
 // Filters
 const filters = ref({
@@ -407,6 +426,9 @@ onMounted(async () => {
 
     // Load posts for selected restaurant
     await fetchPosts()
+
+    // Load Instagram accounts for publish feature
+    await instagramStore.loadConnectedAccounts()
   } finally {
     loading.value = false
   }
@@ -631,6 +653,49 @@ async function handleDeleteConfirm() {
 function handleDeleteCancel() {
   showDeleteModal.value = false
   postToDelete.value = null
+}
+
+// Instagram publish
+async function publishToInstagram() {
+  if (!selectedPost.value) return
+
+  // Check if Instagram is connected - redirect to connect page if not
+  if (instagramStore.connectedAccounts.length === 0) {
+    router.push('/connect-accounts')
+    return
+  }
+
+  const account = instagramStore.connectedAccounts[0]
+
+  // Format caption: post text + hashtags
+  let caption = selectedPost.value.post_text || ''
+  if (selectedPost.value.hashtags?.length) {
+    caption += '\n\n' + selectedPost.value.hashtags.map((tag: string) =>
+      tag.startsWith('#') ? tag : `#${tag}`
+    ).join(' ')
+  }
+
+  isPublishing.value = true
+  publishError.value = ''
+  publishSuccess.value = false
+
+  try {
+    const response = await api.postToInstagram(
+      account.instagramAccountId,
+      caption,
+      selectedPost.value.media_url
+    )
+
+    if (response.success) {
+      publishSuccess.value = true
+    } else {
+      publishError.value = response.error || t('posts.publishError')
+    }
+  } catch (error: any) {
+    publishError.value = error.message || t('posts.publishError')
+  } finally {
+    isPublishing.value = false
+  }
 }
 
 // Utility functions
