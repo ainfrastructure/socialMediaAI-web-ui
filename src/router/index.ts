@@ -8,6 +8,7 @@ import ResetPasswordView from '../views/ResetPasswordView.vue'
 import PlaygroundView from '../views/PlaygroundView.vue'
 import ConnectAccountsView from '../views/ConnectAccountsView.vue'
 import FacebookCallbackView from '../views/FacebookCallbackView.vue'
+import InstagramCallbackView from '../views/InstagramCallbackView.vue'
 import TestPostView from '../views/TestPostView.vue'
 import SchedulerView from '../views/SchedulerView.vue'
 import PostsView from '../views/PostsView.vue'
@@ -78,6 +79,12 @@ const router = createRouter({
       path: '/auth/facebook/callback',
       name: 'facebook-callback',
       component: FacebookCallbackView,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/auth/instagram/callback',
+      name: 'instagram-callback',
+      component: InstagramCallbackView,
       meta: { requiresAuth: true },
     },
     {

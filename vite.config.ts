@@ -21,7 +21,14 @@ export default defineConfig({
     allowedHosts: [
       'successive-emogene-unsyncopated.ngrok-free.dev',
       '.ngrok-free.dev',
+      '.ngrok-free.app',
       'localhost',
     ],
+    proxy: {
+      '/api': {
+        target: 'http://localhost:3000',
+        changeOrigin: true,
+      },
+    },
   },
 })

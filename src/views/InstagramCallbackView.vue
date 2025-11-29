@@ -19,14 +19,6 @@ onMounted(async () => {
     const error = urlParams.get('error')
     const errorDescription = urlParams.get('error_description')
 
-    // If we're on ngrok, redirect to localhost to complete the OAuth flow
-    // (ngrok can't make API calls to localhost backend)
-    if (window.location.hostname.includes('ngrok')) {
-      const localhostUrl = `http://localhost:5173/auth/instagram/callback${window.location.search}`
-      window.location.href = localhostUrl
-      return
-    }
-
     // Check for errors from Facebook/Instagram
     if (error) {
       isError.value = true
