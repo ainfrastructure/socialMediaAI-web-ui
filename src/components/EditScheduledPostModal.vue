@@ -30,6 +30,8 @@ const timezone = ref(defaultTimezone)
 const platform = ref('')
 const notes = ref('')
 const postText = ref('')
+const hashtags = ref<string[]>([])
+const newHashtag = ref('')
 const error = ref('')
 const saving = ref(false)
 const showImagePicker = ref(false)
@@ -126,6 +128,12 @@ const populateForm = (post: any) => {
     postText.value = post.post_text
   }
 
+  if (post.hashtags) {
+    hashtags.value = [...post.hashtags]
+  } else {
+    hashtags.value = []
+  }
+
   if (post.favorite_post_id) {
     selectedFavoriteId.value = post.favorite_post_id
   }
@@ -147,6 +155,19 @@ const get24HourTime = () => {
   }
 
   return `${String(hour).padStart(2, '0')}:${minutes.value}:00`
+}
+
+// Hashtag functions
+const addHashtag = () => {
+  const tag = newHashtag.value.trim().replace(/^#/, '')
+  if (tag && !hashtags.value.includes(`#${tag}`)) {
+    hashtags.value.push(`#${tag}`)
+  }
+  newHashtag.value = ''
+}
+
+const removeHashtag = (index: number) => {
+  hashtags.value.splice(index, 1)
 }
 
 // Close modal
@@ -229,6 +250,7 @@ const saveChanges = async () => {
       platform: platform.value,
       notes: notes.value || undefined,
       post_text: postText.value,
+      hashtags: hashtags.value,
       favorite_post_id: selectedFavoriteId.value
     }
 
@@ -307,6 +329,30 @@ const formatDisplayDate = (dateStr: string) => {
             />
             <div class="char-count" :class="{ warning: postText.length > 5000 }">
               {{ postText.length }} characters
+            </div>
+          </div>
+
+          <!-- Hashtags -->
+          <div class="form-group">
+            <label class="form-label">#️⃣ HASHTAGS</label>
+            <div class="hashtag-editor">
+              <div class="hashtag-tags">
+                <span
+                  v-for="(tag, idx) in hashtags"
+                  :key="idx"
+                  class="hashtag-tag"
+                >
+                  {{ tag }}
+                  <button @click="removeHashtag(idx)" class="remove-tag">&times;</button>
+                </span>
+              </div>
+              <input
+                v-model="newHashtag"
+                @keydown.enter.prevent="addHashtag"
+                @keydown.,.prevent="addHashtag"
+                placeholder="Add hashtag and press Enter..."
+                class="hashtag-input"
+              />
             </div>
           </div>
 
@@ -407,7 +453,7 @@ const formatDisplayDate = (dateStr: string) => {
                 <img
                   v-if="favorite.content_type === 'image'"
                   :src="favorite.media_url"
-                  alt="Favorite"
+                  alt="Post"
                   class="favorite-thumbnail"
                 />
                 <video
@@ -707,6 +753,74 @@ const formatDisplayDate = (dateStr: string) => {
 .form-textarea {
   resize: vertical;
   min-height: 80px;
+}
+
+/* Hashtag Editor */
+.hashtag-editor {
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  border-radius: var(--radius-md);
+  padding: var(--space-md);
+  transition: all 0.2s ease;
+}
+
+.hashtag-editor:focus-within {
+  border-color: var(--gold-primary);
+  background: rgba(0, 0, 0, 0.4);
+}
+
+.hashtag-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-sm);
+}
+
+.hashtag-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: var(--space-xs) var(--space-sm);
+  background: rgba(212, 175, 55, 0.15);
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  border-radius: var(--radius-full);
+  color: var(--gold-primary);
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+}
+
+.remove-tag {
+  background: none;
+  border: none;
+  color: var(--gold-primary);
+  font-size: var(--text-base);
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+  opacity: 0.7;
+  transition: opacity 0.2s ease;
+}
+
+.remove-tag:hover {
+  opacity: 1;
+}
+
+.hashtag-input {
+  width: 100%;
+  background: transparent;
+  border: none;
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  padding: var(--space-xs) 0;
+}
+
+.hashtag-input:focus {
+  outline: none;
+}
+
+.hashtag-input::placeholder {
+  color: var(--text-muted);
 }
 
 .date-preview,

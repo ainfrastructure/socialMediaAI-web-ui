@@ -13,7 +13,7 @@
           {{ $t('nav.cookUp') }}
         </router-link>
 
-        <router-link to="/favorites" class="nav-link" active-class="active">
+        <router-link to="/posts" class="nav-link" active-class="active">
           {{ $t('nav.posts') }}
         </router-link>
 

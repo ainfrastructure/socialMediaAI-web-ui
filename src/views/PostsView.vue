@@ -1,11 +1,11 @@
 <template>
-  <div class="favorites-view">
+  <div class="posts-view">
     <GradientBackground />
 
     <div class="container">
       <div class="header">
-        <h1 class="title">{{ $t('favorites.title') }}</h1>
-        <p class="subtitle">{{ $t('favorites.subtitle') }}</p>
+        <h1 class="title">{{ $t('posts.title') }}</h1>
+        <p class="subtitle">{{ $t('posts.subtitle') }}</p>
       </div>
 
       <!-- Filters Section -->
@@ -23,79 +23,79 @@
       <!-- Loading State -->
       <div v-if="loading" class="loading-container">
         <div class="spinner"></div>
-        <p>{{ $t('favorites.loading') }}</p>
+        <p>{{ $t('posts.loading') }}</p>
       </div>
 
       <!-- Empty State -->
-      <BaseCard v-else-if="favorites.length === 0" variant="glass-intense" class="empty-state">
+      <BaseCard v-else-if="posts.length === 0" variant="glass-intense" class="empty-state">
         <div class="empty-content">
-          <h3>{{ $t('favorites.noFavorites') }}</h3>
-          <p>{{ $t('favorites.noFavoritesDescription') }}</p>
+          <h3>{{ $t('posts.noPosts') }}</h3>
+          <p>{{ $t('posts.noPostsDescription') }}</p>
           <BaseButton variant="primary" @click="router.push('/cook-up')">
-            {{ $t('favorites.goToCookUp') }}
+            {{ $t('posts.goToCookUp') }}
           </BaseButton>
         </div>
       </BaseCard>
 
-      <!-- Favorites Grid -->
-      <div v-else class="favorites-grid">
+      <!-- Posts Grid -->
+      <div v-else class="posts-grid">
         <BaseCard
-          v-for="favorite in favorites"
-          :key="favorite.id"
+          v-for="post in posts"
+          :key="post.id"
           variant="glass"
-          class="favorite-card"
-          @click="viewDetails(favorite)"
+          class="post-card"
+          @click="viewDetails(post)"
         >
           <!-- Media Preview -->
           <div class="media-container">
             <img
-              v-if="favorite.content_type === 'image'"
-              :src="favorite.media_url"
-              alt="Favorite post"
-              class="favorite-media"
+              v-if="post.content_type === 'image'"
+              :src="post.media_url"
+              alt="Post"
+              class="post-media"
             />
             <video
               v-else
-              :src="favorite.media_url"
-              class="favorite-media"
+              :src="post.media_url"
+              class="post-media"
               controls
             ></video>
 
             <!-- Content Type Icon -->
-            <span :class="['type-icon', favorite.content_type]">
-              {{ favorite.content_type === 'image' ? '📸' : '🎥' }}
+            <span :class="['type-icon', post.content_type]">
+              {{ post.content_type === 'image' ? '📸' : '🎥' }}
             </span>
           </div>
 
           <!-- Post Details -->
-          <div class="favorite-details">
+          <div class="post-details">
             <!-- Restaurant Name -->
-            <div v-if="favorite.saved_restaurants?.name" class="restaurant-name">
-              🏪 {{ favorite.saved_restaurants.name }}
+            <div v-if="post.saved_restaurants?.name" class="restaurant-name">
+              🏪 {{ post.saved_restaurants.name }}
             </div>
 
             <!-- Post Text -->
-            <p v-if="favorite.post_text" class="post-text">
-              {{ truncateText(favorite.post_text, 150) }}
+            <p v-if="post.post_text" class="post-text">
+              {{ truncateText(post.post_text, 150) }}
             </p>
 
             <!-- Hashtags -->
-            <div v-if="favorite.hashtags && favorite.hashtags.length > 0" class="hashtags">
-              <span v-for="(tag, idx) in favorite.hashtags.slice(0, 3)" :key="idx" class="hashtag">
+            <div v-if="post.hashtags && post.hashtags.length > 0" class="hashtags">
+              <span v-for="(tag, idx) in post.hashtags.slice(0, 3)" :key="idx" class="hashtag">
                 {{ tag }}
               </span>
-              <span v-if="favorite.hashtags.length > 3" class="more-tags">
-                +{{ favorite.hashtags.length - 3 }}
+              <span v-if="post.hashtags.length > 3" class="more-tags">
+                +{{ post.hashtags.length - 3 }}
               </span>
             </div>
 
             <!-- Bottom Info (Created Date & Platform) -->
             <div class="card-footer">
               <div class="created-date">
-                {{ formatDate(favorite.created_at) }}
+                {{ formatDate(post.created_at) }}
               </div>
-              <span v-if="favorite.platform" :class="['platform-badge', `platform-${favorite.platform}`]">
-                {{ favorite.platform }}
+              <span v-if="post.platform" :class="['platform-badge', `platform-${post.platform}`]">
+                {{ post.platform }}
               </span>
             </div>
           </div>
@@ -104,7 +104,7 @@
 
       <!-- Pagination -->
       <BasePagination
-        v-if="!loading && favorites.length > 0"
+        v-if="!loading && posts.length > 0"
         v-model:current-page="currentPage"
         :total-pages="totalPages"
         :total-items="totalItems"
@@ -116,19 +116,19 @@
     <!-- Schedule Modal -->
     <ScheduleModal
       v-model="showScheduleModal"
-      :favorite-post="selectedFavorite"
+      :favorite-post="selectedPost"
       @scheduled="handleScheduled"
     />
 
     <!-- Delete Confirmation Modal -->
     <ConfirmModal
       v-model="showDeleteModal"
-      title="Delete Favorite"
-      message="Are you sure you want to delete this favorite post? This action cannot be undone."
+      title="Delete Post"
+      message="Are you sure you want to delete this post? This action cannot be undone."
       confirm-text="Delete"
       cancel-text="Cancel"
       type="danger"
-      :loading="deletingFavorite"
+      :loading="deletingPost"
       @confirm="handleDeleteConfirm"
       @cancel="handleDeleteCancel"
     />
@@ -138,82 +138,103 @@
       <div v-if="showDetailModal" class="modal-overlay" @click.self="closeDetailModal">
         <BaseCard variant="glass-intense" class="detail-modal">
           <div class="modal-header">
-            <h3 class="modal-title">{{ $t('favorites.postDetails') }}</h3>
+            <h3 class="modal-title">{{ $t('posts.postDetails') }}</h3>
             <button class="close-btn" @click="closeDetailModal">&times;</button>
           </div>
 
-          <div v-if="selectedFavorite" class="modal-body">
+          <div v-if="selectedPost" class="modal-body">
             <!-- Media -->
             <img
-              v-if="selectedFavorite.content_type === 'image'"
-              :src="selectedFavorite.media_url"
+              v-if="selectedPost.content_type === 'image'"
+              :src="selectedPost.media_url"
               alt="Post"
               class="detail-media"
             />
             <video
               v-else
-              :src="selectedFavorite.media_url"
+              :src="selectedPost.media_url"
               class="detail-media"
               controls
             ></video>
 
             <!-- Restaurant Info -->
-            <div v-if="selectedFavorite.saved_restaurants?.name" class="detail-section">
-              <h4>{{ $t('favorites.restaurant') }}</h4>
-              <p>{{ selectedFavorite.saved_restaurants.name }}</p>
+            <div v-if="selectedPost.saved_restaurants?.name" class="detail-section">
+              <h4>{{ $t('posts.restaurant') }}</h4>
+              <p>{{ selectedPost.saved_restaurants.name }}</p>
             </div>
 
             <!-- Full Post Text -->
-            <div v-if="selectedFavorite.post_text" class="detail-section">
-              <h4>{{ $t('favorites.postText') }}</h4>
+            <div v-if="selectedPost.post_text" class="detail-section">
+              <h4>{{ $t('posts.postText') }}</h4>
               <textarea
                 v-if="isEditMode"
-                v-model="selectedFavorite.post_text"
+                v-model="selectedPost.post_text"
                 class="edit-textarea"
                 rows="6"
               ></textarea>
-              <p v-else class="full-text">{{ selectedFavorite.post_text }}</p>
+              <p v-else class="full-text">{{ selectedPost.post_text }}</p>
             </div>
 
             <!-- Call to Action -->
-            <div v-if="selectedFavorite.call_to_action || isEditMode" class="detail-section">
-              <h4>{{ $t('favorites.callToAction') }}</h4>
+            <div v-if="selectedPost.call_to_action || isEditMode" class="detail-section">
+              <h4>{{ $t('posts.callToAction') }}</h4>
               <input
                 v-if="isEditMode"
-                v-model="selectedFavorite.call_to_action"
+                v-model="selectedPost.call_to_action"
                 type="text"
                 class="edit-input"
               />
-              <p v-else class="full-text">{{ selectedFavorite.call_to_action }}</p>
+              <p v-else class="full-text">{{ selectedPost.call_to_action }}</p>
             </div>
 
             <!-- Hashtags -->
-            <div v-if="selectedFavorite.hashtags && selectedFavorite.hashtags.length > 0" class="detail-section">
-              <h4>{{ $t('favorites.hashtags') }}</h4>
-              <div class="hashtags-full">
-                <span v-for="(tag, idx) in selectedFavorite.hashtags" :key="idx" class="hashtag">
+            <div v-if="(selectedPost.hashtags && selectedPost.hashtags.length > 0) || isEditMode" class="detail-section">
+              <h4>{{ $t('posts.hashtags') }}</h4>
+              <!-- Edit Mode: Tag Editor -->
+              <div v-if="isEditMode" class="hashtag-editor">
+                <div class="hashtag-tags">
+                  <span
+                    v-for="(tag, idx) in selectedPost.hashtags"
+                    :key="idx"
+                    class="hashtag-tag"
+                  >
+                    {{ tag }}
+                    <button @click="removeHashtag(idx)" class="remove-tag">&times;</button>
+                  </span>
+                </div>
+                <input
+                  v-model="newHashtag"
+                  @keydown.enter.prevent="addHashtag"
+                  @keydown.,.prevent="addHashtag"
+                  placeholder="Add hashtag and press Enter..."
+                  class="hashtag-input"
+                />
+              </div>
+              <!-- View Mode: Display Tags -->
+              <div v-else class="hashtags-full">
+                <span v-for="(tag, idx) in selectedPost.hashtags" :key="idx" class="hashtag">
                   {{ tag }}
                 </span>
               </div>
             </div>
 
             <!-- Platform -->
-            <div v-if="selectedFavorite.platform || isEditMode" class="detail-section">
+            <div v-if="selectedPost.platform || isEditMode" class="detail-section">
               <h4>Platform</h4>
-              <select v-if="isEditMode" v-model="selectedFavorite.platform" class="edit-select">
+              <select v-if="isEditMode" v-model="selectedPost.platform" class="edit-select">
                 <option value="instagram">Instagram</option>
                 <option value="facebook">Facebook</option>
                 <option value="tiktok">TikTok</option>
                 <option value="twitter">Twitter</option>
                 <option value="linkedin">LinkedIn</option>
               </select>
-              <p v-else class="full-text" style="text-transform: capitalize;">{{ selectedFavorite.platform }}</p>
+              <p v-else class="full-text" style="text-transform: capitalize;">{{ selectedPost.platform }}</p>
             </div>
 
             <!-- Prompt -->
-            <div v-if="selectedFavorite.prompt" class="detail-section">
-              <h4>{{ $t('favorites.originalPrompt') }}</h4>
-              <p class="prompt-text">{{ selectedFavorite.prompt }}</p>
+            <div v-if="selectedPost.prompt" class="detail-section">
+              <h4>{{ $t('posts.originalPrompt') }}</h4>
+              <p class="prompt-text">{{ selectedPost.prompt }}</p>
             </div>
 
             <!-- Action Buttons -->
@@ -233,7 +254,7 @@
                 <BaseButton variant="secondary" @click="enableEditMode">
                   ✏️ Edit
                 </BaseButton>
-                <BaseButton variant="primary" @click="schedulePost(selectedFavorite)">
+                <BaseButton variant="primary" @click="schedulePost(selectedPost)">
                   📅 Schedule Post
                 </BaseButton>
                 <BaseButton variant="danger" @click="confirmDeleteFromModal">
@@ -265,17 +286,18 @@ const router = useRouter()
 const { t } = useI18n()
 
 // State
-const favorites = ref<any[]>([])
+const posts = ref<any[]>([])
 const restaurants = ref<any[]>([])
 const loading = ref(false)
-const selectedFavorite = ref<any>(null)
+const selectedPost = ref<any>(null)
 const showScheduleModal = ref(false)
 const showDetailModal = ref(false)
 const showDeleteModal = ref(false)
-const deletingFavorite = ref(false)
-const favoriteToDelete = ref<string | null>(null)
+const deletingPost = ref(false)
+const postToDelete = ref<string | null>(null)
 const isEditMode = ref(false)
-const originalFavorite = ref<any>(null)
+const originalPost = ref<any>(null)
+const newHashtag = ref('')
 
 // Filters
 const filters = ref({
@@ -291,8 +313,8 @@ const itemsPerPage = 12
 const totalItems = ref(0)
 const totalPages = ref(0)
 
-// Fetch favorites with filters and pagination
-const fetchFavorites = async () => {
+// Fetch posts (stored as favorites in backend) with filters and pagination
+const fetchPosts = async () => {
   try {
     loading.value = true
     const offset = (currentPage.value - 1) * itemsPerPage
@@ -307,12 +329,12 @@ const fetchFavorites = async () => {
     })
 
     if (response.success) {
-      favorites.value = response.data?.favorites || []
+      posts.value = response.data?.favorites || []
       totalItems.value = response.data?.pagination?.total || 0
       totalPages.value = response.data?.pagination?.totalPages || 0
     }
   } catch (error) {
-    console.error('Error fetching favorites:', error)
+    console.error('Error fetching posts:', error)
   } finally {
     loading.value = false
   }
@@ -333,7 +355,7 @@ const fetchRestaurants = async () => {
 // Filter and pagination handlers
 const applyFilters = () => {
   currentPage.value = 1 // Reset to first page when filters change
-  fetchFavorites()
+  fetchPosts()
 }
 
 const resetFilters = () => {
@@ -348,69 +370,89 @@ const resetFilters = () => {
 
 const handlePageChange = (page: number) => {
   currentPage.value = page
-  fetchFavorites()
+  fetchPosts()
   // Scroll to top of grid
   window.scrollTo({ top: 0, behavior: 'smooth' })
 }
 
 // Post actions
-const schedulePost = (favorite: any) => {
-  const favoriteToSchedule = favorite ? { ...favorite } : (selectedFavorite.value ? { ...selectedFavorite.value } : null)
+const schedulePost = (post: any) => {
+  const postToSchedule = post ? { ...post } : (selectedPost.value ? { ...selectedPost.value } : null)
 
-  if (!favoriteToSchedule) {
-    console.error('No favorite post selected')
+  if (!postToSchedule) {
+    console.error('No post selected')
     return
   }
 
   // Close detail modal if it's open
   showDetailModal.value = false
 
-  // Set the favorite and open schedule modal
-  selectedFavorite.value = favoriteToSchedule
+  // Set the post and open schedule modal
+  selectedPost.value = postToSchedule
   showScheduleModal.value = true
 }
 
-const viewDetails = (favorite: any) => {
-  selectedFavorite.value = { ...favorite }
-  originalFavorite.value = { ...favorite }
+const viewDetails = (post: any) => {
+  selectedPost.value = { ...post }
+  originalPost.value = { ...post }
   isEditMode.value = false
   showDetailModal.value = true
 }
 
 const closeDetailModal = () => {
   showDetailModal.value = false
-  selectedFavorite.value = null
-  originalFavorite.value = null
+  selectedPost.value = null
+  originalPost.value = null
   isEditMode.value = false
 }
 
 const enableEditMode = () => {
   isEditMode.value = true
+  newHashtag.value = ''
+}
+
+const addHashtag = () => {
+  if (!selectedPost.value) return
+  const tag = newHashtag.value.trim().replace(/^#/, '')
+  if (tag) {
+    if (!selectedPost.value.hashtags) {
+      selectedPost.value.hashtags = []
+    }
+    if (!selectedPost.value.hashtags.includes(`#${tag}`)) {
+      selectedPost.value.hashtags.push(`#${tag}`)
+    }
+  }
+  newHashtag.value = ''
+}
+
+const removeHashtag = (index: number) => {
+  if (!selectedPost.value?.hashtags) return
+  selectedPost.value.hashtags.splice(index, 1)
 }
 
 const cancelEdit = () => {
-  if (originalFavorite.value) {
-    selectedFavorite.value = { ...originalFavorite.value }
+  if (originalPost.value) {
+    selectedPost.value = { ...originalPost.value }
   }
   isEditMode.value = false
 }
 
 // Save changes from detail modal
 const saveChanges = async () => {
-  if (!selectedFavorite.value) return
+  if (!selectedPost.value) return
 
   try {
-    const response = await api.updateFavorite(selectedFavorite.value.id, {
-      post_text: selectedFavorite.value.post_text,
-      hashtags: selectedFavorite.value.hashtags,
-      call_to_action: selectedFavorite.value.call_to_action,
-      platform: selectedFavorite.value.platform,
+    const response = await api.updateFavorite(selectedPost.value.id, {
+      post_text: selectedPost.value.post_text,
+      hashtags: selectedPost.value.hashtags,
+      call_to_action: selectedPost.value.call_to_action,
+      platform: selectedPost.value.platform,
     })
 
     if (response.success) {
-      await fetchFavorites()
+      await fetchPosts()
       isEditMode.value = false
-      originalFavorite.value = { ...selectedFavorite.value }
+      originalPost.value = { ...selectedPost.value }
       alert('Changes saved successfully!')
     }
   } catch (error) {
@@ -421,46 +463,46 @@ const saveChanges = async () => {
 
 // Delete from detail modal
 const confirmDeleteFromModal = () => {
-  if (!selectedFavorite.value) return
-  favoriteToDelete.value = selectedFavorite.value.id
+  if (!selectedPost.value) return
+  postToDelete.value = selectedPost.value.id
   showDeleteModal.value = true
 }
 
 // Delete with confirmation modal
 const confirmDelete = (id: string) => {
-  favoriteToDelete.value = id
+  postToDelete.value = id
   showDeleteModal.value = true
 }
 
 const handleDeleteConfirm = async () => {
-  if (!favoriteToDelete.value) return
+  if (!postToDelete.value) return
 
   try {
-    deletingFavorite.value = true
-    const response = await api.deleteFavorite(favoriteToDelete.value)
+    deletingPost.value = true
+    const response = await api.deleteFavorite(postToDelete.value)
 
     if (response.success) {
       showDeleteModal.value = false
       showDetailModal.value = false
-      favoriteToDelete.value = null
-      selectedFavorite.value = null
-      await fetchFavorites()
+      postToDelete.value = null
+      selectedPost.value = null
+      await fetchPosts()
     }
   } catch (error) {
-    console.error('Error deleting favorite:', error)
+    console.error('Error deleting post:', error)
   } finally {
-    deletingFavorite.value = false
+    deletingPost.value = false
   }
 }
 
 const handleDeleteCancel = () => {
   showDeleteModal.value = false
-  favoriteToDelete.value = null
+  postToDelete.value = null
 }
 
 const handleScheduled = () => {
   showScheduleModal.value = false
-  selectedFavorite.value = null
+  selectedPost.value = null
 }
 
 // Utility functions
@@ -480,7 +522,7 @@ const formatDate = (dateString: string): string => {
 const copyToClipboard = async (text: string) => {
   try {
     await navigator.clipboard.writeText(text)
-    alert(t('favorites.copiedToClipboard'))
+    alert(t('posts.copiedToClipboard'))
   } catch (error) {
     console.error('Error copying to clipboard:', error)
   }
@@ -488,13 +530,13 @@ const copyToClipboard = async (text: string) => {
 
 // Initialize
 onMounted(() => {
-  fetchFavorites()
+  fetchPosts()
   fetchRestaurants()
 })
 </script>
 
 <style scoped>
-.favorites-view {
+.posts-view {
   min-height: 100vh;
   position: relative;
   padding: 2rem 1rem;
@@ -577,14 +619,14 @@ onMounted(() => {
   margin: 0;
 }
 
-.favorites-grid {
+.posts-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
   gap: 2rem;
   margin-bottom: 2rem;
 }
 
-.favorite-card {
+.post-card {
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -599,8 +641,8 @@ onMounted(() => {
     0 0 0 1px rgba(212, 175, 55, 0.1);
 }
 
-.favorite-card:hover,
-.favorite-card.card-expanded {
+.post-card:hover,
+.post-card.card-expanded {
   transform: translateY(-8px) scale(1.02);
   border-color: rgba(212, 175, 55, 0.4);
   box-shadow:
@@ -610,7 +652,7 @@ onMounted(() => {
   background: rgba(20, 20, 20, 0.8) !important;
 }
 
-.favorite-card::before {
+.post-card::before {
   content: '';
   position: absolute;
   top: 0;
@@ -622,7 +664,7 @@ onMounted(() => {
   transition: opacity 0.4s ease;
 }
 
-.favorite-card:hover::before {
+.post-card:hover::before {
   opacity: 1;
   background: linear-gradient(90deg, var(--gold-primary), var(--gold-light), var(--gold-primary));
 }
@@ -634,7 +676,7 @@ onMounted(() => {
   overflow: hidden;
 }
 
-.favorite-media {
+.post-media {
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -649,7 +691,7 @@ onMounted(() => {
   transition: transform 0.3s ease;
 }
 
-.favorite-card:hover .type-icon {
+.post-card:hover .type-icon {
   transform: scale(1.1);
 }
 
@@ -694,7 +736,7 @@ onMounted(() => {
   border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
-.favorite-details {
+.post-details {
   padding: 1.5rem;
   display: flex;
   flex-direction: column;
@@ -869,6 +911,74 @@ onMounted(() => {
   margin-bottom: var(--space-md);
 }
 
+/* Hashtag Editor */
+.hashtag-editor {
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  border-radius: var(--radius-md);
+  padding: var(--space-md);
+  transition: all 0.2s ease;
+}
+
+.hashtag-editor:focus-within {
+  border-color: var(--gold-primary);
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.hashtag-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-sm);
+}
+
+.hashtag-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: var(--space-xs) var(--space-sm);
+  background: rgba(212, 175, 55, 0.15);
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  border-radius: var(--radius-full);
+  color: var(--gold-primary);
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+}
+
+.remove-tag {
+  background: none;
+  border: none;
+  color: var(--gold-primary);
+  font-size: var(--text-base);
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+  opacity: 0.7;
+  transition: opacity 0.2s ease;
+}
+
+.remove-tag:hover {
+  opacity: 1;
+}
+
+.hashtag-input {
+  width: 100%;
+  background: transparent;
+  border: none;
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  padding: var(--space-xs) 0;
+}
+
+.hashtag-input:focus {
+  outline: none;
+}
+
+.hashtag-input::placeholder {
+  color: var(--text-muted);
+}
+
 /* Edit inputs in modal */
 .edit-textarea,
 .edit-input,
@@ -926,7 +1036,7 @@ onMounted(() => {
     font-size: 2rem;
   }
 
-  .favorites-grid {
+  .posts-grid {
     grid-template-columns: 1fr;
     gap: 1.5rem;
   }
@@ -946,11 +1056,11 @@ onMounted(() => {
   border-radius: var(--radius-md) var(--radius-md) 0 0;
 }
 
-.favorite-media {
+.post-media {
   transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.favorite-card:hover .favorite-media {
+.post-card:hover .post-media {
   transform: scale(1.05);
 }
 

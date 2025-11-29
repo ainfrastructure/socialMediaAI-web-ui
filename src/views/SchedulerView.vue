@@ -468,11 +468,11 @@
       </BaseCard>
     </div>
 
-    <!-- Pick Favorite Modal -->
-    <PickFavoriteModal
-      v-model="showPickFavoriteModal"
+    <!-- Pick Post Modal -->
+    <PickPostModal
+      v-model="showPickPostModal"
       :selected-date="selectedDateForScheduling"
-      @scheduled="handleFavoriteScheduled"
+      @scheduled="handlePostScheduled"
     />
 
     <!-- Create Post Wizard Modal -->
@@ -488,15 +488,15 @@
             <p class="wizard-subtitle">How would you like to create your post?</p>
 
             <div class="creation-options">
-              <!-- From Favorites Option -->
+              <!-- From Saved Posts Option -->
               <button
                 class="creation-option-card"
-                @click="selectCreationMethod('favorite')"
+                @click="selectCreationMethod('saved')"
               >
                 <div class="option-icon">✨</div>
-                <h3 class="option-title">From Favorites</h3>
+                <h3 class="option-title">From Saved Posts</h3>
                 <p class="option-description">
-                  Choose from your saved favorite posts
+                  Choose from your saved posts
                 </p>
               </button>
 
@@ -707,7 +707,7 @@ import GradientBackground from '../components/GradientBackground.vue'
 import BaseCard from '../components/BaseCard.vue'
 import BaseButton from '../components/BaseButton.vue'
 import FilterBar from '../components/FilterBar.vue'
-import PickFavoriteModal from '../components/PickFavoriteModal.vue'
+import PickPostModal from '../components/PickPostModal.vue'
 import EditScheduledPostModal from '../components/EditScheduledPostModal.vue'
 import Toast from '../components/Toast.vue'
 import ConfirmModal from '../components/ConfirmModal.vue'
@@ -722,7 +722,7 @@ const selectedDay = ref<any>(null)
 const scheduledPosts = ref<any[]>([])
 const holidays = ref<any[]>([])
 const loading = ref(false)
-const showPickFavoriteModal = ref(false)
+const showPickPostModal = ref(false)
 const selectedDateForScheduling = ref<string | null>(null)
 const selectedCountry = ref('NO') // Norway as default
 const showPostDetailModal = ref(false)
@@ -731,7 +731,7 @@ const showEditModal = ref(false)
 const postToEdit = ref<any>(null)
 const showCreatePostWizard = ref(false)
 const wizardStep = ref(1) // 1 = Choose Method, 2 = Create/Select Content
-const selectedCreationMethod = ref<'favorite' | 'new' | null>(null)
+const selectedCreationMethod = ref<'saved' | 'new' | null>(null)
 const dayViewPage = ref(1)
 const postsPerPage = 3
 
@@ -1403,17 +1403,17 @@ const openCreatePostWizard = (day: any) => {
 }
 
 // Select creation method in wizard
-const selectCreationMethod = (method: 'favorite' | 'new') => {
+const selectCreationMethod = (method: 'saved' | 'new') => {
   selectedCreationMethod.value = method
 
   if (method === 'new') {
     // Go to cook up
     showCreatePostWizard.value = false
     router.push(`/cook-up?scheduleDate=${selectedDateForScheduling.value}`)
-  } else if (method === 'favorite') {
-    // Open pick favorite modal
+  } else if (method === 'saved') {
+    // Open pick post modal
     showCreatePostWizard.value = false
-    showPickFavoriteModal.value = true
+    showPickPostModal.value = true
   }
 }
 
@@ -1426,17 +1426,17 @@ const createNewPost = (day: any) => {
   router.push(`/cook-up?scheduleDate=${dateString}`)
 }
 
-const pickFavoriteForDate = (day: any) => {
+const pickPostForDate = (day: any) => {
   // Use local date string to avoid timezone shifts
   const year = day.date.getFullYear()
   const month = String(day.date.getMonth() + 1).padStart(2, '0')
   const dayNum = String(day.date.getDate()).padStart(2, '0')
   const dateString = `${year}-${month}-${dayNum}`
   selectedDateForScheduling.value = dateString
-  showPickFavoriteModal.value = true
+  showPickPostModal.value = true
 }
 
-const handleFavoriteScheduled = async () => {
+const handlePostScheduled = async () => {
   // Keep the currently selected day to reload its posts
   const currentSelectedDate = selectedDateForScheduling.value
 
@@ -1460,7 +1460,7 @@ const handleFavoriteScheduled = async () => {
     }
   }
 
-  showPickFavoriteModal.value = false
+  showPickPostModal.value = false
   selectedDateForScheduling.value = null
 }
 

@@ -81,7 +81,7 @@ export default {
     step1Description: 'Finn restauranter ved hjelp av Google Places og lagre dem i biblioteket ditt. Få tilgang til menyer, bilder og merkevaredetaljer umiddelbart.',
     step1Button: 'Søk nå',
     step2Title: 'Lag innhold',
-    step2Description: 'Generer AI-drevne bilder, videoer og bildetekster. Lagre favorittene dine og bygg et innholdsbibliotek for restaurantene dine.',
+    step2Description: 'Generer AI-drevne bilder, videoer og bildetekster. Bygg et innholdsbibliotek for restaurantene dine.',
     step2Button: 'Start å lage',
     step3Title: 'Planlegg innlegg',
     step3Description: 'Planlegg innholdskalenderen din og publiser direkte til Facebook. Planlegg innlegg på forhånd og oppretthold konsistent engasjement.',
@@ -104,7 +104,7 @@ export default {
 
     // Stats
     postsCreated: 'Innlegg opprettet',
-    favoritesSaved: 'Favoritter lagret',
+    postsSaved: 'Innlegg lagret',
     scheduledPosts: 'Planlagte innlegg',
     restaurants: 'Restauranter',
 
@@ -119,8 +119,8 @@ export default {
     schedulePosts: 'Planlegg innlegg',
     schedulePostsDescription: 'Planlegg innholdskalenderen din på forhånd',
     openCalendar: 'Åpne kalender →',
-    viewFavorites: 'Vis favoritter',
-    viewFavoritesDescription: 'Få tilgang til ditt lagrede innleggsbibliotek',
+    viewPosts: 'Vis innlegg',
+    viewPostsDescription: 'Få tilgang til ditt lagrede innleggsbibliotek',
     browseLibrary: 'Bla gjennom bibliotek →',
 
     // Social platforms
@@ -323,7 +323,7 @@ export default {
         'Generer bilder og videoer med AI',
         'Lag overbevisende bildetekster og hashtags',
         'Tilpass med din merkevareidentitet',
-        'Lagre favoritter for senere bruk',
+        'Alt generert innhold lagres automatisk',
       ],
 
       scheduleTitle: 'Planlegg og publiser 📅',
@@ -349,7 +349,7 @@ export default {
       readyDetails: [
         'Start med å søke etter restauranten din',
         'Generer ditt første innlegg på minutter',
-        'Lagre favorittene dine og bygg biblioteket ditt',
+        'Alt innhold lagres i biblioteket ditt',
         'Planlegg innhold for å opprettholde konsistens',
       ],
 
@@ -386,7 +386,7 @@ export default {
 
       q4Question: 'Hva kan du gjøre med generert innhold på SocialChef?',
       q4Options: ['Kun laste ned', 'Kun planlegge', 'Lagre, planlegge og publisere til Facebook', 'Kun e-post'],
-      q4Explanation: 'Du kan lagre favoritter, planlegge innlegg på forhånd og publisere direkte til Facebook—alt fra én plattform.',
+      q4Explanation: 'Alt generert innhold lagres automatisk. Du kan planlegge innlegg på forhånd og publisere direkte til Facebook—alt fra én plattform.',
     },
 
     // Simple onboarding flow
@@ -492,9 +492,6 @@ export default {
     generatedImageTitle: 'Generert bilde:',
     generatedMarketingImageAlt: 'Generert markedsføringsbilde',
     downloadImage: '⬇️ Last ned bilde',
-    savingToFavorites: 'Lagrer...',
-    savedToFavorites: '⭐ Lagret',
-    saveToFavorites: '⭐ Lagre i favoritter',
     schedulePost: '📅 Planlegg innlegg',
     publishToFacebook: '📤 Publiser til Facebook',
     publishing: 'Publiserer...',
@@ -649,9 +646,9 @@ export default {
     timezone: 'Tidssone',
     loading: 'Laster tidsplan...',
     createPost: 'Lag innlegg',
-    addFavorite: 'Legg til favoritt',
+    addPost: 'Legg til innlegg',
     createNewPost: 'Lag nytt innlegg for denne datoen',
-    scheduleFavorite: 'Planlegg en favoritt for denne datoen',
+    scheduleSavedPost: 'Planlegg et lagret innlegg for denne datoen',
     holidays: 'Høytider',
     moreHolidays: 'flere',
     noPostsScheduled: 'Ingen innlegg planlagt for denne dagen',
@@ -682,24 +679,22 @@ export default {
     posts: 'innlegg',
   },
 
-  // Favorites View
-  favorites: {
-    title: 'Favorittinnlegg',
+  // Posts View (previously Favorites)
+  posts: {
+    title: 'Innlegg',
     subtitle: 'Ditt lagrede markedsføringsinnhold',
     all: 'Alle',
     drafts: 'Utkast',
     scheduled: 'Planlagt',
     published: 'Publisert',
-    loading: 'Laster favoritter...',
-    noFavorites: 'Ingen favoritter ennå',
-    noFavoritesDescription: 'Gå til Lag innhold for å lage og lagre ditt første innlegg!',
+    loading: 'Laster innlegg...',
+    noPosts: 'Ingen innlegg ennå',
+    noPostsDescription: 'Gå til Lag innhold for å lage ditt første innlegg!',
     goToCookUp: 'Gå til Lag innhold',
-    addToFavorites: 'Legg til i favoritter',
-    removeFromFavorites: 'Fjern fra favoritter',
     editPost: 'Rediger innlegg',
     deletePost: 'Slett innlegg',
     postDeleted: 'Innlegg slettet',
-    confirmDelete: 'Er du sikker på at du vil slette denne favoritten?',
+    confirmDelete: 'Er du sikker på at du vil slette dette innlegget?',
     schedule: 'Planlegg',
     delete: 'Slett',
     postDetails: 'Innleggsdetaljer',
@@ -712,6 +707,7 @@ export default {
     copiedToClipboard: 'Kopiert til utklippstavle!',
     image: 'bilde',
     video: 'video',
+    restaurant: 'Restaurant',
   },
 
   // Profile View

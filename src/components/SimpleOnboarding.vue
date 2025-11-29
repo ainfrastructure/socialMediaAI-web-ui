@@ -49,8 +49,7 @@ const generatedPost = ref<{
   hashtags: string[]
   callToAction: string
 } | null>(null)
-const savingFavorite = ref(false)
-const savedFavoriteId = ref<string | null>(null)
+const savedPostId = ref<string | null>(null)
 
 // Step 4: Social media connection
 const showFacebookOnboarding = ref(false)
@@ -386,6 +385,9 @@ async function handlePostGenerated(data: {
     console.log('[ONBOARDING] Generation complete! Generated post:', generatedPost.value)
     console.log('[ONBOARDING] Image URL set to:', generatedPost.value.imageUrl)
 
+    // Auto-save the generated post
+    await autoSavePost()
+
     // Auto-advance to review step
     currentStep.value = 3
   } catch (error: any) {
@@ -496,19 +498,20 @@ async function schedulePost() {
     publishing.value = true
     publishError.value = ''
 
-    // Need to save as favorite first before scheduling if not already saved
-    if (!savedFavoriteId.value) {
-      await saveToFavorites()
+    // Post should already be auto-saved after generation
+    if (!savedPostId.value) {
+      // Try to auto-save if not already saved
+      await autoSavePost()
     }
 
-    if (!savedFavoriteId.value) {
+    if (!savedPostId.value) {
       publishError.value = 'Failed to save post. Please try again.'
       return
     }
 
-    // Create a scheduled post with the favorite
+    // Create a scheduled post
     const response = await api.schedulePost({
-      favorite_post_id: savedFavoriteId.value,
+      favorite_post_id: savedPostId.value,
       scheduled_date: scheduleDate.value,
       scheduled_time: scheduleTime.value,
       timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
@@ -533,13 +536,23 @@ async function schedulePost() {
   }
 }
 
-async function saveToFavorites() {
-  if (!generatedPost.value || !selectedRestaurant.value) return
+// Auto-save post after generation (called automatically, no user interaction)
+async function autoSavePost() {
+  if (!generatedPost.value || !selectedRestaurant.value) {
+    console.log('[ONBOARDING] Skipping auto-save - missing data')
+    return
+  }
+
+  // Skip if already saved
+  if (savedPostId.value) {
+    console.log('[ONBOARDING] Skipping auto-save - already saved')
+    return
+  }
 
   try {
-    savingFavorite.value = true
+    console.log('[ONBOARDING] Auto-saving post...')
 
-    const favoriteData = {
+    const postData = {
       restaurant_id: selectedRestaurant.value.id,
       content_type: 'image' as const,
       media_url: generatedPost.value.imageUrl,
@@ -548,20 +561,16 @@ async function saveToFavorites() {
       call_to_action: generatedPost.value.callToAction
     }
 
-    console.log('[ONBOARDING] Saving to favorites:', favoriteData)
-    const response = await api.saveFavorite(favoriteData)
+    const response = await api.saveFavorite(postData)
 
     if (response.success && response.data?.favorite?.id) {
-      savedFavoriteId.value = response.data.favorite.id
-      console.log('[ONBOARDING] Saved to favorites successfully, ID:', savedFavoriteId.value)
+      savedPostId.value = response.data.favorite.id
+      console.log('[ONBOARDING] Auto-saved post successfully, ID:', savedPostId.value)
     } else {
-      throw new Error(response.error || 'Failed to save')
+      console.error('[ONBOARDING] Auto-save failed:', response.error)
     }
   } catch (error: any) {
-    console.error('[ONBOARDING] Failed to save to favorites:', error)
-    restaurantError.value = error.message || 'Failed to save to favorites'
-  } finally {
-    savingFavorite.value = false
+    console.error('[ONBOARDING] Auto-save error:', error)
   }
 }
 
@@ -751,19 +760,6 @@ function handleFacebookConnected() {
             <div v-if="generatedPost.callToAction" class="preview-section">
               <h4>CALL TO ACTION</h4>
               <p class="cta-text">{{ generatedPost.callToAction }}</p>
-            </div>
-
-            <!-- Add to Favorites Button -->
-            <div class="preview-actions">
-              <BaseButton
-                variant="primary"
-                size="large"
-                full-width
-                @click="saveToFavorites"
-                :disabled="savingFavorite || !!savedFavoriteId"
-              >
-                {{ savedFavoriteId ? '⭐ Saved to Favorites' : (savingFavorite ? 'Saving...' : '⭐ Add to Favorites') }}
-              </BaseButton>
             </div>
           </BaseCard>
         </div>
@@ -1694,13 +1690,6 @@ function handleFacebookConnected() {
   display: flex;
   flex-direction: column;
   gap: var(--space-2xl);
-}
-
-/* Preview Actions */
-.preview-actions {
-  margin-top: var(--space-xl);
-  padding-top: var(--space-xl);
-  border-top: 1px solid var(--border-color);
 }
 
 /* Generation Loading */

@@ -4,7 +4,7 @@
       <BaseCard variant="glass-intense" class="modal-card">
         <div class="modal-header">
           <h3 class="modal-title">
-            {{ currentStep === 1 ? 'Pick a Favorite Post' : 'Schedule Your Post' }}
+            {{ currentStep === 1 ? 'Pick a Saved Post' : 'Schedule Your Post' }}
           </h3>
           <button class="close-btn" @click="closeModal">&times;</button>
         </div>
@@ -17,68 +17,68 @@
             <div :class="['step-dot', { active: currentStep === 2 }]">2</div>
           </div>
 
-          <!-- STEP 1: Select Favorite -->
+          <!-- STEP 1: Select Post -->
           <div v-if="currentStep === 1" class="wizard-step">
             <!-- Loading State -->
             <div v-if="loading" class="loading-container">
               <div class="spinner"></div>
-              <p>Loading favorites...</p>
+              <p>Loading posts...</p>
             </div>
 
             <!-- Empty State -->
-            <div v-else-if="favorites.length === 0" class="empty-state">
-              <p>No favorites yet! Create content in the Playground first.</p>
+            <div v-else-if="posts.length === 0" class="empty-state">
+              <p>No posts yet! Create content in the Playground first.</p>
               <BaseButton variant="primary" @click="goToPlayground">
                 Go to Playground
               </BaseButton>
             </div>
 
-            <!-- Favorites Grid -->
+            <!-- Posts Grid -->
             <div v-else>
-              <div class="favorites-grid">
+              <div class="posts-grid">
                 <div
-                  v-for="favorite in paginatedFavorites"
-                  :key="favorite.id"
-                  :class="['favorite-item', { selected: selectedFavorite?.id === favorite.id }]"
-                  @click="selectFavorite(favorite)"
+                  v-for="post in paginatedPosts"
+                  :key="post.id"
+                  :class="['post-item', { selected: selectedPost?.id === post.id }]"
+                  @click="selectPost(post)"
                 >
                   <!-- Media Thumbnail -->
                   <div class="thumbnail-container">
                     <img
-                      v-if="favorite.content_type === 'image'"
-                      :src="favorite.media_url"
-                      alt="Favorite"
+                      v-if="post.content_type === 'image'"
+                      :src="post.media_url"
+                      alt="Post"
                       class="thumbnail"
                     />
                     <video
                       v-else
-                      :src="favorite.media_url"
+                      :src="post.media_url"
                       class="thumbnail"
                     ></video>
 
                     <!-- Type Badge -->
-                    <span :class="['type-badge', favorite.content_type]">
-                      {{ favorite.content_type === 'image' ? '📸' : '🎥' }}
+                    <span :class="['type-badge', post.content_type]">
+                      {{ post.content_type === 'image' ? '📸' : '🎥' }}
                     </span>
 
                     <!-- Platform Badge -->
-                    <span v-if="favorite.platform" :class="['platform-badge', `platform-${favorite.platform}`]">
-                      {{ favorite.platform }}
+                    <span v-if="post.platform" :class="['platform-badge', `platform-${post.platform}`]">
+                      {{ post.platform }}
                     </span>
 
                     <!-- Selection Indicator -->
-                    <div v-if="selectedFavorite?.id === favorite.id" class="selection-check">
+                    <div v-if="selectedPost?.id === post.id" class="selection-check">
                       ✓
                     </div>
                   </div>
 
                   <!-- Post Info -->
-                  <div class="favorite-info">
-                    <p v-if="favorite.post_text" class="post-preview">
-                      {{ truncateText(favorite.post_text, 80) }}
+                  <div class="post-info">
+                    <p v-if="post.post_text" class="post-preview">
+                      {{ truncateText(post.post_text, 80) }}
                     </p>
-                    <div v-if="favorite.saved_restaurants?.name" class="restaurant-tag">
-                      🏪 {{ favorite.saved_restaurants.name }}
+                    <div v-if="post.saved_restaurants?.name" class="restaurant-tag">
+                      🏪 {{ post.saved_restaurants.name }}
                     </div>
                   </div>
                 </div>
@@ -94,7 +94,7 @@
                   ← Previous
                 </button>
                 <span class="pagination-info">
-                  Page {{ currentPage }} of {{ totalPages }} ({{ favorites.length }} favorites)
+                  Page {{ currentPage }} of {{ totalPages }} ({{ posts.length }} posts)
                 </span>
                 <button
                   class="pagination-btn"
@@ -111,7 +111,7 @@
                   variant="primary"
                   size="large"
                   full-width
-                  :disabled="!selectedFavorite"
+                  :disabled="!selectedPost"
                   @click="goToScheduleStep"
                 >
                   Next: Set Schedule →
@@ -122,24 +122,98 @@
 
           <!-- STEP 2: Set Schedule -->
           <div v-if="currentStep === 2" class="wizard-step">
-            <!-- Selected Favorite Preview -->
-            <div v-if="selectedFavorite" class="selected-favorite-preview">
-              <h4 class="preview-title">Selected Post:</h4>
+            <!-- Selected Post Preview -->
+            <div v-if="selectedPost" class="selected-post-preview">
+              <div class="preview-header">
+                <h4 class="preview-title">Selected Post:</h4>
+                <BaseButton
+                  v-if="!isEditing"
+                  variant="secondary"
+                  size="small"
+                  @click="toggleEditMode"
+                >
+                  ✏️ Edit Content
+                </BaseButton>
+              </div>
               <div class="preview-card">
                 <img
-                  v-if="selectedFavorite.content_type === 'image'"
-                  :src="selectedFavorite.media_url"
+                  v-if="selectedPost.content_type === 'image'"
+                  :src="selectedPost.media_url"
                   alt="Selected"
                   class="preview-thumbnail"
                 />
                 <video
                   v-else
-                  :src="selectedFavorite.media_url"
+                  :src="selectedPost.media_url"
                   class="preview-thumbnail"
                 ></video>
-                <p class="preview-text">
-                  {{ truncateText(selectedFavorite.post_text, 100) }}
+                <p v-if="!isEditing" class="preview-text">
+                  {{ truncateText(selectedPost.post_text, 100) }}
                 </p>
+              </div>
+
+              <!-- Edit Section -->
+              <div v-if="isEditing" class="edit-section">
+                <div class="edit-field">
+                  <label class="edit-label">Post Text</label>
+                  <textarea
+                    v-model="editedPostText"
+                    class="edit-textarea"
+                    rows="4"
+                    placeholder="Enter post text..."
+                  ></textarea>
+                </div>
+
+                <div class="edit-field">
+                  <label class="edit-label">Hashtags</label>
+                  <div class="hashtag-editor">
+                    <div class="hashtag-tags">
+                      <span
+                        v-for="(tag, idx) in editedHashtags"
+                        :key="idx"
+                        class="hashtag-tag"
+                      >
+                        {{ tag }}
+                        <button @click="removeHashtag(idx)" class="remove-tag">&times;</button>
+                      </span>
+                    </div>
+                    <input
+                      v-model="newHashtag"
+                      @keydown.enter.prevent="addHashtag"
+                      @keydown.,.prevent="addHashtag"
+                      placeholder="Add hashtag and press Enter..."
+                      class="hashtag-input"
+                    />
+                  </div>
+                </div>
+
+                <div class="edit-field">
+                  <label class="edit-label">Call to Action</label>
+                  <input
+                    v-model="editedCallToAction"
+                    type="text"
+                    class="edit-input"
+                    placeholder="Enter call to action..."
+                  />
+                </div>
+
+                <div class="edit-actions">
+                  <BaseButton
+                    variant="ghost"
+                    size="small"
+                    @click="cancelEdits"
+                  >
+                    Cancel
+                  </BaseButton>
+                  <BaseButton
+                    variant="primary"
+                    size="small"
+                    :disabled="savingEdits"
+                    @click="saveEdits"
+                  >
+                    {{ savingEdits ? 'Saving...' : 'Save Changes' }}
+                  </BaseButton>
+                </div>
               </div>
             </div>
 
@@ -238,7 +312,7 @@
               <BaseButton
                 variant="primary"
                 size="large"
-                @click="scheduleFavorite"
+                @click="scheduleSelectedPost"
               >
                 Schedule Post
               </BaseButton>
@@ -266,11 +340,11 @@ interface Props {
 const props = defineProps<Props>()
 const emit = defineEmits<{
   (e: 'update:modelValue', value: boolean): void
-  (e: 'scheduled', data: { favorite: any; date: string }): void
+  (e: 'scheduled', data: { post: any; date: string }): void
 }>()
 
 const router = useRouter()
-const favorites = ref<any[]>([])
+const posts = ref<any[]>([])
 const loading = ref(false)
 const scheduledTime = ref('')
 const selectedPlatform = ref('')
@@ -281,8 +355,16 @@ const currentPage = ref(1)
 const itemsPerPage = 6
 
 // Wizard state
-const currentStep = ref(1) // 1 = Select Favorite, 2 = Set Schedule
-const selectedFavorite = ref<any>(null)
+const currentStep = ref(1) // 1 = Select Post, 2 = Set Schedule
+const selectedPost = ref<any>(null)
+
+// Edit state
+const isEditing = ref(false)
+const savingEdits = ref(false)
+const editedPostText = ref('')
+const editedHashtags = ref<string[]>([])
+const editedCallToAction = ref('')
+const newHashtag = ref('')
 
 // Auto-detect timezone with fallback
 const detectedTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone
@@ -301,12 +383,12 @@ const hours = Array.from({ length: 12 }, (_, i) => {
 const minutes = Array.from({ length: 60 }, (_, i) => i.toString().padStart(2, '0'))
 
 // Pagination computed properties
-const totalPages = computed(() => Math.ceil(favorites.value.length / itemsPerPage))
+const totalPages = computed(() => Math.ceil(posts.value.length / itemsPerPage))
 
-const paginatedFavorites = computed(() => {
+const paginatedPosts = computed(() => {
   const start = (currentPage.value - 1) * itemsPerPage
   const end = start + itemsPerPage
-  return favorites.value.slice(start, end)
+  return posts.value.slice(start, end)
 })
 
 const today = computed(() => {
@@ -354,19 +436,20 @@ watch(() => props.modelValue, async (newValue) => {
 
     // Reset wizard state
     currentStep.value = 1
-    selectedFavorite.value = null
+    selectedPost.value = null
+    isEditing.value = false
 
-    await fetchFavorites()
+    await fetchPosts()
   }
 })
 
-const fetchFavorites = async () => {
+const fetchPosts = async () => {
   try {
     loading.value = true
     const response = await api.getFavorites()
 
     if (response.success) {
-      favorites.value = response.data?.favorites || []
+      posts.value = response.data?.favorites || []
     }
   } catch (error) {
 
@@ -379,13 +462,13 @@ const closeModal = () => {
   emit('update:modelValue', false)
 }
 
-const selectFavorite = (favorite: any) => {
-  selectedFavorite.value = favorite
+const selectPost = (post: any) => {
+  selectedPost.value = post
 }
 
 const goToScheduleStep = () => {
-  if (!selectedFavorite.value) {
-    alert('Please select a favorite post first')
+  if (!selectedPost.value) {
+    alert('Please select a post first')
     return
   }
   currentStep.value = 2
@@ -393,12 +476,13 @@ const goToScheduleStep = () => {
 
 const goBackToSelection = () => {
   currentStep.value = 1
+  isEditing.value = false
 }
 
-const scheduleFavorite = async () => {
-  const favorite = selectedFavorite.value
-  if (!favorite) {
-    alert('No favorite selected')
+const scheduleSelectedPost = async () => {
+  const post = selectedPost.value
+  if (!post) {
+    alert('No post selected')
     return
   }
   if (!scheduleDate.value) {
@@ -423,7 +507,7 @@ const scheduleFavorite = async () => {
 
   try {
     const response = await api.schedulePost({
-      favorite_post_id: favorite.id,
+      favorite_post_id: post.id,
       scheduled_date: scheduleDate.value,
       scheduled_time: scheduledTime.value,
       timezone: timezone.value,
@@ -431,7 +515,7 @@ const scheduleFavorite = async () => {
     })
 
     if (response.success) {
-      emit('scheduled', { favorite, date: scheduleDate.value })
+      emit('scheduled', { post, date: scheduleDate.value })
       closeModal()
     } else {
       alert(response.error || 'Failed to schedule post')
@@ -464,6 +548,64 @@ const formatDate = (dateString: string): string => {
 const truncateText = (text: string, maxLength: number): string => {
   if (text.length <= maxLength) return text
   return text.substring(0, maxLength) + '...'
+}
+
+// Edit functions
+const toggleEditMode = () => {
+  if (selectedPost.value) {
+    editedPostText.value = selectedPost.value.post_text || ''
+    editedHashtags.value = [...(selectedPost.value.hashtags || [])]
+    editedCallToAction.value = selectedPost.value.call_to_action || ''
+    newHashtag.value = ''
+  }
+  isEditing.value = true
+}
+
+const cancelEdits = () => {
+  isEditing.value = false
+  newHashtag.value = ''
+}
+
+const addHashtag = () => {
+  const tag = newHashtag.value.trim().replace(/^#/, '')
+  if (tag && !editedHashtags.value.includes(`#${tag}`)) {
+    editedHashtags.value.push(`#${tag}`)
+  }
+  newHashtag.value = ''
+}
+
+const removeHashtag = (index: number) => {
+  editedHashtags.value.splice(index, 1)
+}
+
+const saveEdits = async () => {
+  if (!selectedPost.value) return
+
+  try {
+    savingEdits.value = true
+    const response = await api.updateFavorite(selectedPost.value.id, {
+      post_text: editedPostText.value,
+      hashtags: editedHashtags.value,
+      call_to_action: editedCallToAction.value
+    })
+
+    if (response.success) {
+      // Update the local selected post with new values
+      selectedPost.value = {
+        ...selectedPost.value,
+        post_text: editedPostText.value,
+        hashtags: editedHashtags.value,
+        call_to_action: editedCallToAction.value
+      }
+      isEditing.value = false
+    } else {
+      alert(response.error || 'Failed to save changes')
+    }
+  } catch (error: any) {
+    alert(error.message || 'Failed to save changes')
+  } finally {
+    savingEdits.value = false
+  }
 }
 </script>
 
@@ -830,13 +972,13 @@ const truncateText = (text: string, maxLength: number): string => {
   margin: 0;
 }
 
-.favorites-grid {
+.posts-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
   gap: var(--space-xl);
 }
 
-.favorite-item {
+.post-item {
   background: rgba(0, 0, 0, 0.3);
   border: 1px solid rgba(212, 175, 55, 0.2);
   border-radius: var(--radius-lg);
@@ -847,13 +989,13 @@ const truncateText = (text: string, maxLength: number): string => {
   flex-direction: column;
 }
 
-.favorite-item:hover {
+.post-item:hover {
   border-color: rgba(212, 175, 55, 0.5);
   transform: translateY(-2px);
   box-shadow: var(--shadow-lg);
 }
 
-.favorite-item.selected {
+.post-item.selected {
   border: 2px solid var(--gold-primary);
   box-shadow: var(--glow-gold-md);
   transform: translateY(-2px);
@@ -924,7 +1066,7 @@ const truncateText = (text: string, maxLength: number): string => {
   color: white;
 }
 
-.favorite-info {
+.post-info {
   padding: var(--space-md);
   flex: 1;
   display: flex;
@@ -988,8 +1130,8 @@ const truncateText = (text: string, maxLength: number): string => {
   justify-content: space-between;
 }
 
-/* Selected Favorite Preview (Step 2) */
-.selected-favorite-preview {
+/* Selected Post Preview (Step 2) */
+.selected-post-preview {
   margin-bottom: var(--space-2xl);
   padding: var(--space-lg);
   background: rgba(0, 0, 0, 0.3);
@@ -1024,6 +1166,143 @@ const truncateText = (text: string, maxLength: number): string => {
   font-size: var(--text-sm);
   line-height: 1.5;
   margin: 0;
+}
+
+/* Preview Header */
+.preview-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-md);
+}
+
+.preview-header .preview-title {
+  margin: 0;
+}
+
+/* Edit Section Styles */
+.edit-section {
+  margin-top: var(--space-lg);
+  padding: var(--space-lg);
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  animation: fadeIn 0.3s ease;
+}
+
+.edit-field {
+  margin-bottom: var(--space-lg);
+}
+
+.edit-field:last-of-type {
+  margin-bottom: 0;
+}
+
+.edit-label {
+  display: block;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: var(--space-sm);
+}
+
+.edit-textarea,
+.edit-input {
+  width: 100%;
+  padding: var(--space-md);
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  transition: all 0.2s ease;
+  resize: vertical;
+}
+
+.edit-textarea:focus,
+.edit-input:focus {
+  outline: none;
+  border-color: var(--gold-primary);
+  background: rgba(0, 0, 0, 0.5);
+}
+
+/* Hashtag Editor */
+.hashtag-editor {
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  border-radius: var(--radius-md);
+  padding: var(--space-md);
+  transition: all 0.2s ease;
+}
+
+.hashtag-editor:focus-within {
+  border-color: var(--gold-primary);
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.hashtag-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-sm);
+}
+
+.hashtag-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: var(--space-xs) var(--space-sm);
+  background: rgba(212, 175, 55, 0.15);
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  border-radius: var(--radius-full);
+  color: var(--gold-primary);
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+}
+
+.remove-tag {
+  background: none;
+  border: none;
+  color: var(--gold-primary);
+  font-size: var(--text-base);
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+  opacity: 0.7;
+  transition: opacity 0.2s ease;
+}
+
+.remove-tag:hover {
+  opacity: 1;
+}
+
+.hashtag-input {
+  width: 100%;
+  background: transparent;
+  border: none;
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  padding: var(--space-xs) 0;
+}
+
+.hashtag-input:focus {
+  outline: none;
+}
+
+.hashtag-input::placeholder {
+  color: var(--text-muted);
+}
+
+/* Edit Actions */
+.edit-actions {
+  display: flex;
+  gap: var(--space-md);
+  justify-content: flex-end;
+  margin-top: var(--space-lg);
+  padding-top: var(--space-md);
+  border-top: 1px solid rgba(212, 175, 55, 0.1);
 }
 
 /* Pagination Styles */
@@ -1080,7 +1359,7 @@ const truncateText = (text: string, maxLength: number): string => {
     grid-template-columns: 1fr;
   }
 
-  .favorites-grid {
+  .posts-grid {
     grid-template-columns: 1fr;
   }
 

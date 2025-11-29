@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, watch } from 'vue'
+import { computed, watch, ref } from 'vue'
 import BaseButton from './BaseButton.vue'
 import BaseCard from './BaseCard.vue'
 import { useFacebookStore } from '@/stores/facebook'
@@ -15,7 +15,6 @@ const props = defineProps<{
   }
   isGeneratingImage?: boolean
   isGeneratingContent?: boolean
-  isSaved?: boolean
   isPublishing?: boolean
   isPublished?: boolean
   facebookPostUrl?: string
@@ -29,12 +28,78 @@ watch(() => props.postContent, (newVal) => {
 
 const emit = defineEmits<{
   (e: 'update:modelValue', value: boolean): void
-  (e: 'save'): void
   (e: 'publish'): void
   (e: 'schedule'): void
   (e: 'connectFacebook'): void
   (e: 'retry'): void
+  (e: 'contentUpdated', content: { postText: string; hashtags: string[]; callToAction: string }): void
 }>()
+
+// Edit state
+const isEditing = ref(false)
+const editedPostText = ref('')
+const editedHashtags = ref<string[]>([])
+const editedCallToAction = ref('')
+const newHashtag = ref('')
+
+// Initialize edit fields when postContent changes
+watch(() => props.postContent, (content) => {
+  if (content) {
+    editedPostText.value = content.postText || ''
+    editedHashtags.value = [...(content.hashtags || [])]
+    editedCallToAction.value = content.callToAction || ''
+  }
+}, { immediate: true, deep: true })
+
+// Reset edit state when modal closes
+watch(() => props.modelValue, (isOpen) => {
+  if (!isOpen) {
+    isEditing.value = false
+    newHashtag.value = ''
+  }
+})
+
+// Edit functions
+const toggleEditMode = () => {
+  if (props.postContent) {
+    editedPostText.value = props.postContent.postText || ''
+    editedHashtags.value = [...(props.postContent.hashtags || [])]
+    editedCallToAction.value = props.postContent.callToAction || ''
+    newHashtag.value = ''
+  }
+  isEditing.value = true
+}
+
+const cancelEdits = () => {
+  if (props.postContent) {
+    editedPostText.value = props.postContent.postText || ''
+    editedHashtags.value = [...(props.postContent.hashtags || [])]
+    editedCallToAction.value = props.postContent.callToAction || ''
+  }
+  isEditing.value = false
+  newHashtag.value = ''
+}
+
+const addHashtag = () => {
+  const tag = newHashtag.value.trim().replace(/^#/, '')
+  if (tag && !editedHashtags.value.includes(`#${tag}`)) {
+    editedHashtags.value.push(`#${tag}`)
+  }
+  newHashtag.value = ''
+}
+
+const removeHashtag = (index: number) => {
+  editedHashtags.value.splice(index, 1)
+}
+
+const saveEdits = () => {
+  emit('contentUpdated', {
+    postText: editedPostText.value,
+    hashtags: editedHashtags.value,
+    callToAction: editedCallToAction.value
+  })
+  isEditing.value = false
+}
 
 const facebookStore = useFacebookStore()
 
@@ -48,10 +113,6 @@ const isGenerationComplete = computed(() => {
 
 function close() {
   emit('update:modelValue', false)
-}
-
-function handleSave() {
-  emit('save')
 }
 
 function handlePublish() {
@@ -129,24 +190,103 @@ function handleRetry() {
         <!-- Post Content Preview or Loading State -->
         <div class="post-content-preview">
           <div v-if="postContent" class="content-sections">
-            <div class="content-section">
-              <h3 class="content-label">Post Text</h3>
-              <p class="post-text">{{ postContent.postText }}</p>
+            <!-- Content Header with Edit Button -->
+            <div class="content-header">
+              <span class="content-header-title">Generated Content</span>
+              <BaseButton
+                v-if="!isEditing && isGenerationComplete"
+                variant="secondary"
+                size="small"
+                @click="toggleEditMode"
+              >
+                ✏️ Edit
+              </BaseButton>
             </div>
 
-            <div v-if="postContent.hashtags.length > 0" class="content-section">
-              <h3 class="content-label">Hashtags</h3>
-              <div class="hashtags">
-                <span v-for="(tag, idx) in postContent.hashtags" :key="idx" class="hashtag">
-                  {{ tag }}
-                </span>
+            <!-- Display Mode -->
+            <template v-if="!isEditing">
+              <div class="content-section">
+                <h3 class="content-label">Post Text</h3>
+                <p class="post-text">{{ postContent.postText }}</p>
               </div>
-            </div>
 
-            <div v-if="postContent.callToAction" class="content-section">
-              <h3 class="content-label">Call to Action</h3>
-              <p class="cta-text">{{ postContent.callToAction }}</p>
-            </div>
+              <div v-if="postContent.hashtags.length > 0" class="content-section">
+                <h3 class="content-label">Hashtags</h3>
+                <div class="hashtags">
+                  <span v-for="(tag, idx) in postContent.hashtags" :key="idx" class="hashtag">
+                    {{ tag }}
+                  </span>
+                </div>
+              </div>
+
+              <div v-if="postContent.callToAction" class="content-section">
+                <h3 class="content-label">Call to Action</h3>
+                <p class="cta-text">{{ postContent.callToAction }}</p>
+              </div>
+            </template>
+
+            <!-- Edit Mode -->
+            <template v-else>
+              <div class="edit-field">
+                <label class="edit-label">Post Text</label>
+                <textarea
+                  v-model="editedPostText"
+                  class="edit-textarea"
+                  rows="4"
+                  placeholder="Enter post text..."
+                ></textarea>
+              </div>
+
+              <div class="edit-field">
+                <label class="edit-label">Hashtags</label>
+                <div class="hashtag-editor">
+                  <div class="hashtag-tags">
+                    <span
+                      v-for="(tag, idx) in editedHashtags"
+                      :key="idx"
+                      class="hashtag-tag"
+                    >
+                      {{ tag }}
+                      <button @click="removeHashtag(idx)" class="remove-tag">&times;</button>
+                    </span>
+                  </div>
+                  <input
+                    v-model="newHashtag"
+                    @keydown.enter.prevent="addHashtag"
+                    @keydown.,.prevent="addHashtag"
+                    placeholder="Add hashtag and press Enter..."
+                    class="hashtag-input"
+                  />
+                </div>
+              </div>
+
+              <div class="edit-field">
+                <label class="edit-label">Call to Action</label>
+                <input
+                  v-model="editedCallToAction"
+                  type="text"
+                  class="edit-input"
+                  placeholder="Enter call to action..."
+                />
+              </div>
+
+              <div class="edit-actions">
+                <BaseButton
+                  variant="ghost"
+                  size="small"
+                  @click="cancelEdits"
+                >
+                  Cancel
+                </BaseButton>
+                <BaseButton
+                  variant="primary"
+                  size="small"
+                  @click="saveEdits"
+                >
+                  Save Changes
+                </BaseButton>
+              </div>
+            </template>
           </div>
 
           <div v-else-if="isGeneratingContent" class="content-loading">
@@ -177,63 +317,38 @@ function handleRetry() {
 
         <!-- Action Buttons (only show when generation is complete and no error) -->
         <div v-else-if="isGenerationComplete" class="modal-actions">
-          <!-- If already published, only show Save to Favorites -->
-          <template v-if="isPublished">
+          <!-- Post is auto-saved, show publish/schedule options -->
+          <div v-if="hasConnectedFacebook" class="action-row">
             <BaseButton
-              variant="secondary"
-              size="large"
-              full-width
-              :disabled="isSaved"
-              @click="handleSave"
-            >
-              {{ isSaved ? '✅ Saved to Favorites' : '⭐ Save to Favorites' }}
-            </BaseButton>
-          </template>
-
-          <!-- If not published yet, show all options -->
-          <template v-else>
-            <BaseButton
-              variant="secondary"
-              size="large"
-              full-width
-              :disabled="isSaved"
-              @click="handleSave"
-            >
-              {{ isSaved ? '✅ Saved to Favorites' : '⭐ Save to Favorites' }}
-            </BaseButton>
-
-            <div v-if="hasConnectedFacebook" class="action-row">
-              <BaseButton
-                variant="primary"
-                size="medium"
-                @click="handlePublish"
-                :disabled="isPublishing"
-                class="action-button"
-              >
-                {{ isPublishing ? '⏳ Publishing...' : '📤 Publish Now' }}
-              </BaseButton>
-
-              <BaseButton
-                variant="secondary"
-                size="medium"
-                @click="handleSchedule"
-                :disabled="isPublishing"
-                class="action-button"
-              >
-                📅 Schedule Post
-              </BaseButton>
-            </div>
-
-            <BaseButton
-              v-else
               variant="primary"
-              size="large"
-              full-width
-              @click="handleConnectFacebook"
+              size="medium"
+              @click="handlePublish"
+              :disabled="isPublishing"
+              class="action-button"
             >
-              🔗 Connect Facebook to Post
+              {{ isPublishing ? '⏳ Publishing...' : '📤 Publish Now' }}
             </BaseButton>
-          </template>
+
+            <BaseButton
+              variant="secondary"
+              size="medium"
+              @click="handleSchedule"
+              :disabled="isPublishing"
+              class="action-button"
+            >
+              📅 Schedule Post
+            </BaseButton>
+          </div>
+
+          <BaseButton
+            v-else
+            variant="primary"
+            size="large"
+            full-width
+            @click="handleConnectFacebook"
+          >
+            🔗 Connect Facebook to Post
+          </BaseButton>
         </div>
       </BaseCard>
     </div>
@@ -560,6 +675,144 @@ function handleRetry() {
   color: var(--text-secondary);
   margin: 0;
   font-style: italic;
+}
+
+/* Content Header */
+.content-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-md);
+  padding-bottom: var(--space-md);
+  border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+}
+
+.content-header-title {
+  font-family: var(--font-heading);
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* Edit Field Styles */
+.edit-field {
+  margin-bottom: var(--space-lg);
+}
+
+.edit-field:last-of-type {
+  margin-bottom: 0;
+}
+
+.edit-label {
+  display: block;
+  font-family: var(--font-heading);
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  color: var(--gold-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: var(--space-sm);
+}
+
+.edit-textarea,
+.edit-input {
+  width: 100%;
+  padding: var(--space-md);
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  transition: all 0.2s ease;
+  resize: vertical;
+}
+
+.edit-textarea:focus,
+.edit-input:focus {
+  outline: none;
+  border-color: var(--gold-primary);
+  background: rgba(0, 0, 0, 0.5);
+}
+
+/* Hashtag Editor */
+.hashtag-editor {
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  border-radius: var(--radius-md);
+  padding: var(--space-md);
+  transition: all 0.2s ease;
+}
+
+.hashtag-editor:focus-within {
+  border-color: var(--gold-primary);
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.hashtag-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-sm);
+}
+
+.hashtag-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: var(--space-xs) var(--space-sm);
+  background: rgba(212, 175, 55, 0.15);
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  border-radius: var(--radius-full);
+  color: var(--gold-primary);
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+}
+
+.remove-tag {
+  background: none;
+  border: none;
+  color: var(--gold-primary);
+  font-size: var(--text-base);
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+  opacity: 0.7;
+  transition: opacity 0.2s ease;
+}
+
+.remove-tag:hover {
+  opacity: 1;
+}
+
+.hashtag-input {
+  width: 100%;
+  background: transparent;
+  border: none;
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  padding: var(--space-xs) 0;
+}
+
+.hashtag-input:focus {
+  outline: none;
+}
+
+.hashtag-input::placeholder {
+  color: var(--text-muted);
+}
+
+/* Edit Actions */
+.edit-actions {
+  display: flex;
+  gap: var(--space-md);
+  justify-content: flex-end;
+  margin-top: var(--space-lg);
+  padding-top: var(--space-md);
+  border-top: 1px solid rgba(212, 175, 55, 0.1);
 }
 
 /* Modal Actions */

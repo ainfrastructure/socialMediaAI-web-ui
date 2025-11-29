@@ -81,7 +81,7 @@ export default {
     step1Description: 'Find restaurants using Google Places and save them to your library. Access menus, photos, and brand details instantly.',
     step1Button: 'Search Now',
     step2Title: 'Cook Up Content',
-    step2Description: 'Generate AI-powered images, videos, and captions. Save your favorites and build a content library for your restaurants.',
+    step2Description: 'Generate AI-powered images, videos, and captions. Build a content library for your restaurants.',
     step2Button: 'Start Cooking',
     step3Title: 'Schedule Posts',
     step3Description: 'Plan your content calendar and publish directly to Facebook. Schedule posts in advance and maintain consistent engagement.',
@@ -104,7 +104,7 @@ export default {
 
     // Stats
     postsCreated: 'Posts Created',
-    favoritesSaved: 'Favorites Saved',
+    postsSaved: 'Posts Saved',
     scheduledPosts: 'Scheduled Posts',
     restaurants: 'Restaurants',
 
@@ -119,8 +119,8 @@ export default {
     schedulePosts: 'Schedule Posts',
     schedulePostsDescription: 'Plan your content calendar in advance',
     openCalendar: 'Open Calendar →',
-    viewFavorites: 'View Favorites',
-    viewFavoritesDescription: 'Access your saved post library',
+    viewPosts: 'View Posts',
+    viewPostsDescription: 'Access your saved post library',
     browseLibrary: 'Browse Library →',
 
     // Social platforms
@@ -323,7 +323,7 @@ export default {
         'Generate images and videos with AI',
         'Create compelling captions and hashtags',
         'Customize with your brand identity',
-        'Save favorites for later use',
+        'All generated content is automatically saved',
       ],
 
       scheduleTitle: 'Schedule & Publish 📅',
@@ -349,7 +349,7 @@ export default {
       readyDetails: [
         'Start by searching for your restaurant',
         'Generate your first post in minutes',
-        'Save your favorites and build your library',
+        'All content is saved to your library',
         'Schedule content to maintain consistency',
       ],
 
@@ -386,7 +386,7 @@ export default {
 
       q4Question: 'What can you do with generated content on SocialChef?',
       q4Options: ['Download only', 'Schedule only', 'Save, schedule, and publish to Facebook', 'Email only'],
-      q4Explanation: 'You can save favorites, schedule posts in advance, and publish directly to Facebook—all from one platform.',
+      q4Explanation: 'All generated content is automatically saved. You can schedule posts in advance and publish directly to Facebook—all from one platform.',
     },
 
     // Simple onboarding flow
@@ -492,9 +492,6 @@ export default {
     generatedImageTitle: 'Generated Image:',
     generatedMarketingImageAlt: 'Generated marketing image',
     downloadImage: '⬇️ Download Image',
-    savingToFavorites: 'Saving...',
-    savedToFavorites: '⭐ Saved',
-    saveToFavorites: '⭐ Save to Favorites',
     schedulePost: '📅 Schedule Post',
     publishToFacebook: '📤 Publish to Facebook',
     publishing: 'Publishing...',
@@ -649,9 +646,9 @@ export default {
     timezone: 'Timezone',
     loading: 'Loading schedule...',
     createPost: 'Create Post',
-    addFavorite: 'Add Favorite',
+    addPost: 'Add Post',
     createNewPost: 'Create new post for this date',
-    scheduleFavorite: 'Schedule a favorite for this date',
+    scheduleSavedPost: 'Schedule a saved post for this date',
     holidays: 'Holidays',
     moreHolidays: 'more',
     noPostsScheduled: 'No posts scheduled for this day',
@@ -682,24 +679,22 @@ export default {
     posts: 'posts',
   },
 
-  // Favorites View
-  favorites: {
-    title: 'Favorite Posts',
+  // Posts View (previously Favorites)
+  posts: {
+    title: 'Posts',
     subtitle: 'Your saved marketing content',
     all: 'All',
     drafts: 'Drafts',
     scheduled: 'Scheduled',
     published: 'Published',
-    loading: 'Loading favorites...',
-    noFavorites: 'No favorites yet',
-    noFavoritesDescription: 'Go to Cook Up to create and save your first post!',
+    loading: 'Loading posts...',
+    noPosts: 'No posts yet',
+    noPostsDescription: 'Go to Cook Up to create your first post!',
     goToCookUp: 'Go to Cook Up',
-    addToFavorites: 'Add to Favorites',
-    removeFromFavorites: 'Remove from Favorites',
     editPost: 'Edit Post',
     deletePost: 'Delete Post',
     postDeleted: 'Post deleted',
-    confirmDelete: 'Are you sure you want to delete this favorite?',
+    confirmDelete: 'Are you sure you want to delete this post?',
     schedule: 'Schedule',
     delete: 'Delete',
     postDetails: 'Post Details',
@@ -712,6 +707,7 @@ export default {
     copiedToClipboard: 'Copied to clipboard!',
     image: 'image',
     video: 'video',
+    restaurant: 'Restaurant',
   },
 
   // Profile View

@@ -11,7 +11,7 @@ import ConnectAccountsView from '../views/ConnectAccountsView.vue'
 import FacebookCallbackView from '../views/FacebookCallbackView.vue'
 import TestPostView from '../views/TestPostView.vue'
 import SchedulerView from '../views/SchedulerView.vue'
-import FavoritesView from '../views/FavoritesView.vue'
+import PostsView from '../views/PostsView.vue'
 import ProfileView from '../views/ProfileView.vue'
 import SavedRestaurantsView from '../views/SavedRestaurantsView.vue'
 import OnboardingView from '../views/OnboardingView.vue'
@@ -121,9 +121,9 @@ const router = createRouter({
       meta: { requiresAuth: true },
     },
     {
-      path: '/favorites',
-      name: 'favorites',
-      component: FavoritesView,
+      path: '/posts',
+      name: 'posts',
+      component: PostsView,
       meta: { requiresAuth: true },
     },
     {

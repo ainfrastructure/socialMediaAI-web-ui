@@ -17,7 +17,7 @@ const { t } = useI18n()
 // Real stats from API
 const stats = ref({
   postsCreated: 0,
-  favoritesSaved: 0,
+  postsSaved: 0,
   scheduledPosts: 0,
   restaurantsAdded: 0
 })
@@ -96,7 +96,13 @@ onMounted(async () => {
     // Load real stats from API
     const statsResponse = await api.getStats()
     if (statsResponse.success && statsResponse.data) {
-      stats.value = statsResponse.data
+      // Map backend 'favoritesSaved' to frontend 'postsSaved'
+      stats.value = {
+        postsCreated: statsResponse.data.postsCreated || 0,
+        postsSaved: statsResponse.data.favoritesSaved || 0,
+        scheduledPosts: statsResponse.data.scheduledPosts || 0,
+        restaurantsAdded: statsResponse.data.restaurantsAdded || 0
+      }
     }
 
     // Update Facebook connection status
@@ -151,8 +157,8 @@ onMounted(async () => {
 
         <BaseCard variant="glass" class="stat-card">
           <div class="stat-icon">⭐</div>
-          <div class="stat-value">{{ stats.favoritesSaved }}</div>
-          <div class="stat-label">{{ $t('dashboard.favoritesSaved') }}</div>
+          <div class="stat-value">{{ stats.postsSaved }}</div>
+          <div class="stat-label">{{ $t('dashboard.postsSaved') }}</div>
         </BaseCard>
 
         <BaseCard variant="glass" class="stat-card">
@@ -196,10 +202,10 @@ onMounted(async () => {
           <BaseButton variant="secondary" size="small">{{ $t('dashboard.openCalendar') }}</BaseButton>
         </BaseCard>
 
-        <BaseCard variant="glass" hoverable class="action-card" @click="router.push('/favorites')">
-          <div class="action-icon">⭐</div>
-          <h3 class="action-title">{{ $t('dashboard.viewFavorites') }}</h3>
-          <p class="action-description">{{ $t('dashboard.viewFavoritesDescription') }}</p>
+        <BaseCard variant="glass" hoverable class="action-card" @click="router.push('/posts')">
+          <div class="action-icon">📝</div>
+          <h3 class="action-title">{{ $t('dashboard.viewPosts') }}</h3>
+          <p class="action-description">{{ $t('dashboard.viewPostsDescription') }}</p>
           <BaseButton variant="secondary" size="small">{{ $t('dashboard.browseLibrary') }}</BaseButton>
         </BaseCard>
       </div>

@@ -412,15 +412,7 @@
                   ⬇️ Download Image
                 </a>
                 <BaseButton
-                  variant="secondary"
-                  size="medium"
-                  @click="saveToFavorites"
-                  :disabled="savingFavorite"
-                >
-                  {{ savingFavorite ? 'Saving...' : lastSavedFavorite ? '⭐ Saved' : '⭐ Save to Favorites' }}
-                </BaseButton>
-                <BaseButton
-                  v-if="lastSavedFavorite || generatedPostContent"
+                  v-if="lastSavedPost || generatedPostContent"
                   variant="primary"
                   size="medium"
                   @click="openScheduleModal"
@@ -428,7 +420,7 @@
                   📅 Schedule Post
                 </BaseButton>
                 <BaseButton
-                  v-if="(lastSavedFavorite || generatedPostContent) && selectedPlatforms.includes('facebook')"
+                  v-if="(lastSavedPost || generatedPostContent) && selectedPlatforms.includes('facebook')"
                   variant="primary"
                   size="medium"
                   @click="publishToFacebook"
@@ -537,15 +529,7 @@
                   ⬇️ Download Video
                 </a>
                 <BaseButton
-                  variant="secondary"
-                  size="medium"
-                  @click="saveToFavorites"
-                  :disabled="savingFavorite"
-                >
-                  {{ savingFavorite ? 'Saving...' : lastSavedFavorite ? '⭐ Saved' : '⭐ Save to Favorites' }}
-                </BaseButton>
-                <BaseButton
-                  v-if="lastSavedFavorite || generatedPostContent"
+                  v-if="lastSavedPost || generatedPostContent"
                   variant="primary"
                   size="medium"
                   @click="openScheduleModal"
@@ -553,7 +537,7 @@
                   📅 Schedule Post
                 </BaseButton>
                 <BaseButton
-                  v-if="(lastSavedFavorite || generatedPostContent) && selectedPlatforms.includes('facebook')"
+                  v-if="(lastSavedPost || generatedPostContent) && selectedPlatforms.includes('facebook')"
                   variant="primary"
                   size="medium"
                   @click="publishToFacebook"
@@ -629,22 +613,21 @@
       :post-content="generatedPostContent"
       :is-generating-image="generatingImage"
       :is-generating-content="generatingPostContent"
-      :is-saved="!!lastSavedFavorite"
       :is-publishing="publishingToFacebook"
       :is-published="publishedToFacebook"
       :facebook-post-url="facebookPostUrl"
       :generation-error="generationError"
-      @save="handleResultSave"
       @publish="handleResultPublish"
       @schedule="handleResultSchedule"
       @connect-facebook="handleResultConnectFacebook"
       @retry="handleRetryGeneration"
+      @content-updated="handleContentUpdated"
     />
 
     <!-- Schedule Modal -->
     <ScheduleModal
       v-model="showScheduleModal"
-      :favorite-post="favoriteToSchedule"
+      :favorite-post="postToSchedule"
       :preselected-date="preselectedDate"
       @scheduled="handleScheduled"
     />
@@ -1112,11 +1095,10 @@ const videoResolution = ref<'720p' | '1080p'>('720p')
 const message = ref('')
 const messageType = ref<'success' | 'error' | 'info'>('info')
 
-// Favorites and Scheduling
-const savingFavorite = ref(false)
-const lastSavedFavorite = ref<any>(null)
+// Saving and Scheduling (posts are auto-saved after generation)
+const lastSavedPost = ref<any>(null)
 const showScheduleModal = ref(false)
-const favoriteToSchedule = ref<any>(null)
+const postToSchedule = ref<any>(null)
 const preselectedDate = ref<string | null>(null)
 const publishingToFacebook = ref(false)
 const publishedToFacebook = ref(false)
@@ -1752,7 +1734,7 @@ const selectImagePrompt = (index: number, skipClear = false) => {
   if (!skipClear) {
     generatedImageUrl.value = ''
     generatedPostContent.value = null
-    lastSavedFavorite.value = null
+    lastSavedPost.value = null
     message.value = ''
   }
 }
@@ -1763,7 +1745,7 @@ const selectVideoPrompt = (index: number) => {
   // Clear generated content when switching prompts
   generatedVideoUrl.value = ''
   generatedPostContent.value = null
-  lastSavedFavorite.value = null
+  lastSavedPost.value = null
   message.value = ''
 }
 
@@ -1935,6 +1917,9 @@ const generateImage = async () => {
       await postContentPromise
       console.log('[IMAGE-GEN] Post content generation completed')
     }
+
+    // Auto-save the generated content
+    await autoSavePost('image')
 
     // Refresh usage stats
     await authStore.refreshProfile()
@@ -2111,8 +2096,8 @@ const startVideoPolling = () => {
             showMessage('Video generated successfully!', 'success')
             generatingVideo.value = false
 
-            // Note: Post content is already being generated in parallel from the start
-            // No need to start it again here
+            // Auto-save the generated video
+            await autoSavePost('video')
           } else if (operation.error) {
             showMessage('Video generation failed: ' + operation.error, 'error')
             generatingVideo.value = false
@@ -2168,27 +2153,27 @@ const copyToClipboard = async (text: string) => {
   }
 }
 
-const saveToFavorites = async () => {
-
-  // Check if already saved
-  if (lastSavedFavorite.value) {
-
-    showMessage('Already saved to favorites!', 'info')
+// Auto-save post after generation (called automatically, no user interaction)
+const autoSavePost = async (contentType: 'image' | 'video') => {
+  // Skip if already saved
+  if (lastSavedPost.value) {
+    console.log('[AUTO-SAVE] Skipping - already saved')
     return
   }
 
-  if (!generatedImageUrl.value && !generatedVideoUrl.value) {
-    showMessage('No generated content to save', 'error')
+  const mediaUrl = contentType === 'image' ? generatedImageUrl.value : generatedVideoUrl.value
+  if (!mediaUrl) {
+    console.log('[AUTO-SAVE] Skipping - no media URL')
     return
   }
 
   try {
-    savingFavorite.value = true
+    console.log('[AUTO-SAVE] Saving post automatically...')
 
-    const favoriteData = {
+    const postData = {
       restaurant_id: selectedRestaurant.value?.id,
-      content_type: activeTab.value,
-      media_url: activeTab.value === 'image' ? generatedImageUrl.value : generatedVideoUrl.value,
+      content_type: contentType,
+      media_url: mediaUrl,
       post_text: generatedPostContent.value?.postText,
       hashtags: generatedPostContent.value?.hashtags,
       call_to_action: generatedPostContent.value?.callToAction,
@@ -2199,21 +2184,16 @@ const saveToFavorites = async () => {
       brand_dna: selectedRestaurant.value?.brand_dna,
     }
 
-    const response = await api.saveFavorite(favoriteData)
+    const response = await api.saveFavorite(postData)
 
-    if (!response.success) {
-      showMessage(response.error || 'Failed to save to favorites', 'error')
-      return
+    if (response.success) {
+      lastSavedPost.value = response.data?.favorite
+      console.log('[AUTO-SAVE] Post saved successfully:', lastSavedPost.value?.id)
+    } else {
+      console.error('[AUTO-SAVE] Failed to save:', response.error)
     }
-
-    lastSavedFavorite.value = response.data?.favorite
-
-    showMessage('Post saved to favorites!', 'success')
   } catch (error: any) {
-
-    showMessage(error.message || 'Failed to save to favorites', 'error')
-  } finally {
-    savingFavorite.value = false
+    console.error('[AUTO-SAVE] Error saving post:', error.message)
   }
 }
 
@@ -2300,19 +2280,13 @@ const publishToFacebook = async () => {
 }
 
 const openScheduleModal = async () => {
-
-  // If we just saved a favorite, use that. Otherwise, save first
-  if (!lastSavedFavorite.value) {
-
-    await saveToFavorites()
-    if (!lastSavedFavorite.value) {
-      // Save failed
-
-      return
-    }
+  // Post should already be auto-saved after generation
+  if (!lastSavedPost.value) {
+    showMessage('No saved post to schedule', 'error')
+    return
   }
 
-  favoriteToSchedule.value = lastSavedFavorite.value
+  postToSchedule.value = lastSavedPost.value
   showScheduleModal.value = true
 }
 
@@ -2376,7 +2350,7 @@ const handleEasyModeGenerate = async (data: {
       generatedPostContent.value = null
       publishedToFacebook.value = false // Reset published status for new generation
       facebookPostUrl.value = undefined // Reset Facebook post URL
-      lastSavedFavorite.value = null
+      lastSavedPost.value = null
 
       // Show result modal immediately with loading states
       showResultModal.value = true
@@ -2453,11 +2427,6 @@ const handleFacebookOnboardingClose = () => {
 }
 
 // Result Modal Functions
-const handleResultSave = async () => {
-  await saveToFavorites()
-  // Don't close the modal - let user continue to schedule or publish
-}
-
 const handleResultPublish = async () => {
   // Don't close the modal - let user see publishing progress
   await publishToFacebook()
@@ -2479,6 +2448,31 @@ const handleResultConnectFacebook = async () => {
     showMessage(error.message || 'Failed to connect Facebook', 'error')
     // Reopen the result modal even on error so user can try again
     showResultModal.value = true
+  }
+}
+
+const handleContentUpdated = async (updatedContent: { postText: string; hashtags: string[]; callToAction: string }) => {
+  // Update local state
+  if (generatedPostContent.value) {
+    generatedPostContent.value = {
+      ...generatedPostContent.value,
+      ...updatedContent
+    }
+  }
+
+  // Update saved favorite if exists
+  if (lastSavedPost.value?.id) {
+    try {
+      await api.updateFavorite(lastSavedPost.value.id, {
+        post_text: updatedContent.postText,
+        hashtags: updatedContent.hashtags,
+        call_to_action: updatedContent.callToAction
+      })
+      showMessage('Content updated successfully!', 'success')
+    } catch (error: any) {
+      console.error('Failed to update favorite:', error)
+      showMessage('Failed to save changes', 'error')
+    }
   }
 }
 </script>
