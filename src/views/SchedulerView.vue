@@ -370,7 +370,7 @@
                       <!-- View Post Link for Published Posts -->
                       <a
                         v-if="post.status === 'published' && post.platform_post_urls && Object.keys(post.platform_post_urls).length > 0"
-                        :href="Object.values(post.platform_post_urls)[0]"
+                        :href="Object.values(post.platform_post_urls)[0] as string"
                         target="_blank"
                         rel="noopener noreferrer"
                         class="view-post-link"
@@ -591,7 +591,7 @@
                   <!-- View Post Link for Published Posts -->
                   <div v-else-if="post.platform_post_urls && Object.keys(post.platform_post_urls).length > 0" class="action-buttons" @click.stop>
                     <a
-                      v-for="(url, platform) in post.platform_post_urls"
+                      v-for="(url, platform) in (post.platform_post_urls as Record<string, string>)"
                       :key="platform"
                       :href="url"
                       target="_blank"
@@ -839,7 +839,7 @@
               <!-- View Post Buttons (multi-platform support) -->
               <div v-if="selectedPostForDetail.platform_post_urls && Object.keys(selectedPostForDetail.platform_post_urls).length > 0" class="view-post-buttons-container">
                 <a
-                  v-for="(url, platform) in selectedPostForDetail.platform_post_urls"
+                  v-for="(url, platform) in (selectedPostForDetail.platform_post_urls as Record<string, string>)"
                   :key="platform"
                   :href="url"
                   target="_blank"

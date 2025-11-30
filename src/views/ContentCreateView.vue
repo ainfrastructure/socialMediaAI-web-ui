@@ -183,7 +183,7 @@ async function handleEasyModePublish(data: {
         favorite_post_id: favoritePostId,
         scheduled_date: data.scheduleDate!,
         scheduled_time: data.scheduleTime,
-        platform: data.platform,
+        platforms: [data.platform],
         timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
       })
 
@@ -250,7 +250,7 @@ async function handleEasyModePublish(data: {
                 favorite_post_id: favoritePostId,
                 scheduled_date: now.toISOString().split('T')[0],
                 scheduled_time: now.toTimeString().slice(0, 5),
-                platform: data.platform,
+                platforms: [data.platform],
                 timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
                 notes: 'Published immediately'
               })
@@ -683,7 +683,7 @@ async function handleAdvancedModeComplete(data: {
                   favorite_post_id: lastSavedPost.value.id,
                   scheduled_date: now.toISOString().split('T')[0],
                   scheduled_time: now.toTimeString().slice(0, 5),
-                  platform: data.platform,
+                  platforms: [data.platform],
                   timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
                   notes: 'Published immediately'
                 })
@@ -710,7 +710,7 @@ async function handleAdvancedModeComplete(data: {
           favorite_post_id: lastSavedPost.value.id,
           scheduled_date: scheduledDate.toISOString().split('T')[0],
           scheduled_time: scheduledDate.toTimeString().slice(0, 5),
-          platform: data.platform,
+          platforms: [data.platform],
           timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
         })
 

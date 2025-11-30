@@ -517,7 +517,7 @@ async function schedulePost() {
       scheduled_date: scheduleDate.value,
       scheduled_time: scheduleTime.value,
       timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-      platform: schedulePlatform.value,
+      platforms: [schedulePlatform.value],
     })
 
     if (response.success) {

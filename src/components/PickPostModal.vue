@@ -499,7 +499,7 @@ const scheduleSelectedPost = async () => {
       scheduled_date: scheduleDate.value,
       scheduled_time: scheduledTime.value,
       timezone: timezone.value,
-      platform: selectedPlatform.value,
+      platforms: [selectedPlatform.value],
     })
 
     if (response.success) {
