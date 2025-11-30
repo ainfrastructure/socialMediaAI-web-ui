@@ -114,7 +114,7 @@ export default {
 
   // Waitlist Landing Page
   waitlist: {
-    headline: 'Din restaurants automatiserte sosiale medier-manager',
+    headline: 'Din restaurants automatiserte sosiale medier-ansvarlig',
     subheadline: 'Lag fantastisk matinnhold, planlegg innlegg og utvid restaurantens tilstedeværelse—alt med AI.',
     emailPlaceholder: 'Skriv inn e-posten din',
     joinButton: 'Bli med på ventelisten',

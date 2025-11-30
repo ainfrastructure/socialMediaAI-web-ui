@@ -22,6 +22,7 @@ export default defineConfig({
       'localhost',
       'baofrontend.socialchef.ai',
       'svenfrontend.socialchef.ai',
+      'alifrontend.socialchef.ai',
       '.socialchef.ai'
     ],
   },
