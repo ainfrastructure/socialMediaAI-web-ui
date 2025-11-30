@@ -8,15 +8,50 @@
         <p class="subtitle">{{ $t('scheduler.subtitle') }}</p>
       </div>
 
-      <!-- Filters Section -->
-      <FilterBar
-        v-model="filters"
-        :restaurants="restaurants"
-        show-platform
-        show-restaurant
-        @change="applyFilters"
-        @clear="resetFilters"
-      />
+      <!-- Upcoming Posts Quick View (at top for visibility) -->
+      <BaseCard v-if="upcomingPosts.length > 0" variant="glass" class="upcoming-posts-card">
+        <div class="upcoming-header">
+          <h3 class="upcoming-title">📅 Upcoming Posts</h3>
+          <span class="upcoming-count">{{ upcomingPosts.length }} scheduled</span>
+        </div>
+        <div class="upcoming-list">
+          <div
+            v-for="post in upcomingPosts"
+            :key="post.id"
+            class="upcoming-item"
+            @click="viewPostDetail(post)"
+          >
+            <div class="upcoming-date-badge">
+              <span class="upcoming-date">{{ formatUpcomingDate(post.scheduled_date) }}</span>
+              <span class="upcoming-time">{{ formatTime(post.scheduled_time) || 'No time' }}</span>
+            </div>
+            <div class="upcoming-thumb">
+              <img
+                v-if="post.content_type === 'image' && post.media_url"
+                :src="getMediaUrl(post.media_url)"
+                :alt="post.post_text || 'Post'"
+                @error="handleImageError($event, post)"
+              />
+              <div v-else class="upcoming-thumb-placeholder">
+                {{ getContentTypeEmoji(post.content_type) }}
+              </div>
+            </div>
+            <div class="upcoming-content">
+              <p class="upcoming-text">{{ truncateText(post.post_text || 'No caption', 60) }}</p>
+              <div class="upcoming-meta">
+                <span v-if="post.platform" :class="['upcoming-platform', `platform-${post.platform}`]">
+                  {{ getPlatformIcon(post.platform) }} {{ post.platform }}
+                </span>
+                <span v-if="post.restaurant_name" class="upcoming-restaurant">🏪 {{ post.restaurant_name }}</span>
+              </div>
+            </div>
+            <div class="upcoming-actions" @click.stop>
+              <button class="upcoming-action-btn" @click="editScheduledPost(post)" title="Edit">✏️</button>
+              <button class="upcoming-action-btn delete" @click="cancelPost(post.id)" title="Delete">🗑️</button>
+            </div>
+          </div>
+        </div>
+      </BaseCard>
 
       <!-- Calendar Grid (always rendered) -->
       <BaseCard variant="glass" class="calendar-card">
@@ -24,35 +59,154 @@
         <div v-if="loading" class="loading-overlay">
           <div class="spinner"></div>
         </div>
-        <!-- Calendar Navigation (moved inside calendar card) -->
-        <div class="calendar-header">
-          <div class="calendar-nav">
-            <BaseButton variant="ghost" size="small" @click="previousPeriod"> ← {{ $t('scheduler.previous') }} </BaseButton>
+
+        <!-- Filters Accordion -->
+        <div class="filter-accordion">
+          <button class="filter-toggle" @click="filtersExpanded = !filtersExpanded">
+            <span class="filter-toggle-left">
+              <span class="filter-icon">🔍</span>
+              <span class="filter-label">Filters</span>
+              <span v-if="activeFilterCount > 0" class="filter-badge">{{ activeFilterCount }}</span>
+            </span>
+            <span :class="['filter-arrow', { expanded: filtersExpanded }]">▼</span>
+          </button>
+
+          <div v-show="filtersExpanded" class="filter-content">
+            <div class="inline-filters">
+              <!-- Platform Filter -->
+              <div ref="platformFilterRef" class="inline-filter-group" @mouseleave="platformFilterOpen = false">
+                <button
+                  class="inline-filter-btn"
+                  @click.stop="platformFilterOpen = !platformFilterOpen; restaurantFilterOpen = false"
+                >
+                  <span class="inline-filter-icon">📱</span>
+                  <span class="inline-filter-label">Platforms</span>
+                  <span v-if="filters.platforms.length > 0" class="inline-filter-count">({{ filters.platforms.length }})</span>
+                  <span :class="['inline-filter-arrow', { open: platformFilterOpen }]">▼</span>
+                </button>
+                <div v-show="platformFilterOpen" class="inline-filter-options" @click.stop>
+                  <label class="filter-checkbox select-all">
+                    <input
+                      type="checkbox"
+                      :checked="filters.platforms.length === availablePlatforms.length"
+                      :indeterminate="filters.platforms.length > 0 && filters.platforms.length < availablePlatforms.length"
+                      @change="toggleAllPlatforms"
+                    />
+                    <span class="checkbox-label">Select All</span>
+                  </label>
+                  <div class="filter-divider"></div>
+                  <label
+                    v-for="platform in availablePlatforms"
+                    :key="platform.id"
+                    class="filter-checkbox"
+                  >
+                    <input
+                      type="checkbox"
+                      :checked="filters.platforms.includes(platform.id)"
+                      @change="togglePlatformFilter(platform.id)"
+                    />
+                    <span class="checkbox-icon">{{ platform.icon }}</span>
+                    <span class="checkbox-label">{{ platform.name }}</span>
+                  </label>
+                </div>
+              </div>
+
+              <!-- Restaurant Filter -->
+              <div ref="restaurantFilterRef" class="inline-filter-group" @mouseleave="restaurantFilterOpen = false">
+                <button
+                  class="inline-filter-btn"
+                  @click.stop="restaurantFilterOpen = !restaurantFilterOpen; platformFilterOpen = false"
+                >
+                  <span class="inline-filter-icon">🏪</span>
+                  <span class="inline-filter-label">Restaurants</span>
+                  <span v-if="filters.restaurant_ids.length > 0" class="inline-filter-count">({{ filters.restaurant_ids.length }})</span>
+                  <span :class="['inline-filter-arrow', { open: restaurantFilterOpen }]">▼</span>
+                </button>
+                <div v-show="restaurantFilterOpen" class="inline-filter-options" @click.stop>
+                  <label class="filter-checkbox select-all">
+                    <input
+                      type="checkbox"
+                      :checked="filters.restaurant_ids.length === restaurants.length"
+                      :indeterminate="filters.restaurant_ids.length > 0 && filters.restaurant_ids.length < restaurants.length"
+                      @change="toggleAllRestaurants"
+                    />
+                    <span class="checkbox-label">Select All</span>
+                  </label>
+                  <div class="filter-divider"></div>
+                  <label
+                    v-for="restaurant in restaurants"
+                    :key="restaurant.id"
+                    class="filter-checkbox"
+                  >
+                    <input
+                      type="checkbox"
+                      :checked="filters.restaurant_ids.includes(String(restaurant.id))"
+                      @change="toggleRestaurantFilter(String(restaurant.id))"
+                    />
+                    <span class="checkbox-label">{{ restaurant.name }}</span>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <!-- Active Filters Tags -->
+            <div v-if="activeFilterCount > 0" class="active-filter-tags">
+              <span
+                v-for="platformId in filters.platforms"
+                :key="platformId"
+                class="filter-tag"
+              >
+                {{ availablePlatforms.find(p => p.id === platformId)?.icon }}
+                {{ availablePlatforms.find(p => p.id === platformId)?.name }}
+                <button class="tag-remove" @click="removePlatformFilter(platformId)">×</button>
+              </span>
+              <span
+                v-for="restaurantId in filters.restaurant_ids"
+                :key="restaurantId"
+                class="filter-tag"
+              >
+                🏪 {{ getRestaurantName(restaurantId) }}
+                <button class="tag-remove" @click="removeRestaurantFilter(restaurantId)">×</button>
+              </span>
+              <button class="clear-all-btn" @click="resetFilters">Clear all</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Calendar Navigation - Streamlined -->
+        <div class="calendar-header-new">
+          <button
+            class="nav-arrow"
+            @click="previousPeriod"
+            :title="`Previous ${viewMode}`"
+          >
+            <span class="arrow-icon">←</span>
+            <span class="arrow-tooltip">Previous {{ viewMode }}</span>
+          </button>
+
+          <div class="calendar-center">
             <h2 class="current-month">{{ currentPeriodLabel }}</h2>
-            <BaseButton variant="ghost" size="small" @click="nextPeriod"> {{ $t('scheduler.next') }} → </BaseButton>
+            <div class="view-mode-toggle">
+              <div class="toggle-slider" :class="`position-${viewMode}`"></div>
+              <button
+                v-for="mode in ['month', 'week', 'day']"
+                :key="mode"
+                :class="['view-btn', { active: viewMode === mode }]"
+                @click="viewMode = mode as 'month' | 'week' | 'day'"
+              >
+                {{ mode.charAt(0).toUpperCase() + mode.slice(1) }}
+              </button>
+            </div>
           </div>
 
-          <!-- View Mode Selector -->
-          <div class="view-mode-selector">
-            <button
-              :class="['view-mode-btn', { active: viewMode === 'month' }]"
-              @click="viewMode = 'month'"
-            >
-              {{ $t('scheduler.month') }}
-            </button>
-            <button
-              :class="['view-mode-btn', { active: viewMode === 'week' }]"
-              @click="viewMode = 'week'"
-            >
-              {{ $t('scheduler.week') }}
-            </button>
-            <button
-              :class="['view-mode-btn', { active: viewMode === 'day' }]"
-              @click="viewMode = 'day'"
-            >
-              {{ $t('scheduler.day') }}
-            </button>
-          </div>
+          <button
+            class="nav-arrow"
+            @click="nextPeriod"
+            :title="`Next ${viewMode}`"
+          >
+            <span class="arrow-icon">→</span>
+            <span class="arrow-tooltip">Next {{ viewMode }}</span>
+          </button>
         </div>
 
         <!-- Color Legend -->
@@ -88,7 +242,9 @@
             :class="[
               'calendar-day',
               {
-                'other-month': day.isOtherMonth && viewMode === 'month',
+                'other-month': day.isOtherMonth && viewMode === 'month' && !isPastDate(day.date),
+                'past-date': isPastDate(day.date) && viewMode !== 'day',
+                'future-date': !isPastDate(day.date) && !day.isToday && viewMode !== 'day',
                 today: day.isToday,
                 'has-posts': day.posts.length > 0,
                 'day-view': viewMode === 'day',
@@ -276,7 +432,7 @@
       >
         <div class="detail-header">
           <h3 class="detail-title">
-            {{ formatSelectedDate(selectedDayWithFilteredPosts) }}
+            📅 {{ formatShortDate(selectedDayWithFilteredPosts) }}
             <span v-if="selectedDayWithFilteredPosts.posts.length > 0" class="post-count"
               >({{ selectedDayWithFilteredPosts.posts.length }} {{ selectedDayWithFilteredPosts.posts.length === 1 ? $t('scheduler.post') : $t('scheduler.posts') }})</span
             >
@@ -459,8 +615,9 @@
       <!-- Empty State -->
       <BaseCard v-else-if="selectedDay" variant="glass" class="empty-detail-card">
         <div class="empty-content">
-          <h3>{{ $t('scheduler.noPostsScheduled') }}</h3>
-          <p>{{ $t('scheduler.goToCookUp') }}</p>
+          <h3 class="empty-date">📅 {{ formatShortDate(selectedDay) }}</h3>
+          <p class="empty-title">{{ $t('scheduler.noPostsScheduled') }}</p>
+          <p class="empty-subtitle">{{ $t('scheduler.goToCookUp') }}</p>
           <BaseButton variant="primary" @click="openCreatePostWizard(selectedDay)">
             ➕ Create Post
           </BaseButton>
@@ -699,14 +856,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { toZonedTime, fromZonedTime } from 'date-fns-tz'
 import GradientBackground from '../components/GradientBackground.vue'
 import BaseCard from '../components/BaseCard.vue'
 import BaseButton from '../components/BaseButton.vue'
-import FilterBar from '../components/FilterBar.vue'
 import PickPostModal from '../components/PickPostModal.vue'
 import EditScheduledPostModal from '../components/EditScheduledPostModal.vue'
 import Toast from '../components/Toast.vue'
@@ -757,7 +913,22 @@ const filters = ref({
   platforms: [] as string[],
   restaurant_ids: [] as string[],
 })
+const filtersExpanded = ref(false)
+const platformFilterOpen = ref(false)
+const restaurantFilterOpen = ref(false)
+const platformFilterRef = ref<HTMLElement | null>(null)
+const restaurantFilterRef = ref<HTMLElement | null>(null)
 const restaurants = ref<any[]>([])
+
+const availablePlatforms = [
+  { id: 'facebook', name: 'Facebook', icon: '📘' },
+  { id: 'instagram', name: 'Instagram', icon: '📷' },
+  { id: 'tiktok', name: 'TikTok', icon: '🎵' },
+]
+
+const activeFilterCount = computed(() => {
+  return filters.value.platforms.length + filters.value.restaurant_ids.length
+})
 
 const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
@@ -876,6 +1047,18 @@ const currentMonthYear = computed(() => {
   })
 })
 
+// Helper to format date as YYYY-MM-DD
+const formatDateString = (date: Date) => {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
+}
+
+// Helper to normalize a date string to YYYY-MM-DD format
+const normalizeDate = (dateStr: string | undefined) => {
+  if (!dateStr) return ''
+  // Handle both "2025-11-30" and "2025-11-30T..." formats
+  return dateStr.split('T')[0]
+}
+
 const calendarDays = computed(() => {
   const year = currentDate.value.getFullYear()
   const month = currentDate.value.getMonth()
@@ -891,26 +1074,40 @@ const calendarDays = computed(() => {
 
   const days = []
 
+  // Helper to get posts and holidays for a specific date
+  const getDataForDate = (date: Date) => {
+    const dateString = formatDateString(date)
+    const postsForDay = scheduledPosts.value.filter((post) => {
+      const postDate = post.scheduled_date || ''
+      return postDate === dateString
+    })
+    const holidaysForDay = holidays.value.filter((holiday) => {
+      const holidayDate = holiday.date ? holiday.date.split('T')[0] : ''
+      return holidayDate === dateString
+    })
+    return { postsForDay, holidaysForDay }
+  }
+
   // Previous month days
   for (let i = startingDayOfWeek - 1; i >= 0; i--) {
     const day = prevMonthDays - i
+    const date = new Date(year, month - 1, day)
+    const { postsForDay, holidaysForDay } = getDataForDate(date)
+
     days.push({
       day,
-      date: new Date(year, month - 1, day),
+      date,
       isOtherMonth: true,
       isToday: false,
-      posts: [],
-      holidays: [],
+      posts: postsForDay,
+      holidays: holidaysForDay,
     })
   }
 
   // Current month days
   for (let day = 1; day <= lastDay.getDate(); day++) {
     const date = new Date(year, month, day)
-    // Format date in local timezone (not UTC) to match stored dates
-    const dateString = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
-    const postsForDay = scheduledPosts.value.filter((post) => post.scheduled_date === dateString)
-    const holidaysForDay = holidays.value.filter((holiday) => holiday.date === dateString)
+    const { postsForDay, holidaysForDay } = getDataForDate(date)
 
     days.push({
       day,
@@ -925,13 +1122,16 @@ const calendarDays = computed(() => {
   // Next month days to complete the grid
   const remainingDays = 42 - days.length // 6 weeks * 7 days
   for (let day = 1; day <= remainingDays; day++) {
+    const date = new Date(year, month + 1, day)
+    const { postsForDay, holidaysForDay } = getDataForDate(date)
+
     days.push({
       day,
-      date: new Date(year, month + 1, day),
+      date,
       isOtherMonth: true,
       isToday: false,
-      posts: [],
-      holidays: [],
+      posts: postsForDay,
+      holidays: holidaysForDay,
     })
   }
 
@@ -959,8 +1159,17 @@ const nextMonth = () => {
   fetchHolidays()
 }
 
+const isPastDate = (date: Date) => {
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  const checkDate = new Date(date)
+  checkDate.setHours(0, 0, 0, 0)
+  return checkDate < today
+}
+
 const selectDay = (day: any) => {
-  if (!day.isOtherMonth) {
+  // Only allow selecting today or future dates (even from other months)
+  if (!isPastDate(day.date)) {
     selectedDay.value = day
   }
 }
@@ -978,12 +1187,62 @@ const selectedDayWithFilteredPosts = computed(() => {
   return currentDay || selectedDay.value
 })
 
+// Computed property for upcoming posts (all future scheduled posts)
+const upcomingPosts = computed(() => {
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  const todayString = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
+
+  return scheduledPosts.value
+    .filter((post) => {
+      // Only show scheduled posts (not published or failed)
+      if (post.status && post.status !== 'scheduled') return false
+      // Only show posts from today onwards
+      return post.scheduled_date >= todayString
+    })
+    .sort((a, b) => {
+      // Sort by date then time
+      if (a.scheduled_date !== b.scheduled_date) {
+        return a.scheduled_date.localeCompare(b.scheduled_date)
+      }
+      return (a.scheduled_time || '').localeCompare(b.scheduled_time || '')
+    })
+    .slice(0, 10) // Show max 10 upcoming posts
+})
+
+const formatUpcomingDate = (dateString: string) => {
+  const date = new Date(dateString + 'T00:00:00')
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  const tomorrow = new Date(today)
+  tomorrow.setDate(tomorrow.getDate() + 1)
+
+  if (date.getTime() === today.getTime()) {
+    return 'Today'
+  }
+  if (date.getTime() === tomorrow.getTime()) {
+    return 'Tomorrow'
+  }
+  return date.toLocaleDateString('en-US', {
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric',
+  })
+}
+
 const formatSelectedDate = (day: any) => {
   return day.date.toLocaleDateString('en-US', {
     weekday: 'long',
     month: 'long',
     day: 'numeric',
     year: 'numeric',
+  })
+}
+
+const formatShortDate = (day: any) => {
+  return day.date.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
   })
 }
 
@@ -1196,6 +1455,7 @@ const fetchScheduledPosts = async () => {
     const month = currentDate.value.getMonth() + 1
     const year = currentDate.value.getFullYear()
 
+    // Fetch current month posts
     const response = await api.getScheduledPosts({
       month,
       year,
@@ -1203,11 +1463,47 @@ const fetchScheduledPosts = async () => {
       restaurant_ids: filters.value.restaurant_ids.length > 0 ? filters.value.restaurant_ids : undefined,
     })
 
-    if (response.success) {
-      const posts = response.data?.scheduled_posts || []
+    // Also fetch adjacent months for calendar display (previous and next month days shown in grid)
+    const prevMonth = month === 1 ? 12 : month - 1
+    const prevYear = month === 1 ? year - 1 : year
+    const nextMonth = month === 12 ? 1 : month + 1
+    const nextYear = month === 12 ? year + 1 : year
 
-      // Fix content_type based on media_url if it's incorrect
-      scheduledPosts.value = posts.map((post: any) => {
+    const [prevResponse, nextResponse] = await Promise.all([
+      api.getScheduledPosts({
+        month: prevMonth,
+        year: prevYear,
+        platforms: filters.value.platforms.length > 0 ? filters.value.platforms : undefined,
+        restaurant_ids: filters.value.restaurant_ids.length > 0 ? filters.value.restaurant_ids : undefined,
+      }),
+      api.getScheduledPosts({
+        month: nextMonth,
+        year: nextYear,
+        platforms: filters.value.platforms.length > 0 ? filters.value.platforms : undefined,
+        restaurant_ids: filters.value.restaurant_ids.length > 0 ? filters.value.restaurant_ids : undefined,
+      }),
+    ])
+
+    // Combine posts from all three months (current, previous, next)
+    const allPosts: any[] = []
+
+    if (response.success) {
+      allPosts.push(...(response.data?.scheduled_posts || []))
+    }
+    if (prevResponse.success) {
+      allPosts.push(...(prevResponse.data?.scheduled_posts || []))
+    }
+    if (nextResponse.success) {
+      allPosts.push(...(nextResponse.data?.scheduled_posts || []))
+    }
+
+    // Remove duplicates by post id
+    const uniquePosts = allPosts.filter((post, index, self) =>
+      index === self.findIndex((p) => p.id === post.id)
+    )
+
+    // Fix content_type based on media_url if it's incorrect
+    scheduledPosts.value = uniquePosts.map((post: any) => {
         if (post.favorite_posts) {
         }
 
@@ -1253,8 +1549,12 @@ const fetchScheduledPosts = async () => {
         // If content_type is still missing, detect from URL
         const detectedType = contentType || detectContentTypeFromUrl(mediaUrl || '')
 
+        // Ensure scheduled_date is normalized (strip time component if present)
+        const scheduledDate = post.scheduled_date ? post.scheduled_date.split('T')[0] : post.scheduled_date
+
         return {
           ...post,
+          scheduled_date: scheduledDate,
           media_url: mediaUrl,
           post_text: postText,
           content_type: detectedType,
@@ -1262,7 +1562,6 @@ const fetchScheduledPosts = async () => {
           restaurant_name: restaurantName,
         }
       })
-    }
   } catch (error) {
   } finally {
     loading.value = false
@@ -1525,7 +1824,81 @@ const resetFilters = () => {
   fetchScheduledPosts()
 }
 
+// Toggle platform filter
+const togglePlatformFilter = (platformId: string) => {
+  const index = filters.value.platforms.indexOf(platformId)
+  if (index === -1) {
+    filters.value.platforms.push(platformId)
+  } else {
+    filters.value.platforms.splice(index, 1)
+  }
+  applyFilters()
+}
+
+// Toggle all platforms
+const toggleAllPlatforms = () => {
+  if (filters.value.platforms.length === availablePlatforms.length) {
+    filters.value.platforms = []
+  } else {
+    filters.value.platforms = availablePlatforms.map(p => p.id)
+  }
+  applyFilters()
+}
+
+// Toggle restaurant filter
+const toggleRestaurantFilter = (restaurantId: string) => {
+  const index = filters.value.restaurant_ids.indexOf(restaurantId)
+  if (index === -1) {
+    filters.value.restaurant_ids.push(restaurantId)
+  } else {
+    filters.value.restaurant_ids.splice(index, 1)
+  }
+  applyFilters()
+}
+
+// Toggle all restaurants
+const toggleAllRestaurants = () => {
+  if (filters.value.restaurant_ids.length === restaurants.value.length) {
+    filters.value.restaurant_ids = []
+  } else {
+    filters.value.restaurant_ids = restaurants.value.map(r => String(r.id))
+  }
+  applyFilters()
+}
+
+// Remove single platform filter
+const removePlatformFilter = (platformId: string) => {
+  filters.value.platforms = filters.value.platforms.filter(p => p !== platformId)
+  applyFilters()
+}
+
+// Remove single restaurant filter
+const removeRestaurantFilter = (restaurantId: string) => {
+  filters.value.restaurant_ids = filters.value.restaurant_ids.filter(r => r !== restaurantId)
+  applyFilters()
+}
+
+// Get restaurant name by ID
+const getRestaurantName = (id: string) => {
+  const restaurant = restaurants.value.find(r => r.id === id || r.id === parseInt(id))
+  return restaurant?.name || id
+}
+
+// Click outside handler to close filter dropdowns
+const handleClickOutside = (event: MouseEvent) => {
+  const target = event.target as HTMLElement
+
+  if (platformFilterRef.value && !platformFilterRef.value.contains(target)) {
+    platformFilterOpen.value = false
+  }
+  if (restaurantFilterRef.value && !restaurantFilterRef.value.contains(target)) {
+    restaurantFilterOpen.value = false
+  }
+}
+
 onMounted(async () => {
+  // Add click outside listener
+  document.addEventListener('click', handleClickOutside)
   await Promise.all([fetchScheduledPosts(), fetchHolidays(), fetchRestaurants()])
 
   // Auto-select today's date
@@ -1544,13 +1917,18 @@ onMounted(async () => {
     }, 100)
   }
 })
+
+onUnmounted(() => {
+  // Remove click outside listener
+  document.removeEventListener('click', handleClickOutside)
+})
 </script>
 
 <style scoped>
 .scheduler-view {
   min-height: 100vh;
   position: relative;
-  padding: 2rem 1rem;
+  padding: var(--space-lg) var(--space-md);
 }
 
 .container {
@@ -1562,14 +1940,14 @@ onMounted(async () => {
 
 .header {
   text-align: center;
-  margin-bottom: 3rem;
+  margin-bottom: var(--space-xl);
 }
 
 .title {
   font-family: var(--font-heading);
-  font-size: 3rem;
+  font-size: var(--text-2xl);
   font-weight: 700;
-  margin: 0 0 1rem 0;
+  margin: 0 0 var(--space-xs) 0;
   background: linear-gradient(135deg, var(--text-primary) 0%, var(--gold-primary) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -1577,17 +1955,142 @@ onMounted(async () => {
 }
 
 .subtitle {
-  font-size: 1.125rem;
+  font-size: var(--text-sm);
   color: var(--text-secondary);
   margin: 0;
 }
 
 
-/* Calendar Header (navigation + view mode inside calendar card) */
-.calendar-header {
-  padding-bottom: var(--space-xl);
-  margin-bottom: var(--space-lg);
-  border-bottom: 1px solid rgba(212, 175, 55, 0.15);
+/* Streamlined Calendar Header */
+.calendar-header-new {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-sm) 0 var(--space-md);
+  margin-bottom: var(--space-sm);
+}
+
+.nav-arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 40px;
+  background: rgba(212, 175, 55, 0.1);
+  border: 1px solid rgba(212, 175, 55, 0.25);
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  font-size: var(--text-lg);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  margin: 0 var(--space-md);
+  align-self: flex-end;
+  margin-bottom: var(--space-sm);
+}
+
+.nav-arrow:hover {
+  background: rgba(212, 175, 55, 0.2);
+  border-color: rgba(212, 175, 55, 0.5);
+  color: var(--gold-primary);
+}
+
+.nav-arrow:hover .arrow-tooltip {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.arrow-icon {
+  font-size: var(--text-lg);
+}
+
+.arrow-tooltip {
+  position: absolute;
+  bottom: -32px;
+  left: 50%;
+  transform: translateX(-50%) translateY(-4px);
+  background: rgba(0, 0, 0, 0.9);
+  color: var(--gold-light);
+  font-size: var(--text-xs);
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: all var(--transition-fast);
+  text-transform: capitalize;
+  border: 1px solid rgba(212, 175, 55, 0.2);
+}
+
+.calendar-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-md);
+}
+
+.current-month {
+  font-family: var(--font-heading);
+  font-size: var(--text-3xl);
+  font-weight: var(--font-semibold);
+  color: var(--gold-primary);
+  margin: 0;
+}
+
+.view-mode-toggle {
+  display: flex;
+  gap: 2px;
+  background: rgba(0, 0, 0, 0.3);
+  padding: 3px;
+  border-radius: var(--radius-md);
+  position: relative;
+}
+
+.toggle-slider {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  height: calc(100% - 6px);
+  width: calc(33.333% - 3px);
+  background: var(--gold-primary);
+  border-radius: var(--radius-sm);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 0;
+  box-shadow: 0 2px 8px rgba(212, 175, 55, 0.3);
+}
+
+.toggle-slider.position-month {
+  transform: translateX(0);
+}
+
+.toggle-slider.position-week {
+  transform: translateX(calc(100% + 2px));
+}
+
+.toggle-slider.position-day {
+  transform: translateX(calc(200% + 4px));
+}
+
+.view-btn {
+  padding: var(--space-sm) var(--space-lg);
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  cursor: pointer;
+  transition: color var(--transition-fast);
+  border-radius: var(--radius-sm);
+  position: relative;
+  z-index: 1;
+}
+
+.view-btn:hover {
+  color: var(--text-primary);
+}
+
+.view-btn.active {
+  color: var(--text-on-gold);
 }
 
 /* Calendar Legend */
@@ -1596,8 +2099,8 @@ onMounted(async () => {
   gap: var(--space-xl);
   justify-content: center;
   align-items: center;
-  padding: var(--space-md) 0;
-  margin-bottom: var(--space-xl);
+  padding: var(--space-sm) 0;
+  margin-bottom: var(--space-md);
 }
 
 .legend-item {
@@ -1609,74 +2112,22 @@ onMounted(async () => {
 }
 
 .legend-dot {
-  width: 12px;
-  height: 12px;
+  width: 10px;
+  height: 10px;
   border-radius: 50%;
   flex-shrink: 0;
 }
 
 .legend-published {
   background-color: rgba(34, 197, 94, 0.8);
-  box-shadow: 0 0 8px rgba(34, 197, 94, 0.4);
 }
 
 .legend-scheduled {
   background-color: rgba(59, 130, 246, 0.8);
-  box-shadow: 0 0 8px rgba(59, 130, 246, 0.4);
 }
 
 .legend-failed {
   background-color: rgba(239, 68, 68, 0.8);
-  box-shadow: 0 0 8px rgba(239, 68, 68, 0.4);
-}
-
-.calendar-nav {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: var(--space-lg);
-}
-
-.view-mode-selector {
-  display: flex;
-  gap: var(--space-xs);
-  justify-content: center;
-  background: rgba(0, 0, 0, 0.3);
-  padding: var(--space-xs);
-  border-radius: var(--radius-full);
-  border: 1px solid rgba(212, 175, 55, 0.2);
-}
-
-.view-mode-btn {
-  padding: var(--space-sm) var(--space-xl);
-  border: none;
-  background: transparent;
-  color: var(--text-secondary);
-  font-family: var(--font-body);
-  font-size: var(--text-sm);
-  font-weight: var(--font-semibold);
-  cursor: pointer;
-  transition: var(--transition-base);
-  border-radius: var(--radius-full);
-  letter-spacing: 0.02em;
-}
-
-.view-mode-btn:hover {
-  color: var(--gold-light);
-  background: rgba(212, 175, 55, 0.1);
-}
-
-.view-mode-btn.active {
-  background: var(--gradient-gold);
-  color: var(--text-on-gold);
-  box-shadow: 0 2px 8px rgba(212, 175, 55, 0.3);
-}
-
-.current-month {
-  font-family: var(--font-heading);
-  font-size: 1.5rem;
-  color: var(--gold-primary);
-  margin: 0;
 }
 
 /* Loading Overlay (subtle, doesn't hide calendar) */
@@ -1721,10 +2172,250 @@ onMounted(async () => {
 }
 
 .calendar-card {
-  padding: 2rem;
-  margin-bottom: 2rem;
+  padding: var(--space-lg);
+  margin-bottom: var(--space-lg);
   position: relative;
-  min-height: 600px;
+  min-height: 400px;
+}
+
+/* Filter Accordion */
+.filter-accordion {
+  border-bottom: 1px solid rgba(212, 175, 55, 0.15);
+  margin-bottom: var(--space-xl);
+  padding-bottom: var(--space-sm);
+}
+
+.filter-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: var(--space-sm) 0;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--text-primary);
+  transition: color var(--transition-fast);
+}
+
+.filter-toggle:hover {
+  color: var(--gold-primary);
+}
+
+.filter-toggle:hover .filter-label,
+.filter-toggle:hover .filter-icon {
+  color: var(--gold-primary);
+}
+
+.filter-toggle-left {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.filter-icon {
+  font-size: var(--text-lg);
+}
+
+.filter-label {
+  font-family: var(--font-heading);
+  font-size: var(--text-lg);
+  font-weight: var(--font-semibold);
+  color: var(--text-primary);
+}
+
+.filter-badge {
+  background: var(--gold-primary);
+  color: var(--text-on-gold);
+  font-size: var(--text-xs);
+  padding: 2px 6px;
+  border-radius: var(--radius-full);
+  font-weight: var(--font-semibold);
+}
+
+.filter-arrow {
+  font-size: var(--text-xs);
+  transition: transform var(--transition-fast);
+}
+
+.filter-arrow.expanded {
+  transform: rotate(180deg);
+}
+
+.filter-content {
+  padding: var(--space-md) 0 var(--space-lg) 0;
+}
+
+/* Inline Filters */
+.inline-filters {
+  display: flex;
+  gap: var(--space-lg);
+  margin-bottom: var(--space-md);
+}
+
+.inline-filter-group {
+  flex: 1;
+  max-width: 300px;
+}
+
+.inline-filter-btn {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  width: 100%;
+  padding: var(--space-sm) var(--space-md);
+  background: rgba(30, 30, 30, 0.6);
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.inline-filter-btn:hover {
+  background: rgba(212, 175, 55, 0.1);
+  border-color: rgba(212, 175, 55, 0.4);
+}
+
+.inline-filter-icon {
+  font-size: var(--text-base);
+}
+
+.inline-filter-label {
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+}
+
+.inline-filter-count {
+  color: var(--gold-primary);
+  font-size: var(--text-sm);
+}
+
+.inline-filter-arrow {
+  margin-left: auto;
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  transition: transform var(--transition-fast);
+}
+
+.inline-filter-arrow.open {
+  transform: rotate(180deg);
+}
+
+.inline-filter-options {
+  margin-top: var(--space-xs);
+  padding: var(--space-sm);
+  background: rgba(20, 20, 20, 0.9);
+  border: 1px solid rgba(212, 175, 55, 0.15);
+  border-radius: var(--radius-md);
+}
+
+.filter-checkbox {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-xs) var(--space-sm);
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  transition: background var(--transition-fast);
+}
+
+.filter-checkbox:hover {
+  background: rgba(212, 175, 55, 0.1);
+}
+
+.filter-checkbox input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--gold-primary);
+  cursor: pointer;
+}
+
+.checkbox-icon {
+  font-size: var(--text-sm);
+}
+
+.checkbox-label {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+}
+
+.filter-checkbox:hover .checkbox-label {
+  color: var(--text-primary);
+}
+
+.filter-checkbox.select-all {
+  font-weight: var(--font-medium);
+}
+
+.filter-checkbox.select-all .checkbox-label {
+  color: var(--text-primary);
+}
+
+.filter-divider {
+  height: 1px;
+  background: rgba(212, 175, 55, 0.15);
+  margin: var(--space-xs) 0;
+}
+
+/* Active Filter Tags */
+.active-filter-tags {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-sm);
+  padding-top: var(--space-md);
+  border-top: 1px solid rgba(212, 175, 55, 0.1);
+}
+
+.filter-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: var(--space-xs) var(--space-sm);
+  background: rgba(212, 175, 55, 0.15);
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  border-radius: var(--radius-full);
+  font-size: var(--text-xs);
+  color: var(--gold-light);
+}
+
+.tag-remove {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  margin-left: 2px;
+  padding: 0;
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  border-radius: 50%;
+  color: var(--text-secondary);
+  font-size: 12px;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.tag-remove:hover {
+  background: rgba(255, 100, 100, 0.3);
+  color: #ff6b6b;
+}
+
+.clear-all-btn {
+  padding: var(--space-xs) var(--space-sm);
+  background: transparent;
+  border: 1px solid rgba(255, 100, 100, 0.3);
+  border-radius: var(--radius-full);
+  color: #ff6b6b;
+  font-size: var(--text-xs);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.clear-all-btn:hover {
+  background: rgba(255, 100, 100, 0.2);
+  border-color: rgba(255, 100, 100, 0.5);
 }
 
 .calendar-grid {
@@ -2192,7 +2883,45 @@ onMounted(async () => {
 }
 
 .calendar-day.other-month {
+  opacity: 0.5;
+}
+
+/* Past dates - clearly disabled */
+.calendar-day.past-date {
   opacity: 0.3;
+  cursor: not-allowed;
+  background: rgba(0, 0, 0, 0.5);
+  border-color: rgba(50, 50, 50, 0.3);
+}
+
+.calendar-day.past-date:hover {
+  transform: none;
+  border-color: rgba(50, 50, 50, 0.3);
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.calendar-day.past-date .day-number {
+  color: rgba(100, 100, 100, 0.8);
+  text-decoration: line-through;
+  text-decoration-color: rgba(100, 100, 100, 0.5);
+}
+
+/* Future dates - clearly selectable */
+.calendar-day.future-date {
+  background: rgba(212, 175, 55, 0.08);
+  border-color: rgba(212, 175, 55, 0.25);
+  cursor: pointer;
+}
+
+.calendar-day.future-date:hover {
+  background: rgba(212, 175, 55, 0.18);
+  border-color: rgba(212, 175, 55, 0.5);
+  transform: translateY(-2px);
+}
+
+.calendar-day.future-date .day-number {
+  color: var(--gold-light);
+  font-weight: var(--font-semibold);
 }
 
 .calendar-day.today {
@@ -3194,7 +3923,7 @@ onMounted(async () => {
 }
 
 .empty-detail-card {
-  padding: 3rem 2rem;
+  padding: var(--space-2xl) var(--space-xl);
 }
 
 .empty-content {
@@ -3202,7 +3931,27 @@ onMounted(async () => {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 1.5rem;
+  gap: var(--space-md);
+}
+
+.empty-date {
+  font-family: var(--font-heading);
+  font-size: var(--text-xl);
+  color: var(--gold-primary);
+  margin: 0;
+}
+
+.empty-title {
+  font-family: var(--font-heading);
+  font-size: var(--text-lg);
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.empty-subtitle {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  margin: 0 0 var(--space-sm) 0;
 }
 
 .empty-content h3 {
@@ -3339,7 +4088,7 @@ onMounted(async () => {
   .view-mode-btn {
     flex: 1;
     padding: var(--space-sm) var(--space-md);
-    font-size: 0.75rem;
+    font-size: var(--text-sm);
   }
 }
 
@@ -3855,6 +4604,171 @@ onMounted(async () => {
   margin: 0;
 }
 
+/* Upcoming Posts Section */
+.upcoming-posts-card {
+  padding: var(--space-lg);
+  margin-bottom: var(--space-lg);
+}
+
+.upcoming-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-md);
+  padding-bottom: var(--space-sm);
+  border-bottom: 1px solid rgba(212, 175, 55, 0.15);
+}
+
+.upcoming-title {
+  font-family: var(--font-heading);
+  font-size: var(--text-lg);
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.upcoming-count {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  background: rgba(212, 175, 55, 0.1);
+  padding: var(--space-xs) var(--space-sm);
+  border-radius: var(--radius-full);
+}
+
+.upcoming-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.upcoming-item {
+  display: grid;
+  grid-template-columns: 90px 48px 1fr auto;
+  gap: var(--space-md);
+  align-items: center;
+  padding: var(--space-sm) var(--space-md);
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(212, 175, 55, 0.1);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: var(--transition-base);
+}
+
+.upcoming-item:hover {
+  background: rgba(0, 0, 0, 0.3);
+  border-color: rgba(212, 175, 55, 0.3);
+  transform: translateX(4px);
+}
+
+.upcoming-date-badge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 80px;
+}
+
+.upcoming-date {
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  color: var(--gold-primary);
+}
+
+.upcoming-time {
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+}
+
+.upcoming-thumb {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.3);
+  flex-shrink: 0;
+}
+
+.upcoming-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.upcoming-thumb-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--text-lg);
+  background: rgba(212, 175, 55, 0.1);
+}
+
+.upcoming-content {
+  min-width: 0;
+  flex: 1;
+}
+
+.upcoming-text {
+  font-size: var(--text-sm);
+  color: var(--text-primary);
+  margin: 0 0 var(--space-xs) 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.upcoming-meta {
+  display: flex;
+  gap: var(--space-md);
+  font-size: var(--text-xs);
+}
+
+.upcoming-platform {
+  color: var(--text-secondary);
+  text-transform: capitalize;
+}
+
+.upcoming-platform.platform-facebook { color: #4267B2; }
+.upcoming-platform.platform-instagram { color: #E1306C; }
+.upcoming-platform.platform-tiktok { color: #00f2ea; }
+
+.upcoming-restaurant {
+  color: var(--text-muted);
+}
+
+.upcoming-actions {
+  display: flex;
+  gap: var(--space-xs);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.upcoming-item:hover .upcoming-actions {
+  opacity: 1;
+}
+
+.upcoming-action-btn {
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: rgba(212, 175, 55, 0.15);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: var(--transition-base);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--text-sm);
+}
+
+.upcoming-action-btn:hover {
+  background: rgba(212, 175, 55, 0.3);
+  transform: scale(1.1);
+}
+
+.upcoming-action-btn.delete:hover {
+  background: rgba(239, 68, 68, 0.3);
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .creation-options {
@@ -3863,6 +4777,14 @@ onMounted(async () => {
 
   .wizard-modal {
     max-width: 95%;
+  }
+
+  .upcoming-item {
+    grid-template-columns: 70px 40px 1fr;
+  }
+
+  .upcoming-actions {
+    display: none;
   }
 }
 </style>

@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '../stores/auth'
 import { useFacebookStore } from '../stores/facebook'
+import { useInstagramStore } from '../stores/instagram'
 import { api } from '../services/api'
 import GradientBackground from '../components/GradientBackground.vue'
 import BaseCard from '../components/BaseCard.vue'
@@ -12,6 +13,7 @@ import BaseButton from '../components/BaseButton.vue'
 const router = useRouter()
 const authStore = useAuthStore()
 const facebookStore = useFacebookStore()
+const instagramStore = useInstagramStore()
 const { t } = useI18n()
 
 // Real stats from API
@@ -32,47 +34,15 @@ const progressPercent = computed(() => {
   return Math.min((credits_this_month / monthly_limit) * 100, 100)
 })
 
-// All available platforms
-const allPlatforms = computed(() => [
-  {
-    name: 'Facebook',
-    icon: '📘',
-    connected: false,
-    route: '/playground',
-    description: t('dashboard.facebookDescription')
-  },
-  {
-    name: 'Instagram',
-    icon: '📷',
-    connected: false,
-    route: '/playground',
-    description: t('dashboard.instagramDescription')
-  },
-  {
-    name: 'TikTok',
-    icon: '🎵',
-    connected: false,
-    route: '/playground',
-    description: t('dashboard.tiktokDescription')
-  },
-  {
-    name: 'Twitter/X',
-    icon: '🐦',
-    connected: false,
-    route: '/playground',
-    description: t('dashboard.twitterDescription')
-  },
-  {
-    name: 'LinkedIn',
-    icon: '💼',
-    connected: false,
-    route: '/playground',
-    description: t('dashboard.linkedinDescription')
-  }
-])
+// Platform connection status
+const isFacebookConnected = computed(() => facebookStore.connectedPages.length > 0)
+const isInstagramConnected = computed(() => instagramStore.connectedAccounts.length > 0)
 
 const connectedCount = computed(() => {
-  return allPlatforms.value.filter(p => p.connected).length
+  let count = 0
+  if (isFacebookConnected.value) count++
+  if (isInstagramConnected.value) count++
+  return count
 })
 
 async function openCustomerPortal() {
@@ -89,27 +59,21 @@ async function openCustomerPortal() {
 // Load data on mount
 onMounted(async () => {
   try {
-    // Load profile and connected pages
+    // Load profile and connected pages/accounts
     await authStore.refreshProfile()
-    await facebookStore.loadConnectedPages()
+    await Promise.all([
+      facebookStore.loadConnectedPages(),
+      instagramStore.loadConnectedAccounts()
+    ])
 
     // Load real stats from API
     const statsResponse = await api.getStats()
     if (statsResponse.success && statsResponse.data) {
-      // Map backend 'favoritesSaved' to frontend 'postsSaved'
       stats.value = {
         postsCreated: statsResponse.data.postsCreated || 0,
         postsSaved: statsResponse.data.favoritesSaved || 0,
         scheduledPosts: statsResponse.data.scheduledPosts || 0,
         restaurantsAdded: statsResponse.data.restaurantsAdded || 0
-      }
-    }
-
-    // Update Facebook connection status
-    if (facebookStore.connectedPages && facebookStore.connectedPages.length > 0) {
-      const fbPlatform = allPlatforms.value.find(p => p.name === 'Facebook')
-      if (fbPlatform) {
-        fbPlatform.connected = true
       }
     }
   } catch (error) {
@@ -125,175 +89,162 @@ onMounted(async () => {
     <GradientBackground />
 
     <div class="container">
-      <!-- Hero Section -->
-      <div class="hero-section">
+      <!-- Hero Section with Inline Stats -->
+      <div class="hero-compact">
         <h1 class="hero-title">{{ $t('dashboard.welcomeBack', { name: authStore.user?.email?.split('@')[0] }) }}</h1>
-        <p class="hero-subtitle">
-          {{ $t('dashboard.readyToCreate') }}
-        </p>
-      </div>
 
-      <div class="hero-section">
-        <BaseButton variant="primary" @click="router.push('/onboarding')">
-          {{ $t('dashboard.launchOnboarding') }}
-        </BaseButton>
-      </div>
-
-      <!-- Onboarding Test Button -->
-     
-
-      <!-- Quick Stats -->
-      <div class="stats-grid">
-        <BaseCard variant="glass" class="stat-card">
-          <div class="stat-icon">🎨</div>
-          <div class="stat-value">{{ stats.postsCreated }}</div>
-          <div class="stat-label">{{ $t('dashboard.postsCreated') }}</div>
-        </BaseCard>
-
-        <BaseCard variant="glass" class="stat-card">
-          <div class="stat-icon">⭐</div>
-          <div class="stat-value">{{ stats.postsSaved }}</div>
-          <div class="stat-label">{{ $t('dashboard.postsSaved') }}</div>
-        </BaseCard>
-
-        <BaseCard variant="glass" class="stat-card">
-          <div class="stat-icon">📅</div>
-          <div class="stat-value">{{ stats.scheduledPosts }}</div>
-          <div class="stat-label">{{ $t('dashboard.scheduledPosts') }}</div>
-        </BaseCard>
-
-        <BaseCard variant="glass" class="stat-card">
-          <div class="stat-icon">🍽️</div>
-          <div class="stat-value">{{ stats.restaurantsAdded }}</div>
-          <div class="stat-label">{{ $t('dashboard.restaurants') }}</div>
-        </BaseCard>
+        <!-- Inline Stats Bar -->
+        <div class="stats-bar">
+          <div class="stat-item">
+            <span class="stat-icon">🎨</span>
+            <span class="stat-value">{{ stats.postsCreated }}</span>
+            <span class="stat-label">{{ $t('dashboard.postsCreated') }}</span>
+          </div>
+          <div class="stat-divider"></div>
+          <div class="stat-item">
+            <span class="stat-icon">⭐</span>
+            <span class="stat-value">{{ stats.postsSaved }}</span>
+            <span class="stat-label">{{ $t('dashboard.postsSaved') }}</span>
+          </div>
+          <div class="stat-divider"></div>
+          <div class="stat-item">
+            <span class="stat-icon">📅</span>
+            <span class="stat-value">{{ stats.scheduledPosts }}</span>
+            <span class="stat-label">{{ $t('dashboard.scheduledPosts') }}</span>
+          </div>
+          <div class="stat-divider"></div>
+          <div class="stat-item">
+            <span class="stat-icon">🍽️</span>
+            <span class="stat-value">{{ stats.restaurantsAdded }}</span>
+            <span class="stat-label">{{ $t('dashboard.restaurants') }}</span>
+          </div>
+        </div>
       </div>
 
       <!-- Quick Actions -->
-      <div class="section-header">
-        <h2 class="section-title">{{ $t('dashboard.quickActions') }}</h2>
-        <p class="section-subtitle">{{ $t('dashboard.quickActionsSubtitle') }}</p>
-      </div>
-
-      <div class="actions-grid">
-        <BaseCard variant="glass" hoverable class="action-card" @click="router.push('/restaurants')">
-          <div class="action-icon">🔍</div>
-          <h3 class="action-title">{{ $t('dashboard.addRestaurant') }}</h3>
-          <p class="action-description">{{ $t('dashboard.addRestaurantDescription') }}</p>
-          <BaseButton variant="secondary" size="small">{{ $t('dashboard.getStarted') }}</BaseButton>
-        </BaseCard>
-
-        <BaseCard variant="glass" hoverable class="action-card" @click="router.push('/playground')">
-          <div class="action-icon">🎨</div>
-          <h3 class="action-title">{{ $t('dashboard.cookUpContent') }}</h3>
-          <p class="action-description">{{ $t('dashboard.cookUpContentDescription') }}</p>
-          <BaseButton variant="secondary" size="small">{{ $t('dashboard.createNow') }}</BaseButton>
-        </BaseCard>
-
-        <BaseCard variant="glass" hoverable class="action-card" @click="router.push('/scheduler')">
-          <div class="action-icon">📅</div>
-          <h3 class="action-title">{{ $t('dashboard.schedulePosts') }}</h3>
-          <p class="action-description">{{ $t('dashboard.schedulePostsDescription') }}</p>
-          <BaseButton variant="secondary" size="small">{{ $t('dashboard.openCalendar') }}</BaseButton>
-        </BaseCard>
-
-        <BaseCard variant="glass" hoverable class="action-card" @click="router.push('/content')">
-          <div class="action-icon">📝</div>
-          <h3 class="action-title">{{ $t('dashboard.viewPosts') }}</h3>
-          <p class="action-description">{{ $t('dashboard.viewPostsDescription') }}</p>
-          <BaseButton variant="secondary" size="small">{{ $t('dashboard.browseLibrary') }}</BaseButton>
-        </BaseCard>
-      </div>
-
-      <!-- Connected Platforms -->
-      <div class="section-header">
-        <h2 class="section-title">{{ $t('dashboard.socialPlatforms') }}</h2>
-        <p class="section-subtitle">
-          {{ connectedCount > 0 ? $t('dashboard.platformsConnected', connectedCount) : $t('dashboard.connectPlatformsPrompt') }}
-        </p>
-      </div>
-
-      <div class="platforms-grid">
-        <BaseCard
-          v-for="platform in allPlatforms"
-          :key="platform.name"
-          variant="glass"
-          hoverable
-          :class="['platform-card', { connected: platform.connected }]"
-          @click="router.push(platform.route)"
-        >
-          <div class="platform-card-icon">{{ platform.icon }}</div>
-          <h3 class="platform-card-name">{{ platform.name }}</h3>
-          <p class="platform-card-description">{{ platform.description }}</p>
-          <div class="platform-card-status">
-            <span v-if="platform.connected" class="status-badge connected">
-              {{ $t('dashboard.connected') }}
-            </span>
-            <span v-else class="status-badge disconnected">
-              {{ $t('dashboard.notConnected') }}
-            </span>
-          </div>
-          <BaseButton
-            :variant="platform.connected ? 'secondary' : 'primary'"
-            size="small"
-            class="platform-card-button"
-          >
-            {{ platform.connected ? $t('dashboard.manage') : $t('dashboard.connect') }}
-          </BaseButton>
-        </BaseCard>
-      </div>
-
-      <!-- Account Overview -->
-      <div class="section-header">
-        <h2 class="section-title">{{ $t('dashboard.accountOverview') }}</h2>
-      </div>
-
-      <BaseCard variant="glass" class="account-card">
-        <div class="account-grid">
-          <!-- Subscription Info -->
-          <div class="account-section">
-            <h3 class="account-section-title">{{ $t('dashboard.subscription') }}</h3>
-            <div class="account-info">
-              <div class="info-row">
-                <span class="info-label">{{ $t('dashboard.currentPlan') }}</span>
-                <span class="tier-badge">{{ tierDisplayName }}</span>
-              </div>
-              <div class="info-row">
-                <span class="info-label">{{ $t('dashboard.status') }}</span>
-                <span class="info-value">{{ authStore.user?.subscription.status }}</span>
-              </div>
-            </div>
-            <BaseButton variant="secondary" size="small" @click="router.push('/plans')">
-              {{ $t('dashboard.viewPlans') }}
+      <section class="section">
+        <h2 class="section-label">{{ $t('dashboard.quickActions') }}</h2>
+        <div class="actions-grid">
+          <div class="action-card" @click="router.push('/content/create')">
+            <div class="action-icon">🔍</div>
+            <h3 class="action-title">{{ $t('dashboard.addRestaurant') }}</h3>
+            <p class="action-desc">{{ $t('dashboard.addRestaurantDescription') }}</p>
+            <BaseButton variant="secondary" size="small" class="action-btn-cta">
+              {{ $t('dashboard.getStarted') }} →
             </BaseButton>
           </div>
-
-          <!-- Usage Stats -->
-          <div class="account-section">
-            <h3 class="account-section-title">{{ $t('dashboard.usageThisMonth') }}</h3>
-            <div class="usage-stats">
-              <div class="usage-numbers">
-                <span class="usage-current">{{ authStore.usageStats?.credits_this_month }}</span>
-                <span class="usage-separator">/</span>
-                <span class="usage-total">{{ authStore.usageStats?.monthly_limit }}</span>
-              </div>
-              <div class="usage-label">{{ $t('dashboard.creditsUsedLabel') }}</div>
-            </div>
-            <div class="usage-bar">
-              <div class="usage-progress" :style="{ width: `${progressPercent}%` }"></div>
-            </div>
-            <div class="usage-remaining">
-              {{ $t('dashboard.remainingCreditsLabel', authStore.usageStats?.remaining_credits || 0) }}
-            </div>
+          <div class="action-card" @click="router.push('/content/create')">
+            <div class="action-icon">🎨</div>
+            <h3 class="action-title">{{ $t('dashboard.cookUpContent') }}</h3>
+            <p class="action-desc">{{ $t('dashboard.cookUpContentDescription') }}</p>
+            <BaseButton variant="secondary" size="small" class="action-btn-cta">
+              {{ $t('dashboard.createNow') }} →
+            </BaseButton>
+          </div>
+          <div class="action-card" @click="router.push('/scheduler')">
+            <div class="action-icon">📅</div>
+            <h3 class="action-title">{{ $t('dashboard.schedulePosts') }}</h3>
+            <p class="action-desc">{{ $t('dashboard.schedulePostsDescription') }}</p>
+            <BaseButton variant="secondary" size="small" class="action-btn-cta">
+              {{ $t('dashboard.openCalendar') }} →
+            </BaseButton>
+          </div>
+          <div class="action-card" @click="router.push('/content')">
+            <div class="action-icon">📝</div>
+            <h3 class="action-title">{{ $t('dashboard.viewPosts') }}</h3>
+            <p class="action-desc">{{ $t('dashboard.viewPostsDescription') }}</p>
+            <BaseButton variant="secondary" size="small" class="action-btn-cta">
+              {{ $t('dashboard.browseLibrary') }} →
+            </BaseButton>
           </div>
         </div>
+      </section>
 
-        <div class="account-actions">
-          <BaseButton variant="secondary" @click="openCustomerPortal">
-            {{ $t('dashboard.manageSubscription') }}
-          </BaseButton>
+      <!-- Platforms -->
+      <section class="section">
+        <h2 class="section-label">{{ $t('dashboard.socialPlatforms') }}</h2>
+        <p class="section-subtitle">{{ $t('dashboard.connectPlatformsPrompt') }}</p>
+        <div class="platforms-grid">
+          <div class="platform-card" :class="{ connected: isFacebookConnected }">
+            <div class="platform-icon-large">📘</div>
+            <h3 class="platform-name">Facebook</h3>
+            <p class="platform-desc">{{ $t('dashboard.facebookDescription') }}</p>
+            <span class="status-badge" :class="isFacebookConnected ? 'connected' : 'disconnected'">
+              {{ isFacebookConnected ? $t('dashboard.connected') : $t('dashboard.notConnected') }}
+            </span>
+            <BaseButton
+              :variant="isFacebookConnected ? 'danger' : 'primary'"
+              size="small"
+              class="platform-btn"
+              @click="router.push('/connect-accounts')"
+            >
+              {{ isFacebookConnected ? $t('connectAccounts.disconnect') : $t('dashboard.connect') }}
+            </BaseButton>
+          </div>
+          <div class="platform-card" :class="{ connected: isInstagramConnected }">
+            <div class="platform-icon-large">📷</div>
+            <h3 class="platform-name">Instagram</h3>
+            <p class="platform-desc">{{ $t('dashboard.instagramDescription') }}</p>
+            <span class="status-badge" :class="isInstagramConnected ? 'connected' : 'disconnected'">
+              {{ isInstagramConnected ? $t('dashboard.connected') : $t('dashboard.notConnected') }}
+            </span>
+            <BaseButton
+              :variant="isInstagramConnected ? 'danger' : 'primary'"
+              size="small"
+              class="platform-btn"
+              @click="router.push('/connect-accounts')"
+            >
+              {{ isInstagramConnected ? $t('connectAccounts.disconnect') : $t('dashboard.connect') }}
+            </BaseButton>
+          </div>
+          <div class="platform-card disabled">
+            <div class="platform-icon-large">🎵</div>
+            <h3 class="platform-name">TikTok</h3>
+            <p class="platform-desc">{{ $t('dashboard.tiktokDescription') }}</p>
+            <span class="status-badge coming-soon">{{ $t('connectAccounts.comingSoon') }}</span>
+          </div>
+          <div class="platform-card disabled">
+            <div class="platform-icon-large">🐦</div>
+            <h3 class="platform-name">Twitter/X</h3>
+            <p class="platform-desc">{{ $t('dashboard.twitterDescription') }}</p>
+            <span class="status-badge coming-soon">{{ $t('connectAccounts.comingSoon') }}</span>
+          </div>
         </div>
-      </BaseCard>
+      </section>
+
+      <!-- Account Bar -->
+      <section class="section">
+        <h2 class="section-label">{{ $t('dashboard.accountOverview') }}</h2>
+        <BaseCard variant="glass" class="account-bar">
+          <div class="account-bar-content">
+            <div class="account-tier">
+              <span class="tier-badge">{{ tierDisplayName }}</span>
+              <span class="tier-status">{{ authStore.user?.subscription.status }}</span>
+            </div>
+
+            <div class="account-usage">
+              <div class="usage-info">
+                <span class="usage-current">{{ authStore.usageStats?.credits_this_month || 0 }}</span>
+                <span class="usage-sep">/</span>
+                <span class="usage-total">{{ authStore.usageStats?.monthly_limit || 0 }}</span>
+                <span class="usage-text">{{ $t('dashboard.creditsUsedLabel') }}</span>
+              </div>
+              <div class="usage-bar-compact">
+                <div class="usage-progress-compact" :style="{ width: `${progressPercent}%` }"></div>
+              </div>
+            </div>
+
+            <div class="account-actions-compact">
+              <BaseButton variant="ghost" size="small" @click="router.push('/plans')">
+                {{ $t('dashboard.viewPlans') }}
+              </BaseButton>
+              <BaseButton variant="secondary" size="small" @click="openCustomerPortal">
+                {{ $t('dashboard.manageSubscription') }}
+              </BaseButton>
+            </div>
+          </div>
+        </BaseCard>
+      </section>
     </div>
   </div>
 </template>
@@ -302,110 +253,64 @@ onMounted(async () => {
 .dashboard-view {
   min-height: 100vh;
   position: relative;
-  padding: var(--space-3xl) var(--space-lg);
+  padding: var(--space-xl) var(--space-lg);
 }
 
 .container {
-  max-width: 1400px;
+  max-width: 1200px;
   margin: 0 auto;
   position: relative;
   z-index: 1;
 }
 
-/* Hero Section */
-.hero-section {
-  margin-bottom: var(--space-4xl);
+/* Hero Compact */
+.hero-compact {
   text-align: center;
-  animation: fadeInUp 0.6s var(--ease-smooth);
+  margin-bottom: var(--space-3xl);
+  animation: fadeInUp 0.5s var(--ease-smooth);
 }
 
 .hero-title {
   font-family: var(--font-heading);
-  font-size: var(--text-4xl);
+  font-size: var(--text-3xl);
   font-weight: var(--font-bold);
-  margin: 0 0 var(--space-md) 0;
+  margin: 0 0 var(--space-xl) 0;
   background: var(--gradient-gold);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
-.hero-subtitle {
-  font-size: var(--text-lg);
-  color: var(--text-secondary);
-  margin: 0;
-}
-
-/* Onboarding Test Card */
-.onboarding-test-card {
-  padding: var(--space-2xl);
-  margin-bottom: var(--space-4xl);
-  text-align: center;
-  border: 2px dashed var(--gold-primary);
-  animation: fadeInUp 0.7s var(--ease-smooth);
-}
-
-.test-header {
+/* Stats Bar - Inline Horizontal */
+.stats-bar {
   display: flex;
-  flex-direction: column;
+  justify-content: center;
+  align-items: stretch;
+  padding: 0;
+  background: var(--bg-secondary);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-color);
+  overflow: hidden;
+}
+
+.stat-item {
+  flex: 1;
+  display: flex;
   align-items: center;
-  gap: var(--space-md);
-  margin-bottom: var(--space-lg);
+  justify-content: center;
+  gap: var(--space-sm);
+  padding: var(--space-lg) var(--space-xl);
 }
-
-.test-badge {
-  background: var(--gold-subtle);
-  color: var(--gold-primary);
-  padding: var(--space-xs) var(--space-lg);
-  border-radius: var(--radius-full);
-  font-size: var(--text-sm);
-  font-weight: var(--font-semibold);
-  border: 1px solid var(--gold-primary);
-}
-
-.test-title {
-  font-family: var(--font-heading);
-  font-size: var(--text-2xl);
-  color: var(--text-primary);
-  margin: 0;
-}
-
-.test-description {
-  color: var(--text-secondary);
-  margin: 0 0 var(--space-xl) 0;
-}
-
-/* Stats Grid */
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: var(--space-xl);
-  margin-bottom: var(--space-4xl);
-}
-
-.stat-card {
-  padding: var(--space-2xl);
-  text-align: center;
-  animation: fadeInUp 0.6s var(--ease-smooth);
-  animation-fill-mode: both;
-}
-
-.stat-card:nth-child(1) { animation-delay: 0.1s; }
-.stat-card:nth-child(2) { animation-delay: 0.2s; }
-.stat-card:nth-child(3) { animation-delay: 0.3s; }
-.stat-card:nth-child(4) { animation-delay: 0.4s; }
 
 .stat-icon {
-  font-size: var(--text-5xl);
-  margin-bottom: var(--space-md);
+  font-size: var(--text-xl);
 }
 
 .stat-value {
   font-family: var(--font-heading);
-  font-size: var(--text-4xl);
+  font-size: var(--text-2xl);
   font-weight: var(--font-bold);
   color: var(--gold-primary);
-  margin-bottom: var(--space-xs);
 }
 
 .stat-label {
@@ -415,124 +320,131 @@ onMounted(async () => {
   letter-spacing: 0.5px;
 }
 
-/* Section Headers */
-.section-header {
-  text-align: center;
-  margin: var(--space-5xl) 0 var(--space-3xl) 0;
+.stat-divider {
+  width: 1px;
+  background: var(--border-color);
+  align-self: stretch;
 }
 
-.section-title {
+/* Section */
+.section {
+  margin-bottom: var(--space-3xl);
+}
+
+.section-label {
   font-family: var(--font-heading);
-  font-size: var(--text-3xl);
-  font-weight: var(--font-bold);
-  margin: 0 0 var(--space-sm) 0;
+  font-size: var(--text-lg);
+  font-weight: var(--font-semibold);
   color: var(--text-primary);
+  margin: 0 0 var(--space-lg) 0;
 }
 
+/* Section Subtitle */
 .section-subtitle {
-  font-size: var(--text-base);
+  font-size: var(--text-sm);
   color: var(--text-secondary);
-  margin: 0;
+  margin: calc(-1 * var(--space-md)) 0 var(--space-lg) 0;
 }
 
 /* Actions Grid */
 .actions-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: var(--space-xl);
-  margin-bottom: var(--space-4xl);
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-lg);
 }
 
 .action-card {
-  padding: var(--space-2xl);
-  text-align: center;
   display: flex;
   flex-direction: column;
-  gap: var(--space-md);
+  align-items: center;
+  text-align: center;
+  padding: var(--space-xl);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
   cursor: pointer;
-  animation: fadeInUp 0.6s var(--ease-smooth);
-  animation-fill-mode: both;
+  transition: all var(--transition-fast);
 }
 
-.action-card:nth-child(1) { animation-delay: 0.1s; }
-.action-card:nth-child(2) { animation-delay: 0.2s; }
-.action-card:nth-child(3) { animation-delay: 0.3s; }
-.action-card:nth-child(4) { animation-delay: 0.4s; }
+.action-card:hover {
+  border-color: var(--gold-primary);
+  transform: translateY(-2px);
+}
 
 .action-icon {
-  font-size: 60px;
-  margin-bottom: var(--space-sm);
+  font-size: 48px;
+  margin-bottom: var(--space-md);
 }
 
 .action-title {
   font-family: var(--font-heading);
-  font-size: var(--text-xl);
+  font-size: var(--text-lg);
+  font-weight: var(--font-semibold);
   color: var(--text-primary);
-  margin: 0;
+  margin: 0 0 var(--space-sm) 0;
 }
 
-.action-description {
-  color: var(--text-secondary);
+.action-desc {
   font-size: var(--text-sm);
-  line-height: var(--leading-normal);
-  margin: 0;
+  color: var(--text-secondary);
+  margin: 0 0 var(--space-lg) 0;
   flex: 1;
+}
+
+.action-btn-cta {
+  width: 100%;
 }
 
 /* Platforms Grid */
 .platforms-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: var(--space-xl);
-  margin-bottom: var(--space-4xl);
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-lg);
 }
 
 .platform-card {
-  padding: var(--space-2xl);
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
-  gap: var(--space-md);
-  cursor: pointer;
-  transition: all var(--transition-base);
-  animation: fadeInUp 0.6s var(--ease-smooth);
-  animation-fill-mode: both;
+  padding: var(--space-xl);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  transition: all var(--transition-fast);
 }
 
-.platform-card:nth-child(1) { animation-delay: 0.1s; }
-.platform-card:nth-child(2) { animation-delay: 0.2s; }
-.platform-card:nth-child(3) { animation-delay: 0.3s; }
-.platform-card:nth-child(4) { animation-delay: 0.4s; }
-.platform-card:nth-child(5) { animation-delay: 0.5s; }
+.platform-card:hover:not(.disabled) {
+  border-color: var(--gold-primary);
+}
 
 .platform-card.connected {
   border-color: var(--success-border);
-  background: var(--success-bg);
+  background: rgba(34, 197, 94, 0.05);
 }
 
-.platform-card-icon {
-  font-size: 64px;
-  margin-bottom: var(--space-sm);
+.platform-card.disabled {
+  opacity: 0.6;
 }
 
-.platform-card-name {
+.platform-icon-large {
+  font-size: 48px;
+  margin-bottom: var(--space-md);
+}
+
+.platform-name {
   font-family: var(--font-heading);
-  font-size: var(--text-xl);
+  font-size: var(--text-lg);
+  font-weight: var(--font-semibold);
   color: var(--text-primary);
-  margin: 0;
+  margin: 0 0 var(--space-sm) 0;
 }
 
-.platform-card-description {
-  color: var(--text-secondary);
+.platform-desc {
   font-size: var(--text-sm);
-  line-height: var(--leading-normal);
-  margin: 0;
+  color: var(--text-secondary);
+  margin: 0 0 var(--space-md) 0;
   flex: 1;
-}
-
-.platform-card-status {
-  margin: var(--space-sm) 0;
 }
 
 .status-badge {
@@ -542,6 +454,7 @@ onMounted(async () => {
   border-radius: var(--radius-full);
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  margin-bottom: var(--space-md);
 }
 
 .status-badge.connected {
@@ -556,146 +469,108 @@ onMounted(async () => {
   border: 1px solid var(--border-color);
 }
 
-.platform-card-button {
-  width: 100%;
-}
-
-/* Account Card */
-.account-card {
-  padding: var(--space-3xl);
-  margin-bottom: var(--space-4xl);
-  animation: fadeInUp 0.9s var(--ease-smooth);
-}
-
-.account-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: var(--space-3xl);
-  margin-bottom: var(--space-3xl);
-}
-
-.account-section {
+.status-badge.coming-soon {
   background: var(--bg-tertiary);
-  padding: var(--space-2xl);
-  border-radius: var(--radius-lg);
+  color: var(--text-muted);
   border: 1px solid var(--border-color);
 }
 
-.account-section-title {
-  font-family: var(--font-heading);
-  font-size: var(--text-xl);
-  color: var(--text-primary);
-  margin: 0 0 var(--space-xl) 0;
-  text-align: center;
+.platform-btn {
+  width: 100%;
 }
 
-.account-info {
-  margin-bottom: var(--space-xl);
+/* Account Bar */
+.account-bar {
+  padding: var(--space-lg) var(--space-xl);
 }
 
-.info-row {
+.account-bar-content {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  padding: var(--space-md) 0;
-  border-bottom: 1px solid var(--border-color);
+  gap: var(--space-xl);
+  flex-wrap: wrap;
 }
 
-.info-row:last-child {
-  border-bottom: none;
-}
-
-.info-label {
-  font-weight: var(--font-semibold);
-  color: var(--text-secondary);
-  font-size: var(--text-sm);
-}
-
-.info-value {
-  color: var(--text-primary);
-  font-size: var(--text-sm);
+.account-tier {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
 }
 
 .tier-badge {
   background: var(--gradient-gold);
   color: var(--text-on-gold);
-  padding: var(--space-xs) var(--space-lg);
+  padding: var(--space-xs) var(--space-md);
   border-radius: var(--radius-full);
   font-weight: var(--font-bold);
   font-size: var(--text-xs);
 }
 
-.usage-stats {
-  text-align: center;
-  margin-bottom: var(--space-xl);
+.tier-status {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  text-transform: capitalize;
 }
 
-.usage-numbers {
+.account-usage {
+  flex: 1;
+  min-width: 200px;
+}
+
+.usage-info {
   display: flex;
   align-items: baseline;
-  justify-content: center;
-  gap: var(--space-sm);
-  margin-bottom: var(--space-sm);
+  gap: var(--space-xs);
+  margin-bottom: var(--space-xs);
 }
 
 .usage-current {
   font-family: var(--font-heading);
-  font-size: var(--text-4xl);
+  font-size: var(--text-xl);
   font-weight: var(--font-bold);
   color: var(--gold-primary);
 }
 
-.usage-separator {
-  font-size: var(--text-2xl);
+.usage-sep {
   color: var(--text-muted);
 }
 
 .usage-total {
-  font-size: var(--text-2xl);
+  font-size: var(--text-base);
   color: var(--text-secondary);
 }
 
-.usage-label {
-  font-size: var(--text-sm);
-  color: var(--text-secondary);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+.usage-text {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  margin-left: var(--space-sm);
 }
 
-.usage-bar {
+.usage-bar-compact {
   width: 100%;
-  height: 12px;
+  height: 6px;
   background: var(--bg-primary);
   border-radius: var(--radius-full);
   overflow: hidden;
-  margin-bottom: var(--space-md);
 }
 
-.usage-progress {
+.usage-progress-compact {
   height: 100%;
   background: var(--gradient-gold);
   transition: width var(--transition-base);
   border-radius: var(--radius-full);
 }
 
-.usage-remaining {
-  font-size: var(--text-xs);
-  color: var(--text-muted);
-  text-align: center;
-}
-
-.account-actions {
+.account-actions-compact {
   display: flex;
-  gap: var(--space-lg);
-  justify-content: center;
-  flex-wrap: wrap;
+  gap: var(--space-sm);
 }
 
 /* Animations */
 @keyframes fadeInUp {
   from {
     opacity: 0;
-    transform: translateY(20px);
+    transform: translateY(10px);
   }
   to {
     opacity: 1;
@@ -703,41 +578,67 @@ onMounted(async () => {
   }
 }
 
-/* Responsive */
+/* Responsive - Tablet */
 @media (max-width: 1024px) {
-  .stats-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  .actions-grid {
+  .actions-grid,
+  .platforms-grid {
     grid-template-columns: repeat(2, 1fr);
   }
 }
 
+/* Responsive - Mobile */
 @media (max-width: 768px) {
   .dashboard-view {
-    padding: var(--space-2xl) var(--space-md);
+    padding: var(--space-lg) var(--space-md);
   }
 
   .hero-title {
-    font-size: var(--text-3xl);
+    font-size: var(--text-2xl);
   }
 
-  .hero-subtitle {
-    font-size: var(--text-base);
+  .stats-bar {
+    flex-wrap: wrap;
   }
 
-  .stats-grid,
-  .actions-grid {
+  .stat-divider {
+    display: none;
+  }
+
+  .stat-item {
+    flex: 1 1 45%;
+    padding: var(--space-md);
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .stat-item:nth-child(n+5) {
+    border-bottom: none;
+  }
+
+  .stat-value {
+    font-size: var(--text-xl);
+  }
+
+  .stat-label {
+    font-size: var(--text-xs);
+  }
+
+  .actions-grid,
+  .platforms-grid {
     grid-template-columns: 1fr;
   }
 
-  .account-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .account-actions {
+  .account-bar-content {
     flex-direction: column;
+    align-items: stretch;
+    gap: var(--space-md);
+  }
+
+  .account-tier {
+    justify-content: center;
+  }
+
+  .account-actions-compact {
+    justify-content: center;
   }
 }
 </style>
