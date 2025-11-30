@@ -4,6 +4,7 @@ import BaseCard from './BaseCard.vue'
 import BaseButton from './BaseButton.vue'
 import BaseAlert from './BaseAlert.vue'
 import DatePicker from './DatePicker.vue'
+import { useSocialAccounts } from '../composables/useSocialAccounts'
 
 interface Props {
   modelValue: boolean
@@ -17,6 +18,9 @@ const emit = defineEmits<{
   (e: 'save', updates: any): void
 }>()
 
+// Social accounts integration
+const { availablePlatforms, isConnected } = useSocialAccounts()
+
 // Auto-detect timezone with fallback
 const detectedTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone
 const defaultTimezone = detectedTimezone || 'America/New_York'
@@ -27,7 +31,7 @@ const hours = ref('12')
 const minutes = ref('00')
 const ampm = ref('AM')
 const timezone = ref(defaultTimezone)
-const platform = ref('')
+const selectedPlatforms = ref<string[]>([])
 const notes = ref('')
 const postText = ref('')
 const hashtags = ref<string[]>([])
@@ -116,8 +120,13 @@ const populateForm = (post: any) => {
     timezone.value = post.timezone
   }
 
-  if (post.platform) {
-    platform.value = post.platform
+  if (post.platforms && post.platforms.length > 0) {
+    selectedPlatforms.value = [...post.platforms]
+  } else if (post.platform) {
+    // Fallback for old data structure
+    selectedPlatforms.value = [post.platform]
+  } else {
+    selectedPlatforms.value = []
   }
 
   if (post.notes) {
@@ -225,13 +234,8 @@ const saveChanges = async () => {
     return
   }
 
-  if (!platform.value) {
-    error.value = 'Please select a platform'
-    return
-  }
-
-  if (platform.value !== 'facebook') {
-    error.value = 'Only Facebook is currently supported. Other platforms coming soon.'
+  if (!selectedPlatforms.value || selectedPlatforms.value.length === 0) {
+    error.value = 'Please select at least one platform'
     return
   }
 
@@ -247,7 +251,7 @@ const saveChanges = async () => {
       scheduled_date: scheduledDate.value,
       scheduled_time: get24HourTime(),
       timezone: timezone.value,
-      platform: platform.value,
+      platforms: selectedPlatforms.value,
       notes: notes.value || undefined,
       post_text: postText.value,
       hashtags: hashtags.value,
@@ -302,7 +306,7 @@ const formatDisplayDate = (dateStr: string) => {
               class="preview-video"
             />
             <div v-else class="preview-placeholder">
-              <span class="placeholder-icon">📸</span>
+              <span class="placeholder-icon">photo_camera</span>
               <span class="placeholder-text">No media</span>
             </div>
           </div>
@@ -358,7 +362,7 @@ const formatDisplayDate = (dateStr: string) => {
 
           <!-- Date -->
           <div class="form-group">
-            <label class="form-label">📅 SCHEDULED DATE</label>
+            <label class="form-label">calendar_month SCHEDULED DATE</label>
             <DatePicker
               v-model="scheduledDate"
               :min-date="new Date().toISOString().split('T')[0]"
@@ -370,7 +374,7 @@ const formatDisplayDate = (dateStr: string) => {
 
           <!-- Time -->
           <div class="form-group">
-            <label class="form-label">⏰ SCHEDULED TIME</label>
+            <label class="form-label">schedule SCHEDULED TIME</label>
             <div class="time-picker">
               <select v-model="hours" class="time-select">
                 <option v-for="opt in hourOptions" :key="opt.value" :value="opt.value">
@@ -391,26 +395,40 @@ const formatDisplayDate = (dateStr: string) => {
             <div class="time-preview">{{ formattedTime }}</div>
           </div>
 
-          <!-- Platform & Timezone Row -->
-          <div class="form-row">
-            <div class="form-group">
-              <label class="form-label">📱 PLATFORM <span class="required">*</span></label>
-              <select v-model="platform" class="form-input platform-select">
-                <option value="">Select a platform...</option>
-                <option value="facebook">👥 Facebook</option>
-                <option value="instagram">📷 Instagram</option>
-                <option value="tiktok">🎵 TikTok</option>
-                <option value="twitter">🐦 Twitter/X</option>
-                <option value="linkedin">💼 LinkedIn</option>
-              </select>
-              <p v-if="!platform" class="platform-hint error">
-                ⚠️ Please select a platform
-              </p>
-              <p v-else-if="platform !== 'facebook'" class="platform-hint warning">
-                ⚠️ Only Facebook is supported
-              </p>
+          <!-- Platforms Selection -->
+          <div class="form-group platforms-section">
+            <label class="form-label">PLATFORMS <span class="required">*</span></label>
+            <div class="platforms-grid">
+              <label
+                v-for="platform in availablePlatforms"
+                :key="platform.id"
+                :class="[
+                  'platform-option',
+                  {
+                    'selected': selectedPlatforms.includes(platform.id),
+                    'disabled': !platform.isConnected
+                  }
+                ]"
+              >
+                <input
+                  type="checkbox"
+                  :value="platform.id"
+                  v-model="selectedPlatforms"
+                  :disabled="!platform.isConnected"
+                  class="platform-checkbox"
+                />
+                <span class="platform-icon">{{ platform.icon }}</span>
+                <span class="platform-name">{{ platform.name }}</span>
+                <span v-if="!platform.isConnected" class="connection-hint">(Not connected)</span>
+              </label>
             </div>
+            <p v-if="selectedPlatforms.length === 0" class="platform-hint error">
+              Please select at least one platform
+            </p>
+          </div>
 
+          <!-- Timezone Row -->
+          <div class="form-row">
             <div class="form-group">
               <label class="form-label">🌍 TIMEZONE</label>
               <select v-model="timezone" class="form-input">
@@ -426,7 +444,7 @@ const formatDisplayDate = (dateStr: string) => {
 
           <!-- Notes -->
           <div class="form-group">
-            <label class="form-label">📝 NOTES (OPTIONAL)</label>
+            <label class="form-label">edit_note NOTES (OPTIONAL)</label>
             <textarea
               v-model="notes"
               class="form-textarea"
@@ -461,7 +479,7 @@ const formatDisplayDate = (dateStr: string) => {
                   :src="favorite.media_url"
                   class="favorite-thumbnail"
                 />
-                <div v-if="selectedFavoriteId === favorite.id" class="selected-check">✓</div>
+                <div v-if="selectedFavoriteId === favorite.id" class="selected-check">check_circle</div>
               </div>
             </div>
           </div>
@@ -876,6 +894,71 @@ const formatDisplayDate = (dateStr: string) => {
 
 .platform-select {
   cursor: pointer;
+}
+
+.platforms-section {
+  margin-bottom: var(--space-xl);
+}
+
+.platforms-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: var(--space-md);
+  margin-top: var(--space-md);
+}
+
+.platform-option {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-md);
+  border: 2px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background: var(--bg-secondary);
+  cursor: pointer;
+  transition: all var(--transition-base);
+}
+
+.platform-option:hover:not(.disabled) {
+  border-color: var(--gold-primary);
+  background: var(--gold-subtle);
+}
+
+.platform-option.selected {
+  border-color: var(--gold-primary);
+  background: var(--gold-subtle);
+}
+
+.platform-option.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.platform-checkbox {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: var(--gold-primary);
+}
+
+.platform-option.disabled .platform-checkbox {
+  cursor: not-allowed;
+}
+
+.platform-icon {
+  font-size: var(--text-xl);
+}
+
+.platform-name {
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  color: var(--text-primary);
+}
+
+.connection-hint {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  margin-left: auto;
 }
 
 .platform-hint {

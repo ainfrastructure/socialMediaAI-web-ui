@@ -723,7 +723,7 @@ class ApiService {
     scheduled_date: string
     scheduled_time?: string
     timezone?: string
-    platform?: string
+    platforms: string[]
     notes?: string
     platform_settings?: any
   }): Promise<ApiResponse<{ scheduled_post: any }>> {
@@ -747,6 +747,7 @@ class ApiService {
       notes?: string
       platform_settings?: any
       status?: string
+      platforms?: string[]
     }
   ): Promise<ApiResponse<{ scheduled_post: any }>> {
     const response = await fetch(`${API_URL}/api/scheduler/${id}`, {

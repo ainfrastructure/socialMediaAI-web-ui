@@ -13,7 +13,7 @@
       <div v-else class="content-hub">
         <!-- Restaurant Header -->
         <div class="restaurant-header">
-          <div class="header-content">
+          <div class="header-content clickable-header" @click="showRestaurantSelector = true">
             <div class="logo-container">
               <div v-if="selectedRestaurant?.brand_dna?.logo_url" class="restaurant-logo">
                 <img :src="selectedRestaurant.brand_dna.logo_url" :alt="selectedRestaurant.name" />
@@ -26,18 +26,13 @@
               <h1 class="restaurant-name">{{ selectedRestaurant?.name }}</h1>
               <p class="restaurant-address">{{ selectedRestaurant?.address }}</p>
             </div>
-            <div class="header-actions">
-              <BaseButton variant="secondary" size="medium" @click="showRestaurantSelector = true">
-                {{ $t('contentHub.changeRestaurant') }}
-              </BaseButton>
-            </div>
           </div>
         </div>
 
         <!-- Create Content Card -->
         <BaseCard variant="glass" hoverable class="create-card" @click="goToCreate">
           <div class="create-content">
-            <span class="create-icon">✨</span>
+            <img src="/socialchef_logo.svg" alt="Social Chef" class="create-icon" />
             <div class="create-text">
               <h2 class="create-title">{{ $t('contentHub.createNew') }}</h2>
               <p class="create-description">{{ $t('contentHub.createDescription') }}</p>
@@ -57,11 +52,7 @@
           <!-- Inline Filters -->
           <div class="inline-filters">
             <div class="filter-group">
-              <select
-                v-model="filters.content_type"
-                class="inline-select"
-                @change="applyFilters"
-              >
+              <select v-model="filters.content_type" class="inline-select" @change="applyFilters">
                 <option value="">{{ $t('contentHub.filterAll') }}</option>
                 <option value="image">{{ $t('posts.image') }}</option>
                 <option value="video">{{ $t('posts.video') }}</option>
@@ -69,11 +60,7 @@
             </div>
 
             <div class="filter-group">
-              <select
-                v-model="filters.sort"
-                class="inline-select"
-                @change="applyFilters"
-              >
+              <select v-model="filters.sort" class="inline-select" @change="applyFilters">
                 <option value="newest">{{ $t('contentHub.sortNewest') }}</option>
                 <option value="oldest">{{ $t('contentHub.sortOldest') }}</option>
               </select>
@@ -115,11 +102,7 @@
                   :alt="$t('posts.postAlt')"
                   class="post-media"
                 />
-                <video
-                  v-else
-                  :src="post.media_url"
-                  class="post-media"
-                ></video>
+                <video v-else :src="post.media_url" class="post-media"></video>
 
                 <!-- Content Type Icon -->
                 <span :class="['type-icon', post.content_type]">
@@ -149,7 +132,10 @@
                   <div class="created-date">
                     {{ formatDate(post.created_at) }}
                   </div>
-                  <span v-if="post.platform" :class="['platform-badge', `platform-${post.platform}`]">
+                  <span
+                    v-if="post.platform"
+                    :class="['platform-badge', `platform-${post.platform}`]"
+                  >
                     {{ post.platform }}
                   </span>
                 </div>
@@ -217,12 +203,7 @@
               :alt="$t('posts.postAlt')"
               class="detail-media"
             />
-            <video
-              v-else
-              :src="selectedPost.media_url"
-              class="detail-media"
-              controls
-            ></video>
+            <video v-else :src="selectedPost.media_url" class="detail-media" controls></video>
 
             <!-- Full Post Text -->
             <div v-if="selectedPost.post_text" class="detail-section">
@@ -249,16 +230,15 @@
             </div>
 
             <!-- Hashtags -->
-            <div v-if="(selectedPost.hashtags && selectedPost.hashtags.length > 0) || isEditMode" class="detail-section">
+            <div
+              v-if="(selectedPost.hashtags && selectedPost.hashtags.length > 0) || isEditMode"
+              class="detail-section"
+            >
               <h4>{{ $t('posts.hashtags') }}</h4>
               <!-- Edit Mode: Tag Editor -->
               <div v-if="isEditMode" class="hashtag-editor">
                 <div class="hashtag-tags">
-                  <span
-                    v-for="(tag, idx) in selectedPost.hashtags"
-                    :key="idx"
-                    class="hashtag-tag"
-                  >
+                  <span v-for="(tag, idx) in selectedPost.hashtags" :key="idx" class="hashtag-tag">
                     {{ tag }}
                     <button @click="removeHashtag(idx)" class="remove-tag">&times;</button>
                   </span>
@@ -289,16 +269,10 @@
                 <option value="twitter">{{ $t('platforms.twitter') }}</option>
                 <option value="linkedin">{{ $t('platforms.linkedin') }}</option>
               </select>
-              <p v-else class="full-text" style="text-transform: capitalize;">{{ selectedPost.platform }}</p>
+              <p v-else class="full-text" style="text-transform: capitalize">
+                {{ selectedPost.platform }}
+              </p>
             </div>
-
-            <!-- Publish Feedback -->
-            <BaseAlert v-if="publishSuccess" type="success" @close="publishSuccess = false">
-              {{ $t('posts.publishSuccess') }}
-            </BaseAlert>
-            <BaseAlert v-if="publishError" type="error" @close="publishError = ''">
-              {{ publishError }}
-            </BaseAlert>
 
             <!-- Action Buttons -->
             <div class="modal-actions">
@@ -314,17 +288,14 @@
 
               <!-- View Mode Buttons -->
               <template v-else>
+                <BaseButton variant="danger" @click="confirmDeleteFromModal">
+                  {{ $t('posts.deleteButton') }}
+                </BaseButton>
                 <BaseButton variant="secondary" @click="enableEditMode">
                   {{ $t('posts.editButton') }}
                 </BaseButton>
                 <BaseButton variant="primary" @click="schedulePost(selectedPost)">
                   {{ $t('posts.scheduleButton') }}
-                </BaseButton>
-                <BaseButton variant="danger" @click="confirmDeleteFromModal">
-                  {{ $t('posts.deleteButton') }}
-                </BaseButton>
-                <BaseButton variant="primary" @click="publishToInstagram" :disabled="isPublishing">
-                  {{ isPublishing ? $t('posts.publishing') : $t('posts.publishToInstagram') }}
                 </BaseButton>
               </template>
             </div>
@@ -340,13 +311,11 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { usePreferencesStore } from '@/stores/preferences'
-import { useInstagramStore } from '@/stores/instagram'
 import { api } from '@/services/api'
 import { restaurantService, type SavedRestaurant } from '@/services/restaurantService'
 import GradientBackground from '@/components/GradientBackground.vue'
 import BaseCard from '@/components/BaseCard.vue'
 import BaseButton from '@/components/BaseButton.vue'
-import BaseAlert from '@/components/BaseAlert.vue'
 import BasePagination from '@/components/BasePagination.vue'
 import ConfirmModal from '@/components/ConfirmModal.vue'
 import ScheduleModal from '@/components/ScheduleModal.vue'
@@ -355,7 +324,6 @@ import RestaurantSelectorModal from '@/components/RestaurantSelectorModal.vue'
 const router = useRouter()
 const { t } = useI18n()
 const preferencesStore = usePreferencesStore()
-const instagramStore = useInstagramStore()
 
 // State
 const loading = ref(true)
@@ -375,11 +343,6 @@ const postToDelete = ref<string | null>(null)
 const isEditMode = ref(false)
 const originalPost = ref<any>(null)
 const newHashtag = ref('')
-
-// Instagram publish state
-const isPublishing = ref(false)
-const publishError = ref('')
-const publishSuccess = ref(false)
 
 // Filters
 const filters = ref({
@@ -412,7 +375,7 @@ onMounted(async () => {
     // Auto-select restaurant
     const savedId = preferencesStore.selectedRestaurantId
     if (savedId) {
-      const found = restaurants.value.find(r => r.id === savedId)
+      const found = restaurants.value.find((r) => r.id === savedId)
       if (found) {
         selectedRestaurant.value = found
       }
@@ -426,9 +389,6 @@ onMounted(async () => {
 
     // Load posts for selected restaurant
     await fetchPosts()
-
-    // Load Instagram accounts for publish feature
-    await instagramStore.loadConnectedAccounts()
   } finally {
     loading.value = false
   }
@@ -498,7 +458,7 @@ async function handleDeleteRestaurant(restaurant: SavedRestaurant) {
     await restaurantService.deleteRestaurant(restaurant.place_id)
 
     // Remove from local list
-    restaurants.value = restaurants.value.filter(r => r.id !== restaurant.id)
+    restaurants.value = restaurants.value.filter((r) => r.id !== restaurant.id)
 
     // If the deleted restaurant was selected, select another one or clear
     if (selectedRestaurant.value?.id === restaurant.id) {
@@ -609,7 +569,7 @@ async function saveChanges() {
 
 // Schedule post
 function schedulePost(post: any) {
-  const postToSchedule = post ? { ...post } : (selectedPost.value ? { ...selectedPost.value } : null)
+  const postToSchedule = post ? { ...post } : selectedPost.value ? { ...selectedPost.value } : null
   if (!postToSchedule) return
 
   showDetailModal.value = false
@@ -653,49 +613,6 @@ async function handleDeleteConfirm() {
 function handleDeleteCancel() {
   showDeleteModal.value = false
   postToDelete.value = null
-}
-
-// Instagram publish
-async function publishToInstagram() {
-  if (!selectedPost.value) return
-
-  // Check if Instagram is connected - redirect to connect page if not
-  if (instagramStore.connectedAccounts.length === 0) {
-    router.push('/connect-accounts')
-    return
-  }
-
-  const account = instagramStore.connectedAccounts[0]
-
-  // Format caption: post text + hashtags
-  let caption = selectedPost.value.post_text || ''
-  if (selectedPost.value.hashtags?.length) {
-    caption += '\n\n' + selectedPost.value.hashtags.map((tag: string) =>
-      tag.startsWith('#') ? tag : `#${tag}`
-    ).join(' ')
-  }
-
-  isPublishing.value = true
-  publishError.value = ''
-  publishSuccess.value = false
-
-  try {
-    const response = await api.postToInstagram(
-      account.instagramAccountId,
-      caption,
-      selectedPost.value.media_url
-    )
-
-    if (response.success) {
-      publishSuccess.value = true
-    } else {
-      publishError.value = response.error || t('posts.publishError')
-    }
-  } catch (error: any) {
-    publishError.value = error.message || t('posts.publishError')
-  } finally {
-    isPublishing.value = false
-  }
 }
 
 // Utility functions
@@ -749,7 +666,9 @@ function formatDate(dateString: string): string {
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* Restaurant Header */
@@ -765,6 +684,39 @@ function formatDate(dateString: string): string {
   justify-content: center;
   gap: var(--space-2xl);
   flex-wrap: wrap;
+}
+
+.clickable-header {
+  cursor: pointer;
+  position: relative;
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease;
+}
+
+.clickable-header:hover {
+  opacity: 0.9;
+  transform: scale(1.01);
+}
+
+.change-restaurant-hint {
+  position: absolute;
+  top: 0;
+  right: 0;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+  padding: var(--space-sm) var(--space-md);
+  background: rgba(212, 175, 55, 0.2);
+  border: 1px solid var(--gold-primary);
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  color: var(--gold-primary);
+  font-weight: var(--font-semibold);
+}
+
+.clickable-header:hover .change-restaurant-hint {
+  opacity: 1;
 }
 
 .logo-container {
@@ -829,13 +781,6 @@ function formatDate(dateString: string): string {
   font-weight: var(--font-normal);
 }
 
-.header-actions {
-  flex-shrink: 0;
-  width: 100%;
-  display: flex;
-  justify-content: center;
-}
-
 /* Create Card */
 .create-card {
   margin-bottom: var(--space-3xl);
@@ -855,8 +800,10 @@ function formatDate(dateString: string): string {
 }
 
 .create-icon {
-  font-size: 3rem;
+  width: 3rem;
+  height: 3rem;
   flex-shrink: 0;
+  object-fit: contain;
 }
 
 .create-text {

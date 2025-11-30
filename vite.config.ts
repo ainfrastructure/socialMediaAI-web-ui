@@ -21,6 +21,7 @@ export default defineConfig({
     allowedHosts: [
       'localhost',
       'baofrontend.socialchef.ai',
+      'svenfrontend.socialchef.ai',
       '.socialchef.ai'
     ],
   },

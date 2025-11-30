@@ -251,14 +251,14 @@
 
               <!-- View Mode Buttons -->
               <template v-else>
+                <BaseButton variant="danger" size="small" @click="confirmDeleteFromModal">
+                  🗑️ {{ $t('posts.deleteButton') }}
+                </BaseButton>
                 <BaseButton variant="secondary" @click="enableEditMode">
-                  {{ $t('posts.editButton') }}
+                  ✏️ {{ $t('posts.editButton') }}
                 </BaseButton>
-                <BaseButton variant="primary" @click="schedulePost(selectedPost)">
-                  {{ $t('posts.scheduleButton') }}
-                </BaseButton>
-                <BaseButton variant="danger" @click="confirmDeleteFromModal">
-                  {{ $t('posts.deleteButton') }}
+                <BaseButton variant="primary" size="large" @click="schedulePost(selectedPost)">
+                  📅 {{ $t('posts.scheduleButton') }}
                 </BaseButton>
               </template>
             </div>
@@ -1011,23 +1011,59 @@ onMounted(() => {
 /* Modal actions */
 .modal-actions {
   display: flex;
-  gap: var(--space-md);
+  gap: var(--space-lg);
   margin-top: var(--space-xl);
   padding-top: var(--space-xl);
   border-top: 1px solid rgba(212, 175, 55, 0.2);
   flex-wrap: wrap;
+  align-items: stretch;
 }
 
 .modal-actions button {
-  flex: 1;
-  min-width: 150px;
+  transition: all var(--transition-base);
+}
+
+/* Visual hierarchy through sizing */
+.modal-actions button:nth-child(1) {
+  /* Delete - smallest, danger variant */
+  flex: 0 1 auto;
+  min-width: 100px;
+}
+
+.modal-actions button:nth-child(2) {
+  /* Edit - medium, secondary variant */
+  flex: 1 1 auto;
+  min-width: 120px;
+}
+
+.modal-actions button:nth-child(3) {
+  /* Schedule Post - largest, primary variant */
+  flex: 2 1 auto;
+  min-width: 160px;
 }
 
 /* Pagination */
 .pagination-container {
-  margin-top: 3rem;
+  margin-top: 0;
+  padding-top: var(--space-3xl);
   display: flex;
   justify-content: center;
+  max-width: 1400px;
+  margin-left: auto;
+  margin-right: auto;
+  border-top: 1px solid rgba(212, 175, 55, 0.15);
+  animation: fadeInUp 0.4s ease 0.3s both;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* Responsive */
@@ -1041,13 +1077,20 @@ onMounted(() => {
     gap: 1.5rem;
   }
 
+  .pagination-container {
+    padding-top: var(--space-2xl);
+  }
+
   .modal-actions {
-    flex-direction: column;
+    flex-direction: column-reverse;
   }
 
   .modal-actions button {
-    min-width: 100%;
+    min-width: 100% !important;
+    flex: 1 1 auto !important;
   }
+
+  /* On mobile, primary action appears first (Schedule Post) */
 }
 
 /* Enhanced media container */

@@ -369,7 +369,18 @@
                       <span class="post-card-timing">{{ getTimeRemaining(post) }}</span>
                       <!-- View Post Link for Published Posts -->
                       <a
-                        v-if="post.status === 'published' && post.platform_post_url"
+                        v-if="post.status === 'published' && post.platform_post_urls && Object.keys(post.platform_post_urls).length > 0"
+                        :href="Object.values(post.platform_post_urls)[0]"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="view-post-link"
+                        @click.stop
+                      >
+                        🔗 View on {{ capitalizeFirst(Object.keys(post.platform_post_urls)[0]) }}
+                      </a>
+                      <!-- Fallback for old single-platform posts -->
+                      <a
+                        v-else-if="post.status === 'published' && post.platform_post_url"
                         :href="post.platform_post_url"
                         target="_blank"
                         rel="noopener noreferrer"
@@ -518,8 +529,18 @@
                   </div>
 
                   <div class="status-badges">
-                    <!-- Platform Badge -->
-                    <span v-if="post.platform" :class="['platform-badge-new', `platform-${post.platform}`]">
+                    <!-- Platform Badges (multiple) -->
+                    <template v-if="post.platforms && post.platforms.length > 0">
+                      <span
+                        v-for="platform in post.platforms"
+                        :key="platform"
+                        :class="['platform-badge-new', `platform-${platform}`]"
+                      >
+                        {{ getPlatformIcon(platform) }} {{ capitalizeFirst(platform) }}
+                      </span>
+                    </template>
+                    <!-- Fallback for old data structure -->
+                    <span v-else-if="post.platform" :class="['platform-badge-new', `platform-${post.platform}`]">
                       {{ getPlatformIcon(post.platform) }} {{ capitalizeFirst(post.platform) }}
                     </span>
 
@@ -568,6 +589,19 @@
                   </div>
 
                   <!-- View Post Link for Published Posts -->
+                  <div v-else-if="post.platform_post_urls && Object.keys(post.platform_post_urls).length > 0" class="action-buttons" @click.stop>
+                    <a
+                      v-for="(url, platform) in post.platform_post_urls"
+                      :key="platform"
+                      :href="url"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      class="view-post-btn"
+                    >
+                      🔗 View on {{ capitalizeFirst(platform) }}
+                    </a>
+                  </div>
+                  <!-- Fallback for old single-platform posts -->
                   <div v-else-if="post.platform_post_url" class="action-buttons" @click.stop>
                     <a
                       :href="post.platform_post_url"
@@ -735,12 +769,24 @@
             <div class="info-section">
               <div class="info-label">{{ $t('scheduler.platformAndStatus') }}</div>
               <div class="badges-row">
+                <!-- Platform Badges (multiple) -->
+                <template v-if="selectedPostForDetail.platforms && selectedPostForDetail.platforms.length > 0">
+                  <span
+                    v-for="platform in selectedPostForDetail.platforms"
+                    :key="platform"
+                    :class="['platform-badge-large', `platform-${platform}`]"
+                  >
+                    {{ platform }}
+                  </span>
+                </template>
+                <!-- Fallback for old data structure -->
                 <span
-                  v-if="selectedPostForDetail.platform"
+                  v-else-if="selectedPostForDetail.platform"
                   :class="['platform-badge-large', `platform-${selectedPostForDetail.platform}`]"
                 >
                   {{ selectedPostForDetail.platform }}
                 </span>
+
                 <span :class="['content-type-badge-large']">
                   <template v-if="selectedPostForDetail.content_type === 'image'">📸 {{ $t('scheduler.image') }}</template>
                   <template v-else>🎥 {{ $t('scheduler.video') }}</template>
@@ -790,9 +836,24 @@
                 </div>
               </div>
 
-              <!-- View Post Button -->
+              <!-- View Post Buttons (multi-platform support) -->
+              <div v-if="selectedPostForDetail.platform_post_urls && Object.keys(selectedPostForDetail.platform_post_urls).length > 0" class="view-post-buttons-container">
+                <a
+                  v-for="(url, platform) in selectedPostForDetail.platform_post_urls"
+                  :key="platform"
+                  :href="url"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="view-post-button-modal"
+                >
+                  <span class="view-post-icon">🔗</span>
+                  <span>View on {{ capitalizeFirst(platform) }}</span>
+                  <span class="external-icon">↗</span>
+                </a>
+              </div>
+              <!-- Fallback for old single-platform posts -->
               <a
-                v-if="selectedPostForDetail.platform_post_url"
+                v-else-if="selectedPostForDetail.platform_post_url"
                 :href="selectedPostForDetail.platform_post_url"
                 target="_blank"
                 rel="noopener noreferrer"
@@ -3889,13 +3950,19 @@ onUnmounted(() => {
   color: var(--text-secondary);
 }
 
+.view-post-buttons-container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  margin-top: var(--space-lg);
+}
+
 .view-post-button-modal {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: var(--space-sm);
   padding: var(--space-md) var(--space-xl);
-  margin-top: var(--space-lg);
   background: var(--gradient-gold);
   border: none;
   border-radius: var(--radius-md);
@@ -3907,6 +3974,11 @@ onUnmounted(() => {
   cursor: pointer;
   box-shadow: var(--glow-gold-sm);
   width: 100%;
+}
+
+/* For standalone button (not in container) */
+.view-post-button-modal:not(.view-post-buttons-container .view-post-button-modal) {
+  margin-top: var(--space-lg);
 }
 
 .view-post-button-modal:hover {

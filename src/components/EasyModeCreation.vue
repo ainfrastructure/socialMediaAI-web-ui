@@ -4,9 +4,13 @@ import { useI18n } from 'vue-i18n'
 import BaseCard from './BaseCard.vue'
 import BaseButton from './BaseButton.vue'
 import BaseAlert from './BaseAlert.vue'
+import MaterialIcon from './MaterialIcon.vue'
+import PlatformLogo from './PlatformLogo.vue'
 import { VueDatePicker } from '@vuepic/vue-datepicker'
 import '@vuepic/vue-datepicker/dist/main.css'
 import { useFacebookStore } from '@/stores/facebook'
+import { useInstagramStore } from '@/stores/instagram'
+import { useSocialAccounts } from '@/composables/useSocialAccounts'
 import type { SavedRestaurant } from '@/services/restaurantService'
 
 interface MenuItem {
@@ -53,12 +57,27 @@ const emit = defineEmits<{
     publishType: 'now' | 'schedule'
     scheduleDate?: string
     scheduleTime?: string
+    postText?: string
+    callToAction?: string
+    hashtags?: string[]
   }): void
   (e: 'reset'): void
 }>()
 
 const facebookStore = useFacebookStore()
+const instagramStore = useInstagramStore()
+const { isConnected } = useSocialAccounts()
 const { t } = useI18n()
+
+// Publish platforms (excluding Wolt)
+const publishPlatforms = [
+  { id: 'instagram', name: 'Instagram' },
+  { id: 'facebook', name: 'Facebook' },
+  { id: 'tiktok', name: 'TikTok' },
+  { id: 'twitter', name: 'X (Twitter)' },
+  { id: 'linkedin', name: 'LinkedIn' },
+  { id: 'youtube', name: 'YouTube' }
+] as const
 
 // Wizard State
 const currentStep = ref(1)
@@ -81,6 +100,15 @@ const selectedPlatform = ref<string>('instagram')
 const publishType = ref<'now' | 'schedule'>('now')
 const scheduleDateTime = ref<Date | null>(null)
 
+// Editable content state (local to preview, initialized from props)
+const editedPostText = ref('')
+const editedCallToAction = ref('')
+const editedHashtags = ref<string[]>([])
+const newHashtag = ref('')
+
+// Date picker ref for programmatic control
+const datePickerRef = ref<any>(null)
+
 // Validation state
 const step1Error = ref<string>('')
 
@@ -95,38 +123,53 @@ const styleTemplates = computed<StyleTemplate[]>(() => [
     id: 'vibrant',
     name: t('playground.styleTemplates.vibrant.name'),
     description: t('playground.styleTemplates.vibrant.description'),
-    icon: '🎨',
+    icon: 'palette',
     preview: t('playground.styleTemplates.vibrant.preview')
   },
   {
     id: 'elegant',
     name: t('playground.styleTemplates.elegant.name'),
     description: t('playground.styleTemplates.elegant.description'),
-    icon: '✨',
+    icon: 'auto_awesome',
     preview: t('playground.styleTemplates.elegant.preview')
   },
   {
     id: 'rustic',
     name: t('playground.styleTemplates.rustic.name'),
     description: t('playground.styleTemplates.rustic.description'),
-    icon: '🏡',
+    icon: 'cottage',
     preview: t('playground.styleTemplates.rustic.preview')
   },
   {
     id: 'modern',
     name: t('playground.styleTemplates.modern.name'),
     description: t('playground.styleTemplates.modern.description'),
-    icon: '⚪',
+    icon: 'circle',
     preview: t('playground.styleTemplates.modern.preview')
   },
   {
     id: 'playful',
     name: t('playground.styleTemplates.playful.name'),
     description: t('playground.styleTemplates.playful.description'),
-    icon: '👑',
+    icon: 'sentiment_satisfied',
     preview: t('playground.styleTemplates.playful.preview')
   }
 ])
+
+// Gold SVG icons for style templates
+function getStyleIcon(styleId: string): string {
+  const goldGradient = `<defs><linearGradient id="goldGrad-${styleId}" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#E5C775"/><stop offset="50%" style="stop-color:#D4AF37"/><stop offset="100%" style="stop-color:#B8943D"/></linearGradient></defs>`
+
+  const icons: Record<string, string> = {
+    vibrant: `<svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">${goldGradient}<circle cx="12" cy="12" r="5" fill="url(#goldGrad-${styleId})"/><path d="M12 2V6M12 18V22M2 12H6M18 12H22M4.93 4.93L7.76 7.76M16.24 16.24L19.07 19.07M4.93 19.07L7.76 16.24M16.24 7.76L19.07 4.93" stroke="url(#goldGrad-${styleId})" stroke-width="2" stroke-linecap="round"/></svg>`,
+    elegant: `<svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">${goldGradient}<path d="M12 2L19 12L12 22L5 12L12 2Z" fill="url(#goldGrad-${styleId})"/><path d="M12 6L16 12L12 18L8 12L12 6Z" fill="url(#goldGrad-${styleId})" opacity="0.5"/></svg>`,
+    rustic: `<svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">${goldGradient}<path d="M17 8C8 10 5.9 16.17 3.82 21.34L5.71 22L6.66 19.97C7.14 19.11 8.32 17.76 10.66 17.11C10.66 17.11 11.47 19.63 12.5 22H14.5C13.46 19.63 12.66 17.11 12.66 17.11C14.92 17.11 16.14 17.63 17.66 19.11L18.66 22H20.66L18.66 13C19.86 12.33 21.55 11.5 21.55 9.38C21.55 8.38 20.66 7.5 19.66 7.5C19.39 7.5 19.14 7.57 18.91 7.68C18.58 6.09 17.5 5 16 5C14.5 5 13.42 6.09 13.09 7.68C12.86 7.57 12.61 7.5 12.34 7.5C11.34 7.5 10.45 8.38 10.45 9.38C10.45 11.5 12.14 12.33 13.34 13L13 14C12.5 14 11.5 14.5 11 15C10.5 15.5 10 16.5 10 17L10.5 18C10.5 18 10.32 17.13 10.66 17.11" fill="url(#goldGrad-${styleId})"/></svg>`,
+    modern: `<svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">${goldGradient}<rect x="3" y="3" width="7" height="7" rx="1" fill="url(#goldGrad-${styleId})"/><rect x="14" y="3" width="7" height="7" rx="1" fill="url(#goldGrad-${styleId})" opacity="0.7"/><rect x="3" y="14" width="7" height="7" rx="1" fill="url(#goldGrad-${styleId})" opacity="0.7"/><rect x="14" y="14" width="7" height="7" rx="1" fill="url(#goldGrad-${styleId})"/></svg>`,
+    playful: `<svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">${goldGradient}<circle cx="12" cy="12" r="10" fill="url(#goldGrad-${styleId})"/><circle cx="8.5" cy="10" r="1.5" fill="#0a0a0a"/><circle cx="15.5" cy="10" r="1.5" fill="#0a0a0a"/><path d="M8 14C8 14 9.5 17 12 17C14.5 17 16 14 16 14" stroke="#0a0a0a" stroke-width="2" stroke-linecap="round"/></svg>`
+  }
+
+  return icons[styleId] || icons.vibrant
+}
 
 // Computed
 const paginatedMenuItems = computed(() => {
@@ -160,6 +203,19 @@ const stepLabels = computed(() => [
   { number: 3, label: t('easyMode.steps.preview', 'Preview') },
   { number: 4, label: t('easyMode.steps.publish', 'Publish') }
 ])
+
+// Track highest completed step to control navigation
+const highestCompletedStep = computed(() => {
+  // Step 1 complete: menu item selected OR image uploaded
+  if (!selectedMenuItem.value && !uploadedImagePreview.value) return 0
+
+  // Step 2 is accessible once step 1 is complete (style always has default)
+  // Step 3 complete: image generated (generatedImageUrl exists)
+  if (!props.generatedImageUrl) return 1
+
+  // Step 4 accessible after generation
+  return 3
+})
 
 // Dynamic items per page calculation
 function calculateItemsPerPage() {
@@ -298,7 +354,10 @@ function handlePublish() {
     platform: selectedPlatform.value,
     publishType: publishType.value,
     scheduleDate,
-    scheduleTime
+    scheduleTime,
+    postText: editedPostText.value,
+    callToAction: editedCallToAction.value,
+    hashtags: editedHashtags.value
   })
 }
 
@@ -318,6 +377,10 @@ function resetAndCreateNew() {
   scheduleDateTime.value = null
   step1Error.value = ''
   currentPage.value = 1
+  editedPostText.value = ''
+  editedCallToAction.value = ''
+  editedHashtags.value = []
+  newHashtag.value = ''
 
   // Emit reset event to parent
   emit('reset')
@@ -346,16 +409,63 @@ function prevStep() {
 }
 
 function goToStep(step: number) {
-  // Allow jumping to any step
-  if (step >= 1 && step <= totalSteps) {
+  // Only allow navigation to completed steps or next available step
+  if (step >= 1 && step <= highestCompletedStep.value + 1 && step <= totalSteps) {
     currentStep.value = step
   }
 }
 
-// No need to watch for generation completion since we move to step 3 immediately when generate is clicked
+// Initialize edited content when entering Step 3
+watch(() => currentStep.value, (newStep) => {
+  if (newStep === 3) {
+    editedPostText.value = props.postText || ''
+    editedCallToAction.value = props.callToAction || ''
+    editedHashtags.value = [...(props.hashtags || [])]
+    newHashtag.value = ''
+  }
+})
+
+// Also update when props change while on step 3
+watch(() => [props.postText, props.callToAction, props.hashtags], () => {
+  if (currentStep.value === 3 && !editedPostText.value && props.postText) {
+    editedPostText.value = props.postText
+    editedCallToAction.value = props.callToAction || ''
+    editedHashtags.value = [...(props.hashtags || [])]
+  }
+})
+
+// Hashtag management functions
+function addHashtag() {
+  const tag = newHashtag.value.trim().replace(/^#/, '')
+  if (tag && !editedHashtags.value.includes(tag)) {
+    editedHashtags.value.push(tag)
+    newHashtag.value = ''
+  }
+}
+
+function removeHashtag(index: number) {
+  editedHashtags.value.splice(index, 1)
+}
+
+function handleHashtagKeydown(event: KeyboardEvent) {
+  if (event.key === 'Enter') {
+    event.preventDefault()
+    addHashtag()
+  }
+}
+
+// Handle date selection to automatically show time picker
+function handleDateUpdate() {
+  // Small delay to allow the date to be set, then switch to time picker
+  setTimeout(() => {
+    if (datePickerRef.value) {
+      datePickerRef.value.switchView('time')
+    }
+  }, 100)
+}
 
 // Lifecycle hooks
-onMounted(() => {
+onMounted(async () => {
   // Calculate initial items per page
   setTimeout(() => {
     calculateItemsPerPage()
@@ -363,6 +473,12 @@ onMounted(() => {
 
   // Add resize listener
   window.addEventListener('resize', calculateItemsPerPage)
+
+  // Load social accounts to check connection status
+  await Promise.all([
+    facebookStore.loadConnectedPages(),
+    instagramStore.loadConnectedAccounts()
+  ])
 })
 
 onUnmounted(() => {
@@ -384,12 +500,13 @@ onUnmounted(() => {
           <div
             :class="['progress-step-item', {
               'active': currentStep === step.number,
-              'completed': currentStep > step.number
+              'completed': currentStep > step.number,
+              'disabled': step.number > highestCompletedStep + 1
             }]"
             @click="goToStep(step.number)"
           >
             <div class="progress-step-circle">
-              <span v-if="currentStep > step.number" class="checkmark">✓</span>
+              <MaterialIcon v-if="currentStep > step.number" icon="check_circle" size="md" :color="'var(--success-text)'" />
               <span v-else>{{ step.number }}</span>
             </div>
             <span class="progress-step-label">{{ step.label }}</span>
@@ -422,10 +539,10 @@ onUnmounted(() => {
         <div v-if="uploadedImagePreview" class="uploaded-image-preview">
           <img :src="uploadedImagePreview" alt="Uploaded image" class="preview-image" />
           <button class="remove-image-btn" @click="removeUploadedImage" title="Remove image">
-            ✕
+            <MaterialIcon icon="close" size="sm" :color="'var(--text-primary)'" />
           </button>
           <div class="upload-badge">
-            <span class="badge-icon">✓</span>
+            <MaterialIcon icon="check_circle" size="sm" :color="'var(--text-on-gold)'" />
           </div>
         </div>
         <label v-else class="upload-button">
@@ -436,7 +553,7 @@ onUnmounted(() => {
             class="upload-input"
           />
           <div class="upload-content">
-            <span class="upload-icon">📤</span>
+            <MaterialIcon icon="upload" size="xl" :color="'var(--text-primary)'" />
             <span class="upload-text">{{ t('easyMode.upload.button', 'Upload Your Own Image') }}</span>
             <span class="upload-hint">{{ t('easyMode.upload.hint', 'JPG, PNG, or WebP') }}</span>
           </div>
@@ -465,7 +582,7 @@ onUnmounted(() => {
                 class="menu-item-image"
               />
               <div v-else class="menu-item-placeholder">
-                <span class="placeholder-icon">🍽️</span>
+                <MaterialIcon icon="restaurant" size="xl" :color="'var(--text-muted)'" />
               </div>
             </div>
 
@@ -475,7 +592,7 @@ onUnmounted(() => {
             </div>
 
             <div v-if="selectedMenuItem === item" class="selected-badge">
-              <span class="badge-icon">✓</span>
+              <MaterialIcon icon="check_circle" size="sm" :color="'var(--text-on-gold)'" />
             </div>
           </div>
         </div>
@@ -530,7 +647,7 @@ onUnmounted(() => {
 
       <!-- Style Selection -->
       <div class="customization-section">
-        <h4 class="section-label">🎨 {{ t('easyMode.step2.styleLabel', 'Visual Style') }}</h4>
+        <h4 class="section-label"><MaterialIcon icon="palette" size="sm" :color="'var(--gold-primary)'" /> {{ t('easyMode.step2.styleLabel', 'Visual Style') }}</h4>
         <div class="style-templates-grid">
           <div
             v-for="template in styleTemplates"
@@ -538,11 +655,11 @@ onUnmounted(() => {
             :class="['style-template-card', { 'selected': selectedStyleTemplate === template.id }]"
             @click="selectStyleTemplate(template.id)"
           >
-            <div class="template-icon">{{ template.icon }}</div>
+            <div class="template-icon" v-html="getStyleIcon(template.id)"></div>
             <h4 class="template-name">{{ template.name }}</h4>
             <p class="template-description">{{ template.description }}</p>
             <div v-if="selectedStyleTemplate === template.id" class="template-selected-badge">
-              <span class="badge-icon">✓</span>
+              <MaterialIcon icon="check_circle" size="md" :color="'var(--text-on-gold)'" />
             </div>
           </div>
         </div>
@@ -550,7 +667,7 @@ onUnmounted(() => {
 
       <!-- Campaign Context / Promo -->
       <div class="customization-section">
-        <h4 class="section-label">💫 {{ t('easyMode.step2.promoLabel', 'Special Offer (Optional)') }}</h4>
+        <h4 class="section-label"><MaterialIcon icon="auto_awesome" size="sm" :color="'var(--gold-primary)'" /> {{ t('easyMode.step2.promoLabel', 'Special Offer (Optional)') }}</h4>
         <input
           id="context-input"
           v-model="promptContext"
@@ -566,7 +683,7 @@ onUnmounted(() => {
 
       <!-- Logo Section -->
       <div class="customization-section">
-        <h4 class="section-label">🏷️ {{ t('easyMode.step2.logoLabel', 'Restaurant Logo') }}</h4>
+        <h4 class="section-label"><MaterialIcon icon="label" size="sm" :color="'var(--gold-primary)'" /> {{ t('easyMode.step2.logoLabel', 'Restaurant Logo') }}</h4>
 
         <div class="logo-management">
           <!-- Current Logo Preview -->
@@ -579,8 +696,7 @@ onUnmounted(() => {
                 @click="removeUploadedLogo"
                 :title="t('easyMode.step2.removeLogo', 'Remove uploaded logo')"
               >
-                ✕
-              </button>
+            <MaterialIcon icon="close" size="sm" :color="'var(--text-primary)'" />              </button>
             </div>
             <span class="logo-status">
               {{ uploadedLogoPreview ? t('easyMode.step2.newLogo', 'New logo') : t('easyMode.step2.currentLogo', 'Current logo') }}
@@ -596,7 +712,7 @@ onUnmounted(() => {
               class="upload-input"
             />
             <span class="upload-logo-content">
-              <span class="upload-logo-icon">📤</span>
+              <MaterialIcon icon="upload" size="md" :color="'var(--text-primary)'" />
               <span class="upload-logo-text">
                 {{ currentLogoUrl ? t('easyMode.step2.changeLogo', 'Change logo') : t('easyMode.step2.uploadLogo', 'Upload logo') }}
               </span>
@@ -614,29 +730,6 @@ onUnmounted(() => {
               <span>{{ t('easyMode.step2.includeLogo', 'Include logo on image') }}</span>
             </span>
           </label>
-        </div>
-      </div>
-
-      <!-- Summary of selections -->
-      <div class="generate-summary">
-        <h4 class="summary-title">{{ t('easyMode.step2.summaryTitle', 'Your Selections:') }}</h4>
-        <div class="generate-features">
-          <div class="feature-item">
-            <span class="feature-icon">🎨</span>
-            <span class="feature-text">{{ styleTemplates.find(t => t.id === selectedStyleTemplate)?.name }} {{ t('easyMode.step2.style', 'style') }}</span>
-          </div>
-          <div class="feature-item">
-            <span class="feature-icon">📝</span>
-            <span class="feature-text">{{ t('easyMode.step2.postText', 'Engaging post text') }}</span>
-          </div>
-          <div v-if="includeLogo && hasLogo" class="feature-item">
-            <span class="feature-icon">🏷️</span>
-            <span class="feature-text">{{ t('easyMode.step2.branding', 'Restaurant branding') }}</span>
-          </div>
-          <div v-if="promptContext" class="feature-item">
-            <span class="feature-icon">💫</span>
-            <span class="feature-text">{{ t('easyMode.step2.promo', 'Promotional sticker') }}</span>
-          </div>
         </div>
       </div>
 
@@ -687,29 +780,70 @@ onUnmounted(() => {
             <img v-else-if="props.generatedImageUrl" :src="props.generatedImageUrl" alt="Generated post image" class="preview-image-display" />
           </div>
 
-          <!-- Post Content -->
+          <!-- Post Content - Editable -->
           <div class="preview-post-content">
             <h4 class="preview-content-label">{{ t('playground.postContentTitle', 'Post Content') }}</h4>
 
-            <!-- Post Text -->
-            <div v-if="props.postText" class="preview-text-section">
+            <!-- Editable Post Text -->
+            <div class="preview-text-section">
               <label class="preview-label">{{ t('posts.postText', 'Post Text') }}</label>
-              <p class="preview-text">{{ props.postText }}</p>
+              <textarea
+                v-model="editedPostText"
+                class="editable-textarea"
+                :placeholder="t('easyMode.step3.editPostText', 'Edit your post text')"
+                rows="4"
+              ></textarea>
             </div>
 
-            <!-- Call to Action -->
-            <div v-if="props.callToAction" class="preview-text-section">
+            <!-- Editable Call to Action -->
+            <div class="preview-text-section">
               <label class="preview-label">{{ t('playground.callToActionLabel', 'Call to Action') }}</label>
-              <p class="preview-text">{{ props.callToAction }}</p>
+              <input
+                v-model="editedCallToAction"
+                type="text"
+                class="editable-input"
+                :placeholder="t('easyMode.step3.editCallToAction', 'Edit your call to action')"
+              />
             </div>
 
-            <!-- Hashtags -->
-            <div v-if="props.hashtags && props.hashtags.length > 0" class="preview-text-section">
+            <!-- Editable Hashtags -->
+            <div class="preview-text-section">
               <label class="preview-label">{{ t('posts.hashtags', 'Hashtags') }}</label>
-              <div class="preview-hashtags">
-                <span v-for="(tag, index) in props.hashtags" :key="index" class="preview-hashtag">
-                  #{{ tag }}
-                </span>
+              <div class="editable-hashtags">
+                <div class="hashtag-chips">
+                  <span
+                    v-for="(tag, index) in editedHashtags"
+                    :key="index"
+                    class="hashtag-chip"
+                  >
+                    #{{ tag }}
+                    <button
+                      type="button"
+                      class="remove-hashtag"
+                      @click="removeHashtag(index)"
+                      :aria-label="t('common.remove', 'Remove')"
+                    >
+                      <MaterialIcon icon="close" size="xs" />
+                    </button>
+                  </span>
+                </div>
+                <div class="add-hashtag-container">
+                  <input
+                    v-model="newHashtag"
+                    type="text"
+                    class="editable-input hashtag-input"
+                    :placeholder="t('easyMode.step3.addHashtagPlaceholder', 'Type hashtag and press Enter')"
+                    @keydown="handleHashtagKeydown"
+                  />
+                  <button
+                    type="button"
+                    class="add-hashtag-btn"
+                    @click="addHashtag"
+                    :disabled="!newHashtag.trim()"
+                  >
+                    <MaterialIcon icon="add" size="sm" />
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -747,7 +881,7 @@ onUnmounted(() => {
     <BaseCard v-show="currentStep === 4" variant="glass" class="step-card">
       <!-- Success State -->
       <div v-if="props.published" class="publish-success">
-        <div class="success-icon">🎉</div>
+        <div class="success-icon"><MaterialIcon icon="celebration" size="xl" :color="'var(--gold-primary)'" /></div>
         <h3 class="success-title">{{ t('easyMode.step4.successTitle', 'Congratulations!') }}</h3>
         <p class="success-message">{{ t('easyMode.step4.successMessage', 'Your post has been published successfully!') }}</p>
         <a
@@ -777,36 +911,29 @@ onUnmounted(() => {
 
         <!-- Platform Selection -->
       <div class="customization-section">
-        <h4 class="section-label">📱 {{ t('easyMode.step4.platformLabel', 'Select Platform') }}</h4>
+        <h4 class="section-label"><MaterialIcon icon="smartphone" size="sm" :color="'var(--gold-primary)'" /> {{ t('easyMode.step4.platformLabel', 'Select Platform') }}</h4>
         <div class="platform-grid">
           <div
-            :class="['platform-card', { 'selected': selectedPlatform === 'instagram' }]"
-            @click="selectedPlatform = 'instagram'"
+            v-for="platform in publishPlatforms"
+            :key="platform.id"
+            :class="[
+              'platform-card',
+              {
+                'selected': selectedPlatform === platform.id,
+                'disabled': !isConnected(platform.id)
+              }
+            ]"
+            @click="isConnected(platform.id) ? selectedPlatform = platform.id : null"
           >
-            <div class="platform-icon">📸</div>
-            <span class="platform-name">Instagram</span>
-            <div v-if="selectedPlatform === 'instagram'" class="platform-selected-badge">
-              <span class="badge-icon">✓</span>
+            <div class="platform-icon">
+              <PlatformLogo :platform="platform.id" :size="48" />
             </div>
-          </div>
-          <div
-            :class="['platform-card', { 'selected': selectedPlatform === 'facebook' }]"
-            @click="selectedPlatform = 'facebook'"
-          >
-            <div class="platform-icon">👥</div>
-            <span class="platform-name">Facebook</span>
-            <div v-if="selectedPlatform === 'facebook'" class="platform-selected-badge">
-              <span class="badge-icon">✓</span>
-            </div>
-          </div>
-          <div
-            :class="['platform-card', { 'selected': selectedPlatform === 'tiktok' }]"
-            @click="selectedPlatform = 'tiktok'"
-          >
-            <div class="platform-icon">🎵</div>
-            <span class="platform-name">TikTok</span>
-            <div v-if="selectedPlatform === 'tiktok'" class="platform-selected-badge">
-              <span class="badge-icon">✓</span>
+            <span class="platform-name">{{ platform.name }}</span>
+            <span v-if="!isConnected(platform.id)" class="platform-status">
+              {{ t('easyMode.step4.notConnected', 'Not connected') }}
+            </span>
+            <div v-if="selectedPlatform === platform.id" class="platform-selected-badge">
+              <MaterialIcon icon="check_circle" size="sm" :color="'var(--text-on-gold)'" />
             </div>
           </div>
         </div>
@@ -814,20 +941,20 @@ onUnmounted(() => {
 
       <!-- Publish Type -->
       <div class="customization-section">
-        <h4 class="section-label">⏰ {{ t('easyMode.step4.publishTypeLabel', 'When to Publish') }}</h4>
+        <h4 class="section-label"><MaterialIcon icon="schedule" size="sm" :color="'var(--gold-primary)'" /> {{ t('easyMode.step4.publishTypeLabel', 'When to Publish') }}</h4>
         <div class="publish-type-buttons">
           <button
             :class="['publish-type-btn', { 'active': publishType === 'now' }]"
             @click="publishType = 'now'"
           >
-            <span class="publish-type-icon">🚀</span>
+            <img src="/socialchef_logo.svg" alt="Publish" class="chef-icon" />
             <span class="publish-type-text">{{ t('easyMode.step4.publishNow', 'Publish Now') }}</span>
           </button>
           <button
             :class="['publish-type-btn', { 'active': publishType === 'schedule' }]"
             @click="publishType = 'schedule'"
           >
-            <span class="publish-type-icon">📅</span>
+            <MaterialIcon icon="calendar_month" size="xl" :color="'var(--gold-primary)'" />
             <span class="publish-type-text">{{ t('easyMode.step4.scheduleLater', 'Schedule for Later') }}</span>
           </button>
         </div>
@@ -835,19 +962,22 @@ onUnmounted(() => {
 
       <!-- Schedule Date/Time (shown only when scheduling) -->
       <div v-if="publishType === 'schedule'" class="customization-section">
-        <h4 class="section-label">📆 {{ t('easyMode.step4.scheduleLabel', 'Choose Date & Time') }}</h4>
+        <h4 class="section-label"><MaterialIcon icon="calendar_today" size="sm" :color="'var(--gold-primary)'" /> {{ t('easyMode.step4.scheduleLabel', 'Choose Date & Time') }}</h4>
         <div class="date-picker-container">
           <VueDatePicker
+            ref="datePickerRef"
             v-model="scheduleDateTime"
             :dark="true"
             :enable-time-picker="true"
             :min-date="new Date()"
             :format="'MMM dd, yyyy - HH:mm'"
             :preview-format="'MMM dd, yyyy - HH:mm'"
-            placeholder="Select date and time"
-            auto-apply
+            :placeholder="t('easyMode.step4.selectDateTime', 'Select date and time')"
             :clearable="false"
             :required="true"
+            minutes-increment="5"
+            select-text="Confirm"
+            @date-update="handleDateUpdate"
           />
         </div>
       </div>
@@ -990,6 +1120,20 @@ onUnmounted(() => {
 
 .progress-step-item.completed .progress-step-label {
   color: var(--text-primary);
+}
+
+.progress-step-item.disabled {
+  cursor: not-allowed;
+  opacity: 0.4;
+}
+
+.progress-step-item.disabled .progress-step-circle {
+  background: var(--bg-tertiary);
+  border-color: var(--border-color);
+}
+
+.progress-step-item.disabled .progress-step-label {
+  color: var(--text-muted);
 }
 
 /* Connecting Lines */
@@ -1188,6 +1332,115 @@ onUnmounted(() => {
   color: var(--gold-light);
   font-size: var(--text-sm);
   font-weight: var(--font-medium);
+}
+
+/* Editable inputs for Step 3 */
+.editable-textarea,
+.editable-input {
+  width: 100%;
+  padding: var(--space-md);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  line-height: var(--leading-relaxed);
+  transition: var(--transition-base);
+}
+
+.editable-textarea:focus,
+.editable-input:focus {
+  outline: none;
+  border-color: var(--gold-primary);
+  box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.15);
+}
+
+.editable-textarea::placeholder,
+.editable-input::placeholder {
+  color: var(--text-muted);
+}
+
+.editable-textarea {
+  resize: vertical;
+  min-height: 100px;
+}
+
+/* Editable Hashtags */
+.editable-hashtags {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.hashtag-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  min-height: 32px;
+}
+
+.hashtag-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: var(--space-xs) var(--space-md);
+  background: rgba(212, 175, 55, 0.1);
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  border-radius: var(--radius-full);
+  color: var(--gold-light);
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+}
+
+.remove-hashtag {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px;
+  background: transparent;
+  border: none;
+  color: var(--gold-light);
+  cursor: pointer;
+  border-radius: 50%;
+  transition: var(--transition-fast);
+}
+
+.remove-hashtag:hover {
+  background: rgba(212, 175, 55, 0.2);
+  color: var(--gold-primary);
+}
+
+.add-hashtag-container {
+  display: flex;
+  gap: var(--space-sm);
+}
+
+.hashtag-input {
+  flex: 1;
+}
+
+.add-hashtag-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-sm) var(--space-md);
+  background: var(--gold-subtle);
+  border: 1px solid var(--gold-primary);
+  border-radius: var(--radius-md);
+  color: var(--gold-primary);
+  cursor: pointer;
+  transition: var(--transition-base);
+}
+
+.add-hashtag-btn:hover:not(:disabled) {
+  background: var(--gold-primary);
+  color: var(--text-on-gold);
+}
+
+.add-hashtag-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .preview-placeholder {
@@ -1598,48 +1851,6 @@ onUnmounted(() => {
 
 .checkbox-icon {
   font-size: var(--text-xl);
-}
-
-/* Generate Section */
-.generate-summary {
-  margin-top: var(--space-2xl);
-  padding-top: var(--space-2xl);
-  border-top: 1px solid var(--border-color);
-}
-
-.summary-title {
-  font-family: var(--font-heading);
-  font-size: var(--text-lg);
-  color: var(--text-primary);
-  margin: 0 0 var(--space-lg) 0;
-  font-weight: var(--font-semibold);
-}
-
-.generate-features {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: var(--space-lg);
-}
-
-.feature-item {
-  display: flex;
-  align-items: center;
-  gap: var(--space-md);
-  padding: var(--space-md);
-  background: var(--bg-secondary);
-  border-radius: var(--radius-md);
-  border: var(--border-width) solid var(--border-color);
-}
-
-.feature-icon {
-  font-size: var(--text-2xl);
-  flex-shrink: 0;
-}
-
-.feature-text {
-  font-size: var(--text-sm);
-  color: var(--text-secondary);
-  font-weight: var(--font-medium);
 }
 
 .generate-button {
@@ -2078,10 +2289,6 @@ onUnmounted(() => {
     font-size: var(--text-xl);
   }
 
-  .generate-features {
-    grid-template-columns: 1fr;
-  }
-
   .loading-logo {
     width: 80px;
   }
@@ -2122,11 +2329,23 @@ onUnmounted(() => {
   }
 }
 
-/* Step 3: Platform Selection */
+/* Step 4: Platform Selection */
 .platform-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  grid-template-columns: repeat(3, 1fr);
   gap: var(--space-lg);
+}
+
+@media (max-width: 768px) {
+  .platform-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .platform-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 .platform-card {
@@ -2143,7 +2362,7 @@ onUnmounted(() => {
   transition: all 0.3s ease;
 }
 
-.platform-card:hover {
+.platform-card:hover:not(.disabled) {
   border-color: rgba(212, 175, 55, 0.4);
   background: rgba(26, 26, 26, 0.8);
   transform: translateY(-2px);
@@ -2154,14 +2373,33 @@ onUnmounted(() => {
   background: rgba(212, 175, 55, 0.1);
 }
 
+.platform-card.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.platform-card.disabled:hover {
+  transform: none;
+  border-color: var(--border-color);
+  background: rgba(26, 26, 26, 0.6);
+}
+
 .platform-icon {
-  font-size: 3rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .platform-name {
   font-size: var(--text-lg);
   font-weight: var(--font-semibold);
   color: var(--text-primary);
+}
+
+.platform-status {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  font-weight: var(--font-medium);
 }
 
 .platform-selected-badge {
@@ -2213,6 +2451,12 @@ onUnmounted(() => {
 
 .publish-type-icon {
   font-size: 2.5rem;
+}
+
+.chef-icon {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
 }
 
 .publish-type-text {
@@ -2323,6 +2567,10 @@ onUnmounted(() => {
   --dp-range-between-border-color: var(--gold-primary);
 }
 
+.date-picker-container :deep(.dp__input_wrap) {
+  width: 100%;
+}
+
 .date-picker-container :deep(.dp__input) {
   background: rgba(26, 26, 26, 0.6);
   border: 1px solid var(--border-color);
@@ -2331,9 +2579,16 @@ onUnmounted(() => {
   font-size: var(--text-base);
   font-family: var(--font-body);
   padding: var(--space-md) var(--space-lg);
+  padding-left: 44px;
   transition: all 0.3s ease;
   height: auto;
   min-height: 48px;
+  width: 100%;
+}
+
+.date-picker-container :deep(.dp__input_icon) {
+  left: 12px;
+  color: var(--gold-primary);
 }
 
 .date-picker-container :deep(.dp__input:hover) {
@@ -2396,6 +2651,31 @@ onUnmounted(() => {
 
 .date-picker-container :deep(.dp__button:hover) {
   background: rgba(212, 175, 55, 0.1);
+}
+
+.date-picker-container :deep(.dp__action_row) {
+  padding: var(--space-md);
+  gap: var(--space-md);
+}
+
+.date-picker-container :deep(.dp__action_button) {
+  background: var(--gradient-gold);
+  color: var(--text-on-gold);
+  border: none;
+  border-radius: var(--radius-md);
+  padding: var(--space-sm) var(--space-lg);
+  font-weight: var(--font-semibold);
+  transition: var(--transition-base);
+}
+
+.date-picker-container :deep(.dp__action_button:hover) {
+  transform: translateY(-1px);
+  box-shadow: var(--glow-gold-sm);
+}
+
+.date-picker-container :deep(.dp__selection_preview) {
+  color: var(--gold-primary);
+  font-weight: var(--font-medium);
 }
 
 /* Reduced Motion */

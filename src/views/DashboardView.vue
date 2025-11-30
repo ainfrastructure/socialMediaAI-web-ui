@@ -9,6 +9,9 @@ import { api } from '../services/api'
 import GradientBackground from '../components/GradientBackground.vue'
 import BaseCard from '../components/BaseCard.vue'
 import BaseButton from '../components/BaseButton.vue'
+import MaterialIcon from '../components/MaterialIcon.vue'
+import PlatformLogo from '../components/PlatformLogo.vue'
+import ConfirmModal from '../components/ConfirmModal.vue'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -44,6 +47,50 @@ const connectedCount = computed(() => {
   if (isInstagramConnected.value) count++
   return count
 })
+
+// Disconnect modal state
+const showDisconnectModal = ref(false)
+const disconnectModalTitle = ref('')
+const disconnectModalMessage = ref('')
+const pendingDisconnect = ref<{ type: 'facebook' | 'instagram'; id: string; name: string } | null>(null)
+
+function requestDisconnectFacebook() {
+  const page = facebookStore.connectedPages[0]
+  if (!page) return
+  pendingDisconnect.value = { type: 'facebook', id: page.pageId, name: page.pageName }
+  disconnectModalTitle.value = t('connectAccounts.disconnectTitle')
+  disconnectModalMessage.value = t('connectAccounts.confirmDisconnect', { name: page.pageName })
+  showDisconnectModal.value = true
+}
+
+function requestDisconnectInstagram() {
+  const account = instagramStore.connectedAccounts[0]
+  if (!account) return
+  pendingDisconnect.value = { type: 'instagram', id: account.instagramAccountId, name: `@${account.username}` }
+  disconnectModalTitle.value = t('connectAccounts.disconnectTitle')
+  disconnectModalMessage.value = t('connectAccounts.confirmDisconnect', { name: `@${account.username}` })
+  showDisconnectModal.value = true
+}
+
+async function handleConfirmDisconnect() {
+  showDisconnectModal.value = false
+  if (!pendingDisconnect.value) return
+
+  const { type, id } = pendingDisconnect.value
+
+  if (type === 'facebook') {
+    await facebookStore.disconnectPage(id)
+  } else if (type === 'instagram') {
+    await instagramStore.disconnectAccount(id)
+  }
+
+  pendingDisconnect.value = null
+}
+
+function handleCancelDisconnect() {
+  showDisconnectModal.value = false
+  pendingDisconnect.value = null
+}
 
 async function openCustomerPortal() {
   try {
@@ -96,25 +143,25 @@ onMounted(async () => {
         <!-- Inline Stats Bar -->
         <div class="stats-bar">
           <div class="stat-item">
-            <span class="stat-icon">🎨</span>
+            <MaterialIcon icon="palette" size="lg" :color="'var(--gold-primary)'" />
             <span class="stat-value">{{ stats.postsCreated }}</span>
             <span class="stat-label">{{ $t('dashboard.postsCreated') }}</span>
           </div>
           <div class="stat-divider"></div>
           <div class="stat-item">
-            <span class="stat-icon">⭐</span>
+            <MaterialIcon icon="star" size="lg" :color="'var(--gold-primary)'" />
             <span class="stat-value">{{ stats.postsSaved }}</span>
             <span class="stat-label">{{ $t('dashboard.postsSaved') }}</span>
           </div>
           <div class="stat-divider"></div>
           <div class="stat-item">
-            <span class="stat-icon">📅</span>
+            <MaterialIcon icon="calendar_month" size="lg" :color="'var(--gold-primary)'" />
             <span class="stat-value">{{ stats.scheduledPosts }}</span>
             <span class="stat-label">{{ $t('dashboard.scheduledPosts') }}</span>
           </div>
           <div class="stat-divider"></div>
           <div class="stat-item">
-            <span class="stat-icon">🍽️</span>
+            <MaterialIcon icon="restaurant" size="lg" :color="'var(--gold-primary)'" />
             <span class="stat-value">{{ stats.restaurantsAdded }}</span>
             <span class="stat-label">{{ $t('dashboard.restaurants') }}</span>
           </div>
@@ -125,89 +172,142 @@ onMounted(async () => {
       <section class="section">
         <h2 class="section-label">{{ $t('dashboard.quickActions') }}</h2>
         <div class="actions-grid">
-          <div class="action-card" @click="router.push('/content/create')">
-            <div class="action-icon">🔍</div>
-            <h3 class="action-title">{{ $t('dashboard.addRestaurant') }}</h3>
-            <p class="action-desc">{{ $t('dashboard.addRestaurantDescription') }}</p>
+          <div class="action-card" @click="router.push('/content')">
+            <div class="action-icon-wrapper">
+              <MaterialIcon icon="edit_note" size="3xl" :color="'var(--gold-primary)'" />
+            </div>
+            <h3 class="action-title">Cook Up Content</h3>
+            <p class="action-desc">Create and manage your social media posts</p>
             <BaseButton variant="secondary" size="small" class="action-btn-cta">
-              {{ $t('dashboard.getStarted') }} →
-            </BaseButton>
-          </div>
-          <div class="action-card" @click="router.push('/content/create')">
-            <div class="action-icon">🎨</div>
-            <h3 class="action-title">{{ $t('dashboard.cookUpContent') }}</h3>
-            <p class="action-desc">{{ $t('dashboard.cookUpContentDescription') }}</p>
-            <BaseButton variant="secondary" size="small" class="action-btn-cta">
-              {{ $t('dashboard.createNow') }} →
+              Get Started
             </BaseButton>
           </div>
           <div class="action-card" @click="router.push('/scheduler')">
-            <div class="action-icon">📅</div>
-            <h3 class="action-title">{{ $t('dashboard.schedulePosts') }}</h3>
-            <p class="action-desc">{{ $t('dashboard.schedulePostsDescription') }}</p>
+            <div class="action-icon-wrapper">
+              <MaterialIcon icon="calendar_today" size="3xl" :color="'var(--gold-primary)'" />
+            </div>
+            <h3 class="action-title">Schedule Posts</h3>
+            <p class="action-desc">Plan and schedule your content calendar</p>
             <BaseButton variant="secondary" size="small" class="action-btn-cta">
-              {{ $t('dashboard.openCalendar') }} →
+              Open Calendar
             </BaseButton>
           </div>
-          <div class="action-card" @click="router.push('/content')">
-            <div class="action-icon">📝</div>
-            <h3 class="action-title">{{ $t('dashboard.viewPosts') }}</h3>
-            <p class="action-desc">{{ $t('dashboard.viewPostsDescription') }}</p>
+          <div class="action-card" @click="router.push('/plans')">
+            <div class="action-icon-wrapper">
+              <MaterialIcon icon="credit_card" size="3xl" :color="'var(--gold-primary)'" />
+            </div>
+            <h3 class="action-title">Plans & Billing</h3>
+            <p class="action-desc">Manage subscription and payment methods</p>
             <BaseButton variant="secondary" size="small" class="action-btn-cta">
-              {{ $t('dashboard.browseLibrary') }} →
+              View Plans
+            </BaseButton>
+          </div>
+          <div class="action-card" @click="router.push('/profile')">
+            <div class="action-icon-wrapper">
+              <MaterialIcon icon="person" size="3xl" :color="'var(--gold-primary)'" />
+            </div>
+            <h3 class="action-title">Profile & Settings</h3>
+            <p class="action-desc">Update your account and preferences</p>
+            <BaseButton variant="secondary" size="small" class="action-btn-cta">
+              Manage Profile
             </BaseButton>
           </div>
         </div>
       </section>
 
-      <!-- Platforms -->
+      <!-- Platforms - Minimal Icon Grid -->
       <section class="section">
         <h2 class="section-label">{{ $t('dashboard.socialPlatforms') }}</h2>
         <p class="section-subtitle">{{ $t('dashboard.connectPlatformsPrompt') }}</p>
-        <div class="platforms-grid">
-          <div class="platform-card" :class="{ connected: isFacebookConnected }">
-            <div class="platform-icon-large">📘</div>
-            <h3 class="platform-name">Facebook</h3>
-            <p class="platform-desc">{{ $t('dashboard.facebookDescription') }}</p>
-            <span class="status-badge" :class="isFacebookConnected ? 'connected' : 'disconnected'">
-              {{ isFacebookConnected ? $t('dashboard.connected') : $t('dashboard.notConnected') }}
+        <div class="platforms-grid-minimal">
+          <!-- Facebook -->
+          <div
+            class="platform-box-minimal"
+            :class="{ 'platform-connected': isFacebookConnected }"
+          >
+            <div class="platform-icon-bg platform-bg-facebook">
+              <PlatformLogo platform="facebook" :size="32" />
+            </div>
+            <span v-if="isFacebookConnected" class="connected-badge-mini">
+              <svg class="checkmark-icon-mini" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M9 12L11 14L15 10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+              {{ $t('connectAccounts.connected') }}
             </span>
-            <BaseButton
-              :variant="isFacebookConnected ? 'danger' : 'primary'"
-              size="small"
-              class="platform-btn"
-              @click="router.push('/connect-accounts')"
+            <span v-else class="connect-label" @click="router.push('/connect-accounts')">{{ $t('connectAccounts.connect') }}</span>
+            <button
+              v-if="isFacebookConnected"
+              class="disconnect-btn-top"
+              @click.stop="requestDisconnectFacebook"
+              :aria-label="$t('connectAccounts.disconnect')"
             >
-              {{ isFacebookConnected ? $t('connectAccounts.disconnect') : $t('dashboard.connect') }}
-            </BaseButton>
+              <MaterialIcon icon="close" size="sm" />
+            </button>
           </div>
-          <div class="platform-card" :class="{ connected: isInstagramConnected }">
-            <div class="platform-icon-large">📷</div>
-            <h3 class="platform-name">Instagram</h3>
-            <p class="platform-desc">{{ $t('dashboard.instagramDescription') }}</p>
-            <span class="status-badge" :class="isInstagramConnected ? 'connected' : 'disconnected'">
-              {{ isInstagramConnected ? $t('dashboard.connected') : $t('dashboard.notConnected') }}
+
+          <!-- Instagram -->
+          <div
+            class="platform-box-minimal"
+            :class="{ 'platform-connected': isInstagramConnected }"
+          >
+            <div class="platform-icon-bg platform-bg-instagram">
+              <PlatformLogo platform="instagram" :size="32" />
+            </div>
+            <span v-if="isInstagramConnected" class="connected-badge-mini">
+              <svg class="checkmark-icon-mini" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M9 12L11 14L15 10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+              {{ $t('connectAccounts.connected') }}
             </span>
-            <BaseButton
-              :variant="isInstagramConnected ? 'danger' : 'primary'"
-              size="small"
-              class="platform-btn"
-              @click="router.push('/connect-accounts')"
+            <span v-else class="connect-label" @click="router.push('/connect-accounts')">{{ $t('connectAccounts.connect') }}</span>
+            <button
+              v-if="isInstagramConnected"
+              class="disconnect-btn-top"
+              @click.stop="requestDisconnectInstagram"
+              :aria-label="$t('connectAccounts.disconnect')"
             >
-              {{ isInstagramConnected ? $t('connectAccounts.disconnect') : $t('dashboard.connect') }}
-            </BaseButton>
+              <MaterialIcon icon="close" size="sm" />
+            </button>
           </div>
-          <div class="platform-card disabled">
-            <div class="platform-icon-large">🎵</div>
-            <h3 class="platform-name">TikTok</h3>
-            <p class="platform-desc">{{ $t('dashboard.tiktokDescription') }}</p>
-            <span class="status-badge coming-soon">{{ $t('connectAccounts.comingSoon') }}</span>
+
+          <!-- Wolt (Coming Soon) -->
+          <div class="platform-box-minimal platform-disabled">
+            <div class="platform-icon-bg platform-bg-wolt">
+              <PlatformLogo platform="wolt" :size="32" />
+            </div>
+            <span class="coming-soon-badge">{{ $t('connectAccounts.comingSoon') }}</span>
           </div>
-          <div class="platform-card disabled">
-            <div class="platform-icon-large">🐦</div>
-            <h3 class="platform-name">Twitter/X</h3>
-            <p class="platform-desc">{{ $t('dashboard.twitterDescription') }}</p>
-            <span class="status-badge coming-soon">{{ $t('connectAccounts.comingSoon') }}</span>
+
+          <!-- Twitter/X (Coming Soon) -->
+          <div class="platform-box-minimal platform-disabled">
+            <div class="platform-icon-bg platform-bg-twitter">
+              <PlatformLogo platform="twitter" :size="32" />
+            </div>
+            <span class="coming-soon-badge">{{ $t('connectAccounts.comingSoon') }}</span>
+          </div>
+
+          <!-- LinkedIn (Coming Soon) -->
+          <div class="platform-box-minimal platform-disabled">
+            <div class="platform-icon-bg platform-bg-linkedin">
+              <PlatformLogo platform="linkedin" :size="32" />
+            </div>
+            <span class="coming-soon-badge">{{ $t('connectAccounts.comingSoon') }}</span>
+          </div>
+
+          <!-- TikTok (Coming Soon) -->
+          <div class="platform-box-minimal platform-disabled">
+            <div class="platform-icon-bg platform-bg-tiktok">
+              <PlatformLogo platform="tiktok" :size="32" />
+            </div>
+            <span class="coming-soon-badge">{{ $t('connectAccounts.comingSoon') }}</span>
+          </div>
+
+          <!-- YouTube (Coming Soon) -->
+          <div class="platform-box-minimal platform-disabled">
+            <div class="platform-icon-bg platform-bg-youtube">
+              <PlatformLogo platform="youtube" :size="32" />
+            </div>
+            <span class="coming-soon-badge">{{ $t('connectAccounts.comingSoon') }}</span>
           </div>
         </div>
       </section>
@@ -246,6 +346,19 @@ onMounted(async () => {
         </BaseCard>
       </section>
     </div>
+
+    <!-- Disconnect Confirm Modal -->
+    <ConfirmModal
+      v-model="showDisconnectModal"
+      :title="disconnectModalTitle"
+      :message="disconnectModalMessage"
+      type="danger"
+      :confirm-text="$t('connectAccounts.disconnect')"
+      :cancel-text="$t('common.cancel')"
+      :auto-close-seconds="0"
+      @confirm="handleConfirmDisconnect"
+      @cancel="handleCancelDisconnect"
+    />
   </div>
 </template>
 
@@ -300,10 +413,6 @@ onMounted(async () => {
   justify-content: center;
   gap: var(--space-sm);
   padding: var(--space-lg) var(--space-xl);
-}
-
-.stat-icon {
-  font-size: var(--text-xl);
 }
 
 .stat-value {
@@ -371,9 +480,15 @@ onMounted(async () => {
   transform: translateY(-2px);
 }
 
-.action-icon {
-  font-size: 48px;
+.action-icon-wrapper {
   margin-bottom: var(--space-md);
+  opacity: 0.9;
+  transition: var(--transition-base);
+}
+
+.action-card:hover .action-icon-wrapper {
+  opacity: 1;
+  transform: scale(1.05);
 }
 
 .action-title {
@@ -395,88 +510,148 @@ onMounted(async () => {
   width: 100%;
 }
 
-/* Platforms Grid */
-.platforms-grid {
+/* Platforms Grid - Minimal Icon-Only */
+.platforms-grid-minimal {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: var(--space-lg);
+  grid-template-columns: repeat(7, 1fr);
+  gap: var(--space-md);
+  max-width: 700px; /* Constrains grid to reasonable width for 7 platforms */
 }
 
-.platform-card {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  padding: var(--space-xl);
+.platform-box-minimal {
+  position: relative;
+  aspect-ratio: 1;
   background: var(--bg-secondary);
-  border: 1px solid var(--border-color);
+  border: 2px solid var(--border-color);
   border-radius: var(--radius-lg);
-  transition: all var(--transition-fast);
+  cursor: pointer;
+  transition: all var(--transition-base);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
 }
 
-.platform-card:hover:not(.disabled) {
+.platform-box-minimal:hover:not(.platform-disabled) {
+  transform: translateY(-4px);
   border-color: var(--gold-primary);
+  box-shadow: var(--shadow-lg), var(--glow-gold-sm);
 }
 
-.platform-card.connected {
-  border-color: var(--success-border);
-  background: rgba(34, 197, 94, 0.05);
+.platform-box-minimal.platform-connected {
+  border-color: var(--border-color);
+  background: var(--bg-secondary);
 }
 
-.platform-card.disabled {
-  opacity: 0.6;
+.platform-box-minimal.platform-disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }
 
-.platform-icon-large {
-  font-size: 48px;
-  margin-bottom: var(--space-md);
+.platform-icon-bg {
+  width: 64px;
+  height: 64px;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform var(--transition-base);
 }
 
-.platform-name {
-  font-family: var(--font-heading);
-  font-size: var(--text-lg);
+.platform-box-minimal:hover:not(.platform-disabled) .platform-icon-bg {
+  transform: scale(1.1);
+}
+
+/* Connected Badge - Mini version with checkmark */
+.connected-badge-mini {
+  position: absolute;
+  bottom: 6px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px 6px;
+  background: rgba(34, 197, 94, 0.15);
+  border: 1px solid rgba(34, 197, 94, 0.4);
+  border-radius: var(--radius-sm);
+  font-size: 9px;
+  font-weight: var(--font-bold);
+  color: rgb(34, 197, 94);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+}
+
+.checkmark-icon-mini {
+  width: 10px;
+  height: 10px;
+  color: rgb(34, 197, 94);
+  flex-shrink: 0;
+}
+
+.connect-label {
+  position: absolute;
+  bottom: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 11px;
   font-weight: var(--font-semibold);
-  color: var(--text-primary);
-  margin: 0 0 var(--space-sm) 0;
-}
-
-.platform-desc {
-  font-size: var(--text-sm);
-  color: var(--text-secondary);
-  margin: 0 0 var(--space-md) 0;
-  flex: 1;
-}
-
-.status-badge {
-  font-size: var(--text-xs);
-  font-weight: var(--font-semibold);
-  padding: var(--space-xs) var(--space-md);
-  border-radius: var(--radius-full);
+  color: var(--gold-primary);
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  margin-bottom: var(--space-md);
+  cursor: pointer;
+  transition: var(--transition-fast);
 }
 
-.status-badge.connected {
-  background: var(--success-bg);
-  color: var(--success-text);
-  border: 1px solid var(--success-border);
+.connect-label:hover {
+  color: var(--gold-light);
 }
 
-.status-badge.disconnected {
-  background: var(--bg-tertiary);
-  color: var(--text-muted);
+/* Disconnect Button (appears on hover, top-right) */
+.disconnect-btn-top {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 20px;
+  height: 20px;
+  background: rgba(220, 53, 69, 0.9);
+  border: none;
+  border-radius: 50%;
+  color: white;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: var(--transition-fast);
+  padding: 0;
+}
+
+.platform-box-minimal:hover .disconnect-btn-top {
+  display: flex;
+}
+
+.disconnect-btn-top:hover {
+  background: #dc3545;
+  transform: scale(1.15);
+}
+
+/* Coming Soon Badge */
+.coming-soon-badge {
+  position: absolute;
+  bottom: 6px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 9px;
+  font-weight: var(--font-bold);
+  padding: 2px 6px;
+  background: var(--bg-elevated);
   border: 1px solid var(--border-color);
-}
-
-.status-badge.coming-soon {
-  background: var(--bg-tertiary);
+  border-radius: var(--radius-sm);
   color: var(--text-muted);
-  border: 1px solid var(--border-color);
-}
-
-.platform-btn {
-  width: 100%;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
 }
 
 /* Account Bar */
@@ -580,9 +755,14 @@ onMounted(async () => {
 
 /* Responsive - Tablet */
 @media (max-width: 1024px) {
-  .actions-grid,
-  .platforms-grid {
+  .actions-grid {
     grid-template-columns: repeat(2, 1fr);
+  }
+
+  .platforms-grid-minimal {
+    grid-template-columns: repeat(7, 1fr);
+    max-width: 560px;
+    gap: var(--space-sm);
   }
 }
 
@@ -622,9 +802,29 @@ onMounted(async () => {
     font-size: var(--text-xs);
   }
 
-  .actions-grid,
-  .platforms-grid {
-    grid-template-columns: 1fr;
+  .actions-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .platforms-grid-minimal {
+    grid-template-columns: repeat(7, 1fr);
+    max-width: 100%;
+    gap: var(--space-xs);
+  }
+
+  .platform-box-minimal {
+    min-width: 40px;
+  }
+
+  .platform-icon-bg {
+    width: 40px;
+    height: 40px;
+  }
+
+  .connected-badge-mini,
+  .coming-soon-badge {
+    font-size: 7px;
+    padding: 1px 3px;
   }
 
   .account-bar-content {

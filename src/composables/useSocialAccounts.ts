@@ -1,5 +1,6 @@
 import { computed } from 'vue'
 import { useFacebookStore } from '../stores/facebook'
+import { useInstagramStore } from '../stores/instagram'
 
 export type SocialPlatform = 'facebook' | 'instagram' | 'twitter' | 'linkedin' | 'tiktok' | 'youtube'
 
@@ -19,6 +20,7 @@ export interface PlatformInfo {
  */
 export function useSocialAccounts() {
   const facebookStore = useFacebookStore()
+  const instagramStore = useInstagramStore()
 
   /**
    * Check if a specific platform is connected
@@ -27,8 +29,9 @@ export function useSocialAccounts() {
     switch (platform) {
       case 'facebook':
         return facebookStore.connectedPages.length > 0
-      // Future platforms
       case 'instagram':
+        return instagramStore.connectedAccounts.length > 0
+      // Future platforms
       case 'twitter':
       case 'linkedin':
       case 'tiktok':
@@ -49,6 +52,11 @@ export function useSocialAccounts() {
           id: page.pageId,
           name: page.pageName,
         }))
+      case 'instagram':
+        return instagramStore.connectedAccounts.map((account) => ({
+          id: account.instagramAccountId,
+          name: account.username,
+        }))
       // Future platforms
       default:
         return []
@@ -59,8 +67,7 @@ export function useSocialAccounts() {
    * Get total number of connected accounts across all platforms
    */
   const totalConnectedAccounts = computed(() => {
-    return facebookStore.connectedPages.length
-    // Future: Add other platforms
+    return facebookStore.connectedPages.length + instagramStore.connectedAccounts.length
   })
 
   /**
@@ -90,10 +97,13 @@ export function useSocialAccounts() {
       id: 'instagram',
       name: 'Instagram',
       icon: '📸',
-      isConnected: false,
-      connectedAccounts: [],
-      isAvailable: false,
-      comingSoon: true,
+      isConnected: instagramStore.connectedAccounts.length > 0,
+      connectedAccounts: instagramStore.connectedAccounts.map((account) => ({
+        id: account.instagramAccountId,
+        name: account.username,
+      })),
+      isAvailable: true,
+      comingSoon: false,
     },
     {
       id: 'twitter',
@@ -161,5 +171,6 @@ export function useSocialAccounts() {
 
     // Store references (for loading states, etc.)
     facebookStore,
+    instagramStore,
   }
 }

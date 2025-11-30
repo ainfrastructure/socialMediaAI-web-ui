@@ -58,7 +58,7 @@
 
                     <!-- Type Badge -->
                     <span :class="['type-badge', post.content_type]">
-                      {{ post.content_type === 'image' ? '📸' : '🎥' }}
+                      {{ post.content_type === 'image' ? 'photo_camera' : 'videocam' }}
                     </span>
 
                     <!-- Platform Badge -->
@@ -68,7 +68,7 @@
 
                     <!-- Selection Indicator -->
                     <div v-if="selectedPost?.id === post.id" class="selection-check">
-                      ✓
+                      check_circle
                     </div>
                   </div>
 
@@ -119,7 +119,7 @@
                   size="small"
                   @click="toggleEditMode"
                 >
-                  ✏️ Edit Content
+                  edit Edit Content
                 </BaseButton>
               </div>
               <div class="preview-card">
@@ -272,17 +272,17 @@
               </label>
               <select id="platform" v-model="selectedPlatform" class="form-select platform-select">
                 <option value="">Select a platform...</option>
-                <option value="facebook">👥 Facebook</option>
-                <option value="instagram">📷 Instagram</option>
-                <option value="tiktok">🎵 TikTok</option>
-                <option value="twitter">🐦 Twitter/X</option>
-                <option value="linkedin">💼 LinkedIn</option>
+                <option value="facebook">group Facebook</option>
+                <option value="instagram">photo_camera Instagram</option>
+                <option value="tiktok">music_note TikTok</option>
+                <option value="twitter">flutter_dash Twitter/X</option>
+                <option value="linkedin">work LinkedIn</option>
               </select>
               <p v-if="!selectedPlatform" class="platform-hint error">
-                ⚠️ Please select a platform to publish to
+                warning Please select a platform to publish to
               </p>
               <p v-else-if="selectedPlatform !== 'facebook'" class="platform-hint warning">
-                ⚠️ Only Facebook is currently supported. Other platforms coming soon.
+                warning Only Facebook is currently supported. Other platforms coming soon.
               </p>
             </div>
             </div>

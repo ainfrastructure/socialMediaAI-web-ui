@@ -134,11 +134,11 @@ async function fetchRestaurantDetails(restaurant: any) {
           items: okamService.convertToMenuItems(okamMenu)
         }
         menuSource = 'okam'
-        console.log(`✅ [ONBOARDING] Loaded ${menuData.items.length} items from Okam`)
+        console.log(`check_circle [ONBOARDING] Loaded ${menuData.items.length} items from Okam`)
 
         // If Okam has a logo, use it
         if (okamMenu.logoUrl) {
-          console.log(`✅ [ONBOARDING] Using Okam logo: ${okamMenu.logoUrl}`)
+          console.log(`check_circle [ONBOARDING] Using Okam logo: ${okamMenu.logoUrl}`)
           brandDNA = {
             logo_url: okamMenu.logoUrl,
             brand_name: okamMenu.storeName,
@@ -178,7 +178,7 @@ async function fetchRestaurantDetails(restaurant: any) {
       google_data: details
     }
 
-    console.log('✅ Restaurant details fetched and ready to save')
+    console.log('check_circle Restaurant details fetched and ready to save')
   } catch (error: any) {
     console.error('Failed to fetch restaurant details:', error)
     restaurantError.value = error.message || 'Failed to fetch restaurant details. Please try again.'
@@ -232,13 +232,13 @@ async function saveRestaurantToDatabase() {
     if (result.success) {
       restaurantSaved.value = true
       selectedRestaurant.value.id = result.data?.id || ''
-      console.log('✅ Restaurant saved successfully')
+      console.log('check_circle Restaurant saved successfully')
     } else {
       if (result.error && result.error.includes('already saved')) {
         // Restaurant already exists, that's fine!
         restaurantSaved.value = true
         selectedRestaurant.value.id = result.data?.id || ''
-        console.log('✅ Restaurant already exists')
+        console.log('check_circle Restaurant already exists')
       } else {
         throw new Error(result.error || 'Failed to save restaurant')
       }
@@ -690,14 +690,14 @@ function handleFacebookConnected() {
               <p v-if="selectedRestaurant.address">{{ selectedRestaurant.address }}</p>
               <div v-if="selectedRestaurant.menu_items?.length > 0" class="menu-badge-container">
                 <span v-if="selectedRestaurant.menu_source === 'okam'" class="menu-badge okam-badge">
-                  ✓ Okam Menu - {{selectedRestaurant.menu_items.length}} items
+                  check_circle Okam Menu - {{selectedRestaurant.menu_items.length}} items
                 </span>
                 <span v-else-if="selectedRestaurant.menu_source" class="menu-badge platform-badge">
                   {{ selectedRestaurant.menu_source }} - {{selectedRestaurant.menu_items.length}} items
                 </span>
               </div>
             </div>
-            <span class="check-icon">✓</span>
+            <span class="check-icon">check_circle</span>
           </div>
         </div>
       </div>
@@ -705,7 +705,7 @@ function handleFacebookConnected() {
       <!-- Step 2: Create Post with Easy Mode -->
       <div v-else-if="currentStep === 2" class="step-panel">
         <div class="step-header">
-          <div class="step-icon">✨</div>
+          <div class="step-icon">auto_awesome</div>
           <h2 class="step-title">{{ $t('onboarding.simple.generateFirstPost') }}</h2>
           <p class="step-description">{{ $t('onboarding.simple.selectMenuItem') }}</p>
         </div>
@@ -777,7 +777,7 @@ function handleFacebookConnected() {
       <!-- Step 4: Connect Social Media -->
       <div v-else-if="currentStep === 4" class="step-panel">
         <div class="step-header">
-          <div class="step-icon">🔗</div>
+          <div class="step-icon">link</div>
           <h2 class="step-title">{{ $t('onboarding.simple.connectFacebook') }}</h2>
           <p class="step-description">{{ $t('onboarding.simple.connectFacebookDescription') }}</p>
         </div>
@@ -791,7 +791,7 @@ function handleFacebookConnected() {
           <!-- Facebook Connection -->
           <BaseCard variant="glass" class="account-card">
             <div class="account-header">
-              <div class="account-icon facebook">📘</div>
+              <div class="account-icon facebook">book</div>
               <div class="account-info">
                 <h3 class="account-name">{{ $t('platforms.facebook') }}</h3>
                 <p class="account-description">{{ $t('onboarding.simple.facebookDescription') }}</p>
@@ -810,7 +810,7 @@ function handleFacebookConnected() {
           <!-- Instagram Connection -->
           <BaseCard variant="glass" class="account-card">
             <div class="account-header">
-              <div class="account-icon instagram">📸</div>
+              <div class="account-icon instagram">photo_camera</div>
               <div class="account-info">
                 <h3 class="account-name">{{ $t('platforms.instagram') }}</h3>
                 <p class="account-description">{{ $t('onboarding.simple.instagramDescription') }}</p>
@@ -832,7 +832,7 @@ function handleFacebookConnected() {
       <!-- Step 5: Publish Options -->
       <div v-else-if="currentStep === 5" class="step-panel">
         <div class="step-header">
-          <div class="step-icon">🚀</div>
+          <div class="step-icon">rocket_launch</div>
           <h2 class="step-title">{{ $t('onboarding.simple.publishTitle') }}</h2>
           <p class="step-description">{{ $t('onboarding.simple.publishSubtitle') }}</p>
         </div>
@@ -852,7 +852,7 @@ function handleFacebookConnected() {
             @click="publishMode = 'now'"
           >
             <div class="option-header">
-              <div class="option-icon">⚡</div>
+              <div class="option-icon">bolt</div>
               <div class="option-radio">
                 <div :class="['radio-dot', { active: publishMode === 'now' }]"></div>
               </div>
@@ -885,7 +885,7 @@ function handleFacebookConnected() {
             @click="publishMode = 'schedule'"
           >
             <div class="option-header">
-              <div class="option-icon">📅</div>
+              <div class="option-icon">calendar_month</div>
               <div class="option-radio">
                 <div :class="['radio-dot', { active: publishMode === 'schedule' }]"></div>
               </div>
@@ -1037,22 +1037,22 @@ function handleFacebookConnected() {
     <div v-if="showCompletion" class="completion-overlay" @click="handleCompletionClick">
       <BaseCard variant="glass-intense" class="completion-modal" @click.stop>
         <div class="completion-content">
-          <div class="completion-icon">🎉</div>
+          <div class="completion-icon">celebration</div>
           <h2 class="completion-title">{{ $t('onboarding.simple.congratulations') }}</h2>
           <p class="completion-message">
             {{ $t('onboarding.simple.completionMessage') }}
           </p>
           <div class="completion-features">
             <div class="feature-item">
-              <span class="feature-check">✓</span>
+              <span class="feature-check">check_circle</span>
               <span>{{ $t('onboarding.simple.restaurantAdded') }}</span>
             </div>
             <div class="feature-item">
-              <span class="feature-check">✓</span>
+              <span class="feature-check">check_circle</span>
               <span>{{ $t('onboarding.simple.firstPostCreated') }}</span>
             </div>
             <div v-if="facebookStore.isConnected" class="feature-item">
-              <span class="feature-check">✓</span>
+              <span class="feature-check">check_circle</span>
               <span>{{ $t('onboarding.simple.accountsConnected') }}</span>
             </div>
           </div>
@@ -2064,7 +2064,7 @@ function handleFacebookConnected() {
 }
 
 .platform-checkbox input:checked + .checkbox-custom::after {
-  content: '✓';
+  content: 'check_circle';
   color: var(--text-on-gold);
   font-size: var(--text-xs);
   font-weight: var(--font-bold);
