@@ -2,17 +2,39 @@ import { createI18n } from 'vue-i18n'
 import en from './locales/en'
 import no from './locales/no'
 
-// Get the saved locale from localStorage or default to 'en'
-// Safe check for localStorage availability (SSR/build-time safe)
-const savedLocale = typeof window !== 'undefined'
-  ? (localStorage.getItem('userLocale') || 'en')
-  : 'en'
+// Detect browser language and map to supported locales
+function detectBrowserLocale(): 'en' | 'no' {
+  if (typeof window === 'undefined') return 'en'
+
+  // Check if user has a saved preference first
+  const savedLocale = localStorage.getItem('userLocale')
+  if (savedLocale === 'en' || savedLocale === 'no') {
+    return savedLocale
+  }
+
+  // Get browser language(s)
+  const browserLang = navigator.language || (navigator as any).userLanguage || ''
+  const browserLangs = navigator.languages || [browserLang]
+
+  // Check if any browser language matches Norwegian
+  for (const lang of browserLangs) {
+    const langCode = lang.toLowerCase().split('-')[0]
+    if (langCode === 'no' || langCode === 'nb' || langCode === 'nn') {
+      return 'no'
+    }
+  }
+
+  // Default to English
+  return 'en'
+}
+
+const detectedLocale = detectBrowserLocale()
 
 export type MessageSchema = typeof en
 
 const i18n = createI18n<[MessageSchema], 'en' | 'no'>({
   legacy: false, // Use Composition API mode
-  locale: savedLocale,
+  locale: detectedLocale,
   fallbackLocale: 'en',
   messages: {
     en,

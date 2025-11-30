@@ -111,6 +111,23 @@ export default {
     sendMagicLink: 'Send Magic Link',
   },
 
+  // Waitlist Landing Page
+  waitlist: {
+    headline: 'Din restaurants automatiserte sosiale medier-manager',
+    subheadline: 'Lag fantastisk matinnhold, planlegg innlegg og utvid restaurantens tilstedeværelse—alt med AI.',
+    emailPlaceholder: 'Skriv inn e-posten din',
+    joinButton: 'Bli med på ventelisten',
+    joining: 'Registrerer...',
+    successTitle: 'Du er på listen!',
+    successMessage: 'Vi gir deg beskjed når Social Chef lanseres.',
+    alreadyOnList: 'Denne e-posten er allerede på ventelisten',
+    invalidEmail: 'Vennligst skriv inn en gyldig e-postadresse',
+    error: 'Noe gikk galt. Prøv igjen.',
+    loginLink: 'Har du allerede en konto?',
+    loginLinkText: 'Logg inn',
+    socialProof: 'Bli med {count}+ restauranter på ventelisten',
+  },
+
   // Dashboard View
   dashboard: {
     title: 'Dashbord',

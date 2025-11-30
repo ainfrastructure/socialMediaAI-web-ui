@@ -878,6 +878,29 @@ class ApiService {
     })
     return response.json()
   }
+
+  // Waitlist (public endpoints, no auth required)
+  async joinWaitlist(
+    email: string,
+    metadata?: { locale?: string; timezone?: string; referrer?: string }
+  ): Promise<ApiResponse<{ count: number }>> {
+    const response = await fetch(`${API_URL}/api/waitlist/join`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email,
+        locale: metadata?.locale || navigator.language,
+        timezone: metadata?.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone,
+        referrer: metadata?.referrer || document.referrer,
+      }),
+    })
+    return response.json()
+  }
+
+  async getWaitlistCount(): Promise<ApiResponse<{ count: number }>> {
+    const response = await fetch(`${API_URL}/api/waitlist/count`)
+    return response.json()
+  }
 }
 
 export const api = new ApiService()

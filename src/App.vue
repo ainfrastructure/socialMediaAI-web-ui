@@ -6,9 +6,9 @@ import NavBar from './components/NavBar.vue'
 
 const route = useRoute()
 
-// Show navbar on authenticated pages
+// Show navbar on authenticated pages (hide on guest/landing pages)
 const showNavbar = computed(() => {
-  const guestRoutes = ['/login', '/auth/callback', '/auth/reset-password']
+  const guestRoutes = ['/', '/login', '/auth/callback', '/auth/reset-password']
   return !guestRoutes.includes(route.path)
 })
 </script>

@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
+import WaitlistView from '../views/WaitlistView.vue'
 import LoginView from '../views/LoginView.vue'
 import DashboardView from '../views/DashboardView.vue'
 import PlansView from '../views/PlansView.vue'
@@ -50,7 +51,9 @@ const router = createRouter({
   routes: [
     {
       path: '/',
-      redirect: '/dashboard',
+      name: 'waitlist',
+      component: WaitlistView,
+      meta: { requiresGuest: true },
     },
     {
       path: '/dashboard',

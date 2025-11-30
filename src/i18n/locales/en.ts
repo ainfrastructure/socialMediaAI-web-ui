@@ -111,6 +111,23 @@ export default {
     sendMagicLink: 'Send Magic Link',
   },
 
+  // Waitlist Landing Page
+  waitlist: {
+    headline: "Your restaurant's automated social media manager",
+    subheadline: 'Create stunning food content, schedule posts, and grow your restaurant\'s presence—all with AI.',
+    emailPlaceholder: 'Enter your email',
+    joinButton: 'Join the Waitlist',
+    joining: 'Joining...',
+    successTitle: "You're on the list!",
+    successMessage: "We'll notify you when Social Chef launches.",
+    alreadyOnList: 'This email is already on the waitlist',
+    invalidEmail: 'Please enter a valid email address',
+    error: 'Something went wrong. Please try again.',
+    loginLink: 'Already have an account?',
+    loginLinkText: 'Sign in',
+    socialProof: 'Join {count}+ restaurants on the waitlist',
+  },
+
   // Dashboard View
   dashboard: {
     title: 'Dashboard',

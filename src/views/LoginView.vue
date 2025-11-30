@@ -13,7 +13,7 @@ const router = useRouter()
 const authStore = useAuthStore()
 const { t } = useI18n()
 
-const disableSignup = ref(false)
+const disableSignup = ref(true)
 const isSignup = ref(false)
 const showMagicLink = ref(false)
 const showForgotPassword = ref(false)
