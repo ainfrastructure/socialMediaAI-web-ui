@@ -4,13 +4,25 @@ import { useI18n } from 'vue-i18n'
 import BaseCard from './BaseCard.vue'
 import BaseButton from './BaseButton.vue'
 import BaseAlert from './BaseAlert.vue'
+import MaterialIcon from './MaterialIcon.vue'
 import MenuItemMultiSelector from './MenuItemMultiSelector.vue'
 import AdvancedCustomizationPanel from './AdvancedCustomizationPanel.vue'
 import CustomizationPreview from './CustomizationPreview.vue'
 import PromptVariationSelector from './PromptVariationSelector.vue'
 import LogoTogglePreview from './LogoTogglePreview.vue'
+import UnifiedSchedulePost from './UnifiedSchedulePost.vue'
+import WizardProgress from './WizardProgress.vue'
+import LoadingOverlay from './LoadingOverlay.vue'
+import SuccessModal from './SuccessModal.vue'
+import GoldenRestaurantIcon from './icons/GoldenRestaurantIcon.vue'
+import GoldenComboIcon from './icons/GoldenComboIcon.vue'
+import GoldenCalendarIcon from './icons/GoldenCalendarIcon.vue'
+import GoldenUploadIcon from './icons/GoldenUploadIcon.vue'
+import GoldenSparkleIcon from './icons/GoldenSparkleIcon.vue'
 import type { SavedRestaurant } from '@/services/restaurantService'
 import { api } from '@/services/api'
+import { useFacebookStore } from '@/stores/facebook'
+import { useInstagramStore } from '@/stores/instagram'
 
 interface MenuItem {
   name: string
@@ -77,7 +89,6 @@ const emit = defineEmits<{
     imageUrl: string
     postText: string
     hashtags: string[]
-    callToAction?: string
     menuItems: MenuItem[]
     customization: CustomizationOptions
     selectedVariation: StyleVariation | null
@@ -86,14 +97,30 @@ const emit = defineEmits<{
     includeWeeklyPrices?: boolean
     weeklyMenuData?: WeeklyMenuDataItem[]
     weeklyCustomization?: WeeklyCustomizationOptions
-    platform?: 'facebook' | 'instagram'
+    platforms?: string[]
     publishNow?: boolean
     scheduledTime?: string
-    onResult?: (result: { success: boolean; postUrl?: string; error?: string }) => void
+    timezone?: string
+    onResult?: (result: { success: boolean; postUrls?: Record<string, string>; error?: string }) => void
   }): void
 }>()
 
 const { t } = useI18n()
+
+// Stores
+const facebookStore = useFacebookStore()
+const instagramStore = useInstagramStore()
+
+// Platform configuration
+type PlatformType = 'facebook' | 'instagram' | 'tiktok' | 'twitter' | 'linkedin' | 'youtube'
+const allPlatforms = computed(() => [
+  { id: 'facebook' as PlatformType, name: 'Facebook', icon: 'facebook', connected: (facebookStore.connectedPages?.length ?? 0) > 0 },
+  { id: 'instagram' as PlatformType, name: 'Instagram', icon: 'instagram', connected: (instagramStore.connectedAccounts?.length ?? 0) > 0 },
+  { id: 'tiktok' as PlatformType, name: 'TikTok', icon: 'tiktok', connected: false },
+  { id: 'twitter' as PlatformType, name: 'X (Twitter)', icon: 'twitter', connected: false },
+  { id: 'linkedin' as PlatformType, name: 'LinkedIn', icon: 'linkedin', connected: false },
+  { id: 'youtube' as PlatformType, name: 'YouTube', icon: 'youtube', connected: false }
+])
 
 // State
 const currentStep = ref(1)
@@ -119,24 +146,24 @@ const weeklyCustomization = ref<WeeklyCustomizationOptions>({
 
 // Weekly layout options
 const weeklyLayouts = computed(() => [
-  { value: 'verticalStack', label: t('weeklyCustomization.layout.verticalStack'), icon: '📋', description: t('weeklyCustomization.layout.verticalStackDesc') },
-  { value: 'gridWithHeader', label: t('weeklyCustomization.layout.gridWithHeader'), icon: '⊞', description: t('weeklyCustomization.layout.gridWithHeaderDesc') },
-  { value: 'calendarGrid', label: t('weeklyCustomization.layout.calendarGrid'), icon: '📅', description: t('weeklyCustomization.layout.calendarGridDesc') },
-  { value: 'filmstrip', label: t('weeklyCustomization.layout.filmstrip'), icon: '🎞️', description: t('weeklyCustomization.layout.filmstripDesc') }
+  { value: 'verticalStack', label: t('weeklyCustomization.layout.verticalStack'), icon: 'view_list', description: t('weeklyCustomization.layout.verticalStackDesc') },
+  { value: 'gridWithHeader', label: t('weeklyCustomization.layout.gridWithHeader'), icon: 'grid_view', description: t('weeklyCustomization.layout.gridWithHeaderDesc') },
+  { value: 'calendarGrid', label: t('weeklyCustomization.layout.calendarGrid'), icon: 'calendar_month', description: t('weeklyCustomization.layout.calendarGridDesc') },
+  { value: 'filmstrip', label: t('weeklyCustomization.layout.filmstrip'), icon: 'movie', description: t('weeklyCustomization.layout.filmstripDesc') }
 ])
 
 // Weekly theme presets
 const weeklyThemes = computed(() => [
-  { value: 'none', label: t('weeklyCustomization.themes.none'), icon: '⊘' },
-  { value: 'studentWeek', label: t('weeklyCustomization.themes.studentWeek'), icon: '🎓' },
-  { value: 'christmas', label: t('weeklyCustomization.themes.christmas'), icon: '🎄' },
-  { value: 'easter', label: t('weeklyCustomization.themes.easter'), icon: '🐰' },
-  { value: 'summer', label: t('weeklyCustomization.themes.summer'), icon: '☀️' },
-  { value: 'valentines', label: t('weeklyCustomization.themes.valentines'), icon: '❤️' },
-  { value: 'halloween', label: t('weeklyCustomization.themes.halloween'), icon: '🎃' },
-  { value: 'thanksgiving', label: t('weeklyCustomization.themes.thanksgiving'), icon: '🦃' },
-  { value: 'newYear', label: t('weeklyCustomization.themes.newYear'), icon: '🎆' },
-  { value: 'custom', label: t('weeklyCustomization.themes.custom'), icon: '✏️' }
+  { value: 'none', label: t('weeklyCustomization.themes.none'), icon: 'block' },
+  { value: 'studentWeek', label: t('weeklyCustomization.themes.studentWeek'), icon: 'school' },
+  { value: 'christmas', label: t('weeklyCustomization.themes.christmas'), icon: 'ac_unit' },
+  { value: 'easter', label: t('weeklyCustomization.themes.easter'), icon: 'egg' },
+  { value: 'summer', label: t('weeklyCustomization.themes.summer'), icon: 'wb_sunny' },
+  { value: 'valentines', label: t('weeklyCustomization.themes.valentines'), icon: 'favorite' },
+  { value: 'halloween', label: t('weeklyCustomization.themes.halloween'), icon: 'auto_awesome' },
+  { value: 'thanksgiving', label: t('weeklyCustomization.themes.thanksgiving'), icon: 'dinner_dining' },
+  { value: 'newYear', label: t('weeklyCustomization.themes.newYear'), icon: 'celebration' },
+  { value: 'custom', label: t('weeklyCustomization.themes.custom'), icon: 'edit' }
 ])
 
 // For weekly menu - map items to days with custom prices
@@ -161,6 +188,10 @@ const selectedDayForModal = ref<string | null>(null)
 
 // Step 1: Menu Selection
 const selectedMenuItems = ref<MenuItem[]>([])
+
+// Image upload state (alternative to menu selection)
+const uploadedImage = ref<File | null>(null)
+const uploadedImagePreview = ref<string | null>(null)
 
 // Step 2: Customization
 const customization = ref<CustomizationOptions>({
@@ -193,11 +224,10 @@ const selectedLogoVariant = ref<LogoVariant>('full')
 // Step 5: Post Content & Publishing
 const postText = ref('')
 const hashtags = ref<string[]>([])
-const callToAction = ref('')
 const generatingContent = ref(false)
 
 // Publishing state
-const selectedPlatform = ref<'facebook' | 'instagram'>('facebook')
+const selectedPlatform = ref<PlatformType>('facebook')
 const publishType = ref<'now' | 'schedule'>('now')
 const scheduleDate = ref('')
 const scheduleTime = ref('')
@@ -205,9 +235,20 @@ const publishing = ref(false)
 const publishSuccess = ref(false)
 const publishError = ref('')
 const publishedPostUrl = ref('')
+const publishedPostUrls = ref<Record<string, string>>({})
+const selectedPlatforms = ref<PlatformType[]>([])
+const failedPlatforms = ref<Array<{ platform: string, error: string }>>([])
+
+// Wizard progress tracking
+const highestCompletedStep = ref(0)
 
 // Computed
 const canProceedStep1 = computed(() => {
+  // Allow proceeding with uploaded image for single/combo posts
+  if (uploadedImage.value && (postType.value === 'single' || postType.value === 'combo')) {
+    return true
+  }
+
   if (postType.value === 'single') {
     return selectedMenuItems.value.length === 1
   } else if (postType.value === 'combo') {
@@ -251,6 +292,10 @@ const step1Subtitle = computed(() => {
   }
 })
 
+const canProceedStep2 = computed(() => {
+  return true // Customization always has defaults
+})
+
 const canProceedStep3 = computed(() => {
   return selectedVariation.value !== null
 })
@@ -259,11 +304,15 @@ const canProceedStep4 = computed(() => {
   return generatedImageUrl.value !== ''
 })
 
+const canProceedStep5 = computed(() => {
+  return generatedImageUrl.value !== ''
+})
+
 const stepLabels = computed(() => [
   { number: 1, label: t('advancedMode.steps.menuSelection') },
   { number: 2, label: t('advancedMode.steps.customize') },
   { number: 3, label: t('advancedMode.steps.styleSelection') },
-  { number: 4, label: t('advancedMode.steps.generate') },
+  { number: 4, label: t('advancedMode.steps.preview') },
   { number: 5, label: t('advancedMode.steps.publish') }
 ])
 
@@ -281,6 +330,10 @@ watch(currentStep, async (newStep, oldStep) => {
   if (newStep === 3 && oldStep === 2 && styleVariations.value.length === 0) {
     await generateStyleVariations()
   }
+  // Auto-generate image when entering step 4 (Preview)
+  if (newStep === 4 && oldStep === 3 && !generatedImageUrl.value && selectedVariation.value) {
+    await generateImage()
+  }
 })
 
 // Methods
@@ -288,6 +341,10 @@ watch(currentStep, async (newStep, oldStep) => {
 // Navigation
 function nextStep() {
   if (currentStep.value < totalSteps) {
+    // Update highest completed step
+    if (currentStep.value > highestCompletedStep.value) {
+      highestCompletedStep.value = currentStep.value
+    }
     currentStep.value++
   }
 }
@@ -295,6 +352,13 @@ function nextStep() {
 function prevStep() {
   if (currentStep.value > 1) {
     currentStep.value--
+  }
+}
+
+function navigateToStep(stepNumber: number) {
+  // Only allow navigation to accessible steps
+  if (stepNumber <= highestCompletedStep.value + 1) {
+    currentStep.value = stepNumber
   }
 }
 
@@ -348,6 +412,31 @@ function updateDayPrice(day: string, price: string) {
 function closeDaySelector() {
   showDaySelectorModal.value = false
   selectedDayForModal.value = null
+}
+
+// Image upload handlers
+function handleImageUpload(event: Event) {
+  const target = event.target as HTMLInputElement
+  const file = target.files?.[0]
+
+  if (file) {
+    // Clear menu item selection if image is uploaded
+    selectedMenuItems.value = []
+
+    uploadedImage.value = file
+
+    // Create preview
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      uploadedImagePreview.value = e.target?.result as string
+    }
+    reader.readAsDataURL(file)
+  }
+}
+
+function removeUploadedImage() {
+  uploadedImage.value = null
+  uploadedImagePreview.value = null
 }
 
 // Get menu items for API calls (handles both regular and weekly modes)
@@ -526,7 +615,6 @@ async function generatePostContent() {
     if (response.success && response.data) {
       postText.value = response.data.postText || ''
       hashtags.value = response.data.hashtags || []
-      callToAction.value = response.data.callToAction || ''
     }
   } catch (error: any) {
     console.error('Error generating post content:', error)
@@ -549,12 +637,30 @@ function removeHashtag(index: number) {
   hashtags.value.splice(index, 1)
 }
 
-// Step 5: Publish Post
-async function publishPost() {
+// Handle logo selection
+function handleLogoSelect(variant: LogoVariant) {
+  selectedLogoVariant.value = variant
+}
+
+// Handle publish from UnifiedSchedulePost component
+async function handleUnifiedPublish(data: {
+  platforms: string[]
+  publishType: 'now' | 'schedule'
+  scheduledDate?: string
+  scheduledTime?: string
+  timezone?: string
+}) {
   publishing.value = true
   publishError.value = ''
   publishSuccess.value = false
   publishedPostUrl.value = ''
+  publishedPostUrls.value = {}
+
+  // Set the selected platforms for display
+  if (data.platforms.length > 0) {
+    selectedPlatform.value = data.platforms[0] as PlatformType
+    selectedPlatforms.value = data.platforms as PlatformType[]
+  }
 
   try {
     const menuItemsForApi = getMenuItemsForApi()
@@ -562,17 +668,16 @@ async function publishPost() {
 
     // Build scheduled time if scheduling
     let scheduledTime: string | undefined
-    if (publishType.value === 'schedule' && scheduleDate.value && scheduleTime.value) {
-      scheduledTime = new Date(`${scheduleDate.value}T${scheduleTime.value}`).toISOString()
+    if (data.publishType === 'schedule' && data.scheduledDate && data.scheduledTime) {
+      scheduledTime = new Date(`${data.scheduledDate}T${data.scheduledTime}`).toISOString()
     }
 
     // Emit complete with all data for parent to handle actual publishing
-    const result = await new Promise<{ success: boolean; postUrl?: string; error?: string }>((resolve) => {
+    const result = await new Promise<{ success: boolean; postUrls?: Record<string, string>; error?: string }>((resolve) => {
       emit('complete', {
         imageUrl: generatedImageUrl.value,
         postText: postText.value,
         hashtags: hashtags.value,
-        callToAction: callToAction.value,
         menuItems: menuItemsForApi,
         customization: customization.value,
         selectedVariation: selectedVariation.value,
@@ -581,9 +686,10 @@ async function publishPost() {
         includeWeeklyPrices: postType.value === 'weekly' ? includeWeeklyPrices.value : undefined,
         weeklyMenuData: weeklyMenuData as WeeklyMenuDataItem[] | undefined,
         weeklyCustomization: postType.value === 'weekly' ? weeklyCustomization.value : undefined,
-        platform: selectedPlatform.value,
-        publishNow: publishType.value === 'now',
+        platforms: data.platforms,
+        publishNow: data.publishType === 'now',
         scheduledTime: scheduledTime,
+        timezone: data.timezone,
         onResult: resolve
       })
 
@@ -593,8 +699,11 @@ async function publishPost() {
 
     if (result.success) {
       publishSuccess.value = true
-      if (result.postUrl) {
-        publishedPostUrl.value = result.postUrl
+      if (result.postUrls) {
+        publishedPostUrls.value = result.postUrls
+        // Set first URL as main for backward compatibility
+        const firstUrl = Object.values(result.postUrls)[0]
+        if (firstUrl) publishedPostUrl.value = firstUrl
       }
     } else {
       publishError.value = result.error || t('advancedMode.publish.error')
@@ -606,42 +715,57 @@ async function publishPost() {
   }
 }
 
-// Handle logo selection
-function handleLogoSelect(variant: LogoVariant) {
-  selectedLogoVariant.value = variant
+// Success modal helpers
+function getPlatformName(platformId: PlatformType): string {
+  const platform = allPlatforms.value.find(p => p.id === platformId)
+  return platform?.name || platformId
+}
+
+function closeSuccessModal() {
+  publishSuccess.value = false
+}
+
+function openPostUrl() {
+  if (publishedPostUrl.value) {
+    window.open(publishedPostUrl.value, '_blank')
+  }
+}
+
+function createAnother() {
+  // Reset to step 1 and clear all state
+  publishSuccess.value = false
+  publishedPostUrl.value = ''
+  publishError.value = ''
+  currentStep.value = 1
+  selectedMenuItems.value = []
+  uploadedImage.value = null
+  uploadedImagePreview.value = null
+  styleVariations.value = []
+  selectedVariation.value = null
+  generatedImageUrl.value = ''
+  postText.value = ''
+  hashtags.value = []
+  weeklyMenuItems.value = {
+    monday: { item: null, customPrice: '' },
+    tuesday: { item: null, customPrice: '' },
+    wednesday: { item: null, customPrice: '' },
+    thursday: { item: null, customPrice: '' },
+    friday: { item: null, customPrice: '' },
+    saturday: { item: null, customPrice: '' },
+    sunday: { item: null, customPrice: '' }
+  }
 }
 </script>
 
 <template>
   <div class="advanced-mode-creation">
-    <!-- Progress Indicator -->
-    <div class="wizard-progress">
-      <div class="wizard-progress-track">
-        <div
-          v-for="(step, index) in stepLabels"
-          :key="step.number"
-          class="progress-step-wrapper"
-        >
-          <div
-            :class="['progress-step-item', {
-              'active': currentStep === step.number,
-              'completed': currentStep > step.number
-            }]"
-            @click="goToStep(step.number)"
-          >
-            <div class="progress-step-circle">
-              <span v-if="currentStep > step.number" class="checkmark">✓</span>
-              <span v-else>{{ step.number }}</span>
-            </div>
-            <span class="progress-step-label">{{ step.label }}</span>
-          </div>
-          <div
-            v-if="index < stepLabels.length - 1"
-            :class="['progress-line', { 'completed': currentStep > step.number }]"
-          ></div>
-        </div>
-      </div>
-    </div>
+    <!-- Wizard Progress -->
+    <WizardProgress
+      :current-step="currentStep"
+      :step-labels="stepLabels"
+      :highest-completed-step="highestCompletedStep"
+      @navigate="navigateToStep"
+    />
 
     <!-- Step 1: Menu Item Selection -->
     <BaseCard v-show="currentStep === 1" variant="glass" class="step-card">
@@ -658,7 +782,7 @@ function handleLogoSelect(variant: LogoVariant) {
             :class="['post-type-card', { selected: postType === 'single' }]"
             @click="handlePostTypeChange('single')"
           >
-            <span class="post-type-icon">🍽️</span>
+            <GoldenRestaurantIcon :size="40" class="post-type-icon" />
             <span class="post-type-title">{{ t('advancedMode.postType.single.title') }}</span>
             <span class="post-type-description">{{ t('advancedMode.postType.single.description') }}</span>
           </div>
@@ -666,7 +790,7 @@ function handleLogoSelect(variant: LogoVariant) {
             :class="['post-type-card', { selected: postType === 'combo' }]"
             @click="handlePostTypeChange('combo')"
           >
-            <span class="post-type-icon">🤝</span>
+            <GoldenComboIcon :size="40" class="post-type-icon" />
             <span class="post-type-title">{{ t('advancedMode.postType.combo.title') }}</span>
             <span class="post-type-description">{{ t('advancedMode.postType.combo.description') }}</span>
           </div>
@@ -674,7 +798,7 @@ function handleLogoSelect(variant: LogoVariant) {
             :class="['post-type-card', { selected: postType === 'weekly' }]"
             @click="handlePostTypeChange('weekly')"
           >
-            <span class="post-type-icon">📅</span>
+            <GoldenCalendarIcon :size="40" class="post-type-icon" />
             <span class="post-type-title">{{ t('advancedMode.postType.weekly.title') }}</span>
             <span class="post-type-description">{{ t('advancedMode.postType.weekly.description') }}</span>
           </div>
@@ -704,7 +828,41 @@ function handleLogoSelect(variant: LogoVariant) {
 
       <!-- Menu Selection for Single/Combo -->
       <div v-if="postType !== 'weekly'" class="menu-selection-section">
+        <!-- Image Upload Option -->
+        <div class="image-upload-section">
+          <h4 class="section-label">{{ t('advancedMode.step1.uploadTitle') }}</h4>
+          <div v-if="uploadedImagePreview" class="uploaded-image-preview">
+            <img :src="uploadedImagePreview" alt="Uploaded image" class="preview-image" />
+            <button class="remove-image-btn" @click="removeUploadedImage" :title="t('common.remove')">
+              <MaterialIcon icon="close" size="sm" />
+            </button>
+            <div class="upload-badge">
+              <MaterialIcon icon="check_circle" size="sm" />
+            </div>
+          </div>
+          <label v-else class="upload-button">
+            <input
+              type="file"
+              accept="image/*"
+              @change="handleImageUpload"
+              class="upload-input"
+            />
+            <div class="upload-content">
+              <GoldenUploadIcon :size="32" />
+              <span class="upload-text">{{ t('advancedMode.step1.uploadButton') }}</span>
+              <span class="upload-hint">{{ t('advancedMode.step1.uploadHint') }}</span>
+            </div>
+          </label>
+        </div>
+
+        <!-- Divider -->
+        <div v-if="menuItems.length > 0" class="divider">
+          <span class="divider-text">{{ t('advancedMode.step1.orDivider') }}</span>
+        </div>
+
+        <!-- Menu Item Selector -->
         <MenuItemMultiSelector
+          v-if="menuItems.length > 0"
           :menu-items="menuItems"
           :max-items="maxItemsForSelector"
           @update:selected-items="selectedMenuItems = $event"
@@ -812,17 +970,7 @@ function handleLogoSelect(variant: LogoVariant) {
       </div>
 
       <div class="customization-layout">
-        <!-- Preview Panel (Left) -->
-        <div class="preview-panel">
-          <CustomizationPreview
-            :post-type="postType"
-            :customization="customization"
-            :weekly-customization="weeklyCustomization"
-            :menu-items="postType === 'weekly' ? getMenuItemsForApi() : selectedMenuItems"
-          />
-        </div>
-
-        <!-- Options Panel (Right) -->
+        <!-- Options Panel (Top) -->
         <div class="options-panel">
           <!-- Common customization options -->
           <AdvancedCustomizationPanel v-model="customization" :post-type="postType" />
@@ -839,7 +987,7 @@ function handleLogoSelect(variant: LogoVariant) {
               :class="['layout-option-card', { selected: weeklyCustomization.layout === layout.value }]"
               @click="weeklyCustomization.layout = layout.value as any"
             >
-              <span class="layout-icon">{{ layout.icon }}</span>
+              <MaterialIcon :icon="layout.icon" size="lg" class="layout-icon" />
               <span class="layout-label">{{ layout.label }}</span>
               <span class="layout-desc">{{ layout.description }}</span>
             </button>
@@ -904,7 +1052,7 @@ function handleLogoSelect(variant: LogoVariant) {
               :class="['theme-option-card', { selected: weeklyCustomization.theme === theme.value }]"
               @click="weeklyCustomization.theme = theme.value"
             >
-              <span class="theme-icon">{{ theme.icon }}</span>
+              <MaterialIcon :icon="theme.icon" size="lg" class="theme-icon" />
               <span class="theme-label">{{ theme.label }}</span>
             </button>
           </div>
@@ -922,13 +1070,24 @@ function handleLogoSelect(variant: LogoVariant) {
         </div>
       </div>
         </div>
+
+        <!-- Preview Panel (Bottom) -->
+        <div class="preview-panel">
+          <label class="preview-panel-label">{{ t('advancedMode.step2.previewLabel', 'Preview') }}</label>
+          <CustomizationPreview
+            :post-type="postType"
+            :customization="customization"
+            :weekly-customization="weeklyCustomization"
+            :menu-items="postType === 'weekly' ? getMenuItemsForApi() : selectedMenuItems"
+          />
+        </div>
       </div>
 
       <div class="step-navigation">
         <BaseButton variant="ghost" @click="prevStep">
           {{ t('advancedMode.navigation.back') }}
         </BaseButton>
-        <BaseButton variant="primary" size="large" @click="nextStep">
+        <BaseButton variant="primary" size="large" :disabled="!canProceedStep2" @click="nextStep">
           {{ nextStepLabel }} →
         </BaseButton>
       </div>
@@ -982,7 +1141,7 @@ function handleLogoSelect(variant: LogoVariant) {
       <div v-if="!generatedImageUrl && !generatingImage" class="generate-section">
         <div class="generate-preview">
           <div class="preview-info">
-            <span class="info-icon">✨</span>
+            <GoldenSparkleIcon :size="32" class="info-icon" />
             <div class="info-text">
               <h4 class="info-title">{{ t('advancedMode.step4.generatingWithAI') }}</h4>
               <p class="info-description">
@@ -1056,10 +1215,13 @@ function handleLogoSelect(variant: LogoVariant) {
       <div class="publish-layout">
         <!-- Image Preview at Top -->
         <div class="image-preview-top">
-          <img :src="generatedImageUrl" alt="Generated post" class="preview-image-large" />
+          <label class="form-label">{{ t('advancedMode.step5.imagePreview') }}</label>
+          <div class="preview-image-wrapper">
+            <img :src="generatedImageUrl" alt="Generated post" class="preview-image-large" />
+          </div>
         </div>
 
-        <!-- Content below image -->
+        <!-- Content section -->
         <div class="content-section">
           <!-- Post Text -->
           <div class="form-group">
@@ -1074,7 +1236,18 @@ function handleLogoSelect(variant: LogoVariant) {
 
           <!-- Hashtags -->
           <div class="form-group">
-            <label class="form-label">{{ t('advancedMode.step5.hashtagsLabel') }}</label>
+            <div class="hashtags-header">
+              <label class="form-label">{{ t('advancedMode.step5.hashtagsLabel') }}</label>
+              <button
+                v-if="hashtags.length > 0"
+                type="button"
+                class="clear-all-btn"
+                @click="hashtags = []"
+              >
+                <MaterialIcon icon="delete_sweep" size="sm" />
+                {{ t('common.clearAll', 'Clear All') }}
+              </button>
+            </div>
             <div class="hashtags-container">
               <span
                 v-for="(tag, index) in hashtags"
@@ -1084,83 +1257,69 @@ function handleLogoSelect(variant: LogoVariant) {
                 #{{ tag }}
                 <button class="remove-tag" @click="removeHashtag(index)">×</button>
               </span>
+              <span v-if="hashtags.length === 0" class="hashtags-empty">
+                {{ t('advancedMode.step5.noHashtags', 'No hashtags yet. Add some below.') }}
+              </span>
             </div>
-            <input
-              type="text"
-              :placeholder="t('advancedMode.step5.addHashtag')"
-              class="hashtag-input"
-              @keyup.enter="addHashtag(($event.target as HTMLInputElement).value); ($event.target as HTMLInputElement).value = ''"
-            />
+            <div class="hashtag-input-wrapper">
+              <MaterialIcon icon="tag" size="sm" class="hashtag-input-icon" />
+              <input
+                type="text"
+                :placeholder="t('advancedMode.step5.addHashtag')"
+                class="hashtag-input"
+                @keyup.enter="addHashtag(($event.target as HTMLInputElement).value); ($event.target as HTMLInputElement).value = ''"
+              />
+            </div>
+            <span class="hashtag-hint">{{ t('advancedMode.step5.hashtagHint', 'Press Enter to add') }}</span>
           </div>
 
-          <!-- Platform Selection -->
-          <div class="form-group">
-            <label class="form-label">{{ t('advancedMode.publish.platformLabel') }}</label>
-            <div class="platform-options">
-              <label class="platform-option">
-                <input type="radio" v-model="selectedPlatform" value="facebook" />
-                <span class="platform-icon">📘</span>
-                <span>Facebook</span>
-              </label>
-              <label class="platform-option">
-                <input type="radio" v-model="selectedPlatform" value="instagram" />
-                <span class="platform-icon">📷</span>
-                <span>Instagram</span>
-              </label>
-            </div>
-          </div>
-
-          <!-- Publish Options -->
-          <div class="form-group">
-            <label class="form-label">{{ t('advancedMode.publish.whenLabel') }}</label>
-            <div class="publish-options">
-              <label class="publish-option" :class="{ active: publishType === 'now' }">
-                <input type="radio" v-model="publishType" value="now" />
-                <span class="option-content">
-                  <span class="option-title">{{ t('advancedMode.publish.now') }}</span>
-                  <span class="option-desc">{{ t('advancedMode.publish.nowDesc') }}</span>
-                </span>
-              </label>
-              <label class="publish-option" :class="{ active: publishType === 'schedule' }">
-                <input type="radio" v-model="publishType" value="schedule" />
-                <span class="option-content">
-                  <span class="option-title">{{ t('advancedMode.publish.schedule') }}</span>
-                  <span class="option-desc">{{ t('advancedMode.publish.scheduleDesc') }}</span>
-                </span>
-              </label>
-            </div>
-          </div>
-
-          <!-- Schedule DateTime (if scheduled) -->
-          <div v-if="publishType === 'schedule'" class="form-group schedule-datetime">
-            <div class="datetime-inputs">
-              <div class="date-input">
-                <label class="form-label">{{ t('advancedMode.publish.date') }}</label>
-                <input type="date" v-model="scheduleDate" class="form-input" />
-              </div>
-              <div class="time-input">
-                <label class="form-label">{{ t('advancedMode.publish.time') }}</label>
-                <input type="time" v-model="scheduleTime" class="form-input" />
-              </div>
-            </div>
-          </div>
+          <!-- Platform & Publish Options using UnifiedSchedulePost -->
+          <UnifiedSchedulePost
+            :image-url="generatedImageUrl"
+            :post-text="postText"
+            :hashtags="hashtags"
+            :show-preview="false"
+            :show-cancel-button="false"
+            @publish="handleUnifiedPublish"
+          />
         </div>
       </div>
 
-      <div class="step-navigation">
+      <div class="step-navigation step-5-nav">
         <BaseButton variant="ghost" @click="prevStep">
           {{ t('advancedMode.navigation.back') }}
         </BaseButton>
-        <BaseButton
-          variant="primary"
-          size="large"
-          :disabled="publishing"
-          @click="publishPost"
-        >
-          {{ publishing ? t('advancedMode.publish.publishing') : (publishType === 'now' ? t('advancedMode.publish.publishNow') : t('advancedMode.publish.schedulePost')) }}
-        </BaseButton>
+        <!-- Publish button is handled by UnifiedSchedulePost component above -->
       </div>
     </BaseCard>
+
+    <!-- Loading Overlays -->
+    <LoadingOverlay
+      :visible="generatingVariations"
+      :title="t('advancedMode.step3.generatingVariations', 'Creating style variations...')"
+      :subtitle="t('common.pleaseWait', 'Please wait...')"
+    />
+
+    <LoadingOverlay
+      :visible="generatingImage"
+      :title="t('advancedMode.step4.generating', 'Cooking up your image...')"
+      :subtitle="t('common.pleaseWait', 'Please wait...')"
+    />
+
+    <LoadingOverlay
+      :visible="publishing"
+      :title="t('advancedMode.step5.publishing', 'Publishing your post...')"
+      :subtitle="t('common.pleaseWait', 'Please wait...')"
+    />
+
+    <!-- Success Modal -->
+    <SuccessModal
+      :visible="publishSuccess"
+      :published-urls="publishedPostUrls"
+      :failed-platforms="failedPlatforms"
+      @create-another="createAnother"
+      @close="closeSuccessModal"
+    />
   </div>
 </template>
 
@@ -1181,17 +1340,25 @@ function handleLogoSelect(variant: LogoVariant) {
   border: var(--border-width) solid var(--glass-border);
   border-radius: var(--radius-lg);
   backdrop-filter: blur(var(--blur-md));
+  display: flex;
+  justify-content: center;
 }
 
 .wizard-progress-track {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  max-width: 700px;
+  width: 100%;
+  gap: 0;
 }
 
 .progress-step-wrapper {
   display: flex;
   align-items: center;
+}
+
+.progress-step-wrapper:not(:last-child) {
   flex: 1;
 }
 
@@ -1271,6 +1438,26 @@ function handleLogoSelect(variant: LogoVariant) {
   }
 }
 
+@keyframes fadeInScale {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Animation classes for Step 4 content reveal */
+.animate-fade-in {
+  animation: fadeInScale 0.6s var(--ease-smooth);
+}
+
+.animate-fade-in-delay {
+  animation: fadeInUp 0.6s var(--ease-smooth) 0.3s both;
+}
+
 .step-header {
   margin-bottom: var(--space-2xl);
 }
@@ -1295,6 +1482,10 @@ function handleLogoSelect(variant: LogoVariant) {
   margin-top: var(--space-2xl);
   padding-top: var(--space-2xl);
   border-top: 1px solid var(--border-color);
+}
+
+.step-navigation.step-5-nav {
+  justify-content: flex-start;
 }
 
 /* Generate Section (Step 4) */
@@ -1436,6 +1627,31 @@ function handleLogoSelect(variant: LogoVariant) {
 }
 
 /* Hashtags */
+.hashtags-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.clear-all-btn {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: var(--space-xs) var(--space-sm);
+  background: transparent;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+  cursor: pointer;
+  transition: var(--transition-base);
+}
+
+.clear-all-btn:hover {
+  border-color: var(--gold-primary);
+  color: var(--gold-primary);
+}
+
 .hashtags-container {
   display: flex;
   flex-wrap: wrap;
@@ -1445,6 +1661,13 @@ function handleLogoSelect(variant: LogoVariant) {
   border: var(--border-width) solid var(--border-color);
   border-radius: var(--radius-md);
   min-height: 60px;
+  align-items: flex-start;
+}
+
+.hashtags-empty {
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+  font-style: italic;
 }
 
 .hashtag-tag {
@@ -1471,13 +1694,38 @@ function handleLogoSelect(variant: LogoVariant) {
   margin-left: 2px;
 }
 
-.hashtag-input {
+.hashtag-input-wrapper {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
   padding: var(--space-sm) var(--space-md);
   background: var(--bg-secondary);
   border: var(--border-width) solid var(--border-color);
   border-radius: var(--radius-md);
+}
+
+.hashtag-input-wrapper:focus-within {
+  border-color: var(--gold-primary);
+  box-shadow: 0 0 0 3px var(--gold-subtle);
+}
+
+.hashtag-input-icon {
+  color: var(--text-muted);
+}
+
+.hashtag-input {
+  flex: 1;
+  background: transparent;
+  border: none;
   color: var(--text-primary);
   font-size: var(--text-sm);
+  outline: none;
+}
+
+.hashtag-hint {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  margin-top: var(--space-xs);
 }
 
 /* Schedule Preview (Step 6) */
@@ -1660,6 +1908,133 @@ function handleLogoSelect(variant: LogoVariant) {
 /* Menu Selection Section */
 .menu-selection-section {
   margin-top: var(--space-lg);
+}
+
+/* Image Upload Section */
+.image-upload-section {
+  margin-bottom: var(--space-xl);
+}
+
+.image-upload-section .section-label {
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  color: var(--text-secondary);
+  margin-bottom: var(--space-md);
+}
+
+.upload-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-2xl);
+  background: var(--bg-secondary);
+  border: 2px dashed var(--border-color);
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  transition: var(--transition-base);
+}
+
+.upload-button:hover {
+  border-color: var(--gold-primary);
+  background: var(--gold-subtle);
+}
+
+.upload-input {
+  display: none;
+}
+
+.upload-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-sm);
+  color: var(--text-secondary);
+}
+
+.upload-text {
+  font-size: var(--text-base);
+  font-weight: var(--font-medium);
+  color: var(--text-primary);
+}
+
+.upload-hint {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+}
+
+.uploaded-image-preview {
+  position: relative;
+  width: 200px;
+  height: 200px;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  border: 2px solid var(--gold-primary);
+  box-shadow: var(--glow-gold-sm);
+}
+
+.uploaded-image-preview .preview-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.remove-image-btn {
+  position: absolute;
+  top: var(--space-sm);
+  right: var(--space-sm);
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.7);
+  border: none;
+  border-radius: var(--radius-full);
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: var(--transition-base);
+}
+
+.remove-image-btn:hover {
+  background: var(--error-bg);
+}
+
+.upload-badge {
+  position: absolute;
+  bottom: var(--space-sm);
+  right: var(--space-sm);
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--gold-primary);
+  border-radius: var(--radius-full);
+  color: var(--text-on-gold);
+}
+
+/* Divider */
+.divider {
+  display: flex;
+  align-items: center;
+  gap: var(--space-lg);
+  margin: var(--space-xl) 0;
+}
+
+.divider::before,
+.divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border-color);
+}
+
+.divider-text {
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
 }
 
 /* Weekly Menu Section */
@@ -1944,10 +2319,24 @@ function handleLogoSelect(variant: LogoVariant) {
   gap: var(--space-2xl);
 }
 
+.content-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xl);
+}
+
 .image-preview-top {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.image-preview-top .preview-image-wrapper {
   border-radius: var(--radius-lg);
   overflow: hidden;
   box-shadow: var(--shadow-xl);
+  border: 2px solid var(--gold-subtle);
+  max-width: 400px;
 }
 
 .preview-image-large {
@@ -1958,68 +2347,134 @@ function handleLogoSelect(variant: LogoVariant) {
   background: var(--bg-secondary);
 }
 
-.content-section {
+/* Platform Options */
+/* Platform Cards Grid */
+.platform-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-md);
+}
+
+.platform-card {
   display: flex;
   flex-direction: column;
-  gap: var(--space-xl);
-}
-
-/* Platform Options */
-.platform-options {
-  display: flex;
-  gap: var(--space-lg);
-}
-
-.platform-option {
-  display: flex;
   align-items: center;
   gap: var(--space-sm);
-  padding: var(--space-md) var(--space-lg);
+  padding: var(--space-lg);
   background: var(--bg-secondary);
   border: 2px solid var(--border-color);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-lg);
   cursor: pointer;
   transition: var(--transition-base);
+  text-align: center;
 }
 
-.platform-option:hover {
+.platform-card:hover:not(.disabled) {
   border-color: var(--gold-primary);
+  transform: translateY(-2px);
 }
 
-.platform-option:has(input:checked) {
+.platform-card.selected {
   border-color: var(--gold-primary);
   background: var(--gold-subtle);
+  box-shadow: var(--glow-gold-sm);
 }
 
-.platform-option input {
-  display: none;
+.platform-card.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
-.platform-icon {
-  font-size: 24px;
+.platform-card-icon {
+  color: var(--text-primary);
 }
 
-/* Publish Options */
-.publish-options {
+.platform-card.selected .platform-card-icon {
+  color: var(--gold-primary);
+}
+
+.platform-card-name {
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  color: var(--text-primary);
+}
+
+.platform-status {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  font-size: var(--text-xs);
+}
+
+.platform-status.connected {
+  color: var(--success-text);
+}
+
+.platform-status.not-connected {
+  color: var(--text-muted);
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Publish Options Grid */
+.publish-options-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: var(--space-md);
 }
 
-.publish-option {
+.publish-option-card {
   display: flex;
-  align-items: flex-start;
-  gap: var(--space-md);
-  padding: var(--space-lg);
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-xl);
   background: var(--bg-secondary);
   border: 2px solid var(--border-color);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-lg);
   cursor: pointer;
   transition: var(--transition-base);
+  text-align: center;
 }
 
-.publish-option:hover {
+.publish-option-card:hover {
   border-color: var(--gold-primary);
+  transform: translateY(-2px);
+}
+
+.publish-option-card.active {
+  border-color: var(--gold-primary);
+  background: var(--gold-subtle);
+  box-shadow: var(--glow-gold-sm);
+}
+
+.publish-option-icon {
+  color: var(--text-muted);
+}
+
+.publish-option-card.active .publish-option-icon {
+  color: var(--gold-primary);
+}
+
+.publish-option-title {
+  font-size: var(--text-base);
+  font-weight: var(--font-semibold);
+  color: var(--text-primary);
+}
+
+.publish-option-desc {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
 }
 
 .publish-option.active {
@@ -2089,30 +2544,30 @@ function handleLogoSelect(variant: LogoVariant) {
 }
 
 @media (max-width: 768px) {
-  .publish-options {
+  .publish-options-grid {
     grid-template-columns: 1fr;
+  }
+
+  .platform-cards-grid {
+    grid-template-columns: repeat(2, 1fr);
   }
 
   .datetime-inputs {
     grid-template-columns: 1fr;
   }
+}
 
-  .platform-options {
-    flex-direction: column;
+@media (max-width: 480px) {
+  .platform-cards-grid {
+    grid-template-columns: 1fr;
   }
 }
 
-/* Customization Layout (Preview + Options) */
+/* Customization Layout (Options + Preview at Bottom) */
 .customization-layout {
-  display: grid;
-  grid-template-columns: 1fr 1.5fr;
+  display: flex;
+  flex-direction: column;
   gap: var(--space-2xl);
-  align-items: start;
-}
-
-.preview-panel {
-  position: sticky;
-  top: var(--space-xl);
 }
 
 .options-panel {
@@ -2121,15 +2576,18 @@ function handleLogoSelect(variant: LogoVariant) {
   gap: var(--space-2xl);
 }
 
-@media (max-width: 1024px) {
-  .customization-layout {
-    grid-template-columns: 1fr;
-  }
+.preview-panel {
+  padding: var(--space-xl);
+  background: var(--bg-secondary);
+  border: var(--border-width) solid var(--border-color);
+  border-radius: var(--radius-lg);
+}
 
-  .preview-panel {
-    position: relative;
-    top: 0;
-  }
+.preview-panel-label {
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  color: var(--text-secondary);
+  margin-bottom: var(--space-md);
 }
 
 /* Weekly Customization Section */
@@ -2398,5 +2856,197 @@ function handleLogoSelect(variant: LogoVariant) {
     flex-direction: column;
     gap: var(--space-md);
   }
+}
+
+/* Success Modal */
+.success-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: var(--space-xl);
+}
+
+.success-modal {
+  position: relative;
+  max-width: 500px;
+  width: 100%;
+  padding: var(--space-3xl);
+  text-align: center;
+  animation: modalSlideIn 0.3s var(--ease-smooth);
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.success-modal .modal-close-btn {
+  position: absolute;
+  top: var(--space-lg);
+  right: var(--space-lg);
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-secondary);
+  border: var(--border-width) solid var(--border-color);
+  border-radius: var(--radius-full);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: var(--transition-base);
+}
+
+.success-modal .modal-close-btn:hover {
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+}
+
+.success-modal-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-xl);
+}
+
+.success-celebration {
+  width: 80px;
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--gold-subtle);
+  border-radius: var(--radius-full);
+  animation: celebrationPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes celebrationPulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(212, 175, 55, 0.4);
+  }
+  50% {
+    transform: scale(1.05);
+    box-shadow: 0 0 0 15px rgba(212, 175, 55, 0);
+  }
+}
+
+.celebration-icon {
+  color: var(--gold-primary);
+  font-size: 48px;
+}
+
+.success-modal-title {
+  font-family: var(--font-heading);
+  font-size: var(--text-2xl);
+  font-weight: var(--font-bold);
+  color: var(--text-primary);
+  background: var(--gradient-gold);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.success-modal-message {
+  font-size: var(--text-base);
+  color: var(--text-secondary);
+  max-width: 350px;
+}
+
+.success-image-preview {
+  width: 100%;
+  max-width: 300px;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  border: var(--border-width) solid var(--gold-primary);
+  box-shadow: var(--glow-gold-sm);
+}
+
+.success-image-preview img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.published-links {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-lg);
+}
+
+.platform-link {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-md) var(--space-lg);
+  background: var(--bg-tertiary);
+  border: var(--border-width) solid var(--border-color);
+  border-radius: var(--radius-md);
+  color: var(--gold-primary);
+  text-decoration: none;
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  transition: var(--transition-base);
+}
+
+.platform-link:hover {
+  background: var(--gold-subtle);
+  border-color: var(--gold-primary);
+}
+
+.platform-link-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+}
+
+.platform-link-icon svg {
+  color: var(--gold-primary);
+}
+
+.success-modal-actions {
+  display: flex;
+  gap: var(--space-md);
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.success-modal-actions .base-button {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+/* Modal Transition */
+.modal-enter-active,
+.modal-leave-active {
+  transition: all 0.3s var(--ease-smooth);
+}
+
+.modal-enter-from,
+.modal-leave-to {
+  opacity: 0;
+}
+
+.modal-enter-from .success-modal,
+.modal-leave-to .success-modal {
+  transform: translateY(-20px) scale(0.95);
 }
 </style>

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
+import MaterialIcon from './MaterialIcon.vue'
 
 export interface CustomizationOptions {
   logoPosition: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right' | 'center' | 'none'
@@ -47,12 +48,12 @@ watch(localCustomization, (newValue) => {
 
 // Logo Position Options
 const logoPositions = computed(() => [
-  { value: 'top-left', label: t('advancedMode.logoPositions.topLeft'), icon: '↖️' },
-  { value: 'top-right', label: t('advancedMode.logoPositions.topRight'), icon: '↗️' },
-  { value: 'bottom-left', label: t('advancedMode.logoPositions.bottomLeft'), icon: '↙️' },
-  { value: 'bottom-right', label: t('advancedMode.logoPositions.bottomRight'), icon: '↘️' },
-  { value: 'center', label: t('advancedMode.logoPositions.center'), icon: '⊙' },
-  { value: 'none', label: t('advancedMode.logoPositions.none'), icon: '⊘' },
+  { value: 'top-left', label: t('advancedMode.logoPositions.topLeft'), icon: 'north_west' },
+  { value: 'top-right', label: t('advancedMode.logoPositions.topRight'), icon: 'north_east' },
+  { value: 'bottom-left', label: t('advancedMode.logoPositions.bottomLeft'), icon: 'south_west' },
+  { value: 'bottom-right', label: t('advancedMode.logoPositions.bottomRight'), icon: 'south_east' },
+  { value: 'center', label: t('advancedMode.logoPositions.center'), icon: 'filter_center_focus' },
+  { value: 'none', label: t('advancedMode.logoPositions.none'), icon: 'block' },
 ])
 
 // Font Options
@@ -70,50 +71,50 @@ const strictnessModes = computed(() => [
     value: 'strict',
     label: t('advancedMode.strictness.strict'),
     description: t('advancedMode.strictness.strictDesc'),
-    icon: '🎯'
+    icon: 'gps_fixed'
   },
   {
     value: 'flexible',
     label: t('advancedMode.strictness.flexible'),
     description: t('advancedMode.strictness.flexibleDesc'),
-    icon: '✨'
+    icon: 'auto_awesome'
   },
   {
     value: 'creative',
     label: t('advancedMode.strictness.creative'),
     description: t('advancedMode.strictness.creativeDesc'),
-    icon: '🎨'
+    icon: 'palette'
   },
 ])
 
 // Holiday Theme Options
 const holidayThemes = computed(() => [
-  { value: 'none', label: t('weeklyCustomization.themes.none'), icon: '⊘' },
-  { value: 'studentWeek', label: t('weeklyCustomization.themes.studentWeek'), icon: '🎓' },
-  { value: 'christmas', label: t('weeklyCustomization.themes.christmas'), icon: '🎄' },
-  { value: 'easter', label: t('weeklyCustomization.themes.easter'), icon: '🐰' },
-  { value: 'summer', label: t('weeklyCustomization.themes.summer'), icon: '☀️' },
-  { value: 'valentines', label: t('weeklyCustomization.themes.valentines'), icon: '❤️' },
-  { value: 'halloween', label: t('weeklyCustomization.themes.halloween'), icon: '🎃' },
-  { value: 'thanksgiving', label: t('weeklyCustomization.themes.thanksgiving'), icon: '🦃' },
-  { value: 'newYear', label: t('weeklyCustomization.themes.newYear'), icon: '🎆' },
-  { value: 'custom', label: t('weeklyCustomization.themes.custom'), icon: '✏️' }
+  { value: 'none', label: t('weeklyCustomization.themes.none'), icon: 'block' },
+  { value: 'studentWeek', label: t('weeklyCustomization.themes.studentWeek'), icon: 'school' },
+  { value: 'christmas', label: t('weeklyCustomization.themes.christmas'), icon: 'park' },
+  { value: 'easter', label: t('weeklyCustomization.themes.easter'), icon: 'egg' },
+  { value: 'summer', label: t('weeklyCustomization.themes.summer'), icon: 'wb_sunny' },
+  { value: 'valentines', label: t('weeklyCustomization.themes.valentines'), icon: 'favorite' },
+  { value: 'halloween', label: t('weeklyCustomization.themes.halloween'), icon: 'nightlight' },
+  { value: 'thanksgiving', label: t('weeklyCustomization.themes.thanksgiving'), icon: 'dinner_dining' },
+  { value: 'newYear', label: t('weeklyCustomization.themes.newYear'), icon: 'celebration' },
+  { value: 'custom', label: t('weeklyCustomization.themes.custom'), icon: 'edit' }
 ])
 
 // Combo Text Placement Options
 const comboTextPlacements = computed(() => [
-  { value: 'top', label: t('advancedMode.comboOptions.top'), icon: '⬆️' },
-  { value: 'bottom', label: t('advancedMode.comboOptions.bottom'), icon: '⬇️' },
-  { value: 'side', label: t('advancedMode.comboOptions.side'), icon: '➡️' },
-  { value: 'none', label: t('advancedMode.comboOptions.noText'), icon: '⊘' },
+  { value: 'top', label: t('advancedMode.comboOptions.top'), icon: 'vertical_align_top' },
+  { value: 'bottom', label: t('advancedMode.comboOptions.bottom'), icon: 'vertical_align_bottom' },
+  { value: 'side', label: t('advancedMode.comboOptions.side'), icon: 'format_textdirection_l_to_r' },
+  { value: 'none', label: t('advancedMode.comboOptions.noText'), icon: 'block' },
 ])
 
 // Combo Item Arrangement Options
 const comboArrangements = computed(() => [
-  { value: 'sideBySide', label: t('advancedMode.comboOptions.sideBySide'), icon: '⬜⬜' },
-  { value: 'stacked', label: t('advancedMode.comboOptions.stacked'), icon: '⬜\n⬜' },
-  { value: 'overlapping', label: t('advancedMode.comboOptions.overlapping'), icon: '⬛⬜' },
-  { value: 'diagonal', label: t('advancedMode.comboOptions.diagonal'), icon: '↗️' },
+  { value: 'sideBySide', label: t('advancedMode.comboOptions.sideBySide'), icon: 'view_column' },
+  { value: 'stacked', label: t('advancedMode.comboOptions.stacked'), icon: 'view_agenda' },
+  { value: 'overlapping', label: t('advancedMode.comboOptions.overlapping'), icon: 'layers' },
+  { value: 'diagonal', label: t('advancedMode.comboOptions.diagonal'), icon: 'trending_up' },
 ])
 
 // Text overlay enabled state
@@ -172,7 +173,7 @@ function toggleTextOverlay() {
           :class="['option-button strictness-button', { 'selected': localCustomization.strictnessMode === mode.value }]"
           @click="localCustomization.strictnessMode = mode.value as any"
         >
-          <span class="option-icon">{{ mode.icon }}</span>
+          <span class="option-icon"><MaterialIcon :icon="mode.icon" size="md" /></span>
           <span class="option-label">{{ mode.label }}</span>
           <span class="option-description">{{ mode.description }}</span>
         </button>
@@ -192,66 +193,9 @@ function toggleTextOverlay() {
           :class="['option-button', { 'selected': localCustomization.logoPosition === position.value }]"
           @click="localCustomization.logoPosition = position.value as any"
         >
-          <span class="option-icon">{{ position.icon }}</span>
+          <span class="option-icon"><MaterialIcon :icon="position.icon" size="md" /></span>
           <span class="option-label">{{ position.label }}</span>
         </button>
-      </div>
-    </div>
-
-    <!-- Text Overlay -->
-    <div class="customization-section">
-      <label class="section-label">
-        <input
-          type="checkbox"
-          v-model="textOverlayEnabled"
-          @change="toggleTextOverlay"
-          class="checkbox-toggle"
-        />
-        {{ t('advancedMode.step2.textOverlayLabel') }}
-      </label>
-
-      <div v-if="textOverlayEnabled" class="text-overlay-controls">
-        <div class="form-group">
-          <input
-            v-model="localCustomization.textOverlay!.text"
-            type="text"
-            :placeholder="t('advancedMode.step2.textOverlayPlaceholder')"
-            class="text-input"
-            maxlength="50"
-          />
-        </div>
-
-        <div class="form-row">
-          <div class="form-group">
-            <label class="input-label">{{ t('advancedMode.step2.fontLabel') }}</label>
-            <select v-model="localCustomization.textOverlay!.font" class="select-input">
-              <option v-for="font in fonts" :key="font.value" :value="font.value">
-                {{ font.label }}
-              </option>
-            </select>
-          </div>
-
-          <div class="form-group">
-            <label class="input-label">{{ t('advancedMode.step2.textSizeLabel') }}</label>
-            <input
-              v-model.number="localCustomization.textOverlay!.size"
-              type="range"
-              min="16"
-              max="48"
-              class="range-input"
-            />
-            <span class="range-value">{{ localCustomization.textOverlay!.size }}px</span>
-          </div>
-
-          <div class="form-group">
-            <label class="input-label">{{ t('advancedMode.step2.textColorLabel') }}</label>
-            <input
-              v-model="localCustomization.textOverlay!.color"
-              type="color"
-              class="color-input"
-            />
-          </div>
-        </div>
       </div>
     </div>
 
@@ -268,7 +212,7 @@ function toggleTextOverlay() {
           :class="['option-button holiday-button', { 'selected': localCustomization.holidayTheme === theme.value }]"
           @click="localCustomization.holidayTheme = theme.value"
         >
-          <span class="option-icon">{{ theme.icon }}</span>
+          <span class="option-icon"><MaterialIcon :icon="theme.icon" size="md" /></span>
           <span class="option-label">{{ theme.label }}</span>
         </button>
       </div>
@@ -300,7 +244,7 @@ function toggleTextOverlay() {
             :class="['option-button', { 'selected': localCustomization.comboTextPlacement === placement.value }]"
             @click="localCustomization.comboTextPlacement = placement.value as any"
           >
-            <span class="option-icon">{{ placement.icon }}</span>
+            <span class="option-icon"><MaterialIcon :icon="placement.icon" size="md" /></span>
             <span class="option-label">{{ placement.label }}</span>
           </button>
         </div>
@@ -319,7 +263,7 @@ function toggleTextOverlay() {
             :class="['option-button', { 'selected': localCustomization.comboItemArrangement === arrangement.value }]"
             @click="localCustomization.comboItemArrangement = arrangement.value as any"
           >
-            <span class="option-icon arrangement-icon">{{ arrangement.icon }}</span>
+            <span class="option-icon"><MaterialIcon :icon="arrangement.icon" size="md" /></span>
             <span class="option-label">{{ arrangement.label }}</span>
           </button>
         </div>
@@ -418,6 +362,10 @@ function toggleTextOverlay() {
 
 .option-icon {
   font-size: 24px;
+  color: var(--gold-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .option-label {

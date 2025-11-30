@@ -2,6 +2,7 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import BasePagination from './BasePagination.vue'
+import MaterialIcon from './MaterialIcon.vue'
 
 interface MenuItem {
   name: string
@@ -47,7 +48,7 @@ const canSelectMore = computed(() => {
 })
 
 const selectionText = computed(() => {
-  return t('advancedMode.step1.itemsSelected', { count: selectionCount.value })
+  return t('advancedMode.step1.itemsSelected', { count: selectionCount.value, max: maxSelectableItems.value })
 })
 
 // Methods
@@ -118,7 +119,7 @@ onUnmounted(() => {
         <span class="count-label">{{ selectionText }}</span>
       </div>
       <div v-if="!canSelectMore" class="max-warning">
-        {{ t('advancedMode.step1.maxItems') }}
+        {{ t('advancedMode.step1.maxItemsReached', { count: maxSelectableItems }) }}
       </div>
     </div>
 
@@ -153,7 +154,7 @@ onUnmounted(() => {
               class="menu-item-image"
             />
             <div v-else class="menu-item-placeholder">
-              <span class="placeholder-icon">🍽️</span>
+              <MaterialIcon icon="restaurant_menu" size="xl" class="placeholder-icon" />
             </div>
           </div>
 
@@ -165,7 +166,7 @@ onUnmounted(() => {
 
           <!-- Selected Badge -->
           <div v-if="isSelected(item)" class="selected-badge">
-            <span class="badge-icon">✓</span>
+            <MaterialIcon icon="check" size="sm" class="badge-icon" />
           </div>
         </div>
       </div>
@@ -176,13 +177,13 @@ onUnmounted(() => {
         :current-page="currentPage"
         :total-pages="totalPages"
         :total-items="menuItems.length"
-        @page-change="handlePageChange"
+        @update:current-page="handlePageChange"
       />
     </div>
 
     <!-- Empty State -->
     <div v-else class="empty-state">
-      <span class="empty-icon">🍽️</span>
+      <MaterialIcon icon="restaurant_menu" size="3xl" class="empty-icon" />
       <p class="empty-text">{{ t('advancedMode.step1.noItems') }}</p>
     </div>
   </div>
@@ -245,12 +246,24 @@ onUnmounted(() => {
   font-weight: var(--font-medium);
 }
 
-/* Menu Items Grid */
+/* Menu Items Grid - 2 rows of 3 items (3x2 grid) */
 .menu-items-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  grid-template-columns: repeat(3, 1fr);  /* 3 columns */
+  grid-template-rows: repeat(2, 1fr);     /* 2 rows */
   gap: var(--space-lg);
   padding: var(--space-sm);
+  max-height: 500px;   /* Constrain to 2 rows */
+  overflow: hidden;     /* Hide overflow, pagination handles rest */
+}
+
+/* Responsive: Single column on mobile */
+@media (max-width: 768px) {
+  .menu-items-grid {
+    grid-template-columns: 1fr;
+    grid-template-rows: repeat(6, 1fr);
+    max-height: none;
+  }
 }
 
 .menu-item-card {
@@ -335,7 +348,8 @@ onUnmounted(() => {
 
 .placeholder-icon {
   font-size: 48px;
-  opacity: 0.3;
+  color: var(--gold-primary);
+  opacity: 0.5;
 }
 
 /* Details */
@@ -396,7 +410,8 @@ onUnmounted(() => {
 
 .empty-icon {
   font-size: 64px;
-  opacity: 0.3;
+  color: var(--gold-primary);
+  opacity: 0.5;
   margin-bottom: var(--space-xl);
 }
 
@@ -408,7 +423,7 @@ onUnmounted(() => {
 /* Responsive */
 @media (max-width: 768px) {
   .menu-items-grid {
-    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    grid-template-columns: repeat(2, 1fr);
     gap: var(--space-md);
   }
 
@@ -416,6 +431,12 @@ onUnmounted(() => {
     flex-direction: column;
     gap: var(--space-md);
     text-align: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .menu-items-grid {
+    grid-template-columns: repeat(2, 1fr);
   }
 }
 </style>

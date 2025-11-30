@@ -5,11 +5,12 @@ import BaseCard from './BaseCard.vue'
 import BaseButton from './BaseButton.vue'
 import BaseAlert from './BaseAlert.vue'
 import MaterialIcon from './MaterialIcon.vue'
-import PlatformLogo from './PlatformLogo.vue'
+import UnifiedSchedulePost from './UnifiedSchedulePost.vue'
 import { VueDatePicker } from '@vuepic/vue-datepicker'
 import '@vuepic/vue-datepicker/dist/main.css'
 import { useFacebookStore } from '@/stores/facebook'
 import { useInstagramStore } from '@/stores/instagram'
+import { usePreferencesStore } from '@/stores/preferences'
 import { useSocialAccounts } from '@/composables/useSocialAccounts'
 import type { SavedRestaurant } from '@/services/restaurantService'
 
@@ -28,17 +29,27 @@ interface StyleTemplate {
   preview: string
 }
 
+interface PublishResult {
+  platform: string
+  success: boolean
+  url?: string
+  error?: string
+}
+
+interface PublishResults {
+  success: boolean
+  platforms: PublishResult[]
+}
+
 const props = defineProps<{
   restaurant: SavedRestaurant
   menuItems: MenuItem[]
   generating?: boolean
   generatedImageUrl?: string
   postText?: string
-  callToAction?: string
   hashtags?: string[]
   publishing?: boolean
-  published?: boolean
-  facebookPostUrl?: string
+  publishResults?: PublishResults | null
   error?: string | null
 }>()
 
@@ -53,12 +64,12 @@ const emit = defineEmits<{
     uploadedLogo: File | null
   }): void
   (e: 'publish', data: {
-    platform: string
+    platforms: string[]
     publishType: 'now' | 'schedule'
     scheduleDate?: string
     scheduleTime?: string
+    timezone?: string
     postText?: string
-    callToAction?: string
     hashtags?: string[]
   }): void
   (e: 'reset'): void
@@ -66,18 +77,9 @@ const emit = defineEmits<{
 
 const facebookStore = useFacebookStore()
 const instagramStore = useInstagramStore()
+const preferencesStore = usePreferencesStore()
 const { isConnected } = useSocialAccounts()
 const { t } = useI18n()
-
-// Publish platforms (excluding Wolt)
-const publishPlatforms = [
-  { id: 'instagram', name: 'Instagram' },
-  { id: 'facebook', name: 'Facebook' },
-  { id: 'tiktok', name: 'TikTok' },
-  { id: 'twitter', name: 'X (Twitter)' },
-  { id: 'linkedin', name: 'LinkedIn' },
-  { id: 'youtube', name: 'YouTube' }
-] as const
 
 // Wizard State
 const currentStep = ref(1)
@@ -95,19 +97,10 @@ const uploadedImagePreview = ref<string | null>(null)
 const uploadedLogo = ref<File | null>(null)
 const uploadedLogoPreview = ref<string | null>(null)
 
-// Step 3: Publishing state
-const selectedPlatform = ref<string>('instagram')
-const publishType = ref<'now' | 'schedule'>('now')
-const scheduleDateTime = ref<Date | null>(null)
-
 // Editable content state (local to preview, initialized from props)
 const editedPostText = ref('')
-const editedCallToAction = ref('')
 const editedHashtags = ref<string[]>([])
 const newHashtag = ref('')
-
-// Date picker ref for programmatic control
-const datePickerRef = ref<any>(null)
 
 // Validation state
 const step1Error = ref<string>('')
@@ -333,30 +326,20 @@ function handleGenerate() {
   })
 }
 
-function handlePublish() {
-  let scheduleDate: string | undefined
-  let scheduleTime: string | undefined
-
-  if (publishType.value === 'schedule' && scheduleDateTime.value) {
-    // Format date as YYYY-MM-DD
-    const year = scheduleDateTime.value.getFullYear()
-    const month = String(scheduleDateTime.value.getMonth() + 1).padStart(2, '0')
-    const day = String(scheduleDateTime.value.getDate()).padStart(2, '0')
-    scheduleDate = `${year}-${month}-${day}`
-
-    // Format time as HH:mm
-    const hours = String(scheduleDateTime.value.getHours()).padStart(2, '0')
-    const minutes = String(scheduleDateTime.value.getMinutes()).padStart(2, '0')
-    scheduleTime = `${hours}:${minutes}`
-  }
-
+function handlePublish(data: {
+  platforms: string[]
+  publishType: 'now' | 'schedule'
+  scheduledDate?: string
+  scheduledTime?: string
+  timezone?: string
+}) {
   emit('publish', {
-    platform: selectedPlatform.value,
-    publishType: publishType.value,
-    scheduleDate,
-    scheduleTime,
+    platforms: data.platforms,
+    publishType: data.publishType,
+    scheduleDate: data.scheduledDate,
+    scheduleTime: data.scheduledTime,
+    timezone: data.timezone,
     postText: editedPostText.value,
-    callToAction: editedCallToAction.value,
     hashtags: editedHashtags.value
   })
 }
@@ -372,15 +355,14 @@ function resetAndCreateNew() {
   uploadedImagePreview.value = null
   uploadedLogo.value = null
   uploadedLogoPreview.value = null
-  selectedPlatform.value = 'instagram'
-  publishType.value = 'now'
-  scheduleDateTime.value = null
   step1Error.value = ''
   currentPage.value = 1
   editedPostText.value = ''
-  editedCallToAction.value = ''
   editedHashtags.value = []
   newHashtag.value = ''
+
+  // Clear flow state for mode switching
+  preferencesStore.clearFlowState()
 
   // Emit reset event to parent
   emit('reset')
@@ -419,19 +401,40 @@ function goToStep(step: number) {
 watch(() => currentStep.value, (newStep) => {
   if (newStep === 3) {
     editedPostText.value = props.postText || ''
-    editedCallToAction.value = props.callToAction || ''
     editedHashtags.value = [...(props.hashtags || [])]
     newHashtag.value = ''
   }
 })
 
 // Also update when props change while on step 3
-watch(() => [props.postText, props.callToAction, props.hashtags], () => {
+watch(() => [props.postText, props.hashtags], () => {
   if (currentStep.value === 3 && !editedPostText.value && props.postText) {
     editedPostText.value = props.postText
-    editedCallToAction.value = props.callToAction || ''
     editedHashtags.value = [...(props.hashtags || [])]
   }
+})
+
+// Track flow started state - mark as started when user takes any meaningful action
+watch([selectedMenuItem, uploadedImage, promptContext], ([menuItem, image, context]) => {
+  if (menuItem || image || context) {
+    preferencesStore.markFlowStarted()
+  }
+})
+
+// Helper function to capitalize first letter of platform name
+function capitalizeFirst(str: string): string {
+  return str.charAt(0).toUpperCase() + str.slice(1)
+}
+
+// Computed for successful and failed platforms
+const successfulPlatforms = computed(() => {
+  if (!props.publishResults?.platforms) return []
+  return props.publishResults.platforms.filter(p => p.success)
+})
+
+const failedPlatforms = computed(() => {
+  if (!props.publishResults?.platforms) return []
+  return props.publishResults.platforms.filter(p => !p.success)
 })
 
 // Hashtag management functions
@@ -452,16 +455,6 @@ function handleHashtagKeydown(event: KeyboardEvent) {
     event.preventDefault()
     addHashtag()
   }
-}
-
-// Handle date selection to automatically show time picker
-function handleDateUpdate() {
-  // Small delay to allow the date to be set, then switch to time picker
-  setTimeout(() => {
-    if (datePickerRef.value) {
-      datePickerRef.value.switchView('time')
-    }
-  }, 100)
 }
 
 // Lifecycle hooks
@@ -795,17 +788,6 @@ onUnmounted(() => {
               ></textarea>
             </div>
 
-            <!-- Editable Call to Action -->
-            <div class="preview-text-section">
-              <label class="preview-label">{{ t('playground.callToActionLabel', 'Call to Action') }}</label>
-              <input
-                v-model="editedCallToAction"
-                type="text"
-                class="editable-input"
-                :placeholder="t('easyMode.step3.editCallToAction', 'Edit your call to action')"
-              />
-            </div>
-
             <!-- Editable Hashtags -->
             <div class="preview-text-section">
               <label class="preview-label">{{ t('posts.hashtags', 'Hashtags') }}</label>
@@ -880,19 +862,35 @@ onUnmounted(() => {
     <!-- Step 4: Platform Selection and Scheduling -->
     <BaseCard v-show="currentStep === 4" variant="glass" class="step-card">
       <!-- Success State -->
-      <div v-if="props.published" class="publish-success">
+      <div v-if="props.publishResults?.success" class="publish-success">
         <div class="success-icon"><MaterialIcon icon="celebration" size="xl" :color="'var(--gold-primary)'" /></div>
         <h3 class="success-title">{{ t('easyMode.step4.successTitle', 'Congratulations!') }}</h3>
         <p class="success-message">{{ t('easyMode.step4.successMessage', 'Your post has been published successfully!') }}</p>
-        <a
-          v-if="props.facebookPostUrl"
-          :href="props.facebookPostUrl"
-          target="_blank"
-          rel="noopener noreferrer"
-          class="view-post-link"
-        >
-          {{ t('easyMode.step4.viewPost', 'View your post on Facebook') }} →
-        </a>
+
+        <!-- Show all successful platform links -->
+        <div class="platform-links-container">
+          <a
+            v-for="result in successfulPlatforms"
+            :key="result.platform"
+            :href="result.url"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="view-post-link"
+          >
+            {{ t('easyMode.step4.viewOnPlatform', { platform: capitalizeFirst(result.platform) }, `View on ${capitalizeFirst(result.platform)}`) }} →
+          </a>
+        </div>
+
+        <!-- Show partial failure warning if some platforms failed -->
+        <BaseAlert v-if="failedPlatforms.length > 0" type="warning" class="partial-failure-alert">
+          <strong>{{ t('easyMode.step4.partialFailureWarning', 'Some platforms failed to publish:') }}</strong>
+          <ul class="failed-platforms-list">
+            <li v-for="failed in failedPlatforms" :key="failed.platform">
+              {{ capitalizeFirst(failed.platform) }}: {{ failed.error }}
+            </li>
+          </ul>
+        </BaseAlert>
+
         <div class="success-actions">
           <BaseButton variant="primary" size="large" @click="resetAndCreateNew">
             {{ t('easyMode.step4.createAnother', 'Create Another Post') }}
@@ -909,113 +907,31 @@ onUnmounted(() => {
           </div>
         </div>
 
-        <!-- Platform Selection -->
-      <div class="customization-section">
-        <h4 class="section-label"><MaterialIcon icon="smartphone" size="sm" :color="'var(--gold-primary)'" /> {{ t('easyMode.step4.platformLabel', 'Select Platform') }}</h4>
-        <div class="platform-grid">
-          <div
-            v-for="platform in publishPlatforms"
-            :key="platform.id"
-            :class="[
-              'platform-card',
-              {
-                'selected': selectedPlatform === platform.id,
-                'disabled': !isConnected(platform.id)
-              }
-            ]"
-            @click="isConnected(platform.id) ? selectedPlatform = platform.id : null"
-          >
-            <div class="platform-icon">
-              <PlatformLogo :platform="platform.id" :size="48" />
-            </div>
-            <span class="platform-name">{{ platform.name }}</span>
-            <span v-if="!isConnected(platform.id)" class="platform-status">
-              {{ t('easyMode.step4.notConnected', 'Not connected') }}
-            </span>
-            <div v-if="selectedPlatform === platform.id" class="platform-selected-badge">
-              <MaterialIcon icon="check_circle" size="sm" :color="'var(--text-on-gold)'" />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Publish Type -->
-      <div class="customization-section">
-        <h4 class="section-label"><MaterialIcon icon="schedule" size="sm" :color="'var(--gold-primary)'" /> {{ t('easyMode.step4.publishTypeLabel', 'When to Publish') }}</h4>
-        <div class="publish-type-buttons">
-          <button
-            :class="['publish-type-btn', { 'active': publishType === 'now' }]"
-            @click="publishType = 'now'"
-          >
-            <img src="/socialchef_logo.svg" alt="Publish" class="chef-icon" />
-            <span class="publish-type-text">{{ t('easyMode.step4.publishNow', 'Publish Now') }}</span>
-          </button>
-          <button
-            :class="['publish-type-btn', { 'active': publishType === 'schedule' }]"
-            @click="publishType = 'schedule'"
-          >
-            <MaterialIcon icon="calendar_month" size="xl" :color="'var(--gold-primary)'" />
-            <span class="publish-type-text">{{ t('easyMode.step4.scheduleLater', 'Schedule for Later') }}</span>
-          </button>
-        </div>
-      </div>
-
-      <!-- Schedule Date/Time (shown only when scheduling) -->
-      <div v-if="publishType === 'schedule'" class="customization-section">
-        <h4 class="section-label"><MaterialIcon icon="calendar_today" size="sm" :color="'var(--gold-primary)'" /> {{ t('easyMode.step4.scheduleLabel', 'Choose Date & Time') }}</h4>
-        <div class="date-picker-container">
-          <VueDatePicker
-            ref="datePickerRef"
-            v-model="scheduleDateTime"
-            :dark="true"
-            :enable-time-picker="true"
-            :min-date="new Date()"
-            :format="'MMM dd, yyyy - HH:mm'"
-            :preview-format="'MMM dd, yyyy - HH:mm'"
-            :placeholder="t('easyMode.step4.selectDateTime', 'Select date and time')"
-            :clearable="false"
-            :required="true"
-            minutes-increment="5"
-            select-text="Confirm"
-            @date-update="handleDateUpdate"
-          />
-        </div>
-      </div>
-
         <!-- Error Alert -->
         <BaseAlert v-if="props.error" type="error" class="publish-error">
           {{ props.error }}
         </BaseAlert>
 
-        <!-- Step 4 Navigation -->
-        <div class="step-navigation">
-          <BaseButton
-            variant="secondary"
-            size="large"
-            @click="prevStep"
-            class="prev-button"
-          >
-            {{ t('common.back', 'Back') }}
-          </BaseButton>
-          <BaseButton
-            variant="primary"
-            size="large"
-            :disabled="props.publishing || (publishType === 'schedule' && !scheduleDateTime)"
-            @click="handlePublish"
-            class="generate-button"
-          >
-            <span v-if="props.publishing" class="generating-content">
-              <span class="spinner"></span>
-              {{ t('easyMode.step4.publishing', 'Publishing your post...') }}
-            </span>
-            <span v-else>
-              {{ publishType === 'now'
-                ? t('easyMode.step4.publishButton', 'Publish Now')
-                : t('easyMode.step4.scheduleButton', 'Schedule Post')
-              }}
-            </span>
-          </BaseButton>
+        <!-- Publishing Loading State -->
+        <div v-if="props.publishing" class="publishing-overlay">
+          <div class="publishing-content">
+            <img src="/socialchef_logo.svg" alt="Social Chef" class="publishing-logo" />
+            <p class="publishing-title">{{ t('easyMode.step4.publishing', 'Publishing your post...') }}</p>
+            <p class="publishing-subtitle">{{ t('common.pleaseWait', 'Please wait...') }}</p>
+          </div>
         </div>
+
+        <!-- Unified Schedule Post Component -->
+        <UnifiedSchedulePost
+          v-else
+          :disabled="props.publishing"
+          :show-preview="false"
+          :image-url="props.generatedImageUrl"
+          :post-text="editedPostText"
+          :hashtags="editedHashtags"
+          @publish="handlePublish"
+          @cancel="prevStep"
+        />
       </template>
     </BaseCard>
 
@@ -2522,6 +2438,33 @@ onUnmounted(() => {
   box-shadow: var(--glow-gold-sm);
 }
 
+/* Platform Links Container */
+.platform-links-container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-md);
+  margin-bottom: var(--space-xl);
+}
+
+/* Partial Failure Alert */
+.partial-failure-alert {
+  max-width: 500px;
+  text-align: left;
+  margin-bottom: var(--space-xl);
+}
+
+.failed-platforms-list {
+  margin: var(--space-sm) 0 0 var(--space-lg);
+  padding: 0;
+  list-style-type: disc;
+}
+
+.failed-platforms-list li {
+  margin: var(--space-xs) 0;
+  font-size: var(--text-sm);
+}
+
 .success-actions {
   display: flex;
   gap: var(--space-lg);
@@ -2530,6 +2473,43 @@ onUnmounted(() => {
 /* Publish Error */
 .publish-error {
   margin-bottom: var(--space-xl);
+}
+
+/* Publishing Overlay */
+.publishing-overlay {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-3xl);
+}
+
+.publishing-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.publishing-logo {
+  width: 80px;
+  height: 80px;
+  margin-bottom: var(--space-xl);
+  animation: bounce 2s ease-in-out infinite;
+  filter: drop-shadow(0 4px 20px rgba(212, 175, 55, 0.4));
+}
+
+.publishing-title {
+  font-family: var(--font-heading);
+  font-size: var(--text-xl);
+  color: var(--gold-primary);
+  margin: 0 0 var(--space-sm) 0;
+  font-weight: var(--font-semibold);
+}
+
+.publishing-subtitle {
+  font-size: var(--text-base);
+  color: var(--text-muted);
+  margin: 0;
 }
 
 /* Date Picker Container */

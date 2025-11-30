@@ -1,7 +1,10 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
-import type { CSSProperties } from 'vue'
+import type { CSSProperties, Component } from 'vue'
+import GoldenTargetIcon from './icons/GoldenTargetIcon.vue'
+import GoldenSparkleIcon from './icons/GoldenSparkleIcon.vue'
+import GoldenPaletteIcon from './icons/GoldenPaletteIcon.vue'
 
 interface MenuItem {
   name: string
@@ -55,14 +58,14 @@ const logoPositionStyle = computed(() => {
   return positions[props.customization.logoPosition] || positions['top-left']
 })
 
-// Get strictness icon
-const strictnessIcon = computed(() => {
-  const icons: Record<string, string> = {
-    strict: '🎯',
-    flexible: '✨',
-    creative: '🎨',
+// Get strictness icon component
+const strictnessIconComponent = computed(() => {
+  const icons: Record<string, Component> = {
+    strict: GoldenTargetIcon,
+    flexible: GoldenSparkleIcon,
+    creative: GoldenPaletteIcon,
   }
-  return icons[props.customization.strictnessMode] || '✨'
+  return icons[props.customization.strictnessMode] || GoldenSparkleIcon
 })
 
 // Get strictness label
@@ -135,7 +138,8 @@ const weekDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri']
       <h4 class="preview-title">{{ t('advancedMode.preview.title') }}</h4>
       <div class="preview-badges">
         <span v-if="customization.strictnessMode" class="badge strictness-badge">
-          {{ strictnessIcon }} {{ strictnessLabel }}
+          <component :is="strictnessIconComponent" :size="16" class="strictness-icon" />
+          {{ strictnessLabel }}
         </span>
         <span
           v-if="customization.holidayTheme && customization.holidayTheme !== 'none'"
@@ -316,6 +320,11 @@ const weekDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri']
   background: var(--gold-subtle);
   border-color: var(--gold-primary);
   color: var(--gold-primary);
+}
+
+.strictness-icon {
+  display: inline-flex;
+  align-items: center;
 }
 
 .preview-container {

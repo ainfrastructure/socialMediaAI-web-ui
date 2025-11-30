@@ -367,17 +367,23 @@
                     </div>
                     <div class="post-card-footer">
                       <span class="post-card-timing">{{ getTimeRemaining(post) }}</span>
-                      <!-- View Post Link for Published Posts -->
-                      <a
+                      <!-- View Post Links for Published Posts - Show all platforms -->
+                      <div
                         v-if="post.status === 'published' && post.platform_post_urls && Object.keys(post.platform_post_urls).length > 0"
-                        :href="Object.values(post.platform_post_urls)[0] as string"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        class="view-post-link"
-                        @click.stop
+                        class="platform-links-row"
                       >
-                        🔗 View on {{ capitalizeFirst(Object.keys(post.platform_post_urls)[0]) }}
-                      </a>
+                        <a
+                          v-for="(url, platform) in (post.platform_post_urls as Record<string, string>)"
+                          :key="platform"
+                          :href="url"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          class="view-post-link"
+                          @click.stop
+                        >
+                          🔗 {{ capitalizeFirst(platform as string) }}
+                        </a>
+                      </div>
                       <!-- Fallback for old single-platform posts -->
                       <a
                         v-else-if="post.status === 'published' && post.platform_post_url"
@@ -2866,6 +2872,12 @@ onUnmounted(() => {
   background: rgba(212, 175, 55, 0.2);
   transform: translateY(-1px);
   box-shadow: 0 2px 8px rgba(212, 175, 55, 0.3);
+}
+
+.platform-links-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs);
 }
 
 .day-view-holidays {

@@ -49,7 +49,6 @@ const generatedPost = ref<{
   imageUrl: string
   postText: string
   hashtags: string[]
-  callToAction: string
 } | null>(null)
 const savedPostId = ref<string | null>(null)
 
@@ -381,7 +380,6 @@ async function handlePostGenerated(data: {
       imageUrl: (imageResponse as any).imageUrl || imageResponse.data?.imageUrl || '',
       postText: postContentResponse.data?.postText || '',
       hashtags: postContentResponse.data?.hashtags || [],
-      callToAction: postContentResponse.data?.callToAction || ''
     }
 
     console.log('[ONBOARDING] Generation complete! Generated post:', generatedPost.value)
@@ -560,7 +558,6 @@ async function autoSavePost() {
       media_url: generatedPost.value.imageUrl,
       post_text: generatedPost.value.postText,
       hashtags: generatedPost.value.hashtags,
-      call_to_action: generatedPost.value.callToAction
     }
 
     const response = await api.saveFavorite(postData)
@@ -766,10 +763,6 @@ function handleFacebookConnected() {
               </div>
             </div>
 
-            <div v-if="generatedPost.callToAction" class="preview-section">
-              <h4>{{ $t('posts.callToAction').toUpperCase() }}</h4>
-              <p class="cta-text">{{ generatedPost.callToAction }}</p>
-            </div>
           </BaseCard>
         </div>
       </div>

@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { usePreferencesStore } from '@/stores/preferences'
 import { useFacebookStore } from '@/stores/facebook'
+import { useInstagramStore } from '@/stores/instagram'
 import GradientBackground from '@/components/GradientBackground.vue'
 import BaseCard from '@/components/BaseCard.vue'
 import BaseButton from '@/components/BaseButton.vue'
@@ -21,6 +22,7 @@ const router = useRouter()
 const { t } = useI18n()
 const preferencesStore = usePreferencesStore()
 const facebookStore = useFacebookStore()
+const instagramStore = useInstagramStore()
 
 // Restaurant state
 const restaurant = ref<SavedRestaurant | null>(null)
@@ -33,6 +35,14 @@ const menuItems = computed(() => {
   return restaurant.value.menu.items.filter((item: any) => item.imageUrl)
 })
 
+// Computed properties for backward compatibility with GenerationResultModal
+const isPublished = computed(() => publishResults.value?.success === true)
+const facebookPostUrl = computed(() => {
+  if (!publishResults.value?.platforms) return undefined
+  const facebookResult = publishResults.value.platforms.find(p => p.platform === 'facebook' && p.success)
+  return facebookResult?.url
+})
+
 // Generation state (Easy Mode)
 const easyModeGenerating = ref(false)
 const generatingImage = ref(false)
@@ -41,7 +51,6 @@ const generatedImageUrl = ref('')
 const generatedPostContent = ref<{
   postText: string
   hashtags: string[]
-  callToAction: string
 } | null>(null)
 const generationError = ref<string | null>(null)
 const lastEasyModeData = ref<any>(null)
@@ -63,9 +72,11 @@ const showScheduleModal = ref(false)
 const pendingAction = ref<'publish' | 'schedule' | null>(null)
 
 // Publishing state
-const publishingToFacebook = ref(false)
-const publishedToFacebook = ref(false)
-const facebookPostUrl = ref<string | undefined>(undefined)
+const publishing = ref(false)
+const publishResults = ref<{
+  success: boolean
+  platforms: Array<{ platform: string; success: boolean; url?: string; error?: string }>
+} | null>(null)
 const lastSavedPost = ref<any>(null)
 const postToSchedule = ref<any>(null)
 const preselectedDate = ref<string | null>(null)
@@ -84,11 +95,12 @@ const promptContext = ref('')
 const selectedMenuItems = ref<any[]>([])
 const selectedPlatforms = ref<string[]>(['facebook'])
 
-// Load restaurant and Facebook pages on mount
+// Load restaurant and connected accounts on mount
 onMounted(async () => {
   await Promise.all([
     loadRestaurant(),
-    facebookStore.loadConnectedPages()
+    facebookStore.loadConnectedPages(),
+    instagramStore.loadConnectedAccounts()
   ])
 })
 
@@ -131,14 +143,21 @@ function goBack() {
 
 // Easy Mode Publish/Schedule Handler
 async function handleEasyModePublish(data: {
-  platform: string
+  platforms: string[]
   publishType: 'now' | 'schedule'
   scheduleDate?: string
   scheduleTime?: string
+  timezone?: string
 }) {
   try {
     if (!generatedImageUrl.value || !generatedPostContent.value) {
       generationError.value = 'No content to publish. Please generate content first.'
+      return
+    }
+
+    const platforms = data.platforms || []
+    if (platforms.length === 0) {
+      generationError.value = t('contentCreate.noPlatformSelected', 'Please select at least one platform')
       return
     }
 
@@ -158,8 +177,7 @@ async function handleEasyModePublish(data: {
         media_url: generatedImageUrl.value,
         post_text: generatedPostContent.value.postText,
         hashtags: generatedPostContent.value.hashtags,
-        call_to_action: generatedPostContent.value.callToAction,
-        platform: data.platform,
+        platform: platforms[0], // Primary platform
         prompt: editablePrompt.value,
         menu_items: selectedMenuItems.value,
         context: promptContext.value,
@@ -177,14 +195,14 @@ async function handleEasyModePublish(data: {
 
     if (data.publishType === 'schedule') {
       // Schedule the post
-      console.log('Scheduling post for:', data.scheduleDate, data.scheduleTime)
+      console.log('Scheduling post for:', data.scheduleDate, data.scheduleTime, 'to platforms:', platforms)
 
       const scheduleResponse = await api.schedulePost({
         favorite_post_id: favoritePostId,
         scheduled_date: data.scheduleDate!,
         scheduled_time: data.scheduleTime,
-        platforms: [data.platform],
-        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
+        platforms: platforms,
+        timezone: data.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone
       })
 
       if (!scheduleResponse.success) {
@@ -201,77 +219,137 @@ async function handleEasyModePublish(data: {
         }
       })
     } else {
-      // Publish now to Facebook
-      console.log('Publishing now to:', data.platform)
+      // Publish now to selected platforms
+      console.log('Publishing now to platforms:', platforms)
 
-      if (data.platform === 'facebook') {
-        // Get the first connected Facebook page
-        console.log('Connected Facebook pages:', facebookStore.connectedPages)
-        const selectedPage = facebookStore.connectedPages[0]
-        if (!selectedPage) {
-          console.error('No Facebook page connected')
-          generationError.value = t('contentCreate.noFacebookPage', 'No Facebook page connected')
-          return
-        }
+      // Set publishing state BEFORE starting any API calls
+      publishing.value = true
+      facebookReconnectRequired.value = false
 
-        console.log('Publishing to page:', selectedPage.pageId, selectedPage.pageName)
-        publishingToFacebook.value = true
-        facebookReconnectRequired.value = false
+      const results: Array<{ platform: string; success: boolean; url?: string; error?: string }> = []
 
-        // Build the message with post text and hashtags
-        const hashtags = generatedPostContent.value?.hashtags || []
-        const postText = generatedPostContent.value?.postText || ''
-        const message = hashtags.length > 0
-          ? `${postText}\n\n${hashtags.join(' ')}`
-          : postText
-
-        console.log('Calling API to post to Facebook...')
-        const response = await api.postToFacebook(
-          selectedPage.pageId,
-          message,
-          generatedImageUrl.value
-        )
-        console.log('Facebook API response:', response)
-
-        publishingToFacebook.value = false
-
-        // API returns postUrl directly on response, not inside data
-        const postUrl = (response as any).postUrl || response.data?.postUrl
-        if (response.success && postUrl) {
-          publishedToFacebook.value = true
-          facebookPostUrl.value = postUrl
-          console.log('Published to Facebook successfully:', postUrl)
-
-          // Save to calendar as "published" so it shows in the overview
-          if (favoritePostId) {
-            const now = new Date()
-            try {
-              await api.schedulePost({
-                favorite_post_id: favoritePostId,
-                scheduled_date: now.toISOString().split('T')[0],
-                scheduled_time: now.toTimeString().slice(0, 5),
-                platforms: [data.platform],
-                timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-                notes: 'Published immediately'
-              })
-              // Update status to published
-              // The backend should handle marking it as published based on the notes or a status field
-              console.log('Post saved to calendar')
-            } catch (calendarErr) {
-              console.warn('Failed to save to calendar:', calendarErr)
-              // Don't fail the whole operation if calendar save fails
-            }
+      for (const platform of platforms) {
+        if (platform === 'facebook') {
+          // Get the first connected Facebook page
+          console.log('Connected Facebook pages:', facebookStore.connectedPages)
+          const selectedPage = facebookStore.connectedPages[0]
+          if (!selectedPage) {
+            console.error('No Facebook page connected')
+            results.push({ platform: 'facebook', success: false, error: 'No Facebook page connected' })
+            continue
           }
-        } else if ((response as any).code === 'FACEBOOK_RECONNECT_REQUIRED') {
-          facebookReconnectRequired.value = true
-          generationError.value = t('contentCreate.facebookReconnectRequired', 'Your Facebook connection has expired. Please reconnect to continue.')
+
+          console.log('Publishing to page:', selectedPage.pageId, selectedPage.pageName)
+
+          // Build the message with post text and hashtags
+          const hashtags = generatedPostContent.value?.hashtags || []
+          const postText = generatedPostContent.value?.postText || ''
+          const message = hashtags.length > 0
+            ? `${postText}\n\n${hashtags.join(' ')}`
+            : postText
+
+          console.log('Calling API to post to Facebook...')
+          const response = await api.postToFacebook(
+            selectedPage.pageId,
+            message,
+            generatedImageUrl.value
+          )
+          console.log('Facebook API response:', response)
+
+          // API returns postUrl directly on response, not inside data
+          const postUrl = (response as any).postUrl || response.data?.postUrl
+          if (response.success && postUrl) {
+            results.push({ platform: 'facebook', success: true, url: postUrl })
+            console.log('Published to Facebook successfully:', postUrl)
+          } else if ((response as any).code === 'FACEBOOK_RECONNECT_REQUIRED') {
+            facebookReconnectRequired.value = true
+            results.push({ platform: 'facebook', success: false, error: 'Facebook connection expired' })
+          } else {
+            results.push({ platform: 'facebook', success: false, error: response.error || 'Unknown error' })
+          }
+        } else if (platform === 'instagram') {
+          // Instagram publishing via Facebook Graph API
+          console.log('Connected Instagram accounts:', instagramStore.connectedAccounts)
+          const instagramAccount = instagramStore.connectedAccounts[0]
+          if (!instagramAccount) {
+            console.error('No Instagram account connected')
+            results.push({ platform: 'instagram', success: false, error: 'No Instagram account connected' })
+            continue
+          }
+
+          console.log('Publishing to Instagram account:', instagramAccount.username)
+
+          // Build the message with post text and hashtags
+          const hashtags = generatedPostContent.value?.hashtags || []
+          const postText = generatedPostContent.value?.postText || ''
+          const caption = hashtags.length > 0
+            ? `${postText}\n\n${hashtags.join(' ')}`
+            : postText
+
+          try {
+            const response = await api.postToInstagram(
+              instagramAccount.instagramAccountId,
+              caption,
+              generatedImageUrl.value
+            )
+            console.log('Instagram API response:', response)
+
+            // API returns postUrl directly on response or inside data
+            const postUrl = (response as any).postUrl || response.data?.postUrl
+            if (response.success && postUrl) {
+              results.push({ platform: 'instagram', success: true, url: postUrl })
+              console.log('Published to Instagram successfully:', postUrl)
+            } else {
+              results.push({ platform: 'instagram', success: false, error: response.error || 'Failed to publish to Instagram' })
+            }
+          } catch (instagramErr: any) {
+            console.error('Instagram publishing error:', instagramErr)
+            results.push({ platform: 'instagram', success: false, error: instagramErr.message || 'Failed to publish to Instagram' })
+          }
         } else {
-          console.error('Facebook publish failed:', response.error)
-          generationError.value = response.error || t('contentCreate.publishError', 'Failed to publish to Facebook')
+          // For other platforms, show not implemented message
+          results.push({ platform, success: false, error: `${platform} publishing not yet supported` })
         }
-      } else {
-        // For other platforms (Instagram, TikTok), show not implemented message
-        generationError.value = t('contentCreate.platformNotSupported', 'Publishing to this platform is not yet supported')
+      }
+
+      // Check results and set publishResults
+      publishing.value = false
+      const successfulPlatforms = results.filter(r => r.success)
+      const failedPlatforms = results.filter(r => !r.success)
+
+      // Set publish results for UI display
+      publishResults.value = {
+        success: successfulPlatforms.length > 0,
+        platforms: results
+      }
+
+      if (successfulPlatforms.length > 0) {
+        // Save to calendar as "published" so it shows in the overview
+        if (favoritePostId) {
+          const now = new Date()
+          try {
+            // Create calendar entry with status=published to prevent scheduler from picking it up
+            await api.createPublishedPost({
+              favorite_post_id: favoritePostId,
+              published_date: now.toISOString().split('T')[0],
+              published_time: now.toTimeString().slice(0, 5),
+              platforms: successfulPlatforms.map(r => r.platform),
+              timezone: data.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone,
+              platform_post_urls: Object.fromEntries(
+                successfulPlatforms.filter(r => r.url).map(r => [r.platform, r.url!])
+              )
+            })
+            console.log('Post saved to calendar as published')
+          } catch (calendarErr) {
+            console.warn('Failed to save to calendar:', calendarErr)
+            // Don't fail the whole operation if calendar save fails
+          }
+        }
+      }
+
+      if (failedPlatforms.length > 0 && successfulPlatforms.length === 0) {
+        // All platforms failed
+        generationError.value = failedPlatforms.map(f => f.error).join('. ')
       }
     }
   } catch (err: any) {
@@ -331,8 +409,7 @@ async function handleEasyModeGenerate(data: {
       // Clear previous content
       generatedImageUrl.value = ''
       generatedPostContent.value = null
-      publishedToFacebook.value = false
-      facebookPostUrl.value = undefined
+      publishResults.value = null
       lastSavedPost.value = null
 
       // Don't show modal for Easy Mode - content will show in preview step
@@ -370,9 +447,8 @@ function handleEasyModeReset() {
   generatedPostContent.value = null
   generationError.value = null
   lastSavedPost.value = null
-  publishedToFacebook.value = false
-  facebookPostUrl.value = undefined
-  publishingToFacebook.value = false
+  publishResults.value = null
+  publishing.value = false
   easyModeGenerating.value = false
   selectedMenuItems.value = []
   promptContext.value = ''
@@ -549,7 +625,6 @@ async function generatePostContent() {
       generatedPostContent.value = {
         postText: (content as any).postText || '',
         hashtags: (content as any).hashtags || [],
-        callToAction: (content as any).callToAction || '',
       }
     }
   } catch (err) {
@@ -573,7 +648,6 @@ async function autoSavePost() {
       media_url: generatedImageUrl.value,
       post_text: generatedPostContent.value?.postText || '',
       hashtags: generatedPostContent.value?.hashtags || [],
-      call_to_action: generatedPostContent.value?.callToAction || '',
       prompt: editablePrompt.value,
       platform: selectedPlatforms.value[0] || 'facebook',
       menu_items: selectedMenuItems.value.map(item => ({
@@ -605,7 +679,6 @@ async function handleAdvancedModeComplete(data: {
   imageUrl: string
   postText: string
   hashtags: string[]
-  callToAction?: string
   menuItems: any[]
   customization: any
   selectedVariation: any
@@ -619,10 +692,11 @@ async function handleAdvancedModeComplete(data: {
     price?: string
     imageUrl?: string
   }>
-  platform?: 'facebook' | 'instagram'
+  platforms?: string[]
   publishNow?: boolean
   scheduledTime?: string
-  onResult?: (result: { success: boolean; postUrl?: string; error?: string }) => void
+  timezone?: string
+  onResult?: (result: { success: boolean; postUrls?: Record<string, string>; error?: string }) => void
 }) {
   try {
     // Store advanced mode data
@@ -633,75 +707,120 @@ async function handleAdvancedModeComplete(data: {
     generatedPostContent.value = {
       postText: data.postText,
       hashtags: data.hashtags,
-      callToAction: data.callToAction || '',
     }
     selectedMenuItems.value = data.menuItems
     generationError.value = null
-    publishedToFacebook.value = false
-    facebookPostUrl.value = undefined
+    publishResults.value = null
 
     // Auto-save the advanced mode post
     await autoSaveAdvancedPost()
 
-    // If platform and publish options provided, handle publishing directly
-    if (data.platform && data.onResult) {
+    const platforms = data.platforms || []
+
+    // If platforms and publish options provided, handle publishing directly
+    if (platforms.length > 0 && data.onResult) {
       if (data.publishNow) {
-        // Publish now to Facebook
-        if (data.platform === 'facebook') {
-          const selectedPage = facebookStore.connectedPages[0]
-          if (!selectedPage) {
-            data.onResult({ success: false, error: t('contentCreate.noFacebookPage', 'No Facebook page connected') })
-            return
-          }
+        // Publish now to all selected platforms
+        publishing.value = true
 
-          publishingToFacebook.value = true
+        const results: Array<{ platform: string; success: boolean; url?: string; error?: string }> = []
+        const postUrls: Record<string, string> = {}
 
-          // Build the message with post text and hashtags
-          const hashtags = data.hashtags || []
-          const message = hashtags.length > 0
-            ? `${data.postText}\n\n${hashtags.map(h => `#${h}`).join(' ')}`
-            : data.postText
+        // Build the message with post text and hashtags
+        const hashtags = data.hashtags || []
+        const message = hashtags.length > 0
+          ? `${data.postText}\n\n${hashtags.map(h => `#${h}`).join(' ')}`
+          : data.postText
 
-          const response = await api.postToFacebook(
-            selectedPage.pageId,
-            message,
-            data.imageUrl
-          )
-
-          publishingToFacebook.value = false
-
-          const postUrl = (response as any).postUrl || response.data?.postUrl
-          if (response.success && postUrl) {
-            publishedToFacebook.value = true
-            facebookPostUrl.value = postUrl
-
-            // Save to calendar as "published" so it shows in the overview
-            if (lastSavedPost.value?.id) {
-              const now = new Date()
-              try {
-                await api.schedulePost({
-                  favorite_post_id: lastSavedPost.value.id,
-                  scheduled_date: now.toISOString().split('T')[0],
-                  scheduled_time: now.toTimeString().slice(0, 5),
-                  platforms: [data.platform],
-                  timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-                  notes: 'Published immediately'
-                })
-                console.log('Post saved to calendar')
-              } catch (calendarErr) {
-                console.warn('Failed to save to calendar:', calendarErr)
-              }
+        // Publish to each platform
+        for (const platform of platforms) {
+          if (platform === 'facebook') {
+            const selectedPage = facebookStore.connectedPages[0]
+            if (!selectedPage) {
+              results.push({ platform: 'facebook', success: false, error: 'No Facebook page connected' })
+              continue
             }
 
-            data.onResult({ success: true, postUrl })
-          } else if ((response as any).code === 'FACEBOOK_RECONNECT_REQUIRED') {
-            data.onResult({ success: false, error: t('contentCreate.facebookReconnectRequired', 'Your Facebook connection has expired. Please reconnect to continue.') })
+            try {
+              const response = await api.postToFacebook(
+                selectedPage.pageId,
+                message,
+                data.imageUrl
+              )
+
+              const postUrl = (response as any).postUrl || response.data?.postUrl
+              if (response.success && postUrl) {
+                results.push({ platform: 'facebook', success: true, url: postUrl })
+                postUrls.facebook = postUrl
+              } else if ((response as any).code === 'FACEBOOK_RECONNECT_REQUIRED') {
+                results.push({ platform: 'facebook', success: false, error: 'Facebook connection expired' })
+              } else {
+                results.push({ platform: 'facebook', success: false, error: response.error || 'Failed to publish' })
+              }
+            } catch (err: any) {
+              results.push({ platform: 'facebook', success: false, error: err.message || 'Failed to publish' })
+            }
+          } else if (platform === 'instagram') {
+            const instagramAccount = instagramStore.connectedAccounts[0]
+            if (!instagramAccount) {
+              results.push({ platform: 'instagram', success: false, error: 'No Instagram account connected' })
+              continue
+            }
+
+            try {
+              const response = await api.postToInstagram(
+                instagramAccount.instagramAccountId,
+                message,
+                data.imageUrl
+              )
+
+              const postUrl = (response as any).postUrl || response.data?.postUrl
+              if (response.success && postUrl) {
+                results.push({ platform: 'instagram', success: true, url: postUrl })
+                postUrls.instagram = postUrl
+              } else {
+                results.push({ platform: 'instagram', success: false, error: response.error || 'Failed to publish' })
+              }
+            } catch (err: any) {
+              results.push({ platform: 'instagram', success: false, error: err.message || 'Failed to publish' })
+            }
           } else {
-            data.onResult({ success: false, error: response.error || t('contentCreate.publishError', 'Failed to publish to Facebook') })
+            results.push({ platform, success: false, error: `${platform} publishing not yet supported` })
           }
+        }
+
+        publishing.value = false
+
+        // Set publish results
+        const successfulPlatforms = results.filter(r => r.success)
+        publishResults.value = {
+          success: successfulPlatforms.length > 0,
+          platforms: results
+        }
+
+        // Save to calendar if any succeeded
+        if (successfulPlatforms.length > 0 && lastSavedPost.value?.id) {
+          const now = new Date()
+          try {
+            await api.createPublishedPost({
+              favorite_post_id: lastSavedPost.value.id,
+              published_date: now.toISOString().split('T')[0],
+              published_time: now.toTimeString().slice(0, 5),
+              platforms: successfulPlatforms.map(r => r.platform),
+              timezone: data.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone,
+              platform_post_urls: postUrls
+            })
+          } catch (calendarErr) {
+            console.warn('Failed to save to calendar:', calendarErr)
+          }
+        }
+
+        // Return result
+        if (successfulPlatforms.length > 0) {
+          data.onResult({ success: true, postUrls })
         } else {
-          // Instagram not yet supported
-          data.onResult({ success: false, error: t('contentCreate.platformNotSupported', 'Publishing to this platform is not yet supported') })
+          const errors = results.filter(r => !r.success).map(r => r.error).join(', ')
+          data.onResult({ success: false, error: errors || 'Failed to publish to any platform' })
         }
       } else if (data.scheduledTime && lastSavedPost.value?.id) {
         // Schedule the post
@@ -710,8 +829,8 @@ async function handleAdvancedModeComplete(data: {
           favorite_post_id: lastSavedPost.value.id,
           scheduled_date: scheduledDate.toISOString().split('T')[0],
           scheduled_time: scheduledDate.toTimeString().slice(0, 5),
-          platforms: [data.platform],
-          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
+          platforms: platforms,
+          timezone: data.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone
         })
 
         if (scheduleResponse.success) {
@@ -753,7 +872,6 @@ async function autoSaveAdvancedPost() {
       media_url: advancedModeData.value.imageUrl,
       post_text: advancedModeData.value.postText,
       hashtags: advancedModeData.value.hashtags,
-      call_to_action: '',
       prompt: advancedModeData.value.selectedVariation?.prompt || '',
       platform: selectedPlatforms.value[0] || 'facebook',
       menu_items: advancedModeData.value.menuItems.map(item => ({
@@ -803,7 +921,7 @@ async function publishToFacebook() {
   }
 
   try {
-    publishingToFacebook.value = true
+    publishing.value = true
     facebookReconnectRequired.value = false
 
     // Build the message with post text and hashtags
@@ -819,9 +937,12 @@ async function publishToFacebook() {
       generatedImageUrl.value
     )
 
-    if (response.success && response.data) {
-      publishedToFacebook.value = true
-      facebookPostUrl.value = response.data.postUrl
+    const postUrl = (response as any).postUrl || response.data?.postUrl
+    if (response.success && postUrl) {
+      publishResults.value = {
+        success: true,
+        platforms: [{ platform: 'facebook', success: true, url: postUrl }]
+      }
     } else if ((response as any).code === 'FACEBOOK_RECONNECT_REQUIRED') {
       // Facebook connection expired, need to reconnect
       facebookReconnectRequired.value = true
@@ -833,7 +954,7 @@ async function publishToFacebook() {
     console.error('Failed to publish to Facebook:', err)
     generationError.value = err.message || t('contentCreate.publishError', 'Failed to publish to Facebook')
   } finally {
-    publishingToFacebook.value = false
+    publishing.value = false
   }
 }
 
@@ -878,7 +999,7 @@ function handleScheduled(scheduledPost: any) {
   showScheduleModal.value = false
 }
 
-function handleContentUpdated(updatedContent: { postText: string; hashtags: string[]; callToAction: string }) {
+function handleContentUpdated(updatedContent: { postText: string; hashtags: string[] }) {
   if (generatedPostContent.value) {
     generatedPostContent.value = {
       ...generatedPostContent.value,
@@ -891,7 +1012,6 @@ function handleContentUpdated(updatedContent: { postText: string; hashtags: stri
     api.updateFavorite(lastSavedPost.value.id, {
       post_text: updatedContent.postText,
       hashtags: updatedContent.hashtags,
-      call_to_action: updatedContent.callToAction
     }).catch(err => {
       console.error('Failed to update post:', err)
     })
@@ -952,11 +1072,9 @@ function handleContentUpdated(updatedContent: { postText: string; hashtags: stri
           :generating="easyModeGenerating"
           :generated-image-url="generatedImageUrl"
           :post-text="generatedPostContent?.postText"
-          :call-to-action="generatedPostContent?.callToAction"
           :hashtags="generatedPostContent?.hashtags"
-          :publishing="publishingToFacebook"
-          :published="publishedToFacebook"
-          :facebook-post-url="facebookPostUrl"
+          :publishing="publishing"
+          :publish-results="publishResults"
           :error="generationError"
           @back="goBack"
           @generate="handleEasyModeGenerate"
@@ -982,8 +1100,8 @@ function handleContentUpdated(updatedContent: { postText: string; hashtags: stri
       :post-content="generatedPostContent"
       :is-generating-image="generatingImage"
       :is-generating-content="generatingPostContent"
-      :is-publishing="publishingToFacebook"
-      :is-published="publishedToFacebook"
+      :is-publishing="publishing"
+      :is-published="isPublished"
       :facebook-post-url="facebookPostUrl"
       :generation-error="generationError"
       :facebook-reconnect-required="facebookReconnectRequired"

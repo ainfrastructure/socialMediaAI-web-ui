@@ -455,10 +455,6 @@
                   </button>
                 </div>
 
-                <div v-if="generatedPostContent.callToAction" class="post-cta">
-                  <strong>Call to Action:</strong> {{ generatedPostContent.callToAction }}
-                </div>
-
                 <div v-if="generatedPostContent.hashtags.length > 0" class="post-hashtags-wrapper">
                   <div class="post-hashtags">
                     <span v-for="(tag, idx) in generatedPostContent.hashtags" :key="idx" class="hashtag">
@@ -570,10 +566,6 @@
                   <button @click="copyToClipboard(generatedPostContent.postText)" class="copy-btn" title="Copy post text">
                     📋 Copy
                   </button>
-                </div>
-
-                <div v-if="generatedPostContent.callToAction" class="post-cta">
-                  <strong>Call to Action:</strong> {{ generatedPostContent.callToAction }}
                 </div>
 
                 <div v-if="generatedPostContent.hashtags.length > 0" class="post-hashtags-wrapper">
@@ -1083,7 +1075,6 @@ const generatingPostContent = ref(false)
 const generatedPostContent = ref<{
   postText: string
   hashtags: string[]
-  callToAction: string
 } | null>(null)
 
 // Video options
@@ -1975,12 +1966,10 @@ const generatePostContent = async (contentType: 'image' | 'video') => {
     console.log('[POST-CONTENT] Data keys:', Object.keys(data))
     console.log('[POST-CONTENT] postText:', data.postText)
     console.log('[POST-CONTENT] hashtags:', data.hashtags)
-    console.log('[POST-CONTENT] callToAction:', data.callToAction)
 
     generatedPostContent.value = {
       postText: data.postText || '',
       hashtags: data.hashtags || [],
-      callToAction: data.callToAction || '',
     }
 
     console.log('[POST-CONTENT] Set generatedPostContent:', generatedPostContent.value)
@@ -2176,7 +2165,6 @@ const autoSavePost = async (contentType: 'image' | 'video') => {
       media_url: mediaUrl,
       post_text: generatedPostContent.value?.postText,
       hashtags: generatedPostContent.value?.hashtags,
-      call_to_action: generatedPostContent.value?.callToAction,
       platform: selectedPlatforms.value.length > 0 ? selectedPlatforms.value[0] : undefined,
       prompt: editablePrompt.value,
       menu_items: selectedMenuItems.value.length > 0 ? selectedMenuItems.value : undefined,
@@ -2451,7 +2439,7 @@ const handleResultConnectFacebook = async () => {
   }
 }
 
-const handleContentUpdated = async (updatedContent: { postText: string; hashtags: string[]; callToAction: string }) => {
+const handleContentUpdated = async (updatedContent: { postText: string; hashtags: string[] }) => {
   // Update local state
   if (generatedPostContent.value) {
     generatedPostContent.value = {
@@ -2466,7 +2454,6 @@ const handleContentUpdated = async (updatedContent: { postText: string; hashtags
       await api.updateFavorite(lastSavedPost.value.id, {
         post_text: updatedContent.postText,
         hashtags: updatedContent.hashtags,
-        call_to_action: updatedContent.callToAction
       })
       showMessage('Content updated successfully!', 'success')
     } catch (error: any) {

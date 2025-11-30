@@ -21,7 +21,7 @@ const messageType = ref<'success' | 'error' | 'info'>('info')
 
 // Plan tier icons
 const tierIcons: Record<string, string> = {
-  free: 'spark',
+  free: 'star',
   pro: 'bolt',
   enterprise: 'diamond'
 }
@@ -78,16 +78,31 @@ async function subscribe(tier: string) {
     const successUrl = `${window.location.origin}/playground?success=true`
     const cancelUrl = `${window.location.origin}/plans?canceled=true`
 
+    console.log('[Checkout] Creating checkout session for tier:', tier)
     const response = await api.createCheckout(tier, successUrl, cancelUrl)
+    console.log('[Checkout] Response:', response)
 
     if (!response.success) {
-      showMessage(response.error || t('plans.failedToCheckout'), 'error')
+      const errorMsg = (response as any).message || response.error || t('plans.failedToCheckout')
+      console.error('[Checkout] Error details:', errorMsg)
+      showMessage(errorMsg, 'error')
       return
     }
 
+    // The API returns checkout_url directly, not wrapped in data
+    const checkoutUrl = (response as any).checkout_url || response.data?.checkout_url
+
+    if (!checkoutUrl) {
+      console.error('[Checkout] No checkout URL in response:', response)
+      showMessage(t('plans.failedToCheckout'), 'error')
+      return
+    }
+
+    console.log('[Checkout] Redirecting to:', checkoutUrl)
     // Redirect to Stripe Checkout
-    window.location.href = response.data?.checkout_url || ''
+    window.location.href = checkoutUrl
   } catch (error: any) {
+    console.error('[Checkout] Error:', error)
     showMessage(error.message || t('plans.networkError'), 'error')
   }
 }
@@ -102,14 +117,22 @@ async function openBillingPortal() {
 
   try {
     const returnUrl = `${window.location.origin}/plans`
+    console.log('[Portal] Creating customer portal session')
     const response = await api.createCustomerPortal(returnUrl)
+    console.log('[Portal] Response:', response)
 
-    if (response.success && response.data?.url) {
-      window.location.href = response.data.url
+    // The API returns portal_url directly, not wrapped in data
+    const portalUrl = (response as any).portal_url || response.data?.url
+
+    if (response.success && portalUrl) {
+      console.log('[Portal] Redirecting to:', portalUrl)
+      window.location.href = portalUrl
     } else {
+      console.error('[Portal] No portal URL in response:', response)
       showMessage(t('plans.failedToOpenPortal'), 'error')
     }
   } catch (error: any) {
+    console.error('[Portal] Error:', error)
     showMessage(error.message || t('plans.networkError'), 'error')
   } finally {
     portalLoading.value = false
@@ -209,7 +232,7 @@ if (urlParams.get('success') === 'true') {
 
           <!-- Tier Icon -->
           <div class="tier-icon-wrapper">
-            <MaterialIcon :icon="getTierIcon(plan.tier)" size="lg" :color="plan.tier === 'enterprise' ? 'var(--gold-primary)' : plan.tier === 'pro' ? 'var(--gold-light)' : 'var(--text-secondary)'" />
+            <MaterialIcon :icon="getTierIcon(plan.tier)" size="lg" :color="plan.tier === 'enterprise' ? 'var(--gold-primary)' : plan.tier === 'pro' ? 'var(--gold-light)' : plan.tier === 'free' ? 'var(--gold-primary)' : 'var(--text-secondary)'" />
           </div>
 
           <h3 class="plan-name">{{ plan.name }}</h3>

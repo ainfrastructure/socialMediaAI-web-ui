@@ -217,18 +217,6 @@
               <p v-else class="full-text">{{ selectedPost.post_text }}</p>
             </div>
 
-            <!-- Call to Action -->
-            <div v-if="selectedPost.call_to_action || isEditMode" class="detail-section">
-              <h4>{{ $t('posts.callToAction') }}</h4>
-              <input
-                v-if="isEditMode"
-                v-model="selectedPost.call_to_action"
-                type="text"
-                class="edit-input"
-              />
-              <p v-else class="full-text">{{ selectedPost.call_to_action }}</p>
-            </div>
-
             <!-- Hashtags -->
             <div
               v-if="(selectedPost.hashtags && selectedPost.hashtags.length > 0) || isEditMode"
@@ -553,7 +541,6 @@ async function saveChanges() {
     const response = await api.updateFavorite(selectedPost.value.id, {
       post_text: selectedPost.value.post_text,
       hashtags: selectedPost.value.hashtags,
-      call_to_action: selectedPost.value.call_to_action,
       platform: selectedPost.value.platform,
     })
 

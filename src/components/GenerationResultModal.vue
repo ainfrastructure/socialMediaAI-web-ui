@@ -14,7 +14,6 @@ const props = defineProps<{
   postContent?: {
     postText: string
     hashtags: string[]
-    callToAction: string
   }
   isGeneratingImage?: boolean
   isGeneratingContent?: boolean
@@ -36,14 +35,13 @@ const emit = defineEmits<{
   (e: 'schedule'): void
   (e: 'connectFacebook'): void
   (e: 'retry'): void
-  (e: 'contentUpdated', content: { postText: string; hashtags: string[]; callToAction: string }): void
+  (e: 'contentUpdated', content: { postText: string; hashtags: string[] }): void
 }>()
 
 // Edit state
 const isEditing = ref(false)
 const editedPostText = ref('')
 const editedHashtags = ref<string[]>([])
-const editedCallToAction = ref('')
 const newHashtag = ref('')
 
 // Initialize edit fields when postContent changes
@@ -51,7 +49,6 @@ watch(() => props.postContent, (content) => {
   if (content) {
     editedPostText.value = content.postText || ''
     editedHashtags.value = [...(content.hashtags || [])]
-    editedCallToAction.value = content.callToAction || ''
   }
 }, { immediate: true, deep: true })
 
@@ -68,7 +65,6 @@ const toggleEditMode = () => {
   if (props.postContent) {
     editedPostText.value = props.postContent.postText || ''
     editedHashtags.value = [...(props.postContent.hashtags || [])]
-    editedCallToAction.value = props.postContent.callToAction || ''
     newHashtag.value = ''
   }
   isEditing.value = true
@@ -78,7 +74,6 @@ const cancelEdits = () => {
   if (props.postContent) {
     editedPostText.value = props.postContent.postText || ''
     editedHashtags.value = [...(props.postContent.hashtags || [])]
-    editedCallToAction.value = props.postContent.callToAction || ''
   }
   isEditing.value = false
   newHashtag.value = ''
@@ -100,7 +95,6 @@ const saveEdits = () => {
   emit('contentUpdated', {
     postText: editedPostText.value,
     hashtags: editedHashtags.value,
-    callToAction: editedCallToAction.value
   })
   isEditing.value = false
 }
@@ -223,10 +217,6 @@ function handleRetry() {
                 </div>
               </div>
 
-              <div v-if="postContent.callToAction" class="content-section">
-                <h3 class="content-label">Call to Action</h3>
-                <p class="cta-text">{{ postContent.callToAction }}</p>
-              </div>
             </template>
 
             <!-- Edit Mode -->
@@ -262,16 +252,6 @@ function handleRetry() {
                     class="hashtag-input"
                   />
                 </div>
-              </div>
-
-              <div class="edit-field">
-                <label class="edit-label">Call to Action</label>
-                <input
-                  v-model="editedCallToAction"
-                  type="text"
-                  class="edit-input"
-                  placeholder="Enter call to action..."
-                />
               </div>
 
               <div class="edit-actions">

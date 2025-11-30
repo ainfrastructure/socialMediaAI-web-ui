@@ -570,7 +570,7 @@ class ApiService {
     context?: string,
     brandDNA?: any,
     language?: 'en' | 'no'
-  ): Promise<ApiResponse<{ postText: string; hashtags: string[]; callToAction: string }>> {
+  ): Promise<ApiResponse<{ postText: string; hashtags: string[] }>> {
     const response = await fetch(`${API_URL}/api/post-content/generate`, {
       method: 'POST',
       headers: {
@@ -627,7 +627,6 @@ class ApiService {
     media_url: string
     post_text?: string
     hashtags?: string[]
-    call_to_action?: string
     platform?: string
     prompt?: string
     menu_items?: any[]
@@ -650,7 +649,6 @@ class ApiService {
     updates: {
       post_text?: string
       hashtags?: string[]
-      call_to_action?: string
       platform?: string
     }
   ): Promise<ApiResponse<{ favorite: any }>> {
@@ -765,6 +763,26 @@ class ApiService {
     const response = await fetch(`${API_URL}/api/scheduler/${id}`, {
       method: 'DELETE',
       headers: this.getAuthHeader(),
+    })
+    return response.json()
+  }
+
+  // Create a post entry with status='published' (for posts published immediately)
+  async createPublishedPost(data: {
+    favorite_post_id: string
+    published_date: string
+    published_time?: string
+    platforms: string[]
+    timezone?: string
+    platform_post_urls?: Record<string, string>
+  }): Promise<ApiResponse<{ scheduled_post: any }>> {
+    const response = await fetch(`${API_URL}/api/scheduler/published`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...this.getAuthHeader(),
+      },
+      body: JSON.stringify(data),
     })
     return response.json()
   }

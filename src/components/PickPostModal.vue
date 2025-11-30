@@ -174,16 +174,6 @@
                   </div>
                 </div>
 
-                <div class="edit-field">
-                  <label class="edit-label">Call to Action</label>
-                  <input
-                    v-model="editedCallToAction"
-                    type="text"
-                    class="edit-input"
-                    placeholder="Enter call to action..."
-                  />
-                </div>
-
                 <div class="edit-actions">
                   <BaseButton
                     variant="ghost"
@@ -351,7 +341,6 @@ const isEditing = ref(false)
 const savingEdits = ref(false)
 const editedPostText = ref('')
 const editedHashtags = ref<string[]>([])
-const editedCallToAction = ref('')
 const newHashtag = ref('')
 
 // Auto-detect timezone with fallback
@@ -543,7 +532,6 @@ const toggleEditMode = () => {
   if (selectedPost.value) {
     editedPostText.value = selectedPost.value.post_text || ''
     editedHashtags.value = [...(selectedPost.value.hashtags || [])]
-    editedCallToAction.value = selectedPost.value.call_to_action || ''
     newHashtag.value = ''
   }
   isEditing.value = true
@@ -574,7 +562,6 @@ const saveEdits = async () => {
     const response = await api.updateFavorite(selectedPost.value.id, {
       post_text: editedPostText.value,
       hashtags: editedHashtags.value,
-      call_to_action: editedCallToAction.value
     })
 
     if (response.success) {
@@ -583,7 +570,6 @@ const saveEdits = async () => {
         ...selectedPost.value,
         post_text: editedPostText.value,
         hashtags: editedHashtags.value,
-        call_to_action: editedCallToAction.value
       }
       isEditing.value = false
     } else {
