@@ -930,7 +930,7 @@ const activeFilterCount = computed(() => {
   return filters.value.platforms.length + filters.value.restaurant_ids.length
 })
 
-const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+const weekDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 
 const currentPeriodLabel = computed(() => {
   if (viewMode.value === 'day') {
@@ -991,7 +991,8 @@ const displayedCalendarDays = computed(() => {
 const getWeekStart = (date: Date) => {
   const d = new Date(date)
   const day = d.getDay()
-  const diff = d.getDate() - day
+  // Adjust for Monday start (Monday = 0, Sunday = 6)
+  const diff = d.getDate() - ((day + 6) % 7)
   return new Date(d.setDate(diff))
 }
 
@@ -1067,8 +1068,8 @@ const calendarDays = computed(() => {
   const firstDay = new Date(year, month, 1)
   const lastDay = new Date(year, month + 1, 0)
 
-  // Get days from previous month to fill the first week
-  const startingDayOfWeek = firstDay.getDay()
+  // Get days from previous month to fill the first week (Monday = 0, Sunday = 6)
+  const startingDayOfWeek = (firstDay.getDay() + 6) % 7
   const prevMonthLastDay = new Date(year, month, 0)
   const prevMonthDays = prevMonthLastDay.getDate()
 
@@ -2038,7 +2039,6 @@ onUnmounted(() => {
 
 .view-mode-toggle {
   display: flex;
-  gap: 2px;
   background: rgba(0, 0, 0, 0.3);
   padding: 3px;
   border-radius: var(--radius-md);
@@ -2048,30 +2048,30 @@ onUnmounted(() => {
 .toggle-slider {
   position: absolute;
   top: 3px;
-  left: 3px;
-  height: calc(100% - 6px);
-  width: calc(33.333% - 3px);
+  bottom: 3px;
+  width: 70px;
   background: var(--gold-primary);
   border-radius: var(--radius-sm);
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   z-index: 0;
   box-shadow: 0 2px 8px rgba(212, 175, 55, 0.3);
 }
 
 .toggle-slider.position-month {
-  transform: translateX(0);
+  left: 3px;
 }
 
 .toggle-slider.position-week {
-  transform: translateX(calc(100% + 2px));
+  left: 73px;
 }
 
 .toggle-slider.position-day {
-  transform: translateX(calc(200% + 4px));
+  left: 143px;
 }
 
 .view-btn {
-  padding: var(--space-sm) var(--space-lg);
+  width: 70px;
+  padding: var(--space-sm) 0;
   border: none;
   background: transparent;
   color: var(--text-muted);
@@ -2083,6 +2083,7 @@ onUnmounted(() => {
   border-radius: var(--radius-sm);
   position: relative;
   z-index: 1;
+  text-align: center;
 }
 
 .view-btn:hover {
