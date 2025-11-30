@@ -24,10 +24,10 @@ onMounted(async () => {
   // Fetch current waitlist count
   try {
     const response = await api.getWaitlistCount()
-    if (response.success && response.data?.count !== undefined) {
-      waitlistCount.value = BASE_COUNT + response.data.count
-    } else if (response.success && (response as any).count !== undefined) {
-      waitlistCount.value = BASE_COUNT + (response as any).count
+    // Backend returns { success: true, count: X } directly
+    const count = (response as any).count ?? response.data?.count
+    if (response.success && count !== undefined) {
+      waitlistCount.value = BASE_COUNT + count
     } else {
       waitlistCount.value = BASE_COUNT
     }
@@ -52,14 +52,14 @@ async function handleSubmit() {
 
     if (response.success) {
       success.value = true
-      // Update count with new value
-      const newCount = response.data?.count ?? (response as any).count
+      // Update count with new value from backend
+      const newCount = (response as any).count ?? response.data?.count
       if (newCount !== undefined) {
         waitlistCount.value = BASE_COUNT + newCount
       } else {
         waitlistCount.value += 1
       }
-    } else if (response.error === 'already_on_waitlist') {
+    } else if ((response as any).error === 'already_on_waitlist') {
       error.value = t('waitlist.alreadyOnList')
     } else {
       error.value = response.error || t('waitlist.error')
@@ -277,6 +277,11 @@ function goToLogin() {
 
 .email-input {
   flex: 1;
+  min-width: 0;
+}
+
+.email-input :deep(.form-group) {
+  margin-bottom: 0;
 }
 
 .email-input :deep(input) {
@@ -358,6 +363,12 @@ function goToLogin() {
 
 /* Responsive */
 @media (max-width: 640px) {
+  .background-image {
+    /* Center on the food/plate area instead of top which might show just decorations */
+    background-position: center 40%;
+    background-size: cover;
+  }
+
   .content {
     padding: var(--space-lg);
   }
@@ -376,6 +387,17 @@ function goToLogin() {
 
   .input-row {
     flex-direction: column;
+    width: 100%;
+    gap: var(--space-md);
+  }
+
+  .email-input {
+    width: 100%;
+  }
+
+  .email-input :deep(.form-group) {
+    width: 100%;
+    margin-bottom: 0;
   }
 
   .submit-button {
@@ -387,6 +409,7 @@ function goToLogin() {
   }
 
   .email-input :deep(input) {
+    width: 100%;
     font-size: var(--text-base);
     padding: var(--space-md) var(--space-lg);
     min-height: 48px;
