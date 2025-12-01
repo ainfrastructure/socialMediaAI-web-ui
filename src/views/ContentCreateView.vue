@@ -15,6 +15,7 @@ import ModeToggle from '@/components/ModeToggle.vue'
 import GenerationResultModal from '@/components/GenerationResultModal.vue'
 import FacebookOnboardingModal from '@/components/FacebookOnboardingModal.vue'
 import ScheduleModal from '@/components/ScheduleModal.vue'
+import FeedbackModal from '@/components/FeedbackModal.vue'
 import { restaurantService, type SavedRestaurant } from '@/services/restaurantService'
 import { api } from '@/services/api'
 
@@ -65,10 +66,15 @@ const advancedModeData = ref<{
   selectedVariation: any
 } | null>(null)
 
+// Component refs
+const easyModeCreationRef = ref<any>(null)
+const advancedModeCreationRef = ref<any>(null)
+
 // Modal state
 const showResultModal = ref(false)
 const showFacebookOnboardingModal = ref(false)
 const showScheduleModal = ref(false)
+const showFeedbackModal = ref(false)
 const pendingAction = ref<'publish' | 'schedule' | null>(null)
 
 // Publishing state
@@ -81,6 +87,7 @@ const lastSavedPost = ref<any>(null)
 const postToSchedule = ref<any>(null)
 const preselectedDate = ref<string | null>(null)
 const facebookReconnectRequired = ref(false)
+const pendingPublishData = ref<any>(null)
 
 // Prompt state (for image generation)
 const editablePrompt = ref('')
@@ -91,6 +98,7 @@ const includeLogo = ref(true)
 const logoPosition = ref<'top-left' | 'top-right' | 'bottom-left' | 'bottom-right'>('bottom-right')
 const stickerStyle = ref<'bold' | 'outlined' | 'ribbon' | 'badge' | 'starburst'>('bold')
 const stickerPosition = ref<'top-left' | 'top-right' | 'bottom-left' | 'bottom-right' | 'top-center' | 'center'>('top-right')
+const strictnessMode = ref<'strict' | 'flexible' | 'creative'>('strict')
 const promptContext = ref('')
 const selectedMenuItems = ref<any[]>([])
 const selectedPlatforms = ref<string[]>(['facebook'])
@@ -226,8 +234,35 @@ async function handleEasyModePublish(data: {
         }
       })
     } else {
-      // Publish now to selected platforms
-      console.log('Publishing now to platforms:', platforms)
+      // Publish now to selected platforms (feedback already shown in step 3->4 transition)
+      console.log('[DEBUG] Easy Mode: Publishing now to platforms:', platforms)
+
+      // Just call continueEasyModePublish directly, feedback was already shown
+      pendingPublishData.value = {
+        favoritePostId,
+        platforms
+      }
+      await continueEasyModePublish()
+    }
+  } catch (err: any) {
+    console.error('Failed to handle easy mode publish:', err)
+    generationError.value = err.message || 'Failed to publish post'
+    publishing.value = false
+  }
+}
+
+// Continue publishing after feedback (for Easy Mode)
+async function continueEasyModePublish() {
+  if (!pendingPublishData.value) {
+    console.error('No pending publish data')
+    return
+  }
+
+  const { favoritePostId, platforms } = pendingPublishData.value
+
+  try {
+    // Publish now to selected platforms
+    console.log('Publishing now to platforms:', platforms)
 
       // Set publishing state BEFORE starting any API calls
       publishing.value = true
@@ -341,7 +376,7 @@ async function handleEasyModePublish(data: {
               published_date: now.toISOString().split('T')[0],
               published_time: now.toTimeString().slice(0, 5),
               platforms: successfulPlatforms.map(r => r.platform),
-              timezone: data.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone,
+              timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
               platform_post_urls: Object.fromEntries(
                 successfulPlatforms.filter(r => r.url).map(r => [r.platform, r.url!])
               )
@@ -358,10 +393,139 @@ async function handleEasyModePublish(data: {
         // All platforms failed
         generationError.value = failedPlatforms.map(f => f.error).join('. ')
       }
-    }
+
+      // Clear pending data
+      pendingPublishData.value = null
   } catch (err: any) {
     console.error('Error publishing/scheduling:', err)
     generationError.value = err.message || 'Failed to publish post'
+    publishing.value = false
+  }
+}
+
+// Continue publishing after feedback (for Advanced Mode)
+async function continueAdvancedModePublish() {
+  if (!pendingPublishData.value || pendingPublishData.value.type !== 'advanced') {
+    console.error('No pending advanced mode publish data')
+    return
+  }
+
+  const { platforms, data, onResult } = pendingPublishData.value
+
+  try {
+    console.log('[DEBUG] Continuing Advanced Mode publish to platforms:', platforms)
+
+    // Publish now to all selected platforms
+    publishing.value = true
+
+    const results: Array<{ platform: string; success: boolean; url?: string; error?: string }> = []
+    const postUrls: Record<string, string> = {}
+
+    // Build the message with post text and hashtags
+    const hashtags = data.hashtags || []
+    const message = hashtags.length > 0
+      ? `${data.postText}\n\n${hashtags.map((h: string) => `#${h}`).join(' ')}`
+      : data.postText
+
+    // Publish to each platform
+    for (const platform of platforms) {
+      if (platform === 'facebook') {
+        const selectedPage = facebookStore.connectedPages[0]
+        if (!selectedPage) {
+          results.push({ platform: 'facebook', success: false, error: 'No Facebook page connected' })
+          continue
+        }
+
+        try {
+          const response = await api.postToFacebook(
+            selectedPage.pageId,
+            message,
+            data.imageUrl
+          )
+
+          const postUrl = (response as any).postUrl || response.data?.postUrl
+          if (response.success && postUrl) {
+            results.push({ platform: 'facebook', success: true, url: postUrl })
+            postUrls.facebook = postUrl
+          } else if ((response as any).code === 'FACEBOOK_RECONNECT_REQUIRED') {
+            results.push({ platform: 'facebook', success: false, error: 'Facebook connection expired' })
+          } else {
+            results.push({ platform: 'facebook', success: false, error: response.error || 'Failed to publish' })
+          }
+        } catch (err: any) {
+          results.push({ platform: 'facebook', success: false, error: err.message || 'Failed to publish' })
+        }
+      } else if (platform === 'instagram') {
+        const instagramAccount = instagramStore.connectedAccounts[0]
+        if (!instagramAccount) {
+          results.push({ platform: 'instagram', success: false, error: 'No Instagram account connected' })
+          continue
+        }
+
+        try {
+          const response = await api.postToInstagram(
+            instagramAccount.instagramAccountId,
+            message,
+            data.imageUrl
+          )
+
+          const postUrl = (response as any).postUrl || response.data?.postUrl
+          if (response.success && postUrl) {
+            results.push({ platform: 'instagram', success: true, url: postUrl })
+            postUrls.instagram = postUrl
+          } else {
+            results.push({ platform: 'instagram', success: false, error: response.error || 'Failed to publish' })
+          }
+        } catch (err: any) {
+          results.push({ platform: 'instagram', success: false, error: err.message || 'Failed to publish' })
+        }
+      } else {
+        results.push({ platform, success: false, error: `${platform} publishing not yet supported` })
+      }
+    }
+
+    publishing.value = false
+
+    // Set publish results
+    const successfulPlatforms = results.filter(r => r.success)
+    publishResults.value = {
+      success: successfulPlatforms.length > 0,
+      platforms: results
+    }
+
+    // Save to calendar if any succeeded
+    if (successfulPlatforms.length > 0 && lastSavedPost.value?.id) {
+      const now = new Date()
+      try {
+        await api.createPublishedPost({
+          favorite_post_id: lastSavedPost.value.id,
+          published_date: now.toISOString().split('T')[0],
+          published_time: now.toTimeString().slice(0, 5),
+          platforms: successfulPlatforms.map(r => r.platform),
+          timezone: data.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone,
+          platform_post_urls: postUrls
+        })
+      } catch (calendarErr) {
+        console.warn('Failed to save to calendar:', calendarErr)
+      }
+    }
+
+    // Return result
+    if (successfulPlatforms.length > 0) {
+      onResult({ success: true, postUrls })
+    } else {
+      const errors = results.filter(r => !r.success).map(r => r.error).join(', ')
+      onResult({ success: false, error: errors || 'Failed to publish to any platform' })
+    }
+
+    // Clear pending data
+    pendingPublishData.value = null
+  } catch (err: any) {
+    console.error('[DEBUG] Error in Advanced Mode publish:', err)
+    publishing.value = false
+    if (onResult) {
+      onResult({ success: false, error: err.message || 'Failed to publish' })
+    }
   }
 }
 
@@ -370,6 +534,7 @@ async function handleEasyModeGenerate(data: {
   menuItem: any | null
   context: string
   styleTemplate: string
+  strictnessMode: 'strict' | 'flexible' | 'creative'
   includeLogo: boolean
   uploadedImage: File | null
   uploadedLogo: File | null
@@ -399,6 +564,7 @@ async function handleEasyModeGenerate(data: {
     stickerStyle.value = selectedStyle.stickerStyle
     stickerPosition.value = selectedStyle.stickerPosition
     includeLogo.value = data.includeLogo
+    strictnessMode.value = data.strictnessMode
     logoPosition.value = 'bottom-right'
 
     // Generate prompts
@@ -576,7 +742,8 @@ async function generateImage(uploadedLogo: File | null = null) {
       watermark,
       referenceImage,
       promotionalSticker,
-      restaurant.value.place_id
+      restaurant.value.place_id,
+      strictnessMode.value
     )
 
     if (!response.success) {
@@ -736,108 +903,16 @@ async function handleAdvancedModeComplete(data: {
     // If platforms and publish options provided, handle publishing directly
     if (platforms.length > 0 && data.onResult) {
       if (data.publishNow) {
-        // Publish now to all selected platforms
-        publishing.value = true
-
-        const results: Array<{ platform: string; success: boolean; url?: string; error?: string }> = []
-        const postUrls: Record<string, string> = {}
-
-        // Build the message with post text and hashtags
-        const hashtags = data.hashtags || []
-        const message = hashtags.length > 0
-          ? `${data.postText}\n\n${hashtags.map(h => `#${h}`).join(' ')}`
-          : data.postText
-
-        // Publish to each platform
-        for (const platform of platforms) {
-          if (platform === 'facebook') {
-            const selectedPage = facebookStore.connectedPages[0]
-            if (!selectedPage) {
-              results.push({ platform: 'facebook', success: false, error: 'No Facebook page connected' })
-              continue
-            }
-
-            try {
-              const response = await api.postToFacebook(
-                selectedPage.pageId,
-                message,
-                data.imageUrl
-              )
-
-              const postUrl = (response as any).postUrl || response.data?.postUrl
-              if (response.success && postUrl) {
-                results.push({ platform: 'facebook', success: true, url: postUrl })
-                postUrls.facebook = postUrl
-              } else if ((response as any).code === 'FACEBOOK_RECONNECT_REQUIRED') {
-                results.push({ platform: 'facebook', success: false, error: 'Facebook connection expired' })
-              } else {
-                results.push({ platform: 'facebook', success: false, error: response.error || 'Failed to publish' })
-              }
-            } catch (err: any) {
-              results.push({ platform: 'facebook', success: false, error: err.message || 'Failed to publish' })
-            }
-          } else if (platform === 'instagram') {
-            const instagramAccount = instagramStore.connectedAccounts[0]
-            if (!instagramAccount) {
-              results.push({ platform: 'instagram', success: false, error: 'No Instagram account connected' })
-              continue
-            }
-
-            try {
-              const response = await api.postToInstagram(
-                instagramAccount.instagramAccountId,
-                message,
-                data.imageUrl
-              )
-
-              const postUrl = (response as any).postUrl || response.data?.postUrl
-              if (response.success && postUrl) {
-                results.push({ platform: 'instagram', success: true, url: postUrl })
-                postUrls.instagram = postUrl
-              } else {
-                results.push({ platform: 'instagram', success: false, error: response.error || 'Failed to publish' })
-              }
-            } catch (err: any) {
-              results.push({ platform: 'instagram', success: false, error: err.message || 'Failed to publish' })
-            }
-          } else {
-            results.push({ platform, success: false, error: `${platform} publishing not yet supported` })
-          }
+        // Publish directly (feedback already shown if needed)
+        console.log('[DEBUG] Advanced Mode: Publishing now')
+        pendingPublishData.value = {
+          type: 'advanced',
+          platforms,
+          data,
+          onResult: data.onResult
         }
-
-        publishing.value = false
-
-        // Set publish results
-        const successfulPlatforms = results.filter(r => r.success)
-        publishResults.value = {
-          success: successfulPlatforms.length > 0,
-          platforms: results
-        }
-
-        // Save to calendar if any succeeded
-        if (successfulPlatforms.length > 0 && lastSavedPost.value?.id) {
-          const now = new Date()
-          try {
-            await api.createPublishedPost({
-              favorite_post_id: lastSavedPost.value.id,
-              published_date: now.toISOString().split('T')[0],
-              published_time: now.toTimeString().slice(0, 5),
-              platforms: successfulPlatforms.map(r => r.platform),
-              timezone: data.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone,
-              platform_post_urls: postUrls
-            })
-          } catch (calendarErr) {
-            console.warn('Failed to save to calendar:', calendarErr)
-          }
-        }
-
-        // Return result
-        if (successfulPlatforms.length > 0) {
-          data.onResult({ success: true, postUrls })
-        } else {
-          const errors = results.filter(r => !r.success).map(r => r.error).join(', ')
-          data.onResult({ success: false, error: errors || 'Failed to publish to any platform' })
-        }
+        await continueAdvancedModePublish()
+        return
       } else if (data.scheduledTime && lastSavedPost.value?.id) {
         // Schedule the post
         const scheduledDate = new Date(data.scheduledTime)
@@ -849,32 +924,19 @@ async function handleAdvancedModeComplete(data: {
           timezone: data.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone
         })
 
-        if (scheduleResponse.success) {
+        if (scheduleResponse.success && data.onResult) {
           data.onResult({ success: true })
-          // Navigate to calendar view
-          router.push({
-            path: '/scheduler',
-            query: {
-              date: scheduledDate.toISOString().split('T')[0]
-            }
-          })
-        } else {
+        } else if (data.onResult) {
           data.onResult({ success: false, error: 'Failed to schedule post' })
         }
-      } else {
-        data.onResult({ success: true })
       }
     } else {
-      // Fallback: Show result modal (old behavior)
+      // Show result modal for user to choose publish or schedule
       showResultModal.value = true
     }
   } catch (err: any) {
-    if (data.onResult) {
-      data.onResult({ success: false, error: err.message || 'Failed to publish' })
-    } else {
-      generationError.value = err.message || t('contentCreate.generateError', 'Failed to complete advanced mode')
-      showResultModal.value = true
-    }
+    console.error('Failed to handle advanced mode:', err)
+    generationError.value = err.message || 'Failed to process advanced mode'
   }
 }
 
@@ -910,12 +972,135 @@ async function autoSaveAdvancedPost() {
 
 // Facebook actions
 function handleResultPublish() {
+  console.log('[DEBUG] handleResultPublish called')
+  console.log('[DEBUG] Facebook pages connected:', facebookStore.connectedPages.length)
+  console.log('[DEBUG] Has seen onboarding:', preferencesStore.hasSeenFacebookOnboarding)
+
   if (facebookStore.connectedPages.length === 0 && !preferencesStore.hasSeenFacebookOnboarding) {
+    console.log('[DEBUG] Showing Facebook onboarding modal')
     pendingAction.value = 'publish'
     showFacebookOnboardingModal.value = true
   } else {
+    // Show feedback modal before publishing
+    console.log('[DEBUG] Showing feedback modal')
+    showFeedbackModal.value = true
+    console.log('[DEBUG] showFeedbackModal.value =', showFeedbackModal.value)
+  }
+}
+
+async function handleFeedbackSubmit(feedback: any) {
+  console.log('[DEBUG] handleFeedbackSubmit called with feedback:', feedback)
+
+  // Submit feedback to backend
+  try {
+    const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/feedback`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
+      },
+      body: JSON.stringify({
+        favoritePostId: lastSavedPost.value?.id,
+        imageRating: feedback.imageRating,
+        contentRating: feedback.contentRating,
+        hashtagsRating: feedback.hashtagsRating,
+        additionalFeedback: feedback.additionalFeedback,
+      })
+    })
+
+    if (response.ok) {
+      console.log('[DEBUG] Feedback submitted successfully')
+    } else {
+      console.error('Failed to submit feedback:', await response.text())
+    }
+  } catch (error) {
+    console.error('Failed to submit feedback:', error)
+    // Don't block publishing if feedback fails
+  }
+
+  // Close feedback modal
+  showFeedbackModal.value = false
+  console.log('[DEBUG] Proceeding after feedback')
+
+  // Check which flow to continue
+  if (pendingPublishData.value) {
+    if (pendingPublishData.value.type === 'easyModeStep4') {
+      // Easy Mode: Continue to step 4 (platform selection)
+      console.log('[DEBUG] Continuing to Easy Mode step 4')
+      easyModeCreationRef.value?.continueToPublishStep()
+      pendingPublishData.value = null
+    } else if (pendingPublishData.value.type === 'advancedModeStep5') {
+      // Advanced Mode: Continue to step 5 (generation)
+      console.log('[DEBUG] Continuing to Advanced Mode step 5')
+      advancedModeCreationRef.value?.continueToGenerateStep()
+      pendingPublishData.value = null
+    } else if (pendingPublishData.value.type === 'advanced') {
+      // Advanced Mode flow
+      await continueAdvancedModePublish()
+    } else {
+      // Easy Mode publish flow
+      await continueEasyModePublish()
+    }
+  } else {
+    // Result Modal flow
     publishToFacebook()
   }
+}
+
+function handleFeedbackSkip() {
+  console.log('[DEBUG] User skipped feedback')
+  // User skipped feedback
+  showFeedbackModal.value = false
+
+  // Check which flow to continue
+  if (pendingPublishData.value) {
+    if (pendingPublishData.value.type === 'easyModeStep4') {
+      // Easy Mode: Continue to step 4 (platform selection)
+      console.log('[DEBUG] Skipped feedback, continuing to Easy Mode step 4')
+      easyModeCreationRef.value?.continueToPublishStep()
+      pendingPublishData.value = null
+    } else if (pendingPublishData.value.type === 'advancedModeStep5') {
+      // Advanced Mode: Continue to step 5 (generation)
+      console.log('[DEBUG] Skipped feedback, continuing to Advanced Mode step 5')
+      advancedModeCreationRef.value?.continueToGenerateStep()
+      pendingPublishData.value = null
+    } else if (pendingPublishData.value.type === 'advanced') {
+      // Advanced Mode flow
+      continueAdvancedModePublish()
+    } else {
+      // Easy Mode publish flow
+      continueEasyModePublish()
+    }
+  } else {
+    // Result Modal flow
+    publishToFacebook()
+  }
+}
+
+// Handle request for feedback from Easy Mode (step 3 -> step 4)
+function handleRequestFeedback() {
+  console.log('[DEBUG] Easy Mode requesting feedback before step 4')
+  pendingPublishData.value = {
+    type: 'easyModeStep4'
+  }
+  showFeedbackModal.value = true
+}
+
+// Handle request for feedback from Advanced Mode (step 4 -> step 5)
+function handleAdvancedRequestFeedback(previewData: { imageUrl: string; postText: string; hashtags: string[] }) {
+  console.log('[DEBUG] Advanced Mode requesting feedback before step 5', previewData)
+
+  // Update current preview data so feedback modal shows the correct image
+  generatedImageUrl.value = previewData.imageUrl
+  generatedPostContent.value = {
+    postText: previewData.postText,
+    hashtags: previewData.hashtags
+  }
+
+  pendingPublishData.value = {
+    type: 'advancedModeStep5'
+  }
+  showFeedbackModal.value = true
 }
 
 function handleResultSchedule() {
@@ -1083,6 +1268,7 @@ function handleContentUpdated(updatedContent: { postText: string; hashtags: stri
         <!-- Easy Mode Creation -->
         <EasyModeCreation
           v-if="preferencesStore.creationMode === 'easy'"
+          ref="easyModeCreationRef"
           :restaurant="restaurant"
           :menu-items="menuItems"
           :generating="easyModeGenerating"
@@ -1095,15 +1281,18 @@ function handleContentUpdated(updatedContent: { postText: string; hashtags: stri
           @back="goBack"
           @generate="handleEasyModeGenerate"
           @publish="handleEasyModePublish"
+          @request-feedback="handleRequestFeedback"
           @reset="handleEasyModeReset"
         />
 
         <!-- Advanced Mode Creation -->
         <AdvancedModeCreation
           v-else
+          ref="advancedModeCreationRef"
           :restaurant="restaurant"
           :menu-items="menuItems"
           @back="goBack"
+          @request-feedback="handleAdvancedRequestFeedback"
           @complete="handleAdvancedModeComplete"
         />
       </div>
@@ -1141,6 +1330,16 @@ function handleContentUpdated(updatedContent: { postText: string; hashtags: stri
       :favorite-post="postToSchedule"
       :preselected-date="preselectedDate"
       @scheduled="handleScheduled"
+    />
+
+    <!-- Feedback Modal -->
+    <FeedbackModal
+      v-model="showFeedbackModal"
+      :favorite-post-id="lastSavedPost?.id"
+      :image-url="generatedImageUrl"
+      :post-content="generatedPostContent"
+      @submit="handleFeedbackSubmit"
+      @skip="handleFeedbackSkip"
     />
     </div>
   </DashboardLayout>

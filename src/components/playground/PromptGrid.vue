@@ -102,6 +102,9 @@ const truncateText = (text: string, maxLength: number): string => {
   justify-content: center;
   padding: var(--space-3xl);
   gap: var(--space-md);
+  cursor: default;
+  user-select: none;
+  pointer-events: none;
 }
 
 .loading-prompts p {
@@ -116,6 +119,9 @@ const truncateText = (text: string, maxLength: number): string => {
   border-top-color: var(--gold-primary);
   border-radius: 50%;
   animation: spin 1s linear infinite;
+  cursor: default;
+  user-select: none;
+  pointer-events: none;
 }
 
 @keyframes spin {

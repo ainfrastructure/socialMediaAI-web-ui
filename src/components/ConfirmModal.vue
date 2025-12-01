@@ -5,6 +5,7 @@
     :show-close-button="false"
     :close-on-overlay-click="!loading"
     :close-on-escape="!loading"
+    :z-index="10000"
     @update:model-value="(val: boolean) => !val && handleCancel()"
     @close="handleCancel"
   >

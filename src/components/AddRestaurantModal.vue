@@ -316,6 +316,9 @@ async function handleSave() {
   align-items: center;
   padding: var(--space-3xl);
   gap: var(--space-lg);
+  cursor: default;
+  user-select: none;
+  pointer-events: none;
 }
 
 .spinner {
@@ -325,6 +328,9 @@ async function handleSave() {
   border-top-color: var(--gold-primary);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
+  cursor: default;
+  user-select: none;
+  pointer-events: none;
 }
 
 @keyframes spin {

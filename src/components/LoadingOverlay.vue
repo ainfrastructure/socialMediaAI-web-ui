@@ -32,6 +32,8 @@ const props = withDefaults(defineProps<Props>(), {
   display: flex;
   align-items: center;
   justify-content: center;
+  cursor: default;
+  pointer-events: none;
 }
 
 .loading-content {
@@ -41,6 +43,7 @@ const props = withDefaults(defineProps<Props>(), {
   text-align: center;
   max-width: 500px;
   padding: var(--space-2xl);
+  user-select: none;
 }
 
 .loading-logo {
@@ -49,6 +52,9 @@ const props = withDefaults(defineProps<Props>(), {
   margin-bottom: var(--space-2xl);
   animation: bounce 1s ease-in-out infinite;
   filter: drop-shadow(0 0 20px rgba(212, 175, 55, 0.5));
+  cursor: default;
+  user-select: none;
+  pointer-events: none;
 }
 
 @keyframes bounce {

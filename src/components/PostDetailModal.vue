@@ -658,7 +658,7 @@ function handleSchedule() {
   margin-top: auto;
   padding-top: var(--space-xl);
   border-top: 1px solid var(--border-color);
-  flex-wrap: wrap;
+  justify-content: flex-end;
 }
 
 /* Responsive */

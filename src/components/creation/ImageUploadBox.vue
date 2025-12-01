@@ -81,8 +81,7 @@ function handleFileChange(event: Event) {
 .uploaded-image-preview {
   position: relative;
   width: 100%;
-  max-width: 300px;
-  aspect-ratio: 1;
+  max-height: 400px;
   border-radius: var(--radius-lg);
   overflow: hidden;
   border: 2px solid var(--gold-primary);
@@ -135,8 +134,7 @@ function handleFileChange(event: Event) {
   align-items: center;
   justify-content: center;
   width: 100%;
-  max-width: 300px;
-  aspect-ratio: 1;
+  min-height: 200px;
   border: 2px dashed var(--border-color);
   border-radius: var(--radius-lg);
   background: var(--bg-tertiary);

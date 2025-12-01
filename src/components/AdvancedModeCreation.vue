@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, watch, nextTick } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useRouter } from 'vue-router'
 import BaseCard from './BaseCard.vue'
 import BaseButton from './BaseButton.vue'
 import BaseAlert from './BaseAlert.vue'
@@ -12,11 +13,22 @@ import PromptVariationSelector from './PromptVariationSelector.vue'
 import LogoTogglePreview from './LogoTogglePreview.vue'
 import UnifiedSchedulePost from './UnifiedSchedulePost.vue'
 import WizardProgress from './WizardProgress.vue'
-import GoldenRestaurantIcon from './icons/GoldenRestaurantIcon.vue'
+import GoldenDishIcon from './icons/GoldenDishIcon.vue'
 import GoldenComboIcon from './icons/GoldenComboIcon.vue'
 import GoldenCalendarIcon from './icons/GoldenCalendarIcon.vue'
 import GoldenUploadIcon from './icons/GoldenUploadIcon.vue'
 import GoldenSparkleIcon from './icons/GoldenSparkleIcon.vue'
+import GoldenBlockIcon from './icons/GoldenBlockIcon.vue'
+import GoldenSchoolIcon from './icons/GoldenSchoolIcon.vue'
+import GoldenChristmasIcon from './icons/GoldenChristmasIcon.vue'
+import GoldenEasterIcon from './icons/GoldenEasterIcon.vue'
+import GoldenSummerIcon from './icons/GoldenSummerIcon.vue'
+import GoldenHeartIcon from './icons/GoldenHeartIcon.vue'
+import GoldenHalloweenIcon from './icons/GoldenHalloweenIcon.vue'
+import GoldenThanksgivingIcon from './icons/GoldenThanksgivingIcon.vue'
+import GoldenCelebrationIcon from './icons/GoldenCelebrationIcon.vue'
+import GoldenEditIcon from './icons/GoldenEditIcon.vue'
+import GoldenGridIcon from './icons/GoldenGridIcon.vue'
 import { ImageUploadBox, SectionLabel, ContentDivider } from './creation'
 import type { SavedRestaurant } from '@/services/restaurantService'
 import { api } from '@/services/api'
@@ -58,7 +70,7 @@ type WeekLength = 5 | 7
 
 // Weekly-specific customization options
 interface WeeklyCustomizationOptions {
-  layout: 'verticalStack' | 'gridWithHeader' | 'calendarGrid' | 'filmstrip'
+  layout: 'verticalStack' | 'gridWithHeader' | 'calendarGrid' | 'weeklyMenuGrid'
   showDates: boolean
   dateFormat: 'full' | 'short' | 'dayOnly'
   showWeekNumber: boolean
@@ -84,6 +96,7 @@ interface WeeklyMenuDataItem {
 
 const emit = defineEmits<{
   (e: 'back'): void
+  (e: 'requestFeedback', previewData: { imageUrl: string; postText: string; hashtags: string[] }): void
   (e: 'complete', data: {
     imageUrl: string
     postText: string
@@ -105,6 +118,7 @@ const emit = defineEmits<{
 }>()
 
 const { t } = useI18n()
+const router = useRouter()
 
 // Stores
 const facebookStore = useFacebookStore()
@@ -145,24 +159,24 @@ const weeklyCustomization = ref<WeeklyCustomizationOptions>({
 
 // Weekly layout options
 const weeklyLayouts = computed(() => [
+  { value: 'weeklyMenuGrid', label: t('weeklyCustomization.layout.weeklyMenuGrid'), icon: 'grid_on', description: t('weeklyCustomization.layout.weeklyMenuGridDesc') },
   { value: 'verticalStack', label: t('weeklyCustomization.layout.verticalStack'), icon: 'view_list', description: t('weeklyCustomization.layout.verticalStackDesc') },
   { value: 'gridWithHeader', label: t('weeklyCustomization.layout.gridWithHeader'), icon: 'grid_view', description: t('weeklyCustomization.layout.gridWithHeaderDesc') },
-  { value: 'calendarGrid', label: t('weeklyCustomization.layout.calendarGrid'), icon: 'calendar_month', description: t('weeklyCustomization.layout.calendarGridDesc') },
-  { value: 'filmstrip', label: t('weeklyCustomization.layout.filmstrip'), icon: 'movie', description: t('weeklyCustomization.layout.filmstripDesc') }
+  { value: 'calendarGrid', label: t('weeklyCustomization.layout.calendarGrid'), icon: 'calendar_month', description: t('weeklyCustomization.layout.calendarGridDesc') }
 ])
 
 // Weekly theme presets
 const weeklyThemes = computed(() => [
-  { value: 'none', label: t('weeklyCustomization.themes.none'), icon: 'block' },
-  { value: 'studentWeek', label: t('weeklyCustomization.themes.studentWeek'), icon: 'school' },
-  { value: 'christmas', label: t('weeklyCustomization.themes.christmas'), icon: 'ac_unit' },
-  { value: 'easter', label: t('weeklyCustomization.themes.easter'), icon: 'egg' },
-  { value: 'summer', label: t('weeklyCustomization.themes.summer'), icon: 'wb_sunny' },
-  { value: 'valentines', label: t('weeklyCustomization.themes.valentines'), icon: 'favorite' },
-  { value: 'halloween', label: t('weeklyCustomization.themes.halloween'), icon: 'auto_awesome' },
-  { value: 'thanksgiving', label: t('weeklyCustomization.themes.thanksgiving'), icon: 'dinner_dining' },
-  { value: 'newYear', label: t('weeklyCustomization.themes.newYear'), icon: 'celebration' },
-  { value: 'custom', label: t('weeklyCustomization.themes.custom'), icon: 'edit' }
+  { value: 'none', label: t('weeklyCustomization.themes.none'), component: GoldenBlockIcon },
+  { value: 'studentWeek', label: t('weeklyCustomization.themes.studentWeek'), component: GoldenSchoolIcon },
+  { value: 'christmas', label: t('weeklyCustomization.themes.christmas'), component: GoldenChristmasIcon },
+  { value: 'easter', label: t('weeklyCustomization.themes.easter'), component: GoldenEasterIcon },
+  { value: 'summer', label: t('weeklyCustomization.themes.summer'), component: GoldenSummerIcon },
+  { value: 'valentines', label: t('weeklyCustomization.themes.valentines'), component: GoldenHeartIcon },
+  { value: 'halloween', label: t('weeklyCustomization.themes.halloween'), component: GoldenHalloweenIcon },
+  { value: 'thanksgiving', label: t('weeklyCustomization.themes.thanksgiving'), component: GoldenThanksgivingIcon },
+  { value: 'newYear', label: t('weeklyCustomization.themes.newYear'), component: GoldenCelebrationIcon },
+  { value: 'custom', label: t('weeklyCustomization.themes.custom'), component: GoldenEditIcon }
 ])
 
 // For weekly menu - map items to days with custom prices
@@ -194,7 +208,7 @@ const uploadedImagePreview = ref<string | null>(null)
 
 // Step 2: Customization
 const customization = ref<CustomizationOptions>({
-  logoPosition: 'top-left',
+  logoPosition: 'bottom-right',
   textOverlay: {
     text: '',
     font: 'playfair',
@@ -237,6 +251,11 @@ const publishedPostUrl = ref('')
 const publishedPostUrls = ref<Record<string, string>>({})
 const selectedPlatforms = ref<PlatformType[]>([])
 const failedPlatforms = ref<Array<{ platform: string, error: string }>>([])
+
+// Editable content state for preview (Step 4)
+const editedPostText = ref('')
+const editedHashtags = ref<string[]>([])
+const newHashtag = ref('')
 
 // Wizard progress tracking
 const highestCompletedStep = ref(0)
@@ -300,12 +319,8 @@ const canProceedStep3 = computed(() => {
 })
 
 const canProceedStep4 = computed(() => {
-  // Require both image AND text to be ready, and not still generating
+  // Preview step - require image and text to be generated
   return generatedImageUrl.value !== '' && postText.value !== '' && !generatingImage.value && !generatingContent.value
-})
-
-const canProceedStep5 = computed(() => {
-  return generatedImageUrl.value !== ''
 })
 
 const stepLabels = computed(() => [
@@ -327,12 +342,27 @@ const nextStepLabel = computed(() => {
 
 // Watch for step 3 entry - auto-generate variations
 watch(currentStep, async (newStep, oldStep) => {
+  // Auto-generate style variations when entering step 3
   if (newStep === 3 && oldStep === 2 && styleVariations.value.length === 0) {
     await generateStyleVariations()
   }
-  // Auto-generate image when entering step 4 (Preview)
-  if (newStep === 4 && oldStep === 3 && !generatedImageUrl.value && selectedVariation.value) {
-    await generateImage()
+
+  // Auto-generate image and content when entering step 4 (Preview)
+  if (newStep === 4 && oldStep === 3 && selectedVariation.value) {
+    // Generate image if not already generated
+    if (!generatedImageUrl.value) {
+      await generateImage()
+    }
+    // Generate content if not already generated
+    if (!postText.value) {
+      await generatePostContent()
+    }
+    // Initialize editable content after generation
+    await nextTick()
+    if (postText.value) {
+      editedPostText.value = postText.value
+      editedHashtags.value = [...hashtags.value]
+    }
   }
 })
 
@@ -340,8 +370,28 @@ watch(currentStep, async (newStep, oldStep) => {
 
 // Navigation
 function nextStep() {
+  // Intercept Step 4 → Step 5 transition to show feedback modal
+  if (currentStep.value === 4) {
+    emit('requestFeedback', {
+      imageUrl: generatedImageUrl.value,
+      postText: editedPostText.value || postText.value,
+      hashtags: editedHashtags.value.length > 0 ? editedHashtags.value : hashtags.value
+    })
+    return
+  }
+
   if (currentStep.value < totalSteps) {
     // Update highest completed step
+    if (currentStep.value > highestCompletedStep.value) {
+      highestCompletedStep.value = currentStep.value
+    }
+    currentStep.value++
+  }
+}
+
+function continueToGenerateStep() {
+  // Called after feedback modal is submitted/skipped
+  if (currentStep.value === 4 && currentStep.value < totalSteps) {
     if (currentStep.value > highestCompletedStep.value) {
       highestCompletedStep.value = currentStep.value
     }
@@ -532,6 +582,10 @@ async function regenerateVariations() {
 // Step 3: Go to Step 4 and auto-generate image
 async function goToStep4AndGenerate() {
   if (!selectedVariation.value) return
+  // Update highest completed step
+  if (currentStep.value > highestCompletedStep.value) {
+    highestCompletedStep.value = currentStep.value
+  }
   currentStep.value = 4
   // Auto-start generation after a brief moment for UI to update
   await nextTick()
@@ -571,13 +625,10 @@ async function generateImage() {
     if (response.success && response.data?.imageUrl) {
       generatedImageUrl.value = response.data.imageUrl
 
-      // Generate post content - wait for it to complete before advancing
+      // Generate post content
       await generatePostContent()
 
-      // Auto-advance to next step only after both image AND text are ready
-      setTimeout(() => {
-        nextStep()
-      }, 500)
+      // Stay on Step 4 (Preview) - user must click "Continue to Publish" to proceed
     } else {
       throw new Error(response.error || 'Failed to generate image')
     }
@@ -678,11 +729,12 @@ async function handleUnifiedPublish(data: {
     }
 
     // Emit complete with all data for parent to handle actual publishing
+    // Use edited content from preview if available, otherwise fallback to generated content
     const result = await new Promise<{ success: boolean; postUrls?: Record<string, string>; error?: string }>((resolve) => {
       emit('complete', {
         imageUrl: generatedImageUrl.value,
-        postText: postText.value,
-        hashtags: hashtags.value,
+        postText: editedPostText.value || postText.value,
+        hashtags: editedHashtags.value.length > 0 ? editedHashtags.value : hashtags.value,
         menuItems: menuItemsForApi,
         customization: customization.value,
         selectedVariation: selectedVariation.value,
@@ -703,12 +755,18 @@ async function handleUnifiedPublish(data: {
     })
 
     if (result.success) {
-      publishSuccess.value = true
-      if (result.postUrls) {
-        publishedPostUrls.value = result.postUrls
-        // Set first URL as main for backward compatibility
-        const firstUrl = Object.values(result.postUrls)[0]
-        if (firstUrl) publishedPostUrl.value = firstUrl
+      // If scheduling, redirect to calendar view instead of showing success
+      if (data.publishType === 'schedule') {
+        router.push({ name: 'scheduler' })
+      } else {
+        // For immediate publishing, show success message
+        publishSuccess.value = true
+        if (result.postUrls) {
+          publishedPostUrls.value = result.postUrls
+          // Set first URL as main for backward compatibility
+          const firstUrl = Object.values(result.postUrls)[0]
+          if (firstUrl) publishedPostUrl.value = firstUrl
+        }
       }
     } else {
       publishError.value = result.error || t('advancedMode.publish.error')
@@ -750,6 +808,31 @@ function createAnother() {
     sunday: { item: null, customPrice: '' }
   }
 }
+
+// Hashtag management functions (for Step 4 Preview)
+function addPreviewHashtag() {
+  const tag = newHashtag.value.trim().replace(/^#/, '')
+  if (tag && !editedHashtags.value.includes(tag)) {
+    editedHashtags.value.push(tag)
+    newHashtag.value = ''
+  }
+}
+
+function removePreviewHashtag(index: number) {
+  editedHashtags.value.splice(index, 1)
+}
+
+function handlePreviewHashtagKeydown(event: KeyboardEvent) {
+  if (event.key === 'Enter') {
+    event.preventDefault()
+    addPreviewHashtag()
+  }
+}
+
+// Expose methods for parent component
+defineExpose({
+  continueToGenerateStep
+})
 </script>
 
 <template>
@@ -777,7 +860,7 @@ function createAnother() {
             :class="['post-type-card', { selected: postType === 'single' }]"
             @click="handlePostTypeChange('single')"
           >
-            <GoldenRestaurantIcon :size="40" class="post-type-icon" />
+            <GoldenDishIcon :size="40" class="post-type-icon" />
             <span class="post-type-title">{{ t('advancedMode.postType.single.title') }}</span>
             <span class="post-type-description">{{ t('advancedMode.postType.single.description') }}</span>
           </div>
@@ -966,7 +1049,7 @@ function createAnother() {
               :class="['layout-option-card', { selected: weeklyCustomization.layout === layout.value }]"
               @click="weeklyCustomization.layout = layout.value as any"
             >
-              <MaterialIcon :icon="layout.icon" size="lg" class="layout-icon" />
+              <MaterialIcon :icon="layout.icon" size="lg" :color="'var(--gold-primary)'" class="layout-icon" />
               <span class="layout-label">{{ layout.label }}</span>
               <span class="layout-desc">{{ layout.description }}</span>
             </button>
@@ -1031,7 +1114,7 @@ function createAnother() {
               :class="['theme-option-card', { selected: weeklyCustomization.theme === theme.value }]"
               @click="weeklyCustomization.theme = theme.value"
             >
-              <MaterialIcon :icon="theme.icon" size="lg" class="theme-icon" />
+              <component :is="theme.component" :size="32" class="theme-icon" />
               <span class="theme-label">{{ theme.label }}</span>
             </button>
           </div>
@@ -1105,76 +1188,87 @@ function createAnother() {
       </div>
     </BaseCard>
 
-    <!-- Step 4: Image Generation -->
+    <!-- Step 4: Preview Generated Content -->
     <BaseCard v-show="currentStep === 4" variant="glass" class="step-card">
       <div class="step-header">
         <h3 class="step-title">{{ t('advancedMode.step4.title') }}</h3>
         <p class="step-subtitle">{{ t('advancedMode.step4.subtitle') }}</p>
       </div>
 
-      <BaseAlert v-if="imageError" type="error">
-        {{ imageError }}
-      </BaseAlert>
+      <!-- Loading State -->
+      <div v-if="generatingImage || generatingContent" class="preview-loading">
+        <img src="/socialchef_logo.svg" alt="Social Chef" class="loading-logo" />
+        <p class="loading-title">{{ t('advancedMode.step4.generating') }}</p>
+        <p class="loading-subtitle">{{ t('advancedMode.step4.generatingSubtitle') }}</p>
+      </div>
 
-      <!-- Generate Button (if not generated yet) -->
-      <div v-if="!generatedImageUrl && !generatingImage" class="generate-section">
-        <div class="generate-preview">
-          <div class="preview-info">
-            <GoldenSparkleIcon :size="32" class="info-icon" />
-            <div class="info-text">
-              <h4 class="info-title">{{ t('advancedMode.step4.generatingWithAI') }}</h4>
-              <p class="info-description">
-                {{ selectedVariation?.title || t('advancedMode.step3.selectedStyle') }}
-              </p>
+      <!-- Preview Content -->
+      <div v-else class="preview-section">
+        <div class="preview-content">
+          <!-- Generated Image -->
+          <div class="preview-image-container">
+            <img v-if="generatedImageUrl" :src="generatedImageUrl" alt="Generated post" class="preview-image-display" />
+          </div>
+
+          <!-- Editable Post Content -->
+          <div class="preview-post-content">
+            <h4 class="preview-content-label">{{ t('playground.postContentTitle') }}</h4>
+
+            <!-- Editable Post Text -->
+            <div class="preview-text-section">
+              <label class="preview-label">{{ t('posts.postText') }}</label>
+              <textarea
+                v-model="editedPostText"
+                class="editable-textarea"
+                :placeholder="t('advancedMode.step4.editPostText')"
+                rows="4"
+              ></textarea>
+            </div>
+
+            <!-- Editable Hashtags -->
+            <div class="preview-text-section">
+              <label class="preview-label">{{ t('posts.hashtags') }}</label>
+              <div class="editable-hashtags">
+                <div class="hashtag-chips">
+                  <span v-for="(tag, index) in editedHashtags" :key="index" class="hashtag-chip">
+                    #{{ tag }}
+                    <button type="button" class="remove-hashtag" @click="removePreviewHashtag(index)" :aria-label="t('common.remove')">
+                      <MaterialIcon icon="close" size="xs" />
+                    </button>
+                  </span>
+                </div>
+                <div class="add-hashtag-container">
+                  <input
+                    v-model="newHashtag"
+                    type="text"
+                    class="editable-input hashtag-input"
+                    :placeholder="t('advancedMode.step4.addHashtagPlaceholder')"
+                    @keydown="handlePreviewHashtagKeydown"
+                  />
+                  <button type="button" class="add-hashtag-btn" @click="addPreviewHashtag" :disabled="!newHashtag.trim()">
+                    <MaterialIcon icon="add" size="sm" />
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
-
-        <BaseButton
-          variant="primary"
-          size="large"
-          full-width
-          @click="generateImage"
-        >
-          {{ t('advancedMode.step4.generateButton') }}
-        </BaseButton>
       </div>
 
-      <!-- Generating State (show while generating image OR content) -->
-      <div v-else-if="generatingImage || generatingContent" class="generating-state">
-        <img src="/socialchef_logo.svg" alt="Social Chef" class="loading-logo" />
-        <p class="loading-title">{{ generatingImage ? t('advancedMode.step4.generatingImageTitle', 'Creating your image') : t('advancedMode.step4.generatingContentTitle', 'Writing your caption') }}</p>
-        <p class="loading-subtitle">{{ generatingImage ? t('advancedMode.step4.generatingImageSubtitle', 'Bringing your vision to life with AI') : t('advancedMode.step4.generatingContentSubtitle', 'Crafting the perfect words for your post') }}</p>
-      </div>
-
-      <!-- Generated Image with Logo Toggle -->
-      <LogoTogglePreview
-        v-else
-        :image-url="generatedImageUrl"
-        :logo-position="customization.logoPosition"
-        @select-logo="handleLogoSelect"
-      />
-
+      <!-- Navigation -->
       <div class="step-navigation">
-        <BaseButton variant="ghost" @click="prevStep">
-          {{ t('advancedMode.navigation.back') }}
-        </BaseButton>
-        <BaseButton
-          v-if="canProceedStep4"
-          variant="primary"
-          size="large"
-          @click="nextStep"
-        >
-          {{ nextStepLabel }} →
+        <BaseButton variant="ghost" @click="prevStep">{{ t('advancedMode.navigation.back') }}</BaseButton>
+        <BaseButton variant="primary" size="large" :disabled="!canProceedStep4" @click="nextStep">
+          {{ t('advancedMode.step4.nextButton') }} →
         </BaseButton>
       </div>
     </BaseCard>
 
-    <!-- Step 5: Preview & Publish -->
+    <!-- Step 5: Publish -->
     <BaseCard v-show="currentStep === 5" variant="glass" class="step-card publish-step">
       <!-- Success State (inline like Easy mode) -->
       <div v-if="publishSuccess" class="publish-success">
-        <div class="success-icon"><MaterialIcon icon="celebration" size="xl" :color="'var(--gold-primary)'" /></div>
+        <img src="/socialchef_logo.svg" alt="Social Chef" class="success-logo" />
         <h3 class="success-title">{{ t('easyMode.step4.successTitle', 'Congratulations!') }}</h3>
         <p class="success-message">{{ t('easyMode.step4.successMessage', 'Your post has been published successfully!') }}</p>
 
@@ -1440,6 +1534,9 @@ function createAnother() {
   justify-content: center;
   padding: var(--space-5xl) var(--space-2xl);
   width: 100%;
+  user-select: none;
+  cursor: default;
+  pointer-events: none;
 }
 
 .loading-logo {
@@ -1448,6 +1545,9 @@ function createAnother() {
   margin-bottom: var(--space-xl);
   animation: bounce 2s ease-in-out infinite;
   filter: drop-shadow(0 4px 20px rgba(212, 175, 55, 0.4));
+  cursor: default;
+  user-select: none;
+  pointer-events: none;
 }
 
 @keyframes bounce {
@@ -2013,7 +2113,7 @@ function createAnother() {
 
 .menu-items-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  grid-template-columns: repeat(4, 1fr);
   gap: var(--space-lg);
 }
 
@@ -2079,6 +2179,10 @@ function createAnother() {
   .step-navigation {
     flex-direction: column;
   }
+
+  .menu-items-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
 /* Publish Step Layout */
@@ -2108,8 +2212,9 @@ function createAnother() {
   }
 }
 
-.success-icon {
-  font-size: 4rem;
+.success-logo {
+  width: 120px;
+  height: auto;
   margin-bottom: var(--space-xl);
   animation: celebrateBounce 0.6s ease-out;
 }
@@ -2184,6 +2289,8 @@ function createAnother() {
   align-items: center;
   justify-content: center;
   padding: var(--space-3xl);
+  cursor: default;
+  pointer-events: none;
 }
 
 .publishing-content {
@@ -2191,6 +2298,7 @@ function createAnother() {
   flex-direction: column;
   align-items: center;
   text-align: center;
+  user-select: none;
 }
 
 .publish-layout {
@@ -2217,6 +2325,7 @@ function createAnother() {
   box-shadow: var(--shadow-xl);
   border: 2px solid var(--gold-subtle);
   max-width: 400px;
+  margin: 0 auto;
 }
 
 .preview-image-large {
@@ -2928,5 +3037,212 @@ function createAnother() {
 .modal-enter-from .success-modal,
 .modal-leave-to .success-modal {
   transform: translateY(-20px) scale(0.95);
+}
+
+/* ===== Step 4: Preview Section Styles ===== */
+.preview-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-5xl) var(--space-2xl);
+  min-height: 400px;
+  cursor: default;
+  user-select: none;
+  pointer-events: none;
+}
+
+.loading-logo {
+  width: 120px;
+  height: 120px;
+  margin-bottom: var(--space-xl);
+  animation: bounce 2s ease-in-out infinite;
+  filter: drop-shadow(0 4px 20px rgba(212, 175, 55, 0.4));
+  cursor: default;
+  user-select: none;
+  pointer-events: none;
+}
+
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-20px);
+  }
+}
+
+.loading-title {
+  font-family: var(--font-heading);
+  font-size: var(--text-2xl);
+  color: var(--gold-primary);
+  margin: 0 0 var(--space-sm) 0;
+  font-weight: var(--font-semibold);
+}
+
+.loading-subtitle {
+  font-size: var(--text-base);
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.preview-section {
+  margin-top: var(--space-2xl);
+}
+
+.preview-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2xl);
+}
+
+.preview-image-container {
+  width: 100%;
+  min-height: 400px;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  border: 2px solid var(--gold-primary);
+  box-shadow: var(--glow-gold-md);
+  background: var(--bg-tertiary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.preview-image-display {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.preview-post-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+
+.preview-content-label {
+  font-family: var(--font-heading);
+  font-size: var(--text-xl);
+  color: var(--text-primary);
+  margin: 0 0 var(--space-md) 0;
+}
+
+.preview-text-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.preview-label {
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  color: var(--gold-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Editable inputs */
+.editable-textarea,
+.editable-input {
+  width: 100%;
+  padding: var(--space-md);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  line-height: var(--leading-relaxed);
+  transition: var(--transition-base);
+}
+
+.editable-textarea:focus,
+.editable-input:focus {
+  outline: none;
+  border-color: var(--gold-primary);
+  box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.15);
+}
+
+.editable-textarea {
+  resize: vertical;
+  min-height: 100px;
+}
+
+/* Editable Hashtags */
+.editable-hashtags {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.hashtag-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  min-height: 32px;
+}
+
+.hashtag-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: var(--space-xs) var(--space-md);
+  background: rgba(212, 175, 55, 0.1);
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  border-radius: var(--radius-full);
+  color: var(--gold-light);
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+}
+
+.remove-hashtag {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px;
+  background: transparent;
+  border: none;
+  color: var(--gold-light);
+  cursor: pointer;
+  border-radius: 50%;
+  transition: var(--transition-fast);
+}
+
+.remove-hashtag:hover {
+  background: rgba(212, 175, 55, 0.2);
+  color: var(--gold-primary);
+}
+
+.add-hashtag-container {
+  display: flex;
+  gap: var(--space-sm);
+}
+
+.hashtag-input {
+  flex: 1;
+}
+
+.add-hashtag-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-sm) var(--space-md);
+  background: var(--gold-subtle);
+  border: 1px solid var(--gold-primary);
+  border-radius: var(--radius-md);
+  color: var(--gold-primary);
+  cursor: pointer;
+  transition: var(--transition-base);
+}
+
+.add-hashtag-btn:hover:not(:disabled) {
+  background: var(--gold-primary);
+  color: var(--text-on-gold);
+}
+
+.add-hashtag-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 </style>

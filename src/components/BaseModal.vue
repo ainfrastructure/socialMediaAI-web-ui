@@ -11,6 +11,7 @@ interface Props {
   closeOnEscape?: boolean
   preventBodyScroll?: boolean
   cardVariant?: 'glass' | 'glass-intense' | 'solid'
+  zIndex?: number
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -20,6 +21,7 @@ const props = withDefaults(defineProps<Props>(), {
   closeOnEscape: true,
   preventBodyScroll: true,
   cardVariant: 'glass-intense',
+  zIndex: 9999,
 })
 
 const emit = defineEmits<{
@@ -80,6 +82,7 @@ watch(() => props.modelValue, (isOpen) => {
       <div
         v-if="modelValue"
         class="base-modal-overlay"
+        :style="{ zIndex: props.zIndex }"
         @click.self="handleOverlayClick"
       >
         <BaseCard

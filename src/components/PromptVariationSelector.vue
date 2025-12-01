@@ -51,15 +51,18 @@ function updatePrompt() {
   }
 }
 
-// Get style icon
+// Get style icon (Golden SVG)
 function getStyleIcon(style: string): string {
+  const goldGradient = `<defs><linearGradient id="goldGrad-${style}" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#E5C775"/><stop offset="50%" style="stop-color:#D4AF37"/><stop offset="100%" style="stop-color:#B8943D"/></linearGradient></defs>`
+
   const icons: Record<string, string> = {
-    elegant: '✨',
-    vibrant: '🎨',
-    rustic: '🏡',
-    modern: '⚪'
+    elegant: `<svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">${goldGradient}<path d="M12 2L19 12L12 22L5 12L12 2Z" fill="url(#goldGrad-${style})"/><path d="M12 6L16 12L12 18L8 12L12 6Z" fill="url(#goldGrad-${style})" opacity="0.5"/></svg>`,
+    vibrant: `<svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">${goldGradient}<circle cx="12" cy="12" r="5" fill="url(#goldGrad-${style})"/><path d="M12 2V6M12 18V22M2 12H6M18 12H22M4.93 4.93L7.76 7.76M16.24 16.24L19.07 19.07M4.93 19.07L7.76 16.24M16.24 7.76L19.07 4.93" stroke="url(#goldGrad-${style})" stroke-width="2" stroke-linecap="round"/></svg>`,
+    rustic: `<svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">${goldGradient}<path d="M12 2C10 4 8 7 8 10C8 13 10 15 12 15C14 15 16 13 16 10C16 7 14 4 12 2Z" fill="url(#goldGrad-${style})"/><path d="M12 15V22M8 18H16" stroke="url(#goldGrad-${style})" stroke-width="2"/></svg>`,
+    modern: `<svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">${goldGradient}<rect x="3" y="3" width="7" height="7" rx="1" fill="url(#goldGrad-${style})"/><rect x="14" y="3" width="7" height="7" rx="1" fill="url(#goldGrad-${style})" opacity="0.7"/><rect x="3" y="14" width="7" height="7" rx="1" fill="url(#goldGrad-${style})" opacity="0.7"/><rect x="14" y="14" width="7" height="7" rx="1" fill="url(#goldGrad-${style})"/></svg>`
   }
-  return icons[style] || '⭐'
+
+  return icons[style] || icons.vibrant
 }
 
 // Check if a variation is selected
@@ -99,7 +102,7 @@ function getStyleInfo(style: string) {
         >
           <!-- Style Icon & Title -->
           <div class="variation-header">
-            <span class="style-icon">{{ getStyleIcon(variation.style) }}</span>
+            <div class="style-icon" v-html="getStyleIcon(variation.style)"></div>
             <div class="variation-title-section">
               <h3 class="variation-title">{{ variation.title }}</h3>
               <p class="variation-subtitle">{{ getStyleInfo(variation.style).description }}</p>
@@ -135,7 +138,8 @@ function getStyleInfo(style: string) {
         <BaseCard v-if="selectedVariation" variant="glass-intense" class="selected-variation-panel">
           <div class="panel-header">
             <h3 class="panel-title">
-              {{ getStyleIcon(selectedVariation.style) }} {{ t('advancedMode.step3.selectedStyle') }}
+              <span class="panel-icon" v-html="getStyleIcon(selectedVariation.style)"></span>
+              <span>{{ t('advancedMode.step3.selectedStyle') }}</span>
             </h3>
             <span class="style-name">{{ selectedVariation.title }}</span>
           </div>
@@ -196,7 +200,17 @@ function getStyleInfo(style: string) {
       <!-- Regenerate Button -->
       <div class="regenerate-section">
         <BaseButton variant="ghost" @click="emit('regenerate')">
-          🔄 {{ t('advancedMode.step4.regenerate') }}
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="display: inline-block; margin-right: 8px;">
+            <defs>
+              <linearGradient id="goldGrad-regenerate" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" style="stop-color:#E5C775"/>
+                <stop offset="50%" style="stop-color:#D4AF37"/>
+                <stop offset="100%" style="stop-color:#B8943D"/>
+              </linearGradient>
+            </defs>
+            <path d="M21 10C21 10 18.995 7.26822 17.3662 5.63824C15.7373 4.00827 13.4864 3 11 3C6.02944 3 2 7.02944 2 12C2 16.9706 6.02944 21 11 21C15.1031 21 18.5649 18.2543 19.6482 14.5M21 10V4M21 10H15" stroke="url(#goldGrad-regenerate)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          {{ t('advancedMode.step3.regenerate') }}
         </BaseButton>
       </div>
     </div>
@@ -291,7 +305,9 @@ function getStyleInfo(style: string) {
 }
 
 .style-icon {
-  font-size: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   flex-shrink: 0;
 }
 
@@ -404,6 +420,15 @@ function getStyleInfo(style: string) {
   font-family: var(--font-heading);
   font-size: var(--text-2xl);
   color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.panel-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .style-name {

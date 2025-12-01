@@ -30,7 +30,7 @@ interface CustomizationOptions {
 }
 
 interface WeeklyCustomizationOptions {
-  layout: 'verticalStack' | 'gridWithHeader' | 'calendarGrid' | 'filmstrip'
+  layout: 'verticalStack' | 'gridWithHeader' | 'calendarGrid' | 'filmstrip' | 'weeklyMenuGrid'
 }
 
 type PostType = 'single' | 'combo' | 'weekly'
@@ -259,8 +259,17 @@ const weekDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri']
 
         <div class="weekly-days">
           <div v-for="day in weekDays" :key="day" class="day-slot">
-            <span class="day-label">{{ day }}</span>
-            <div class="day-dish">🍽️</div>
+            <!-- Enhanced preview for weeklyMenuGrid layout -->
+            <template v-if="weeklyCustomization?.layout === 'weeklyMenuGrid'">
+              <span class="day-name">{{ day }}</span>
+              <div class="dish-image-placeholder"></div>
+              <span class="dish-name">Dish Name</span>
+            </template>
+            <!-- Standard preview for other layouts -->
+            <template v-else>
+              <span class="day-label">{{ day }}</span>
+              <div class="day-dish">🍽️</div>
+            </template>
           </div>
         </div>
 
@@ -600,6 +609,62 @@ const weekDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri']
 .layout-filmstrip .weekly-days {
   flex-wrap: nowrap;
   overflow-x: hidden;
+}
+
+.layout-weeklyMenuGrid .weekly-days {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: var(--space-md);
+}
+
+.layout-weeklyMenuGrid .day-slot {
+  flex-direction: column;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: var(--space-md);
+  min-height: 140px;
+}
+
+.layout-weeklyMenuGrid .day-name {
+  font-weight: var(--font-semibold);
+  color: var(--gold-primary);
+  margin-bottom: var(--space-sm);
+  text-align: center;
+  font-size: var(--text-sm);
+}
+
+.layout-weeklyMenuGrid .dish-name {
+  text-align: center;
+  font-size: var(--text-xs);
+  line-height: 1.3;
+}
+
+.layout-weeklyMenuGrid .dish-image {
+  width: 100%;
+  height: 60px;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+  margin-bottom: var(--space-sm);
+}
+
+.layout-weeklyMenuGrid .dish-image-placeholder {
+  width: 100%;
+  height: 60px;
+  background: linear-gradient(135deg, var(--bg-tertiary) 0%, var(--bg-elevated) 100%);
+  border-radius: var(--radius-sm);
+  margin-bottom: var(--space-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.layout-weeklyMenuGrid .dish-image-placeholder::before {
+  content: '🍽️';
+  font-size: 24px;
+  opacity: 0.4;
 }
 
 .preview-hint {

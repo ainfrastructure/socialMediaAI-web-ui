@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import BasePagination from './BasePagination.vue'
 import MaterialIcon from './MaterialIcon.vue'
@@ -25,7 +25,7 @@ const { t } = useI18n()
 // State
 const selectedItems = ref<MenuItem[]>([])
 const currentPage = ref(1)
-const itemsPerPage = ref(12)
+const itemsPerPage = ref(16)
 const gridContainer = ref<HTMLElement | null>(null)
 
 // Computed
@@ -82,6 +82,12 @@ function calculateItemsPerPage() {
   const containerWidth = gridContainer.value.offsetWidth
   const containerHeight = window.innerHeight - gridContainer.value.getBoundingClientRect().top - 250
 
+  // Defensive check: retry if no dimensions
+  if (containerWidth === 0 || containerHeight <= 0) {
+    setTimeout(calculateItemsPerPage, 300)
+    return
+  }
+
   // Card dimensions
   const cardWidth = 180 // approximate card width including gap
   const cardHeight = 200 // approximate card height including gap
@@ -92,15 +98,31 @@ function calculateItemsPerPage() {
 
   // Update items per page
   const newItemsPerPage = columns * rows
-  itemsPerPage.value = Math.max(6, Math.min(newItemsPerPage, 24))
+  itemsPerPage.value = Math.max(12, Math.min(newItemsPerPage, 24))
 }
 
 // Lifecycle hooks
-onMounted(() => {
+onMounted(async () => {
+  await nextTick()
+
   setTimeout(() => {
     calculateItemsPerPage()
-  }, 100)
+  }, 250)
+
+  // Fallback retry
+  setTimeout(() => {
+    if (gridContainer.value?.offsetWidth > 0) {
+      calculateItemsPerPage()
+    }
+  }, 500)
+
   window.addEventListener('resize', calculateItemsPerPage)
+})
+
+// Watch for menu items changes and recalculate
+watch(() => props.menuItems.length, async () => {
+  await nextTick()
+  calculateItemsPerPage()
 })
 
 onUnmounted(() => {
@@ -135,16 +157,6 @@ onUnmounted(() => {
           }]"
           @click="toggleItem(item)"
         >
-          <!-- Checkbox -->
-          <div class="item-checkbox">
-            <input
-              type="checkbox"
-              :checked="isSelected(item)"
-              :disabled="!isSelected(item) && !canSelectMore"
-              @click.stop="toggleItem(item)"
-            />
-          </div>
-
           <!-- Image -->
           <div class="menu-item-image-wrapper">
             <img
@@ -166,7 +178,7 @@ onUnmounted(() => {
 
           <!-- Selected Badge -->
           <div v-if="isSelected(item)" class="selected-badge">
-            <MaterialIcon icon="check" size="sm" class="badge-icon" />
+            <MaterialIcon icon="check_circle" size="sm" :color="'var(--text-on-gold)'" />
           </div>
         </div>
       </div>
@@ -246,14 +258,12 @@ onUnmounted(() => {
   font-weight: var(--font-medium);
 }
 
-/* Menu Items Grid - 2 rows of 3 items (3x2 grid) */
+/* Menu Items Grid - 4 items per row */
 .menu-items-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);  /* 3 columns */
-  grid-template-rows: repeat(2, 1fr);     /* 2 rows */
+  grid-template-columns: repeat(4, 1fr);  /* 4 columns */
   gap: var(--space-lg);
   padding: var(--space-sm);
-  max-height: 500px;   /* Constrain to 2 rows */
   overflow: hidden;     /* Hide overflow, pagination handles rest */
 }
 
@@ -270,25 +280,24 @@ onUnmounted(() => {
   position: relative;
   display: flex;
   flex-direction: column;
-  background: var(--glass-bg);
-  border: var(--border-width) solid var(--glass-border);
+  background: var(--bg-secondary);
+  border: 2px solid var(--border-color);
   border-radius: var(--radius-lg);
-  padding: var(--space-md);
+  padding: var(--space-lg);
   cursor: pointer;
   transition: var(--transition-base);
-  backdrop-filter: blur(var(--blur-md));
 }
 
 .menu-item-card:hover {
+  border-color: var(--gold-primary);
   transform: translateY(-2px);
   box-shadow: var(--shadow-lg);
-  border-color: var(--gold-primary);
 }
 
 .menu-item-card.selected {
   border-color: var(--gold-primary);
   background: var(--gold-subtle);
-  box-shadow: var(--glow-gold-sm);
+  box-shadow: var(--glow-gold-md);
 }
 
 .menu-item-card.disabled {
@@ -300,25 +309,6 @@ onUnmounted(() => {
   transform: none;
   box-shadow: none;
   border-color: var(--glass-border);
-}
-
-/* Checkbox */
-.item-checkbox {
-  position: absolute;
-  top: var(--space-sm);
-  right: var(--space-sm);
-  z-index: 2;
-}
-
-.item-checkbox input[type="checkbox"] {
-  width: 20px;
-  height: 20px;
-  cursor: pointer;
-  accent-color: var(--gold-primary);
-}
-
-.item-checkbox input[type="checkbox"]:disabled {
-  cursor: not-allowed;
 }
 
 /* Image Wrapper */
@@ -379,15 +369,14 @@ onUnmounted(() => {
 /* Selected Badge */
 .selected-badge {
   position: absolute;
-  bottom: var(--space-md);
-  left: 50%;
-  transform: translateX(-50%);
+  top: var(--space-md);
+  right: var(--space-md);
   display: flex;
   align-items: center;
   justify-content: center;
   width: 32px;
   height: 32px;
-  background: var(--gold-primary);
+  background: var(--gradient-gold);
   border-radius: var(--radius-full);
   box-shadow: var(--shadow-md);
 }

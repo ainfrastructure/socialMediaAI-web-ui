@@ -33,19 +33,6 @@ const emit = defineEmits<{
 
 const { t } = useI18n()
 
-// Local state (synced with modelValue)
-const localCustomization = ref<CustomizationOptions>({ ...props.modelValue })
-
-// Watch for external changes
-watch(() => props.modelValue, (newValue) => {
-  localCustomization.value = { ...newValue }
-}, { deep: true })
-
-// Watch for local changes and emit
-watch(localCustomization, (newValue) => {
-  emit('update:modelValue', { ...newValue })
-}, { deep: true })
-
 // Logo Position Options
 const logoPositions = computed(() => [
   { value: 'top-left', label: t('advancedMode.logoPositions.topLeft'), icon: 'north_west' },
@@ -117,44 +104,29 @@ const comboArrangements = computed(() => [
   { value: 'diagonal', label: t('advancedMode.comboOptions.diagonal'), icon: 'trending_up' },
 ])
 
-// Text overlay enabled state
-const textOverlayEnabled = ref(!!localCustomization.value.textOverlay?.text)
-
-// Initialize text overlay if enabled
-if (!localCustomization.value.textOverlay) {
-  localCustomization.value.textOverlay = {
-    text: '',
-    font: 'playfair',
-    size: 24,
-    color: '#FFFFFF'
-  }
+// Selection handler methods
+function selectLogoPosition(position: CustomizationOptions['logoPosition']) {
+  emit('update:modelValue', { ...props.modelValue, logoPosition: position })
 }
 
-// Initialize new fields with defaults if not present
-if (!localCustomization.value.strictnessMode) {
-  localCustomization.value.strictnessMode = 'flexible'
-}
-if (!localCustomization.value.holidayTheme) {
-  localCustomization.value.holidayTheme = 'none'
-}
-if (!localCustomization.value.customHolidayText) {
-  localCustomization.value.customHolidayText = ''
-}
-if (props.postType === 'combo') {
-  if (!localCustomization.value.comboTextPlacement) {
-    localCustomization.value.comboTextPlacement = 'bottom'
-  }
-  if (!localCustomization.value.comboItemArrangement) {
-    localCustomization.value.comboItemArrangement = 'sideBySide'
-  }
+function selectStrictnessMode(mode: CustomizationOptions['strictnessMode']) {
+  emit('update:modelValue', { ...props.modelValue, strictnessMode: mode })
 }
 
-// Toggle text overlay
-function toggleTextOverlay() {
-  textOverlayEnabled.value = !textOverlayEnabled.value
-  if (!textOverlayEnabled.value) {
-    localCustomization.value.textOverlay!.text = ''
-  }
+function selectHolidayTheme(theme: string) {
+  emit('update:modelValue', { ...props.modelValue, holidayTheme: theme })
+}
+
+function updateCustomHolidayText(text: string) {
+  emit('update:modelValue', { ...props.modelValue, customHolidayText: text })
+}
+
+function updateComboTextPlacement(placement: CustomizationOptions['comboTextPlacement']) {
+  emit('update:modelValue', { ...props.modelValue, comboTextPlacement: placement })
+}
+
+function updateComboItemArrangement(arrangement: CustomizationOptions['comboItemArrangement']) {
+  emit('update:modelValue', { ...props.modelValue, comboItemArrangement: arrangement })
 }
 </script>
 
@@ -170,10 +142,10 @@ function toggleTextOverlay() {
         <button
           v-for="mode in strictnessModes"
           :key="mode.value"
-          :class="['option-button strictness-button', { 'selected': localCustomization.strictnessMode === mode.value }]"
-          @click="localCustomization.strictnessMode = mode.value as any"
+          :class="['option-button strictness-button', { 'selected': props.modelValue.strictnessMode === mode.value }]"
+          @click="selectStrictnessMode(mode.value as CustomizationOptions['strictnessMode'])"
         >
-          <span class="option-icon"><MaterialIcon :icon="mode.icon" size="md" /></span>
+          <span class="option-icon"><MaterialIcon :icon="mode.icon" size="md" :color="'var(--gold-primary)'" /></span>
           <span class="option-label">{{ mode.label }}</span>
           <span class="option-description">{{ mode.description }}</span>
         </button>
@@ -190,42 +162,12 @@ function toggleTextOverlay() {
         <button
           v-for="position in logoPositions"
           :key="position.value"
-          :class="['option-button', { 'selected': localCustomization.logoPosition === position.value }]"
-          @click="localCustomization.logoPosition = position.value as any"
+          :class="['option-button', { 'selected': props.modelValue.logoPosition === position.value }]"
+          @click="selectLogoPosition(position.value as CustomizationOptions['logoPosition'])"
         >
-          <span class="option-icon"><MaterialIcon :icon="position.icon" size="md" /></span>
+          <span class="option-icon"><MaterialIcon :icon="position.icon" size="md" :color="'var(--gold-primary)'" /></span>
           <span class="option-label">{{ position.label }}</span>
         </button>
-      </div>
-    </div>
-
-    <!-- Holiday Inspiration -->
-    <div class="customization-section">
-      <label class="section-label">
-        {{ t('advancedMode.holidayInspiration.label') }}
-        <span class="section-hint">{{ t('advancedMode.holidayInspiration.hint') }}</span>
-      </label>
-      <div class="option-grid holiday-themes">
-        <button
-          v-for="theme in holidayThemes"
-          :key="theme.value"
-          :class="['option-button holiday-button', { 'selected': localCustomization.holidayTheme === theme.value }]"
-          @click="localCustomization.holidayTheme = theme.value"
-        >
-          <span class="option-icon"><MaterialIcon :icon="theme.icon" size="md" /></span>
-          <span class="option-label">{{ theme.label }}</span>
-        </button>
-      </div>
-
-      <!-- Custom theme text input -->
-      <div v-if="localCustomization.holidayTheme === 'custom'" class="custom-theme-input-wrapper">
-        <input
-          v-model="localCustomization.customHolidayText"
-          type="text"
-          :placeholder="t('weeklyCustomization.themes.customPlaceholder')"
-          class="custom-theme-text-input"
-          maxlength="50"
-        />
       </div>
     </div>
 
@@ -241,10 +183,10 @@ function toggleTextOverlay() {
           <button
             v-for="placement in comboTextPlacements"
             :key="placement.value"
-            :class="['option-button', { 'selected': localCustomization.comboTextPlacement === placement.value }]"
-            @click="localCustomization.comboTextPlacement = placement.value as any"
+            :class="['option-button', { 'selected': props.modelValue.comboTextPlacement === placement.value }]"
+            @click="updateComboTextPlacement(placement.value as CustomizationOptions['comboTextPlacement'])"
           >
-            <span class="option-icon"><MaterialIcon :icon="placement.icon" size="md" /></span>
+            <span class="option-icon"><MaterialIcon :icon="placement.icon" size="md" :color="'var(--gold-primary)'" /></span>
             <span class="option-label">{{ placement.label }}</span>
           </button>
         </div>
@@ -260,10 +202,10 @@ function toggleTextOverlay() {
           <button
             v-for="arrangement in comboArrangements"
             :key="arrangement.value"
-            :class="['option-button', { 'selected': localCustomization.comboItemArrangement === arrangement.value }]"
-            @click="localCustomization.comboItemArrangement = arrangement.value as any"
+            :class="['option-button', { 'selected': props.modelValue.comboItemArrangement === arrangement.value }]"
+            @click="updateComboItemArrangement(arrangement.value as CustomizationOptions['comboItemArrangement'])"
           >
-            <span class="option-icon"><MaterialIcon :icon="arrangement.icon" size="md" /></span>
+            <span class="option-icon"><MaterialIcon :icon="arrangement.icon" size="md" :color="'var(--gold-primary)'" /></span>
             <span class="option-label">{{ arrangement.label }}</span>
           </button>
         </div>

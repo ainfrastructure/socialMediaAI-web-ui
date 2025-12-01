@@ -778,7 +778,7 @@ export default {
       timeLabel: 'Time',
       publishing: 'Publishing your post...',
       publishButton: 'Publish Now',
-      scheduleButton: 'Schedule Post',
+      scheduleButton: 'Schedule',
       successTitle: 'Congratulations!',
       successMessage: 'Your post has been published successfully!',
       viewPost: 'View your post on Facebook',
@@ -797,6 +797,7 @@ export default {
       customize: 'Customize',
       styleSelection: 'Style',
       preview: 'Preview',
+      generate: 'Generate',
       publish: 'Publish',
     },
     step1: {
@@ -865,6 +866,7 @@ export default {
       backgroundStyleHint: 'Style of the background',
       layoutTemplateLabel: 'Layout Template',
       layoutTemplateHint: 'Choose how elements are arranged',
+      previewLabel: 'Preview',
     },
     logoPositions: {
       topLeft: 'Top Left',
@@ -915,6 +917,7 @@ export default {
       editPrompt: 'Edit Prompt',
       promptLabel: 'AI Prompt (Editable)',
       promptPlaceholder: 'Describe how you want your image to look...',
+      regenerate: 'Regenerate Styles',
     },
     styleVariations: {
       elegant: {
@@ -967,6 +970,15 @@ export default {
       placeholder: 'Your post preview will appear here',
     },
     step4: {
+      title: 'Preview Your Post',
+      subtitle: 'Review and edit your generated content',
+      generating: 'Creating your masterpiece',
+      generatingSubtitle: 'Generating image and writing content',
+      editPostText: 'Edit your post text',
+      addHashtagPlaceholder: 'Type hashtag and press Enter',
+      nextButton: 'Continue to Publish',
+    },
+    step5: {
       title: 'Generate Your Image',
       subtitle: 'Create your custom post image',
       generating: 'Generating your image...',
@@ -983,9 +995,9 @@ export default {
       generateButton: 'Generate Image (1 credit)',
       regenerate: 'Regenerate',
     },
-    step5: {
-      title: 'Review & Publish',
-      subtitle: 'Preview your post and publish to social media',
+    step6: {
+      title: 'Publish Your Post',
+      subtitle: 'Choose platforms and schedule',
       imagePreview: 'Image Preview',
       postContent: 'Post Content',
       postTextLabel: 'Post Text',
@@ -1052,6 +1064,8 @@ export default {
       calendarGridDesc: 'Full calendar grid layout',
       filmstrip: 'Horizontal Strip',
       filmstripDesc: 'Horizontal filmstrip style',
+      weeklyMenuGrid: 'Weekly Menu Grid',
+      weeklyMenuGridDesc: 'Grid with days and dishes',
     },
     dates: {
       title: 'Date Display',
@@ -1225,7 +1239,7 @@ export default {
     saveChangesButton: 'Save Changes',
     cancelChangesButton: 'Cancel',
     editButton: 'Edit',
-    scheduleButton: 'Schedule Post',
+    scheduleButton: 'Schedule',
     deleteButton: 'Delete',
     postAlt: 'Post',
     publishToInstagram: 'Publish to Instagram',
@@ -1593,5 +1607,32 @@ export default {
     failed: 'Failed',
     cancelled: 'Cancelled',
     draft: 'Draft',
+  },
+
+  // Feedback Modal
+  feedback: {
+    title: 'How satisfied are you with this post?',
+    subtitle: 'Your feedback helps us improve our AI generation',
+    imageQuality: 'Image Quality',
+    contentQuality: 'Content Quality',
+    hashtagsQuality: 'Hashtags Quality',
+    ratingLabels: {
+      1: 'Poor',
+      2: 'Fair',
+      3: 'Good',
+      4: 'Very Good',
+      5: 'Excellent',
+    },
+    additionalFeedback: 'Anything else? What can we improve?',
+    additionalFeedbackPlaceholder: 'Share your thoughts or suggestions...',
+    submitAndPublish: 'Submit Feedback & Publish',
+    skipAndPublish: 'Skip & Publish',
+    submit: 'Submit',
+    skip: 'Skip',
+    submitting: 'Submitting...',
+    thankYou: 'Thank you for your feedback!',
+    rateImage: 'How would you rate the generated image?',
+    rateContent: 'How would you rate the post content?',
+    rateHashtags: 'How would you rate the hashtags?',
   },
 }

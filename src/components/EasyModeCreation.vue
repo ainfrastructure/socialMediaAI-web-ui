@@ -6,6 +6,9 @@ import BaseButton from './BaseButton.vue'
 import BaseAlert from './BaseAlert.vue'
 import MaterialIcon from './MaterialIcon.vue'
 import WizardProgress from './WizardProgress.vue'
+import GoldenTargetIcon from './icons/GoldenTargetIcon.vue'
+import GoldenSparkleIcon from './icons/GoldenSparkleIcon.vue'
+import GoldenPaletteIcon from './icons/GoldenPaletteIcon.vue'
 import UnifiedSchedulePost from './UnifiedSchedulePost.vue'
 import { ImageUploadBox, SectionLabel, StyleTemplateGrid, MenuItemCard, ContentDivider } from './creation'
 import { VueDatePicker } from '@vuepic/vue-datepicker'
@@ -61,6 +64,7 @@ const emit = defineEmits<{
     menuItem: MenuItem | null
     context: string
     styleTemplate: string
+    strictnessMode: 'strict' | 'flexible' | 'creative'
     includeLogo: boolean
     uploadedImage: File | null
     uploadedLogo: File | null
@@ -74,6 +78,7 @@ const emit = defineEmits<{
     postText?: string
     hashtags?: string[]
   }): void
+  (e: 'requestFeedback'): void
   (e: 'reset'): void
 }>()
 
@@ -91,6 +96,7 @@ const totalSteps = 4
 const selectedMenuItem = ref<MenuItem | null>(null)
 const promptContext = ref('')
 const selectedStyleTemplate = ref<string>('vibrant')
+const strictnessMode = ref<'strict' | 'flexible' | 'creative'>('strict')
 const includeLogo = ref(true)
 const uploadedImage = ref<File | null>(null)
 const uploadedImagePreview = ref<string | null>(null)
@@ -325,6 +331,7 @@ function handleGenerate() {
     menuItem: selectedMenuItem.value,
     context: promptContext.value.trim(),
     styleTemplate: selectedStyleTemplate.value,
+    strictnessMode: strictnessMode.value,
     includeLogo: includeLogo.value,
     uploadedImage: uploadedImage.value,
     uploadedLogo: uploadedLogo.value
@@ -392,6 +399,13 @@ function nextStep() {
     step1Error.value = ''
   }
 
+  // Step 3 -> 4: Show feedback modal before going to publish options
+  if (currentStep.value === 3) {
+    console.log('[EasyMode] Step 3 -> Requesting feedback before step 4')
+    emit('requestFeedback')
+    return
+  }
+
   if (currentStep.value < totalSteps) {
     currentStep.value++
   }
@@ -402,6 +416,17 @@ function prevStep() {
     currentStep.value--
   }
 }
+
+// Function to continue to step 4 after feedback (called from parent)
+function continueToPublishStep() {
+  console.log('[EasyMode] Continuing to step 4 after feedback')
+  currentStep.value = 4
+}
+
+// Expose this function so parent can call it
+defineExpose({
+  continueToPublishStep
+})
 
 function goToStep(step: number) {
   // Only allow navigation to completed steps or next available step
@@ -630,6 +655,38 @@ onUnmounted(() => {
         />
       </div>
 
+      <!-- Image Style (Strictness Mode) -->
+      <div class="customization-section">
+        <SectionLabel icon="tune">{{ t('advancedMode.strictness.label', 'Image Style') }}</SectionLabel>
+        <p class="section-hint">{{ t('advancedMode.strictness.hint', 'How closely should the AI follow your dish presentation') }}</p>
+        <div class="strictness-options">
+          <button
+            :class="['strictness-button', { 'selected': strictnessMode === 'strict' }]"
+            @click="strictnessMode = 'strict'"
+          >
+            <GoldenTargetIcon :size="32" class="strictness-icon" />
+            <span class="strictness-label">{{ t('advancedMode.strictness.strict', 'Strict') }}</span>
+            <span class="strictness-description">{{ t('advancedMode.strictness.strictDesc', 'Exact match to menu item') }}</span>
+          </button>
+          <button
+            :class="['strictness-button', { 'selected': strictnessMode === 'flexible' }]"
+            @click="strictnessMode = 'flexible'"
+          >
+            <GoldenSparkleIcon :size="32" class="strictness-icon" />
+            <span class="strictness-label">{{ t('advancedMode.strictness.flexible', 'Flexible') }}</span>
+            <span class="strictness-description">{{ t('advancedMode.strictness.flexibleDesc', 'Balanced creativity') }}</span>
+          </button>
+          <button
+            :class="['strictness-button', { 'selected': strictnessMode === 'creative' }]"
+            @click="strictnessMode = 'creative'"
+          >
+            <GoldenPaletteIcon :size="32" class="strictness-icon" />
+            <span class="strictness-label">{{ t('advancedMode.strictness.creative', 'Creative') }}</span>
+            <span class="strictness-description">{{ t('advancedMode.strictness.creativeDesc', 'Artistic interpretation') }}</span>
+          </button>
+        </div>
+      </div>
+
       <!-- Campaign Context / Promo -->
       <div class="customization-section">
         <SectionLabel icon="auto_awesome">{{ t('easyMode.step2.promoLabel', 'Special Offer (Optional)') }}</SectionLabel>
@@ -836,7 +893,7 @@ onUnmounted(() => {
     <BaseCard v-show="currentStep === 4" variant="glass" class="step-card">
       <!-- Success State -->
       <div v-if="props.publishResults?.success" class="publish-success">
-        <div class="success-icon"><MaterialIcon icon="celebration" size="xl" :color="'var(--gold-primary)'" /></div>
+        <img src="/socialchef_logo.svg" alt="Social Chef" class="success-logo" />
         <h3 class="success-title">{{ t('easyMode.step4.successTitle', 'Congratulations!') }}</h3>
         <p class="success-message">{{ t('easyMode.step4.successMessage', 'Your post has been published successfully!') }}</p>
 
@@ -1122,6 +1179,9 @@ onUnmounted(() => {
   justify-content: center;
   padding: var(--space-5xl) var(--space-2xl);
   min-height: 400px;
+  cursor: default;
+  user-select: none;
+  pointer-events: none;
 }
 
 .image-loading {
@@ -1131,6 +1191,9 @@ onUnmounted(() => {
   justify-content: center;
   padding: var(--space-5xl) var(--space-2xl);
   width: 100%;
+  cursor: default;
+  user-select: none;
+  pointer-events: none;
 }
 
 .loading-logo {
@@ -1139,6 +1202,9 @@ onUnmounted(() => {
   margin-bottom: var(--space-xl);
   animation: bounce 2s ease-in-out infinite;
   filter: drop-shadow(0 4px 20px rgba(212, 175, 55, 0.4));
+  cursor: default;
+  user-select: none;
+  pointer-events: none;
 }
 
 @keyframes bounce {
@@ -1564,6 +1630,75 @@ onUnmounted(() => {
   color: var(--text-primary);
   margin: 0 0 var(--space-lg) 0;
   font-weight: var(--font-semibold);
+}
+
+.section-hint {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  margin-bottom: var(--space-lg);
+  line-height: 1.4;
+}
+
+/* Strictness Options */
+.strictness-options {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-md);
+}
+
+.strictness-button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-sm);
+  padding: var(--space-xl);
+  background: var(--glass-bg);
+  border: var(--border-width) solid var(--glass-border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: var(--transition-base);
+  backdrop-filter: blur(var(--blur-md));
+  min-height: 120px;
+}
+
+.strictness-button:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--gold-primary);
+}
+
+.strictness-button.selected {
+  background: var(--gold-subtle);
+  border-color: var(--gold-primary);
+  box-shadow: var(--glow-gold-sm);
+}
+
+.strictness-icon {
+  font-size: 32px;
+  color: var(--gold-primary);
+}
+
+.strictness-label {
+  font-size: var(--text-base);
+  color: var(--text-secondary);
+  text-align: center;
+  font-weight: var(--font-semibold);
+}
+
+.strictness-button.selected .strictness-label {
+  color: var(--gold-primary);
+}
+
+.strictness-description {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  text-align: center;
+  line-height: 1.4;
+}
+
+.strictness-button.selected .strictness-description {
+  color: var(--text-secondary);
 }
 
 /* Logo Management */
@@ -2373,8 +2508,9 @@ onUnmounted(() => {
   animation: fadeInUp 0.5s var(--ease-smooth);
 }
 
-.success-icon {
-  font-size: 4rem;
+.success-logo {
+  width: 120px;
+  height: auto;
   margin-bottom: var(--space-xl);
   animation: bounce 0.6s ease-out;
 }

@@ -778,7 +778,7 @@ export default {
       timeLabel: 'Tid',
       publishing: 'Publiserer innlegget ditt...',
       publishButton: 'Publiser nå',
-      scheduleButton: 'Planlegg innlegg',
+      scheduleButton: 'Planlegg',
       successTitle: 'Gratulerer!',
       successMessage: 'Innlegget ditt er publisert!',
       viewPost: 'Se innlegget på Facebook',
@@ -797,6 +797,7 @@ export default {
       customize: 'Tilpass',
       styleSelection: 'Stil',
       preview: 'Forhåndsvisning',
+      generate: 'Generer',
       publish: 'Publiser',
     },
     step1: {
@@ -865,6 +866,7 @@ export default {
       backgroundStyleHint: 'Stil på bakgrunnen',
       layoutTemplateLabel: 'Layoutmal',
       layoutTemplateHint: 'Velg hvordan elementene skal arrangeres',
+      previewLabel: 'Forhåndsvisning',
     },
     logoPositions: {
       topLeft: 'Topp venstre',
@@ -915,6 +917,7 @@ export default {
       editPrompt: 'Rediger ledetekst',
       promptLabel: 'AI-ledetekst (redigerbar)',
       promptPlaceholder: 'Beskriv hvordan du vil at bildet ditt skal se ut...',
+      regenerate: 'Regenerer stiler',
     },
     styleVariations: {
       elegant: {
@@ -967,8 +970,17 @@ export default {
       placeholder: 'Forhåndsvisning av innlegget vises her',
     },
     step4: {
-      title: 'Generer bildet ditt',
-      subtitle: 'Lag ditt tilpassede innleggsbilde',
+      title: 'Forhåndsvis innlegget ditt',
+      subtitle: 'Gjennomgå og rediger det genererte innholdet',
+      generating: 'Lager ditt mesterverk',
+      generatingSubtitle: 'Genererer bilde og skriver innhold',
+      editPostText: 'Rediger innleggsteksten din',
+      addHashtagPlaceholder: 'Skriv hashtag og trykk Enter',
+      nextButton: 'Fortsett til publisering',
+    },
+    step5: {
+      title: 'Publiser',
+      subtitle: 'Forhåndsvis innlegget ditt og publiser til sosiale medier',
       generating: 'Genererer bildet ditt...',
       generatingWithAI: 'Bruker AI til å lage ditt perfekte innlegg...',
       generatingImageTitle: 'Lager bildet ditt',
@@ -983,9 +995,9 @@ export default {
       generateButton: 'Generer bilde (1 kreditt)',
       regenerate: 'Regenerer',
     },
-    step5: {
-      title: 'Gjennomgå og publiser',
-      subtitle: 'Forhåndsvis innlegget ditt og publiser til sosiale medier',
+    step6: {
+      title: 'Publiser innlegget ditt',
+      subtitle: 'Velg plattformer og planlegg',
       imagePreview: 'Bildeforhåndsvisning',
       postContent: 'Innleggsinnhold',
       postTextLabel: 'Innleggstekst',
@@ -1052,6 +1064,8 @@ export default {
       calendarGridDesc: 'Full kalender-layout',
       filmstrip: 'Horisontal stripe',
       filmstripDesc: 'Horisontal filmstripe-stil',
+      weeklyMenuGrid: 'Ukentlig menyrutenett',
+      weeklyMenuGridDesc: 'Rutenett med dager og retter',
     },
     dates: {
       title: 'Datovisning',
@@ -1225,7 +1239,7 @@ export default {
     saveChangesButton: 'Lagre endringer',
     cancelChangesButton: 'Avbryt',
     editButton: 'Rediger',
-    scheduleButton: ' Planlegg innlegg',
+    scheduleButton: 'Planlegg',
     deleteButton: 'Slett',
     postAlt: 'Innlegg',
     publishToInstagram: 'Publiser til Instagram',
@@ -1593,5 +1607,32 @@ export default {
     failed: 'Mislykket',
     cancelled: 'Avbrutt',
     draft: 'Utkast',
+  },
+
+  // Feedback Modal
+  feedback: {
+    title: 'Hvor fornøyd er du med dette innlegget?',
+    subtitle: 'Din tilbakemelding hjelper oss med å forbedre AI-genereringen',
+    imageQuality: 'Bildekvalitet',
+    contentQuality: 'Innholdskvalitet',
+    hashtagsQuality: 'Hashtag-kvalitet',
+    ratingLabels: {
+      1: 'Dårlig',
+      2: 'Greit',
+      3: 'Bra',
+      4: 'Veldig bra',
+      5: 'Utmerket',
+    },
+    additionalFeedback: 'Noe annet? Hva kan vi forbedre?',
+    additionalFeedbackPlaceholder: 'Del dine tanker eller forslag...',
+    submitAndPublish: 'Send tilbakemelding og publiser',
+    skipAndPublish: 'Hopp over og publiser',
+    submit: 'Send',
+    skip: 'Hopp over',
+    submitting: 'Sender...',
+    thankYou: 'Takk for tilbakemeldingen!',
+    rateImage: 'Hvordan vil du vurdere det genererte bildet?',
+    rateContent: 'Hvordan vil du vurdere innholdet?',
+    rateHashtags: 'Hvordan vil du vurdere hashtagene?',
   },
 }

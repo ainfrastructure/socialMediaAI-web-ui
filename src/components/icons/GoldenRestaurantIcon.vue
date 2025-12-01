@@ -19,13 +19,14 @@ const sizeValue = typeof props.size === 'number' ? `${props.size}px` : props.siz
         <stop offset="100%" style="stop-color:#B8943D"/>
       </linearGradient>
     </defs>
-    <!-- Fork -->
-    <path d="M8.5 2V11C8.5 11.5523 8.05228 12 7.5 12C6.94772 12 6.5 11.5523 6.5 11V2" stroke="url(#goldGrad-restaurant)" stroke-width="1.5" stroke-linecap="round"/>
-    <path d="M7.5 12V22" stroke="url(#goldGrad-restaurant)" stroke-width="1.5" stroke-linecap="round"/>
-    <path d="M4.5 2V8" stroke="url(#goldGrad-restaurant)" stroke-width="1.5" stroke-linecap="round"/>
-    <path d="M10.5 2V8" stroke="url(#goldGrad-restaurant)" stroke-width="1.5" stroke-linecap="round"/>
-    <!-- Knife -->
-    <path d="M16.5 2V9C16.5 10.1046 17.3954 11 18.5 11C19.6046 11 20.5 10.1046 20.5 9V2" stroke="url(#goldGrad-restaurant)" stroke-width="1.5" stroke-linecap="round"/>
-    <path d="M18.5 11V22" stroke="url(#goldGrad-restaurant)" stroke-width="1.5" stroke-linecap="round"/>
+    <!-- Plate/Dome -->
+    <circle cx="12" cy="12" r="8" fill="url(#goldGrad-restaurant)" opacity="0.2"/>
+    <path d="M4 12C4 7.58172 7.58172 4 12 4C16.4183 4 20 7.58172 20 12" stroke="url(#goldGrad-restaurant)" stroke-width="2" stroke-linecap="round"/>
+    <!-- Chef Hat Top -->
+    <path d="M8 9C8 6.79086 9.79086 5 12 5C14.2091 5 16 6.79086 16 9L15 12H9L8 9Z" fill="url(#goldGrad-restaurant)"/>
+    <!-- Plate Base -->
+    <ellipse cx="12" cy="18" rx="7" ry="2" fill="url(#goldGrad-restaurant)" opacity="0.6"/>
+    <!-- Accent Line -->
+    <path d="M6 18H18" stroke="url(#goldGrad-restaurant)" stroke-width="2.5" stroke-linecap="round"/>
   </svg>
 </template>

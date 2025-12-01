@@ -16,12 +16,13 @@ class ContentService {
       size?: string
       rotation?: number
     },
-    placeId?: string
+    placeId?: string,
+    strictnessMode?: 'strict' | 'flexible' | 'creative'
   ): Promise<ApiResponse<{ imageUrl: string; usage: any; watermarked?: boolean; promotionalStickerAdded?: boolean }>> {
     const response = await fetch(`${API_URL}/api/gemini/generate-image`, {
       method: 'POST',
       headers: getAuthHeaders(),
-      body: JSON.stringify({ prompt, watermark, referenceImage, promotionalSticker, placeId }),
+      body: JSON.stringify({ prompt, watermark, referenceImage, promotionalSticker, placeId, strictnessMode }),
     })
     return response.json()
   }
