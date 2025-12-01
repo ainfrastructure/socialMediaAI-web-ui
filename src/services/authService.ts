@@ -150,6 +150,14 @@ class AuthService {
     })
     return response.json()
   }
+
+  async signInWithGoogle(): Promise<ApiResponse<{ url: string }>> {
+    const response = await fetch(`${API_URL}/api/auth/google/init`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+    })
+    return response.json()
+  }
 }
 
 export const authService = new AuthService()

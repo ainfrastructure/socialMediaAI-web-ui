@@ -9,6 +9,7 @@ import BaseButton from '../components/BaseButton.vue'
 import BaseAlert from '../components/BaseAlert.vue'
 import BaseInput from '../components/BaseInput.vue'
 import AppleIcon from '../components/icons/AppleIcon.vue'
+import GoogleIcon from '../components/icons/GoogleIcon.vue'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -167,6 +168,14 @@ async function handleAppleSignIn() {
     showMessage(result.error || t('errors.generic'), 'error')
   }
 }
+
+async function handleGoogleSignIn() {
+  const result = await authStore.signInWithGoogle()
+
+  if (!result.success) {
+    showMessage(result.error || t('errors.generic'), 'error')
+  }
+}
 </script>
 
 <template>
@@ -187,16 +196,28 @@ async function handleAppleSignIn() {
         {{ message }}
       </BaseAlert>
 
-      <!-- Apple Sign In Button -->
-      <button
-        type="button"
-        class="apple-sign-in-button"
-        :disabled="authStore.loading"
-        @click="handleAppleSignIn"
-      >
-        <AppleIcon :size="20" />
-        <span>{{ $t('auth.continueWithApple') }}</span>
-      </button>
+      <!-- Social Sign In Buttons -->
+      <div class="social-buttons">
+        <button
+          type="button"
+          class="social-sign-in-button apple-button"
+          :disabled="authStore.loading"
+          @click="handleAppleSignIn"
+        >
+          <AppleIcon :size="20" />
+          <span>{{ $t('auth.continueWithApple') }}</span>
+        </button>
+
+        <button
+          type="button"
+          class="social-sign-in-button google-button"
+          :disabled="authStore.loading"
+          @click="handleGoogleSignIn"
+        >
+          <GoogleIcon :size="20" />
+          <span>{{ $t('auth.continueWithGoogle') }}</span>
+        </button>
+      </div>
 
       <div class="divider">
         <span>{{ $t('auth.orContinueWithEmail') }}</span>
@@ -402,16 +423,20 @@ form {
   gap: var(--space-md);
 }
 
-/* Apple Sign In Button */
-.apple-sign-in-button {
+/* Social Sign In Buttons */
+.social-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.social-sign-in-button {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: var(--space-md);
   width: 100%;
   padding: var(--space-lg) var(--space-xl);
-  background: #000000;
-  color: #ffffff;
   border: none;
   border-radius: var(--radius-md);
   font-family: var(--font-body);
@@ -421,18 +446,38 @@ form {
   transition: var(--transition-base);
 }
 
-.apple-sign-in-button:hover:not(:disabled) {
-  background: #1a1a1a;
+.social-sign-in-button:hover:not(:disabled) {
   transform: translateY(-1px);
 }
 
-.apple-sign-in-button:active:not(:disabled) {
+.social-sign-in-button:active:not(:disabled) {
   transform: translateY(0);
 }
 
-.apple-sign-in-button:disabled {
+.social-sign-in-button:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+/* Apple Button */
+.apple-button {
+  background: #000000;
+  color: #ffffff;
+}
+
+.apple-button:hover:not(:disabled) {
+  background: #1a1a1a;
+}
+
+/* Google Button */
+.google-button {
+  background: #ffffff;
+  color: #1f1f1f;
+  border: 1px solid var(--border-color);
+}
+
+.google-button:hover:not(:disabled) {
+  background: #f5f5f5;
 }
 
 .divider {

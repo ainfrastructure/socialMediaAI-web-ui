@@ -130,6 +130,7 @@ export default {
     loginWithMagicLink: 'Login with Magic Link',
     sendMagicLink: 'Send Magic Link',
     continueWithApple: 'Continue with Apple',
+    continueWithGoogle: 'Continue with Google',
     orContinueWithEmail: 'or continue with email',
   },
 

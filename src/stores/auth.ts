@@ -236,6 +236,29 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
+  async function signInWithGoogle() {
+    loading.value = true
+    error.value = null
+
+    try {
+      const response = await api.signInWithGoogle()
+
+      if (!response.success || !response.data?.url) {
+        error.value = response.error || 'Failed to initiate Google Sign In'
+        return { success: false, error: error.value }
+      }
+
+      // Redirect to Google OAuth
+      window.location.href = response.data.url
+      return { success: true }
+    } catch (err: any) {
+      error.value = err.message || 'Network error'
+      return { success: false, error: error.value }
+    } finally {
+      loading.value = false
+    }
+  }
+
   async function loadProfile() {
     // Check localStorage for token if not in state
     if (!accessToken.value) {
@@ -422,6 +445,7 @@ export const useAuthStore = defineStore('auth', () => {
     login,
     logout,
     signInWithApple,
+    signInWithGoogle,
     loadProfile,
     refreshProfile,
     refreshAccessToken,

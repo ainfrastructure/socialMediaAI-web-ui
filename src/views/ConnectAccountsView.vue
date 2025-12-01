@@ -1,17 +1,14 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useFacebookStore } from '../stores/facebook'
 import { useInstagramStore } from '../stores/instagram'
-import { woltService } from '../services/woltService'
 import DashboardLayout from '../components/DashboardLayout.vue'
 import BaseCard from '../components/BaseCard.vue'
 import BaseButton from '../components/BaseButton.vue'
 import BaseAlert from '../components/BaseAlert.vue'
 import ConfirmModal from '../components/ConfirmModal.vue'
 
-const router = useRouter()
 const facebookStore = useFacebookStore()
 const instagramStore = useInstagramStore()
 const { t } = useI18n()
@@ -25,7 +22,7 @@ const showConfirmModal = ref(false)
 const confirmModalMessage = ref('')
 const confirmModalTitle = ref('')
 const pendingDisconnect = ref<{
-  type: 'facebook' | 'instagram' | 'wolt'
+  type: 'facebook' | 'instagram'
   id: string
   name: string
 } | null>(null)
@@ -37,12 +34,8 @@ const isConnected = computed(() => facebookStore.connectedPages.length > 0)
 const isInstagramConnected = computed(() => instagramStore.connectedAccounts.length > 0)
 
 onMounted(async () => {
-  // Load connected Facebook pages, Instagram accounts, and check Wolt on mount
+  // Load connected Facebook pages and Instagram accounts on mount
   await Promise.all([facebookStore.loadConnectedPages(), instagramStore.loadConnectedAccounts()])
-
-  // Check Wolt connection
-  const woltConnected = await woltService.isConnected()
-  isWoltConnected.value = woltConnected
 
   // Check if we just came back from a successful connection
   const urlParams = new URLSearchParams(window.location.search)
@@ -122,45 +115,6 @@ async function executeDisconnectInstagramAccount(accountId: string, username: st
   }
 }
 
-// Wolt state
-const woltLoading = ref(false)
-const isWoltConnected = ref(false)
-
-async function handleConnectWolt() {
-  woltLoading.value = true
-  try {
-    await woltService.initiateOAuth()
-    // Will redirect to Wolt
-  } catch (error: any) {
-    console.error('Failed to connect Wolt:', error)
-    showErrorMessage.value = true
-  } finally {
-    woltLoading.value = false
-  }
-}
-
-function requestDisconnectWolt() {
-  pendingDisconnect.value = { type: 'wolt', id: 'wolt', name: 'Wolt' }
-  confirmModalTitle.value = t('connectAccounts.disconnectTitle')
-  confirmModalMessage.value = t('connectAccounts.confirmDisconnect', { name: 'Wolt' })
-  showConfirmModal.value = true
-}
-
-async function executeDisconnectWolt() {
-  woltLoading.value = true
-  try {
-    await woltService.disconnect()
-    isWoltConnected.value = false
-    successMessage.value = 'Successfully disconnected Wolt'
-    showSuccessMessage.value = true
-  } catch (error: any) {
-    console.error('Failed to disconnect Wolt:', error)
-    showErrorMessage.value = true
-  } finally {
-    woltLoading.value = false
-  }
-}
-
 // Handle confirm from modal
 async function handleConfirmDisconnect() {
   showConfirmModal.value = false
@@ -173,8 +127,6 @@ async function handleConfirmDisconnect() {
     await executeDisconnectPage(id, name)
   } else if (type === 'instagram') {
     await executeDisconnectInstagramAccount(id, name.replace('@', ''))
-  } else if (type === 'wolt') {
-    await executeDisconnectWolt()
   }
 
   pendingDisconnect.value = null
@@ -322,63 +274,6 @@ function handleCancelDisconnect() {
             </div>
           </div>
 
-          <!-- Wolt Row -->
-          <div class="platform-row" :class="{ connected: isWoltConnected }">
-            <div class="platform-icon wolt-icon">
-              <svg
-                width="22"
-                height="22"
-                viewBox="0 0 24 24"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  d="M6 2L3 6V20C3 20.5304 3.21071 21.0391 3.58579 21.4142C3.96086 21.7893 4.46957 22 5 22H19C19.5304 22 20.0391 21.7893 20.4142 21.4142C20.7893 21.0391 21 20.5304 21 20V6L18 2H6Z"
-                  stroke="white"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                />
-                <path
-                  d="M3 6H21"
-                  stroke="white"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                />
-                <path
-                  d="M16 10C16 11.0609 15.5786 12.0783 14.8284 12.8284C14.0783 13.5786 13.0609 14 12 14C10.9391 14 9.92172 13.5786 9.17157 12.8284C8.42143 12.0783 8 11.0609 8 10"
-                  stroke="white"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                />
-              </svg>
-            </div>
-            <div class="platform-info">
-              <h3>Wolt Venue</h3>
-            </div>
-            <div class="platform-actions">
-              <BaseButton
-                v-if="isWoltConnected"
-                @click="requestDisconnectWolt"
-                variant="danger"
-                size="small"
-                :disabled="woltLoading"
-              >
-                Disconnect
-              </BaseButton>
-              <BaseButton
-                v-if="!isWoltConnected"
-                @click="handleConnectWolt"
-                variant="primary"
-                size="small"
-                :disabled="woltLoading"
-              >
-                {{ woltLoading ? 'Connecting...' : 'Connect' }}
-              </BaseButton>
-            </div>
-          </div>
           <!-- X (Twitter) Row - Coming Soon -->
           <div class="platform-row disabled">
             <div class="platform-icon platform-icon-x">
@@ -573,10 +468,6 @@ function handleCancelDisconnect() {
 
 .facebook-icon {
   background: linear-gradient(135deg, #1877f2, #0d5dbf);
-}
-
-.wolt-icon {
-  background: linear-gradient(135deg, #009de0, #0077b3);
 }
 
 .platform-icon-instagram {
