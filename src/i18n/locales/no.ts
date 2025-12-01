@@ -53,6 +53,10 @@ export default {
     created: 'Opprettet',
     saving: 'Lagrer...',
     saveChanges: 'Lagre endringer',
+    somethingWentWrong: 'Noe gikk galt',
+    errorHint: 'Feilen har blitt rapportert til vårt team. Vennligst prøv å oppdatere siden.',
+    refresh: 'Oppdater side',
+    goBack: 'Gå tilbake',
     pagination: {
       previous: '← Forrige',
       next: 'Neste →',

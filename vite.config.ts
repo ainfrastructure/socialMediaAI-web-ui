@@ -3,6 +3,7 @@ import { fileURLToPath, URL } from 'node:url'
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import vueDevTools from 'vite-plugin-vue-devtools'
+import { sentryVitePlugin } from '@sentry/vite-plugin'
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -10,6 +11,17 @@ export default defineConfig({
   plugins: [
     vue(),
     vueDevTools(),
+    // Upload source maps to Sentry on production builds
+    sentryVitePlugin({
+      org: process.env.VITE_SENTRY_ORG,
+      project: process.env.VITE_SENTRY_PROJECT,
+      authToken: process.env.SENTRY_AUTH_TOKEN,
+      // Only upload source maps in production builds
+      disable: process.env.NODE_ENV !== 'production',
+      sourcemaps: {
+        assets: './dist/**',
+      },
+    }),
   ],
   resolve: {
     alias: {
@@ -27,6 +39,8 @@ export default defineConfig({
     ],
   },
   build: {
+    // Enable source maps for Sentry
+    sourcemap: true,
     rollupOptions: {
       output: {
         manualChunks: {

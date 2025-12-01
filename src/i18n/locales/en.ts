@@ -53,6 +53,10 @@ export default {
     created: 'Created',
     saving: 'Saving...',
     saveChanges: 'Save Changes',
+    somethingWentWrong: 'Something went wrong',
+    errorHint: 'The error has been reported to our team. Please try refreshing the page.',
+    refresh: 'Refresh Page',
+    goBack: 'Go Back',
     pagination: {
       previous: '← Previous',
       next: 'Next →',
