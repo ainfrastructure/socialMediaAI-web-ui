@@ -16,12 +16,16 @@ const loading = ref(false)
 const success = ref(false)
 const error = ref('')
 const waitlistCount = ref(0)
+const countLoading = ref(true)
+const countFailed = ref(false)
 
 // Base count offset (fake starting count)
 const BASE_COUNT = 110
 
 onMounted(async () => {
   // Fetch current waitlist count
+  countLoading.value = true
+  countFailed.value = false
   try {
     const response = await api.getWaitlistCount()
     // Backend returns { success: true, count: X } directly
@@ -29,10 +33,12 @@ onMounted(async () => {
     if (response.success && count !== undefined) {
       waitlistCount.value = BASE_COUNT + count
     } else {
-      waitlistCount.value = BASE_COUNT
+      countFailed.value = true
     }
   } catch {
-    waitlistCount.value = BASE_COUNT
+    countFailed.value = true
+  } finally {
+    countLoading.value = false
   }
 })
 
@@ -95,13 +101,21 @@ function goToLogin() {
       <h1 class="headline">{{ $t('waitlist.headline') }}</h1>
       <p class="subheadline">{{ $t('waitlist.subheadline') }}</p>
 
-      <!-- Social Proof -->
-      <p class="social-proof">
-        {{ $t('waitlist.socialProof', { count: waitlistCount }) }}
+      <!-- Social Proof (only show when not failed) -->
+      <p v-if="!countFailed" class="social-proof">
+        <span v-if="countLoading" class="count-spinner"></span>
+        <template v-else>
+          {{ $t('waitlist.socialProof', { count: waitlistCount }) }}
+        </template>
       </p>
 
-      <!-- Form Card -->
-      <BaseCard variant="glass-intense" class="form-card">
+      <!-- Coming Soon (show when count fetch failed) -->
+      <template v-if="countFailed">
+        <p class="coming-soon">{{ $t('waitlist.comingSoon') }}</p>
+      </template>
+
+      <!-- Form Card (hide when count failed) -->
+      <BaseCard v-else variant="glass-intense" class="form-card">
         <!-- Success State -->
         <div v-if="success" class="success-state">
           <div class="success-icon">✓</div>
@@ -255,6 +269,34 @@ function goToLogin() {
   margin-bottom: var(--space-2xl);
   font-weight: var(--font-medium);
   letter-spacing: 0.5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 20px;
+}
+
+.count-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--gold-subtle);
+  border-top-color: var(--gold-primary);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.coming-soon {
+  font-family: var(--font-heading);
+  font-size: var(--text-2xl);
+  color: var(--gold-primary);
+  margin-bottom: var(--space-2xl);
+  font-weight: var(--font-semibold);
+  letter-spacing: 1px;
 }
 
 .form-card {

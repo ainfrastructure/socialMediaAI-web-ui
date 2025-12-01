@@ -146,6 +146,7 @@ export default {
     loginLink: 'Har du allerede en konto?',
     loginLinkText: 'Logg inn',
     socialProof: 'Bli med {count}+ restauranter på ventelisten',
+    comingSoon: 'Kommer snart',
   },
 
   // Dashboard View
