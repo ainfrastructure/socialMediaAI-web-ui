@@ -146,6 +146,7 @@ export default {
     loginLink: 'Already have an account?',
     loginLinkText: 'Sign in',
     socialProof: 'Join {count}+ restaurants on the waitlist',
+    comingSoon: 'Coming soon',
   },
 
   // Dashboard View
