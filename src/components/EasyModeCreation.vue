@@ -57,6 +57,7 @@ const props = defineProps<{
   publishResults?: PublishResults | null
   error?: string | null
   initialScheduleDate?: string // Format: YYYY-MM-DD, pre-fills schedule date
+  lockDate?: boolean // When true, date cannot be changed in the schedule step
 }>()
 
 const emit = defineEmits<{
@@ -436,16 +437,17 @@ function goToStep(step: number) {
   }
 }
 
-// Initialize edited content when entering Step 3
-watch(() => currentStep.value, (newStep) => {
-  if (newStep === 3) {
+// Initialize edited content when entering Step 3 for the first time (not when going back from step 4)
+watch(() => currentStep.value, (newStep, oldStep) => {
+  // Only initialize when coming from step 2 (forward), not from step 4 (backward)
+  if (newStep === 3 && oldStep === 2) {
     editedPostText.value = props.postText || ''
     editedHashtags.value = [...(props.hashtags || [])]
     newHashtag.value = ''
   }
 })
 
-// Also update when props change while on step 3
+// Also update when props change while on step 3 (and edited content is empty)
 watch(() => [props.postText, props.hashtags], () => {
   if (currentStep.value === 3 && !editedPostText.value && props.postText) {
     editedPostText.value = props.postText
@@ -961,6 +963,7 @@ onUnmounted(() => {
           :post-text="editedPostText"
           :hashtags="editedHashtags"
           :initial-schedule-date="props.initialScheduleDate"
+          :lock-date="props.lockDate"
           @publish="handlePublish"
           @cancel="prevStep"
         />

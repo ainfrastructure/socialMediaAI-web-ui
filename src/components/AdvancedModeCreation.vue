@@ -84,6 +84,8 @@ interface WeeklyCustomizationOptions {
 const props = defineProps<{
   restaurant: SavedRestaurant
   menuItems: MenuItem[]
+  initialScheduleDate?: string // Format: YYYY-MM-DD, pre-fills schedule date
+  lockDate?: boolean // When true, date cannot be changed in the schedule step
 }>()
 
 interface WeeklyMenuDataItem {
@@ -1392,6 +1394,8 @@ defineExpose({
             :hashtags="hashtags"
             :show-preview="false"
             :show-cancel-button="false"
+            :initial-schedule-date="props.initialScheduleDate"
+            :lock-date="props.lockDate"
             @publish="handleUnifiedPublish"
           />
         </div>

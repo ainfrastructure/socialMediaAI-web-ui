@@ -704,9 +704,8 @@ function handleSchedule() {
   display: flex;
   gap: var(--space-md);
   margin-top: auto;
-  padding-top: var(--space-xl);
-  border-top: 1px solid var(--border-color);
-  justify-content: flex-end;
+  padding-top: var(--space-2xl);
+  flex-wrap: wrap;
 }
 
 /* Responsive */

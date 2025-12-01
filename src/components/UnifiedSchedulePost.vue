@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import BaseButton from './BaseButton.vue'
 import BaseAlert from './BaseAlert.vue'
@@ -19,6 +19,7 @@ interface Props {
   initialScheduleDate?: string // Format: YYYY-MM-DD
   forceScheduleMode?: boolean
   showCancelButton?: boolean
+  lockDate?: boolean // When true, date picker is hidden and date is displayed as read-only
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -27,7 +28,8 @@ const props = withDefaults(defineProps<Props>(), {
   initialPlatforms: () => [],
   initialPublishType: 'now',
   forceScheduleMode: false,
-  showCancelButton: true
+  showCancelButton: true,
+  lockDate: false
 })
 
 const emit = defineEmits<{
@@ -134,6 +136,17 @@ const today = computed(() => {
   return date
 })
 
+// Formatted locked date display
+const formattedLockedDate = computed(() => {
+  if (!scheduleDateTime.value) return ''
+  return scheduleDateTime.value.toLocaleDateString('en-US', {
+    weekday: 'long',
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric'
+  })
+})
+
 // Methods
 function togglePlatform(platformId: string) {
   const index = selectedPlatforms.value.indexOf(platformId)
@@ -154,6 +167,7 @@ function getPlatformIconStyle(platformId: string) {
 function handlePublish() {
   error.value = ''
 
+  // Validate platform selection
   if (selectedPlatforms.value.length === 0) {
     error.value = t('unifiedSchedule.noPlatformSelected', 'Please select at least one platform')
     return
@@ -168,12 +182,6 @@ function handlePublish() {
       return
     }
 
-    // Format date as YYYY-MM-DD
-    const year = scheduleDateTime.value.getFullYear()
-    const month = String(scheduleDateTime.value.getMonth() + 1).padStart(2, '0')
-    const day = String(scheduleDateTime.value.getDate()).padStart(2, '0')
-    scheduledDate = `${year}-${month}-${day}`
-
     // Convert 12-hour to 24-hour format
     let hour24 = parseInt(selectedHour.value)
     if (selectedPeriod.value === 'PM' && hour24 !== 12) {
@@ -181,6 +189,28 @@ function handlePublish() {
     } else if (selectedPeriod.value === 'AM' && hour24 === 12) {
       hour24 = 0
     }
+
+    // Create scheduled datetime for validation
+    const scheduledDateTime = new Date(
+      scheduleDateTime.value.getFullYear(),
+      scheduleDateTime.value.getMonth(),
+      scheduleDateTime.value.getDate(),
+      hour24,
+      parseInt(selectedMinute.value)
+    )
+
+    // Validate that scheduled time is in the future
+    const now = new Date()
+    if (scheduledDateTime <= now) {
+      error.value = t('unifiedSchedule.mustBeInFuture', 'Scheduled time must be after now')
+      return
+    }
+
+    // Format date as YYYY-MM-DD
+    const year = scheduleDateTime.value.getFullYear()
+    const month = String(scheduleDateTime.value.getMonth() + 1).padStart(2, '0')
+    const day = String(scheduleDateTime.value.getDate()).padStart(2, '0')
+    scheduledDate = `${year}-${month}-${day}`
     scheduledTime = `${String(hour24).padStart(2, '0')}:${selectedMinute.value}`
   }
 
@@ -221,8 +251,14 @@ onMounted(() => {
       </div>
     </div>
 
-    <!-- Publish Type Toggle (hidden in force schedule mode) -->
-    <div v-if="!forceScheduleMode" class="publish-type-section">
+    <!-- Locked Date Header (shown when date is locked) -->
+    <div v-if="lockDate" class="locked-date-header">
+      <span class="locked-date-icon">📅</span>
+      <h3 class="locked-date-title">{{ formattedLockedDate }}</h3>
+    </div>
+
+    <!-- Publish Type Toggle (hidden in force schedule mode OR when date is locked) -->
+    <div v-if="!forceScheduleMode && !lockDate" class="publish-type-section">
       <h4 class="section-label">{{ t('unifiedSchedule.whenToPublish', 'When to Publish') }}</h4>
       <div class="publish-type-toggle">
         <button
@@ -242,10 +278,10 @@ onMounted(() => {
       </div>
     </div>
 
-    <!-- Schedule Section (always shown in force mode, otherwise when scheduling) -->
-    <div v-if="publishType === 'schedule' || forceScheduleMode" class="schedule-section">
-      <!-- Date Picker -->
-      <div class="form-group">
+    <!-- Schedule Section (always shown in force mode or lockDate mode, otherwise when scheduling) -->
+    <div v-if="publishType === 'schedule' || forceScheduleMode || lockDate" class="schedule-section">
+      <!-- Date Picker (only shown when NOT locked) -->
+      <div v-if="!lockDate" class="form-group">
         <label class="form-label">{{ t('unifiedSchedule.selectDate', 'Select Date') }}</label>
         <VueDatePicker
           v-model="scheduleDateTime"
@@ -533,6 +569,35 @@ onMounted(() => {
   color: var(--gold-primary);
   font-size: var(--text-xl);
   font-weight: var(--font-bold);
+}
+
+/* Locked Date Header */
+.locked-date-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-md);
+  padding: var(--space-lg) var(--space-xl);
+  background: var(--gold-subtle);
+  border: var(--border-width) solid var(--gold-primary);
+  border-radius: var(--radius-lg);
+  margin-bottom: var(--space-md);
+}
+
+.locked-date-icon {
+  font-size: var(--text-2xl);
+}
+
+.locked-date-title {
+  font-family: var(--font-heading);
+  font-size: var(--text-xl);
+  font-weight: var(--font-semibold);
+  color: var(--text-primary);
+  margin: 0;
+  background: var(--gradient-gold);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 /* Platform Section */

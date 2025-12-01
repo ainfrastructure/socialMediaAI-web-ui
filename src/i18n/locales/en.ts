@@ -1519,6 +1519,7 @@ export default {
     schedule: 'Schedule Post',
     noPlatformSelected: 'Please select at least one platform',
     noDateSelected: 'Please select a date',
+    mustBeInFuture: 'Scheduled time must be after now',
   },
 
   // Mode Toggle

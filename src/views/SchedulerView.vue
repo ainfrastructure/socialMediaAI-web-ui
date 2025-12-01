@@ -7,14 +7,6 @@
         <p class="subtitle">{{ $t('scheduler.subtitle') }}</p>
       </div>
 
-      <!-- Upcoming Posts Quick View -->
-      <UpcomingPostsList
-        :posts="upcomingPosts"
-        @view="viewPostDetail"
-        @edit="editScheduledPost"
-        @delete="cancelPost"
-      />
-
       <!-- Calendar Grid (always rendered) -->
       <BaseCard variant="glass" class="calendar-card">
         <!-- Loading Overlay -->
@@ -71,9 +63,27 @@
           >
             <div class="day-number">{{ viewMode === 'day' ? '' : day.day }}</div>
 
-            <!-- Hover Create Button (Month/Week view only) -->
-            <div v-if="viewMode !== 'day' && !isPastDate(day.date)" class="day-hover-action" @click.stop="openCreatePostWizard(day)">
-              <span class="material-symbols-outlined create-icon">add</span>
+            <!-- Hover Actions Overlay (Month/Week view only) -->
+            <div v-if="viewMode !== 'day' && !isPastDate(day.date)" class="day-hover-overlay">
+              <div class="day-hover-actions">
+                <button
+                  class="hover-action-btn create-btn"
+                  @click.stop="openCreatePostWizard(day)"
+                  :title="$t('scheduler.createPost', 'Create Post')"
+                >
+                  <span class="material-symbols-outlined">add</span>
+                  <span class="btn-label">{{ $t('common.create', 'Create') }}</span>
+                </button>
+                <button
+                  v-if="day.posts.length > 0"
+                  class="hover-action-btn view-btn"
+                  @click.stop="selectDay(day)"
+                  :title="$t('scheduler.viewPosts', 'View Posts')"
+                >
+                  <span class="material-symbols-outlined">visibility</span>
+                  <span class="btn-label">{{ $t('common.view', 'View') }} ({{ day.posts.length }})</span>
+                </button>
+              </div>
             </div>
 
             <!-- Day View Header -->
@@ -365,6 +375,15 @@
       @select="handleRestaurantSelected"
     />
 
+    <!-- Full Creation Wizard Modal -->
+    <FullCreationWizardModal
+      v-model="showFullCreationWizard"
+      :selected-date="selectedDateForScheduling"
+      :restaurants="restaurants"
+      @post-created="handleFullWizardPostCreated"
+      @open-pick-post-modal="handleFullWizardOpenPickPost"
+    />
+
     <!-- Post Detail Modal -->
     <PostDetailModal
       v-model="showPostDetailModal"
@@ -418,7 +437,7 @@ import Toast from '../components/Toast.vue'
 import ConfirmModal from '../components/ConfirmModal.vue'
 import PostDetailModal from '../components/PostDetailModal.vue'
 import RestaurantSelectorModal from '../components/RestaurantSelectorModal.vue'
-import { UpcomingPostsList, CalendarHeader, CalendarLegend, CreatePostWizard, DayPostCard, CalendarFilters, SelectedDayDetail } from '../components/scheduler'
+import { CalendarHeader, CalendarLegend, CreatePostWizard, DayPostCard, CalendarFilters, SelectedDayDetail, FullCreationWizardModal } from '../components/scheduler'
 import PlatformLogo from '../components/PlatformLogo.vue'
 import { api } from '../services/api'
 import { schedulerService } from '../services/schedulerService'
@@ -432,6 +451,7 @@ const restaurantsStore = useRestaurantsStore()
 const currentDate = ref(new Date())
 const selectedDay = ref<any>(null)
 const scheduledPosts = ref<any[]>([])
+const allScheduledPosts = ref<any[]>([]) // Unfiltered posts for "Upcoming" tab
 const holidays = ref<any[]>([])
 const loading = ref(false)
 const showPickPostModal = ref(false)
@@ -442,6 +462,7 @@ const selectedPostForDetail = ref<any>(null)
 const showEditModal = ref(false)
 const postToEdit = ref<any>(null)
 const showCreatePostWizard = ref(false)
+const showFullCreationWizard = ref(false)
 const wizardStep = ref(1) // 1 = Choose Method, 2 = Create/Select Content
 const selectedCreationMethod = ref<'saved' | 'new' | null>(null)
 const showRestaurantSelector = ref(false)
@@ -766,13 +787,14 @@ const selectedDayWithFilteredPosts = computed(() => {
   return currentDay || selectedDay.value
 })
 
-// Computed property for upcoming posts (all future scheduled posts)
+// Computed property for upcoming posts (all future scheduled posts - ignores calendar filters)
 const upcomingPosts = computed(() => {
   const today = new Date()
   today.setHours(0, 0, 0, 0)
   const todayString = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
 
-  return scheduledPosts.value
+  // Use allScheduledPosts (unfiltered) for the Upcoming tab
+  return allScheduledPosts.value
     .filter((post) => {
       // Only show scheduled posts (not published or failed)
       if (post.status && post.status !== 'scheduled') return false
@@ -1086,7 +1108,10 @@ const fetchScheduledPosts = async () => {
     const month = currentDate.value.getMonth() + 1
     const year = currentDate.value.getFullYear()
 
-    // Fetch current month posts
+    // Check if filters are active
+    const hasFilters = filters.value.platforms.length > 0 || filters.value.restaurant_ids.length > 0
+
+    // Fetch current month posts (with filters for calendar)
     const response = await api.getScheduledPosts({
       month,
       year,
@@ -1114,6 +1139,19 @@ const fetchScheduledPosts = async () => {
         restaurant_ids: filters.value.restaurant_ids.length > 0 ? filters.value.restaurant_ids : undefined,
       }),
     ])
+
+    // If filters are active, also fetch unfiltered posts for "Upcoming" tab
+    let unfilteredPosts: any[] = []
+    if (hasFilters) {
+      const [unfilteredCurrent, unfilteredPrev, unfilteredNext] = await Promise.all([
+        api.getScheduledPosts({ month, year }),
+        api.getScheduledPosts({ month: prevMonth, year: prevYear }),
+        api.getScheduledPosts({ month: nextMonth, year: nextYear }),
+      ])
+      if (unfilteredCurrent.success) unfilteredPosts.push(...(unfilteredCurrent.data?.scheduled_posts || []))
+      if (unfilteredPrev.success) unfilteredPosts.push(...(unfilteredPrev.data?.scheduled_posts || []))
+      if (unfilteredNext.success) unfilteredPosts.push(...(unfilteredNext.data?.scheduled_posts || []))
+    }
 
     // Combine posts from all three months (current, previous, next)
     const allPosts: any[] = []
@@ -1193,6 +1231,58 @@ const fetchScheduledPosts = async () => {
           restaurant_name: restaurantName,
         }
       })
+
+    // Process unfiltered posts for "Upcoming" tab (same normalization)
+    if (unfilteredPosts.length > 0) {
+      const uniqueUnfiltered = unfilteredPosts.filter((post, index, self) =>
+        index === self.findIndex((p) => p.id === post.id)
+      )
+      allScheduledPosts.value = uniqueUnfiltered.map((post: any) => {
+        let mediaUrl = post.media_url || post.image_url || post.video_url || post.content_url
+        let postText = post.post_text || post.caption
+        let contentType = post.content_type
+        let platform = post.platform
+        let restaurantName = post.restaurant_name
+
+        if (!mediaUrl && post.favorite_posts) {
+          mediaUrl = post.favorite_posts.media_url || post.favorite_posts.image_url || post.favorite_posts.video_url
+          postText = postText || post.favorite_posts.post_text || post.favorite_posts.caption
+          contentType = contentType || post.favorite_posts.content_type
+          platform = platform || post.favorite_posts.platform
+          restaurantName = restaurantName || post.favorite_posts.restaurant_name
+        }
+        if (!mediaUrl && post.favorite) {
+          mediaUrl = post.favorite.media_url || post.favorite.image_url || post.favorite.video_url
+          postText = postText || post.favorite.post_text || post.favorite.caption
+          contentType = contentType || post.favorite.content_type
+          platform = platform || post.favorite.platform
+          restaurantName = restaurantName || post.favorite.restaurant_name
+        }
+        if (!mediaUrl && post.favorite_post) {
+          mediaUrl = post.favorite_post.media_url || post.favorite_post.image_url || post.favorite_post.video_url
+          postText = postText || post.favorite_post.post_text || post.favorite_post.caption
+          contentType = contentType || post.favorite_post.content_type
+          platform = platform || post.favorite_post.platform
+          restaurantName = restaurantName || post.favorite_post.restaurant_name
+        }
+
+        const detectedType = contentType || detectContentTypeFromUrl(mediaUrl || '')
+        const scheduledDate = post.scheduled_date ? post.scheduled_date.split('T')[0] : post.scheduled_date
+
+        return {
+          ...post,
+          scheduled_date: scheduledDate,
+          media_url: mediaUrl,
+          post_text: postText,
+          content_type: detectedType,
+          platform: platform,
+          restaurant_name: restaurantName,
+        }
+      })
+    } else {
+      // No filters active, use the same posts
+      allScheduledPosts.value = scheduledPosts.value
+    }
   } catch (error) {
   } finally {
     loading.value = false
@@ -1367,7 +1457,8 @@ const openCreatePostWizard = (day: any) => {
   selectedDateForScheduling.value = dateString
   wizardStep.value = 1
   selectedCreationMethod.value = null
-  showCreatePostWizard.value = true
+  // Open the full creation wizard modal instead of the simple wizard
+  showFullCreationWizard.value = true
 }
 
 // Select creation method in wizard
@@ -1455,6 +1546,43 @@ const handlePostScheduled = async () => {
 
   showPickPostModal.value = false
   selectedDateForScheduling.value = null
+}
+
+// Handle post created from full creation wizard
+const handleFullWizardPostCreated = async () => {
+  showFullCreationWizard.value = false
+
+  // Show success toast
+  toastMessage.value = t('scheduler.postCreatedSuccess', 'Post created successfully!')
+  toastType.value = 'success'
+  showToast.value = true
+
+  // Refresh calendar data
+  await fetchScheduledPosts()
+
+  // Re-select the same day if it was selected
+  if (selectedDateForScheduling.value) {
+    const updatedDay = displayedCalendarDays.value.find(
+      (d: any) => {
+        const dYear = d.date.getFullYear()
+        const dMonth = String(d.date.getMonth() + 1).padStart(2, '0')
+        const dDay = String(d.date.getDate()).padStart(2, '0')
+        return `${dYear}-${dMonth}-${dDay}` === selectedDateForScheduling.value
+      }
+    )
+
+    if (updatedDay) {
+      selectedDay.value = updatedDay
+    }
+  }
+
+  selectedDateForScheduling.value = null
+}
+
+// Handle opening pick post modal from full wizard
+const handleFullWizardOpenPickPost = () => {
+  showFullCreationWizard.value = false
+  showPickPostModal.value = true
 }
 
 const viewPostDetail = (post: any) => {
@@ -2332,41 +2460,79 @@ onMounted(async () => {
   margin-bottom: var(--space-sm);
 }
 
-/* Hover Create Button */
-.day-hover-action {
+/* Day Hover Overlay */
+.day-hover-overlay {
   position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 48px;
-  height: 48px;
-  border-radius: var(--radius-full);
-  background: var(--gold-primary);
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
   justify-content: center;
   opacity: 0;
   pointer-events: none;
-  transition: var(--transition-base);
-  box-shadow: var(--shadow-md);
+  transition: opacity 0.2s ease;
   z-index: 10;
+  border-radius: inherit;
 }
 
-.day-hover-action .create-icon {
-  font-size: 28px;
-  color: var(--text-on-gold);
-  font-weight: var(--font-bold);
-}
-
-.calendar-day:hover .day-hover-action {
+.calendar-day:hover .day-hover-overlay {
   opacity: 1;
   pointer-events: all;
 }
 
-.day-hover-action:hover {
+.day-hover-actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  padding: var(--space-sm);
+}
+
+.hover-action-btn {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.hover-action-btn .material-symbols-outlined {
+  font-size: 18px;
+}
+
+.hover-action-btn.create-btn {
+  background: var(--gold-primary);
+  color: var(--text-on-gold);
+}
+
+.hover-action-btn.create-btn:hover {
   background: var(--gold-light);
-  transform: translate(-50%, -50%) scale(1.1);
-  box-shadow: var(--glow-gold-md);
+  transform: scale(1.05);
+  box-shadow: var(--glow-gold-sm);
+}
+
+.hover-action-btn.view-btn {
+  background: rgba(255, 255, 255, 0.15);
+  color: var(--text-primary);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.hover-action-btn.view-btn:hover {
+  background: rgba(255, 255, 255, 0.25);
+  transform: scale(1.05);
+}
+
+.hover-action-btn .btn-label {
+  font-size: var(--text-xs);
 }
 
 .day-holidays {

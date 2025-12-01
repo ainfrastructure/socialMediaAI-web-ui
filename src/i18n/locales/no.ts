@@ -1519,6 +1519,7 @@ export default {
     schedule: 'Planlegg innlegg',
     noPlatformSelected: 'Vennligst velg minst én plattform',
     noDateSelected: 'Vennligst velg en dato',
+    mustBeInFuture: 'Planlagt tid må være etter nå',
   },
 
   // Mode Toggle
