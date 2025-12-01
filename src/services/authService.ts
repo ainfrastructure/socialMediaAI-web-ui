@@ -91,11 +91,11 @@ class AuthService {
     return response.json()
   }
 
-  async sendMagicLink(email: string): Promise<ApiResponse> {
+  async sendMagicLink(email: string, language?: string): Promise<ApiResponse> {
     const response = await fetch(`${API_URL}/api/auth/magic-link`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email }),
+      body: JSON.stringify({ email, language }),
     })
     return response.json()
   }

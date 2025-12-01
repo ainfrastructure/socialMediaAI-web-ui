@@ -13,14 +13,10 @@ import GoogleIcon from '../components/icons/GoogleIcon.vue'
 
 const router = useRouter()
 const authStore = useAuthStore()
-const { t } = useI18n()
+const { t, locale } = useI18n()
 
-const disableSignup = ref(true)
-const isSignup = ref(false)
-const showMagicLink = ref(false)
-const showForgotPassword = ref(false)
+const showEmailLogin = ref(false)
 const email = ref('')
-const password = ref('')
 const message = ref('')
 const messageType = ref<'success' | 'error' | 'info'>('info')
 
@@ -33,14 +29,14 @@ onMounted(() => {
     const refreshToken = params.get('refresh_token')
     const type = params.get('type')
 
-    if (accessToken && type === 'signup') {
+    if (accessToken && (type === 'signup' || type === 'magiclink')) {
       // Store the tokens
       localStorage.setItem('access_token', accessToken)
       if (refreshToken) {
         localStorage.setItem('refresh_token', refreshToken)
       }
 
-      showMessage('Email confirmed! Loading your profile...', 'success')
+      showMessage(t('auth.emailConfirmed'), 'success')
 
       // Load profile and redirect
       setTimeout(async () => {
@@ -48,7 +44,7 @@ onMounted(() => {
         if (authStore.isAuthenticated) {
           router.push('/playground')
         } else {
-          showMessage('Please login to continue', 'info')
+          showMessage(t('auth.pleaseLogin'), 'info')
           window.location.hash = '' // Clear hash
         }
       }, 1000)
@@ -56,106 +52,32 @@ onMounted(() => {
   }
 })
 
-async function handleSubmit() {
-  if (!email.value || !password.value) {
-    showMessage(t('auth.invalidCredentials'), 'error')
-    return
-  }
-
-  if (isSignup.value) {
-    const result = await authStore.signup(email.value, password.value)
-
-    if (!result.success) {
-      showMessage(result.error || t('errors.generic'), 'error')
-      return
-    }
-
-    if (result.emailConfirmationRequired) {
-      showMessage(
-        result.message || t('auth.checkEmail'),
-        'info',
-      )
-      isSignup.value = false
-      return
-    }
-
-    showMessage(t('common.success'), 'success')
-    router.push('/dashboard')
-  } else {
-    const result = await authStore.login(email.value, password.value)
-
-    if (!result.success) {
-      showMessage(result.error || t('errors.generic'), 'error')
-      return
-    }
-
-    showMessage(t('common.success'), 'success')
-    router.push('/dashboard')
-  }
-}
-
 function showMessage(msg: string, type: 'success' | 'error' | 'info') {
   message.value = msg
   messageType.value = type
   setTimeout(() => (message.value = ''), 5000)
 }
 
-function toggleMode() {
-  isSignup.value = !isSignup.value
-  showMagicLink.value = false
-  showForgotPassword.value = false
+function toggleEmailLogin() {
+  showEmailLogin.value = !showEmailLogin.value
   message.value = ''
 }
 
-function toggleMagicLink() {
-  showMagicLink.value = !showMagicLink.value
-  isSignup.value = false
-  showForgotPassword.value = false
-  message.value = ''
-}
-
-function toggleForgotPassword() {
-  showForgotPassword.value = !showForgotPassword.value
-  isSignup.value = false
-  showMagicLink.value = false
-  message.value = ''
-}
-
-async function handleMagicLink() {
+async function handleEmailLogin() {
   if (!email.value) {
     showMessage(t('errors.validationError'), 'error')
     return
   }
 
   try {
-    const response = await api.sendMagicLink(email.value)
+    const response = await api.sendMagicLink(email.value, locale.value)
 
     if (!response.success) {
       showMessage(response.error || t('errors.generic'), 'error')
       return
     }
 
-    showMessage(t('auth.checkEmail'), 'success')
-  } catch (err: any) {
-    showMessage(err.message || t('errors.networkError'), 'error')
-  }
-}
-
-async function handleForgotPassword() {
-  if (!email.value) {
-    showMessage(t('errors.validationError'), 'error')
-    return
-  }
-
-  try {
-    const response = await api.requestPasswordReset(email.value)
-
-    if (!response.success) {
-      showMessage(response.error || t('errors.generic'), 'error')
-      return
-    }
-
-    showMessage(t('auth.checkEmail'), 'success')
+    showMessage(t('auth.checkEmailForLink'), 'success')
   } catch (err: any) {
     showMessage(err.message || t('errors.networkError'), 'error')
   }
@@ -196,160 +118,77 @@ async function handleGoogleSignIn() {
         {{ message }}
       </BaseAlert>
 
-      <!-- Social Sign In Buttons -->
-      <div class="social-buttons">
-        <button
-          type="button"
-          class="social-sign-in-button apple-button"
-          :disabled="authStore.loading"
-          @click="handleAppleSignIn"
-        >
-          <AppleIcon :size="20" />
-          <span>{{ $t('auth.continueWithApple') }}</span>
-        </button>
+      <!-- Login Content Wrapper -->
+      <div class="login-content-wrapper">
+        <!-- Main Login View: Social Sign In -->
+        <div :class="['login-content', { 'is-hidden': showEmailLogin }]">
+          <!-- Social Sign In Buttons -->
+          <div class="social-buttons">
+            <button
+              type="button"
+              class="social-sign-in-button apple-button"
+              :disabled="authStore.loading"
+              @click="handleAppleSignIn"
+            >
+              <AppleIcon :size="20" />
+              <span>{{ $t('auth.continueWithApple') }}</span>
+            </button>
 
-        <button
-          type="button"
-          class="social-sign-in-button google-button"
-          :disabled="authStore.loading"
-          @click="handleGoogleSignIn"
-        >
-          <GoogleIcon :size="20" />
-          <span>{{ $t('auth.continueWithGoogle') }}</span>
-        </button>
-      </div>
+            <button
+              type="button"
+              class="social-sign-in-button google-button"
+              :disabled="authStore.loading"
+              @click="handleGoogleSignIn"
+            >
+              <GoogleIcon :size="20" />
+              <span>{{ $t('auth.continueWithGoogle') }}</span>
+            </button>
+          </div>
 
-      <div class="divider">
-        <span>{{ $t('auth.orContinueWithEmail') }}</span>
-      </div>
-
-      <form v-if="!showMagicLink && !showForgotPassword" @submit.prevent="handleSubmit">
-        <BaseInput
-          v-model="email"
-          type="email"
-          :label="$t('auth.email')"
-          :placeholder="$t('auth.emailPlaceholder')"
-          required
-        />
-
-        <BaseInput
-          v-model="password"
-          type="password"
-          :label="$t('auth.password')"
-          :placeholder="$t('auth.passwordPlaceholder')"
-          required
-        />
-
-        <BaseButton
-          type="submit"
-          variant="primary"
-          size="large"
-          full-width
-          :disabled="authStore.loading"
-        >
-          {{ isSignup ? $t('auth.signUp') : $t('auth.signIn') }}
-        </BaseButton>
-
-        <BaseButton
-          v-if="!disableSignup"
-          type="button"
-          variant="ghost"
-          size="medium"
-          full-width
-          @click="toggleMode"
-        >
-          <template v-if="isSignup">{{ $t('auth.login') }}</template>
-          <template v-else>{{ $t('auth.dontHaveAccount') }} {{ $t('auth.signUp') }}</template>
-        </BaseButton>
-
-        <div v-if="!disableSignup" class="divider">
-          <span>{{ $t('common.or') }}</span>
+          <!-- Email Sign In Link -->
+          <button
+            type="button"
+            class="email-link"
+            @click="toggleEmailLogin"
+          >
+            {{ $t('auth.signInWithEmail') }}
+          </button>
         </div>
 
-        <BaseButton
-          v-if="!disableSignup"
-          type="button"
-          variant="ghost"
-          size="small"
-          full-width
-          @click="toggleMagicLink"
-        >
-          {{ $t('auth.loginWithMagicLink') }}
-        </BaseButton>
+        <!-- Email Login Form (Passwordless) -->
+        <div :class="['login-content', 'email-content', { 'is-visible': showEmailLogin }]">
+          <p class="email-description">{{ $t('auth.emailLoginDescription') }}</p>
 
-        <BaseButton
-          v-if="!disableSignup"
-          type="button"
-          variant="ghost"
-          size="small"
-          full-width
-          @click="toggleForgotPassword"
-        >
-          {{ $t('auth.forgotPassword') }}
-        </BaseButton>
-      </form>
+          <form @submit.prevent="handleEmailLogin">
+            <BaseInput
+              v-model="email"
+              type="email"
+              :label="$t('auth.email')"
+              :placeholder="$t('auth.emailPlaceholder')"
+              required
+            />
 
-      <!-- Magic Link Form -->
-      <form v-if="showMagicLink" @submit.prevent="handleMagicLink">
-        <BaseInput
-          v-model="email"
-          type="email"
-          :label="$t('auth.email')"
-          :placeholder="$t('auth.emailPlaceholder')"
-          required
-        />
+            <BaseButton
+              type="submit"
+              variant="primary"
+              size="large"
+              full-width
+              :disabled="authStore.loading"
+            >
+              {{ $t('auth.sendLoginLink') }}
+            </BaseButton>
+          </form>
 
-        <BaseButton
-          type="submit"
-          variant="primary"
-          size="large"
-          full-width
-          :disabled="authStore.loading"
-        >
-          {{ $t('auth.sendMagicLink') }}
-        </BaseButton>
-
-        <BaseButton
-          type="button"
-          variant="secondary"
-          size="medium"
-          full-width
-          @click="toggleMagicLink"
-        >
-          {{ $t('auth.backToLogin') }}
-        </BaseButton>
-      </form>
-
-      <!-- Forgot Password Form -->
-      <form v-if="showForgotPassword" @submit.prevent="handleForgotPassword">
-        <BaseInput
-          v-model="email"
-          type="email"
-          :label="$t('auth.email')"
-          :placeholder="$t('auth.emailPlaceholder')"
-          required
-        />
-
-        <BaseButton
-          type="submit"
-          variant="primary"
-          size="large"
-          full-width
-          :disabled="authStore.loading"
-        >
-          {{ $t('auth.sendResetLink') }}
-        </BaseButton>
-
-        <BaseButton
-          type="button"
-          variant="secondary"
-          size="medium"
-          full-width
-          @click="toggleForgotPassword"
-        >
-          {{ $t('auth.backToLogin') }}
-        </BaseButton>
-      </form>
+          <!-- Back to Social Login -->
+          <button
+            type="button"
+            class="back-link"
+            @click="toggleEmailLogin"
+          >
+            ← {{ $t('auth.backToLogin') }}
+          </button>
+        </div>
+      </div>
     </BaseCard>
   </div>
 </template>
@@ -480,26 +319,91 @@ form {
   background: #f5f5f5;
 }
 
-.divider {
+/* Login Content Wrapper - enables smooth crossfade */
+.login-content-wrapper {
+  position: relative;
+  min-height: 200px;
+}
+
+/* Login Content Container */
+.login-content {
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  gap: var(--space-lg);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+/* Social login - default visible */
+.login-content.is-hidden {
+  opacity: 0;
+  transform: translateY(-8px);
+  pointer-events: none;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+}
+
+/* Email login - initially hidden */
+.login-content.email-content {
+  opacity: 0;
+  transform: translateY(8px);
+  pointer-events: none;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+}
+
+/* Email login - visible state */
+.login-content.email-content.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+  position: relative;
+}
+
+/* Email Description */
+.email-description {
   text-align: center;
-  margin: var(--space-xl) 0 var(--space-lg);
-  color: var(--text-muted);
-}
-
-.divider::before,
-.divider::after {
-  content: '';
-  flex: 1;
-  border-bottom: var(--border-width) solid var(--border-color);
-}
-
-.divider span {
-  padding: 0 var(--space-lg);
+  color: var(--text-secondary);
   font-size: var(--text-sm);
-  font-weight: var(--font-medium);
-  letter-spacing: 0.05em;
+  line-height: var(--leading-normal);
+}
+
+/* Email Sign In Link */
+.email-link {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  cursor: pointer;
+  padding: var(--space-md) 0;
+  transition: color 0.15s ease;
+  text-align: center;
+  margin-top: var(--space-sm);
+}
+
+.email-link:hover {
+  color: var(--gold-primary);
+}
+
+/* Back Link */
+.back-link {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  cursor: pointer;
+  padding: var(--space-md) 0;
+  transition: color 0.15s ease;
+  text-align: center;
+}
+
+.back-link:hover {
+  color: var(--gold-primary);
 }
 
 /* Responsive */

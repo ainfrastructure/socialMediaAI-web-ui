@@ -132,6 +132,12 @@ export default {
     continueWithApple: 'Continue with Apple',
     continueWithGoogle: 'Continue with Google',
     orContinueWithEmail: 'or continue with email',
+    signInWithEmail: 'Sign in with email',
+    emailLoginDescription: 'Enter your email and we\'ll send you a link to sign in. No password needed.',
+    sendLoginLink: 'Send Login Link',
+    checkEmailForLink: 'Check your email for a login link',
+    emailConfirmed: 'Success! Loading your profile...',
+    pleaseLogin: 'Please sign in to continue',
   },
 
   // Waitlist Landing Page

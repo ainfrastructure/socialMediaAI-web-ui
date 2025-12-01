@@ -132,6 +132,12 @@ export default {
     continueWithApple: 'Fortsett med Apple',
     continueWithGoogle: 'Fortsett med Google',
     orContinueWithEmail: 'eller fortsett med e-post',
+    signInWithEmail: 'Logg inn med e-post',
+    emailLoginDescription: 'Skriv inn e-posten din, så sender vi deg en lenke for å logge inn. Ingen passord nødvendig.',
+    sendLoginLink: 'Send innloggingslenke',
+    checkEmailForLink: 'Sjekk e-posten din for en innloggingslenke',
+    emailConfirmed: 'Suksess! Laster profilen din...',
+    pleaseLogin: 'Vennligst logg inn for å fortsette',
   },
 
   // Waitlist Landing Page
