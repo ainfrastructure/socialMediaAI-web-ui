@@ -213,6 +213,29 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
+  async function signInWithApple() {
+    loading.value = true
+    error.value = null
+
+    try {
+      const response = await api.signInWithApple()
+
+      if (!response.success || !response.data?.url) {
+        error.value = response.error || 'Failed to initiate Apple Sign In'
+        return { success: false, error: error.value }
+      }
+
+      // Redirect to Apple OAuth
+      window.location.href = response.data.url
+      return { success: true }
+    } catch (err: any) {
+      error.value = err.message || 'Network error'
+      return { success: false, error: error.value }
+    } finally {
+      loading.value = false
+    }
+  }
+
   async function loadProfile() {
     // Check localStorage for token if not in state
     if (!accessToken.value) {
@@ -398,6 +421,7 @@ export const useAuthStore = defineStore('auth', () => {
     signup,
     login,
     logout,
+    signInWithApple,
     loadProfile,
     refreshProfile,
     refreshAccessToken,

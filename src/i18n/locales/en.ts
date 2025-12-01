@@ -129,6 +129,8 @@ export default {
     invalidCredentials: 'Invalid credentials',
     loginWithMagicLink: 'Login with Magic Link',
     sendMagicLink: 'Send Magic Link',
+    continueWithApple: 'Continue with Apple',
+    orContinueWithEmail: 'or continue with email',
   },
 
   // Waitlist Landing Page

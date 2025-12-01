@@ -129,6 +129,8 @@ export default {
     invalidCredentials: 'Ugyldige påloggingsdetaljer',
     loginWithMagicLink: 'Logg inn med Magic Link',
     sendMagicLink: 'Send Magic Link',
+    continueWithApple: 'Fortsett med Apple',
+    orContinueWithEmail: 'eller fortsett med e-post',
   },
 
   // Waitlist Landing Page

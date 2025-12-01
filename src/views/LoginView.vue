@@ -8,6 +8,7 @@ import BaseCard from '../components/BaseCard.vue'
 import BaseButton from '../components/BaseButton.vue'
 import BaseAlert from '../components/BaseAlert.vue'
 import BaseInput from '../components/BaseInput.vue'
+import AppleIcon from '../components/icons/AppleIcon.vue'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -158,6 +159,14 @@ async function handleForgotPassword() {
     showMessage(err.message || t('errors.networkError'), 'error')
   }
 }
+
+async function handleAppleSignIn() {
+  const result = await authStore.signInWithApple()
+
+  if (!result.success) {
+    showMessage(result.error || t('errors.generic'), 'error')
+  }
+}
 </script>
 
 <template>
@@ -177,6 +186,21 @@ async function handleForgotPassword() {
       >
         {{ message }}
       </BaseAlert>
+
+      <!-- Apple Sign In Button -->
+      <button
+        type="button"
+        class="apple-sign-in-button"
+        :disabled="authStore.loading"
+        @click="handleAppleSignIn"
+      >
+        <AppleIcon :size="20" />
+        <span>{{ $t('auth.continueWithApple') }}</span>
+      </button>
+
+      <div class="divider">
+        <span>{{ $t('auth.orContinueWithEmail') }}</span>
+      </div>
 
       <form v-if="!showMagicLink && !showForgotPassword" @submit.prevent="handleSubmit">
         <BaseInput
@@ -378,11 +402,44 @@ form {
   gap: var(--space-md);
 }
 
+/* Apple Sign In Button */
+.apple-sign-in-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-md);
+  width: 100%;
+  padding: var(--space-lg) var(--space-xl);
+  background: #000000;
+  color: #ffffff;
+  border: none;
+  border-radius: var(--radius-md);
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  font-weight: var(--font-medium);
+  cursor: pointer;
+  transition: var(--transition-base);
+}
+
+.apple-sign-in-button:hover:not(:disabled) {
+  background: #1a1a1a;
+  transform: translateY(-1px);
+}
+
+.apple-sign-in-button:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.apple-sign-in-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .divider {
   display: flex;
   align-items: center;
   text-align: center;
-  margin: var(--space-lg) 0;
+  margin: var(--space-xl) 0 var(--space-lg);
   color: var(--text-muted);
 }
 

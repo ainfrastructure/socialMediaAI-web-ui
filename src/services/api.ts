@@ -49,6 +49,7 @@ class ApiService {
   signup = authService.signup.bind(authService)
   login = authService.login.bind(authService)
   logout = authService.logout.bind(authService)
+  signInWithApple = authService.signInWithApple.bind(authService)
   getProfile = authService.getProfile.bind(authService)
   completeOnboarding = authService.completeOnboarding.bind(authService)
   getStats = authService.getStats.bind(authService)

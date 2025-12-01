@@ -142,6 +142,14 @@ class AuthService {
     })
     return response.json()
   }
+
+  async signInWithApple(): Promise<ApiResponse<{ url: string }>> {
+    const response = await fetch(`${API_URL}/api/auth/apple/init`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+    })
+    return response.json()
+  }
 }
 
 export const authService = new AuthService()
