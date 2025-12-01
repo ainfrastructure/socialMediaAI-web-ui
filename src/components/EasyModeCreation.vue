@@ -425,9 +425,11 @@ function continueToPublishStep() {
   currentStep.value = 4
 }
 
-// Expose this function so parent can call it
+// Expose functions and state so parent can call them
 defineExpose({
-  continueToPublishStep
+  continueToPublishStep,
+  currentStep,
+  prevStep
 })
 
 function goToStep(step: number) {

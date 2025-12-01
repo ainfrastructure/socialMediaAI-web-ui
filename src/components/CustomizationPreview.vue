@@ -30,7 +30,7 @@ interface CustomizationOptions {
 }
 
 interface WeeklyCustomizationOptions {
-  layout: 'verticalStack' | 'gridWithHeader' | 'calendarGrid' | 'filmstrip' | 'weeklyMenuGrid'
+  layout: 'verticalStack' | 'gridWithHeader' | 'calendarGrid' | 'filmstrip' | 'featuredGrid'
 }
 
 type PostType = 'single' | 'combo' | 'weekly'
@@ -40,6 +40,7 @@ const props = defineProps<{
   customization: CustomizationOptions
   weeklyCustomization?: WeeklyCustomizationOptions
   menuItems?: MenuItem[]
+  weekLength?: 5 | 7
 }>()
 
 const { t } = useI18n()
@@ -128,8 +129,13 @@ const displayItems = computed(() => {
   return (props.menuItems || []).slice(0, props.postType === 'combo' ? 2 : 1)
 })
 
-// Days for weekly preview
-const weekDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri']
+// Days for weekly preview (dynamic based on weekLength)
+const allWeekDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+const weekDays = computed(() => allWeekDays.slice(0, props.weekLength || 5))
+
+// For featured grid: first day is featured, rest go in grid
+const featuredDay = computed(() => weekDays.value[0])
+const gridDays = computed(() => weekDays.value.slice(1))
 </script>
 
 <template>
@@ -245,7 +251,7 @@ const weekDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri']
       <!-- Weekly Menu Preview -->
       <div
         v-else-if="postType === 'weekly'"
-        :class="['preview-frame weekly-preview', weeklyLayoutClass]"
+        :class="['preview-frame weekly-preview', weeklyLayoutClass, `week-${weekLength || 5}`]"
       >
         <div class="weekly-header">
           <span class="weekly-title">Weekly Menu</span>
@@ -257,19 +263,30 @@ const weekDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri']
           </span>
         </div>
 
-        <div class="weekly-days">
+        <!-- Featured Grid Layout: 1 big + grid (2x2 for 5 days, 2x3 for 7 days) -->
+        <template v-if="weeklyCustomization?.layout === 'featuredGrid'">
+          <div :class="['featured-grid-layout', weekLength === 7 ? 'seven-days' : 'five-days']">
+            <div class="featured-day">
+              <span class="day-name">{{ featuredDay }}</span>
+              <div class="dish-image-placeholder large"></div>
+              <span class="dish-name">Featured Dish</span>
+            </div>
+            <div :class="['small-days-grid', weekLength === 7 ? 'grid-2x3' : 'grid-2x2']">
+              <div v-for="day in gridDays" :key="day" class="small-day-slot">
+                <span class="day-name">{{ day }}</span>
+                <div class="dish-image-placeholder small"></div>
+                <span class="dish-name">Dish</span>
+              </div>
+            </div>
+          </div>
+        </template>
+
+        <!-- Other layouts (all use the nice card styling) -->
+        <div v-else class="weekly-days">
           <div v-for="day in weekDays" :key="day" class="day-slot">
-            <!-- Enhanced preview for weeklyMenuGrid layout -->
-            <template v-if="weeklyCustomization?.layout === 'weeklyMenuGrid'">
-              <span class="day-name">{{ day }}</span>
-              <div class="dish-image-placeholder"></div>
-              <span class="dish-name">Dish Name</span>
-            </template>
-            <!-- Standard preview for other layouts -->
-            <template v-else>
-              <span class="day-label">{{ day }}</span>
-              <div class="day-dish">🍽️</div>
-            </template>
+            <span class="day-name">{{ day }}</span>
+            <div class="dish-image-placeholder"></div>
+            <span class="dish-name">Dish Name</span>
           </div>
         </div>
 
@@ -566,44 +583,117 @@ const weekDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri']
   flex-direction: column;
   align-items: center;
   gap: var(--space-xs);
-  padding: var(--space-xs);
-  background: var(--bg-secondary);
-  border-radius: var(--radius-sm);
+  padding: var(--space-sm);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  min-height: 80px;
 }
 
-.day-label {
-  font-size: 10px;
+.day-slot .day-name {
   font-weight: var(--font-semibold);
-  color: var(--text-muted);
+  color: var(--gold-primary);
+  font-size: var(--text-xs);
+  margin-bottom: var(--space-xs);
 }
 
-.day-dish {
-  font-size: 20px;
-  opacity: 0.5;
+.day-slot .dish-image-placeholder {
+  flex: 1;
+  width: 100%;
+  min-height: 30px;
+  background: linear-gradient(135deg, var(--bg-tertiary) 0%, var(--bg-elevated) 100%);
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.day-slot .dish-image-placeholder::before {
+  content: '🍽️';
+  font-size: 16px;
+  opacity: 0.4;
+}
+
+.day-slot .dish-name {
+  font-size: 8px;
+  color: var(--text-secondary);
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
 }
 
 /* Weekly Layout Variations */
 .layout-verticalStack .weekly-days {
   flex-direction: column;
+  gap: var(--space-xs);
 }
 
 .layout-verticalStack .day-slot {
   flex-direction: row;
-  justify-content: space-between;
+  align-items: center;
+  min-height: auto;
+  padding: var(--space-xs) var(--space-sm);
+}
+
+.layout-verticalStack .day-slot .day-name {
+  min-width: 30px;
+  margin-bottom: 0;
+  margin-right: var(--space-sm);
+}
+
+.layout-verticalStack .day-slot .dish-image-placeholder {
+  width: 30px;
+  height: 30px;
+  min-height: auto;
+  flex: none;
+}
+
+.layout-verticalStack .day-slot .dish-name {
+  flex: 1;
+  text-align: left;
+  margin-left: var(--space-sm);
 }
 
 .layout-gridWithHeader .weekly-days {
   flex-wrap: wrap;
+  gap: var(--space-xs);
 }
 
 .layout-gridWithHeader .day-slot {
   width: calc(33.33% - var(--space-xs));
   flex: none;
+  min-height: 70px;
 }
 
-.layout-calendarGrid .weekly-days {
+/* Calendar Grid - adapts to week length */
+.layout-calendarGrid.week-5 .weekly-days {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
+  gap: var(--space-xs);
+}
+
+.layout-calendarGrid.week-7 .weekly-days {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-xs);
+}
+
+.layout-calendarGrid.week-7 .day-slot {
+  min-height: 60px;
+}
+
+.layout-calendarGrid.week-7 .day-slot .dish-image-placeholder {
+  min-height: 20px;
+}
+
+.layout-calendarGrid.week-7 .day-slot .day-name {
+  font-size: 9px;
+}
+
+.layout-calendarGrid.week-7 .day-slot .dish-name {
+  font-size: 7px;
 }
 
 .layout-filmstrip .weekly-days {
@@ -611,60 +701,114 @@ const weekDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri']
   overflow-x: hidden;
 }
 
-.layout-weeklyMenuGrid .weekly-days {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-  gap: var(--space-md);
+/* Featured Grid Layout: 1 big + 2x2 */
+.featured-grid-layout {
+  display: flex;
+  gap: var(--space-sm);
+  width: 100%;
+  height: 100%;
+  padding: var(--space-sm);
 }
 
-.layout-weeklyMenuGrid .day-slot {
+.featured-day {
+  flex: 1;
+  display: flex;
   flex-direction: column;
   background: var(--bg-elevated);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
-  padding: var(--space-md);
-  min-height: 140px;
+  padding: var(--space-sm);
+  min-width: 0;
 }
 
-.layout-weeklyMenuGrid .day-name {
+.featured-day .day-name {
   font-weight: var(--font-semibold);
   color: var(--gold-primary);
-  margin-bottom: var(--space-sm);
-  text-align: center;
-  font-size: var(--text-sm);
-}
-
-.layout-weeklyMenuGrid .dish-name {
-  text-align: center;
   font-size: var(--text-xs);
-  line-height: 1.3;
+  margin-bottom: var(--space-xs);
 }
 
-.layout-weeklyMenuGrid .dish-image {
+.featured-day .dish-image-placeholder.large {
+  flex: 1;
   width: 100%;
-  height: 60px;
-  object-fit: cover;
-  border-radius: var(--radius-sm);
-  margin-bottom: var(--space-sm);
-}
-
-.layout-weeklyMenuGrid .dish-image-placeholder {
-  width: 100%;
-  height: 60px;
+  min-height: 60px;
   background: linear-gradient(135deg, var(--bg-tertiary) 0%, var(--bg-elevated) 100%);
   border-radius: var(--radius-sm);
-  margin-bottom: var(--space-sm);
   display: flex;
   align-items: center;
   justify-content: center;
-  position: relative;
-  overflow: hidden;
 }
 
-.layout-weeklyMenuGrid .dish-image-placeholder::before {
+.featured-day .dish-image-placeholder.large::before {
   content: '🍽️';
-  font-size: 24px;
+  font-size: 28px;
   opacity: 0.4;
+}
+
+.featured-day .dish-name {
+  font-size: 9px;
+  color: var(--text-secondary);
+  margin-top: var(--space-xs);
+  text-align: center;
+}
+
+.small-days-grid {
+  display: grid;
+  gap: var(--space-xs);
+  flex: 1;
+}
+
+.small-days-grid.grid-2x2 {
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+}
+
+.small-days-grid.grid-2x3 {
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+}
+
+.small-day-slot {
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  padding: var(--space-xs);
+}
+
+.small-day-slot .day-name {
+  font-weight: var(--font-semibold);
+  color: var(--gold-primary);
+  font-size: 8px;
+  margin-bottom: 2px;
+}
+
+.small-day-slot .dish-image-placeholder.small {
+  flex: 1;
+  width: 100%;
+  min-height: 20px;
+  background: linear-gradient(135deg, var(--bg-tertiary) 0%, var(--bg-elevated) 100%);
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.small-day-slot .dish-image-placeholder.small::before {
+  content: '🍽️';
+  font-size: 12px;
+  opacity: 0.4;
+}
+
+.small-day-slot .dish-name {
+  font-size: 7px;
+  color: var(--text-secondary);
+  margin-top: 2px;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .preview-hint {

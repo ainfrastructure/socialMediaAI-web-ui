@@ -424,7 +424,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, watch, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { toZonedTime, fromZonedTime } from 'date-fns-tz'
@@ -442,8 +442,10 @@ import PlatformLogo from '../components/PlatformLogo.vue'
 import { api } from '../services/api'
 import { schedulerService } from '../services/schedulerService'
 import { useRestaurantsStore } from '../stores/restaurants'
+import { usePreferencesStore } from '../stores/preferences'
 
 const router = useRouter()
+const preferencesStore = usePreferencesStore()
 const { t } = useI18n()
 const restaurantsStore = useRestaurantsStore()
 
@@ -770,6 +772,13 @@ const selectDay = (day: any) => {
     // If day has no posts, open the create post wizard directly
     if (!day.posts || day.posts.length === 0) {
       openCreatePostWizard(day)
+    } else {
+      // Scroll to the posts table when day has posts
+      nextTick(() => {
+        if (selectedDayDetailRef.value?.$el) {
+          selectedDayDetailRef.value.$el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        }
+      })
     }
   }
 }
@@ -1480,6 +1489,8 @@ const selectCreationMethod = (method: 'saved' | 'new') => {
 // Proceed with the creation method after restaurant selection (or if only one restaurant)
 const proceedWithCreationMethod = (method: 'saved' | 'new', restaurantId?: string) => {
   if (method === 'new') {
+    // Always start in easy mode when creating new content
+    preferencesStore.setCreationMode('easy', true)
     // Go to content create page with optional restaurant ID
     let url = `/content/create?scheduleDate=${selectedDateForScheduling.value}`
     if (restaurantId) {
@@ -1502,6 +1513,8 @@ const handleRestaurantSelected = (restaurant: any) => {
 }
 
 const createNewPost = (day: any) => {
+  // Always start in easy mode when creating new content
+  preferencesStore.setCreationMode('easy', true)
   // Use local date string to avoid timezone shifts
   const year = day.date.getFullYear()
   const month = String(day.date.getMonth() + 1).padStart(2, '0')

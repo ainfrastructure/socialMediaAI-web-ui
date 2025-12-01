@@ -6,6 +6,7 @@ import { useAuthStore } from '../stores/auth'
 import { useFacebookStore } from '../stores/facebook'
 import { useInstagramStore } from '../stores/instagram'
 import { useRestaurantsStore } from '../stores/restaurants'
+import { usePreferencesStore } from '../stores/preferences'
 import { api } from '../services/api'
 import DashboardLayout from '../components/DashboardLayout.vue'
 import BaseCard from '../components/BaseCard.vue'
@@ -22,7 +23,14 @@ const authStore = useAuthStore()
 const facebookStore = useFacebookStore()
 const instagramStore = useInstagramStore()
 const restaurantsStore = useRestaurantsStore()
+const preferencesStore = usePreferencesStore()
 const { t } = useI18n()
+
+// Navigation helper to always start in easy mode
+function goToCreateContent() {
+  preferencesStore.setCreationMode('easy', true)
+  router.push('/content/create')
+}
 
 // Real stats from API
 const stats = ref({
@@ -575,7 +583,7 @@ onMounted(async () => {
       <section class="section">
         <h2 class="section-title">{{ $t('dashboard.quickActions') }}</h2>
         <div class="quick-actions-grid">
-          <div class="quick-action-card" @click="router.push('/content/create')">
+          <div class="quick-action-card" @click="goToCreateContent">
             <div class="quick-action-icon quick-action-icon-pink">
               <MaterialIcon icon="add" size="xl" color="#fff" />
             </div>
@@ -649,7 +657,7 @@ onMounted(async () => {
 
             <div v-else-if="recentPosts.length === 0" class="empty-state">
               <p>{{ $t('dashboardNew.noRecentPosts') }}</p>
-              <BaseButton variant="primary" size="small" @click="router.push('/content/create')">
+              <BaseButton variant="primary" size="small" @click="goToCreateContent">
                 {{ $t('dashboardNew.createFirstPost') }}
               </BaseButton>
             </div>
@@ -1094,11 +1102,24 @@ onMounted(async () => {
   display: grid;
   grid-template-columns: 1fr 340px;
   gap: var(--space-xl);
+  align-items: stretch;
 }
 
 /* Recent Posts Section */
 .recent-posts-section {
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.recent-posts-section .posts-table-card {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.recent-posts-section .posts-table {
+  flex: 1;
 }
 
 .posts-table-card {
@@ -1307,6 +1328,15 @@ onMounted(async () => {
 /* Platforms Section */
 .platforms-section {
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.platforms-section .platforms-card {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
 }
 
 .platforms-count {

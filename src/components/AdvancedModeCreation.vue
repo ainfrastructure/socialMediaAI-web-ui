@@ -30,7 +30,7 @@ import GoldenCelebrationIcon from './icons/GoldenCelebrationIcon.vue'
 import GoldenEditIcon from './icons/GoldenEditIcon.vue'
 import GoldenGridIcon from './icons/GoldenGridIcon.vue'
 import { ImageUploadBox, SectionLabel, ContentDivider } from './creation'
-import type { SavedRestaurant } from '@/services/restaurantService'
+import { restaurantService, type SavedRestaurant } from '@/services/restaurantService'
 import { api } from '@/services/api'
 import { useFacebookStore } from '@/stores/facebook'
 import { useInstagramStore } from '@/stores/instagram'
@@ -70,7 +70,7 @@ type WeekLength = 5 | 7
 
 // Weekly-specific customization options
 interface WeeklyCustomizationOptions {
-  layout: 'verticalStack' | 'gridWithHeader' | 'calendarGrid' | 'weeklyMenuGrid'
+  layout: 'verticalStack' | 'gridWithHeader' | 'calendarGrid' | 'featuredGrid'
   showDates: boolean
   dateFormat: 'full' | 'short' | 'dayOnly'
   showWeekNumber: boolean
@@ -148,7 +148,7 @@ const includeWeeklyPrices = ref(false)
 
 // Weekly customization options (Step 2 - specific to weekly posts)
 const weeklyCustomization = ref<WeeklyCustomizationOptions>({
-  layout: 'gridWithHeader',
+  layout: 'featuredGrid',
   showDates: false,
   dateFormat: 'short',
   showWeekNumber: false,
@@ -161,10 +161,10 @@ const weeklyCustomization = ref<WeeklyCustomizationOptions>({
 
 // Weekly layout options
 const weeklyLayouts = computed(() => [
-  { value: 'weeklyMenuGrid', label: t('weeklyCustomization.layout.weeklyMenuGrid'), icon: 'grid_on', description: t('weeklyCustomization.layout.weeklyMenuGridDesc') },
+  { value: 'featuredGrid', label: t('weeklyCustomization.layout.featuredGrid'), icon: 'view_comfy', description: t('weeklyCustomization.layout.featuredGridDesc') },
+  { value: 'calendarGrid', label: t('weeklyCustomization.layout.calendarGrid'), icon: 'calendar_month', description: t('weeklyCustomization.layout.calendarGridDesc') },
   { value: 'verticalStack', label: t('weeklyCustomization.layout.verticalStack'), icon: 'view_list', description: t('weeklyCustomization.layout.verticalStackDesc') },
-  { value: 'gridWithHeader', label: t('weeklyCustomization.layout.gridWithHeader'), icon: 'grid_view', description: t('weeklyCustomization.layout.gridWithHeaderDesc') },
-  { value: 'calendarGrid', label: t('weeklyCustomization.layout.calendarGrid'), icon: 'calendar_month', description: t('weeklyCustomization.layout.calendarGridDesc') }
+  { value: 'gridWithHeader', label: t('weeklyCustomization.layout.gridWithHeader'), icon: 'grid_view', description: t('weeklyCustomization.layout.gridWithHeaderDesc') }
 ])
 
 // Weekly theme presets
@@ -615,17 +615,76 @@ async function generateImage() {
       weeklyCustomization: postType.value === 'weekly' ? weeklyCustomization.value : undefined
     }
 
+    // Prepare reference image from uploaded image or menu item
+    let referenceImage: { base64Data: string; mimeType: string } | undefined = undefined
+
+    // First, check if user uploaded an image
+    if (uploadedImage.value) {
+      try {
+        const base64Data = await new Promise<string>((resolve) => {
+          const reader = new FileReader()
+          reader.onloadend = () => {
+            const base64String = reader.result as string
+            resolve(base64String.split(',')[1])
+          }
+          reader.readAsDataURL(uploadedImage.value!)
+        })
+        referenceImage = {
+          base64Data,
+          mimeType: uploadedImage.value.type,
+        }
+      } catch {
+        console.error('Failed to process uploaded image')
+      }
+    }
+    // If no uploaded image, try to use menu item image (for single posts)
+    else if (postType.value === 'single' && selectedMenuItems.value.length > 0 && selectedMenuItems.value[0].imageUrl) {
+      try {
+        const imageUrl = selectedMenuItems.value[0].imageUrl
+        const imageResponse = await fetch(imageUrl)
+        const blob = await imageResponse.blob()
+        const base64Data = await new Promise<string>((resolve) => {
+          const reader = new FileReader()
+          reader.onloadend = () => {
+            const base64String = reader.result as string
+            resolve(base64String.split(',')[1])
+          }
+          reader.readAsDataURL(blob)
+        })
+        referenceImage = {
+          base64Data,
+          mimeType: blob.type,
+        }
+      } catch {
+        console.error('Failed to fetch menu item image')
+      }
+    }
+
     const response = await api.generateAdvancedImage(
       selectedVariation.value.prompt,
       customization.value,
       menuItemsForApi,
       props.restaurant.brand_dna?.logo_url,
       props.restaurant.place_id,
-      postTypeOptions
+      postTypeOptions,
+      referenceImage
     )
 
     if (response.success && response.data?.imageUrl) {
       generatedImageUrl.value = response.data.imageUrl
+
+      // Upload the image to the restaurant's uploaded_images collection
+      if (uploadedImage.value && props.restaurant.place_id) {
+        try {
+          await restaurantService.uploadRestaurantImages(
+            props.restaurant.place_id,
+            [uploadedImage.value]
+          )
+        } catch (uploadError) {
+          console.error('Failed to save uploaded image to restaurant:', uploadError)
+          // Don't fail the entire operation if this fails
+        }
+      }
 
       // Generate post content
       await generatePostContent()
@@ -831,9 +890,11 @@ function handlePreviewHashtagKeydown(event: KeyboardEvent) {
   }
 }
 
-// Expose methods for parent component
+// Expose methods and state for parent component
 defineExpose({
-  continueToGenerateStep
+  continueToGenerateStep,
+  currentStep,
+  prevStep
 })
 </script>
 
@@ -1143,6 +1204,7 @@ defineExpose({
             :customization="customization"
             :weekly-customization="weeklyCustomization"
             :menu-items="postType === 'weekly' ? getMenuItemsForApi() : selectedMenuItems"
+            :week-length="weekLength"
           />
         </div>
       </div>

@@ -16,7 +16,7 @@ import FeedbackModal from '../FeedbackModal.vue'
 import { useFacebookStore } from '@/stores/facebook'
 import { useInstagramStore } from '@/stores/instagram'
 import { useNotificationStore } from '@/stores/notifications'
-import type { SavedRestaurant } from '@/services/restaurantService'
+import { restaurantService, type SavedRestaurant } from '@/services/restaurantService'
 import { api } from '@/services/api'
 
 interface MenuItem {
@@ -81,6 +81,7 @@ const showSuccess = ref(false)
 // Feedback modal state
 const showFeedbackModal = ref(false)
 const easyModeCreationRef = ref<InstanceType<typeof EasyModeCreation> | null>(null)
+const advancedModeCreationRef = ref<InstanceType<typeof AdvancedModeCreation> | null>(null)
 
 // Prompt/generation internals
 const editablePrompt = ref('')
@@ -197,19 +198,29 @@ function goBack() {
     wizardStep.value = 'choose-method'
     selectedMethod.value = null
   } else if (wizardStep.value === 'create') {
-    if (props.restaurants.length > 1) {
-      wizardStep.value = 'choose-restaurant'
+    // Check if the child creation component can go back internally
+    const activeRef = creationMode.value === 'easy' ? easyModeCreationRef.value : advancedModeCreationRef.value
+    const childStep = activeRef?.currentStep
+
+    if (childStep && childStep > 1) {
+      // Go back within the creation component
+      activeRef?.prevStep()
     } else {
-      wizardStep.value = 'choose-method'
+      // Child is on step 1, exit to previous wizard step
+      if (props.restaurants.length > 1) {
+        wizardStep.value = 'choose-restaurant'
+      } else {
+        wizardStep.value = 'choose-method'
+      }
+      selectedRestaurant.value = null
+      menuItems.value = []
+      // Reset generation state
+      generatedImageUrl.value = ''
+      postText.value = ''
+      hashtags.value = []
+      generationError.value = null
+      publishResults.value = null
     }
-    selectedRestaurant.value = null
-    menuItems.value = []
-    // Reset generation state
-    generatedImageUrl.value = ''
-    postText.value = ''
-    hashtags.value = []
-    generationError.value = null
-    publishResults.value = null
   }
 }
 
@@ -282,7 +293,7 @@ async function generatePostContent() {
 }
 
 // Generate image
-async function generateImage(uploadedLogo: File | null = null) {
+async function generateImage(uploadedLogo: File | null = null, uploadedImage: File | null = null) {
   if (!editablePrompt.value || !selectedRestaurant.value) return
 
   // Start post content generation in parallel
@@ -305,9 +316,30 @@ async function generateImage(uploadedLogo: File | null = null) {
       }
     : undefined
 
-  // Prepare reference image if menu items are selected
+  // Prepare reference image - prioritize uploaded image, then menu item
   let referenceImage: { base64Data: string; mimeType: string } | undefined = undefined
-  if (selectedMenuItems.value.length > 0 && selectedMenuItems.value[0].imageUrl) {
+
+  // First, check if user uploaded an image
+  if (uploadedImage) {
+    try {
+      const base64Data = await new Promise<string>((resolve) => {
+        const reader = new FileReader()
+        reader.onloadend = () => {
+          const base64String = reader.result as string
+          resolve(base64String.split(',')[1])
+        }
+        reader.readAsDataURL(uploadedImage)
+      })
+      referenceImage = {
+        base64Data,
+        mimeType: uploadedImage.type,
+      }
+    } catch {
+      console.error('Failed to process uploaded image')
+    }
+  }
+  // If no uploaded image, try to use menu item image
+  else if (selectedMenuItems.value.length > 0 && selectedMenuItems.value[0].imageUrl) {
     try {
       const firstItem = selectedMenuItems.value[0]
       const imageResponse = await fetch(firstItem.imageUrl)
@@ -414,8 +446,22 @@ async function handleEasyModeGenerate(data: {
       publishResults.value = null
       lastSavedPost.value = null
 
-      // Generate the image
-      await generateImage(data.uploadedLogo)
+      // Generate the image (pass both uploaded logo and uploaded image for reference)
+      await generateImage(data.uploadedLogo, data.uploadedImage)
+
+      // Upload the image to the restaurant's uploaded_images collection
+      if (data.uploadedImage && selectedRestaurant.value?.place_id) {
+        try {
+          await restaurantService.uploadRestaurantImages(
+            selectedRestaurant.value.place_id,
+            [data.uploadedImage]
+          )
+        } catch (uploadError) {
+          console.error('Failed to save uploaded image to restaurant:', uploadError)
+          // Don't fail the entire operation if this fails
+        }
+      }
+
       generationError.value = null
       generating.value = false
     } else {
@@ -841,6 +887,7 @@ function handleFeedbackSkip() {
           <!-- Advanced Mode -->
           <AdvancedModeCreation
             v-else-if="creationMode === 'advanced' && selectedRestaurant"
+            ref="advancedModeCreationRef"
             :restaurant="selectedRestaurant"
             :menu-items="menuItems"
             :initial-schedule-date="props.selectedDate || undefined"

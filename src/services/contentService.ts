@@ -165,12 +165,13 @@ class ContentService {
         theme: string
         customThemeText?: string
       }
-    }
+    },
+    referenceImage?: { base64Data: string; mimeType: string }
   ): Promise<ApiResponse<{ imageUrl: string; textOverlayAdded: boolean; customization: any }>> {
     const response = await fetch(`${API_URL}/api/images/generate-advanced`, {
       method: 'POST',
       headers: getAuthHeaders(),
-      body: JSON.stringify({ prompt, customization, menuItems, restaurantLogoPath, placeId, postTypeOptions }),
+      body: JSON.stringify({ prompt, customization, menuItems, restaurantLogoPath, placeId, postTypeOptions, referenceImage }),
     })
     return response.json()
   }

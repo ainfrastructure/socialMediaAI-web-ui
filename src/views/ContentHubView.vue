@@ -29,18 +29,11 @@
         </div>
 
         <!-- Create Content Card -->
-        <BaseCard variant="glass" hoverable class="create-card" @click="goToCreate">
-          <div class="create-content">
-            <img src="/socialchef_logo.svg" alt="Social Chef" class="create-icon" />
-            <div class="create-text">
-              <h2 class="create-title">{{ $t('contentHub.createNew') }}</h2>
-              <p class="create-description">{{ $t('contentHub.createDescription') }}</p>
-            </div>
-            <BaseButton variant="primary" size="large">
-              {{ $t('contentHub.startCreating') }}
-            </BaseButton>
+        <div class="create-card" @click="goToCreate">
+          <div class="create-plus-icon">
+            <span class="plus-symbol">+</span>
           </div>
-        </BaseCard>
+        </div>
 
         <!-- Posts Section -->
         <section class="posts-section">
@@ -425,6 +418,8 @@ function handleRestaurantChange(restaurant: SavedRestaurant) {
 
 // Navigation
 function goToCreate() {
+  // Always start in easy mode when clicking the + button
+  preferencesStore.setCreationMode('easy', true)
   router.push('/content/create')
 }
 
@@ -774,41 +769,35 @@ function formatDate(dateString: string): string {
   margin-bottom: var(--space-3xl);
   cursor: pointer;
   transition: all 0.3s ease;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: var(--space-2xl);
 }
 
-.create-card:hover {
-  transform: translateY(-4px);
+.create-card:hover .create-plus-icon {
+  transform: scale(1.1);
+  box-shadow: 0 0 40px rgba(212, 175, 55, 0.4);
 }
 
-.create-content {
+.create-plus-icon {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  background: var(--gradient-gold);
   display: flex;
   align-items: center;
-  gap: var(--space-xl);
-  padding: var(--space-lg);
+  justify-content: center;
+  transition: all 0.3s ease;
+  box-shadow: 0 0 20px rgba(212, 175, 55, 0.3);
 }
 
-.create-icon {
-  width: 3rem;
-  height: 3rem;
-  flex-shrink: 0;
-  object-fit: contain;
-}
-
-.create-text {
-  flex: 1;
-}
-
-.create-title {
-  font-family: var(--font-heading);
-  font-size: var(--text-xl);
-  color: var(--text-primary);
-  margin: 0 0 var(--space-xs) 0;
-}
-
-.create-description {
-  font-size: var(--text-sm);
-  color: var(--text-secondary);
-  margin: 0;
+.plus-symbol {
+  font-size: 4rem;
+  font-weight: var(--font-light);
+  color: var(--text-on-gold);
+  line-height: 1;
+  margin-top: -4px;
 }
 
 /* Posts Section */

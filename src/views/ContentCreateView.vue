@@ -153,7 +153,19 @@ async function loadRestaurant() {
 }
 
 function goBack() {
-  router.push('/content')
+  // Check if the active creation mode component can go back internally
+  const activeRef = preferencesStore.creationMode === 'easy'
+    ? easyModeCreationRef.value
+    : advancedModeCreationRef.value
+  const childStep = activeRef?.currentStep
+
+  if (childStep && childStep > 1) {
+    // Go back within the creation component
+    activeRef?.prevStep()
+  } else {
+    // Child is on step 1, navigate back to content hub
+    router.push('/content')
+  }
 }
 
 // Easy Mode Publish/Schedule Handler
@@ -600,11 +612,25 @@ async function handleEasyModeGenerate(data: {
       // Keep generating state true while generating
       easyModeGenerating.value = true
 
-      // Generate the image
+      // Generate the image (pass both uploaded logo and uploaded image for reference)
       try {
         console.log('[EasyMode] Starting image generation...')
-        await generateImage(data.uploadedLogo)
+        await generateImage(data.uploadedLogo, data.uploadedImage)
         console.log('[EasyMode] Image generated successfully:', generatedImageUrl.value)
+
+        // Upload the image to the restaurant's uploaded_images collection
+        if (data.uploadedImage && restaurant.value?.place_id) {
+          try {
+            await restaurantService.uploadRestaurantImages(
+              restaurant.value.place_id,
+              [data.uploadedImage]
+            )
+          } catch (uploadError) {
+            console.error('Failed to save uploaded image to restaurant:', uploadError)
+            // Don't fail the entire operation if this fails
+          }
+        }
+
         generationError.value = null
         easyModeGenerating.value = false // Generation complete
       } catch (imageError: any) {
@@ -680,7 +706,7 @@ async function generatePromptsFromSelection() {
   }
 }
 
-async function generateImage(uploadedLogo: File | null = null) {
+async function generateImage(uploadedLogo: File | null = null, uploadedImage: File | null = null) {
   if (!editablePrompt.value || !restaurant.value) return
 
   try {
@@ -709,9 +735,30 @@ async function generateImage(uploadedLogo: File | null = null) {
         }
       : undefined
 
-    // Prepare reference image if menu items are selected
+    // Prepare reference image - prioritize uploaded image, then menu item
     let referenceImage: { base64Data: string; mimeType: string } | undefined = undefined
-    if (selectedMenuItems.value.length > 0 && selectedMenuItems.value[0].imageUrl) {
+
+    // First, check if user uploaded an image
+    if (uploadedImage) {
+      try {
+        const base64Data = await new Promise<string>((resolve) => {
+          const reader = new FileReader()
+          reader.onloadend = () => {
+            const base64String = reader.result as string
+            resolve(base64String.split(',')[1])
+          }
+          reader.readAsDataURL(uploadedImage)
+        })
+        referenceImage = {
+          base64Data,
+          mimeType: uploadedImage.type,
+        }
+      } catch {
+        console.error('Failed to process uploaded image')
+      }
+    }
+    // If no uploaded image, try to use menu item image
+    else if (selectedMenuItems.value.length > 0 && selectedMenuItems.value[0].imageUrl) {
       try {
         const firstItem = selectedMenuItems.value[0]
         const imageResponse = await fetch(firstItem.imageUrl)
