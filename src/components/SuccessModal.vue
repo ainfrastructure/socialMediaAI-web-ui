@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
+import BaseModal from './BaseModal.vue'
 import MaterialIcon from './MaterialIcon.vue'
 import BaseButton from './BaseButton.vue'
 import BaseAlert from './BaseAlert.vue'
@@ -48,85 +49,55 @@ function handleClose() {
 </script>
 
 <template>
-  <Transition name="fade">
-    <div v-if="visible" class="success-modal-overlay" @click.self="handleClose">
-      <div class="success-modal">
-        <div class="success-content">
-          <div class="success-icon">
-            <MaterialIcon icon="celebration" size="xl" :color="'var(--gold-primary)'" />
-          </div>
-          <h3 class="success-title">{{ t('easyMode.step4.successTitle', 'Congratulations!') }}</h3>
-          <p class="success-message">{{ t('easyMode.step4.successMessage', 'Your post has been published successfully!') }}</p>
+  <BaseModal
+    :model-value="visible"
+    size="md"
+    :show-close-button="true"
+    :close-on-overlay-click="true"
+    card-variant="solid"
+    @update:model-value="handleClose"
+  >
+    <div class="success-content">
+      <div class="success-icon">
+        <MaterialIcon icon="celebration" size="xl" :color="'var(--gold-primary)'" />
+      </div>
+      <h3 class="success-title">{{ t('easyMode.step4.successTitle', 'Congratulations!') }}</h3>
+      <p class="success-message">{{ t('easyMode.step4.successMessage', 'Your post has been published successfully!') }}</p>
 
-          <!-- Show all successful platform links -->
-          <div class="platform-links-container">
-            <a
-              v-for="result in successfulPlatforms"
-              :key="result.platform"
-              :href="result.url"
-              target="_blank"
-              rel="noopener noreferrer"
-              class="view-post-link"
-            >
-              {{ t('easyMode.step4.viewOnPlatform', { platform: capitalizeFirst(result.platform) }, `View on ${capitalizeFirst(result.platform)}`) }} →
-            </a>
-          </div>
+      <!-- Show all successful platform links -->
+      <div class="platform-links-container">
+        <a
+          v-for="result in successfulPlatforms"
+          :key="result.platform"
+          :href="result.url"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="view-post-link"
+        >
+          {{ t('easyMode.step4.viewOnPlatform', { platform: capitalizeFirst(result.platform) }, `View on ${capitalizeFirst(result.platform)}`) }} →
+        </a>
+      </div>
 
-          <!-- Show partial failure warning if some platforms failed -->
-          <BaseAlert v-if="failedPlatforms.length > 0" type="warning" class="partial-failure-alert">
-            <strong>{{ t('easyMode.step4.partialFailureWarning', 'Some platforms failed to publish:') }}</strong>
-            <ul class="failed-platforms-list">
-              <li v-for="failed in failedPlatforms" :key="failed.platform">
-                {{ capitalizeFirst(failed.platform) }}: {{ failed.error }}
-              </li>
-            </ul>
-          </BaseAlert>
+      <!-- Show partial failure warning if some platforms failed -->
+      <BaseAlert v-if="failedPlatforms.length > 0" type="warning" class="partial-failure-alert">
+        <strong>{{ t('easyMode.step4.partialFailureWarning', 'Some platforms failed to publish:') }}</strong>
+        <ul class="failed-platforms-list">
+          <li v-for="failed in failedPlatforms" :key="failed.platform">
+            {{ capitalizeFirst(failed.platform) }}: {{ failed.error }}
+          </li>
+        </ul>
+      </BaseAlert>
 
-          <div class="success-actions">
-            <BaseButton variant="primary" size="large" @click="handleCreateAnother">
-              {{ t('easyMode.step4.createAnother', 'Create Another Post') }}
-            </BaseButton>
-          </div>
-        </div>
+      <div class="success-actions">
+        <BaseButton variant="primary" size="large" @click="handleCreateAnother">
+          {{ t('easyMode.step4.createAnother', 'Create Another Post') }}
+        </BaseButton>
       </div>
     </div>
-  </Transition>
+  </BaseModal>
 </template>
 
 <style scoped>
-.success-modal-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 1000;
-  background: rgba(10, 10, 10, 0.95);
-  backdrop-filter: blur(8px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: var(--space-xl);
-}
-
-.success-modal {
-  max-width: 600px;
-  width: 100%;
-  background: var(--bg-secondary);
-  border: var(--border-width) solid var(--border-color);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-xl);
-  animation: fadeInUp 0.5s var(--ease-smooth);
-}
-
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
 .success-content {
   display: flex;
   flex-direction: column;
@@ -219,24 +190,8 @@ function handleClose() {
   justify-content: center;
 }
 
-/* Transition */
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity 0.3s ease;
-}
-
-.fade-enter-from,
-.fade-leave-to {
-  opacity: 0;
-}
-
 /* Responsive */
 @media (max-width: 768px) {
-  .success-modal {
-    max-width: 90%;
-    margin: var(--space-lg);
-  }
-
   .success-content {
     padding: var(--space-2xl) var(--space-lg);
   }

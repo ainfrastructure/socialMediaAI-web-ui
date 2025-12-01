@@ -6,6 +6,7 @@ import BaseAlert from './BaseAlert.vue'
 import { VueDatePicker } from '@vuepic/vue-datepicker'
 import '@vuepic/vue-datepicker/dist/main.css'
 import { useSocialAccounts } from '@/composables/useSocialAccounts'
+import { useScheduleTime } from '@/composables/useScheduleTime'
 
 interface Props {
   disabled?: boolean
@@ -41,12 +42,13 @@ const emit = defineEmits<{
 
 const { t } = useI18n()
 const { platforms: socialPlatforms, isConnected } = useSocialAccounts()
+const { hours12, minutes, timezoneOptions, getDefaultTimezone } = useScheduleTime()
 
 // State
 const publishType = ref<'now' | 'schedule'>(props.forceScheduleMode ? 'schedule' : props.initialPublishType)
 const selectedPlatforms = ref<string[]>(props.initialPlatforms.length > 0 ? [...props.initialPlatforms] : [])
 const scheduleDateTime = ref<Date | null>(null)
-const selectedTimezone = ref(Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC')
+const selectedTimezone = ref(getDefaultTimezone())
 const error = ref('')
 
 // Time picker state
@@ -54,30 +56,9 @@ const selectedHour = ref('12')
 const selectedMinute = ref('00')
 const selectedPeriod = ref<'AM' | 'PM'>('PM')
 
-// Generate hours 1-12
-const hours = computed(() =>
-  Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, '0'))
-)
-
-// Generate minutes 00-59
-const minutes = computed(() =>
-  Array.from({ length: 60 }, (_, i) => String(i).padStart(2, '0'))
-)
-
-// Common timezones
-const timezoneOptions = [
-  { value: 'Europe/Oslo', label: 'Oslo (CET/CEST)' },
-  { value: 'Europe/London', label: 'London (GMT/BST)' },
-  { value: 'Europe/Paris', label: 'Paris (CET/CEST)' },
-  { value: 'Europe/Berlin', label: 'Berlin (CET/CEST)' },
-  { value: 'America/New_York', label: 'New York (EST/EDT)' },
-  { value: 'America/Los_Angeles', label: 'Los Angeles (PST/PDT)' },
-  { value: 'America/Chicago', label: 'Chicago (CST/CDT)' },
-  { value: 'Asia/Tokyo', label: 'Tokyo (JST)' },
-  { value: 'Asia/Shanghai', label: 'Shanghai (CST)' },
-  { value: 'Australia/Sydney', label: 'Sydney (AEST/AEDT)' },
-  { value: 'UTC', label: 'UTC' },
-]
+// Use composable values - extract just the value strings for the template
+const hours = computed(() => hours12.value.map(h => h.value))
+const minuteOptions = computed(() => minutes.value.map(m => m.value))
 
 // Platform display info
 const availablePlatforms = computed(() => {
@@ -270,7 +251,7 @@ onMounted(() => {
           </select>
           <span class="time-separator">:</span>
           <select v-model="selectedMinute" class="time-select">
-            <option v-for="minute in minutes" :key="minute" :value="minute">{{ minute }}</option>
+            <option v-for="minute in minuteOptions" :key="minute" :value="minute">{{ minute }}</option>
           </select>
           <select v-model="selectedPeriod" class="period-select">
             <option value="AM">AM</option>

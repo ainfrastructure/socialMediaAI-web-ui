@@ -26,4 +26,16 @@ export default defineConfig({
       '.socialchef.ai'
     ],
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          // Vendor chunks for better caching
+          'vendor-vue': ['vue', 'vue-router', 'pinia'],
+          'vendor-i18n': ['vue-i18n'],
+          'vendor-date': ['date-fns', 'date-fns-tz'],
+        },
+      },
+    },
+  },
 })

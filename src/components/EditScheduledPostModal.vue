@@ -1,10 +1,14 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
-import BaseCard from './BaseCard.vue'
+import { useI18n } from 'vue-i18n'
+import BaseModal from './BaseModal.vue'
 import BaseButton from './BaseButton.vue'
 import BaseAlert from './BaseAlert.vue'
 import DatePicker from './DatePicker.vue'
+import MaterialIcon from './MaterialIcon.vue'
+import PlatformLogo from './PlatformLogo.vue'
 import { useSocialAccounts } from '../composables/useSocialAccounts'
+import { useScheduleTime } from '../composables/useScheduleTime'
 
 interface Props {
   modelValue: boolean
@@ -18,19 +22,20 @@ const emit = defineEmits<{
   (e: 'save', updates: any): void
 }>()
 
+const { t } = useI18n()
+
 // Social accounts integration
 const { availablePlatforms, isConnected } = useSocialAccounts()
 
-// Auto-detect timezone with fallback
-const detectedTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone
-const defaultTimezone = detectedTimezone || 'America/New_York'
+// Schedule time utilities
+const { hours12, minutes: minutesList, timezones, getDefaultTimezone } = useScheduleTime()
 
 // Form state
 const scheduledDate = ref('')
 const hours = ref('12')
 const minutes = ref('00')
 const ampm = ref('AM')
-const timezone = ref(defaultTimezone)
+const timezone = ref(getDefaultTimezone())
 const selectedPlatforms = ref<string[]>([])
 const notes = ref('')
 const postText = ref('')
@@ -42,40 +47,12 @@ const showImagePicker = ref(false)
 const availableFavorites = ref<any[]>([])
 const selectedFavoriteId = ref<string | null>(null)
 
-// Time options
-const hourOptions = Array.from({ length: 12 }, (_, i) => ({
-  value: String(i + 1).padStart(2, '0'),
-  label: String(i + 1)
-}))
+// Time options from composable
+const hourOptions = hours12
+const minuteOptions = minutesList
 
-const minuteOptions = Array.from({ length: 60 }, (_, i) => ({
-  value: String(i).padStart(2, '0'),
-  label: String(i).padStart(2, '0')
-}))
-
-const timezones = [
-  'America/New_York',
-  'America/Chicago',
-  'America/Denver',
-  'America/Los_Angeles',
-  'America/Phoenix',
-  'America/Anchorage',
-  'Pacific/Honolulu',
-  'Europe/London',
-  'Europe/Paris',
-  'Europe/Berlin',
-  'Europe/Oslo',
-  'Europe/Stockholm',
-  'Europe/Copenhagen',
-  'Europe/Amsterdam',
-  'Europe/Rome',
-  'Europe/Madrid',
-  'Asia/Tokyo',
-  'Asia/Shanghai',
-  'Asia/Dubai',
-  'Australia/Sydney',
-  'Pacific/Auckland'
-]
+// Detected timezone for display
+const detectedTimezone = getDefaultTimezone()
 
 // Watch for post changes and populate form
 watch(() => props.post, (newPost) => {
@@ -281,477 +258,336 @@ const formatDisplayDate = (dateStr: string) => {
 </script>
 
 <template>
-  <div v-if="modelValue" class="modal-overlay" @click.self="close">
-    <BaseCard variant="glass-intense" class="edit-modal">
-      <div class="modal-header">
-        <h2 class="modal-title">Edit Scheduled Post</h2>
-        <button class="close-button" @click="close" aria-label="Close">×</button>
+  <BaseModal
+    :model-value="modelValue"
+    size="xl"
+    :show-close-button="true"
+    card-variant="glass-intense"
+    :close-on-overlay-click="!saving"
+    :close-on-escape="!saving"
+    @update:model-value="(val: boolean) => !val && close()"
+    @close="close"
+  >
+    <div class="modal-content">
+      <!-- Media Section (Left) -->
+      <div class="modal-media">
+        <img
+          v-if="currentFavorite?.content_type === 'image' && currentFavorite?.media_url"
+          :src="currentFavorite.media_url"
+          alt="Post preview"
+          class="media-image"
+        />
+        <video
+          v-else-if="currentFavorite?.content_type === 'video' && currentFavorite?.media_url"
+          :src="currentFavorite.media_url"
+          controls
+          class="media-video"
+        />
+        <div v-else class="media-placeholder">
+          <MaterialIcon icon="image" size="xl" color="var(--text-muted)" />
+          <span>{{ $t('common.noImage') }}</span>
+        </div>
+        <BaseButton
+          variant="secondary"
+          size="small"
+          @click="openImagePicker"
+          class="change-image-btn"
+        >
+          <MaterialIcon icon="image" size="sm" />
+          {{ $t('editScheduledPost.changeImage') }}
+        </BaseButton>
       </div>
 
-      <div class="modal-body">
+      <!-- Form Section (Right) -->
+      <div class="modal-info">
+        <h2 class="modal-title">{{ $t('editScheduledPost.title') }}</h2>
+
         <BaseAlert v-if="error" type="error">{{ error }}</BaseAlert>
 
-        <!-- Image Preview at Top -->
-        <div v-if="currentFavorite" class="preview-section">
-          <div class="preview-media">
-            <img
-              v-if="currentFavorite.content_type === 'image' && currentFavorite.media_url"
-              :src="currentFavorite.media_url"
-              alt="Post preview"
-              class="preview-image"
-            />
-            <video
-              v-else-if="currentFavorite.content_type === 'video' && currentFavorite.media_url"
-              :src="currentFavorite.media_url"
-              class="preview-video"
-            />
-            <div v-else class="preview-placeholder">
-              <span class="placeholder-icon">photo_camera</span>
-              <span class="placeholder-text">No media</span>
-            </div>
+        <!-- Post Text -->
+        <div class="info-section">
+          <div class="info-label">
+            <MaterialIcon icon="notes" size="sm" />
+            <span>{{ $t('scheduler.caption') }} <span class="required">*</span></span>
           </div>
-          <BaseButton
-            variant="secondary"
-            size="small"
-            @click="openImagePicker"
-            class="change-image-btn"
-          >
-            🖼️ Change Image
+          <textarea
+            v-model="postText"
+            class="form-textarea post-text-area"
+            :placeholder="$t('editScheduledPost.postTextPlaceholder')"
+            rows="4"
+          />
+          <div class="char-count" :class="{ warning: postText.length > 5000 }">
+            {{ postText.length }} {{ $t('editScheduledPost.characters') }}
+          </div>
+        </div>
+
+        <!-- Hashtags -->
+        <div class="info-section">
+          <div class="info-label">
+            <MaterialIcon icon="tag" size="sm" />
+            <span>{{ $t('posts.hashtags') }}</span>
+          </div>
+          <div class="hashtags-row" v-if="hashtags.length > 0">
+            <span v-for="(tag, idx) in hashtags" :key="idx" class="hashtag">
+              {{ tag }}
+              <button @click="removeHashtag(idx)" class="remove-tag">&times;</button>
+            </span>
+          </div>
+          <input
+            v-model="newHashtag"
+            @keydown.enter.prevent="addHashtag"
+            @keydown.,.prevent="addHashtag"
+            :placeholder="$t('editScheduledPost.hashtagPlaceholder')"
+            class="hashtag-input"
+          />
+        </div>
+
+        <!-- Date & Time -->
+        <div class="info-section">
+          <div class="info-label">
+            <MaterialIcon icon="calendar_today" size="sm" />
+            <span>{{ $t('scheduleModal.date') }} <span class="required">*</span></span>
+          </div>
+          <DatePicker
+            v-model="scheduledDate"
+            :min-date="new Date().toISOString().split('T')[0]"
+          />
+          <div v-if="scheduledDate" class="date-preview">
+            {{ formatDisplayDate(scheduledDate) }}
+          </div>
+        </div>
+
+        <div class="info-section">
+          <div class="info-label">
+            <MaterialIcon icon="schedule" size="sm" />
+            <span>{{ $t('scheduleModal.time') }}</span>
+          </div>
+          <div class="time-picker">
+            <select v-model="hours" class="time-select">
+              <option v-for="opt in hourOptions" :key="opt.value" :value="opt.value">
+                {{ opt.label }}
+              </option>
+            </select>
+            <span class="time-separator">:</span>
+            <select v-model="minutes" class="time-select">
+              <option v-for="opt in minuteOptions" :key="opt.value" :value="opt.value">
+                {{ opt.label }}
+              </option>
+            </select>
+            <select v-model="ampm" class="time-select ampm-select">
+              <option value="AM">AM</option>
+              <option value="PM">PM</option>
+            </select>
+          </div>
+          <div class="time-preview">{{ formattedTime }}</div>
+        </div>
+
+        <!-- Platforms -->
+        <div class="info-section">
+          <div class="info-label">
+            <MaterialIcon icon="share" size="sm" />
+            <span>{{ $t('dashboardNew.platforms') }} <span class="required">*</span></span>
+          </div>
+          <div class="platforms-grid">
+            <label
+              v-for="platform in availablePlatforms"
+              :key="platform.id"
+              :class="[
+                'platform-option',
+                {
+                  'selected': selectedPlatforms.includes(platform.id),
+                  'disabled': !platform.isConnected
+                }
+              ]"
+            >
+              <input
+                type="checkbox"
+                :value="platform.id"
+                v-model="selectedPlatforms"
+                :disabled="!platform.isConnected"
+                class="platform-checkbox"
+              />
+              <PlatformLogo :platform="platform.id" :size="20" />
+              <span class="platform-name">{{ platform.name }}</span>
+              <span v-if="!platform.isConnected" class="connection-hint">({{ $t('editScheduledPost.notConnected') }})</span>
+            </label>
+          </div>
+          <p v-if="selectedPlatforms.length === 0" class="platform-hint error">
+            {{ $t('editScheduledPost.selectPlatform') }}
+          </p>
+        </div>
+
+        <!-- Timezone -->
+        <div class="info-section">
+          <div class="info-label">
+            <MaterialIcon icon="public" size="sm" />
+            <span>{{ $t('scheduleModal.timezone') }}</span>
+          </div>
+          <select v-model="timezone" class="form-input">
+            <option v-for="tz in timezones" :key="tz" :value="tz">
+              {{ tz.replace(/_/g, ' ') }}
+            </option>
+          </select>
+          <div class="timezone-hint">
+            {{ $t('editScheduledPost.detected') }}: {{ detectedTimezone.replace(/_/g, ' ') }}
+          </div>
+        </div>
+
+        <!-- Notes -->
+        <div class="info-section">
+          <div class="info-label">
+            <MaterialIcon icon="edit_note" size="sm" />
+            <span>{{ $t('editScheduledPost.notes') }}</span>
+          </div>
+          <textarea
+            v-model="notes"
+            class="form-textarea"
+            :placeholder="$t('editScheduledPost.notesPlaceholder')"
+            rows="2"
+          />
+        </div>
+
+        <!-- Actions -->
+        <div class="modal-actions">
+          <BaseButton variant="ghost" size="medium" @click="close" :disabled="saving">
+            {{ $t('common.cancel') }}
+          </BaseButton>
+          <BaseButton variant="primary" size="medium" @click="saveChanges" :disabled="saving">
+            <MaterialIcon icon="save" size="sm" />
+            {{ saving ? $t('common.saving') : $t('common.saveChanges') }}
           </BaseButton>
         </div>
+      </div>
+    </div>
 
-        <!-- Form Fields -->
-        <div class="edit-form">
-          <!-- Post Text -->
-          <div class="form-group">
-            <label class="form-label">✍️ POST TEXT <span class="required">*</span></label>
-            <textarea
-              v-model="postText"
-              class="form-textarea post-text-area"
-              placeholder="Write your post content here..."
-              rows="5"
-            />
-            <div class="char-count" :class="{ warning: postText.length > 5000 }">
-              {{ postText.length }} characters
-            </div>
-          </div>
-
-          <!-- Hashtags -->
-          <div class="form-group">
-            <label class="form-label">#️⃣ HASHTAGS</label>
-            <div class="hashtag-editor">
-              <div class="hashtag-tags">
-                <span
-                  v-for="(tag, idx) in hashtags"
-                  :key="idx"
-                  class="hashtag-tag"
-                >
-                  {{ tag }}
-                  <button @click="removeHashtag(idx)" class="remove-tag">&times;</button>
-                </span>
-              </div>
-              <input
-                v-model="newHashtag"
-                @keydown.enter.prevent="addHashtag"
-                @keydown.,.prevent="addHashtag"
-                placeholder="Add hashtag and press Enter..."
-                class="hashtag-input"
-              />
-            </div>
-          </div>
-
-          <!-- Date -->
-          <div class="form-group">
-            <label class="form-label">calendar_month SCHEDULED DATE</label>
-            <DatePicker
-              v-model="scheduledDate"
-              :min-date="new Date().toISOString().split('T')[0]"
-            />
-            <div v-if="scheduledDate" class="date-preview">
-              {{ formatDisplayDate(scheduledDate) }}
-            </div>
-          </div>
-
-          <!-- Time -->
-          <div class="form-group">
-            <label class="form-label">schedule SCHEDULED TIME</label>
-            <div class="time-picker">
-              <select v-model="hours" class="time-select">
-                <option v-for="opt in hourOptions" :key="opt.value" :value="opt.value">
-                  {{ opt.label }}
-                </option>
-              </select>
-              <span class="time-separator">:</span>
-              <select v-model="minutes" class="time-select">
-                <option v-for="opt in minuteOptions" :key="opt.value" :value="opt.value">
-                  {{ opt.label }}
-                </option>
-              </select>
-              <select v-model="ampm" class="time-select ampm-select">
-                <option value="AM">AM</option>
-                <option value="PM">PM</option>
-              </select>
-            </div>
-            <div class="time-preview">{{ formattedTime }}</div>
-          </div>
-
-          <!-- Platforms Selection -->
-          <div class="form-group platforms-section">
-            <label class="form-label">PLATFORMS <span class="required">*</span></label>
-            <div class="platforms-grid">
-              <label
-                v-for="platform in availablePlatforms"
-                :key="platform.id"
-                :class="[
-                  'platform-option',
-                  {
-                    'selected': selectedPlatforms.includes(platform.id),
-                    'disabled': !platform.isConnected
-                  }
-                ]"
-              >
-                <input
-                  type="checkbox"
-                  :value="platform.id"
-                  v-model="selectedPlatforms"
-                  :disabled="!platform.isConnected"
-                  class="platform-checkbox"
-                />
-                <span class="platform-icon">{{ platform.icon }}</span>
-                <span class="platform-name">{{ platform.name }}</span>
-                <span v-if="!platform.isConnected" class="connection-hint">(Not connected)</span>
-              </label>
-            </div>
-            <p v-if="selectedPlatforms.length === 0" class="platform-hint error">
-              Please select at least one platform
-            </p>
-          </div>
-
-          <!-- Timezone Row -->
-          <div class="form-row">
-            <div class="form-group">
-              <label class="form-label">🌍 TIMEZONE</label>
-              <select v-model="timezone" class="form-input">
-                <option v-for="tz in timezones" :key="tz" :value="tz">
-                  {{ tz.replace(/_/g, ' ') }}
-                </option>
-              </select>
-              <div class="timezone-hint">
-                Detected: {{ detectedTimezone.replace(/_/g, ' ') }}
-              </div>
-            </div>
-          </div>
-
-          <!-- Notes -->
-          <div class="form-group">
-            <label class="form-label">edit_note NOTES (OPTIONAL)</label>
-            <textarea
-              v-model="notes"
-              class="form-textarea"
-              placeholder="Add any notes about this post..."
-              rows="3"
-            />
-          </div>
+    <!-- Image Picker Modal -->
+    <div v-if="showImagePicker" class="image-picker-overlay" @click.self="showImagePicker = false">
+      <div class="image-picker-modal">
+        <div class="image-picker-header">
+          <h3 class="image-picker-title">{{ $t('editScheduledPost.selectImage') }}</h3>
+          <button class="close-button" @click="showImagePicker = false">
+            <MaterialIcon icon="close" size="md" />
+          </button>
         </div>
-
-        <!-- Image Picker Modal -->
-        <div v-if="showImagePicker" class="image-picker-overlay" @click.self="showImagePicker = false">
-          <div class="image-picker-modal">
-            <div class="image-picker-header">
-              <h3 class="image-picker-title">Select a Different Image</h3>
-              <button class="close-button" @click="showImagePicker = false">×</button>
-            </div>
-            <div class="favorites-grid">
-              <div
-                v-for="favorite in availableFavorites"
-                :key="favorite.id"
-                :class="['favorite-card', { selected: selectedFavoriteId === favorite.id }]"
-                @click="selectFavorite(favorite)"
-              >
-                <img
-                  v-if="favorite.content_type === 'image'"
-                  :src="favorite.media_url"
-                  alt="Post"
-                  class="favorite-thumbnail"
-                />
-                <video
-                  v-else
-                  :src="favorite.media_url"
-                  class="favorite-thumbnail"
-                />
-                <div v-if="selectedFavoriteId === favorite.id" class="selected-check">check_circle</div>
-              </div>
+        <div class="favorites-grid">
+          <div
+            v-for="favorite in availableFavorites"
+            :key="favorite.id"
+            :class="['favorite-card', { selected: selectedFavoriteId === favorite.id }]"
+            @click="selectFavorite(favorite)"
+          >
+            <img
+              v-if="favorite.content_type === 'image'"
+              :src="favorite.media_url"
+              alt="Post"
+              class="favorite-thumbnail"
+            />
+            <video
+              v-else
+              :src="favorite.media_url"
+              class="favorite-thumbnail"
+            />
+            <div v-if="selectedFavoriteId === favorite.id" class="selected-check">
+              <MaterialIcon icon="check_circle" size="lg" />
             </div>
           </div>
         </div>
       </div>
-
-      <div class="modal-footer">
-        <BaseButton variant="ghost" size="medium" @click="close" :disabled="saving">
-          Cancel
-        </BaseButton>
-        <BaseButton variant="primary" size="medium" @click="saveChanges" :disabled="saving">
-          {{ saving ? 'Saving...' : 'Save Changes' }}
-        </BaseButton>
-      </div>
-    </BaseCard>
-  </div>
+    </div>
+  </BaseModal>
 </template>
 
 <style scoped>
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.8);
-  backdrop-filter: blur(var(--blur-md));
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-  padding: var(--space-xl);
-  animation: fadeIn 0.2s ease-out;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-.edit-modal {
-  max-width: 700px;
-  width: 100%;
+/* Two-Column Layout matching PostDetailModal */
+.modal-content {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   max-height: 90vh;
-  overflow: hidden;
+}
+
+/* Media Section (Left) */
+.modal-media {
+  background: rgba(0, 0, 0, 0.4);
   display: flex;
   flex-direction: column;
-  animation: slideUp 0.3s ease-out;
-}
-
-@keyframes slideUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.modal-header {
-  display: flex;
-  justify-content: space-between;
   align-items: center;
-  padding-bottom: var(--space-lg);
-  border-bottom: 1px solid rgba(212, 175, 55, 0.1);
-  margin-bottom: var(--space-xl);
+  justify-content: center;
+  min-height: 400px;
+  max-height: 90vh;
+  overflow: hidden;
+  padding: var(--space-xl);
+  gap: var(--space-lg);
+}
+
+.media-image,
+.media-video {
+  max-width: 100%;
+  max-height: 70vh;
+  object-fit: contain;
+  border-radius: var(--radius-md);
+}
+
+.media-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-md);
+  color: var(--text-muted);
+  padding: var(--space-3xl);
+}
+
+.change-image-btn {
+  margin-top: var(--space-md);
+}
+
+/* Info/Form Section (Right) */
+.modal-info {
+  padding: var(--space-2xl);
+  overflow-y: auto;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
 }
 
 .modal-title {
   font-family: var(--font-heading);
   font-size: var(--text-2xl);
-  font-weight: var(--font-semibold);
-  color: var(--text-primary);
+  font-weight: var(--font-bold);
+  color: var(--gold-primary);
   margin: 0;
 }
 
-.close-button {
-  width: 32px;
-  height: 32px;
-  border-radius: var(--radius-sm);
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: var(--text-secondary);
-  font-size: var(--text-2xl);
-  cursor: pointer;
-  transition: var(--transition-base);
+/* Info Sections (matching PostDetailModal) */
+.info-section {
+  padding-bottom: var(--space-md);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.info-section:last-of-type {
+  border-bottom: none;
+}
+
+.info-label {
   display: flex;
-  align-items: center;
-  justify-content: center;
-  line-height: 1;
-}
-
-.close-button:hover {
-  background: var(--gold-primary);
-  border-color: var(--gold-primary);
-  color: var(--text-on-gold);
-  transform: rotate(90deg);
-}
-
-.modal-body {
-  flex: 1;
-  overflow-y: auto;
-  padding-right: var(--space-sm);
-}
-
-.modal-body::-webkit-scrollbar {
-  width: 6px;
-}
-
-.modal-body::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: var(--radius-sm);
-}
-
-.modal-body::-webkit-scrollbar-thumb {
-  background: var(--gold-primary);
-  border-radius: var(--radius-sm);
-}
-
-/* Preview Section at Top */
-.preview-section {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--space-md);
-  margin-bottom: var(--space-xl);
-  padding-bottom: var(--space-xl);
-  border-bottom: 1px solid rgba(212, 175, 55, 0.2);
-}
-
-.preview-media {
-  width: 240px;
-  height: 240px;
-  border-radius: var(--radius-lg);
-  overflow: hidden;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 2px solid rgba(212, 175, 55, 0.3);
-  transition: var(--transition-base);
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
-}
-
-.preview-media:hover {
-  border-color: var(--gold-primary);
-  box-shadow: 0 12px 24px rgba(212, 175, 55, 0.2);
-}
-
-.change-image-btn {
-  min-width: 200px;
-}
-
-.preview-image,
-.preview-video {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.preview-placeholder {
-  display: flex;
-  flex-direction: column;
   align-items: center;
   gap: var(--space-sm);
+  font-size: var(--text-sm);
   color: var(--text-muted);
+  margin-bottom: var(--space-sm);
 }
 
-.placeholder-icon {
-  font-size: var(--text-4xl);
-}
-
-.placeholder-text {
-  font-size: var(--text-sm);
-}
-
-.preview-info {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-md);
-}
-
-.preview-platform {
-  display: flex;
-  gap: var(--space-sm);
-}
-
-.platform-badge {
-  padding: var(--space-xs) var(--space-md);
-  border-radius: var(--radius-full);
-  font-size: var(--text-xs);
-  font-weight: var(--font-semibold);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-.platform-instagram {
-  background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
-  color: white;
-}
-
-.platform-facebook {
-  background: #1877f2;
-  color: white;
-}
-
-.platform-tiktok {
-  background: #000000;
-  color: #00f2ea;
-  border: 1px solid #00f2ea;
-}
-
-.preview-text {
-  font-size: var(--text-sm);
-  color: var(--text-secondary);
-  line-height: var(--leading-normal);
-  max-height: 60px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.preview-note {
-  font-size: var(--text-xs);
-  color: var(--text-muted);
-  font-style: italic;
-  padding: var(--space-sm);
-  background: rgba(212, 175, 55, 0.05);
-  border-left: 2px solid var(--gold-primary);
-  border-radius: var(--radius-sm);
-}
-
-/* Edit Form */
-.edit-form {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-lg);
-}
-
-.form-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: var(--space-lg);
-}
-
-.form-group {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-sm);
-}
-
-.form-label {
-  font-size: var(--text-sm);
-  font-weight: var(--font-semibold);
-  color: var(--text-primary);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
+/* Form Elements */
 .form-input,
 .form-textarea {
+  width: 100%;
   padding: var(--space-md);
-  background: rgba(0, 0, 0, 0.3);
-  border: 1px solid rgba(212, 175, 55, 0.2);
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
   color: var(--text-primary);
-  font-size: var(--text-base);
+  font-size: var(--text-sm);
   font-family: var(--font-body);
   transition: var(--transition-base);
 }
@@ -773,38 +609,41 @@ const formatDisplayDate = (dateStr: string) => {
   min-height: 80px;
 }
 
-/* Hashtag Editor */
-.hashtag-editor {
-  background: rgba(0, 0, 0, 0.3);
-  border: 1px solid rgba(212, 175, 55, 0.2);
-  border-radius: var(--radius-md);
-  padding: var(--space-md);
-  transition: all 0.2s ease;
+.post-text-area {
+  font-size: var(--text-sm);
+  line-height: 1.6;
+  min-height: 100px;
 }
 
-.hashtag-editor:focus-within {
-  border-color: var(--gold-primary);
-  background: rgba(0, 0, 0, 0.4);
+.char-count {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  text-align: right;
+  margin-top: var(--space-xs);
 }
 
-.hashtag-tags {
+.char-count.warning {
+  color: #f59e0b;
+  font-weight: var(--font-semibold);
+}
+
+/* Hashtags (matching PostDetailModal) */
+.hashtags-row {
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-sm);
   margin-bottom: var(--space-sm);
 }
 
-.hashtag-tag {
+.hashtag {
   display: inline-flex;
   align-items: center;
   gap: var(--space-xs);
-  padding: var(--space-xs) var(--space-sm);
-  background: rgba(212, 175, 55, 0.15);
-  border: 1px solid rgba(212, 175, 55, 0.3);
-  border-radius: var(--radius-full);
-  color: var(--gold-primary);
   font-size: var(--text-sm);
-  font-weight: var(--font-medium);
+  color: var(--gold-primary);
+  background: rgba(212, 175, 55, 0.1);
+  padding: var(--space-xs) var(--space-sm);
+  border-radius: var(--radius-sm);
 }
 
 .remove-tag {
@@ -814,6 +653,7 @@ const formatDisplayDate = (dateStr: string) => {
   font-size: var(--text-base);
   cursor: pointer;
   padding: 0;
+  margin-left: var(--space-xs);
   line-height: 1;
   opacity: 0.7;
   transition: opacity 0.2s ease;
@@ -825,27 +665,32 @@ const formatDisplayDate = (dateStr: string) => {
 
 .hashtag-input {
   width: 100%;
-  background: transparent;
-  border: none;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
   color: var(--text-primary);
   font-family: var(--font-body);
-  font-size: var(--text-base);
-  padding: var(--space-xs) 0;
+  font-size: var(--text-sm);
+  padding: var(--space-sm) var(--space-md);
+  transition: var(--transition-base);
 }
 
 .hashtag-input:focus {
   outline: none;
+  border-color: var(--gold-primary);
 }
 
 .hashtag-input::placeholder {
   color: var(--text-muted);
 }
 
+/* Date & Time */
 .date-preview,
 .time-preview {
   font-size: var(--text-sm);
   color: var(--gold-primary);
   font-weight: var(--font-medium);
+  margin-top: var(--space-xs);
 }
 
 .time-picker {
@@ -855,12 +700,12 @@ const formatDisplayDate = (dateStr: string) => {
 }
 
 .time-select {
-  padding: var(--space-md);
-  background: rgba(0, 0, 0, 0.3);
-  border: 1px solid rgba(212, 175, 55, 0.2);
+  padding: var(--space-sm) var(--space-md);
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
   color: var(--text-primary);
-  font-size: var(--text-base);
+  font-size: var(--text-sm);
   cursor: pointer;
   transition: var(--transition-base);
 }
@@ -873,15 +718,14 @@ const formatDisplayDate = (dateStr: string) => {
 .time-select:focus {
   outline: none;
   border-color: var(--gold-primary);
-  background: rgba(0, 0, 0, 0.4);
 }
 
 .ampm-select {
-  flex: 0 0 80px;
+  flex: 0 0 70px;
 }
 
 .time-separator {
-  font-size: var(--text-xl);
+  font-size: var(--text-lg);
   font-weight: var(--font-bold);
   color: var(--text-primary);
 }
@@ -890,31 +734,25 @@ const formatDisplayDate = (dateStr: string) => {
   font-size: var(--text-xs);
   color: var(--text-muted);
   font-style: italic;
+  margin-top: var(--space-xs);
 }
 
-.platform-select {
-  cursor: pointer;
-}
-
-.platforms-section {
-  margin-bottom: var(--space-xl);
-}
-
+/* Platforms Grid */
 .platforms-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: var(--space-md);
-  margin-top: var(--space-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  margin-top: var(--space-sm);
 }
 
 .platform-option {
   display: flex;
   align-items: center;
   gap: var(--space-sm);
-  padding: var(--space-md);
-  border: 2px solid var(--border-color);
+  padding: var(--space-sm) var(--space-md);
+  border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
-  background: var(--bg-secondary);
+  background: var(--bg-primary);
   cursor: pointer;
   transition: all var(--transition-base);
 }
@@ -935,8 +773,8 @@ const formatDisplayDate = (dateStr: string) => {
 }
 
 .platform-checkbox {
-  width: 18px;
-  height: 18px;
+  width: 16px;
+  height: 16px;
   cursor: pointer;
   accent-color: var(--gold-primary);
 }
@@ -945,14 +783,11 @@ const formatDisplayDate = (dateStr: string) => {
   cursor: not-allowed;
 }
 
-.platform-icon {
-  font-size: var(--text-xl);
-}
-
 .platform-name {
   font-size: var(--text-sm);
-  font-weight: var(--font-semibold);
+  font-weight: var(--font-medium);
   color: var(--text-primary);
+  text-transform: capitalize;
 }
 
 .connection-hint {
@@ -965,39 +800,25 @@ const formatDisplayDate = (dateStr: string) => {
   margin: 0;
   font-size: var(--text-sm);
   font-weight: var(--font-medium);
-  display: flex;
-  align-items: center;
-  gap: var(--space-xs);
-  margin-top: var(--space-xs);
+  margin-top: var(--space-sm);
 }
 
 .platform-hint.error {
   color: #ef4444;
 }
 
-.platform-hint.warning {
-  color: #f59e0b;
-}
-
 .required {
   color: #ef4444;
 }
 
-.post-text-area {
-  font-size: var(--text-base);
-  line-height: var(--leading-normal);
-  min-height: 150px;
-}
-
-.char-count {
-  font-size: var(--text-xs);
-  color: var(--text-muted);
-  text-align: right;
-}
-
-.char-count.warning {
-  color: #f59e0b;
-  font-weight: var(--font-semibold);
+/* Actions (matching PostDetailModal) */
+.modal-actions {
+  display: flex;
+  gap: var(--space-md);
+  margin-top: auto;
+  padding-top: var(--space-xl);
+  border-top: 1px solid var(--border-color);
+  flex-wrap: wrap;
 }
 
 /* Image Picker Modal */
@@ -1017,16 +838,32 @@ const formatDisplayDate = (dateStr: string) => {
   animation: fadeIn 0.2s ease-out;
 }
 
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
 .image-picker-modal {
   max-width: 800px;
   width: 100%;
   max-height: 80vh;
   background: rgba(26, 26, 26, 0.95);
-  border: 1px solid rgba(212, 175, 55, 0.3);
+  border: 1px solid var(--border-color);
   border-radius: var(--radius-lg);
   padding: var(--space-2xl);
   overflow-y: auto;
   animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .image-picker-header {
@@ -1035,7 +872,7 @@ const formatDisplayDate = (dateStr: string) => {
   align-items: center;
   margin-bottom: var(--space-2xl);
   padding-bottom: var(--space-lg);
-  border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+  border-bottom: 1px solid var(--border-color);
 }
 
 .image-picker-title {
@@ -1043,6 +880,21 @@ const formatDisplayDate = (dateStr: string) => {
   font-size: var(--text-xl);
   color: var(--text-primary);
   margin: 0;
+}
+
+.close-button {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: var(--space-sm);
+  border-radius: var(--radius-md);
+  transition: var(--transition-fast);
+}
+
+.close-button:hover {
+  color: var(--text-primary);
+  background: var(--bg-elevated);
 }
 
 .favorites-grid {
@@ -1057,7 +909,7 @@ const formatDisplayDate = (dateStr: string) => {
   border-radius: var(--radius-md);
   overflow: hidden;
   cursor: pointer;
-  border: 2px solid rgba(212, 175, 55, 0.2);
+  border: 2px solid var(--border-color);
   transition: var(--transition-base);
 }
 
@@ -1090,9 +942,7 @@ const formatDisplayDate = (dateStr: string) => {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: var(--text-2xl);
   color: var(--text-on-gold);
-  font-weight: var(--font-bold);
   box-shadow: var(--glow-gold-md);
   animation: scaleIn 0.3s ease;
 }
@@ -1106,48 +956,46 @@ const formatDisplayDate = (dateStr: string) => {
   }
 }
 
-.modal-footer {
-  display: flex;
-  justify-content: flex-end;
-  gap: var(--space-lg);
-  padding-top: var(--space-xl);
-  border-top: 1px solid rgba(212, 175, 55, 0.1);
-  margin-top: var(--space-xl);
+/* Responsive */
+@media (max-width: 900px) {
+  .modal-content {
+    grid-template-columns: 1fr;
+  }
+
+  .modal-media {
+    min-height: 250px;
+    max-height: 40vh;
+  }
+
+  .media-image,
+  .media-video {
+    max-height: 35vh;
+  }
+
+  .modal-info {
+    max-height: 50vh;
+  }
 }
 
-/* Responsive */
-@media (max-width: 768px) {
-  .modal-overlay {
+@media (max-width: 600px) {
+  .modal-info {
     padding: var(--space-lg);
   }
 
-  .edit-modal {
-    max-width: 100%;
+  .modal-title {
+    font-size: var(--text-xl);
   }
 
-  .form-row {
-    grid-template-columns: 1fr;
-    gap: var(--space-md);
+  .modal-actions {
+    flex-direction: column;
   }
 
-  .preview-media {
+  .modal-actions > * {
     width: 100%;
-    max-width: 300px;
-    height: auto;
-    aspect-ratio: 1;
   }
 
   .time-picker {
     flex-wrap: wrap;
-  }
-}
-
-/* Accessibility */
-@media (prefers-reduced-motion: reduce) {
-  .modal-overlay,
-  .edit-modal,
-  .close-button {
-    animation: none;
   }
 }
 </style>

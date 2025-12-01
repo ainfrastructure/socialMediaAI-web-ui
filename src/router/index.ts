@@ -1,22 +1,22 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
-import WaitlistView from '../views/WaitlistView.vue'
-import LoginView from '../views/LoginView.vue'
-import DashboardView from '../views/DashboardView.vue'
-import PlansView from '../views/PlansView.vue'
-import AuthCallbackView from '../views/AuthCallbackView.vue'
-import ResetPasswordView from '../views/ResetPasswordView.vue'
-import PlaygroundView from '../views/PlaygroundView.vue'
-import ConnectAccountsView from '../views/ConnectAccountsView.vue'
-import FacebookCallbackView from '../views/FacebookCallbackView.vue'
-import InstagramCallbackView from '../views/InstagramCallbackView.vue'
-import TestPostView from '../views/TestPostView.vue'
-import SchedulerView from '../views/SchedulerView.vue'
-import PostsView from '../views/PostsView.vue'
-import ProfileView from '../views/ProfileView.vue'
-import OnboardingView from '../views/OnboardingView.vue'
-import ContentHubView from '../views/ContentHubView.vue'
-import ContentCreateView from '../views/ContentCreateView.vue'
+
+// Lazy load views for better code splitting
+const WaitlistView = () => import('../views/WaitlistView.vue')
+const LoginView = () => import('../views/LoginView.vue')
+const DashboardView = () => import('../views/DashboardView.vue')
+const PlansView = () => import('../views/PlansView.vue')
+const AuthCallbackView = () => import('../views/AuthCallbackView.vue')
+const ResetPasswordView = () => import('../views/ResetPasswordView.vue')
+const ConnectAccountsView = () => import('../views/ConnectAccountsView.vue')
+const FacebookCallbackView = () => import('../views/FacebookCallbackView.vue')
+const InstagramCallbackView = () => import('../views/InstagramCallbackView.vue')
+const TestPostView = () => import('../views/TestPostView.vue')
+const SchedulerView = () => import('../views/SchedulerView.vue')
+const ProfileView = () => import('../views/ProfileView.vue')
+const OnboardingView = () => import('../views/OnboardingView.vue')
+const ContentHubView = () => import('../views/ContentHubView.vue')
+const ContentCreateView = () => import('../views/ContentCreateView.vue')
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),

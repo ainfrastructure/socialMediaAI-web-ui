@@ -1,21 +1,10 @@
 <script setup lang="ts">
-import { RouterView, useRoute } from 'vue-router'
-import { computed } from 'vue'
+import { RouterView } from 'vue-router'
 import GradientBackground from './components/GradientBackground.vue'
-import NavBar from './components/NavBar.vue'
-
-const route = useRoute()
-
-// Show navbar on authenticated pages (hide on guest/landing pages)
-const showNavbar = computed(() => {
-  const guestRoutes = ['/', '/login', '/auth/callback', '/auth/reset-password']
-  return !guestRoutes.includes(route.path)
-})
 </script>
 
 <template>
   <GradientBackground />
-  <NavBar v-if="showNavbar" />
   <RouterView />
 </template>
 

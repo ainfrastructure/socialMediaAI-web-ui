@@ -1,7 +1,6 @@
 <template>
-  <div class="posts-view">
-    <GradientBackground />
-
+  <DashboardLayout>
+    <div class="posts-view">
     <div class="container">
       <div class="header">
         <h1 class="title">{{ $t('posts.title') }}</h1>
@@ -216,7 +215,7 @@
                 <option value="twitter">{{ $t('platforms.twitter') }}</option>
                 <option value="linkedin">{{ $t('platforms.linkedin') }}</option>
               </select>
-              <p v-else class="full-text" style="text-transform: capitalize;">{{ selectedPost.platform }}</p>
+              <p v-else class="full-text platform-name">{{ selectedPost.platform }}</p>
             </div>
 
             <!-- Prompt -->
@@ -254,14 +253,15 @@
         </BaseCard>
       </div>
     </Teleport>
-  </div>
+    </div>
+  </DashboardLayout>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import GradientBackground from '../components/GradientBackground.vue'
+import DashboardLayout from '../components/DashboardLayout.vue'
 import BaseCard from '../components/BaseCard.vue'
 import BaseButton from '../components/BaseButton.vue'
 import BasePagination from '../components/BasePagination.vue'
@@ -269,13 +269,15 @@ import ConfirmModal from '../components/ConfirmModal.vue'
 import ScheduleModal from '../components/ScheduleModal.vue'
 import FilterBar from '../components/FilterBar.vue'
 import { api } from '../services/api'
+import { useRestaurantsStore } from '../stores/restaurants'
 
 const router = useRouter()
 const { t } = useI18n()
+const restaurantsStore = useRestaurantsStore()
 
 // State
 const posts = ref<any[]>([])
-const restaurants = ref<any[]>([])
+const restaurants = computed(() => restaurantsStore.restaurants)
 const loading = ref(false)
 const selectedPost = ref<any>(null)
 const showScheduleModal = ref(false)
@@ -328,16 +330,9 @@ const fetchPosts = async () => {
   }
 }
 
-// Fetch restaurants for filter dropdown
+// Fetch restaurants for filter dropdown (uses store)
 const fetchRestaurants = async () => {
-  try {
-    const response = await api.getRestaurants()
-    if (response.success) {
-      restaurants.value = response.data || []
-    }
-  } catch (error) {
-    console.error('Error fetching restaurants:', error)
-  }
+  await restaurantsStore.initialize()
 }
 
 // Filter and pagination handlers
@@ -889,6 +884,10 @@ onMounted(() => {
   line-height: 1.6;
   white-space: pre-wrap;
   margin-bottom: var(--space-md);
+}
+
+.platform-name {
+  text-transform: capitalize;
 }
 
 .hashtags-full {

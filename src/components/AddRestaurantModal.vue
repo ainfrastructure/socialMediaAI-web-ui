@@ -1,88 +1,85 @@
 <template>
-  <Teleport to="body">
-    <div v-if="modelValue" class="modal-overlay" @click.self="closeModal">
-      <BaseCard variant="glass-intense" class="modal-card">
-        <div class="modal-header">
-          <h3 class="modal-title">{{ $t('restaurantSelector.addNew') }}</h3>
-          <button class="close-btn" @click="closeModal">&times;</button>
-        </div>
+  <BaseModal
+    :model-value="modelValue"
+    size="md"
+    :title="$t('restaurantSelector.addNew')"
+    :show-close-button="true"
+    :close-on-overlay-click="!savingRestaurant"
+    :close-on-escape="!savingRestaurant"
+    @update:model-value="(val: boolean) => !val && closeModal()"
+    @close="closeModal"
+  >
+    <!-- Error Alert -->
+    <BaseAlert v-if="restaurantError" type="error" :dismissible="false">
+      {{ restaurantError }}
+    </BaseAlert>
 
-        <div class="modal-body">
-          <!-- Error Alert -->
-          <BaseAlert v-if="restaurantError" type="error" :dismissible="false">
-            {{ restaurantError }}
-          </BaseAlert>
-
-          <!-- Search Field -->
-          <div class="search-section">
-            <label class="search-label">{{ $t('restaurantSearch.searchPlaceholder') }}</label>
-            <RestaurantAutocomplete
-              :placeholder="$t('restaurantSearch.searchPlaceholder')"
-              :saved-restaurants="savedRestaurants"
-              @select="handleRestaurantSelect"
-              :disabled="savingRestaurant"
-            />
-          </div>
-
-          <!-- Loading State -->
-          <div v-if="savingRestaurant && !detailsFetched" class="loading-state">
-            <div class="spinner"></div>
-            <p class="loading-text">{{ $t('common.loading') }}</p>
-          </div>
-
-          <!-- Selected Restaurant Preview -->
-          <div v-if="(detailsFetched || restaurantSaved) && selectedRestaurant" class="selected-restaurant">
-            <div class="restaurant-card">
-              <div class="restaurant-logo" v-if="selectedRestaurant.brand_dna?.logo_url">
-                <img :src="selectedRestaurant.brand_dna.logo_url" :alt="selectedRestaurant.name" />
-              </div>
-              <div class="restaurant-info">
-                <h3>{{ selectedRestaurant.name }}</h3>
-                <p v-if="selectedRestaurant.address" class="address">{{ selectedRestaurant.address }}</p>
-                <div v-if="selectedRestaurant.menu_items?.length > 0" class="menu-badge-container">
-                  <span v-if="selectedRestaurant.menu_source === 'okam'" class="menu-badge okam-badge">
-                    ✓ Okam Menu - {{ selectedRestaurant.menu_items.length }} items
-                  </span>
-                  <span v-else-if="selectedRestaurant.menu_source" class="menu-badge platform-badge">
-                    {{ selectedRestaurant.menu_source }} - {{ selectedRestaurant.menu_items.length }} items
-                  </span>
-                </div>
-              </div>
-              <span class="check-icon">✓</span>
-            </div>
-          </div>
-
-          <!-- Actions -->
-          <div v-if="detailsFetched && !restaurantSaved" class="modal-actions">
-            <BaseButton
-              variant="ghost"
-              @click="closeModal"
-            >
-              {{ $t('common.cancel') }}
-            </BaseButton>
-            <BaseButton
-              variant="primary"
-              :disabled="savingRestaurant"
-              @click="handleSave"
-            >
-              {{ savingRestaurant ? $t('common.processing') : $t('common.save') }}
-            </BaseButton>
-          </div>
-
-          <!-- Success Message -->
-          <div v-if="restaurantSaved" class="success-message">
-            <div class="success-icon">✓</div>
-            <p>{{ $t('restaurantSelector.restaurantAdded') }}</p>
-          </div>
-        </div>
-      </BaseCard>
+    <!-- Search Field -->
+    <div class="search-section">
+      <label class="search-label">{{ $t('restaurantSearch.searchPlaceholder') }}</label>
+      <RestaurantAutocomplete
+        :placeholder="$t('restaurantSearch.searchPlaceholder')"
+        :saved-restaurants="savedRestaurants"
+        @select="handleRestaurantSelect"
+        :disabled="savingRestaurant"
+      />
     </div>
-  </Teleport>
+
+    <!-- Loading State -->
+    <div v-if="savingRestaurant && !detailsFetched" class="loading-state">
+      <div class="spinner"></div>
+      <p class="loading-text">{{ $t('common.loading') }}</p>
+    </div>
+
+    <!-- Selected Restaurant Preview -->
+    <div v-if="(detailsFetched || restaurantSaved) && selectedRestaurant" class="selected-restaurant">
+      <div class="restaurant-card">
+        <div class="restaurant-logo" v-if="selectedRestaurant.brand_dna?.logo_url">
+          <img :src="selectedRestaurant.brand_dna.logo_url" :alt="selectedRestaurant.name" />
+        </div>
+        <div class="restaurant-info">
+          <h3>{{ selectedRestaurant.name }}</h3>
+          <p v-if="selectedRestaurant.address" class="address">{{ selectedRestaurant.address }}</p>
+          <div v-if="selectedRestaurant.menu_items?.length > 0" class="menu-badge-container">
+            <span v-if="selectedRestaurant.menu_source === 'okam'" class="menu-badge okam-badge">
+              ✓ Okam Menu - {{ selectedRestaurant.menu_items.length }} items
+            </span>
+            <span v-else-if="selectedRestaurant.menu_source" class="menu-badge platform-badge">
+              {{ selectedRestaurant.menu_source }} - {{ selectedRestaurant.menu_items.length }} items
+            </span>
+          </div>
+        </div>
+        <span class="check-icon">✓</span>
+      </div>
+    </div>
+
+    <!-- Success Message -->
+    <div v-if="restaurantSaved" class="success-message">
+      <div class="success-icon">✓</div>
+      <p>{{ $t('restaurantSelector.restaurantAdded') }}</p>
+    </div>
+
+    <template #footer v-if="detailsFetched && !restaurantSaved">
+      <BaseButton
+        variant="ghost"
+        @click="closeModal"
+      >
+        {{ $t('common.cancel') }}
+      </BaseButton>
+      <BaseButton
+        variant="primary"
+        :disabled="savingRestaurant"
+        @click="handleSave"
+      >
+        {{ savingRestaurant ? $t('common.processing') : $t('common.save') }}
+      </BaseButton>
+    </template>
+  </BaseModal>
 </template>
 
 <script setup lang="ts">
 import { ref, watch } from 'vue'
-import BaseCard from './BaseCard.vue'
+import BaseModal from './BaseModal.vue'
 import BaseButton from './BaseButton.vue'
 import BaseAlert from './BaseAlert.vue'
 import RestaurantAutocomplete from './RestaurantAutocomplete.vue'
@@ -298,94 +295,6 @@ async function handleSave() {
 </script>
 
 <style scoped>
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.85);
-  backdrop-filter: blur(var(--blur-md));
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: var(--space-xl);
-  z-index: 1000;
-  animation: fadeIn 0.2s ease;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-.modal-card {
-  max-width: 600px;
-  width: 100%;
-  min-height: 720px;
-  max-height: 90vh;
-  overflow: visible;
-  display: flex;
-  flex-direction: column;
-  animation: slideUp 0.3s ease;
-}
-
-@keyframes slideUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: var(--space-xl);
-  border-bottom: 1px solid rgba(212, 175, 55, 0.2);
-}
-
-.modal-title {
-  font-family: var(--font-heading);
-  font-size: var(--text-2xl);
-  color: var(--gold-primary);
-  margin: 0;
-}
-
-.close-btn {
-  background: none;
-  border: none;
-  color: var(--text-secondary);
-  font-size: 2rem;
-  line-height: 1;
-  cursor: pointer;
-  padding: 0;
-  width: 40px;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: var(--radius-md);
-  transition: all 0.2s ease;
-}
-
-.close-btn:hover {
-  background: rgba(212, 175, 55, 0.1);
-  color: var(--gold-primary);
-}
-
-.modal-body {
-  padding: var(--space-xl);
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-xl);
-  overflow: visible;
-}
-
 .search-section {
   display: flex;
   flex-direction: column;
@@ -430,6 +339,11 @@ async function handleSave() {
 
 .selected-restaurant {
   animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 .restaurant-card {
@@ -519,14 +433,6 @@ async function handleSave() {
   font-size: var(--text-lg);
 }
 
-.modal-actions {
-  display: flex;
-  gap: var(--space-md);
-  justify-content: flex-end;
-  padding-top: var(--space-md);
-  border-top: 1px solid rgba(212, 175, 55, 0.1);
-}
-
 .success-message {
   display: flex;
   flex-direction: column;
@@ -559,21 +465,9 @@ async function handleSave() {
 
 /* Responsive */
 @media (max-width: 768px) {
-  .modal-card {
-    max-height: 95vh;
-  }
-
   .restaurant-card {
     flex-direction: column;
     text-align: center;
-  }
-
-  .modal-actions {
-    flex-direction: column;
-  }
-
-  .modal-actions button {
-    width: 100%;
   }
 }
 </style>

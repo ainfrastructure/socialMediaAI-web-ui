@@ -1,5 +1,6 @@
 <template>
-  <div class="profile-view">
+  <DashboardLayout>
+    <div class="profile-view">
     <div class="profile-container">
       <!-- Header -->
       <div class="profile-header">
@@ -235,7 +236,8 @@
         </div>
       </div>
     </Teleport>
-  </div>
+    </div>
+  </DashboardLayout>
 </template>
 
 <script setup lang="ts">
@@ -244,6 +246,7 @@ import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '../stores/auth'
 import { api } from '../services/api'
+import DashboardLayout from '../components/DashboardLayout.vue'
 import BaseCard from '../components/BaseCard.vue'
 import BaseButton from '../components/BaseButton.vue'
 import BaseInput from '../components/BaseInput.vue'

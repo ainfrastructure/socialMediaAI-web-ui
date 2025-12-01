@@ -5,18 +5,21 @@ import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '../stores/auth'
 import { useFacebookStore } from '../stores/facebook'
 import { useInstagramStore } from '../stores/instagram'
+import { useRestaurantsStore } from '../stores/restaurants'
 import { api } from '../services/api'
-import GradientBackground from '../components/GradientBackground.vue'
+import DashboardLayout from '../components/DashboardLayout.vue'
 import BaseCard from '../components/BaseCard.vue'
 import BaseButton from '../components/BaseButton.vue'
 import MaterialIcon from '../components/MaterialIcon.vue'
 import PlatformLogo from '../components/PlatformLogo.vue'
 import ConfirmModal from '../components/ConfirmModal.vue'
+import PostDetailModal from '../components/PostDetailModal.vue'
 
 const router = useRouter()
 const authStore = useAuthStore()
 const facebookStore = useFacebookStore()
 const instagramStore = useInstagramStore()
+const restaurantsStore = useRestaurantsStore()
 const { t } = useI18n()
 
 // Real stats from API
@@ -27,14 +30,18 @@ const stats = ref({
   restaurantsAdded: 0
 })
 
+// Restaurants for filter - uses store
+const restaurants = computed(() => restaurantsStore.restaurants)
+const selectedRestaurantFilter = ref<string>('all')
+
+// Recent posts from API
+const recentPosts = ref<any[]>([])
+const loadingPosts = ref(false)
 const loading = ref(true)
 
-const tierDisplayName = computed(() => authStore.user?.subscription.tier.toUpperCase() || 'FREE')
-
-const progressPercent = computed(() => {
-  if (!authStore.usageStats) return 0
-  const { credits_this_month, monthly_limit } = authStore.usageStats
-  return Math.min((credits_this_month / monthly_limit) * 100, 100)
+const userName = computed(() => {
+  const email = authStore.user?.email || ''
+  return email.split('@')[0]
 })
 
 // Platform connection status
@@ -92,15 +99,343 @@ function handleCancelDisconnect() {
   pendingDisconnect.value = null
 }
 
-async function openCustomerPortal() {
-  try {
-    const response = await api.createPortalSession(window.location.href)
-    if (response.success && (response as any).portal_url) {
-      window.location.href = (response as any).portal_url
-    }
-  } catch (error) {
-    console.error('Failed to open customer portal:', error)
+function getStatusClass(status: string) {
+  switch (status?.toLowerCase()) {
+    case 'published':
+      return 'status-published'
+    case 'failed':
+      return 'status-failed'
+    case 'cancelled':
+      return 'status-cancelled'
+    case 'draft':
+      return 'status-draft'
+    case 'scheduled':
+    default:
+      return 'status-scheduled'
   }
+}
+
+function getStatusLabel(status: string) {
+  switch (status?.toLowerCase()) {
+    case 'published':
+      return t('dashboardNew.published')
+    case 'failed':
+      return t('dashboardNew.failed')
+    case 'cancelled':
+      return t('dashboardNew.cancelled')
+    case 'draft':
+      return t('dashboardNew.draft')
+    case 'scheduled':
+    default:
+      return t('dashboardNew.scheduled')
+  }
+}
+
+function formatTimeAgo(dateString: string) {
+  if (!dateString) return ''
+  const date = new Date(dateString)
+  const now = new Date()
+  const diffMs = now.getTime() - date.getTime()
+  const diffMins = Math.floor(diffMs / 60000)
+  const diffHours = Math.floor(diffMs / 3600000)
+  const diffDays = Math.floor(diffMs / 86400000)
+
+  if (diffMins < 60) return `${diffMins}m ago`
+  if (diffHours < 24) return `${diffHours}h ago`
+  return `${diffDays}d ago`
+}
+
+// Get media URL from post (handles both favorites and scheduled posts)
+// Backend returns nested data in various formats: favorite_posts, favorite_post, favorite
+function getPostMediaUrl(post: any): string | null {
+  // Direct media_url (favorites/drafts have this)
+  if (post.media_url) return post.media_url
+  if (post.image_url) return post.image_url
+  if (post.video_url) return post.video_url
+
+  // Nested in favorite_posts (plural - backend join format)
+  if (post.favorite_posts?.media_url) return post.favorite_posts.media_url
+  if (post.favorite_posts?.image_url) return post.favorite_posts.image_url
+  if (post.favorite_posts?.video_url) return post.favorite_posts.video_url
+
+  // Nested in favorite_post (singular)
+  if (post.favorite_post?.media_url) return post.favorite_post.media_url
+  if (post.favorite_post?.image_url) return post.favorite_post.image_url
+  if (post.favorite_post?.video_url) return post.favorite_post.video_url
+
+  // Nested in favorite
+  if (post.favorite?.media_url) return post.favorite.media_url
+  if (post.favorite?.image_url) return post.favorite.image_url
+  if (post.favorite?.video_url) return post.favorite.video_url
+
+  return null
+}
+
+// Get post text from post (handles both favorites and scheduled posts)
+function getPostText(post: any): string | null {
+  // Direct post_text
+  if (post.post_text) return post.post_text
+  if (post.caption) return post.caption
+
+  // Nested in favorite_posts (plural)
+  if (post.favorite_posts?.post_text) return post.favorite_posts.post_text
+  if (post.favorite_posts?.caption) return post.favorite_posts.caption
+
+  // Nested in favorite_post (singular)
+  if (post.favorite_post?.post_text) return post.favorite_post.post_text
+  if (post.favorite_post?.caption) return post.favorite_post.caption
+
+  // Nested in favorite
+  if (post.favorite?.post_text) return post.favorite.post_text
+  if (post.favorite?.caption) return post.favorite.caption
+
+  return null
+}
+
+// Get restaurant name from post
+function getPostRestaurantName(post: any): string | null {
+  if (post.restaurant_name) return post.restaurant_name
+  if (post.favorite_posts?.restaurant_name) return post.favorite_posts.restaurant_name
+  if (post.favorite_post?.restaurant_name) return post.favorite_post.restaurant_name
+  if (post.favorite?.restaurant_name) return post.favorite.restaurant_name
+
+  // Try to find from restaurants list using restaurant_id
+  const restaurantId = post.restaurant_id || post.favorite_posts?.restaurant_id || post.favorite_post?.restaurant_id
+  if (restaurantId) {
+    const restaurant = restaurants.value.find(r => r.id === restaurantId)
+    if (restaurant) return restaurant.name
+  }
+
+  return null
+}
+
+// Get platforms a post was published to (returns array)
+function getPostPlatforms(post: any): string[] {
+  // Check if post has published_platforms array
+  if (post.published_platforms && Array.isArray(post.published_platforms)) {
+    return post.published_platforms
+  }
+
+  // Check platform_post_urls object
+  if (post.platform_post_urls && Object.keys(post.platform_post_urls).length > 0) {
+    return Object.keys(post.platform_post_urls)
+  }
+
+  // Check platforms array (scheduled posts have this)
+  if (post.platforms && Array.isArray(post.platforms) && post.platforms.length > 0) {
+    return post.platforms
+  }
+
+  // Fallback to single platform field
+  const platforms: string[] = []
+
+  if (post.platform) {
+    platforms.push(post.platform)
+  }
+
+  // Check nested favorite_posts
+  if (post.favorite_posts?.platform && !platforms.includes(post.favorite_posts.platform)) {
+    platforms.push(post.favorite_posts.platform)
+  }
+
+  // Check nested favorite_post
+  if (post.favorite_post?.platform && !platforms.includes(post.favorite_post.platform)) {
+    platforms.push(post.favorite_post.platform)
+  }
+
+  return platforms
+}
+
+// Post detail modal state
+const showPostDetailModal = ref(false)
+const selectedPost = ref<any>(null)
+
+// Open post detail modal
+function viewPostDetail(post: any) {
+  selectedPost.value = post
+  showPostDetailModal.value = true
+}
+
+// Close post detail modal
+function closePostDetailModal() {
+  showPostDetailModal.value = false
+  selectedPost.value = null
+}
+
+// Handle edit action from modal
+function handlePostEdit(post: any) {
+  closePostDetailModal()
+  if (post.status === 'draft') {
+    // Navigate to content hub to edit draft
+    router.push('/content')
+  } else {
+    // Navigate to scheduler with post ID
+    router.push(`/scheduler?post=${post.id}`)
+  }
+}
+
+// Handle schedule action from modal (for drafts)
+function handlePostSchedule(post: any) {
+  closePostDetailModal()
+  router.push(`/scheduler?favorite=${post.id}`)
+}
+
+// Handle delete action from modal
+function handlePostDelete(post: any) {
+  // For now, just close the modal - delete functionality can be implemented later
+  closePostDetailModal()
+  // TODO: Show delete confirmation modal and handle deletion
+}
+
+// Get content type from post
+function getPostContentType(post: any): string {
+  if (post.content_type) return post.content_type
+  if (post.favorite_posts?.content_type) return post.favorite_posts.content_type
+  if (post.favorite_post?.content_type) return post.favorite_post.content_type
+
+  // Detect from URL
+  const url = getPostMediaUrl(post)
+  if (url) {
+    if (url.match(/\.(mp4|webm|mov|avi)$/i)) return 'video'
+  }
+  return 'image'
+}
+
+// Format date for display
+function formatPostDate(post: any): string {
+  const date = post.scheduled_date || post.published_at || post.created_at
+  if (!date) return ''
+  return new Date(date).toLocaleDateString(undefined, {
+    weekday: 'short',
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric'
+  })
+}
+
+// Format time for display
+function formatPostTime(time: string | null): string {
+  if (!time) return ''
+  // Handle HH:MM format
+  if (time.includes(':')) {
+    const [hours, minutes] = time.split(':')
+    return `${hours}:${minutes}`
+  }
+  return time
+}
+
+// Computed to check if showing all restaurants
+const showRestaurantColumn = computed(() => selectedRestaurantFilter.value === 'all')
+
+// Load recent posts (scheduled/published + drafts) with optional restaurant filter
+async function loadRecentPosts() {
+  loadingPosts.value = true
+  try {
+    const restaurantFilter = selectedRestaurantFilter.value !== 'all'
+      ? selectedRestaurantFilter.value
+      : undefined
+
+    const now = new Date()
+    const currentMonth = now.getMonth() + 1
+    const currentYear = now.getFullYear()
+
+    // Build array of months to fetch: current, prev 2, next 1
+    const monthsToFetch: { month: number; year: number }[] = []
+    for (let i = -2; i <= 1; i++) {
+      let m = currentMonth + i
+      let y = currentYear
+      if (m <= 0) {
+        m += 12
+        y -= 1
+      } else if (m > 12) {
+        m -= 12
+        y += 1
+      }
+      monthsToFetch.push({ month: m, year: y })
+    }
+
+    // Fetch scheduled posts and favorites (drafts) in parallel
+    const [scheduledResponses, favoritesResponse] = await Promise.all([
+      // Fetch scheduled posts from multiple months
+      Promise.all(
+        monthsToFetch.map(({ month, year }) =>
+          api.getScheduledPosts({
+            month,
+            year,
+            restaurant_ids: restaurantFilter ? [restaurantFilter] : undefined
+          })
+        )
+      ),
+      // Fetch favorites (drafts) - these are saved but not scheduled
+      api.getFavorites({
+        restaurant_id: restaurantFilter,
+        limit: 10,
+        sort: 'newest'
+      })
+    ])
+
+    // Combine all scheduled posts
+    const scheduledPosts: any[] = []
+    for (const response of scheduledResponses) {
+      if (response.success && response.data?.scheduled_posts) {
+        scheduledPosts.push(...response.data.scheduled_posts)
+      }
+    }
+
+    // Get the favorite_post_ids that are already scheduled (to exclude from drafts)
+    const scheduledFavoriteIds = new Set(
+      scheduledPosts
+        .filter(p => p.favorite_post_id)
+        .map(p => p.favorite_post_id)
+    )
+
+    // Get favorites that are NOT scheduled (true drafts)
+    const drafts: any[] = []
+    if (favoritesResponse.success && favoritesResponse.data?.favorites) {
+      for (const fav of favoritesResponse.data.favorites) {
+        // Only include if not already scheduled
+        if (!scheduledFavoriteIds.has(fav.id)) {
+          drafts.push({
+            ...fav,
+            status: 'draft', // Mark as draft
+            // Map favorite fields to match scheduled post structure
+            post_text: fav.post_text,
+            media_url: fav.media_url,
+            restaurant_name: fav.restaurant_name || restaurants.value.find(r => r.id === fav.restaurant_id)?.name
+          })
+        }
+      }
+    }
+
+    // Combine scheduled posts and drafts
+    const allPosts = [...scheduledPosts, ...drafts]
+
+    // Remove duplicates by id
+    const uniquePosts = allPosts.filter((post, index, self) =>
+      index === self.findIndex(p => p.id === post.id)
+    )
+
+    // Sort by date descending and take first 5
+    const sortedPosts = uniquePosts
+      .sort((a: any, b: any) => {
+        const dateA = new Date(a.scheduled_time || a.created_at).getTime()
+        const dateB = new Date(b.scheduled_time || b.created_at).getTime()
+        return dateB - dateA
+      })
+      .slice(0, 5)
+
+    recentPosts.value = sortedPosts
+  } catch (error) {
+    console.error('Failed to load recent posts:', error)
+    recentPosts.value = []
+  } finally {
+    loadingPosts.value = false
+  }
+}
+
+// Handle restaurant filter change
+function onRestaurantFilterChange() {
+  loadRecentPosts()
 }
 
 // Load data on mount
@@ -123,6 +458,12 @@ onMounted(async () => {
         restaurantsAdded: statsResponse.data.restaurantsAdded || 0
       }
     }
+
+    // Load restaurants for filter (uses store)
+    await restaurantsStore.initialize()
+
+    // Load recent posts (favorites)
+    await loadRecentPosts()
   } catch (error) {
     console.error('Failed to load dashboard data:', error)
   } finally {
@@ -132,219 +473,327 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="dashboard-view">
-    <GradientBackground />
-
-    <div class="container">
-      <!-- Hero Section with Inline Stats -->
-      <div class="hero-compact">
-        <h1 class="hero-title">{{ $t('dashboard.welcomeBack', { name: authStore.user?.email?.split('@')[0] }) }}</h1>
-
-        <!-- Inline Stats Bar -->
-        <div class="stats-bar">
-          <div class="stat-item">
-            <MaterialIcon icon="palette" size="lg" :color="'var(--gold-primary)'" />
-            <span class="stat-value">{{ stats.postsCreated }}</span>
-            <span class="stat-label">{{ $t('dashboard.postsCreated') }}</span>
-          </div>
-          <div class="stat-divider"></div>
-          <div class="stat-item">
-            <MaterialIcon icon="star" size="lg" :color="'var(--gold-primary)'" />
-            <span class="stat-value">{{ stats.postsSaved }}</span>
-            <span class="stat-label">{{ $t('dashboard.postsSaved') }}</span>
-          </div>
-          <div class="stat-divider"></div>
-          <div class="stat-item">
-            <MaterialIcon icon="calendar_month" size="lg" :color="'var(--gold-primary)'" />
-            <span class="stat-value">{{ stats.scheduledPosts }}</span>
-            <span class="stat-label">{{ $t('dashboard.scheduledPosts') }}</span>
-          </div>
-          <div class="stat-divider"></div>
-          <div class="stat-item">
-            <MaterialIcon icon="restaurant" size="lg" :color="'var(--gold-primary)'" />
-            <span class="stat-value">{{ stats.restaurantsAdded }}</span>
-            <span class="stat-label">{{ $t('dashboard.restaurants') }}</span>
-          </div>
-        </div>
+  <DashboardLayout>
+    <!-- Header Left Slot: Welcome Message -->
+    <template #header-left>
+      <div class="welcome-section">
+        <span class="welcome-label">{{ $t('dashboard.welcomeBack', { name: '' }).replace(', !', '') }}</span>
+        <h1 class="welcome-name">{{ userName }}</h1>
       </div>
+    </template>
+
+    <div class="dashboard-content">
+      <!-- Stats Cards Row -->
+      <section class="stats-grid">
+        <div class="stat-card stat-card-orange">
+          <div class="stat-card-header">
+            <div class="stat-icon stat-icon-orange">
+              <MaterialIcon icon="palette" size="lg" color="#fff" />
+            </div>
+            <span v-if="stats.postsCreated > 0" class="stat-badge">+12%</span>
+          </div>
+          <div class="stat-value">{{ stats.postsCreated }}</div>
+          <div class="stat-label">{{ $t('dashboard.postsCreated') }}</div>
+        </div>
+
+        <div class="stat-card stat-card-yellow">
+          <div class="stat-card-header">
+            <div class="stat-icon stat-icon-yellow">
+              <MaterialIcon icon="star" size="lg" color="#fff" />
+            </div>
+            <span v-if="stats.postsSaved > 0" class="stat-badge">+8%</span>
+          </div>
+          <div class="stat-value">{{ stats.postsSaved }}</div>
+          <div class="stat-label">{{ $t('dashboard.postsSaved') }}</div>
+        </div>
+
+        <div class="stat-card stat-card-blue">
+          <div class="stat-card-header">
+            <div class="stat-icon stat-icon-blue">
+              <MaterialIcon icon="calendar_month" size="lg" color="#fff" />
+            </div>
+            <span v-if="stats.scheduledPosts > 0" class="stat-badge">+3</span>
+          </div>
+          <div class="stat-value">{{ stats.scheduledPosts }}</div>
+          <div class="stat-label">{{ $t('dashboard.scheduledPosts') }}</div>
+        </div>
+
+        <div class="stat-card stat-card-green">
+          <div class="stat-card-header">
+            <div class="stat-icon stat-icon-green">
+              <MaterialIcon icon="restaurant" size="lg" color="#fff" />
+            </div>
+            <span class="stat-badge-active">{{ $t('dashboardNew.active') }}</span>
+          </div>
+          <div class="stat-value">{{ stats.restaurantsAdded }}</div>
+          <div class="stat-label">{{ $t('dashboard.restaurants') }}</div>
+        </div>
+      </section>
 
       <!-- Quick Actions -->
       <section class="section">
-        <h2 class="section-label">{{ $t('dashboard.quickActions') }}</h2>
-        <div class="actions-grid">
-          <div class="action-card" @click="router.push('/content')">
-            <div class="action-icon-wrapper">
-              <MaterialIcon icon="edit_note" size="3xl" :color="'var(--gold-primary)'" />
+        <h2 class="section-title">{{ $t('dashboard.quickActions') }}</h2>
+        <div class="quick-actions-grid">
+          <div class="quick-action-card" @click="router.push('/content/create')">
+            <div class="quick-action-icon quick-action-icon-pink">
+              <MaterialIcon icon="add" size="xl" color="#fff" />
             </div>
-            <h3 class="action-title">Cook Up Content</h3>
-            <p class="action-desc">Create and manage your social media posts</p>
-            <BaseButton variant="secondary" size="small" class="action-btn-cta">
-              Get Started
-            </BaseButton>
+            <h3 class="quick-action-title">{{ $t('dashboardNew.createPost') }}</h3>
+            <p class="quick-action-desc">{{ $t('dashboardNew.createPostDesc') }}</p>
           </div>
-          <div class="action-card" @click="router.push('/scheduler')">
-            <div class="action-icon-wrapper">
-              <MaterialIcon icon="calendar_today" size="3xl" :color="'var(--gold-primary)'" />
+
+          <div class="quick-action-card" @click="router.push('/scheduler')">
+            <div class="quick-action-icon quick-action-icon-teal">
+              <MaterialIcon icon="schedule" size="xl" color="#fff" />
             </div>
-            <h3 class="action-title">Schedule Posts</h3>
-            <p class="action-desc">Plan and schedule your content calendar</p>
-            <BaseButton variant="secondary" size="small" class="action-btn-cta">
-              Open Calendar
-            </BaseButton>
+            <h3 class="quick-action-title">{{ $t('dashboardNew.schedule') }}</h3>
+            <p class="quick-action-desc">{{ $t('dashboardNew.scheduleDesc') }}</p>
           </div>
-          <div class="action-card" @click="router.push('/plans')">
-            <div class="action-icon-wrapper">
-              <MaterialIcon icon="credit_card" size="3xl" :color="'var(--gold-primary)'" />
+
+          <div class="quick-action-card" @click="router.push('/connect-accounts')">
+            <div class="quick-action-icon quick-action-icon-purple">
+              <MaterialIcon icon="insights" size="xl" color="#fff" />
             </div>
-            <h3 class="action-title">Plans & Billing</h3>
-            <p class="action-desc">Manage subscription and payment methods</p>
-            <BaseButton variant="secondary" size="small" class="action-btn-cta">
-              View Plans
-            </BaseButton>
+            <h3 class="quick-action-title">{{ $t('dashboardNew.analytics') }}</h3>
+            <p class="quick-action-desc">{{ $t('dashboardNew.analyticsDesc') }}</p>
           </div>
-          <div class="action-card" @click="router.push('/profile')">
-            <div class="action-icon-wrapper">
-              <MaterialIcon icon="person" size="3xl" :color="'var(--gold-primary)'" />
+
+          <div class="quick-action-card" @click="router.push('/profile')">
+            <div class="quick-action-icon quick-action-icon-gray">
+              <MaterialIcon icon="settings" size="xl" color="#fff" />
             </div>
-            <h3 class="action-title">Profile & Settings</h3>
-            <p class="action-desc">Update your account and preferences</p>
-            <BaseButton variant="secondary" size="small" class="action-btn-cta">
-              Manage Profile
-            </BaseButton>
+            <h3 class="quick-action-title">{{ $t('dashboardNew.settings') }}</h3>
+            <p class="quick-action-desc">{{ $t('dashboardNew.settingsDesc') }}</p>
           </div>
         </div>
       </section>
 
-      <!-- Platforms - Minimal Icon Grid -->
-      <section class="section">
-        <h2 class="section-label">{{ $t('dashboard.socialPlatforms') }}</h2>
-        <p class="section-subtitle">{{ $t('dashboard.connectPlatformsPrompt') }}</p>
-        <div class="platforms-grid-minimal">
-          <!-- Facebook -->
-          <div
-            class="platform-box-minimal"
-            :class="{ 'platform-connected': isFacebookConnected }"
-          >
-            <div class="platform-icon-bg platform-bg-facebook">
-              <PlatformLogo platform="facebook" :size="32" />
+      <!-- Main Grid: Recent Posts + Platforms -->
+      <div class="main-grid">
+        <!-- Recent Posts Table -->
+        <section class="recent-posts-section">
+          <div class="section-header">
+            <div class="section-header-left">
+              <h2 class="section-title">{{ $t('dashboardNew.recentPosts') }}</h2>
+              <!-- Restaurant Filter -->
+              <select
+                v-model="selectedRestaurantFilter"
+                class="restaurant-filter"
+                @change="onRestaurantFilterChange"
+              >
+                <option value="all">{{ $t('dashboardNew.allRestaurants') }}</option>
+                <option
+                  v-for="restaurant in restaurants"
+                  :key="restaurant.id"
+                  :value="restaurant.id"
+                >
+                  {{ restaurant.name }}
+                </option>
+              </select>
             </div>
-            <span v-if="isFacebookConnected" class="connected-badge-mini">
-              <svg class="checkmark-icon-mini" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M9 12L11 14L15 10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-              </svg>
-              {{ $t('connectAccounts.connected') }}
-            </span>
-            <span v-else class="connect-label" @click="router.push('/connect-accounts')">{{ $t('connectAccounts.connect') }}</span>
-            <button
-              v-if="isFacebookConnected"
-              class="disconnect-btn-top"
-              @click.stop="requestDisconnectFacebook"
-              :aria-label="$t('connectAccounts.disconnect')"
+            <router-link
+              v-if="selectedRestaurantFilter !== 'all'"
+              to="/content"
+              class="view-all-link"
             >
-              <MaterialIcon icon="close" size="sm" />
-            </button>
+              {{ $t('dashboardNew.viewAll') }} →
+            </router-link>
           </div>
 
-          <!-- Instagram -->
-          <div
-            class="platform-box-minimal"
-            :class="{ 'platform-connected': isInstagramConnected }"
-          >
-            <div class="platform-icon-bg platform-bg-instagram">
-              <PlatformLogo platform="instagram" :size="32" />
-            </div>
-            <span v-if="isInstagramConnected" class="connected-badge-mini">
-              <svg class="checkmark-icon-mini" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M9 12L11 14L15 10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-              </svg>
-              {{ $t('connectAccounts.connected') }}
-            </span>
-            <span v-else class="connect-label" @click="router.push('/connect-accounts')">{{ $t('connectAccounts.connect') }}</span>
-            <button
-              v-if="isInstagramConnected"
-              class="disconnect-btn-top"
-              @click.stop="requestDisconnectInstagram"
-              :aria-label="$t('connectAccounts.disconnect')"
-            >
-              <MaterialIcon icon="close" size="sm" />
-            </button>
-          </div>
-
-          <!-- Wolt (Coming Soon) -->
-          <div class="platform-box-minimal platform-disabled">
-            <div class="platform-icon-bg platform-bg-wolt">
-              <PlatformLogo platform="wolt" :size="32" />
-            </div>
-            <span class="coming-soon-badge">{{ $t('connectAccounts.comingSoon') }}</span>
-          </div>
-
-          <!-- Twitter/X (Coming Soon) -->
-          <div class="platform-box-minimal platform-disabled">
-            <div class="platform-icon-bg platform-bg-twitter">
-              <PlatformLogo platform="twitter" :size="32" />
-            </div>
-            <span class="coming-soon-badge">{{ $t('connectAccounts.comingSoon') }}</span>
-          </div>
-
-          <!-- LinkedIn (Coming Soon) -->
-          <div class="platform-box-minimal platform-disabled">
-            <div class="platform-icon-bg platform-bg-linkedin">
-              <PlatformLogo platform="linkedin" :size="32" />
-            </div>
-            <span class="coming-soon-badge">{{ $t('connectAccounts.comingSoon') }}</span>
-          </div>
-
-          <!-- TikTok (Coming Soon) -->
-          <div class="platform-box-minimal platform-disabled">
-            <div class="platform-icon-bg platform-bg-tiktok">
-              <PlatformLogo platform="tiktok" :size="32" />
-            </div>
-            <span class="coming-soon-badge">{{ $t('connectAccounts.comingSoon') }}</span>
-          </div>
-
-          <!-- YouTube (Coming Soon) -->
-          <div class="platform-box-minimal platform-disabled">
-            <div class="platform-icon-bg platform-bg-youtube">
-              <PlatformLogo platform="youtube" :size="32" />
-            </div>
-            <span class="coming-soon-badge">{{ $t('connectAccounts.comingSoon') }}</span>
-          </div>
-        </div>
-      </section>
-
-      <!-- Account Bar -->
-      <section class="section">
-        <h2 class="section-label">{{ $t('dashboard.accountOverview') }}</h2>
-        <BaseCard variant="glass" class="account-bar">
-          <div class="account-bar-content">
-            <div class="account-tier">
-              <span class="tier-badge">{{ tierDisplayName }}</span>
-              <span class="tier-status">{{ authStore.user?.subscription.status }}</span>
+          <BaseCard variant="glass" class="posts-table-card">
+            <div v-if="loading || loadingPosts" class="loading-state">
+              <MaterialIcon icon="hourglass_empty" size="xl" color="var(--text-muted)" />
+              <span>{{ $t('common.loading') }}</span>
             </div>
 
-            <div class="account-usage">
-              <div class="usage-info">
-                <span class="usage-current">{{ authStore.usageStats?.credits_this_month || 0 }}</span>
-                <span class="usage-sep">/</span>
-                <span class="usage-total">{{ authStore.usageStats?.monthly_limit || 0 }}</span>
-                <span class="usage-text">{{ $t('dashboard.creditsUsedLabel') }}</span>
-              </div>
-              <div class="usage-bar-compact">
-                <div class="usage-progress-compact" :style="{ width: `${progressPercent}%` }"></div>
-              </div>
-            </div>
-
-            <div class="account-actions-compact">
-              <BaseButton variant="ghost" size="small" @click="router.push('/plans')">
-                {{ $t('dashboard.viewPlans') }}
-              </BaseButton>
-              <BaseButton variant="secondary" size="small" @click="openCustomerPortal">
-                {{ $t('dashboard.manageSubscription') }}
+            <div v-else-if="recentPosts.length === 0" class="empty-state">
+              <p>{{ $t('dashboardNew.noRecentPosts') }}</p>
+              <BaseButton variant="primary" size="small" @click="router.push('/content/create')">
+                {{ $t('dashboardNew.createFirstPost') }}
               </BaseButton>
             </div>
+
+            <table v-else class="posts-table" :class="{ 'hide-restaurant': !showRestaurantColumn }">
+              <thead>
+                <tr>
+                  <th>{{ $t('dashboardNew.post') }}</th>
+                  <th>{{ $t('dashboardNew.platforms') }}</th>
+                  <th>{{ $t('dashboardNew.status') }}</th>
+                  <th class="restaurant-header">{{ $t('dashboardNew.restaurant') }}</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr
+                  v-for="post in recentPosts"
+                  :key="post.id"
+                  class="post-row"
+                  @click="viewPostDetail(post)"
+                >
+                  <td class="post-cell">
+                    <div class="post-info">
+                      <div v-if="getPostMediaUrl(post)" class="post-thumbnail">
+                        <img :src="getPostMediaUrl(post)" :alt="getPostText(post) || 'Post'" />
+                      </div>
+                      <div v-else class="post-thumbnail placeholder">
+                        <MaterialIcon icon="image" size="sm" color="var(--text-muted)" />
+                      </div>
+                      <div class="post-details">
+                        <span class="post-title">{{ getPostText(post)?.substring(0, 35) || 'Untitled Post' }}{{ getPostText(post)?.length > 35 ? '...' : '' }}</span>
+                        <span class="post-time">{{ formatTimeAgo(post.created_at) }}</span>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="platforms-cell">
+                    <div class="platform-icons">
+                      <div
+                        v-for="platform in getPostPlatforms(post)"
+                        :key="platform"
+                        class="platform-icon-small"
+                        :class="`platform-bg-${platform}`"
+                        :title="platform"
+                      >
+                        <PlatformLogo :platform="platform as any" :size="14" />
+                      </div>
+                      <span v-if="getPostPlatforms(post).length === 0" class="muted">—</span>
+                    </div>
+                  </td>
+                  <td>
+                    <span class="status-badge" :class="getStatusClass(post.status || 'scheduled')">
+                      {{ getStatusLabel(post.status || 'scheduled') }}
+                    </span>
+                  </td>
+                  <td class="restaurant-cell">
+                    <span v-if="getPostRestaurantName(post)" class="restaurant-name">
+                      {{ getPostRestaurantName(post) }}
+                    </span>
+                    <span v-else class="muted">—</span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </BaseCard>
+        </section>
+
+        <!-- Platforms Panel -->
+        <section class="platforms-section">
+          <div class="section-header">
+            <h2 class="section-title">{{ $t('dashboardNew.platforms') }}</h2>
+            <span class="platforms-count">{{ connectedCount }} {{ $t('dashboardNew.activeCount') }}</span>
           </div>
-        </BaseCard>
-      </section>
+
+          <BaseCard variant="glass" class="platforms-card">
+            <!-- Facebook -->
+            <div class="platform-row">
+              <div class="platform-info">
+                <div class="platform-icon-box platform-bg-facebook">
+                  <PlatformLogo platform="facebook" :size="20" />
+                </div>
+                <div class="platform-details">
+                  <span class="platform-name">Facebook</span>
+                  <span v-if="isFacebookConnected" class="platform-followers">
+                    {{ facebookStore.connectedPages[0]?.pageName || '' }}
+                  </span>
+                </div>
+              </div>
+              <div class="platform-status">
+                <span v-if="isFacebookConnected" class="status-dot-online"></span>
+                <button
+                  v-if="!isFacebookConnected"
+                  class="connect-btn"
+                  @click="router.push('/connect-accounts')"
+                >
+                  {{ $t('dashboard.connect') }}
+                </button>
+              </div>
+            </div>
+
+            <!-- Instagram -->
+            <div class="platform-row">
+              <div class="platform-info">
+                <div class="platform-icon-box platform-bg-instagram">
+                  <PlatformLogo platform="instagram" :size="20" />
+                </div>
+                <div class="platform-details">
+                  <span class="platform-name">Instagram</span>
+                  <span v-if="isInstagramConnected" class="platform-followers">
+                    @{{ instagramStore.connectedAccounts[0]?.username || '' }}
+                  </span>
+                </div>
+              </div>
+              <div class="platform-status">
+                <span v-if="isInstagramConnected" class="status-dot-online"></span>
+                <button
+                  v-if="!isInstagramConnected"
+                  class="connect-btn"
+                  @click="router.push('/connect-accounts')"
+                >
+                  {{ $t('dashboard.connect') }}
+                </button>
+              </div>
+            </div>
+
+            <!-- X/Twitter -->
+            <div class="platform-row platform-disabled">
+              <div class="platform-info">
+                <div class="platform-icon-box platform-bg-twitter">
+                  <PlatformLogo platform="twitter" :size="20" />
+                </div>
+                <div class="platform-details">
+                  <span class="platform-name">X</span>
+                </div>
+              </div>
+              <div class="platform-status">
+                <span class="connect-btn disabled">{{ $t('dashboard.connect') }}</span>
+              </div>
+            </div>
+
+            <!-- LinkedIn -->
+            <div class="platform-row platform-disabled">
+              <div class="platform-info">
+                <div class="platform-icon-box platform-bg-linkedin">
+                  <PlatformLogo platform="linkedin" :size="20" />
+                </div>
+                <div class="platform-details">
+                  <span class="platform-name">LinkedIn</span>
+                </div>
+              </div>
+              <div class="platform-status">
+                <span class="connect-btn disabled">{{ $t('dashboard.connect') }}</span>
+              </div>
+            </div>
+
+            <!-- TikTok -->
+            <div class="platform-row platform-disabled">
+              <div class="platform-info">
+                <div class="platform-icon-box platform-bg-tiktok">
+                  <PlatformLogo platform="tiktok" :size="20" />
+                </div>
+                <div class="platform-details">
+                  <span class="platform-name">TikTok</span>
+                </div>
+              </div>
+              <div class="platform-status">
+                <span class="connect-btn disabled">{{ $t('dashboard.connect') }}</span>
+              </div>
+            </div>
+
+            <!-- YouTube -->
+            <div class="platform-row platform-disabled">
+              <div class="platform-info">
+                <div class="platform-icon-box platform-bg-youtube">
+                  <PlatformLogo platform="youtube" :size="20" />
+                </div>
+                <div class="platform-details">
+                  <span class="platform-name">YouTube</span>
+                </div>
+              </div>
+              <div class="platform-status">
+                <span class="connect-btn disabled">{{ $t('dashboard.connect') }}</span>
+              </div>
+            </div>
+          </BaseCard>
+        </section>
+      </div>
     </div>
 
     <!-- Disconnect Confirm Modal -->
@@ -359,80 +808,121 @@ onMounted(async () => {
       @confirm="handleConfirmDisconnect"
       @cancel="handleCancelDisconnect"
     />
-  </div>
+
+    <!-- Post Detail Modal -->
+    <PostDetailModal
+      v-model="showPostDetailModal"
+      :post="selectedPost"
+      @edit="handlePostEdit"
+      @schedule="handlePostSchedule"
+      @delete="handlePostDelete"
+      @close="closePostDetailModal"
+    />
+  </DashboardLayout>
 </template>
 
 <style scoped>
-.dashboard-view {
-  min-height: 100vh;
-  position: relative;
-  padding: var(--space-xl) var(--space-lg);
-}
-
-.container {
-  max-width: 1200px;
+.dashboard-content {
+  max-width: 1400px;
   margin: 0 auto;
-  position: relative;
-  z-index: 1;
 }
 
-/* Hero Compact */
-.hero-compact {
-  text-align: center;
-  margin-bottom: var(--space-3xl);
-  animation: fadeInUp 0.5s var(--ease-smooth);
-}
-
-.hero-title {
-  font-family: var(--font-heading);
-  font-size: var(--text-3xl);
-  font-weight: var(--font-bold);
-  margin: 0 0 var(--space-xl) 0;
-  background: var(--gradient-gold);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-/* Stats Bar - Inline Horizontal */
-.stats-bar {
+/* Welcome Section */
+.welcome-section {
   display: flex;
-  justify-content: center;
-  align-items: stretch;
-  padding: 0;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.welcome-label {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+}
+
+.welcome-name {
+  font-family: var(--font-heading);
+  font-size: var(--text-2xl);
+  font-weight: var(--font-bold);
+  color: var(--text-primary);
+  margin: 0;
+}
+
+/* Stats Grid */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-lg);
+  margin-bottom: var(--space-3xl);
+}
+
+.stat-card {
   background: var(--bg-secondary);
   border-radius: var(--radius-lg);
-  border: 1px solid var(--border-color);
-  overflow: hidden;
+  padding: var(--space-xl);
+  border-top: 3px solid transparent;
+  transition: var(--transition-base);
 }
 
-.stat-item {
-  flex: 1;
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
+.stat-card-orange { border-top-color: #f97316; }
+.stat-card-yellow { border-top-color: #eab308; }
+.stat-card-blue { border-top-color: #3b82f6; }
+.stat-card-green { border-top-color: #22c55e; }
+
+.stat-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: var(--space-lg);
+}
+
+.stat-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-md);
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: var(--space-sm);
-  padding: var(--space-lg) var(--space-xl);
+}
+
+.stat-icon-orange { background: #f97316; }
+.stat-icon-yellow { background: #eab308; }
+.stat-icon-blue { background: #3b82f6; }
+.stat-icon-green { background: #22c55e; }
+
+.stat-badge {
+  font-size: var(--text-xs);
+  font-weight: var(--font-semibold);
+  color: #22c55e;
+  background: rgba(34, 197, 94, 0.15);
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+}
+
+.stat-badge-active {
+  font-size: var(--text-xs);
+  font-weight: var(--font-semibold);
+  color: var(--text-secondary);
+  background: var(--bg-elevated);
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
 }
 
 .stat-value {
   font-family: var(--font-heading);
-  font-size: var(--text-2xl);
+  font-size: var(--text-4xl);
   font-weight: var(--font-bold);
-  color: var(--gold-primary);
+  color: var(--text-primary);
+  margin-bottom: var(--space-xs);
 }
 
 .stat-label {
   font-size: var(--text-sm);
   color: var(--text-secondary);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.stat-divider {
-  width: 1px;
-  background: var(--border-color);
-  align-self: stretch;
 }
 
 /* Section */
@@ -440,405 +930,467 @@ onMounted(async () => {
   margin-bottom: var(--space-3xl);
 }
 
-.section-label {
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-lg);
+  flex-wrap: wrap;
+  gap: var(--space-md);
+}
+
+.section-header-left {
+  display: flex;
+  align-items: center;
+  gap: var(--space-lg);
+  flex-wrap: wrap;
+}
+
+.section-title {
   font-family: var(--font-heading);
   font-size: var(--text-lg);
   font-weight: var(--font-semibold);
   color: var(--text-primary);
-  margin: 0 0 var(--space-lg) 0;
+  margin: 0;
 }
 
-/* Section Subtitle */
-.section-subtitle {
+/* Restaurant Filter */
+.restaurant-filter {
+  appearance: none;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: var(--space-sm) var(--space-2xl) var(--space-sm) var(--space-md);
+  color: var(--text-primary);
+  font-family: var(--font-body);
   font-size: var(--text-sm);
-  color: var(--text-secondary);
-  margin: calc(-1 * var(--space-md)) 0 var(--space-lg) 0;
+  cursor: pointer;
+  transition: var(--transition-base);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23D4AF37' d='M6 8L2 4h8z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  min-width: 140px;
 }
 
-/* Actions Grid */
-.actions-grid {
+.restaurant-filter:hover {
+  border-color: var(--gold-primary);
+}
+
+.restaurant-filter:focus {
+  outline: none;
+  border-color: var(--gold-primary);
+  box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.15);
+}
+
+.restaurant-filter option {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+.view-all-link {
+  font-size: var(--text-sm);
+  color: var(--gold-primary);
+  text-decoration: none;
+  transition: var(--transition-fast);
+}
+
+.view-all-link:hover {
+  color: var(--gold-light);
+}
+
+/* Quick Actions Grid */
+.quick-actions-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: var(--space-lg);
 }
 
-.action-card {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  padding: var(--space-xl);
+.quick-action-card {
   background: var(--bg-secondary);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-lg);
+  padding: var(--space-xl);
   cursor: pointer;
-  transition: all var(--transition-fast);
+  transition: var(--transition-base);
 }
 
-.action-card:hover {
+.quick-action-card:hover {
   border-color: var(--gold-primary);
   transform: translateY(-2px);
 }
 
-.action-icon-wrapper {
-  margin-bottom: var(--space-md);
-  opacity: 0.9;
-  transition: var(--transition-base);
-}
-
-.action-card:hover .action-icon-wrapper {
-  opacity: 1;
-  transform: scale(1.05);
-}
-
-.action-title {
-  font-family: var(--font-heading);
-  font-size: var(--text-lg);
-  font-weight: var(--font-semibold);
-  color: var(--text-primary);
-  margin: 0 0 var(--space-sm) 0;
-}
-
-.action-desc {
-  font-size: var(--text-sm);
-  color: var(--text-secondary);
-  margin: 0 0 var(--space-lg) 0;
-  flex: 1;
-}
-
-.action-btn-cta {
-  width: 100%;
-}
-
-/* Platforms Grid - Minimal Icon-Only */
-.platforms-grid-minimal {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: var(--space-md);
-  max-width: 700px; /* Constrains grid to reasonable width for 7 platforms */
-}
-
-.platform-box-minimal {
-  position: relative;
-  aspect-ratio: 1;
-  background: var(--bg-secondary);
-  border: 2px solid var(--border-color);
-  border-radius: var(--radius-lg);
-  cursor: pointer;
-  transition: all var(--transition-base);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-}
-
-.platform-box-minimal:hover:not(.platform-disabled) {
-  transform: translateY(-4px);
-  border-color: var(--gold-primary);
-  box-shadow: var(--shadow-lg), var(--glow-gold-sm);
-}
-
-.platform-box-minimal.platform-connected {
-  border-color: var(--border-color);
-  background: var(--bg-secondary);
-}
-
-.platform-box-minimal.platform-disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-
-.platform-icon-bg {
-  width: 64px;
-  height: 64px;
+.quick-action-icon {
+  width: 48px;
+  height: 48px;
   border-radius: var(--radius-md);
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: transform var(--transition-base);
+  margin-bottom: var(--space-md);
 }
 
-.platform-box-minimal:hover:not(.platform-disabled) .platform-icon-bg {
-  transform: scale(1.1);
-}
+.quick-action-icon-pink { background: #ec4899; }
+.quick-action-icon-teal { background: #14b8a6; }
+.quick-action-icon-purple { background: #8b5cf6; }
+.quick-action-icon-gray { background: #6b7280; }
 
-/* Connected Badge - Mini version with checkmark */
-.connected-badge-mini {
-  position: absolute;
-  bottom: 6px;
-  left: 50%;
-  transform: translateX(-50%);
-  display: inline-flex;
-  align-items: center;
-  gap: 2px;
-  padding: 2px 6px;
-  background: rgba(34, 197, 94, 0.15);
-  border: 1px solid rgba(34, 197, 94, 0.4);
-  border-radius: var(--radius-sm);
-  font-size: 9px;
-  font-weight: var(--font-bold);
-  color: rgb(34, 197, 94);
-  text-transform: uppercase;
-  letter-spacing: 0.3px;
-  white-space: nowrap;
-}
-
-.checkmark-icon-mini {
-  width: 10px;
-  height: 10px;
-  color: rgb(34, 197, 94);
-  flex-shrink: 0;
-}
-
-.connect-label {
-  position: absolute;
-  bottom: 8px;
-  left: 50%;
-  transform: translateX(-50%);
-  font-size: 11px;
+.quick-action-title {
+  font-family: var(--font-heading);
+  font-size: var(--text-base);
   font-weight: var(--font-semibold);
-  color: var(--gold-primary);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  cursor: pointer;
-  transition: var(--transition-fast);
+  color: var(--text-primary);
+  margin: 0 0 var(--space-xs) 0;
 }
 
-.connect-label:hover {
-  color: var(--gold-light);
-}
-
-/* Disconnect Button (appears on hover, top-right) */
-.disconnect-btn-top {
-  position: absolute;
-  top: 6px;
-  right: 6px;
-  width: 20px;
-  height: 20px;
-  background: rgba(220, 53, 69, 0.9);
-  border: none;
-  border-radius: 50%;
-  color: white;
-  display: none;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: var(--transition-fast);
-  padding: 0;
-}
-
-.platform-box-minimal:hover .disconnect-btn-top {
-  display: flex;
-}
-
-.disconnect-btn-top:hover {
-  background: #dc3545;
-  transform: scale(1.15);
-}
-
-/* Coming Soon Badge */
-.coming-soon-badge {
-  position: absolute;
-  bottom: 6px;
-  left: 50%;
-  transform: translateX(-50%);
-  font-size: 9px;
-  font-weight: var(--font-bold);
-  padding: 2px 6px;
-  background: var(--bg-elevated);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-sm);
-  color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.3px;
-  white-space: nowrap;
-}
-
-/* Account Bar */
-.account-bar {
-  padding: var(--space-lg) var(--space-xl);
-}
-
-.account-bar-content {
-  display: flex;
-  align-items: center;
-  gap: var(--space-xl);
-  flex-wrap: wrap;
-}
-
-.account-tier {
-  display: flex;
-  align-items: center;
-  gap: var(--space-sm);
-}
-
-.tier-badge {
-  background: var(--gradient-gold);
-  color: var(--text-on-gold);
-  padding: var(--space-xs) var(--space-md);
-  border-radius: var(--radius-full);
-  font-weight: var(--font-bold);
-  font-size: var(--text-xs);
-}
-
-.tier-status {
+.quick-action-desc {
   font-size: var(--text-sm);
   color: var(--text-muted);
-  text-transform: capitalize;
+  margin: 0;
 }
 
-.account-usage {
-  flex: 1;
-  min-width: 200px;
+/* Main Grid: Posts + Platforms */
+.main-grid {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: var(--space-xl);
 }
 
-.usage-info {
-  display: flex;
-  align-items: baseline;
-  gap: var(--space-xs);
-  margin-bottom: var(--space-xs);
+/* Recent Posts Section */
+.recent-posts-section {
+  min-width: 0;
 }
 
-.usage-current {
-  font-family: var(--font-heading);
-  font-size: var(--text-xl);
-  font-weight: var(--font-bold);
-  color: var(--gold-primary);
-}
-
-.usage-sep {
-  color: var(--text-muted);
-}
-
-.usage-total {
-  font-size: var(--text-base);
-  color: var(--text-secondary);
-}
-
-.usage-text {
-  font-size: var(--text-xs);
-  color: var(--text-muted);
-  margin-left: var(--space-sm);
-}
-
-.usage-bar-compact {
-  width: 100%;
-  height: 6px;
-  background: var(--bg-primary);
-  border-radius: var(--radius-full);
+.posts-table-card {
+  padding: 0;
   overflow: hidden;
 }
 
-.usage-progress-compact {
+.loading-state,
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-md);
+  padding: var(--space-3xl);
+  color: var(--text-muted);
+}
+
+.posts-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.posts-table th {
+  text-align: left;
+  padding: var(--space-md) var(--space-lg);
+  font-size: var(--text-xs);
+  font-weight: var(--font-semibold);
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.posts-table td {
+  padding: var(--space-md) var(--space-lg);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.posts-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.post-row {
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.post-row:hover {
+  background: var(--bg-elevated);
+}
+
+.post-cell {
+  min-width: 200px;
+}
+
+.post-info {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+}
+
+/* Post Thumbnail */
+.post-thumbnail {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  flex-shrink: 0;
+  background: var(--bg-tertiary);
+}
+
+.post-thumbnail img {
+  width: 100%;
   height: 100%;
-  background: var(--gradient-gold);
-  transition: width var(--transition-base);
+  object-fit: cover;
+}
+
+.post-thumbnail.placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.post-platform-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.post-details {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.post-title {
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.post-time {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+  font-size: var(--text-xs);
+  font-weight: var(--font-semibold);
+  text-transform: capitalize;
+}
+
+.status-published {
+  background: rgba(34, 197, 94, 0.15);
+  color: #22c55e;
+}
+
+.status-scheduled {
+  background: rgba(59, 130, 246, 0.15);
+  color: #3b82f6;
+}
+
+.status-failed {
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+}
+
+.status-cancelled {
+  background: rgba(107, 114, 128, 0.15);
+  color: #6b7280;
+}
+
+.status-draft {
+  background: rgba(156, 163, 175, 0.15);
+  color: #9ca3af;
+}
+
+/* Platform Icons in Table */
+.platforms-cell {
+  white-space: nowrap;
+}
+
+.platform-icons {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.platform-icon-small {
+  width: 24px;
+  height: 24px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* Restaurant Cell - Animated show/hide */
+.restaurant-header,
+.restaurant-cell {
+  max-width: 150px;
+  overflow: hidden;
+  transition: max-width 0.3s ease, padding 0.3s ease, opacity 0.3s ease;
+}
+
+.posts-table.hide-restaurant .restaurant-header,
+.posts-table.hide-restaurant .restaurant-cell {
+  max-width: 0;
+  padding-left: 0;
+  padding-right: 0;
+  opacity: 0;
+}
+
+.restaurant-name {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
+}
+
+.engagement-cell,
+.reach-cell {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+}
+
+.muted {
+  color: var(--text-muted);
+}
+
+/* Platforms Section */
+.platforms-section {
+  min-width: 0;
+}
+
+.platforms-count {
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  color: #22c55e;
+  background: rgba(34, 197, 94, 0.15);
+  padding: 4px 12px;
   border-radius: var(--radius-full);
 }
 
-.account-actions-compact {
+.platforms-card {
+  padding: var(--space-md);
+}
+
+.platform-row {
   display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-md);
+  border-radius: var(--radius-md);
+  transition: var(--transition-fast);
+}
+
+.platform-row:hover:not(.platform-disabled) {
+  background: var(--bg-elevated);
+}
+
+.platform-row.platform-disabled {
+  opacity: 0.5;
+}
+
+.platform-info {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+}
+
+.platform-icon-box {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.platform-details {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.platform-name {
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  color: var(--text-primary);
+}
+
+.platform-followers {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+}
+
+.platform-status {
+  display: flex;
+  align-items: center;
   gap: var(--space-sm);
 }
 
-/* Animations */
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+.status-dot-online {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #22c55e;
+  box-shadow: 0 0 8px rgba(34, 197, 94, 0.5);
 }
 
-/* Responsive - Tablet */
-@media (max-width: 1024px) {
-  .actions-grid {
+.connect-btn {
+  font-size: var(--text-sm);
+  color: var(--gold-primary);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.connect-btn:hover:not(.disabled) {
+  color: var(--gold-light);
+}
+
+.connect-btn.disabled {
+  color: var(--text-muted);
+  cursor: not-allowed;
+}
+
+/* Responsive */
+@media (max-width: 1200px) {
+  .stats-grid {
     grid-template-columns: repeat(2, 1fr);
   }
 
-  .platforms-grid-minimal {
-    grid-template-columns: repeat(7, 1fr);
-    max-width: 560px;
-    gap: var(--space-sm);
+  .quick-actions-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .main-grid {
+    grid-template-columns: 1fr;
   }
 }
 
-/* Responsive - Mobile */
 @media (max-width: 768px) {
-  .dashboard-view {
-    padding: var(--space-lg) var(--space-md);
+  .stats-grid {
+    grid-template-columns: 1fr;
   }
 
-  .hero-title {
-    font-size: var(--text-2xl);
+  .quick-actions-grid {
+    grid-template-columns: 1fr;
   }
 
-  .stats-bar {
-    flex-wrap: wrap;
-  }
-
-  .stat-divider {
+  .posts-table th:nth-child(3),
+  .posts-table th:nth-child(4),
+  .posts-table td:nth-child(3),
+  .posts-table td:nth-child(4) {
     display: none;
-  }
-
-  .stat-item {
-    flex: 1 1 45%;
-    padding: var(--space-md);
-    border-bottom: 1px solid var(--border-color);
-  }
-
-  .stat-item:nth-child(n+5) {
-    border-bottom: none;
-  }
-
-  .stat-value {
-    font-size: var(--text-xl);
-  }
-
-  .stat-label {
-    font-size: var(--text-xs);
-  }
-
-  .actions-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  .platforms-grid-minimal {
-    grid-template-columns: repeat(7, 1fr);
-    max-width: 100%;
-    gap: var(--space-xs);
-  }
-
-  .platform-box-minimal {
-    min-width: 40px;
-  }
-
-  .platform-icon-bg {
-    width: 40px;
-    height: 40px;
-  }
-
-  .connected-badge-mini,
-  .coming-soon-badge {
-    font-size: 7px;
-    padding: 1px 3px;
-  }
-
-  .account-bar-content {
-    flex-direction: column;
-    align-items: stretch;
-    gap: var(--space-md);
-  }
-
-  .account-tier {
-    justify-content: center;
-  }
-
-  .account-actions-compact {
-    justify-content: center;
   }
 }
 </style>

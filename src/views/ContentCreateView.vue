@@ -5,7 +5,7 @@ import { useI18n } from 'vue-i18n'
 import { usePreferencesStore } from '@/stores/preferences'
 import { useFacebookStore } from '@/stores/facebook'
 import { useInstagramStore } from '@/stores/instagram'
-import GradientBackground from '@/components/GradientBackground.vue'
+import DashboardLayout from '@/components/DashboardLayout.vue'
 import BaseCard from '@/components/BaseCard.vue'
 import BaseButton from '@/components/BaseButton.vue'
 import BaseAlert from '@/components/BaseAlert.vue'
@@ -168,6 +168,12 @@ async function handleEasyModePublish(data: {
       // Reuse the already saved post from autoSavePost()
       favoritePostId = lastSavedPost.value.id
       console.log('Using existing saved post ID:', favoritePostId)
+
+      // Update the saved post with the user's selected platforms
+      await api.updateFavorite(favoritePostId, {
+        platform: platforms[0],
+        platforms: platforms
+      })
     } else {
       // No existing saved post, save a new one
       console.log('Saving post as favorite...')
@@ -177,7 +183,8 @@ async function handleEasyModePublish(data: {
         media_url: generatedImageUrl.value,
         post_text: generatedPostContent.value.postText,
         hashtags: generatedPostContent.value.hashtags,
-        platform: platforms[0], // Primary platform
+        platform: platforms[0], // Primary platform (for backward compatibility)
+        platforms: platforms, // All selected platforms
         prompt: editablePrompt.value,
         menu_items: selectedMenuItems.value,
         context: promptContext.value,
@@ -650,6 +657,7 @@ async function autoSavePost() {
       hashtags: generatedPostContent.value?.hashtags || [],
       prompt: editablePrompt.value,
       platform: selectedPlatforms.value[0] || 'facebook',
+      platforms: selectedPlatforms.value.length > 0 ? selectedPlatforms.value : ['facebook'],
       menu_items: selectedMenuItems.value.map(item => ({
         name: item.name,
         price: item.price,
@@ -716,6 +724,14 @@ async function handleAdvancedModeComplete(data: {
     await autoSaveAdvancedPost()
 
     const platforms = data.platforms || []
+
+    // Update saved post with the actual platforms user selected
+    if (platforms.length > 0 && lastSavedPost.value?.id) {
+      await api.updateFavorite(lastSavedPost.value.id, {
+        platform: platforms[0],
+        platforms: platforms
+      })
+    }
 
     // If platforms and publish options provided, handle publishing directly
     if (platforms.length > 0 && data.onResult) {
@@ -874,6 +890,7 @@ async function autoSaveAdvancedPost() {
       hashtags: advancedModeData.value.hashtags,
       prompt: advancedModeData.value.selectedVariation?.prompt || '',
       platform: selectedPlatforms.value[0] || 'facebook',
+      platforms: selectedPlatforms.value.length > 0 ? selectedPlatforms.value : ['facebook'],
       menu_items: advancedModeData.value.menuItems.map(item => ({
         name: item.name,
         price: item.price,
@@ -1020,9 +1037,8 @@ function handleContentUpdated(updatedContent: { postText: string; hashtags: stri
 </script>
 
 <template>
-  <div class="content-create-view">
-    <GradientBackground />
-
+  <DashboardLayout>
+    <div class="content-create-view">
     <div class="container">
       <!-- Loading State -->
       <div v-if="loading" class="loading-container">
@@ -1126,7 +1142,8 @@ function handleContentUpdated(updatedContent: { postText: string; hashtags: stri
       :preselected-date="preselectedDate"
       @scheduled="handleScheduled"
     />
-  </div>
+    </div>
+  </DashboardLayout>
 </template>
 
 <style scoped>

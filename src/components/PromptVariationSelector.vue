@@ -81,8 +81,9 @@ function getStyleInfo(style: string) {
   <div class="prompt-variation-selector">
     <!-- Loading State -->
     <div v-if="generating" class="generating-state">
-      <div class="loading-spinner"></div>
-      <p class="loading-text">{{ t('advancedMode.step3.generatingPrompts') }}</p>
+      <img src="/socialchef_logo.svg" alt="Social Chef" class="loading-logo" />
+      <p class="loading-title">{{ t('advancedMode.step3.generatingTitle', 'Crafting your styles') }}</p>
+      <p class="loading-subtitle">{{ t('advancedMode.step3.generatingSubtitle', 'Our AI is creating unique design options for you') }}</p>
     </div>
 
     <!-- Variations Grid -->
@@ -220,26 +221,39 @@ function getStyleInfo(style: string) {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: var(--space-5xl);
-  gap: var(--space-xl);
+  padding: var(--space-5xl) var(--space-2xl);
+  width: 100%;
 }
 
-.loading-spinner {
-  width: 48px;
-  height: 48px;
-  border: 4px solid var(--glass-border);
-  border-top-color: var(--gold-primary);
-  border-radius: var(--radius-full);
-  animation: spin 1s linear infinite;
+.loading-logo {
+  width: 120px;
+  height: 120px;
+  margin-bottom: var(--space-xl);
+  animation: bounce 2s ease-in-out infinite;
+  filter: drop-shadow(0 4px 20px rgba(212, 175, 55, 0.4));
 }
 
-@keyframes spin {
-  to { transform: rotate(360deg); }
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-20px);
+  }
 }
 
-.loading-text {
+.loading-title {
+  font-family: var(--font-heading);
+  font-size: var(--text-2xl);
+  color: var(--gold-primary);
+  margin: 0 0 var(--space-sm) 0;
+  font-weight: var(--font-semibold);
+}
+
+.loading-subtitle {
+  font-size: var(--text-base);
   color: var(--text-secondary);
-  font-size: var(--text-lg);
+  margin: 0;
 }
 
 /* Variations Container */

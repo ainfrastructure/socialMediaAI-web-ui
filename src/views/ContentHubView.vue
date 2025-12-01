@@ -1,7 +1,6 @@
 <template>
-  <div class="content-hub-view">
-    <GradientBackground />
-
+  <DashboardLayout>
+    <div class="content-hub-view">
     <div class="container">
       <!-- Loading State -->
       <div v-if="loading" class="loading-container">
@@ -132,12 +131,23 @@
                   <div class="created-date">
                     {{ formatDate(post.created_at) }}
                   </div>
-                  <span
-                    v-if="post.platform"
-                    :class="['platform-badge', `platform-${post.platform}`]"
-                  >
-                    {{ post.platform }}
-                  </span>
+                  <div class="platform-badges">
+                    <template v-if="post.platforms && post.platforms.length > 0">
+                      <span
+                        v-for="platform in post.platforms"
+                        :key="platform"
+                        :class="['platform-badge', `platform-${platform}`]"
+                      >
+                        {{ platform }}
+                      </span>
+                    </template>
+                    <span
+                      v-else-if="post.platform"
+                      :class="['platform-badge', `platform-${post.platform}`]"
+                    >
+                      {{ post.platform }}
+                    </span>
+                  </div>
                 </div>
               </div>
             </BaseCard>
@@ -186,13 +196,24 @@
       @cancel="handleDeleteCancel"
     />
 
-    <!-- Detail Modal -->
+    <!-- Detail Modal (View Mode) -->
+    <PostDetailModal
+      v-if="!isEditMode"
+      v-model="showDetailModal"
+      :post="selectedPostWithDraftStatus"
+      @edit="enableEditMode"
+      @schedule="schedulePost"
+      @delete="confirmDeleteFromModal"
+      @close="closeDetailModal"
+    />
+
+    <!-- Edit Modal (Edit Mode) -->
     <Teleport to="body">
-      <div v-if="showDetailModal" class="modal-overlay" @click.self="closeDetailModal">
+      <div v-if="showDetailModal && isEditMode" class="modal-overlay" @click.self="cancelEdit">
         <BaseCard variant="glass-intense" class="detail-modal">
           <div class="modal-header">
-            <h3 class="modal-title">{{ $t('posts.postDetails') }}</h3>
-            <button class="close-btn" @click="closeDetailModal">&times;</button>
+            <h3 class="modal-title">{{ $t('posts.editPost') }}</h3>
+            <button class="close-btn" @click="cancelEdit">&times;</button>
           </div>
 
           <div v-if="selectedPost" class="modal-body">
@@ -206,25 +227,19 @@
             <video v-else :src="selectedPost.media_url" class="detail-media" controls></video>
 
             <!-- Full Post Text -->
-            <div v-if="selectedPost.post_text" class="detail-section">
+            <div class="detail-section">
               <h4>{{ $t('posts.postText') }}</h4>
               <textarea
-                v-if="isEditMode"
                 v-model="selectedPost.post_text"
                 class="edit-textarea"
                 rows="6"
               ></textarea>
-              <p v-else class="full-text">{{ selectedPost.post_text }}</p>
             </div>
 
             <!-- Hashtags -->
-            <div
-              v-if="(selectedPost.hashtags && selectedPost.hashtags.length > 0) || isEditMode"
-              class="detail-section"
-            >
+            <div class="detail-section">
               <h4>{{ $t('posts.hashtags') }}</h4>
-              <!-- Edit Mode: Tag Editor -->
-              <div v-if="isEditMode" class="hashtag-editor">
+              <div class="hashtag-editor">
                 <div class="hashtag-tags">
                   <span v-for="(tag, idx) in selectedPost.hashtags" :key="idx" class="hashtag-tag">
                     {{ tag }}
@@ -239,75 +254,52 @@
                   class="hashtag-input"
                 />
               </div>
-              <!-- View Mode: Display Tags -->
-              <div v-else class="hashtags-full">
-                <span v-for="(tag, idx) in selectedPost.hashtags" :key="idx" class="hashtag">
-                  {{ tag }}
-                </span>
-              </div>
             </div>
 
             <!-- Platform -->
-            <div v-if="selectedPost.platform || isEditMode" class="detail-section">
+            <div class="detail-section">
               <h4>{{ $t('posts.platformSection') }}</h4>
-              <select v-if="isEditMode" v-model="selectedPost.platform" class="edit-select">
+              <select v-model="selectedPost.platform" class="edit-select">
                 <option value="instagram">{{ $t('platforms.instagram') }}</option>
                 <option value="facebook">{{ $t('platforms.facebook') }}</option>
                 <option value="tiktok">{{ $t('platforms.tiktok') }}</option>
                 <option value="twitter">{{ $t('platforms.twitter') }}</option>
                 <option value="linkedin">{{ $t('platforms.linkedin') }}</option>
               </select>
-              <p v-else class="full-text" style="text-transform: capitalize">
-                {{ selectedPost.platform }}
-              </p>
             </div>
 
             <!-- Action Buttons -->
             <div class="modal-actions">
-              <!-- Edit Mode Buttons -->
-              <template v-if="isEditMode">
-                <BaseButton variant="primary" @click="saveChanges">
-                  {{ $t('posts.saveChangesButton') }}
-                </BaseButton>
-                <BaseButton variant="ghost" @click="cancelEdit">
-                  {{ $t('posts.cancelChangesButton') }}
-                </BaseButton>
-              </template>
-
-              <!-- View Mode Buttons -->
-              <template v-else>
-                <BaseButton variant="danger" @click="confirmDeleteFromModal">
-                  {{ $t('posts.deleteButton') }}
-                </BaseButton>
-                <BaseButton variant="secondary" @click="enableEditMode">
-                  {{ $t('posts.editButton') }}
-                </BaseButton>
-                <BaseButton variant="primary" @click="schedulePost(selectedPost)">
-                  {{ $t('posts.scheduleButton') }}
-                </BaseButton>
-              </template>
+              <BaseButton variant="primary" @click="saveChanges">
+                {{ $t('posts.saveChangesButton') }}
+              </BaseButton>
+              <BaseButton variant="ghost" @click="cancelEdit">
+                {{ $t('posts.cancelChangesButton') }}
+              </BaseButton>
             </div>
           </div>
         </BaseCard>
       </div>
     </Teleport>
-  </div>
+    </div>
+  </DashboardLayout>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { usePreferencesStore } from '@/stores/preferences'
 import { api } from '@/services/api'
 import { restaurantService, type SavedRestaurant } from '@/services/restaurantService'
-import GradientBackground from '@/components/GradientBackground.vue'
+import DashboardLayout from '@/components/DashboardLayout.vue'
 import BaseCard from '@/components/BaseCard.vue'
 import BaseButton from '@/components/BaseButton.vue'
 import BasePagination from '@/components/BasePagination.vue'
 import ConfirmModal from '@/components/ConfirmModal.vue'
 import ScheduleModal from '@/components/ScheduleModal.vue'
 import RestaurantSelectorModal from '@/components/RestaurantSelectorModal.vue'
+import PostDetailModal from '@/components/PostDetailModal.vue'
 
 const router = useRouter()
 const { t } = useI18n()
@@ -331,6 +323,15 @@ const postToDelete = ref<string | null>(null)
 const isEditMode = ref(false)
 const originalPost = ref<any>(null)
 const newHashtag = ref('')
+
+// Computed to add draft status for PostDetailModal
+const selectedPostWithDraftStatus = computed(() => {
+  if (!selectedPost.value) return null
+  return {
+    ...selectedPost.value,
+    status: 'draft' // ContentHub posts are favorites/drafts
+  }
+})
 
 // Filters
 const filters = ref({
@@ -1004,6 +1005,12 @@ function formatDate(dateString: string): string {
 .created-date {
   font-size: var(--text-xs);
   color: var(--text-muted);
+}
+
+.platform-badges {
+  display: flex;
+  gap: var(--space-xs);
+  flex-wrap: wrap;
 }
 
 .platform-badge {

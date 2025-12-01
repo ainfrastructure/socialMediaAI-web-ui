@@ -1,0 +1,189 @@
+<template>
+  <div class="calendar-header-new">
+    <button
+      class="nav-arrow"
+      @click="$emit('previous')"
+      :title="`Previous ${viewMode}`"
+    >
+      <span class="arrow-icon">←</span>
+      <span class="arrow-tooltip">Previous {{ viewMode }}</span>
+    </button>
+
+    <div class="calendar-center">
+      <h2 class="current-month">{{ periodLabel }}</h2>
+      <div class="view-mode-toggle">
+        <div class="toggle-slider" :class="`position-${viewMode}`"></div>
+        <button
+          v-for="mode in viewModes"
+          :key="mode"
+          :class="['view-btn', { active: viewMode === mode }]"
+          @click="$emit('update:viewMode', mode)"
+        >
+          {{ capitalizeFirst(mode) }}
+        </button>
+      </div>
+    </div>
+
+    <button
+      class="nav-arrow"
+      @click="$emit('next')"
+      :title="`Next ${viewMode}`"
+    >
+      <span class="arrow-icon">→</span>
+      <span class="arrow-tooltip">Next {{ viewMode }}</span>
+    </button>
+  </div>
+</template>
+
+<script setup lang="ts">
+export type ViewMode = 'month' | 'week' | 'day'
+
+defineProps<{
+  viewMode: ViewMode
+  periodLabel: string
+}>()
+
+defineEmits<{
+  (e: 'update:viewMode', mode: ViewMode): void
+  (e: 'previous'): void
+  (e: 'next'): void
+}>()
+
+const viewModes: ViewMode[] = ['month', 'week', 'day']
+
+const capitalizeFirst = (str: string): string => {
+  return str.charAt(0).toUpperCase() + str.slice(1)
+}
+</script>
+
+<style scoped>
+.calendar-header-new {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-md) 0;
+  margin-bottom: var(--space-md);
+}
+
+.nav-arrow {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: var(--space-md) var(--space-lg);
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all var(--transition-base);
+  color: var(--text-primary);
+}
+
+.nav-arrow:hover {
+  background: rgba(212, 175, 55, 0.15);
+  border-color: rgba(212, 175, 55, 0.3);
+  transform: scale(1.05);
+}
+
+.arrow-icon {
+  font-size: var(--text-xl);
+}
+
+.arrow-tooltip {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  opacity: 0;
+  transition: opacity var(--transition-base);
+  position: absolute;
+  bottom: -20px;
+  white-space: nowrap;
+}
+
+.nav-arrow:hover .arrow-tooltip {
+  opacity: 1;
+}
+
+.calendar-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-md);
+}
+
+.current-month {
+  font-family: var(--font-heading);
+  font-size: var(--text-2xl);
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.view-mode-toggle {
+  position: relative;
+  display: flex;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: var(--radius-full);
+  padding: 4px;
+  gap: 4px;
+}
+
+.toggle-slider {
+  position: absolute;
+  height: calc(100% - 8px);
+  width: calc(33.33% - 4px);
+  background: var(--gold-primary);
+  border-radius: var(--radius-full);
+  transition: transform var(--transition-base);
+  top: 4px;
+  left: 4px;
+}
+
+.toggle-slider.position-month {
+  transform: translateX(0);
+}
+
+.toggle-slider.position-week {
+  transform: translateX(calc(100% + 4px));
+}
+
+.toggle-slider.position-day {
+  transform: translateX(calc(200% + 8px));
+}
+
+.view-btn {
+  position: relative;
+  z-index: 1;
+  padding: var(--space-sm) var(--space-lg);
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  cursor: pointer;
+  transition: color var(--transition-base);
+  border-radius: var(--radius-full);
+}
+
+.view-btn.active {
+  color: var(--text-on-gold);
+}
+
+.view-btn:hover:not(.active) {
+  color: var(--text-primary);
+}
+
+@media (max-width: 768px) {
+  .calendar-header-new {
+    flex-direction: column;
+    gap: var(--space-md);
+  }
+
+  .nav-arrow {
+    width: 100%;
+  }
+
+  .arrow-tooltip {
+    display: none;
+  }
+}
+</style>

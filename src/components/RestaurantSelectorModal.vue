@@ -2,7 +2,7 @@
 import { ref, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { SavedRestaurant } from '@/services/restaurantService'
-import BaseCard from './BaseCard.vue'
+import BaseModal from './BaseModal.vue'
 import BaseButton from './BaseButton.vue'
 import AddRestaurantModal from './AddRestaurantModal.vue'
 
@@ -44,7 +44,6 @@ function handleAddNew() {
 }
 
 function handleRestaurantAdded(restaurant: any) {
-  // Emit event to parent to refresh restaurant list
   emit('restaurant-added')
 }
 
@@ -57,59 +56,55 @@ function handleDelete(event: Event, restaurant: SavedRestaurant) {
 </script>
 
 <template>
-  <Teleport to="body">
-    <Transition name="modal-fade">
-      <div v-if="isOpen" class="modal-overlay" @click.self="close">
-        <BaseCard variant="glass-intense" class="selector-modal">
-          <div class="modal-header">
-            <h2 class="modal-title">{{ t('restaurantSelector.title') }}</h2>
-            <button class="close-btn" @click="close">&times;</button>
+  <BaseModal
+    :model-value="isOpen"
+    size="sm"
+    :title="t('restaurantSelector.title')"
+    :show-close-button="true"
+    @update:model-value="(val: boolean) => isOpen = val"
+    @close="close"
+  >
+    <div class="restaurants-list">
+      <div
+        v-for="restaurant in restaurants"
+        :key="restaurant.id"
+        :class="['restaurant-item', { selected: restaurant.id === currentId }]"
+        @click="selectRestaurant(restaurant)"
+      >
+        <div v-if="restaurant.brand_dna?.logo_url" class="item-logo">
+          <img :src="restaurant.brand_dna.logo_url" :alt="restaurant.name" />
+        </div>
+        <div v-else class="item-logo placeholder">
+          <span class="placeholder-icon">🏪</span>
+        </div>
+
+        <div class="item-info">
+          <h4 class="item-name">{{ restaurant.name }}</h4>
+          <p class="item-address">{{ restaurant.address }}</p>
+          <div v-if="restaurant.menu?.items?.length" class="item-meta">
+            {{ t('restaurantSelector.menuItems', { count: restaurant.menu.items.length }) }}
           </div>
+        </div>
 
-          <div class="restaurants-list">
-            <div
-              v-for="restaurant in restaurants"
-              :key="restaurant.id"
-              :class="['restaurant-item', { selected: restaurant.id === currentId }]"
-              @click="selectRestaurant(restaurant)"
-            >
-              <div v-if="restaurant.brand_dna?.logo_url" class="item-logo">
-                <img :src="restaurant.brand_dna.logo_url" :alt="restaurant.name" />
-              </div>
-              <div v-else class="item-logo placeholder">
-                <span class="placeholder-icon">🏪</span>
-              </div>
-
-              <div class="item-info">
-                <h4 class="item-name">{{ restaurant.name }}</h4>
-                <p class="item-address">{{ restaurant.address }}</p>
-                <div v-if="restaurant.menu?.items?.length" class="item-meta">
-                  {{ t('restaurantSelector.menuItems', { count: restaurant.menu.items.length }) }}
-                </div>
-              </div>
-
-              <div class="item-actions">
-                <span v-if="restaurant.id === currentId" class="check-icon">✓</span>
-                <button
-                  class="delete-btn"
-                  @click="handleDelete($event, restaurant)"
-                  :title="t('restaurantSelector.delete')"
-                >
-                  <span class="delete-icon">×</span>
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <div class="modal-footer">
-            <BaseButton variant="secondary" full-width @click="handleAddNew">
-              {{ t('restaurantSelector.addNew') }}
-            </BaseButton>
-          </div>
-        </BaseCard>
+        <div class="item-actions">
+          <span v-if="restaurant.id === currentId" class="check-icon">✓</span>
+          <button
+            class="delete-btn"
+            @click="handleDelete($event, restaurant)"
+            :title="t('restaurantSelector.delete')"
+          >
+            <span class="delete-icon">×</span>
+          </button>
+        </div>
       </div>
-    </Transition>
-  </Teleport>
+    </div>
+
+    <template #footer>
+      <BaseButton variant="secondary" full-width @click="handleAddNew">
+        {{ t('restaurantSelector.addNew') }}
+      </BaseButton>
+    </template>
+  </BaseModal>
 
   <!-- Add Restaurant Modal -->
   <AddRestaurantModal
@@ -120,84 +115,12 @@ function handleDelete(event: Event, restaurant: SavedRestaurant) {
 </template>
 
 <style scoped>
-.modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.85);
-  backdrop-filter: blur(var(--blur-md));
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: var(--space-xl);
-  z-index: 1000;
-}
-
-.selector-modal {
-  max-width: 500px;
-  width: 100%;
-  max-height: 80vh;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  animation: slideUp 0.3s var(--ease-smooth);
-}
-
-@keyframes slideUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding-bottom: var(--space-xl);
-  border-bottom: 1px solid rgba(212, 175, 55, 0.2);
-  margin-bottom: var(--space-lg);
-}
-
-.modal-title {
-  font-family: var(--font-heading);
-  font-size: var(--text-2xl);
-  color: var(--gold-primary);
-  margin: 0;
-}
-
-.close-btn {
-  background: none;
-  border: none;
-  color: var(--text-secondary);
-  font-size: 2rem;
-  line-height: 1;
-  cursor: pointer;
-  padding: 0;
-  width: 40px;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: var(--radius-md);
-  transition: all 0.2s ease;
-}
-
-.close-btn:hover {
-  background: rgba(212, 175, 55, 0.1);
-  color: var(--gold-primary);
-}
-
 .restaurants-list {
-  flex: 1;
-  overflow-y: auto;
   display: flex;
   flex-direction: column;
   gap: var(--space-md);
   max-height: 400px;
+  overflow-y: auto;
   padding-right: var(--space-sm);
 }
 
@@ -332,23 +255,6 @@ function handleDelete(event: Event, restaurant: SavedRestaurant) {
   color: #ff6464;
 }
 
-.modal-footer {
-  padding-top: var(--space-xl);
-  border-top: 1px solid rgba(212, 175, 55, 0.2);
-  margin-top: var(--space-lg);
-}
-
-/* Transition */
-.modal-fade-enter-active,
-.modal-fade-leave-active {
-  transition: opacity 0.2s ease;
-}
-
-.modal-fade-enter-from,
-.modal-fade-leave-to {
-  opacity: 0;
-}
-
 /* Scrollbar styling */
 .restaurants-list::-webkit-scrollbar {
   width: 6px;
@@ -369,14 +275,6 @@ function handleDelete(event: Event, restaurant: SavedRestaurant) {
 
 /* Responsive */
 @media (max-width: 768px) {
-  .modal-overlay {
-    padding: var(--space-lg);
-  }
-
-  .selector-modal {
-    max-height: 90vh;
-  }
-
   .restaurant-item {
     padding: var(--space-md);
     gap: var(--space-md);

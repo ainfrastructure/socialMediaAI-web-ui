@@ -1,15 +1,13 @@
 <template>
-  <Teleport to="body">
-    <div v-if="modelValue" class="modal-overlay" @click.self="closeModal">
-      <BaseCard variant="glass-intense" class="modal-card">
-        <div class="modal-header">
-          <h3 class="modal-title">
-            {{ currentStep === 1 ? 'Pick a Saved Post' : 'Schedule Your Post' }}
-          </h3>
-          <button class="close-btn" @click="closeModal">&times;</button>
-        </div>
-
-        <div class="modal-body">
+  <BaseModal
+    :model-value="modelValue"
+    size="xl"
+    :title="currentStep === 1 ? 'Pick a Saved Post' : 'Schedule Your Post'"
+    :show-close-button="true"
+    card-variant="glass-intense"
+    @update:model-value="(val: boolean) => !val && closeModal()"
+    @close="closeModal"
+  >
           <!-- Progress Indicator -->
           <div class="progress-indicator">
             <div :class="['step-dot', { active: currentStep === 1, completed: currentStep > 1 }]">1</div>
@@ -295,20 +293,18 @@
               </BaseButton>
             </div>
           </div>
-        </div>
-      </BaseCard>
-    </div>
-  </Teleport>
+  </BaseModal>
 </template>
 
 <script setup lang="ts">
 import { ref, watch, computed } from 'vue'
 import { useRouter } from 'vue-router'
-import BaseCard from './BaseCard.vue'
+import BaseModal from './BaseModal.vue'
 import BaseButton from './BaseButton.vue'
 import BasePagination from './BasePagination.vue'
 import DatePicker from './DatePicker.vue'
 import { api } from '../services/api'
+import { useScheduleTime } from '../composables/useScheduleTime'
 
 interface Props {
   modelValue: boolean
@@ -343,21 +339,16 @@ const editedPostText = ref('')
 const editedHashtags = ref<string[]>([])
 const newHashtag = ref('')
 
-// Auto-detect timezone with fallback
-const detectedTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone
-const defaultTimezone = detectedTimezone || 'UTC'
+// Schedule time utilities from composable
+const { hours12, minutes: minutesList, getDefaultTimezone } = useScheduleTime()
+const defaultTimezone = getDefaultTimezone()
 const timezone = ref(defaultTimezone)
 
 const scheduleDate = ref(props.selectedDate || '')
 
-// Generate hour options (1-12)
-const hours = Array.from({ length: 12 }, (_, i) => {
-  const hour = i + 1
-  return hour.toString().padStart(2, '0')
-})
-
-// Generate minute options (00-59)
-const minutes = Array.from({ length: 60 }, (_, i) => i.toString().padStart(2, '0'))
+// Extract simple arrays for template usage
+const hours = computed(() => hours12.value.map(h => h.value))
+const minutes = computed(() => minutesList.value.map(m => m.value))
 
 // Pagination computed properties
 const totalPages = computed(() => Math.ceil(posts.value.length / itemsPerPage))
@@ -588,91 +579,6 @@ const handlePageChange = (page: number) => {
 </script>
 
 <style scoped>
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.85);
-  backdrop-filter: blur(var(--blur-md));
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: var(--space-xl);
-  z-index: 1000;
-  animation: fadeIn 0.2s ease;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-.modal-card {
-  max-width: 900px;
-  width: 100%;
-  max-height: 90vh;
-  overflow-y: auto;
-  animation: slideUp 0.3s ease;
-}
-
-@keyframes slideUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: var(--space-xl);
-  border-bottom: 1px solid rgba(212, 175, 55, 0.2);
-}
-
-.modal-title {
-  font-family: var(--font-heading);
-  font-size: var(--text-2xl);
-  color: var(--gold-primary);
-  margin: 0;
-}
-
-.close-btn {
-  background: none;
-  border: none;
-  color: var(--text-secondary);
-  font-size: 2rem;
-  line-height: 1;
-  cursor: pointer;
-  padding: 0;
-  width: 40px;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: var(--radius-md);
-  transition: all 0.2s ease;
-}
-
-.close-btn:hover {
-  background: rgba(212, 175, 55, 0.1);
-  color: var(--gold-primary);
-}
-
-.modal-body {
-  padding: var(--space-xl);
-}
-
 /* Progress Indicator */
 .progress-indicator {
   display: flex;
@@ -1285,10 +1191,6 @@ const handlePageChange = (page: number) => {
 
 /* Responsive */
 @media (max-width: 768px) {
-  .modal-card {
-    max-height: 95vh;
-  }
-
   .schedule-settings {
     grid-template-columns: 1fr;
   }

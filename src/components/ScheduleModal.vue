@@ -1,72 +1,68 @@
 <template>
-  <Teleport to="body">
-    <div v-if="modelValue" class="modal-overlay" @click.self="closeModal">
-      <BaseCard variant="glass-intense" class="modal-card">
-        <div class="modal-header">
-          <h3 class="modal-title">{{ $t('scheduleModal.title') }}</h3>
-          <button class="close-btn" @click="closeModal">&times;</button>
-        </div>
-
-        <div class="modal-body">
-          <!-- Preview -->
-          <div v-if="favoritePost" class="preview-section">
-            <h4 class="section-title">{{ $t('scheduleModal.preview') }}</h4>
-            <div class="preview-content">
-              <img
-                v-if="favoritePost.content_type === 'image'"
-                :src="favoritePost.media_url"
-                alt="Post preview"
-                class="preview-media"
-              />
-              <video
-                v-else
-                :src="favoritePost.media_url"
-                class="preview-media"
-                controls
-              ></video>
-              <p v-if="favoritePost.post_text" class="preview-text">
-                {{ truncateText(favoritePost.post_text, 100) }}
-              </p>
-            </div>
-          </div>
-
-          <!-- Notes -->
-          <div class="form-group notes-section">
-            <label for="notes" class="form-label">{{ $t('scheduleModal.notesLabel') }}</label>
-            <textarea
-              id="notes"
-              v-model="formData.notes"
-              class="form-textarea"
-              rows="2"
-              :placeholder="$t('scheduleModal.notesPlaceholder')"
-            ></textarea>
-          </div>
-
-          <!-- Unified Schedule Component -->
-          <UnifiedSchedulePost
-            :disabled="scheduling"
-            :force-schedule-mode="true"
-            :show-cancel-button="true"
-            :initial-platforms="initialPlatforms"
-            @publish="handleUnifiedPublish"
-            @cancel="closeModal"
-          />
-
-          <BaseAlert v-if="error" type="error" class="form-alert">
-            {{ error }}
-          </BaseAlert>
-        </div>
-      </BaseCard>
+  <BaseModal
+    :model-value="modelValue"
+    size="lg"
+    :title="$t('scheduleModal.title')"
+    :show-close-button="true"
+    card-variant="glass-intense"
+    @update:model-value="(val: boolean) => !val && closeModal()"
+    @close="closeModal"
+  >
+    <!-- Preview -->
+    <div v-if="favoritePost" class="preview-section">
+      <h4 class="section-title">{{ $t('scheduleModal.preview') }}</h4>
+      <div class="preview-content">
+        <img
+          v-if="favoritePost.content_type === 'image'"
+          :src="favoritePost.media_url"
+          alt="Post preview"
+          class="preview-media"
+        />
+        <video
+          v-else
+          :src="favoritePost.media_url"
+          class="preview-media"
+          controls
+        ></video>
+        <p v-if="favoritePost.post_text" class="preview-text">
+          {{ truncateText(favoritePost.post_text, 100) }}
+        </p>
+      </div>
     </div>
-  </Teleport>
+
+    <!-- Notes -->
+    <div class="form-group notes-section">
+      <label for="notes" class="form-label">{{ $t('scheduleModal.notesLabel') }}</label>
+      <textarea
+        id="notes"
+        v-model="formData.notes"
+        class="form-textarea"
+        rows="2"
+        :placeholder="$t('scheduleModal.notesPlaceholder')"
+      ></textarea>
+    </div>
+
+    <!-- Unified Schedule Component -->
+    <UnifiedSchedulePost
+      :disabled="scheduling"
+      :force-schedule-mode="true"
+      :show-cancel-button="true"
+      :initial-platforms="initialPlatforms"
+      @publish="handleUnifiedPublish"
+      @cancel="closeModal"
+    />
+
+    <BaseAlert v-if="error" type="error" class="form-alert">
+      {{ error }}
+    </BaseAlert>
+  </BaseModal>
 </template>
 
 <script setup lang="ts">
 import { ref, watch, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import BaseCard from './BaseCard.vue'
-import BaseButton from './BaseButton.vue'
+import BaseModal from './BaseModal.vue'
 import BaseAlert from './BaseAlert.vue'
 import UnifiedSchedulePost from './UnifiedSchedulePost.vue'
 import { api } from '../services/api'
@@ -175,91 +171,6 @@ const truncateText = (text: string, maxLength: number): string => {
 </script>
 
 <style scoped>
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.85);
-  backdrop-filter: blur(var(--blur-md));
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: var(--space-xl);
-  z-index: 1000;
-  animation: fadeIn 0.2s ease;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-.modal-card {
-  max-width: 600px;
-  width: 100%;
-  max-height: 90vh;
-  overflow-y: auto;
-  animation: slideUp 0.3s ease;
-}
-
-@keyframes slideUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: var(--space-xl);
-  border-bottom: 1px solid rgba(212, 175, 55, 0.2);
-}
-
-.modal-title {
-  font-family: var(--font-heading);
-  font-size: var(--text-2xl);
-  color: var(--gold-primary);
-  margin: 0;
-}
-
-.close-btn {
-  background: none;
-  border: none;
-  color: var(--text-secondary);
-  font-size: 2rem;
-  line-height: 1;
-  cursor: pointer;
-  padding: 0;
-  width: 40px;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: var(--radius-md);
-  transition: all 0.2s ease;
-}
-
-.close-btn:hover {
-  background: rgba(212, 175, 55, 0.1);
-  color: var(--gold-primary);
-}
-
-.modal-body {
-  padding: var(--space-xl);
-}
-
 .preview-section {
   margin-bottom: var(--space-2xl);
 }
@@ -635,19 +546,6 @@ const truncateText = (text: string, maxLength: number): string => {
 
 /* Responsive */
 @media (max-width: 768px) {
-  .modal-overlay {
-    padding: var(--space-md);
-  }
-
-  .modal-card {
-    max-height: 95vh;
-  }
-
-  .modal-header,
-  .modal-body {
-    padding: var(--space-lg);
-  }
-
   .preview-media {
     max-height: 200px;
   }

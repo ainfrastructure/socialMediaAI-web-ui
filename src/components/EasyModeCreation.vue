@@ -5,7 +5,9 @@ import BaseCard from './BaseCard.vue'
 import BaseButton from './BaseButton.vue'
 import BaseAlert from './BaseAlert.vue'
 import MaterialIcon from './MaterialIcon.vue'
+import WizardProgress from './WizardProgress.vue'
 import UnifiedSchedulePost from './UnifiedSchedulePost.vue'
+import { ImageUploadBox, SectionLabel, StyleTemplateGrid, MenuItemCard, ContentDivider } from './creation'
 import { VueDatePicker } from '@vuepic/vue-datepicker'
 import '@vuepic/vue-datepicker/dist/main.css'
 import { useFacebookStore } from '@/stores/facebook'
@@ -251,23 +253,28 @@ function selectStyleTemplate(templateId: string) {
   selectedStyleTemplate.value = templateId
 }
 
+// Handler for ImageUploadBox component (receives File directly)
+function handleImageUploadFile(file: File) {
+  // Clear menu item selection if image is uploaded
+  selectedMenuItem.value = null
+  step1Error.value = '' // Clear error when image is uploaded
+
+  uploadedImage.value = file
+
+  // Create preview
+  const reader = new FileReader()
+  reader.onload = (e) => {
+    uploadedImagePreview.value = e.target?.result as string
+  }
+  reader.readAsDataURL(file)
+}
+
 function handleImageUpload(event: Event) {
   const target = event.target as HTMLInputElement
   const file = target.files?.[0]
 
   if (file) {
-    // Clear menu item selection if image is uploaded
-    selectedMenuItem.value = null
-    step1Error.value = '' // Clear error when image is uploaded
-
-    uploadedImage.value = file
-
-    // Create preview
-    const reader = new FileReader()
-    reader.onload = (e) => {
-      uploadedImagePreview.value = e.target?.result as string
-    }
-    reader.readAsDataURL(file)
+    handleImageUploadFile(file)
   }
 }
 
@@ -313,9 +320,7 @@ function prevPage() {
 function handleGenerate() {
   if (!selectedMenuItem.value && !uploadedImage.value) return
 
-  // Move to preview step immediately
-  currentStep.value = 3
-
+  // Stay on Step 2 - will auto-advance when generation completes
   emit('generate', {
     menuItem: selectedMenuItem.value,
     context: promptContext.value.trim(),
@@ -325,6 +330,14 @@ function handleGenerate() {
     uploadedLogo: uploadedLogo.value
   })
 }
+
+// Watch for generation complete to auto-advance to Step 3
+watch(() => [props.generating, props.generatedImageUrl, props.postText], ([generating, imageUrl, postText]) => {
+  // When generating finishes AND we have both image and text, advance to Step 3
+  if (!generating && imageUrl && postText && currentStep.value === 2) {
+    currentStep.value = 3
+  }
+})
 
 function handlePublish(data: {
   platforms: string[]
@@ -482,35 +495,13 @@ onUnmounted(() => {
 
 <template>
   <div class="easy-mode-creation">
-    <!-- Progress Indicator - Horizontal Stepper -->
-    <div class="wizard-progress">
-      <div class="wizard-progress-track">
-        <div
-          v-for="(step, index) in stepLabels"
-          :key="step.number"
-          class="progress-step-wrapper"
-        >
-          <div
-            :class="['progress-step-item', {
-              'active': currentStep === step.number,
-              'completed': currentStep > step.number,
-              'disabled': step.number > highestCompletedStep + 1
-            }]"
-            @click="goToStep(step.number)"
-          >
-            <div class="progress-step-circle">
-              <MaterialIcon v-if="currentStep > step.number" icon="check_circle" size="md" :color="'var(--success-text)'" />
-              <span v-else>{{ step.number }}</span>
-            </div>
-            <span class="progress-step-label">{{ step.label }}</span>
-          </div>
-          <div
-            v-if="index < stepLabels.length - 1"
-            :class="['progress-line', { 'completed': currentStep > step.number }]"
-          ></div>
-        </div>
-      </div>
-    </div>
+    <!-- Progress Indicator - Reusable Component -->
+    <WizardProgress
+      :current-step="currentStep"
+      :step-labels="stepLabels"
+      :highest-completed-step="highestCompletedStep"
+      @navigate="goToStep"
+    />
 
     <!-- Step 1: Menu Item Selection or Image Upload -->
     <BaseCard v-show="currentStep === 1" variant="glass" class="step-card">
@@ -529,34 +520,17 @@ onUnmounted(() => {
 
       <!-- Image Upload Option -->
       <div class="image-upload-section">
-        <div v-if="uploadedImagePreview" class="uploaded-image-preview">
-          <img :src="uploadedImagePreview" alt="Uploaded image" class="preview-image" />
-          <button class="remove-image-btn" @click="removeUploadedImage" title="Remove image">
-            <MaterialIcon icon="close" size="sm" :color="'var(--text-primary)'" />
-          </button>
-          <div class="upload-badge">
-            <MaterialIcon icon="check_circle" size="sm" :color="'var(--text-on-gold)'" />
-          </div>
-        </div>
-        <label v-else class="upload-button">
-          <input
-            type="file"
-            accept="image/*"
-            @change="handleImageUpload"
-            class="upload-input"
-          />
-          <div class="upload-content">
-            <MaterialIcon icon="upload" size="xl" :color="'var(--text-primary)'" />
-            <span class="upload-text">{{ t('easyMode.upload.button', 'Upload Your Own Image') }}</span>
-            <span class="upload-hint">{{ t('easyMode.upload.hint', 'JPG, PNG, or WebP') }}</span>
-          </div>
-        </label>
+        <ImageUploadBox
+          :preview-url="uploadedImagePreview"
+          :upload-text="t('easyMode.upload.button', 'Upload Your Own Image')"
+          :upload-hint="t('easyMode.upload.hint', 'JPG, PNG, or WebP')"
+          @upload="handleImageUploadFile"
+          @remove="removeUploadedImage"
+        />
       </div>
 
       <!-- Divider -->
-      <div v-if="menuItems.length > 0" class="divider">
-        <span class="divider-text">OR</span>
-      </div>
+      <ContentDivider v-if="menuItems.length > 0" text="OR" />
 
       <!-- Menu Items Grid with Pagination -->
       <div v-if="menuItems.length > 0">
@@ -631,36 +605,34 @@ onUnmounted(() => {
 
     <!-- Step 2: Customize (Style + Promo + Logo) -->
     <BaseCard v-show="currentStep === 2" variant="glass" class="step-card generate-section">
-      <div class="step-header">
-        <div class="step-info">
-          <h3 class="step-title">{{ t('easyMode.step2.title', 'Customize Your Post') }}</h3>
-          <p class="step-subtitle">{{ t('easyMode.step2.subtitle', 'Choose style, add promotions, and branding') }}</p>
-        </div>
+      <!-- Generating Loading State -->
+      <div v-if="props.generating" class="step-generating-overlay">
+        <img src="/socialchef_logo.svg" alt="Social Chef" class="loading-logo" />
+        <p class="loading-title">{{ t('easyMode.step2.generatingTitle', 'Creating your post') }}</p>
+        <p class="loading-subtitle">{{ t('easyMode.step2.generatingSubtitle', 'Designing your image and writing captions') }}</p>
       </div>
 
-      <!-- Style Selection -->
-      <div class="customization-section">
-        <h4 class="section-label"><MaterialIcon icon="palette" size="sm" :color="'var(--gold-primary)'" /> {{ t('easyMode.step2.styleLabel', 'Visual Style') }}</h4>
-        <div class="style-templates-grid">
-          <div
-            v-for="template in styleTemplates"
-            :key="template.id"
-            :class="['style-template-card', { 'selected': selectedStyleTemplate === template.id }]"
-            @click="selectStyleTemplate(template.id)"
-          >
-            <div class="template-icon" v-html="getStyleIcon(template.id)"></div>
-            <h4 class="template-name">{{ template.name }}</h4>
-            <p class="template-description">{{ template.description }}</p>
-            <div v-if="selectedStyleTemplate === template.id" class="template-selected-badge">
-              <MaterialIcon icon="check_circle" size="md" :color="'var(--text-on-gold)'" />
-            </div>
+      <!-- Normal customization form -->
+      <template v-else>
+        <div class="step-header">
+          <div class="step-info">
+            <h3 class="step-title">{{ t('easyMode.step2.title', 'Customize Your Post') }}</h3>
+            <p class="step-subtitle">{{ t('easyMode.step2.subtitle', 'Choose style, add promotions, and branding') }}</p>
           </div>
         </div>
+
+        <!-- Style Selection -->
+      <div class="customization-section">
+        <SectionLabel icon="palette">{{ t('easyMode.step2.styleLabel', 'Visual Style') }}</SectionLabel>
+        <StyleTemplateGrid
+          v-model="selectedStyleTemplate"
+          :templates="styleTemplates"
+        />
       </div>
 
       <!-- Campaign Context / Promo -->
       <div class="customization-section">
-        <h4 class="section-label"><MaterialIcon icon="auto_awesome" size="sm" :color="'var(--gold-primary)'" /> {{ t('easyMode.step2.promoLabel', 'Special Offer (Optional)') }}</h4>
+        <SectionLabel icon="auto_awesome">{{ t('easyMode.step2.promoLabel', 'Special Offer (Optional)') }}</SectionLabel>
         <input
           id="context-input"
           v-model="promptContext"
@@ -676,7 +648,7 @@ onUnmounted(() => {
 
       <!-- Logo Section -->
       <div class="customization-section">
-        <h4 class="section-label"><MaterialIcon icon="label" size="sm" :color="'var(--gold-primary)'" /> {{ t('easyMode.step2.logoLabel', 'Restaurant Logo') }}</h4>
+        <SectionLabel icon="label">{{ t('easyMode.step2.logoLabel', 'Restaurant Logo') }}</SectionLabel>
 
         <div class="logo-management">
           <!-- Current Logo Preview -->
@@ -726,26 +698,27 @@ onUnmounted(() => {
         </div>
       </div>
 
-      <!-- Step 2 Navigation -->
-      <div class="step-navigation">
-        <BaseButton
-          variant="secondary"
-          size="large"
-          @click="prevStep"
-          class="prev-button"
-        >
-          {{ t('common.back', 'Back') }}
-        </BaseButton>
-        <BaseButton
-          variant="primary"
-          size="large"
-          :disabled="!canGenerate || generating"
-          @click="handleGenerate"
-          class="next-button"
-        >
-          {{ generating ? t('easyMode.step2.generating', 'Cooking up your post...') : t('easyMode.step2.generateButton', 'Generate Image') }}
-        </BaseButton>
-      </div>
+        <!-- Step 2 Navigation -->
+        <div class="step-navigation">
+          <BaseButton
+            variant="secondary"
+            size="large"
+            @click="prevStep"
+            class="prev-button"
+          >
+            {{ t('common.back', 'Back') }}
+          </BaseButton>
+          <BaseButton
+            variant="primary"
+            size="large"
+            :disabled="!canGenerate"
+            @click="handleGenerate"
+            class="next-button"
+          >
+            {{ t('easyMode.step2.generateButton', 'Generate Image') }}
+          </BaseButton>
+        </div>
+      </template>
     </BaseCard>
 
     <!-- Step 3: Preview Generated Content -->
@@ -766,8 +739,8 @@ onUnmounted(() => {
             <!-- Loading State for Image -->
             <div v-if="props.generating && !props.generatedImageUrl" class="image-loading">
               <img src="/socialchef_logo.svg" alt="Social Chef" class="loading-logo" />
-              <p class="loading-title">{{ t('easyMode.step2.generating', 'Cooking up your post...') }}</p>
-              <p class="loading-subtitle">{{ t('common.pleaseWait', 'Please wait...') }}</p>
+              <p class="loading-title">{{ t('easyMode.step2.generatingTitle', 'Creating your post') }}</p>
+              <p class="loading-subtitle">{{ t('easyMode.step2.generatingSubtitle', 'Designing your image and writing captions') }}</p>
             </div>
             <!-- Generated Image (when ready) -->
             <img v-else-if="props.generatedImageUrl" :src="props.generatedImageUrl" alt="Generated post image" class="preview-image-display" />
@@ -916,8 +889,8 @@ onUnmounted(() => {
         <div v-if="props.publishing" class="publishing-overlay">
           <div class="publishing-content">
             <img src="/socialchef_logo.svg" alt="Social Chef" class="publishing-logo" />
-            <p class="publishing-title">{{ t('easyMode.step4.publishing', 'Publishing your post...') }}</p>
-            <p class="publishing-subtitle">{{ t('common.pleaseWait', 'Please wait...') }}</p>
+            <p class="publishing-title">{{ t('advancedMode.publish.publishingTitle', 'Sharing your post') }}</p>
+            <p class="publishing-subtitle">{{ t('advancedMode.publish.publishingSubtitle', 'Uploading to your social accounts') }}</p>
           </div>
         </div>
 
@@ -1139,6 +1112,16 @@ onUnmounted(() => {
   width: 100%;
   height: auto;
   display: block;
+}
+
+/* Step 2 Generating Overlay */
+.step-generating-overlay {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-5xl) var(--space-2xl);
+  min-height: 400px;
 }
 
 .image-loading {

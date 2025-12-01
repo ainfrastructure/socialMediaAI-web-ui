@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '../stores/auth'
 import { api, type SubscriptionPlan } from '../services/api'
+import DashboardLayout from '../components/DashboardLayout.vue'
 import BaseCard from '../components/BaseCard.vue'
 import BaseButton from '../components/BaseButton.vue'
 import BaseAlert from '../components/BaseAlert.vue'
@@ -184,7 +185,8 @@ if (urlParams.get('success') === 'true') {
 </script>
 
 <template>
-  <div class="plans-view">
+  <DashboardLayout>
+    <div class="plans-view">
     <BaseAlert
       v-if="message"
       :type="messageType"
@@ -326,7 +328,8 @@ if (urlParams.get('success') === 'true') {
         </div>
       </div>
     </div>
-  </div>
+    </div>
+  </DashboardLayout>
 </template>
 
 <style scoped>

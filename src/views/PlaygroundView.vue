@@ -12,64 +12,13 @@
       <!-- Main Content -->
       <div v-else class="playground-content">
         <!-- Step 1: Restaurant Selection (shown when no restaurant is selected) -->
-        <div v-if="!selectedRestaurant" class="restaurant-selection-view">
-          <div class="selection-header">
-            <h2 class="selection-title">Choose a Restaurant</h2>
-            <p class="selection-subtitle">Select which restaurant to create content for</p>
-            <BaseButton variant="primary" @click="router.push('/restaurants')">
-              + Add New Restaurant
-            </BaseButton>
-          </div>
-
-          <div class="restaurants-grid">
-            <BaseCard
-              v-for="restaurant in restaurants"
-              :key="restaurant.id"
-              variant="glass"
-              hoverable
-              class="restaurant-card"
-              @click="selectRestaurantById(restaurant.id)"
-            >
-              <div class="card-header">
-                <div class="card-title-section">
-                  <div v-if="restaurant.brand_dna?.logo_url" class="card-logo-container">
-                    <img
-                      :src="restaurant.brand_dna.logo_url"
-                      :alt="restaurant.brand_dna.brand_name || restaurant.name"
-                      class="card-logo"
-                    />
-                  </div>
-                  <h3 class="restaurant-name">{{ restaurant.name }}</h3>
-                </div>
-                <button class="edit-btn" @click.stop="editRestaurant(restaurant)" title="Edit Restaurant">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                  </svg>
-                </button>
-              </div>
-
-              <p class="restaurant-address">{{ restaurant.address }}</p>
-
-              <div class="restaurant-meta">
-                <div v-if="restaurant.rating" class="meta-item">
-                  <span class="meta-icon">⭐</span>
-                  <span>{{ restaurant.rating }} / 5</span>
-                </div>
-
-                <div v-if="restaurant.menu && restaurant.menu.items && restaurant.menu.items.length > 0" class="meta-item">
-                  <span class="meta-icon">📋</span>
-                  <span>{{ restaurant.menu.items.length }} menu items</span>
-                </div>
-
-                <div v-if="restaurant.saved_at" class="meta-item">
-                  <span class="meta-icon">📅</span>
-                  <span>Saved {{ formatDate(restaurant.saved_at) }}</span>
-                </div>
-              </div>
-            </BaseCard>
-          </div>
-        </div>
+        <RestaurantSelectionGrid
+          v-if="!selectedRestaurant"
+          :restaurants="restaurants"
+          @select="selectRestaurantById"
+          @edit="editRestaurant"
+          @add-new="router.push('/restaurants')"
+        />
 
         <!-- Step 2: Content Creation (shown after restaurant is selected) -->
         <div v-else class="content-creation-view">
@@ -249,44 +198,16 @@
               </div>
 
               <!-- Live Banner Preview -->
-              <div class="banner-preview-container">
-                <h5 class="preview-label">👁️ Live Preview</h5>
-                <div class="banner-preview-frame">
-                  <!-- Simulated Image Placeholder -->
-                  <div class="preview-image-placeholder">
-                    <div class="preview-food-icon">🍽️</div>
-                    <div class="preview-image-text">Your Generated Image</div>
-                  </div>
-
-                  <!-- Promotional Sticker Overlay -->
-                  <div
-                    v-if="promptContext"
-                    :class="['preview-sticker', `style-${stickerStyle}`, `position-${stickerPosition}`]"
-                    :style="{
-                      backgroundColor: getBrandColor(),
-                      borderColor: getBrandColor(),
-                      transform: stickerStyle === 'ribbon' ? 'rotate(0deg)' : 'rotate(-5deg)'
-                    }"
-                  >
-                    <span class="sticker-text">{{ promptContext.toUpperCase() }}</span>
-                  </div>
-
-                  <!-- Logo Watermark -->
-                  <div
-                    v-if="includeLogo && selectedRestaurant?.brand_dna?.logo_url"
-                    :class="['preview-logo', `logo-${logoPosition}`]"
-                  >
-                    <img
-                      :src="selectedRestaurant.brand_dna.logo_url"
-                      :alt="selectedRestaurant.name"
-                      class="preview-logo-img"
-                    />
-                  </div>
-                </div>
-                <p class="preview-description">
-                  Preview how your sticker and logo will appear
-                </p>
-              </div>
+              <StickerPreview
+                :promotional-text="promptContext"
+                :sticker-style="stickerStyle"
+                :sticker-position="stickerPosition"
+                :brand-color="getBrandColor()"
+                :show-logo="includeLogo"
+                :logo-url="selectedRestaurant?.brand_dna?.logo_url"
+                :logo-alt="selectedRestaurant?.name"
+                :logo-position="logoPosition"
+              />
             </div>
 
             <div class="selection-actions">
@@ -308,85 +229,20 @@
             <span class="restaurant-badge">{{ getCuisineType(selectedRestaurant) }}</span>
           </div>
 
-          <!-- Tabs -->
-          <div class="tabs">
-            <button :class="['tab', { active: activeTab === 'image' }]" @click="switchTab('image')">
-              📸 Image
-            </button>
-            <button :class="['tab', { active: activeTab === 'video' }]" @click="switchTab('video')">
-              🎥 Video
-            </button>
-          </div>
-
-          <!-- Loading Prompts State -->
-          <div v-if="loadingPrompts" class="loading-prompts">
-            <div class="spinner"></div>
-            <p>Generating creative ideas with AI...</p>
-          </div>
-
-          <!-- Prompt Selection Section -->
-          <div v-else class="prompt-section">
-            <div class="section-header">
-              <h4>AI-Generated Ideas</h4>
-              <BaseButton
-                variant="secondary"
-                size="small"
-                @click="generatePrompts"
-                :disabled="loadingPrompts"
-              >
-                ✨ Get New Ideas
-              </BaseButton>
-            </div>
-
-            <!-- Image Tab -->
-            <div v-if="activeTab === 'image'">
-              <div v-if="imagePrompts.length > 0" class="prompt-grid">
-                <div
-                  v-for="(prompt, index) in imagePrompts"
-                  :key="`image-${index}`"
-                  :class="['prompt-card', { selected: selectedImagePromptIndex === index }]"
-                  @click="selectImagePrompt(index)"
-                >
-                  <div class="prompt-number">{{ index + 1 }}</div>
-                  <div class="prompt-preview">{{ truncateText(prompt, 120) }}</div>
-                  <div v-if="selectedImagePromptIndex === index" class="selected-badge">✓ Selected</div>
-                </div>
-              </div>
-              <div v-else class="prompt-placeholder">
-                <p>Click "Get New Ideas" to generate AI-powered image prompts!</p>
-              </div>
-            </div>
-
-            <!-- Video Tab -->
-            <div v-if="activeTab === 'video'">
-              <div v-if="videoPrompts.length > 0" class="prompt-grid">
-                <div
-                  v-for="(prompt, index) in videoPrompts"
-                  :key="`video-${index}`"
-                  :class="['prompt-card', { selected: selectedVideoPromptIndex === index }]"
-                  @click="selectVideoPrompt(index)"
-                >
-                  <div class="prompt-number">{{ index + 1 }}</div>
-                  <div class="prompt-preview">{{ truncateText(prompt, 120) }}</div>
-                  <div v-if="selectedVideoPromptIndex === index" class="selected-badge">✓ Selected</div>
-                </div>
-              </div>
-              <div v-else class="prompt-placeholder">
-                <p>Click "Get New Ideas" to generate AI-powered video prompts!</p>
-              </div>
-            </div>
-
-            <!-- Selected Prompt Display (Editable) -->
-            <div v-if="selectedPrompt" class="selected-prompt">
-              <label>Selected Prompt (editable):</label>
-              <textarea
-                v-model="editablePrompt"
-                class="prompt-textarea"
-                rows="5"
-                placeholder="Select a prompt above..."
-              ></textarea>
-            </div>
-          </div>
+          <!-- Content Generator Tabs -->
+          <ContentGeneratorTabs
+            v-model:activeTab="activeTab"
+            v-model:editablePrompt="editablePrompt"
+            :loading="loadingPrompts"
+            :image-prompts="imagePrompts"
+            :video-prompts="videoPrompts"
+            :selected-image-index="selectedImagePromptIndex"
+            :selected-video-index="selectedVideoPromptIndex"
+            :selected-prompt="selectedPrompt"
+            @refresh="generatePrompts"
+            @select-image="selectImagePrompt"
+            @select-video="selectVideoPrompt"
+          />
 
           <!-- Image Generation Section -->
           <div v-if="activeTab === 'image'" class="generation-section">
@@ -476,32 +332,11 @@
             </BaseAlert>
 
             <!-- Video Options -->
-            <div class="video-options">
-              <div class="option-group">
-                <label>Duration</label>
-                <select v-model="videoDuration" class="option-select">
-                  <option :value="4">4 seconds</option>
-                  <option :value="6">6 seconds</option>
-                  <option :value="8">8 seconds</option>
-                </select>
-              </div>
-
-              <div class="option-group">
-                <label>Aspect Ratio</label>
-                <select v-model="videoAspectRatio" class="option-select">
-                  <option value="16:9">16:9 (Landscape)</option>
-                  <option value="9:16">9:16 (Portrait)</option>
-                </select>
-              </div>
-
-              <div class="option-group">
-                <label>Resolution</label>
-                <select v-model="videoResolution" class="option-select">
-                  <option value="720p">720p</option>
-                  <option value="1080p">1080p</option>
-                </select>
-              </div>
-            </div>
+            <VideoOptionsPanel
+              v-model:duration="videoDuration"
+              v-model:aspect-ratio="videoAspectRatio"
+              v-model:resolution="videoResolution"
+            />
 
             <BaseButton
               variant="primary"
@@ -625,389 +460,25 @@
     />
 
     <!-- Restaurant Details Modal -->
-    <div v-if="restaurantToEdit" class="modal-overlay" @click="closeRestaurantDetails">
-      <div class="details-modal" @click.stop>
-        <BaseCard variant="glass-intense" class="details-content">
-          <div class="details-header">
-            <h2 class="details-title">{{ restaurantToEdit.name }}</h2>
-            <div class="header-actions">
-              <button class="close-btn" @click="closeRestaurantDetails">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <line x1="18" y1="6" x2="6" y2="18"></line>
-                  <line x1="6" y1="6" x2="18" y2="18"></line>
-                </svg>
-              </button>
-            </div>
-          </div>
-
-          <BaseAlert v-if="saveError" type="error" class="save-alert">
-            {{ saveError }}
-          </BaseAlert>
-
-          <div class="details-body">
-            <!-- Basic Info -->
-            <section class="details-section">
-              <div class="section-header">
-                <h3 class="section-title">Information</h3>
-              </div>
-              <div class="info-grid">
-                <div class="info-item">
-                  <span class="info-label">Address</span>
-                  <span class="info-value">{{ restaurantToEdit.address }}</span>
-                </div>
-
-                <div v-if="restaurantToEdit.phone_number" class="info-item">
-                  <span class="info-label">Phone</span>
-                  <span class="info-value">{{ restaurantToEdit.phone_number }}</span>
-                </div>
-
-                <div class="info-item">
-                  <span class="info-label">Website</span>
-                  <div class="editable-field">
-                    <input
-                      v-if="editingWebsite"
-                      v-model="editedWebsite"
-                      type="url"
-                      class="edit-input"
-                      placeholder="https://example.com"
-                    />
-                    <a v-else-if="restaurantToEdit.website" :href="restaurantToEdit.website" target="_blank" class="info-link">
-                      {{ restaurantToEdit.website }}
-                    </a>
-                    <span v-else class="info-value empty">Not set</span>
-
-                    <div class="field-actions">
-                      <button v-if="!editingWebsite" class="edit-field-btn" @click="startEditWebsite" title="Edit website">
-                        ✏️
-                      </button>
-                      <template v-else>
-                        <BaseButton variant="primary" size="small" @click="saveWebsite" :disabled="saving">
-                          {{ saving ? '...' : '💾' }}
-                        </BaseButton>
-                        <BaseButton variant="ghost" size="small" @click="cancelEditWebsite">
-                          ✕
-                        </BaseButton>
-                      </template>
-                    </div>
-                  </div>
-                </div>
-
-                <div v-if="restaurantToEdit.rating" class="info-item">
-                  <span class="info-label">Rating</span>
-                  <span class="info-value">
-                    ⭐ {{ restaurantToEdit.rating }} / 5
-                    <span v-if="restaurantToEdit.user_ratings_total" class="rating-count">
-                      ({{ restaurantToEdit.user_ratings_total }} reviews)
-                    </span>
-                  </span>
-                </div>
-              </div>
-            </section>
-
-            <!-- Brand DNA -->
-            <section v-if="restaurantToEdit.brand_dna" class="details-section">
-              <h3 class="section-title">Brand Identity</h3>
-
-              <!-- Brand Name -->
-              <div v-if="restaurantToEdit.brand_dna.brand_name" class="brand-item">
-                <span class="brand-label">Brand Name</span>
-                <span class="brand-value brand-name-text">{{ restaurantToEdit.brand_dna.brand_name }}</span>
-              </div>
-
-              <!-- Logo -->
-              <div v-if="restaurantToEdit.brand_dna.logo_url" class="brand-item logo-item">
-                <span class="brand-label">Logo</span>
-                <div class="logo-container">
-                  <img
-                    :src="restaurantToEdit.brand_dna.logo_url"
-                    :alt="restaurantToEdit.brand_dna.brand_name || 'Logo'"
-                    class="brand-logo"
-                  />
-                </div>
-              </div>
-
-              <!-- Brand Colors -->
-              <div class="brand-item colors-item">
-                <span class="brand-label">Brand Colors</span>
-                <div class="colors-display">
-                  <div v-if="restaurantToEdit.brand_dna.primary_color" class="color-box">
-                    <div class="color-swatch-small" :style="{ backgroundColor: restaurantToEdit.brand_dna.primary_color }"></div>
-                    <div class="color-details">
-                      <span class="color-name">Primary</span>
-                      <span class="color-code">{{ restaurantToEdit.brand_dna.primary_color }}</span>
-                    </div>
-                  </div>
-                  <div v-if="restaurantToEdit.brand_dna.secondary_color" class="color-box">
-                    <div class="color-swatch-small" :style="{ backgroundColor: restaurantToEdit.brand_dna.secondary_color }"></div>
-                    <div class="color-details">
-                      <span class="color-name">Secondary</span>
-                      <span class="color-code">{{ restaurantToEdit.brand_dna.secondary_color }}</span>
-                    </div>
-                  </div>
-                  <div
-                    v-for="(color, index) in restaurantToEdit.brand_dna.additional_colors"
-                    :key="index"
-                    class="color-box"
-                  >
-                    <div class="color-swatch-small" :style="{ backgroundColor: color }"></div>
-                    <div class="color-details">
-                      <span class="color-name">Accent {{ index + 1 }}</span>
-                      <span class="color-code">{{ color }}</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Font Style -->
-              <div v-if="restaurantToEdit.brand_dna.font_style" class="brand-item">
-                <span class="brand-label">Typography</span>
-                <span class="brand-value font-badge-small">{{ restaurantToEdit.brand_dna.font_style }}</span>
-              </div>
-            </section>
-
-            <!-- Opening Hours -->
-            <section v-if="restaurantToEdit.opening_hours || editingHours" class="details-section">
-              <div class="section-header">
-                <h3 class="section-title">Opening Hours</h3>
-                <button v-if="!editingHours" class="edit-section-btn" @click="startEditHours" title="Edit opening hours">
-                  ✏️ Edit
-                </button>
-                <div v-else class="section-actions">
-                  <BaseButton variant="primary" size="small" @click="saveHours" :disabled="saving">
-                    {{ saving ? 'Saving...' : '💾 Save' }}
-                  </BaseButton>
-                  <BaseButton variant="ghost" size="small" @click="cancelEditHours">
-                    Cancel
-                  </BaseButton>
-                </div>
-              </div>
-
-              <div v-if="restaurantToEdit.opening_hours?.open_now !== undefined && !editingHours" class="status-badge" :class="{ 'open': restaurantToEdit.opening_hours.open_now }">
-                {{ restaurantToEdit.opening_hours.open_now ? '🟢 Open Now' : '🔴 Closed' }}
-              </div>
-
-              <!-- Edit Mode -->
-              <div v-if="editingHours" class="hours-edit-list">
-                <div v-for="(day, index) in editedHours" :key="index" class="hours-edit-item">
-                  <input
-                    v-model="editedHours[index]"
-                    type="text"
-                    class="edit-input hours-input"
-                    placeholder="Monday: 9:00 AM – 5:00 PM"
-                  />
-                  <button class="remove-day-btn" @click="editedHours.splice(index, 1)" title="Remove day">
-                    ✕
-                  </button>
-                </div>
-                <BaseButton variant="ghost" size="small" @click="editedHours.push('')">
-                  ➕ Add Day
-                </BaseButton>
-              </div>
-
-              <!-- View Mode -->
-              <div v-else-if="restaurantToEdit.opening_hours?.weekday_text" class="hours-list">
-                <div v-for="(day, index) in restaurantToEdit.opening_hours.weekday_text" :key="index" class="hours-item">
-                  {{ day }}
-                </div>
-              </div>
-            </section>
-
-            <!-- Social Media -->
-            <section v-if="(restaurantToEdit.social_media && hasSocialMedia(restaurantToEdit.social_media)) || editingSocial" class="details-section">
-              <div class="section-header">
-                <h3 class="section-title">Social Media</h3>
-                <button v-if="!editingSocial" class="edit-section-btn" @click="startEditSocial" title="Edit social media">
-                  ✏️ Edit
-                </button>
-                <div v-else class="section-actions">
-                  <BaseButton variant="primary" size="small" @click="saveSocial" :disabled="saving">
-                    {{ saving ? 'Saving...' : '💾 Save' }}
-                  </BaseButton>
-                  <BaseButton variant="ghost" size="small" @click="cancelEditSocial">
-                    Cancel
-                  </BaseButton>
-                </div>
-              </div>
-
-              <!-- Edit Mode -->
-              <div v-if="editingSocial" class="social-edit-grid">
-                <div class="social-edit-item">
-                  <label class="social-label">
-                    <span class="social-icon facebook-icon">📘</span>
-                    Facebook
-                  </label>
-                  <input
-                    v-model="editedSocial.facebook"
-                    type="url"
-                    class="edit-input"
-                    placeholder="https://facebook.com/..."
-                  />
-                </div>
-
-                <div class="social-edit-item">
-                  <label class="social-label">
-                    <span class="social-icon instagram-icon">📷</span>
-                    Instagram
-                  </label>
-                  <input
-                    v-model="editedSocial.instagram"
-                    type="url"
-                    class="edit-input"
-                    placeholder="https://instagram.com/..."
-                  />
-                </div>
-
-                <div class="social-edit-item">
-                  <label class="social-label">
-                    <span class="social-icon twitter-icon">🐦</span>
-                    Twitter/X
-                  </label>
-                  <input
-                    v-model="editedSocial.twitter"
-                    type="url"
-                    class="edit-input"
-                    placeholder="https://twitter.com/..."
-                  />
-                </div>
-
-                <div class="social-edit-item">
-                  <label class="social-label">
-                    <span class="social-icon youtube-icon">📺</span>
-                    YouTube
-                  </label>
-                  <input
-                    v-model="editedSocial.youtube"
-                    type="url"
-                    class="edit-input"
-                    placeholder="https://youtube.com/..."
-                  />
-                </div>
-
-                <div class="social-edit-item">
-                  <label class="social-label">
-                    <span class="social-icon tiktok-icon">🎵</span>
-                    TikTok
-                  </label>
-                  <input
-                    v-model="editedSocial.tiktok"
-                    type="url"
-                    class="edit-input"
-                    placeholder="https://tiktok.com/..."
-                  />
-                </div>
-              </div>
-
-              <!-- View Mode -->
-              <div v-else class="social-links">
-                <a v-if="restaurantToEdit.social_media?.facebook" :href="restaurantToEdit.social_media.facebook" target="_blank" class="social-link facebook">
-                  Facebook
-                </a>
-                <a v-if="restaurantToEdit.social_media?.instagram" :href="restaurantToEdit.social_media.instagram" target="_blank" class="social-link instagram">
-                  Instagram
-                </a>
-                <a v-if="restaurantToEdit.social_media?.twitter" :href="restaurantToEdit.social_media.twitter" target="_blank" class="social-link twitter">
-                  Twitter/X
-                </a>
-                <a v-if="restaurantToEdit.social_media?.youtube" :href="restaurantToEdit.social_media.youtube" target="_blank" class="social-link youtube">
-                  YouTube
-                </a>
-                <a v-if="restaurantToEdit.social_media?.tiktok" :href="restaurantToEdit.social_media.tiktok" target="_blank" class="social-link tiktok">
-                  TikTok
-                </a>
-              </div>
-            </section>
-
-            <!-- Menu -->
-            <section v-if="restaurantToEdit.menu && restaurantToEdit.menu.items && restaurantToEdit.menu.items.length > 0" class="details-section">
-              <h3 class="section-title">
-                Menu ({{ restaurantToEdit.menu.items.length }} items)
-                <span v-if="restaurantToEdit.menu.platform" class="platform-badge">
-                  {{ restaurantToEdit.menu.platform.toUpperCase() }}
-                </span>
-              </h3>
-              <div class="menu-grid">
-                <div v-for="(item, index) in paginatedEditMenuItems" :key="index" class="menu-item">
-                  <img v-if="item.imageUrl" :src="item.imageUrl" :alt="item.name" class="menu-image" />
-                  <div class="menu-item-content">
-                    <h4 class="menu-item-name">{{ item.name }}</h4>
-                    <p v-if="item.description" class="menu-item-description">{{ item.description }}</p>
-                    <p class="menu-item-price">{{ item.price }}</p>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Menu Pagination -->
-              <div v-if="totalMenuPages > 1" class="pagination">
-                <button
-                  class="pagination-btn"
-                  :disabled="menuCurrentPage === 1"
-                  @click="goToMenuPage(menuCurrentPage - 1)"
-                >
-                  ← Previous
-                </button>
-
-                <div class="pagination-numbers">
-                  <button
-                    v-for="page in totalMenuPages"
-                    :key="page"
-                    class="pagination-number"
-                    :class="{ active: menuCurrentPage === page }"
-                    @click="goToMenuPage(page)"
-                  >
-                    {{ page }}
-                  </button>
-                </div>
-
-                <button
-                  class="pagination-btn"
-                  :disabled="menuCurrentPage === totalMenuPages"
-                  @click="goToMenuPage(menuCurrentPage + 1)"
-                >
-                  Next →
-                </button>
-              </div>
-            </section>
-
-            <!-- Delete Restaurant Section -->
-            <section class="details-section delete-section">
-              <h3 class="section-title danger">Delete Restaurant</h3>
-              <p class="delete-warning">
-                This will permanently delete this restaurant and all associated data, including images and menu items. This action cannot be undone.
-              </p>
-
-              <div v-if="!confirmDelete" class="delete-actions">
-                <BaseButton variant="danger" size="medium" @click="confirmDelete = true">
-                  Delete Restaurant
-                </BaseButton>
-              </div>
-
-              <div v-else class="delete-confirm">
-                <p class="confirm-text">Are you sure? This cannot be undone.</p>
-                <div class="confirm-actions">
-                  <BaseButton variant="danger" size="medium" @click="deleteRestaurant" :disabled="deleting">
-                    {{ deleting ? 'Deleting...' : 'Yes, Delete' }}
-                  </BaseButton>
-                  <BaseButton variant="ghost" size="medium" @click="confirmDelete = false" :disabled="deleting">
-                    Cancel
-                  </BaseButton>
-                </div>
-              </div>
-            </section>
-          </div>
-        </BaseCard>
-      </div>
-    </div>
+    <RestaurantDetailsModal
+      v-model="showRestaurantDetailsModal"
+      :restaurant="restaurantToEdit"
+      @updated="handleRestaurantUpdated"
+      @deleted="handleRestaurantDeleted"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
+import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import { useFacebookStore } from '../stores/facebook'
 import { usePreferencesStore } from '../stores/preferences'
 import { useLocaleStore } from '../stores/locale'
+import { useRestaurantsStore } from '../stores/restaurants'
 import { useSocialAccounts } from '../composables/useSocialAccounts'
+import { useContentForm } from '../composables/useContentForm'
 import GradientBackground from '../components/GradientBackground.vue'
 import BaseCard from '../components/BaseCard.vue'
 import BaseButton from '../components/BaseButton.vue'
@@ -1018,7 +489,8 @@ import EasyModeCreation from '../components/EasyModeCreation.vue'
 import FacebookOnboardingModal from '../components/FacebookOnboardingModal.vue'
 import GenerationResultModal from '../components/GenerationResultModal.vue'
 import ModeToggle from '../components/ModeToggle.vue'
-import { restaurantService, type SavedRestaurant } from '../services/restaurantService'
+import { RestaurantSelectionGrid, StickerPreview, VideoOptionsPanel, ContentGeneratorTabs, RestaurantDetailsModal } from '../components/playground'
+import { type SavedRestaurant } from '../services/restaurantService'
 import { api } from '../services/api'
 
 const router = useRouter()
@@ -1027,15 +499,33 @@ const authStore = useAuthStore()
 const facebookStore = useFacebookStore()
 const preferencesStore = usePreferencesStore()
 const localeStore = useLocaleStore()
+const restaurantsStore = useRestaurantsStore()
 const socialAccounts = useSocialAccounts()
 
-// Restaurant selection
-const restaurants = ref<SavedRestaurant[]>([])
+// Content form state (menu items, platforms, sticker/logo options)
+const contentForm = useContentForm()
+const {
+  selectedMenuItems,
+  toggleMenuItem,
+  isItemSelected,
+  selectedPlatforms,
+  availablePlatforms,
+  togglePlatform,
+  promptContext,
+  stickerStyle,
+  stickerPosition,
+  includeLogo,
+  logoPosition,
+  clearAll: clearContentForm,
+} = contentForm
+
+// Restaurant selection - uses store
+const restaurants = computed(() => restaurantsStore.restaurants)
 const selectedRestaurantId = ref('')
 const selectedRestaurant = computed(() =>
   restaurants.value.find(r => r.id === selectedRestaurantId.value)
 )
-const loadingRestaurants = ref(false)
+const loadingRestaurants = computed(() => restaurantsStore.loading)
 
 // Playground state
 const activeTab = ref<'image' | 'video'>('image')
@@ -1116,74 +606,8 @@ const menuItems = computed(() => {
   return selectedRestaurant.value.menu.items.filter((item: any) => item.imageUrl)
 })
 
-// Multi-select menu items
-const selectedMenuItems = ref<any[]>([])
-const promptContext = ref('')
-const selectedPlatforms = ref<string[]>([])
-
 // Selected Facebook pages for posting (when multiple pages are connected)
 const selectedFacebookPages = ref<string[]>([])
-
-// Available platforms with connection status
-const availablePlatforms = computed(() => {
-  const platforms = [
-    {
-      value: 'facebook',
-      label: 'Facebook',
-      icon: '👥',
-      isConnected: socialAccounts.isConnected('facebook'),
-      connectedAccounts: socialAccounts.getConnectedAccounts('facebook'),
-      isAvailable: true,
-      comingSoon: false,
-    },
-    {
-      value: 'instagram',
-      label: 'Instagram',
-      icon: '📷',
-      isConnected: false,
-      connectedAccounts: [],
-      isAvailable: false,
-      comingSoon: true,
-    },
-    {
-      value: 'tiktok',
-      label: 'TikTok',
-      icon: '🎵',
-      isConnected: false,
-      connectedAccounts: [],
-      isAvailable: false,
-      comingSoon: true,
-    },
-    {
-      value: 'twitter',
-      label: 'Twitter/X',
-      icon: '🐦',
-      isConnected: false,
-      connectedAccounts: [],
-      isAvailable: false,
-      comingSoon: true,
-    },
-    {
-      value: 'linkedin',
-      label: 'LinkedIn',
-      icon: '💼',
-      isConnected: false,
-      connectedAccounts: [],
-      isAvailable: false,
-      comingSoon: true,
-    },
-  ]
-
-  return platforms
-})
-
-// Promotional sticker options
-const stickerStyle = ref<'bold' | 'outlined' | 'ribbon' | 'badge' | 'starburst'>('bold')
-const stickerPosition = ref<'top-left' | 'top-right' | 'bottom-left' | 'bottom-right' | 'top-center' | 'center'>('top-right')
-
-// Logo watermark options
-const includeLogo = ref(true) // Include logo by default
-const logoPosition = ref<'top-left' | 'top-right' | 'bottom-left' | 'bottom-right'>('bottom-right')
 
 // Pagination
 const currentPage = ref(1)
@@ -1228,27 +652,7 @@ const calculateItemsPerPage = () => {
   itemsPerPage.value = Math.max(8, Math.min(20, calculatedItems))
 }
 
-const toggleMenuItem = (item: any) => {
-  const index = selectedMenuItems.value.findIndex((i) => i.name === item.name)
-  if (index > -1) {
-    selectedMenuItems.value.splice(index, 1)
-  } else {
-    selectedMenuItems.value.push(item)
-  }
-}
-
-const isItemSelected = (item: any) => {
-  return selectedMenuItems.value.some((i) => i.name === item.name)
-}
-
-const togglePlatform = (platformValue: string) => {
-  const index = selectedPlatforms.value.indexOf(platformValue)
-  if (index > -1) {
-    selectedPlatforms.value.splice(index, 1)
-  } else {
-    selectedPlatforms.value.push(platformValue)
-  }
-}
+// toggleMenuItem, isItemSelected, togglePlatform - now from useContentForm composable
 
 const handlePlatformConnected = async () => {
   // Refresh the connected pages data after successful connection
@@ -1256,18 +660,12 @@ const handlePlatformConnected = async () => {
   // Auto-select the newly connected platform
   const connectedPlatform = availablePlatforms.value.find(p => p.isConnected && !selectedPlatforms.value.includes(p.value))
   if (connectedPlatform) {
-    selectedPlatforms.value.push(connectedPlatform.value)
+    togglePlatform(connectedPlatform.value)
   }
 }
 
 const clearSelection = () => {
-  selectedMenuItems.value = []
-  promptContext.value = ''
-  selectedPlatforms.value = []
-  stickerStyle.value = 'bold'
-  stickerPosition.value = 'top-right'
-  includeLogo.value = true
-  logoPosition.value = 'bottom-right'
+  clearContentForm()
   showMessage('Selection cleared', 'info')
 }
 
@@ -1326,8 +724,7 @@ onUnmounted(() => {
 
 const fetchRestaurants = async () => {
   try {
-    loadingRestaurants.value = true
-    restaurants.value = await restaurantService.getSavedRestaurants()
+    await restaurantsStore.fetchRestaurants()
 
     // Auto-redirect to search if no restaurants saved
     if (restaurants.value.length === 0) {
@@ -1335,278 +732,42 @@ const fetchRestaurants = async () => {
     }
   } catch (error: any) {
     showMessage('Failed to load restaurants: ' + error.message, 'error')
-  } finally {
-    loadingRestaurants.value = false
   }
 }
 
-// Edit restaurant state
-const restaurantToEdit = ref<any>(null)
-const editingWebsite = ref(false)
-const editedWebsite = ref('')
-const editingHours = ref(false)
-const editedHours = ref<string[]>([])
-const editingSocial = ref(false)
-const editedSocial = ref({
-  facebook: '',
-  instagram: '',
-  twitter: '',
-  youtube: '',
-  tiktok: ''
-})
-const saving = ref(false)
-const saveError = ref<string | null>(null)
-const deleting = ref(false)
-const confirmDelete = ref(false)
-
-// Menu pagination state
-const menuCurrentPage = ref(1)
-const menuItemsPerPage = 12
+// Restaurant details modal state
+const restaurantToEdit = ref<SavedRestaurant | null>(null)
+const showRestaurantDetailsModal = ref(false)
 
 const selectRestaurantById = (restaurantId: string) => {
   selectedRestaurantId.value = restaurantId
   onRestaurantChange()
 }
 
-const editRestaurant = (restaurant: any) => {
+const editRestaurant = (restaurant: SavedRestaurant) => {
   restaurantToEdit.value = restaurant
-  resetEditState()
+  showRestaurantDetailsModal.value = true
 }
 
-const closeRestaurantDetails = () => {
+const handleRestaurantUpdated = (updatedRestaurant: SavedRestaurant) => {
+  // Refresh restaurants from store to get updated data
+  restaurantsStore.refreshRestaurants()
+  restaurantToEdit.value = updatedRestaurant
+  showMessage('Restaurant updated successfully', 'success')
+}
+
+const handleRestaurantDeleted = (restaurantId: string) => {
+  // Refresh restaurants from store
+  restaurantsStore.refreshRestaurants()
+
+  // If this was the selected restaurant, clear selection
+  if (selectedRestaurant.value?.id === restaurantId) {
+    selectedRestaurantId.value = ''
+  }
+
   restaurantToEdit.value = null
-  resetEditState()
-}
-
-const resetEditState = () => {
-  editingWebsite.value = false
-  editedWebsite.value = ''
-  editingHours.value = false
-  editedHours.value = []
-  editingSocial.value = false
-  editedSocial.value = {
-    facebook: '',
-    instagram: '',
-    twitter: '',
-    youtube: '',
-    tiktok: ''
-  }
-  saveError.value = null
-  menuCurrentPage.value = 1
-  confirmDelete.value = false
-}
-
-// Delete restaurant
-const deleteRestaurant = async () => {
-  if (!restaurantToEdit.value) return
-
-  try {
-    deleting.value = true
-    saveError.value = null
-
-    const success = await restaurantService.deleteRestaurant(restaurantToEdit.value.place_id)
-
-    if (success) {
-      // Remove from local restaurants array
-      restaurants.value = restaurants.value.filter(r => r.id !== restaurantToEdit.value!.id)
-
-      // If this was the selected restaurant, clear selection
-      if (selectedRestaurant.value?.id === restaurantToEdit.value.id) {
-        selectedRestaurantId.value = ''
-      }
-
-      // Close the modal
-      closeRestaurantDetails()
-
-      showMessage('Restaurant deleted successfully', 'success')
-    } else {
-      saveError.value = 'Failed to delete restaurant'
-    }
-  } catch (err: any) {
-    saveError.value = err.message || 'Failed to delete restaurant'
-  } finally {
-    deleting.value = false
-  }
-}
-
-// Website editing
-const startEditWebsite = () => {
-  editingWebsite.value = true
-  editedWebsite.value = restaurantToEdit.value?.website || ''
-}
-
-const cancelEditWebsite = () => {
-  editingWebsite.value = false
-  editedWebsite.value = ''
-  saveError.value = null
-}
-
-const saveWebsite = async () => {
-  if (!restaurantToEdit.value) return
-
-  try {
-    saving.value = true
-    saveError.value = null
-
-    const response = await restaurantService.updateRestaurant(restaurantToEdit.value.place_id, {
-      website: editedWebsite.value || null
-    })
-
-    if (response.success && response.data) {
-      restaurantToEdit.value = response.data
-
-      const index = restaurants.value.findIndex(r => r.id === restaurantToEdit.value!.id)
-      if (index !== -1) {
-        restaurants.value[index] = response.data
-      }
-
-      editingWebsite.value = false
-      editedWebsite.value = ''
-      showMessage('Website updated successfully', 'success')
-    } else {
-      saveError.value = response.error || 'Failed to save website'
-    }
-  } catch (err: any) {
-
-    saveError.value = err.message || 'Failed to save website'
-  } finally {
-    saving.value = false
-  }
-}
-
-// Opening hours editing
-const startEditHours = () => {
-  editingHours.value = true
-  editedHours.value = restaurantToEdit.value?.opening_hours?.weekday_text
-    ? [...restaurantToEdit.value.opening_hours.weekday_text]
-    : []
-}
-
-const cancelEditHours = () => {
-  editingHours.value = false
-  editedHours.value = []
-  saveError.value = null
-}
-
-const saveHours = async () => {
-  if (!restaurantToEdit.value) return
-
-  try {
-    saving.value = true
-    saveError.value = null
-
-    const response = await restaurantService.updateRestaurant(restaurantToEdit.value.place_id, {
-      opening_hours: {
-        weekday_text: editedHours.value.filter(h => h.trim() !== '')
-      }
-    })
-
-    if (response.success && response.data) {
-      restaurantToEdit.value = response.data
-
-      const index = restaurants.value.findIndex(r => r.id === restaurantToEdit.value!.id)
-      if (index !== -1) {
-        restaurants.value[index] = response.data
-      }
-
-      editingHours.value = false
-      editedHours.value = []
-      showMessage('Opening hours updated successfully', 'success')
-    } else {
-      saveError.value = response.error || 'Failed to save opening hours'
-    }
-  } catch (err: any) {
-
-    saveError.value = err.message || 'Failed to save opening hours'
-  } finally {
-    saving.value = false
-  }
-}
-
-// Social media editing
-const startEditSocial = () => {
-  editingSocial.value = true
-  editedSocial.value = {
-    facebook: restaurantToEdit.value?.social_media?.facebook || '',
-    instagram: restaurantToEdit.value?.social_media?.instagram || '',
-    twitter: restaurantToEdit.value?.social_media?.twitter || '',
-    youtube: restaurantToEdit.value?.social_media?.youtube || '',
-    tiktok: restaurantToEdit.value?.social_media?.tiktok || ''
-  }
-}
-
-const cancelEditSocial = () => {
-  editingSocial.value = false
-  editedSocial.value = {
-    facebook: '',
-    instagram: '',
-    twitter: '',
-    youtube: '',
-    tiktok: ''
-  }
-  saveError.value = null
-}
-
-const saveSocial = async () => {
-  if (!restaurantToEdit.value) return
-
-  try {
-    saving.value = true
-    saveError.value = null
-
-    const response = await restaurantService.updateRestaurant(restaurantToEdit.value.place_id, {
-      social_media: editedSocial.value
-    })
-
-    if (response.success && response.data) {
-      restaurantToEdit.value = response.data
-
-      const index = restaurants.value.findIndex(r => r.id === restaurantToEdit.value!.id)
-      if (index !== -1) {
-        restaurants.value[index] = response.data
-      }
-
-      editingSocial.value = false
-      editedSocial.value = {
-        facebook: '',
-        instagram: '',
-        twitter: '',
-        youtube: '',
-        tiktok: ''
-      }
-      showMessage('Social media updated successfully', 'success')
-    } else {
-      saveError.value = response.error || 'Failed to save social media'
-    }
-  } catch (err: any) {
-
-    saveError.value = err.message || 'Failed to save social media'
-  } finally {
-    saving.value = false
-  }
-}
-
-const hasSocialMedia = (socialMedia: any): boolean => {
-  if (!socialMedia) return false
-  return !!(socialMedia.facebook || socialMedia.instagram || socialMedia.twitter || socialMedia.youtube || socialMedia.tiktok)
-}
-
-// Menu pagination for edit modal
-const paginatedEditMenuItems = computed(() => {
-  if (!restaurantToEdit.value?.menu?.items) return []
-  const items = restaurantToEdit.value.menu.items
-  const start = (menuCurrentPage.value - 1) * menuItemsPerPage
-  const end = start + menuItemsPerPage
-  return items.slice(start, end)
-})
-
-const totalMenuPages = computed(() => {
-  if (!restaurantToEdit.value?.menu?.items) return 0
-  return Math.ceil(restaurantToEdit.value.menu.items.length / menuItemsPerPage)
-})
-
-const goToMenuPage = (page: number) => {
-  menuCurrentPage.value = page
+  showRestaurantDetailsModal.value = false
+  showMessage('Restaurant deleted successfully', 'success')
 }
 
 const clearRestaurantSelection = () => {
@@ -1740,9 +901,8 @@ const selectVideoPrompt = (index: number) => {
   message.value = ''
 }
 
-const switchTab = (tab: 'image' | 'video') => {
-  activeTab.value = tab
-
+// Watch activeTab changes to auto-select prompts
+watch(activeTab, (tab) => {
   // Auto-select first prompt if none selected
   if (tab === 'image' && selectedImagePromptIndex.value === null && imagePrompts.value.length > 0) {
     selectImagePrompt(0)
@@ -1754,7 +914,7 @@ const switchTab = (tab: 'image' | 'video') => {
   if (selectedPrompt.value) {
     editablePrompt.value = selectedPrompt.value
   }
-}
+})
 
 const clearAll = () => {
   imagePrompts.value = []
@@ -2554,148 +1714,6 @@ const handleContentUpdated = async (updatedContent: { postText: string; hashtags
   gap: 1.5rem;
 }
 
-/* Restaurant Selection View */
-.restaurant-selection-view {
-  width: 100%;
-}
-
-.selection-header {
-  text-align: center;
-  margin-bottom: var(--space-3xl);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--space-lg);
-}
-
-.selection-title {
-  font-family: var(--font-heading);
-  font-size: var(--text-4xl);
-  font-weight: 700;
-  margin: 0;
-  background: var(--gradient-gold);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-.selection-subtitle {
-  font-size: var(--text-lg);
-  color: var(--text-secondary);
-  margin: 0;
-}
-
-.restaurants-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-  gap: var(--space-xl);
-}
-
-.restaurant-card {
-  padding: var(--space-xl);
-  transition: all 0.3s ease;
-  display: flex;
-  flex-direction: column;
-  cursor: pointer;
-}
-
-.restaurant-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 24px rgba(212, 175, 55, 0.2);
-  border-color: rgba(212, 175, 55, 0.4);
-}
-
-.card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 1rem;
-  margin-bottom: 0.75rem;
-}
-
-.card-title-section {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  flex: 1;
-}
-
-.card-logo-container {
-  width: 56px;
-  height: 56px;
-  flex-shrink: 0;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(212, 175, 55, 0.2);
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0.5rem;
-}
-
-.card-logo {
-  max-width: 100%;
-  max-height: 100%;
-  width: auto;
-  height: auto;
-  object-fit: contain;
-}
-
-.restaurant-name {
-  font-family: var(--font-heading);
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: var(--text-primary);
-  margin: 0;
-  flex: 1;
-}
-
-.edit-btn {
-  background: rgba(212, 175, 55, 0.1);
-  border: 1px solid rgba(212, 175, 55, 0.3);
-  border-radius: 6px;
-  padding: 0.5rem;
-  cursor: pointer;
-  color: var(--gold-primary);
-  transition: all 0.2s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.edit-btn:hover {
-  background: var(--gradient-gold);
-  border-color: transparent;
-  color: var(--text-on-gold);
-  transform: scale(1.05);
-}
-
-.restaurant-address {
-  font-size: 0.875rem;
-  color: var(--text-secondary);
-  margin: 0 0 1rem 0;
-  line-height: 1.5;
-}
-
-.restaurant-meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1rem;
-  margin-top: auto;
-}
-
-.meta-item {
-  display: flex;
-  align-items: center;
-  gap: 0.375rem;
-  font-size: 0.8125rem;
-  color: var(--text-secondary);
-}
-
-.meta-icon {
-  font-size: 1rem;
-}
-
 /* Content Creation View */
 .content-creation-view {
   display: flex;
@@ -3038,172 +2056,6 @@ const handleContentUpdated = async (updatedContent: { postText: string; hashtags
   color: var(--gold-primary);
 }
 
-.tabs {
-  display: flex;
-  gap: 1rem;
-  margin-bottom: 2rem;
-  border-bottom: 1px solid rgba(212, 175, 55, 0.2);
-}
-
-.tab {
-  padding: 1rem 2rem;
-  background: none;
-  border: none;
-  border-bottom: 2px solid transparent;
-  color: var(--text-secondary);
-  font-size: 1rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.tab.active {
-  color: var(--gold-primary);
-  border-bottom-color: var(--gold-primary);
-}
-
-.tab:hover {
-  color: var(--text-primary);
-}
-
-.prompt-section {
-  background: rgba(0, 0, 0, 0.3);
-  border: 1px solid rgba(212, 175, 55, 0.2);
-  border-radius: 12px;
-  padding: 1.5rem;
-  margin-bottom: 2rem;
-}
-
-.section-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1.5rem;
-  gap: 1rem;
-  flex-wrap: wrap;
-}
-
-.section-header h4 {
-  font-family: var(--font-heading);
-  font-size: 1.125rem;
-  color: var(--text-primary);
-  margin: 0;
-}
-
-.prompt-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 1rem;
-  margin-bottom: 1.5rem;
-}
-
-.prompt-card {
-  position: relative;
-  padding: 1.25rem;
-  background: rgba(0, 0, 0, 0.4);
-  border: 2px solid rgba(212, 175, 55, 0.2);
-  border-radius: 10px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  min-height: 140px;
-  display: flex;
-  flex-direction: column;
-}
-
-.prompt-card:hover {
-  border-color: rgba(212, 175, 55, 0.5);
-  background: rgba(0, 0, 0, 0.5);
-  transform: translateY(-2px);
-}
-
-.prompt-card.selected {
-  border-color: var(--gold-primary);
-  background: rgba(212, 175, 55, 0.1);
-  box-shadow: 0 0 20px rgba(212, 175, 55, 0.3);
-}
-
-.prompt-number {
-  position: absolute;
-  top: 0.75rem;
-  right: 0.75rem;
-  width: 28px;
-  height: 28px;
-  background: rgba(212, 175, 55, 0.2);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.75rem;
-  font-weight: 700;
-  color: var(--gold-primary);
-}
-
-.prompt-preview {
-  color: var(--text-secondary);
-  font-size: 0.875rem;
-  line-height: 1.5;
-  flex: 1;
-  margin-top: 0.5rem;
-}
-
-.prompt-card.selected .prompt-preview {
-  color: var(--text-primary);
-}
-
-.selected-badge {
-  margin-top: 0.75rem;
-  padding: 0.375rem 0.75rem;
-  background: var(--gold-primary);
-  color: var(--text-on-gold);
-  font-size: 0.75rem;
-  font-weight: 700;
-  border-radius: 4px;
-  text-align: center;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-.selected-prompt {
-  margin-top: 1.5rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.selected-prompt label {
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: var(--text-secondary);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-.prompt-textarea {
-  width: 100%;
-  padding: 1rem;
-  background: rgba(0, 0, 0, 0.4);
-  border: 1px solid rgba(212, 175, 55, 0.3);
-  border-radius: 8px;
-  color: var(--text-primary);
-  font-size: 1rem;
-  font-family: var(--font-body);
-  line-height: 1.6;
-  resize: vertical;
-  transition: border-color 0.2s ease;
-}
-
-.prompt-textarea:focus {
-  outline: none;
-  border-color: var(--gold-primary);
-}
-
-.prompt-placeholder {
-  padding: 3rem 2rem;
-  text-align: center;
-  color: var(--text-secondary);
-  font-style: italic;
-}
-
 .generation-section {
   display: flex;
   flex-direction: column;
@@ -3212,48 +2064,6 @@ const handleContentUpdated = async (updatedContent: { postText: string; hashtags
 
 .generation-alert {
   margin-bottom: 0;
-}
-
-.video-options {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 1rem;
-  padding: 1.5rem;
-  background: rgba(0, 0, 0, 0.2);
-  border-radius: 8px;
-}
-
-.option-group {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.option-group label {
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: var(--text-secondary);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-.option-select {
-  padding: 0.5rem;
-  background: rgba(0, 0, 0, 0.3);
-  border: 1px solid rgba(212, 175, 55, 0.3);
-  border-radius: 6px;
-  color: var(--text-primary);
-  font-size: 0.875rem;
-  cursor: pointer;
-}
-
-.option-select:focus {
-  outline: none;
-  border-color: var(--gold-primary);
-}
-
-.option-select option {
-  background: var(--bg-secondary);
 }
 
 .progress-bar {
@@ -3372,10 +2182,6 @@ const handleContentUpdated = async (updatedContent: { postText: string; hashtags
   .generator-header {
     flex-direction: column;
     align-items: flex-start;
-  }
-
-  .video-options {
-    grid-template-columns: 1fr;
   }
 
   .usage-stats {
@@ -3771,228 +2577,6 @@ const handleContentUpdated = async (updatedContent: { postText: string; hashtags
   .sticker-options-grid {
     grid-template-columns: 1fr;
   }
-}
-
-/* Live Banner Preview */
-.banner-preview-container {
-  margin-top: var(--space-xl);
-}
-
-.preview-label {
-  font-family: var(--font-heading);
-  font-size: var(--text-lg);
-  font-weight: 600;
-  color: var(--gold-primary);
-  margin: 0 0 var(--space-md) 0;
-}
-
-.banner-preview-frame {
-  position: relative;
-  width: 250px;
-  height: 250px;
-  background: linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 100%);
-  border-radius: var(--radius-lg);
-  overflow: hidden;
-  border: 2px solid rgba(212, 175, 55, 0.3);
-  margin: 0 auto;
-}
-
-.preview-image-placeholder {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-md);
-  background: radial-gradient(circle at center, rgba(212, 175, 55, 0.05) 0%, transparent 70%);
-}
-
-.preview-food-icon {
-  font-size: 2.5rem;
-  opacity: 0.3;
-  filter: grayscale(1);
-}
-
-.preview-image-text {
-  font-size: var(--text-sm);
-  color: var(--text-muted);
-  opacity: 0.5;
-  font-weight: 500;
-}
-
-.preview-sticker {
-  position: absolute;
-  padding: 0.5rem 1rem;
-  color: white;
-  font-weight: 700;
-  font-size: 0.75rem;
-  letter-spacing: 0.05em;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-  transition: all 0.3s ease;
-  z-index: 10;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
-}
-
-/* Sticker Styles */
-.preview-sticker.style-bold {
-  border-radius: 8px;
-}
-
-.preview-sticker.style-outlined {
-  background: transparent !important;
-  border: 3px solid;
-  backdrop-filter: blur(4px);
-  text-shadow: 0 0 8px rgba(0, 0, 0, 0.8);
-}
-
-.preview-sticker.style-ribbon {
-  clip-path: polygon(
-    10% 0%,
-    90% 0%,
-    100% 50%,
-    90% 100%,
-    10% 100%,
-    0% 50%
-  );
-  padding: 0.5rem 1.25rem;
-}
-
-.preview-sticker.style-badge {
-  border-radius: 50%;
-  width: 70px;
-  height: 70px;
-  padding: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-}
-
-.preview-sticker.style-badge .sticker-text {
-  font-size: 0.65rem;
-  line-height: 1.2;
-}
-
-.preview-sticker.style-starburst {
-  clip-path: polygon(
-    50% 0%,
-    61% 35%,
-    98% 35%,
-    68% 57%,
-    79% 91%,
-    50% 70%,
-    21% 91%,
-    32% 57%,
-    2% 35%,
-    39% 35%
-  );
-  width: 85px;
-  height: 85px;
-  padding: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-}
-
-.preview-sticker.style-starburst .sticker-text {
-  font-size: 0.65rem;
-  line-height: 1.2;
-  margin-top: -0.5rem;
-}
-
-/* Sticker Positions */
-.preview-sticker.position-top-left {
-  top: 1rem;
-  left: 1rem;
-}
-
-.preview-sticker.position-top-right {
-  top: 1rem;
-  right: 1rem;
-}
-
-.preview-sticker.position-top-center {
-  top: 1rem;
-  left: 50%;
-  transform: translateX(-50%) rotate(-5deg);
-}
-
-.preview-sticker.position-top-center.style-ribbon {
-  transform: translateX(-50%) rotate(0deg);
-}
-
-.preview-sticker.position-bottom-left {
-  bottom: 1rem;
-  left: 1rem;
-}
-
-.preview-sticker.position-bottom-right {
-  bottom: 1rem;
-  right: 1rem;
-}
-
-.preview-sticker.position-center {
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%) rotate(-5deg);
-}
-
-.preview-sticker.position-center.style-ribbon {
-  transform: translate(-50%, -50%) rotate(0deg);
-}
-
-.sticker-text {
-  white-space: nowrap;
-}
-
-/* Logo Watermark Preview */
-.preview-logo {
-  position: absolute;
-  width: 80px;
-  height: 80px;
-  z-index: 5;
-  background: rgba(255, 255, 255, 0.9);
-  border-radius: 8px;
-  padding: 0.5rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-}
-
-.preview-logo.logo-top-left {
-  top: 1rem;
-  left: 1rem;
-}
-
-.preview-logo.logo-top-right {
-  top: 1rem;
-  right: 1rem;
-}
-
-.preview-logo.logo-bottom-left {
-  bottom: 1rem;
-  left: 1rem;
-}
-
-.preview-logo.logo-bottom-right {
-  bottom: 1rem;
-  right: 1rem;
-}
-
-.preview-logo-img {
-  max-width: 100%;
-  max-height: 100%;
-  object-fit: contain;
-}
-
-.preview-description {
-  margin-top: var(--space-md);
-  font-size: var(--text-sm);
-  color: var(--text-secondary);
-  text-align: center;
 }
 
 .preview-text strong {

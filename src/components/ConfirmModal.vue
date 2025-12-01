@@ -1,75 +1,79 @@
 <template>
-  <Teleport to="body">
-    <Transition name="modal">
-      <div v-if="modelValue" class="modal-overlay" @click.self="handleCancel">
-        <BaseCard variant="glass-intense" class="confirm-modal">
-          <!-- Progress bar at top (only shown when auto-close is enabled) -->
-          <div v-if="autoCloseSeconds > 0" class="progress-bar-container">
-            <div
-              class="progress-bar"
-              :style="{ width: `${progressWidth}%` }"
-            ></div>
-          </div>
-
-          <!-- Close button -->
-          <button class="close-button" @click="handleCancel" aria-label="Close">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M18 6L6 18M6 6l12 12" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-          </button>
-
-          <div class="modal-header">
-            <div :class="['modal-icon', `icon-${type}`]">
-              <svg v-if="type === 'danger'" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <circle cx="12" cy="12" r="10"/>
-                <path d="M12 8v4M12 16h.01" stroke-linecap="round"/>
-              </svg>
-              <svg v-else-if="type === 'warning'" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
-                <path d="M12 9v4M12 17h.01" stroke-linecap="round"/>
-              </svg>
-              <svg v-else-if="type === 'success'" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <circle cx="12" cy="12" r="10"/>
-                <path d="M9 12l2 2 4-4" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-              <svg v-else width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <circle cx="12" cy="12" r="10"/>
-                <path d="M12 16v-4M12 8h.01" stroke-linecap="round"/>
-              </svg>
-            </div>
-            <h3 class="modal-title">{{ title }}</h3>
-          </div>
-
-          <div class="modal-body">
-            <p class="modal-message">{{ message }}</p>
-          </div>
-
-          <div class="modal-actions">
-            <button class="btn btn-cancel" @click="handleCancel" :disabled="loading">
-              {{ cancelText }}
-            </button>
-            <button
-              class="btn"
-              :class="type === 'danger' ? 'btn-danger' : 'btn-primary'"
-              @click="handleConfirm"
-              :disabled="loading"
-            >
-              {{ loading ? loadingText : confirmText }}
-            </button>
-          </div>
-
-          <p v-if="autoCloseSeconds > 0" class="auto-close-text">
-            Auto-closing in {{ remainingSeconds }}s
-          </p>
-        </BaseCard>
+  <BaseModal
+    :model-value="modelValue"
+    size="sm"
+    :show-close-button="false"
+    :close-on-overlay-click="!loading"
+    :close-on-escape="!loading"
+    @update:model-value="(val: boolean) => !val && handleCancel()"
+    @close="handleCancel"
+  >
+    <div class="confirm-modal-content">
+      <!-- Progress bar at top (only shown when auto-close is enabled) -->
+      <div v-if="autoCloseSeconds > 0" class="progress-bar-container">
+        <div
+          class="progress-bar"
+          :style="{ width: `${progressWidth}%` }"
+        ></div>
       </div>
-    </Transition>
-  </Teleport>
+
+      <!-- Close button -->
+      <button class="close-button" @click="handleCancel" aria-label="Close" :disabled="loading">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M18 6L6 18M6 6l12 12" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+
+      <div class="modal-header">
+        <div :class="['modal-icon', `icon-${type}`]">
+          <svg v-if="type === 'danger'" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/>
+            <path d="M12 8v4M12 16h.01" stroke-linecap="round"/>
+          </svg>
+          <svg v-else-if="type === 'warning'" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+            <path d="M12 9v4M12 17h.01" stroke-linecap="round"/>
+          </svg>
+          <svg v-else-if="type === 'success'" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/>
+            <path d="M9 12l2 2 4-4" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <svg v-else width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/>
+            <path d="M12 16v-4M12 8h.01" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <h3 class="modal-title">{{ title }}</h3>
+      </div>
+
+      <div class="modal-body">
+        <p class="modal-message">{{ message }}</p>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn btn-cancel" @click="handleCancel" :disabled="loading">
+          {{ cancelText }}
+        </button>
+        <button
+          class="btn"
+          :class="type === 'danger' ? 'btn-danger' : 'btn-primary'"
+          @click="handleConfirm"
+          :disabled="loading"
+        >
+          {{ loading ? loadingText : confirmText }}
+        </button>
+      </div>
+
+      <p v-if="autoCloseSeconds > 0" class="auto-close-text">
+        Auto-closing in {{ remainingSeconds }}s
+      </p>
+    </div>
+  </BaseModal>
 </template>
 
 <script setup lang="ts">
 import { ref, watch, onUnmounted } from 'vue'
-import BaseCard from './BaseCard.vue'
+import BaseModal from './BaseModal.vue'
 
 interface Props {
   modelValue: boolean
@@ -175,47 +179,8 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.8);
-  backdrop-filter: blur(8px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: var(--space-xl);
-  z-index: 9999;
-}
-
-.modal-enter-active,
-.modal-leave-active {
-  transition: opacity 0.25s ease;
-}
-
-.modal-enter-from,
-.modal-leave-to {
-  opacity: 0;
-}
-
-.modal-enter-active .confirm-modal,
-.modal-leave-active .confirm-modal {
-  transition: transform 0.25s ease, opacity 0.25s ease;
-}
-
-.modal-enter-from .confirm-modal,
-.modal-leave-to .confirm-modal {
-  opacity: 0;
-  transform: scale(0.95) translateY(-10px);
-}
-
-.confirm-modal {
+.confirm-modal-content {
   position: relative;
-  max-width: 420px;
-  width: 100%;
-  overflow: hidden;
 }
 
 /* Progress bar */
@@ -388,14 +353,6 @@ onUnmounted(() => {
 
 /* Responsive */
 @media (max-width: 480px) {
-  .modal-overlay {
-    padding: var(--space-md);
-  }
-
-  .confirm-modal {
-    max-width: 100%;
-  }
-
   .modal-actions {
     flex-direction: column-reverse;
     gap: var(--space-sm);
@@ -409,13 +366,6 @@ onUnmounted(() => {
 
 /* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
-  .modal-enter-active,
-  .modal-leave-active,
-  .modal-enter-active .confirm-modal,
-  .modal-leave-active .confirm-modal {
-    transition: none;
-  }
-
   .progress-bar {
     transition: none;
   }

@@ -12,13 +12,12 @@ import PromptVariationSelector from './PromptVariationSelector.vue'
 import LogoTogglePreview from './LogoTogglePreview.vue'
 import UnifiedSchedulePost from './UnifiedSchedulePost.vue'
 import WizardProgress from './WizardProgress.vue'
-import LoadingOverlay from './LoadingOverlay.vue'
-import SuccessModal from './SuccessModal.vue'
 import GoldenRestaurantIcon from './icons/GoldenRestaurantIcon.vue'
 import GoldenComboIcon from './icons/GoldenComboIcon.vue'
 import GoldenCalendarIcon from './icons/GoldenCalendarIcon.vue'
 import GoldenUploadIcon from './icons/GoldenUploadIcon.vue'
 import GoldenSparkleIcon from './icons/GoldenSparkleIcon.vue'
+import { ImageUploadBox, SectionLabel, ContentDivider } from './creation'
 import type { SavedRestaurant } from '@/services/restaurantService'
 import { api } from '@/services/api'
 import { useFacebookStore } from '@/stores/facebook'
@@ -301,7 +300,8 @@ const canProceedStep3 = computed(() => {
 })
 
 const canProceedStep4 = computed(() => {
-  return generatedImageUrl.value !== ''
+  // Require both image AND text to be ready, and not still generating
+  return generatedImageUrl.value !== '' && postText.value !== '' && !generatingImage.value && !generatingContent.value
 })
 
 const canProceedStep5 = computed(() => {
@@ -420,18 +420,23 @@ function handleImageUpload(event: Event) {
   const file = target.files?.[0]
 
   if (file) {
-    // Clear menu item selection if image is uploaded
-    selectedMenuItems.value = []
-
-    uploadedImage.value = file
-
-    // Create preview
-    const reader = new FileReader()
-    reader.onload = (e) => {
-      uploadedImagePreview.value = e.target?.result as string
-    }
-    reader.readAsDataURL(file)
+    handleImageUploadFile(file)
   }
+}
+
+// Handler for ImageUploadBox component
+function handleImageUploadFile(file: File) {
+  // Clear menu item selection if image is uploaded
+  selectedMenuItems.value = []
+
+  uploadedImage.value = file
+
+  // Create preview
+  const reader = new FileReader()
+  reader.onload = (e) => {
+    uploadedImagePreview.value = e.target?.result as string
+  }
+  reader.readAsDataURL(file)
 }
 
 function removeUploadedImage() {
@@ -566,13 +571,13 @@ async function generateImage() {
     if (response.success && response.data?.imageUrl) {
       generatedImageUrl.value = response.data.imageUrl
 
-      // Auto-advance to next step
+      // Generate post content - wait for it to complete before advancing
+      await generatePostContent()
+
+      // Auto-advance to next step only after both image AND text are ready
       setTimeout(() => {
         nextStep()
       }, 500)
-
-      // Also generate post content in parallel
-      await generatePostContent()
     } else {
       throw new Error(response.error || 'Failed to generate image')
     }
@@ -715,20 +720,10 @@ async function handleUnifiedPublish(data: {
   }
 }
 
-// Success modal helpers
-function getPlatformName(platformId: PlatformType): string {
+// Success helpers
+function getPlatformDisplayName(platformId: string): string {
   const platform = allPlatforms.value.find(p => p.id === platformId)
-  return platform?.name || platformId
-}
-
-function closeSuccessModal() {
-  publishSuccess.value = false
-}
-
-function openPostUrl() {
-  if (publishedPostUrl.value) {
-    window.open(publishedPostUrl.value, '_blank')
-  }
+  return platform?.name || platformId.charAt(0).toUpperCase() + platformId.slice(1)
 }
 
 function createAnother() {
@@ -776,7 +771,7 @@ function createAnother() {
 
       <!-- Post Type Selector -->
       <div class="post-type-section">
-        <h4 class="section-label">{{ t('advancedMode.postType.title') }}</h4>
+        <SectionLabel :label="t('advancedMode.postType.title')" />
         <div class="post-type-options">
           <div
             :class="['post-type-card', { selected: postType === 'single' }]"
@@ -830,35 +825,19 @@ function createAnother() {
       <div v-if="postType !== 'weekly'" class="menu-selection-section">
         <!-- Image Upload Option -->
         <div class="image-upload-section">
-          <h4 class="section-label">{{ t('advancedMode.step1.uploadTitle') }}</h4>
-          <div v-if="uploadedImagePreview" class="uploaded-image-preview">
-            <img :src="uploadedImagePreview" alt="Uploaded image" class="preview-image" />
-            <button class="remove-image-btn" @click="removeUploadedImage" :title="t('common.remove')">
-              <MaterialIcon icon="close" size="sm" />
-            </button>
-            <div class="upload-badge">
-              <MaterialIcon icon="check_circle" size="sm" />
-            </div>
-          </div>
-          <label v-else class="upload-button">
-            <input
-              type="file"
-              accept="image/*"
-              @change="handleImageUpload"
-              class="upload-input"
-            />
-            <div class="upload-content">
-              <GoldenUploadIcon :size="32" />
-              <span class="upload-text">{{ t('advancedMode.step1.uploadButton') }}</span>
-              <span class="upload-hint">{{ t('advancedMode.step1.uploadHint') }}</span>
-            </div>
-          </label>
+          <SectionLabel :label="t('advancedMode.step1.uploadTitle')" />
+          <ImageUploadBox
+            :preview-url="uploadedImagePreview"
+            :upload-text="t('advancedMode.step1.uploadButton')"
+            :upload-hint="t('advancedMode.step1.uploadHint')"
+            :show-golden-icon="true"
+            @upload="handleImageUploadFile"
+            @remove="removeUploadedImage"
+          />
         </div>
 
         <!-- Divider -->
-        <div v-if="menuItems.length > 0" class="divider">
-          <span class="divider-text">{{ t('advancedMode.step1.orDivider') }}</span>
-        </div>
+        <ContentDivider v-if="menuItems.length > 0" :text="t('advancedMode.step1.orDivider')" />
 
         <!-- Menu Item Selector -->
         <MenuItemMultiSelector
@@ -871,7 +850,7 @@ function createAnother() {
 
       <!-- Day Assignment for Weekly Menu -->
       <div v-else class="weekly-menu-section">
-        <h4 class="section-label">{{ t('advancedMode.postType.assignDishes') }}</h4>
+        <SectionLabel :label="t('advancedMode.postType.assignDishes')" />
         <div class="day-assignment-list">
           <div
             v-for="day in activeDays"
@@ -1161,10 +1140,11 @@ function createAnother() {
         </BaseButton>
       </div>
 
-      <!-- Generating State -->
-      <div v-else-if="generatingImage" class="generating-state">
-        <div class="loading-spinner"></div>
-        <p class="loading-text">{{ t('advancedMode.step4.generating') }}</p>
+      <!-- Generating State (show while generating image OR content) -->
+      <div v-else-if="generatingImage || generatingContent" class="generating-state">
+        <img src="/socialchef_logo.svg" alt="Social Chef" class="loading-logo" />
+        <p class="loading-title">{{ generatingImage ? t('advancedMode.step4.generatingImageTitle', 'Creating your image') : t('advancedMode.step4.generatingContentTitle', 'Writing your caption') }}</p>
+        <p class="loading-subtitle">{{ generatingImage ? t('advancedMode.step4.generatingImageSubtitle', 'Bringing your vision to life with AI') : t('advancedMode.step4.generatingContentSubtitle', 'Crafting the perfect words for your post') }}</p>
       </div>
 
       <!-- Generated Image with Logo Toggle -->
@@ -1192,27 +1172,65 @@ function createAnother() {
 
     <!-- Step 5: Preview & Publish -->
     <BaseCard v-show="currentStep === 5" variant="glass" class="step-card publish-step">
-      <div class="step-header">
-        <h3 class="step-title">{{ t('advancedMode.step5.title') }}</h3>
-        <p class="step-subtitle">{{ t('advancedMode.step5.subtitle') }}</p>
-      </div>
+      <!-- Success State (inline like Easy mode) -->
+      <div v-if="publishSuccess" class="publish-success">
+        <div class="success-icon"><MaterialIcon icon="celebration" size="xl" :color="'var(--gold-primary)'" /></div>
+        <h3 class="success-title">{{ t('easyMode.step4.successTitle', 'Congratulations!') }}</h3>
+        <p class="success-message">{{ t('easyMode.step4.successMessage', 'Your post has been published successfully!') }}</p>
 
-      <!-- Success Alert -->
-      <BaseAlert v-if="publishSuccess" type="success" class="publish-success-alert">
-        <div class="success-content">
-          <span>{{ t('advancedMode.publish.success') }}</span>
-          <a v-if="publishedPostUrl" :href="publishedPostUrl" target="_blank" class="post-link">
-            {{ t('advancedMode.publish.viewPost') }} →
+        <!-- Show all successful platform links -->
+        <div class="platform-links-container">
+          <a
+            v-for="(url, platform) in publishedPostUrls"
+            :key="platform"
+            :href="url"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="view-post-link"
+          >
+            {{ t('easyMode.step4.viewOnPlatform', { platform: getPlatformDisplayName(platform) }, `View on ${getPlatformDisplayName(platform)}`) }} →
           </a>
         </div>
-      </BaseAlert>
 
-      <!-- Error Alert -->
-      <BaseAlert v-if="publishError" type="error">
-        {{ publishError }}
-      </BaseAlert>
+        <!-- Show partial failure warning if some platforms failed -->
+        <BaseAlert v-if="failedPlatforms.length > 0" type="warning" class="partial-failure-alert">
+          <strong>{{ t('easyMode.step4.partialFailureWarning', 'Some platforms failed to publish:') }}</strong>
+          <ul class="failed-platforms-list">
+            <li v-for="failed in failedPlatforms" :key="failed.platform">
+              {{ getPlatformDisplayName(failed.platform) }}: {{ failed.error }}
+            </li>
+          </ul>
+        </BaseAlert>
 
-      <div class="publish-layout">
+        <div class="success-actions">
+          <BaseButton variant="primary" size="large" @click="createAnother">
+            {{ t('easyMode.step4.createAnother', 'Create Another Post') }}
+          </BaseButton>
+        </div>
+      </div>
+
+      <!-- Publishing Loading State (inline like Easy mode) -->
+      <div v-else-if="publishing" class="publishing-overlay">
+        <div class="publishing-content">
+          <img src="/socialchef_logo.svg" alt="Social Chef" class="loading-logo" />
+          <p class="loading-title">{{ t('advancedMode.publish.publishingTitle', 'Sharing your post') }}</p>
+          <p class="loading-subtitle">{{ t('advancedMode.publish.publishingSubtitle', 'Uploading to your social accounts') }}</p>
+        </div>
+      </div>
+
+      <!-- Normal publish flow -->
+      <template v-else>
+        <div class="step-header">
+          <h3 class="step-title">{{ t('advancedMode.step5.title') }}</h3>
+          <p class="step-subtitle">{{ t('advancedMode.step5.subtitle') }}</p>
+        </div>
+
+        <!-- Error Alert -->
+        <BaseAlert v-if="publishError" type="error">
+          {{ publishError }}
+        </BaseAlert>
+
+        <div class="publish-layout">
         <!-- Image Preview at Top -->
         <div class="image-preview-top">
           <label class="form-label">{{ t('advancedMode.step5.imagePreview') }}</label>
@@ -1283,43 +1301,16 @@ function createAnother() {
             @publish="handleUnifiedPublish"
           />
         </div>
-      </div>
+        </div>
 
-      <div class="step-navigation step-5-nav">
-        <BaseButton variant="ghost" @click="prevStep">
-          {{ t('advancedMode.navigation.back') }}
-        </BaseButton>
-        <!-- Publish button is handled by UnifiedSchedulePost component above -->
-      </div>
+        <div class="step-navigation step-5-nav">
+          <BaseButton variant="ghost" @click="prevStep">
+            {{ t('advancedMode.navigation.back') }}
+          </BaseButton>
+          <!-- Publish button is handled by UnifiedSchedulePost component above -->
+        </div>
+      </template>
     </BaseCard>
-
-    <!-- Loading Overlays -->
-    <LoadingOverlay
-      :visible="generatingVariations"
-      :title="t('advancedMode.step3.generatingVariations', 'Creating style variations...')"
-      :subtitle="t('common.pleaseWait', 'Please wait...')"
-    />
-
-    <LoadingOverlay
-      :visible="generatingImage"
-      :title="t('advancedMode.step4.generating', 'Cooking up your image...')"
-      :subtitle="t('common.pleaseWait', 'Please wait...')"
-    />
-
-    <LoadingOverlay
-      :visible="publishing"
-      :title="t('advancedMode.step5.publishing', 'Publishing your post...')"
-      :subtitle="t('common.pleaseWait', 'Please wait...')"
-    />
-
-    <!-- Success Modal -->
-    <SuccessModal
-      :visible="publishSuccess"
-      :published-urls="publishedPostUrls"
-      :failed-platforms="failedPlatforms"
-      @create-another="createAnother"
-      @close="closeSuccessModal"
-    />
   </div>
 </template>
 
@@ -1331,94 +1322,6 @@ function createAnother() {
   max-width: 1200px;
   margin: 0 auto;
   padding: var(--space-xl);
-}
-
-/* Progress Indicator */
-.wizard-progress {
-  padding: var(--space-xl);
-  background: var(--glass-bg);
-  border: var(--border-width) solid var(--glass-border);
-  border-radius: var(--radius-lg);
-  backdrop-filter: blur(var(--blur-md));
-  display: flex;
-  justify-content: center;
-}
-
-.wizard-progress-track {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  max-width: 700px;
-  width: 100%;
-  gap: 0;
-}
-
-.progress-step-wrapper {
-  display: flex;
-  align-items: center;
-}
-
-.progress-step-wrapper:not(:last-child) {
-  flex: 1;
-}
-
-.progress-step-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--space-sm);
-  cursor: pointer;
-  transition: var(--transition-base);
-}
-
-.progress-step-circle {
-  width: 40px;
-  height: 40px;
-  border-radius: var(--radius-full);
-  background: var(--bg-secondary);
-  border: 2px solid var(--border-color);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: var(--font-semibold);
-  color: var(--text-muted);
-  transition: var(--transition-base);
-}
-
-.progress-step-item.active .progress-step-circle {
-  background: var(--gold-primary);
-  border-color: var(--gold-primary);
-  color: var(--text-on-gold);
-  box-shadow: var(--glow-gold-sm);
-}
-
-.progress-step-item.completed .progress-step-circle {
-  background: var(--gold-subtle);
-  border-color: var(--gold-primary);
-  color: var(--gold-primary);
-}
-
-.progress-step-label {
-  font-size: var(--text-xs);
-  color: var(--text-muted);
-  text-align: center;
-}
-
-.progress-step-item.active .progress-step-label {
-  color: var(--gold-primary);
-  font-weight: var(--font-semibold);
-}
-
-.progress-line {
-  flex: 1;
-  height: 2px;
-  background: var(--border-color);
-  margin: 0 var(--space-sm);
-  transition: var(--transition-base);
-}
-
-.progress-line.completed {
-  background: var(--gold-primary);
 }
 
 /* Step Card */
@@ -1535,26 +1438,39 @@ function createAnother() {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: var(--space-5xl);
-  gap: var(--space-xl);
+  padding: var(--space-5xl) var(--space-2xl);
+  width: 100%;
 }
 
-.loading-spinner {
-  width: 48px;
-  height: 48px;
-  border: 4px solid var(--glass-border);
-  border-top-color: var(--gold-primary);
-  border-radius: var(--radius-full);
-  animation: spin 1s linear infinite;
+.loading-logo {
+  width: 120px;
+  height: 120px;
+  margin-bottom: var(--space-xl);
+  animation: bounce 2s ease-in-out infinite;
+  filter: drop-shadow(0 4px 20px rgba(212, 175, 55, 0.4));
 }
 
-@keyframes spin {
-  to { transform: rotate(360deg); }
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-20px);
+  }
 }
 
-.loading-text {
+.loading-title {
+  font-family: var(--font-heading);
+  font-size: var(--text-2xl);
+  color: var(--gold-primary);
+  margin: 0 0 var(--space-sm) 0;
+  font-weight: var(--font-semibold);
+}
+
+.loading-subtitle {
+  font-size: var(--text-base);
   color: var(--text-secondary);
-  font-size: var(--text-lg);
+  margin: 0;
 }
 
 /* Preview Content (Step 5) */
@@ -1794,13 +1710,6 @@ function createAnother() {
   margin-bottom: var(--space-2xl);
 }
 
-.section-label {
-  font-size: var(--text-lg);
-  font-weight: var(--font-semibold);
-  color: var(--text-primary);
-  margin-bottom: var(--space-lg);
-}
-
 .post-type-options {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -1913,128 +1822,6 @@ function createAnother() {
 /* Image Upload Section */
 .image-upload-section {
   margin-bottom: var(--space-xl);
-}
-
-.image-upload-section .section-label {
-  font-size: var(--text-sm);
-  font-weight: var(--font-medium);
-  color: var(--text-secondary);
-  margin-bottom: var(--space-md);
-}
-
-.upload-button {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: var(--space-2xl);
-  background: var(--bg-secondary);
-  border: 2px dashed var(--border-color);
-  border-radius: var(--radius-lg);
-  cursor: pointer;
-  transition: var(--transition-base);
-}
-
-.upload-button:hover {
-  border-color: var(--gold-primary);
-  background: var(--gold-subtle);
-}
-
-.upload-input {
-  display: none;
-}
-
-.upload-content {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--space-sm);
-  color: var(--text-secondary);
-}
-
-.upload-text {
-  font-size: var(--text-base);
-  font-weight: var(--font-medium);
-  color: var(--text-primary);
-}
-
-.upload-hint {
-  font-size: var(--text-xs);
-  color: var(--text-muted);
-}
-
-.uploaded-image-preview {
-  position: relative;
-  width: 200px;
-  height: 200px;
-  border-radius: var(--radius-lg);
-  overflow: hidden;
-  border: 2px solid var(--gold-primary);
-  box-shadow: var(--glow-gold-sm);
-}
-
-.uploaded-image-preview .preview-image {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.remove-image-btn {
-  position: absolute;
-  top: var(--space-sm);
-  right: var(--space-sm);
-  width: 28px;
-  height: 28px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(0, 0, 0, 0.7);
-  border: none;
-  border-radius: var(--radius-full);
-  color: var(--text-primary);
-  cursor: pointer;
-  transition: var(--transition-base);
-}
-
-.remove-image-btn:hover {
-  background: var(--error-bg);
-}
-
-.upload-badge {
-  position: absolute;
-  bottom: var(--space-sm);
-  right: var(--space-sm);
-  width: 28px;
-  height: 28px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--gold-primary);
-  border-radius: var(--radius-full);
-  color: var(--text-on-gold);
-}
-
-/* Divider */
-.divider {
-  display: flex;
-  align-items: center;
-  gap: var(--space-lg);
-  margin: var(--space-xl) 0;
-}
-
-.divider::before,
-.divider::after {
-  content: '';
-  flex: 1;
-  height: 1px;
-  background: var(--border-color);
-}
-
-.divider-text {
-  font-size: var(--text-sm);
-  font-weight: var(--font-medium);
-  color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
 }
 
 /* Weekly Menu Section */
@@ -2289,19 +2076,6 @@ function createAnother() {
     padding: var(--space-lg);
   }
 
-  .wizard-progress-track {
-    flex-wrap: wrap;
-    gap: var(--space-md);
-  }
-
-  .progress-step-wrapper {
-    flex: none;
-  }
-
-  .progress-line {
-    display: none;
-  }
-
   .step-navigation {
     flex-direction: column;
   }
@@ -2311,6 +2085,112 @@ function createAnother() {
 .publish-step {
   max-width: 800px;
   margin: 0 auto;
+}
+
+/* Publish Success State */
+.publish-success {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: var(--space-3xl) var(--space-xl);
+  animation: fadeInUp 0.5s var(--ease-smooth);
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.success-icon {
+  font-size: 4rem;
+  margin-bottom: var(--space-xl);
+  animation: celebrateBounce 0.6s ease-out;
+}
+
+@keyframes celebrateBounce {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.2); }
+}
+
+.success-title {
+  font-family: var(--font-heading);
+  font-size: var(--text-3xl);
+  background: var(--gradient-gold);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin: 0 0 var(--space-md) 0;
+}
+
+.success-message {
+  font-size: var(--text-lg);
+  color: var(--text-secondary);
+  margin: 0 0 var(--space-xl) 0;
+}
+
+.platform-links-container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-md);
+  margin-bottom: var(--space-xl);
+}
+
+.view-post-link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-md) var(--space-xl);
+  background: var(--gold-subtle);
+  border: 1px solid var(--gold-primary);
+  border-radius: var(--radius-md);
+  color: var(--gold-light);
+  font-weight: var(--font-semibold);
+  text-decoration: none;
+  transition: var(--transition-base);
+}
+
+.view-post-link:hover {
+  background: rgba(212, 175, 55, 0.2);
+  transform: translateY(-2px);
+  box-shadow: var(--glow-gold-sm);
+}
+
+.partial-failure-alert {
+  margin-bottom: var(--space-xl);
+  text-align: left;
+}
+
+.failed-platforms-list {
+  margin: var(--space-md) 0 0 var(--space-xl);
+  padding: 0;
+}
+
+.success-actions {
+  display: flex;
+  gap: var(--space-lg);
+}
+
+/* Publishing Loading State */
+.publishing-overlay {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-3xl);
+}
+
+.publishing-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
 }
 
 .publish-layout {

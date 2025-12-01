@@ -5,6 +5,7 @@ import { useI18n } from 'vue-i18n'
 import { useFacebookStore } from '../stores/facebook'
 import { useInstagramStore } from '../stores/instagram'
 import { woltService } from '../services/woltService'
+import DashboardLayout from '../components/DashboardLayout.vue'
 import BaseCard from '../components/BaseCard.vue'
 import BaseButton from '../components/BaseButton.vue'
 import BaseAlert from '../components/BaseAlert.vue'
@@ -186,14 +187,9 @@ function handleCancelDisconnect() {
 </script>
 
 <template>
-  <div class="connect-accounts-view">
+  <DashboardLayout>
+    <div class="connect-accounts-view">
     <div class="container">
-      <!-- Back Navigation -->
-      <div class="back-nav">
-        <BaseButton variant="ghost" size="small" @click="router.back()">
-          ← {{ $t('connectAccounts.back') }}
-        </BaseButton>
-      </div>
 
       <header class="page-header">
         <h1>{{ $t('connectAccounts.pageTitle') }}</h1>
@@ -280,10 +276,7 @@ function handleCancelDisconnect() {
 
           <!-- Instagram Row -->
           <div class="platform-row" :class="{ connected: isInstagramConnected }">
-            <div
-              class="platform-icon"
-              style="background: linear-gradient(135deg, #f58529, #dd2a7b, #8134af, #515bd4)"
-            >
+            <div class="platform-icon platform-icon-instagram">
               <svg
                 width="20"
                 height="20"
@@ -388,7 +381,7 @@ function handleCancelDisconnect() {
           </div>
           <!-- X (Twitter) Row - Coming Soon -->
           <div class="platform-row disabled">
-            <div class="platform-icon" style="background: #000000">
+            <div class="platform-icon platform-icon-x">
               <svg
                 width="16"
                 height="16"
@@ -411,7 +404,7 @@ function handleCancelDisconnect() {
 
           <!-- LinkedIn Row - Coming Soon -->
           <div class="platform-row disabled">
-            <div class="platform-icon" style="background: #0a66c2">
+            <div class="platform-icon platform-icon-linkedin">
               <svg
                 width="16"
                 height="16"
@@ -434,7 +427,7 @@ function handleCancelDisconnect() {
 
           <!-- TikTok Row - Coming Soon -->
           <div class="platform-row disabled">
-            <div class="platform-icon" style="background: #000000">
+            <div class="platform-icon platform-icon-tiktok">
               <svg
                 width="16"
                 height="16"
@@ -457,7 +450,7 @@ function handleCancelDisconnect() {
 
           <!-- YouTube Row - Coming Soon -->
           <div class="platform-row disabled">
-            <div class="platform-icon" style="background: #ff0000">
+            <div class="platform-icon platform-icon-youtube">
               <svg
                 width="18"
                 height="18"
@@ -493,7 +486,8 @@ function handleCancelDisconnect() {
       @confirm="handleConfirmDisconnect"
       @cancel="handleCancelDisconnect"
     />
-  </div>
+    </div>
+  </DashboardLayout>
 </template>
 
 <style scoped>
@@ -583,6 +577,23 @@ function handleCancelDisconnect() {
 
 .wolt-icon {
   background: linear-gradient(135deg, #009de0, #0077b3);
+}
+
+.platform-icon-instagram {
+  background: linear-gradient(135deg, #f58529, #dd2a7b, #8134af, #515bd4);
+}
+
+.platform-icon-x,
+.platform-icon-tiktok {
+  background: #000000;
+}
+
+.platform-icon-linkedin {
+  background: #0a66c2;
+}
+
+.platform-icon-youtube {
+  background: #ff0000;
 }
 
 .platform-info {

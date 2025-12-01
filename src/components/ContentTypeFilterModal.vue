@@ -1,72 +1,70 @@
 <template>
-  <Teleport to="body">
-    <Transition name="modal">
-      <div v-if="modelValue" class="modal-overlay" @click.self="close">
-        <div class="modal-container">
-          <BaseCard variant="glass-intense" class="modal-card">
-            <!-- Header -->
-            <div class="modal-header">
-              <div class="header-icon">📸</div>
-              <h2 class="modal-title">Select Content Types</h2>
-              <button class="close-btn" @click="close">×</button>
-            </div>
+  <BaseModal
+    :model-value="modelValue"
+    size="md"
+    title="Select Content Types"
+    :show-close-button="true"
+    @update:model-value="(val: boolean) => !val && close()"
+    @close="close"
+  >
+    <template #header>
+      <div class="modal-header-content">
+        <div class="header-icon">📸</div>
+        <h2 class="modal-title">Select Content Types</h2>
+      </div>
+    </template>
 
-            <!-- Selected Count -->
-            <div v-if="selectedCount > 0" class="selected-count">
-              {{ selectedCount }} type{{ selectedCount !== 1 ? 's' : '' }} selected
-            </div>
+    <!-- Selected Count -->
+    <div v-if="selectedCount > 0" class="selected-count">
+      {{ selectedCount }} type{{ selectedCount !== 1 ? 's' : '' }} selected
+    </div>
 
-            <!-- Content Type Grid -->
-            <div class="content-types-grid">
-              <div
-                v-for="type in contentTypes"
-                :key="type.value"
-                :class="['content-type-card', { selected: isSelected(type.value) }]"
-                @click="toggleContentType(type.value)"
-              >
-                <!-- Checkbox -->
-                <div class="checkbox-wrapper">
-                  <input
-                    type="checkbox"
-                    :checked="isSelected(type.value)"
-                    class="checkbox-input"
-                    @click.stop
-                  />
-                  <span class="checkbox-custom"></span>
-                </div>
+    <!-- Content Type Grid -->
+    <div class="content-types-grid">
+      <div
+        v-for="type in contentTypes"
+        :key="type.value"
+        :class="['content-type-card', { selected: isSelected(type.value) }]"
+        @click="toggleContentType(type.value)"
+      >
+        <!-- Checkbox -->
+        <div class="checkbox-wrapper">
+          <input
+            type="checkbox"
+            :checked="isSelected(type.value)"
+            class="checkbox-input"
+            @click.stop
+          />
+          <span class="checkbox-custom"></span>
+        </div>
 
-                <!-- Content Type Icon -->
-                <div class="content-type-icon">
-                  {{ type.emoji }}
-                </div>
+        <!-- Content Type Icon -->
+        <div class="content-type-icon">
+          {{ type.emoji }}
+        </div>
 
-                <!-- Content Type Info -->
-                <div class="content-type-info">
-                  <h3 class="content-type-name">{{ type.label }}</h3>
-                  <p class="content-type-description">{{ type.description }}</p>
-                </div>
-              </div>
-            </div>
-
-            <!-- Footer Actions -->
-            <div class="modal-footer">
-              <BaseButton variant="ghost" @click="clearSelection">
-                Clear All
-              </BaseButton>
-              <BaseButton variant="primary" @click="close">
-                Apply Filters
-              </BaseButton>
-            </div>
-          </BaseCard>
+        <!-- Content Type Info -->
+        <div class="content-type-info">
+          <h3 class="content-type-name">{{ type.label }}</h3>
+          <p class="content-type-description">{{ type.description }}</p>
         </div>
       </div>
-    </Transition>
-  </Teleport>
+    </div>
+
+    <template #footer>
+      <BaseButton variant="ghost" @click="clearSelection">
+        Clear All
+      </BaseButton>
+      <BaseButton variant="primary" @click="close">
+        Apply Filters
+      </BaseButton>
+    </template>
+  </BaseModal>
 </template>
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import BaseCard from './BaseCard.vue'
+import BaseModal from './BaseModal.vue'
 import BaseButton from './BaseButton.vue'
 
 interface Props {
@@ -125,55 +123,11 @@ const close = () => {
 </script>
 
 <style scoped>
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.8);
-  backdrop-filter: blur(8px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-  padding: var(--space-xl);
-}
-
-.modal-container {
-  width: 100%;
-  max-width: 600px;
-  max-height: 90vh;
-  animation: modalSlideUp 0.3s ease;
-}
-
-@keyframes modalSlideUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.modal-card {
-  display: flex;
-  flex-direction: column;
-  max-height: 90vh;
-  padding: 0;
-  overflow: hidden;
-}
-
 /* Header */
-.modal-header {
+.modal-header-content {
   display: flex;
   align-items: center;
   gap: var(--space-md);
-  padding: var(--space-xl);
-  border-bottom: 1px solid rgba(212, 175, 55, 0.15);
-  background: linear-gradient(135deg, rgba(20, 20, 20, 0.8), rgba(30, 30, 30, 0.8));
 }
 
 .header-icon {
@@ -189,27 +143,6 @@ const close = () => {
   flex: 1;
 }
 
-.close-btn {
-  width: 36px;
-  height: 36px;
-  border: none;
-  background: rgba(212, 175, 55, 0.1);
-  color: var(--gold-primary);
-  font-size: 1.5rem;
-  border-radius: var(--radius-md);
-  cursor: pointer;
-  transition: all 0.2s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  line-height: 1;
-}
-
-.close-btn:hover {
-  background: rgba(212, 175, 55, 0.2);
-  transform: rotate(90deg);
-}
-
 /* Selected Count */
 .selected-count {
   padding: var(--space-sm) var(--space-xl);
@@ -219,13 +152,11 @@ const close = () => {
   font-size: var(--text-sm);
   font-weight: 600;
   text-align: center;
+  margin: calc(-1 * var(--space-xl)) calc(-1 * var(--space-xl)) var(--space-lg);
 }
 
 /* Content Type Grid */
 .content-types-grid {
-  flex: 1;
-  overflow-y: auto;
-  padding: var(--space-xl);
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
   gap: var(--space-lg);
@@ -357,44 +288,10 @@ const close = () => {
   margin: 0;
 }
 
-/* Footer */
-.modal-footer {
-  display: flex;
-  justify-content: space-between;
-  gap: var(--space-md);
-  padding: var(--space-xl);
-  border-top: 1px solid rgba(212, 175, 55, 0.15);
-  background: linear-gradient(135deg, rgba(20, 20, 20, 0.8), rgba(30, 30, 30, 0.8));
-}
-
-/* Transitions */
-.modal-enter-active,
-.modal-leave-active {
-  transition: opacity 0.3s ease;
-}
-
-.modal-enter-from,
-.modal-leave-to {
-  opacity: 0;
-}
-
 /* Responsive */
 @media (max-width: 768px) {
-  .modal-overlay {
-    padding: var(--space-md);
-  }
-
   .content-types-grid {
     grid-template-columns: 1fr;
-    padding: var(--space-md);
-  }
-
-  .modal-footer {
-    flex-direction: column;
-  }
-
-  .modal-footer button {
-    width: 100%;
   }
 }
 </style>

@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { computed, watch, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
+import BaseModal from './BaseModal.vue'
 import BaseButton from './BaseButton.vue'
-import BaseCard from './BaseCard.vue'
 import { useFacebookStore } from '@/stores/facebook'
 import SocialChefLogo from '@/assets/socialchef_logo.svg'
 
@@ -131,293 +131,229 @@ function handleRetry() {
 </script>
 
 <template>
-  <Transition name="modal">
-    <div v-if="modelValue" class="modal-overlay" @click.self="close">
-      <BaseCard variant="glass-intense" class="result-modal">
-        <!-- Close Button -->
-        <button class="close-button" @click="close" title="Close">
-          ✕
-        </button>
-
-        <!-- Header -->
-        <div class="modal-header">
+  <BaseModal
+    :model-value="modelValue"
+    size="lg"
+    :show-close-button="true"
+    card-variant="glass-intense"
+    @update:model-value="(val: boolean) => !val && close()"
+    @close="close"
+  >
+    <template #header>
+      <div class="modal-header-content">
           <div class="success-icon" v-if="!generationError || isGenerationComplete">✨</div>
           <div class="error-icon" v-else-if="generationError && !isGenerationComplete">⚠️</div>
           <h2 class="modal-title">
             {{ (generationError && !isGenerationComplete) ? 'Generation Failed' : (isGenerationComplete ? 'Your Post is Ready!' : 'Cooking Up Your Post...') }}
           </h2>
-          <p class="modal-subtitle">
-            {{ (generationError && !isGenerationComplete) ? generationError : (isGenerationComplete ? 'Choose what to do with your generated content' : 'Hang tight while we prepare everything') }}
+        <p class="modal-subtitle">
+          {{ (generationError && !isGenerationComplete) ? generationError : (isGenerationComplete ? 'Choose what to do with your generated content' : 'Hang tight while we prepare everything') }}
+        </p>
+      </div>
+    </template>
+
+    <!-- Published Success Banner -->
+    <div v-if="isPublished" class="success-banner">
+      <div class="success-banner-content">
+        <span class="success-icon-large">🎉</span>
+        <div class="success-text">
+          <h3 class="success-title">Published Successfully!</h3>
+          <p class="success-message">
+            Your post has been published to
+            <a
+              v-if="facebookPostUrl"
+              :href="facebookPostUrl"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="facebook-link"
+            >
+              Facebook
+            </a>
+            <span v-else class="facebook-highlight">Facebook</span>
           </p>
         </div>
-
-        <!-- Published Success Banner -->
-        <div v-if="isPublished" class="success-banner">
-          <div class="success-banner-content">
-            <span class="success-icon-large">🎉</span>
-            <div class="success-text">
-              <h3 class="success-title">Published Successfully!</h3>
-              <p class="success-message">
-                Your post has been published to
-                <a
-                  v-if="facebookPostUrl"
-                  :href="facebookPostUrl"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  class="facebook-link"
-                >
-                  Facebook
-                </a>
-                <span v-else class="facebook-highlight">Facebook</span>
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <!-- Generated Image or Loading State -->
-        <div class="image-preview">
-          <img v-if="imageUrl" :src="imageUrl" alt="Generated post" class="preview-image" />
-          <div v-else-if="isGeneratingImage" class="image-loading">
-            <div class="bouncing-logo">
-              <img :src="SocialChefLogo" alt="Social Chef" class="logo-image" />
-            </div>
-            <p class="loading-text">Generating image...</p>
-          </div>
-        </div>
-
-        <!-- Post Content Preview or Loading State -->
-        <div class="post-content-preview">
-          <div v-if="postContent" class="content-sections">
-            <!-- Content Header with Edit Button -->
-            <div class="content-header">
-              <span class="content-header-title">Generated Content</span>
-              <BaseButton
-                v-if="!isEditing && isGenerationComplete"
-                variant="secondary"
-                size="small"
-                @click="toggleEditMode"
-              >
-                ✏️ Edit
-              </BaseButton>
-            </div>
-
-            <!-- Display Mode -->
-            <template v-if="!isEditing">
-              <div class="content-section">
-                <h3 class="content-label">Post Text</h3>
-                <p class="post-text">{{ postContent.postText }}</p>
-              </div>
-
-              <div v-if="postContent.hashtags.length > 0" class="content-section">
-                <h3 class="content-label">Hashtags</h3>
-                <div class="hashtags">
-                  <span v-for="(tag, idx) in postContent.hashtags" :key="idx" class="hashtag">
-                    {{ tag }}
-                  </span>
-                </div>
-              </div>
-
-            </template>
-
-            <!-- Edit Mode -->
-            <template v-else>
-              <div class="edit-field">
-                <label class="edit-label">Post Text</label>
-                <textarea
-                  v-model="editedPostText"
-                  class="edit-textarea"
-                  rows="4"
-                  placeholder="Enter post text..."
-                ></textarea>
-              </div>
-
-              <div class="edit-field">
-                <label class="edit-label">Hashtags</label>
-                <div class="hashtag-editor">
-                  <div class="hashtag-tags">
-                    <span
-                      v-for="(tag, idx) in editedHashtags"
-                      :key="idx"
-                      class="hashtag-tag"
-                    >
-                      {{ tag }}
-                      <button @click="removeHashtag(idx)" class="remove-tag">&times;</button>
-                    </span>
-                  </div>
-                  <input
-                    v-model="newHashtag"
-                    @keydown.enter.prevent="addHashtag"
-                    @keydown.,.prevent="addHashtag"
-                    placeholder="Add hashtag and press Enter..."
-                    class="hashtag-input"
-                  />
-                </div>
-              </div>
-
-              <div class="edit-actions">
-                <BaseButton
-                  variant="ghost"
-                  size="small"
-                  @click="cancelEdits"
-                >
-                  Cancel
-                </BaseButton>
-                <BaseButton
-                  variant="primary"
-                  size="small"
-                  @click="saveEdits"
-                >
-                  Save Changes
-                </BaseButton>
-              </div>
-            </template>
-          </div>
-
-          <div v-else-if="isGeneratingContent" class="content-loading">
-            <div class="spinner"></div>
-            <p class="loading-text">Generating post content...</p>
-          </div>
-        </div>
-
-        <!-- Error Actions - Show Retry Button (only if generation failed AND no content was generated) -->
-        <div v-if="generationError && !isGenerationComplete" class="modal-actions">
-          <BaseButton
-            variant="primary"
-            size="large"
-            full-width
-            @click="handleRetry"
-          >
-            🔄 Try Again
-          </BaseButton>
-          <BaseButton
-            variant="secondary"
-            size="large"
-            full-width
-            @click="close"
-          >
-            Cancel
-          </BaseButton>
-        </div>
-
-        <!-- Action Buttons (only show when generation is complete and no error) -->
-        <div v-else-if="isGenerationComplete" class="modal-actions">
-          <!-- Facebook reconnection required - show reconnect button -->
-          <div v-if="facebookReconnectRequired" class="reconnect-section">
-            <p class="reconnect-message">{{ t('contentCreate.facebookReconnectMessage') }}</p>
-            <BaseButton
-              variant="primary"
-              size="large"
-              full-width
-              @click="handleConnectFacebook"
-            >
-              🔗 {{ t('contentCreate.reconnectFacebook') }}
-            </BaseButton>
-          </div>
-
-          <!-- Post is auto-saved, show publish/schedule options -->
-          <div v-else-if="hasConnectedFacebook" class="action-row">
-            <BaseButton
-              variant="primary"
-              size="medium"
-              @click="handlePublish"
-              :disabled="isPublishing"
-              class="action-button"
-            >
-              {{ isPublishing ? '⏳ Publishing...' : '📤 Publish Now' }}
-            </BaseButton>
-
-            <BaseButton
-              variant="secondary"
-              size="medium"
-              @click="handleSchedule"
-              :disabled="isPublishing"
-              class="action-button"
-            >
-              📅 Schedule Post
-            </BaseButton>
-          </div>
-
-          <BaseButton
-            v-else
-            variant="primary"
-            size="large"
-            full-width
-            @click="handleConnectFacebook"
-          >
-            🔗 Connect Facebook to Post
-          </BaseButton>
-        </div>
-      </BaseCard>
+      </div>
     </div>
-  </Transition>
+
+    <!-- Generated Image or Loading State -->
+    <div class="image-preview">
+      <img v-if="imageUrl" :src="imageUrl" alt="Generated post" class="preview-image" />
+      <div v-else-if="isGeneratingImage" class="image-loading">
+        <div class="bouncing-logo">
+          <img :src="SocialChefLogo" alt="Social Chef" class="logo-image" />
+        </div>
+        <p class="loading-text">Generating image...</p>
+      </div>
+    </div>
+
+    <!-- Post Content Preview or Loading State -->
+    <div class="post-content-preview">
+      <div v-if="postContent" class="content-sections">
+        <!-- Content Header with Edit Button -->
+        <div class="content-header">
+          <span class="content-header-title">Generated Content</span>
+          <BaseButton
+            v-if="!isEditing && isGenerationComplete"
+            variant="secondary"
+            size="small"
+            @click="toggleEditMode"
+          >
+            ✏️ Edit
+          </BaseButton>
+        </div>
+
+        <!-- Display Mode -->
+        <template v-if="!isEditing">
+          <div class="content-section">
+            <h3 class="content-label">Post Text</h3>
+            <p class="post-text">{{ postContent.postText }}</p>
+          </div>
+
+          <div v-if="postContent.hashtags.length > 0" class="content-section">
+            <h3 class="content-label">Hashtags</h3>
+            <div class="hashtags">
+              <span v-for="(tag, idx) in postContent.hashtags" :key="idx" class="hashtag">
+                {{ tag }}
+              </span>
+            </div>
+          </div>
+        </template>
+
+        <!-- Edit Mode -->
+        <template v-else>
+          <div class="edit-field">
+            <label class="edit-label">Post Text</label>
+            <textarea
+              v-model="editedPostText"
+              class="edit-textarea"
+              rows="4"
+              placeholder="Enter post text..."
+            ></textarea>
+          </div>
+
+          <div class="edit-field">
+            <label class="edit-label">Hashtags</label>
+            <div class="hashtag-editor">
+              <div class="hashtag-tags">
+                <span
+                  v-for="(tag, idx) in editedHashtags"
+                  :key="idx"
+                  class="hashtag-tag"
+                >
+                  {{ tag }}
+                  <button @click="removeHashtag(idx)" class="remove-tag">&times;</button>
+                </span>
+              </div>
+              <input
+                v-model="newHashtag"
+                @keydown.enter.prevent="addHashtag"
+                @keydown.,.prevent="addHashtag"
+                placeholder="Add hashtag and press Enter..."
+                class="hashtag-input"
+              />
+            </div>
+          </div>
+
+          <div class="edit-actions">
+            <BaseButton
+              variant="ghost"
+              size="small"
+              @click="cancelEdits"
+            >
+              Cancel
+            </BaseButton>
+            <BaseButton
+              variant="primary"
+              size="small"
+              @click="saveEdits"
+            >
+              Save Changes
+            </BaseButton>
+          </div>
+        </template>
+      </div>
+
+      <div v-else-if="isGeneratingContent" class="content-loading">
+        <div class="spinner"></div>
+        <p class="loading-text">Generating post content...</p>
+      </div>
+    </div>
+
+    <!-- Error Actions - Show Retry Button (only if generation failed AND no content was generated) -->
+    <div v-if="generationError && !isGenerationComplete" class="modal-actions">
+      <BaseButton
+        variant="primary"
+        size="large"
+        full-width
+        @click="handleRetry"
+      >
+        🔄 Try Again
+      </BaseButton>
+      <BaseButton
+        variant="secondary"
+        size="large"
+        full-width
+        @click="close"
+      >
+        Cancel
+      </BaseButton>
+    </div>
+
+    <!-- Action Buttons (only show when generation is complete and no error) -->
+    <div v-else-if="isGenerationComplete" class="modal-actions">
+      <!-- Facebook reconnection required - show reconnect button -->
+      <div v-if="facebookReconnectRequired" class="reconnect-section">
+        <p class="reconnect-message">{{ t('contentCreate.facebookReconnectMessage') }}</p>
+        <BaseButton
+          variant="primary"
+          size="large"
+          full-width
+          @click="handleConnectFacebook"
+        >
+          🔗 {{ t('contentCreate.reconnectFacebook') }}
+        </BaseButton>
+      </div>
+
+      <!-- Post is auto-saved, show publish/schedule options -->
+      <div v-else-if="hasConnectedFacebook" class="action-row">
+        <BaseButton
+          variant="primary"
+          size="medium"
+          @click="handlePublish"
+          :disabled="isPublishing"
+          class="action-button"
+        >
+          {{ isPublishing ? '⏳ Publishing...' : '📤 Publish Now' }}
+        </BaseButton>
+
+        <BaseButton
+          variant="secondary"
+          size="medium"
+          @click="handleSchedule"
+          :disabled="isPublishing"
+          class="action-button"
+        >
+          📅 Schedule Post
+        </BaseButton>
+      </div>
+
+      <BaseButton
+        v-else
+        variant="primary"
+        size="large"
+        full-width
+        @click="handleConnectFacebook"
+      >
+        🔗 Connect Facebook to Post
+      </BaseButton>
+    </div>
+  </BaseModal>
 </template>
 
 <style scoped>
-/* Modal Overlay */
-.modal-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 2000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: var(--space-xl);
-  background: rgba(0, 0, 0, 0.85);
-  backdrop-filter: blur(8px);
-  overflow-y: auto;
-}
-
-/* Result Modal */
-.result-modal {
-  position: relative;
-  max-width: 700px;
-  width: 100%;
-  max-height: 90vh;
-  overflow-y: auto;
-  padding: var(--space-3xl);
-  animation: slideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-@keyframes slideUp {
-  from {
-    opacity: 0;
-    transform: translateY(40px) scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-
-/* Close Button */
-.close-button {
-  position: absolute;
-  top: var(--space-lg);
-  right: var(--space-lg);
-  width: 36px;
-  height: 36px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: transparent;
-  border: none;
-  border-radius: var(--radius-sm);
-  color: var(--text-muted);
-  font-size: var(--text-2xl);
-  cursor: pointer;
-  transition: var(--transition-base);
-  z-index: 10;
-}
-
-.close-button:hover {
-  background: var(--bg-elevated);
-  color: var(--text-primary);
-}
-
-/* Modal Header */
-.modal-header {
+/* Modal Header Content */
+.modal-header-content {
   text-align: center;
-  margin-bottom: var(--space-3xl);
 }
 
 /* Success Banner */
@@ -846,46 +782,8 @@ function handleRetry() {
   margin: 0;
 }
 
-/* Transitions */
-.modal-enter-active,
-.modal-leave-active {
-  transition: opacity 0.3s ease;
-}
-
-.modal-enter-from,
-.modal-leave-to {
-  opacity: 0;
-}
-
-.modal-enter-active .result-modal {
-  animation: slideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.modal-leave-active .result-modal {
-  animation: slideDown 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-@keyframes slideDown {
-  from {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-  to {
-    opacity: 0;
-    transform: translateY(40px) scale(0.95);
-  }
-}
-
 /* Responsive */
 @media (max-width: 768px) {
-  .modal-overlay {
-    padding: var(--space-lg);
-  }
-
-  .result-modal {
-    padding: var(--space-2xl);
-  }
-
   .modal-title {
     font-size: var(--text-2xl);
   }
@@ -905,10 +803,7 @@ function handleRetry() {
 
 /* Reduced Motion */
 @media (prefers-reduced-motion: reduce) {
-  .result-modal,
-  .success-icon,
-  .modal-enter-active .result-modal,
-  .modal-leave-active .result-modal {
+  .success-icon {
     animation: none;
   }
 }
