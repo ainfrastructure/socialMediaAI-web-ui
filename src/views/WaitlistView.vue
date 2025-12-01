@@ -151,7 +151,7 @@ function goToLogin() {
       </BaseCard>
 
       <!-- Login Link -->
-      <p v-if="false" class="login-link">
+      <p class="login-link">
         {{ $t('waitlist.loginLink') }}
         <a href="#" @click.prevent="goToLogin" class="login-link-text">
           {{ $t('waitlist.loginLinkText') }}
