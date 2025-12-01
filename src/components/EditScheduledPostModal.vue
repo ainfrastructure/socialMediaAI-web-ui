@@ -110,12 +110,20 @@ const populateForm = (post: any) => {
     notes.value = post.notes
   }
 
+  // Get post_text from scheduled post first, then from favorite_posts
   if (post.post_text) {
     postText.value = post.post_text
+  } else if (post.favorite_posts?.post_text) {
+    postText.value = post.favorite_posts.post_text
+  } else {
+    postText.value = ''
   }
 
-  if (post.hashtags) {
+  // Get hashtags from favorite_posts (that's where they're stored in the database)
+  if (post.hashtags && post.hashtags.length > 0) {
     hashtags.value = [...post.hashtags]
+  } else if (post.favorite_posts?.hashtags && post.favorite_posts.hashtags.length > 0) {
+    hashtags.value = [...post.favorite_posts.hashtags]
   } else {
     hashtags.value = []
   }
@@ -346,7 +354,7 @@ const formatDisplayDate = (dateStr: string) => {
         <div class="info-section">
           <div class="info-label">
             <MaterialIcon icon="calendar_today" size="sm" />
-            <span>{{ $t('scheduleModal.date') }} <span class="required">*</span></span>
+            <span>{{ $t('scheduleModal.dateLabel') }} <span class="required">*</span></span>
           </div>
           <DatePicker
             v-model="scheduledDate"
@@ -360,7 +368,7 @@ const formatDisplayDate = (dateStr: string) => {
         <div class="info-section">
           <div class="info-label">
             <MaterialIcon icon="schedule" size="sm" />
-            <span>{{ $t('scheduleModal.time') }}</span>
+            <span>{{ $t('scheduleModal.timeLabel') }}</span>
           </div>
           <div class="time-picker">
             <select v-model="hours" class="time-select">
@@ -421,7 +429,7 @@ const formatDisplayDate = (dateStr: string) => {
         <div class="info-section">
           <div class="info-label">
             <MaterialIcon icon="public" size="sm" />
-            <span>{{ $t('scheduleModal.timezone') }}</span>
+            <span>{{ $t('scheduleModal.timezoneLabel') }}</span>
           </div>
           <select v-model="timezone" class="form-input">
             <option v-for="tz in timezones" :key="tz" :value="tz">

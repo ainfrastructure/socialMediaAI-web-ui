@@ -1,4 +1,4 @@
-<template>
+∑<template>
   <div class="test-post-view">
     <div class="container">
       <header class="page-header">

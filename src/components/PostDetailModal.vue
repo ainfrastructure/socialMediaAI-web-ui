@@ -261,80 +261,100 @@ function handleSchedule() {
               <span class="status-badge" :class="getStatusClass(postStatus)">
                 {{ getStatusLabel(postStatus) }}
               </span>
-              <span v-if="post.timezone" class="timezone-badge">
-                {{ post.timezone }}
-              </span>
             </div>
 
-            <!-- Date & Time -->
+            <!-- Date, Time & Timezone -->
             <div v-if="postStatus !== 'draft'" class="info-section">
-              <div class="info-label">
-                <MaterialIcon icon="calendar_today" size="sm" />
-                <span>{{ postStatus === 'published' ? $t('scheduler.publishedAt') : $t('scheduler.scheduledFor') }}</span>
-              </div>
-              <div class="info-value">
-                {{ formatDate() }}
-                <span v-if="formatTime()" class="time-value">{{ formatTime() }}</span>
-              </div>
-              <div v-if="postStatus === 'scheduled' && getTimeRemaining()" class="time-remaining">
-                {{ getTimeRemaining() }}
+              <div class="info-section-inner">
+                <div class="info-label">
+                  <MaterialIcon icon="calendar_today" size="sm" />
+                  <span>{{ postStatus === 'published' ? $t('scheduler.publishedAt') : $t('scheduler.publishTime') }}</span>
+                </div>
+                <div class="datetime-details">
+                  <div class="datetime-item">
+                    <MaterialIcon icon="event" size="sm" />
+                    <span>{{ formatDate() }}</span>
+                  </div>
+                  <div v-if="formatTime()" class="datetime-item">
+                    <MaterialIcon icon="schedule" size="sm" />
+                    <span>{{ formatTime() }}</span>
+                  </div>
+                  <div v-if="post.timezone" class="datetime-item">
+                    <MaterialIcon icon="public" size="sm" />
+                    <span>{{ post.timezone.replace(/_/g, ' ') }}</span>
+                  </div>
+                  <div v-if="postStatus === 'scheduled' && getTimeRemaining()" class="datetime-item">
+                    <MaterialIcon icon="timer" size="sm" />
+                    <span>{{ getTimeRemaining() }}</span>
+                  </div>
+                </div>
               </div>
             </div>
 
             <!-- Created (for drafts) -->
             <div v-if="postStatus === 'draft'" class="info-section">
-              <div class="info-label">
-                <MaterialIcon icon="edit_note" size="sm" />
-                <span>{{ $t('common.created') }}</span>
+              <div class="info-section-inner">
+                <div class="info-label">
+                  <MaterialIcon icon="edit_note" size="sm" />
+                  <span>{{ $t('common.created') }}</span>
+                </div>
+                <div class="info-value">{{ formatDate() }}</div>
               </div>
-              <div class="info-value">{{ formatDate() }}</div>
             </div>
 
             <!-- Platforms -->
             <div v-if="getPlatforms().length > 0" class="info-section">
-              <div class="info-label">
-                <MaterialIcon icon="share" size="sm" />
-                <span>{{ $t('dashboardNew.platforms') }}</span>
-              </div>
-              <div class="platforms-row">
-                <div
-                  v-for="platform in getPlatforms()"
-                  :key="platform"
-                  class="platform-badge"
-                  :class="`platform-bg-${platform}`"
-                >
-                  <PlatformLogo :platform="platform as any" :size="16" />
-                  <span>{{ platform }}</span>
+              <div class="info-section-inner">
+                <div class="info-label">
+                  <MaterialIcon icon="share" size="sm" />
+                  <span>{{ $t('dashboardNew.platforms') }}</span>
+                </div>
+                <div class="platforms-row">
+                  <div
+                    v-for="platform in getPlatforms()"
+                    :key="platform"
+                    class="platform-badge"
+                    :class="`platform-bg-${platform}`"
+                  >
+                    <PlatformLogo :platform="platform as any" :size="16" />
+                    <span>{{ platform }}</span>
+                  </div>
                 </div>
               </div>
             </div>
 
             <!-- Restaurant -->
             <div v-if="getRestaurantName()" class="info-section">
-              <div class="info-label">
-                <MaterialIcon icon="restaurant" size="sm" />
-                <span>{{ $t('dashboardNew.restaurant') }}</span>
+              <div class="info-section-inner">
+                <div class="info-label">
+                  <MaterialIcon icon="restaurant" size="sm" />
+                  <span>{{ $t('dashboardNew.restaurant') }}</span>
+                </div>
+                <div class="info-value">{{ getRestaurantName() }}</div>
               </div>
-              <div class="info-value">{{ getRestaurantName() }}</div>
             </div>
 
             <!-- Caption -->
             <div v-if="getPostText()" class="info-section">
-              <div class="info-label">
-                <MaterialIcon icon="notes" size="sm" />
-                <span>{{ $t('scheduler.caption') }}</span>
+              <div class="info-section-inner">
+                <div class="info-label">
+                  <MaterialIcon icon="notes" size="sm" />
+                  <span>{{ $t('scheduler.caption') }}</span>
+                </div>
+                <div class="caption-text">{{ getPostText() }}</div>
               </div>
-              <div class="caption-text">{{ getPostText() }}</div>
             </div>
 
             <!-- Hashtags -->
             <div v-if="getHashtags().length > 0" class="info-section">
-              <div class="info-label">
-                <MaterialIcon icon="tag" size="sm" />
-                <span>{{ $t('posts.hashtags') }}</span>
-              </div>
-              <div class="hashtags-row">
-                <span v-for="tag in getHashtags()" :key="tag" class="hashtag">{{ tag }}</span>
+              <div class="info-section-inner">
+                <div class="info-label">
+                  <MaterialIcon icon="tag" size="sm" />
+                  <span>{{ $t('posts.hashtags') }}</span>
+                </div>
+                <div class="hashtags-row">
+                  <span v-for="tag in getHashtags()" :key="tag" class="hashtag">{{ tag }}</span>
+                </div>
               </div>
             </div>
 
@@ -367,6 +387,17 @@ function handleSchedule() {
                   <span>{{ $t('scheduler.viewOn') }} {{ platform }}</span>
                   <MaterialIcon icon="open_in_new" size="sm" />
                 </a>
+              </div>
+            </div>
+
+            <!-- Notes -->
+            <div v-if="post.notes" class="info-section no-border">
+              <div class="info-section-inner">
+                <div class="info-label">
+                  <MaterialIcon icon="sticky_note_2" size="sm" />
+                  <span>{{ $t('editScheduledPost.notes') }}</span>
+                </div>
+                <div class="notes-text">{{ post.notes }}</div>
               </div>
             </div>
 
@@ -471,7 +502,7 @@ function handleSchedule() {
 
 .modal-title {
   font-family: var(--font-heading);
-  font-size: var(--text-2xl);
+  font-size: var(--text-3xl);
   font-weight: var(--font-bold);
   color: var(--gold-primary);
   margin: 0;
@@ -519,47 +550,54 @@ function handleSchedule() {
   color: #9ca3af;
 }
 
-.timezone-badge {
-  font-size: var(--text-xs);
+.datetime-details {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.datetime-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  font-size: var(--text-base);
+  font-weight: var(--font-normal);
+  color: var(--text-primary);
+}
+
+.datetime-item .material-icon {
   color: var(--text-muted);
-  background: var(--bg-elevated);
-  padding: var(--space-xs) var(--space-sm);
-  border-radius: var(--radius-sm);
 }
 
 .info-section {
-  padding-bottom: var(--space-lg);
+  padding: var(--space-lg) 0;
   border-bottom: 1px solid var(--border-color);
 }
 
+.info-section.no-border,
 .info-section:last-of-type {
   border-bottom: none;
+}
+
+.info-section-inner {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
 }
 
 .info-label {
   display: flex;
   align-items: center;
   gap: var(--space-sm);
-  font-size: var(--text-sm);
-  color: var(--text-muted);
-  margin-bottom: var(--space-sm);
+  font-size: var(--text-lg);
+  font-weight: var(--font-medium);
+  color: var(--text-secondary);
 }
 
 .info-value {
   font-size: var(--text-base);
   color: var(--text-primary);
-}
-
-.time-value {
-  margin-left: var(--space-md);
-  color: var(--text-secondary);
-}
-
-.time-remaining {
-  margin-top: var(--space-sm);
-  font-size: var(--text-lg);
-  font-weight: var(--font-bold);
-  color: var(--gold-primary);
 }
 
 .platforms-row {
@@ -610,6 +648,16 @@ function handleSchedule() {
   background: rgba(212, 175, 55, 0.1);
   padding: var(--space-xs) var(--space-sm);
   border-radius: var(--radius-sm);
+}
+
+.notes-text {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  line-height: 1.5;
+  padding: var(--space-md);
+  background: var(--bg-primary);
+  border-radius: var(--radius-md);
+  font-style: italic;
 }
 
 .error-section {

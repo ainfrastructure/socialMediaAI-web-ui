@@ -1190,6 +1190,8 @@ export default {
     video: 'Video',
     post: 'post',
     posts: 'posts',
+    timeLeft: 'left',
+    publishTime: 'Publish Time',
   },
 
   // Edit Scheduled Post Modal

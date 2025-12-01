@@ -5,6 +5,7 @@ import { useI18n } from 'vue-i18n'
 import SidebarMenu from './SidebarMenu.vue'
 import LanguageSelector from './LanguageSelector.vue'
 import MaterialIcon from './MaterialIcon.vue'
+import NotificationDropdown from './NotificationDropdown.vue'
 
 const authStore = useAuthStore()
 const { t } = useI18n()
@@ -65,10 +66,8 @@ const userInitial = computed(() => {
           <!-- Language Selector -->
           <LanguageSelector />
 
-          <!-- Notifications (placeholder) -->
-          <button class="icon-btn" :aria-label="$t('sidebar.notifications')">
-            <MaterialIcon icon="notifications" size="md" />
-          </button>
+          <!-- Notifications -->
+          <NotificationDropdown />
 
           <!-- User Avatar -->
           <router-link to="/profile" class="user-avatar">

@@ -71,6 +71,11 @@
           >
             <div class="day-number">{{ viewMode === 'day' ? '' : day.day }}</div>
 
+            <!-- Hover Create Button (Month/Week view only) -->
+            <div v-if="viewMode !== 'day' && !isPastDate(day.date)" class="day-hover-action" @click.stop="openCreatePostWizard(day)">
+              <span class="material-symbols-outlined create-icon">add</span>
+            </div>
+
             <!-- Day View Header -->
             <div v-if="viewMode === 'day'" class="day-view-header">
               <h2 class="day-view-title">
@@ -119,14 +124,165 @@
             </div>
 
             <div v-if="day.posts.length > 0" class="day-posts">
-              <!-- Day View: Show detailed post cards -->
-              <div v-if="viewMode === 'day'" class="day-view-posts">
-                <DayPostCard
-                  v-for="post in paginatedDayPosts(day.posts)"
-                  :key="post.id"
-                  :post="post"
-                  @view="viewPostDetail"
-                />
+              <!-- Day View: Expandable Table -->
+              <div v-if="viewMode === 'day'" class="day-view-table">
+                <!-- Table Header -->
+                <div class="table-header">
+                  <div class="th-post">{{ $t('scheduler.post') || 'Post' }}</div>
+                  <div class="th-platforms">{{ $t('dashboardNew.platforms') || 'Platforms' }}</div>
+                  <div class="th-status">{{ $t('scheduler.status') || 'Status' }}</div>
+                  <div class="th-restaurant">{{ $t('scheduler.restaurant') || 'Restaurant' }}</div>
+                  <div class="th-expand"></div>
+                </div>
+
+                <!-- Table Body -->
+                <div class="table-body">
+                  <div
+                    v-for="post in paginatedDayPosts(day.posts)"
+                    :key="post.id"
+                    class="table-row-wrapper"
+                  >
+                    <!-- Row -->
+                    <div
+                      :class="['table-row', { 'is-expanded': expandedPostId === post.id }]"
+                      @click.stop="toggleExpandedPost(post.id)"
+                    >
+                      <!-- Post Column -->
+                      <div class="td-post">
+                        <img
+                          v-if="post.media_url"
+                          :src="getMediaUrl(post.media_url)"
+                          class="post-thumb"
+                          @error="(e: Event) => (e.target as HTMLImageElement).src = 'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%22100%22><rect fill=%22%23333%22 width=%22100%22 height=%22100%22/></svg>'"
+                        />
+                        <div v-else class="post-thumb post-thumb-placeholder">📷</div>
+                        <div class="post-info">
+                          <div class="post-time-row">
+                            <span class="post-time">{{ formatTime(post.scheduled_time) || '--:--' }}</span>
+                            <span class="post-time-sep">•</span>
+                            <span class="post-time-ago">{{ getPostTimeAgo(post) }}</span>
+                          </div>
+                          <p class="post-caption-preview">{{ truncateCaption(getPostCaption(post)) }}</p>
+                        </div>
+                      </div>
+
+                      <!-- Platforms Column -->
+                      <div class="td-platforms">
+                        <PlatformLogo
+                          v-for="platform in getPostPlatforms(post)"
+                          :key="platform"
+                          :platform="platform as 'facebook' | 'instagram' | 'tiktok'"
+                          :size="24"
+                        />
+                      </div>
+
+                      <!-- Status Column -->
+                      <div class="td-status">
+                        <span :class="['status-badge', `status-${post.status || 'scheduled'}`]">
+                          <span class="status-dot"></span>
+                          {{ post.status === 'published' ? $t('dashboardNew.published') : post.status === 'failed' ? $t('dashboardNew.failed') : $t('dashboardNew.scheduled') }}
+                        </span>
+                      </div>
+
+                      <!-- Restaurant Column -->
+                      <div class="td-restaurant">
+                        <span class="restaurant-name">{{ post.restaurant_name || '-' }}</span>
+                      </div>
+
+                      <!-- Expand Toggle -->
+                      <div class="td-expand">
+                        <span :class="['expand-icon', { 'is-expanded': expandedPostId === post.id }]">
+                          ▾
+                        </span>
+                      </div>
+                    </div>
+
+                    <!-- Expanded Details -->
+                    <div v-if="expandedPostId === post.id" class="expanded-details">
+                      <div class="expanded-grid">
+                        <!-- Preview -->
+                        <div class="detail-section">
+                          <h4 class="detail-label">{{ $t('scheduleModal.preview') || 'Preview' }}</h4>
+                          <img
+                            v-if="post.media_url"
+                            :src="getMediaUrl(post.media_url)"
+                            class="detail-preview-img"
+                          />
+                          <div v-else class="detail-preview-placeholder">{{ $t('scheduler.noMedia') || 'No media' }}</div>
+                        </div>
+
+                        <!-- Published At & Platforms -->
+                        <div class="detail-section">
+                          <h4 class="detail-label">{{ $t('scheduler.publishedAt') || 'Published At' }}</h4>
+                          <p class="detail-value">{{ formatSelectedDate(day) }}</p>
+                          <p class="detail-subvalue">{{ formatTime(post.scheduled_time) }} • {{ post.timezone || 'UTC' }}</p>
+
+                          <h4 class="detail-label" style="margin-top: var(--space-lg)">{{ $t('dashboardNew.platforms') || 'Platforms' }}</h4>
+                          <div class="detail-platforms">
+                            <span
+                              v-for="platform in getPostPlatforms(post)"
+                              :key="platform"
+                              :class="['platform-pill', `platform-${platform}`]"
+                            >
+                              <PlatformLogo :platform="platform as 'facebook' | 'instagram' | 'tiktok'" :size="14" />
+                              {{ capitalizeFirst(platform) }}
+                            </span>
+                          </div>
+
+                          <!-- Error for failed posts -->
+                          <div v-if="post.status === 'failed' && post.error_message" class="detail-error">
+                            <h4 class="detail-label error-label">{{ $t('scheduler.error') || 'Error' }}</h4>
+                            <p class="error-message">{{ post.error_message }}</p>
+                          </div>
+                        </div>
+
+                        <!-- Caption -->
+                        <div class="detail-section">
+                          <div class="detail-label-row">
+                            <h4 class="detail-label">{{ $t('scheduleModal.caption') || 'Caption' }}</h4>
+                            <span class="char-count">{{ getPostCaption(post).length }} chars</span>
+                          </div>
+                          <div class="detail-caption-box">
+                            {{ getPostCaption(post) || $t('scheduler.noCaption') || 'No caption' }}
+                          </div>
+                        </div>
+
+                        <!-- Hashtags & Links -->
+                        <div class="detail-section">
+                          <h4 class="detail-label">{{ $t('scheduleModal.hashtags') || 'Hashtags' }}</h4>
+                          <div v-if="getPostHashtags(post).length > 0" class="detail-hashtags">
+                            <span
+                              v-for="tag in getPostHashtags(post)"
+                              :key="tag"
+                              class="hashtag-chip"
+                            >
+                              {{ tag.startsWith('#') ? tag : '#' + tag }}
+                            </span>
+                          </div>
+                          <p v-else class="detail-empty">{{ $t('scheduler.noHashtags') || 'No hashtags' }}</p>
+
+                          <!-- View Post Links -->
+                          <div v-if="post.status === 'published' && post.platform_post_urls && Object.keys(post.platform_post_urls).length > 0" class="detail-links">
+                            <h4 class="detail-label" style="margin-top: var(--space-lg)">{{ $t('scheduler.viewPost') || 'View Post' }}</h4>
+                            <a
+                              v-for="(url, platform) in (post.platform_post_urls as Record<string, string>)"
+                              :key="platform"
+                              :href="url"
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              :class="['view-link', `link-${platform}`]"
+                              @click.stop
+                            >
+                              <PlatformLogo :platform="(platform as string) as 'facebook' | 'instagram' | 'tiktok'" :size="14" />
+                              {{ $t('scheduler.viewOn') || 'View on' }} {{ capitalizeFirst(platform as string) }}
+                              <span class="link-arrow">↗</span>
+                            </a>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
 
               <!-- Pagination Controls for Day View -->
@@ -136,17 +292,17 @@
                   :disabled="dayViewPage === 1"
                   @click.stop="dayViewPage--"
                 >
-                  ← Previous
+                  ← {{ $t('common.previous') || 'Previous' }}
                 </button>
                 <span class="pagination-info">
-                  Page {{ dayViewPage }} of {{ getTotalPages(day.posts) }}
+                  {{ $t('common.page') || 'Page' }} {{ dayViewPage }} {{ $t('common.of') || 'of' }} {{ getTotalPages(day.posts) }}
                 </span>
                 <button
                   class="pagination-btn"
                   :disabled="dayViewPage === getTotalPages(day.posts)"
                   @click.stop="dayViewPage++"
                 >
-                  Next →
+                  {{ $t('common.next') || 'Next' }} →
                 </button>
               </div>
 
@@ -170,27 +326,21 @@
         </div>
       </BaseCard>
 
-      <!-- Selected Day Detail -->
+      <!-- Selected Day Detail / Upcoming Posts Panel -->
       <SelectedDayDetail
+        ref="selectedDayDetailRef"
         :day="selectedDayWithFilteredPosts"
+        :upcoming-posts="upcomingPosts"
+        :active-tab="bottomPanelTab"
         :posts-per-page="postsPerPage"
         @view="viewPostDetail"
         @edit="editScheduledPost"
         @delete="cancelPost"
         @create="openCreatePostWizard"
+        @tab-change="handleBottomPanelTabChange"
+        @save="saveScheduledPost"
       />
 
-      <!-- Empty State (shown when day is selected but has no posts/holidays) -->
-      <BaseCard v-if="selectedDay && (!selectedDayWithFilteredPosts || (selectedDayWithFilteredPosts.posts.length === 0 && (!selectedDayWithFilteredPosts.holidays || selectedDayWithFilteredPosts.holidays.length === 0)))" variant="glass" class="empty-detail-card">
-        <div class="empty-content">
-          <h3 class="empty-date">📅 {{ formatShortDate(selectedDay) }}</h3>
-          <p class="empty-title">{{ $t('scheduler.noPostsScheduled') }}</p>
-          <p class="empty-subtitle">{{ $t('scheduler.goToCookUp') }}</p>
-          <BaseButton variant="primary" @click="openCreatePostWizard(selectedDay)">
-            ➕ Create Post
-          </BaseButton>
-        </div>
-      </BaseCard>
     </div>
 
     <!-- Pick Post Modal -->
@@ -205,6 +355,14 @@
       v-model="showCreatePostWizard"
       :selected-date="selectedDateForScheduling"
       @select="selectCreationMethod"
+    />
+
+    <!-- Restaurant Selector Modal (shown when user has multiple restaurants) -->
+    <RestaurantSelectorModal
+      v-model="showRestaurantSelector"
+      :restaurants="restaurants"
+      :show-add-button="false"
+      @select="handleRestaurantSelected"
     />
 
     <!-- Post Detail Modal -->
@@ -259,8 +417,11 @@ import EditScheduledPostModal from '../components/EditScheduledPostModal.vue'
 import Toast from '../components/Toast.vue'
 import ConfirmModal from '../components/ConfirmModal.vue'
 import PostDetailModal from '../components/PostDetailModal.vue'
+import RestaurantSelectorModal from '../components/RestaurantSelectorModal.vue'
 import { UpcomingPostsList, CalendarHeader, CalendarLegend, CreatePostWizard, DayPostCard, CalendarFilters, SelectedDayDetail } from '../components/scheduler'
+import PlatformLogo from '../components/PlatformLogo.vue'
 import { api } from '../services/api'
+import { schedulerService } from '../services/schedulerService'
 import { useRestaurantsStore } from '../stores/restaurants'
 
 const router = useRouter()
@@ -283,8 +444,18 @@ const postToEdit = ref<any>(null)
 const showCreatePostWizard = ref(false)
 const wizardStep = ref(1) // 1 = Choose Method, 2 = Create/Select Content
 const selectedCreationMethod = ref<'saved' | 'new' | null>(null)
+const showRestaurantSelector = ref(false)
+const pendingCreationMethod = ref<'saved' | 'new' | null>(null)
 const dayViewPage = ref(1)
-const postsPerPage = 3
+const postsPerPage = 5
+const expandedPostId = ref<string | number | null>(null)
+const bottomPanelTab = ref<'day' | 'upcoming'>('day')
+const selectedDayDetailRef = ref<any>(null)
+
+// Toggle expanded row
+const toggleExpandedPost = (postId: string | number) => {
+  expandedPostId.value = expandedPostId.value === postId ? null : postId
+}
 
 // Toast and confirmation state
 const showToast = ref(false)
@@ -572,6 +743,13 @@ const selectDay = (day: any) => {
   // Only allow selecting today or future dates (even from other months)
   if (!isPastDate(day.date)) {
     selectedDay.value = day
+    // Auto-switch to day tab when selecting a date
+    bottomPanelTab.value = 'day'
+
+    // If day has no posts, open the create post wizard directly
+    if (!day.posts || day.posts.length === 0) {
+      openCreatePostWizard(day)
+    }
   }
 }
 
@@ -608,8 +786,12 @@ const upcomingPosts = computed(() => {
       }
       return (a.scheduled_time || '').localeCompare(b.scheduled_time || '')
     })
-    .slice(0, 10) // Show max 10 upcoming posts
 })
+
+// Handle tab change from SelectedDayDetail
+const handleBottomPanelTabChange = (tab: 'day' | 'upcoming') => {
+  bottomPanelTab.value = tab
+}
 
 const formatUpcomingDate = (dateString: string) => {
   const date = new Date(dateString + 'T00:00:00')
@@ -728,6 +910,59 @@ const formatTime = (time: string | null) => {
   return `${displayHour}:${minutes} ${ampm}`
 }
 
+// Helper functions for expandable table
+const getPostTimeAgo = (post: any) => {
+  if (post.status === 'scheduled') return t('dashboardNew.scheduled') || 'Scheduled'
+  if (post.status === 'failed') return t('dashboardNew.failed') || 'Failed'
+  if (!post.published_at) return ''
+
+  const date = new Date(post.published_at)
+  const now = new Date()
+  const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000)
+
+  if (diffInSeconds < 60) return t('common.justNow') || 'Just now'
+  if (diffInSeconds < 3600) {
+    const minutes = Math.floor(diffInSeconds / 60)
+    return `${minutes} ${minutes > 1 ? t('common.minutesAgo') || 'minutes ago' : t('common.minuteAgo') || 'minute ago'}`
+  }
+  if (diffInSeconds < 86400) {
+    const hours = Math.floor(diffInSeconds / 3600)
+    return `${hours} ${hours > 1 ? t('common.hoursAgo') || 'hours ago' : t('common.hourAgo') || 'hour ago'}`
+  }
+  const days = Math.floor(diffInSeconds / 86400)
+  return `${days} ${days > 1 ? t('common.daysAgo') || 'days ago' : t('common.dayAgo') || 'day ago'}`
+}
+
+const getPostPlatforms = (post: any): string[] => {
+  if (post.platforms && Array.isArray(post.platforms) && post.platforms.length > 0) {
+    return post.platforms
+  }
+  if (post.platform) {
+    return [post.platform]
+  }
+  return []
+}
+
+const getPostHashtags = (post: any): string[] => {
+  const hashtags = post.hashtags || post.favorite_posts?.hashtags || post.favorite?.hashtags || post.favorite_post?.hashtags || []
+  if (Array.isArray(hashtags)) return hashtags
+  if (typeof hashtags === 'string') return hashtags.split(/\s+/).filter(Boolean)
+  return []
+}
+
+const getPostCaption = (post: any): string => {
+  return post.post_text || post.caption || post.favorite_posts?.post_text || ''
+}
+
+const truncateCaption = (text: string, maxLength: number = 60): string => {
+  if (!text) return ''
+  return text.length > maxLength ? text.substring(0, maxLength) + '...' : text
+}
+
+const capitalizeFirst = (str: string): string => {
+  return str.charAt(0).toUpperCase() + str.slice(1)
+}
+
 const formatPublishedDate = (dateString: string) => {
   const date = new Date(dateString)
   const now = new Date()
@@ -775,11 +1010,6 @@ const getPlatformIcon = (platform: string) => {
     linkedin: '💼'
   }
   return icons[platform.toLowerCase()] || '📱'
-}
-
-const capitalizeFirst = (str: string) => {
-  if (!str) return ''
-  return str.charAt(0).toUpperCase() + str.slice(1)
 }
 
 const getTimeRemaining = (post: any) => {
@@ -1090,6 +1320,44 @@ const confirmCancelPost = async () => {
 
 const cancelPost = showCancelConfirmation
 
+// Save edited scheduled post (from inline edit in SelectedDayDetail)
+const saveScheduledPost = async (postId: string, data: any) => {
+  try {
+    const updatePayload: any = {}
+
+    // Map the edit form data to the API payload
+    if (data.scheduled_date) updatePayload.scheduled_date = data.scheduled_date
+    if (data.scheduled_time !== undefined) updatePayload.scheduled_time = data.scheduled_time
+    if (data.timezone) updatePayload.timezone = data.timezone
+    if (data.platforms && data.platforms.length > 0) updatePayload.platforms = data.platforms
+    if (data.post_text !== undefined) updatePayload.post_text = data.post_text
+    if (data.hashtags !== undefined) updatePayload.hashtags = data.hashtags
+    if (data.notes !== undefined) updatePayload.notes = data.notes
+
+    const response = await schedulerService.updateScheduledPost(postId, updatePayload)
+
+    if (response.success) {
+      toastMessage.value = 'Post updated successfully'
+      toastType.value = 'success'
+      showToast.value = true
+
+      // Refresh the posts to show updated data
+      await fetchScheduledPosts()
+    } else {
+      throw new Error(response.error || 'Failed to update post')
+    }
+  } catch (error: any) {
+    toastMessage.value = error.message || 'Failed to update post'
+    toastType.value = 'error'
+    showToast.value = true
+  } finally {
+    // Reset the saving state in the child component
+    if (selectedDayDetailRef.value) {
+      selectedDayDetailRef.value.savingPost = false
+    }
+  }
+}
+
 // Open the create post wizard
 const openCreatePostWizard = (day: any) => {
   const year = day.date.getFullYear()
@@ -1105,15 +1373,40 @@ const openCreatePostWizard = (day: any) => {
 // Select creation method in wizard
 const selectCreationMethod = (method: 'saved' | 'new') => {
   selectedCreationMethod.value = method
+  showCreatePostWizard.value = false
 
+  // If user has more than one restaurant, show restaurant selector first
+  if (restaurants.value.length > 1) {
+    pendingCreationMethod.value = method
+    showRestaurantSelector.value = true
+  } else {
+    // Single restaurant or no restaurants - proceed directly
+    const restaurantId = restaurants.value.length === 1 ? restaurants.value[0].id : undefined
+    proceedWithCreationMethod(method, restaurantId)
+  }
+}
+
+// Proceed with the creation method after restaurant selection (or if only one restaurant)
+const proceedWithCreationMethod = (method: 'saved' | 'new', restaurantId?: string) => {
   if (method === 'new') {
-    // Go to cook up
-    showCreatePostWizard.value = false
-    router.push(`/cook-up?scheduleDate=${selectedDateForScheduling.value}`)
+    // Go to content create page with optional restaurant ID
+    let url = `/content/create?scheduleDate=${selectedDateForScheduling.value}`
+    if (restaurantId) {
+      url += `&restaurantId=${restaurantId}`
+    }
+    router.push(url)
   } else if (method === 'saved') {
     // Open pick post modal
-    showCreatePostWizard.value = false
     showPickPostModal.value = true
+  }
+}
+
+// Handle restaurant selection from modal
+const handleRestaurantSelected = (restaurant: any) => {
+  showRestaurantSelector.value = false
+  if (pendingCreationMethod.value) {
+    proceedWithCreationMethod(pendingCreationMethod.value, restaurant.id)
+    pendingCreationMethod.value = null
   }
 }
 
@@ -1123,7 +1416,7 @@ const createNewPost = (day: any) => {
   const month = String(day.date.getMonth() + 1).padStart(2, '0')
   const dayNum = String(day.date.getDate()).padStart(2, '0')
   const dateString = `${year}-${month}-${dayNum}`
-  router.push(`/cook-up?scheduleDate=${dateString}`)
+  router.push(`/content/create?scheduleDate=${dateString}`)
 }
 
 const pickPostForDate = (day: any) => {
@@ -1256,7 +1549,7 @@ onMounted(async () => {
 .scheduler-view {
   min-height: 100vh;
   position: relative;
-  padding: var(--space-lg) var(--space-md);
+  padding: var(--space-lg) var(--space-md) var(--space-5xl);
 }
 
 .container {
@@ -1341,9 +1634,10 @@ onMounted(async () => {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   gap: 1px;
-  background: rgba(212, 175, 55, 0.1);
+  background: var(--border-color);
   border-radius: var(--radius-lg);
   overflow: hidden;
+  border: 1px solid var(--border-color);
 }
 
 .calendar-grid.view-week {
@@ -1464,6 +1758,397 @@ onMounted(async () => {
   padding: var(--space-xl);
 }
 
+/* Expandable Table Styles */
+.day-view-table {
+  background: var(--bg-secondary);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  border: 1px solid var(--border-color);
+  margin: var(--space-lg);
+}
+
+.table-header {
+  display: grid;
+  grid-template-columns: 5fr 2fr 2fr 2fr 40px;
+  gap: var(--space-md);
+  padding: var(--space-md) var(--space-lg);
+  background: rgba(13, 13, 13, 0.8);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.table-header > div {
+  font-size: var(--text-xs);
+  font-weight: var(--font-medium);
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.table-body {
+  background: var(--bg-secondary);
+}
+
+.table-row-wrapper {
+  border-bottom: 1px solid var(--border-color);
+}
+
+.table-row-wrapper:last-child {
+  border-bottom: none;
+}
+
+.table-row {
+  display: grid;
+  grid-template-columns: 5fr 2fr 2fr 2fr 40px;
+  gap: var(--space-md);
+  padding: var(--space-lg);
+  cursor: pointer;
+  transition: background var(--transition-fast);
+}
+
+.table-row:hover {
+  background: rgba(20, 20, 20, 0.8);
+}
+
+.table-row.is-expanded {
+  background: rgba(20, 20, 20, 0.9);
+}
+
+/* Post Column */
+.td-post {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  min-width: 0;
+}
+
+.post-thumb {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-md);
+  object-fit: cover;
+  flex-shrink: 0;
+  background: var(--bg-tertiary);
+}
+
+.post-thumb-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--text-lg);
+  color: var(--text-muted);
+}
+
+.post-info {
+  min-width: 0;
+  flex: 1;
+}
+
+.post-time-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  margin-bottom: 4px;
+}
+
+.post-time {
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  color: var(--gold-primary);
+}
+
+.post-time-sep {
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+}
+
+.post-time-ago {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+}
+
+.post-caption-preview {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Platforms Column */
+.td-platforms {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Status Column */
+.td-status {
+  display: flex;
+  align-items: center;
+}
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+  font-size: var(--text-xs);
+  font-weight: var(--font-medium);
+}
+
+.status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+
+.status-badge.status-published {
+  background: rgba(34, 197, 94, 0.15);
+  color: #22c55e;
+}
+
+.status-badge.status-published .status-dot {
+  background: #22c55e;
+}
+
+.status-badge.status-scheduled {
+  background: rgba(251, 191, 36, 0.15);
+  color: #fbbf24;
+}
+
+.status-badge.status-scheduled .status-dot {
+  background: #fbbf24;
+}
+
+.status-badge.status-failed {
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+}
+
+.status-badge.status-failed .status-dot {
+  background: #ef4444;
+}
+
+/* Restaurant Column */
+.td-restaurant {
+  display: flex;
+  align-items: center;
+}
+
+.restaurant-name {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+}
+
+/* Expand Toggle */
+.td-expand {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.expand-icon {
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+  transition: transform 0.2s ease;
+}
+
+.expand-icon.is-expanded {
+  transform: rotate(180deg);
+}
+
+/* Expanded Details */
+.expanded-details {
+  background: rgba(13, 13, 13, 0.9);
+  border-top: 1px solid var(--border-color);
+  padding: var(--space-xl);
+}
+
+.expanded-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-xl);
+}
+
+.detail-section {
+  min-width: 0;
+}
+
+.detail-label {
+  font-size: var(--text-xs);
+  font-weight: var(--font-medium);
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 0 0 var(--space-sm) 0;
+}
+
+.detail-label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-sm);
+}
+
+.char-count {
+  font-size: 10px;
+  color: var(--text-muted);
+  background: var(--bg-tertiary);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.detail-value {
+  font-size: var(--text-sm);
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.detail-subvalue {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  margin: 4px 0 0 0;
+}
+
+.detail-preview-img {
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: var(--radius-lg);
+  object-fit: cover;
+}
+
+.detail-preview-placeholder {
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: var(--radius-lg);
+  background: var(--bg-tertiary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+
+.detail-platforms {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+}
+
+.platform-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: var(--radius-md);
+  font-size: var(--text-xs);
+  font-weight: var(--font-medium);
+  color: white;
+}
+
+.platform-pill.platform-facebook {
+  background: #1877F2;
+}
+
+.platform-pill.platform-instagram {
+  background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);
+}
+
+.platform-pill.platform-tiktok {
+  background: #000;
+  border: 1px solid #333;
+}
+
+.detail-caption-box {
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-md);
+  padding: var(--space-md);
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  line-height: 1.5;
+  max-height: 120px;
+  overflow-y: auto;
+  border: 1px solid var(--border-color);
+}
+
+.detail-hashtags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.hashtag-chip {
+  padding: 4px 8px;
+  border-radius: 4px;
+  background: var(--bg-tertiary);
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+  transition: color 0.2s ease;
+}
+
+.hashtag-chip:hover {
+  color: var(--gold-primary);
+}
+
+.detail-empty {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  font-style: italic;
+  margin: 0;
+}
+
+.detail-error {
+  margin-top: var(--space-lg);
+}
+
+.error-label {
+  color: #ef4444;
+}
+
+.error-message {
+  font-size: var(--text-sm);
+  color: #f87171;
+  margin: 0;
+}
+
+.detail-links {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.view-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--text-xs);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.view-link.link-facebook {
+  color: #1877F2;
+}
+
+.view-link.link-instagram {
+  color: #E1306C;
+}
+
+.view-link.link-tiktok {
+  color: var(--text-secondary);
+}
+
+.view-link:hover {
+  text-decoration: underline;
+}
+
+.link-arrow {
+  font-size: 10px;
+  opacity: 0.7;
+}
+
 .day-view-pagination {
   display: flex;
   align-items: center;
@@ -1554,140 +2239,134 @@ onMounted(async () => {
 }
 
 .calendar-day-header {
-  background: rgba(0, 0, 0, 0.4);
-  padding: 1rem;
+  background: var(--bg-tertiary);
+  padding: var(--space-lg);
   text-align: center;
-  font-weight: 600;
-  color: var(--gold-primary);
-  font-size: 0.875rem;
+  font-weight: var(--font-semibold);
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
   text-transform: uppercase;
   letter-spacing: 0.05em;
+  border-bottom: 1px solid var(--border-color);
 }
 
 .calendar-day {
-  background: rgba(0, 0, 0, 0.3);
+  background: var(--bg-secondary);
   min-height: 120px;
-  padding: 0.75rem;
+  padding: var(--space-md);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: var(--transition-base);
   position: relative;
   display: flex;
   flex-direction: column;
+  border: 1px solid var(--border-color);
 }
 
 .calendar-day:hover {
-  background: rgba(212, 175, 55, 0.1);
-  transform: translateY(-2px);
-}
-
-.calendar-day:hover .day-actions {
-  opacity: 1;
-  pointer-events: all;
+  background: var(--bg-elevated);
+  border-color: var(--gold-primary);
+  box-shadow: var(--shadow-sm);
 }
 
 .calendar-day.other-month {
-  opacity: 0.5;
+  opacity: 0.4;
+  background: var(--bg-primary);
 }
 
 /* Past dates - clearly disabled */
 .calendar-day.past-date {
-  opacity: 0.3;
+  opacity: 0.35;
   cursor: not-allowed;
-  background: rgba(0, 0, 0, 0.5);
-  border-color: rgba(50, 50, 50, 0.3);
+  background: var(--bg-primary);
+  border-color: var(--border-color);
 }
 
 .calendar-day.past-date:hover {
   transform: none;
-  border-color: rgba(50, 50, 50, 0.3);
-  background: rgba(0, 0, 0, 0.5);
+  border-color: var(--border-color);
+  background: var(--bg-primary);
 }
 
 .calendar-day.past-date .day-number {
-  color: rgba(100, 100, 100, 0.8);
+  color: var(--text-disabled);
   text-decoration: line-through;
-  text-decoration-color: rgba(100, 100, 100, 0.5);
+  text-decoration-color: var(--text-disabled);
 }
 
 /* Future dates - clearly selectable */
 .calendar-day.future-date {
-  background: rgba(212, 175, 55, 0.08);
-  border-color: rgba(212, 175, 55, 0.25);
+  background: var(--bg-secondary);
+  border-color: var(--border-color);
   cursor: pointer;
 }
 
 .calendar-day.future-date:hover {
-  background: rgba(212, 175, 55, 0.18);
-  border-color: rgba(212, 175, 55, 0.5);
-  transform: translateY(-2px);
+  background: var(--bg-elevated);
+  border-color: var(--gold-primary);
 }
 
 .calendar-day.future-date .day-number {
-  color: var(--gold-light);
-  font-weight: var(--font-semibold);
+  color: var(--text-primary);
+  font-weight: var(--font-medium);
 }
 
 .calendar-day.today {
-  background: rgba(212, 175, 55, 0.15);
+  background: var(--gold-subtle);
   border: 2px solid var(--gold-primary);
+  box-shadow: var(--glow-gold-sm);
+}
+
+.calendar-day.today .day-number {
+  color: var(--gold-primary);
+  font-weight: var(--font-bold);
 }
 
 .calendar-day.has-posts {
-  background: rgba(212, 175, 55, 0.08);
+  background: var(--bg-tertiary);
 }
 
 .day-number {
-  font-size: 1.125rem;
-  font-weight: 600;
+  font-size: var(--text-lg);
+  font-weight: var(--font-semibold);
   color: var(--text-primary);
-  margin-bottom: 0.5rem;
+  margin-bottom: var(--space-sm);
 }
 
-.day-actions {
-  display: flex;
-  gap: 0.25rem;
-  margin-bottom: 0.5rem;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.2s ease;
-}
-
-.action-btn {
-  flex: 1;
-  padding: 0.375rem;
-  background: rgba(0, 0, 0, 0.6);
-  border: 1px solid rgba(212, 175, 55, 0.3);
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 1rem;
-  transition: all 0.2s ease;
+/* Hover Create Button */
+.day-hover-action {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-full);
+  background: var(--gold-primary);
   display: flex;
   align-items: center;
   justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: var(--transition-base);
+  box-shadow: var(--shadow-md);
+  z-index: 10;
 }
 
-.action-btn:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 2px 8px rgba(212, 175, 55, 0.3);
+.day-hover-action .create-icon {
+  font-size: 28px;
+  color: var(--text-on-gold);
+  font-weight: var(--font-bold);
 }
 
-.new-post-btn {
-  border-color: var(--gold-primary);
-  background: rgba(212, 175, 55, 0.2);
+.calendar-day:hover .day-hover-action {
+  opacity: 1;
+  pointer-events: all;
 }
 
-.new-post-btn:hover {
-  background: rgba(212, 175, 55, 0.3);
-  border-color: var(--gold-light);
-}
-
-.pick-favorite-btn {
-  border-color: rgba(212, 175, 55, 0.4);
-}
-
-.pick-favorite-btn:hover {
-  background: rgba(212, 175, 55, 0.15);
-  border-color: var(--gold-primary);
+.day-hover-action:hover {
+  background: var(--gold-light);
+  transform: translate(-50%, -50%) scale(1.1);
+  box-shadow: var(--glow-gold-md);
 }
 
 .day-holidays {
@@ -2129,50 +2808,6 @@ onMounted(async () => {
 .external-icon {
   font-size: var(--text-sm);
   opacity: 0.8;
-}
-
-.empty-detail-card {
-  padding: var(--space-2xl) var(--space-xl);
-}
-
-.empty-content {
-  text-align: center;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--space-md);
-}
-
-.empty-date {
-  font-family: var(--font-heading);
-  font-size: var(--text-xl);
-  color: var(--gold-primary);
-  margin: 0;
-}
-
-.empty-title {
-  font-family: var(--font-heading);
-  font-size: var(--text-lg);
-  color: var(--text-primary);
-  margin: 0;
-}
-
-.empty-subtitle {
-  font-size: var(--text-sm);
-  color: var(--text-secondary);
-  margin: 0 0 var(--space-sm) 0;
-}
-
-.empty-content h3 {
-  font-family: var(--font-heading);
-  font-size: 1.5rem;
-  color: var(--text-primary);
-  margin: 0;
-}
-
-.empty-content p {
-  color: var(--text-secondary);
-  margin: 0;
 }
 
 /* Responsive */

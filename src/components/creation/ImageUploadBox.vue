@@ -76,6 +76,8 @@ function handleFileChange(event: Event) {
 <style scoped>
 .image-upload-box {
   width: 100%;
+  display: flex;
+  justify-content: center;
 }
 
 .uploaded-image-preview {

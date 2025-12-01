@@ -6,7 +6,9 @@
       "Bash(npm uninstall:*)",
       "Bash(npx eslint:*)",
       "Bash(npm run build:*)",
-      "Bash(npx tsc:*)"
+      "Bash(npx tsc:*)",
+      "Bash(git checkout:*)",
+      "Bash(npm run type-check:*)"
     ],
     "deny": [],
     "ask": []

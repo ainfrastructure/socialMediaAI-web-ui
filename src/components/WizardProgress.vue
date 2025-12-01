@@ -50,7 +50,7 @@ const isStepDisabled = computed(() => (stepNumber: number) => {
           @click="handleStepClick(step.number)"
         >
           <div class="progress-step-circle">
-            <MaterialIcon v-if="currentStep > step.number" icon="check_circle" size="md" :color="'var(--success-text)'" />
+            <MaterialIcon v-if="currentStep > step.number" icon="check" size="md" :color="'var(--text-on-gold)'" />
             <span v-else>{{ step.number }}</span>
           </div>
           <span class="progress-step-label">{{ step.label }}</span>

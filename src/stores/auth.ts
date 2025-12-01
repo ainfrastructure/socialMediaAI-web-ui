@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { api, type User } from '../services/api'
+import { sseService } from '../services/sseService'
 
 export const useAuthStore = defineStore('auth', () => {
   // State
@@ -183,6 +184,9 @@ export const useAuthStore = defineStore('auth', () => {
       storeSession(response.session)
       await loadProfile()
 
+      // Connect to SSE for real-time notifications
+      sseService.connect(response.session.access_token)
+
       return { success: true }
     } catch (err: any) {
       error.value = err.message || 'Network error'
@@ -195,6 +199,9 @@ export const useAuthStore = defineStore('auth', () => {
   async function logout() {
     loading.value = true
     error.value = null
+
+    // Disconnect SSE before logout
+    sseService.disconnect()
 
     try {
       await api.logout()
@@ -346,20 +353,28 @@ export const useAuthStore = defineStore('auth', () => {
     if (isTokenExpired()) {
       refreshAccessToken().then((success) => {
         if (success) {
-          loadProfile()
+          loadProfile().then(() => {
+            // Connect SSE after successful profile load
+            if (accessToken.value) {
+              sseService.connect(accessToken.value)
+            }
+          })
         } else {
           initialized.value = true
         }
       })
     } else {
       // Token is still valid, just load profile
-
-      loadProfile()
+      loadProfile().then(() => {
+        // Connect SSE after successful profile load
+        if (accessToken.value) {
+          sseService.connect(accessToken.value)
+        }
+      })
       scheduleTokenRefresh()
     }
   } else {
     // No tokens, mark as initialized
-
     initialized.value = true
   }
 

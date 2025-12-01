@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, nextTick } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { usePreferencesStore } from '@/stores/preferences'
 import { useFacebookStore } from '@/stores/facebook'
 import { useInstagramStore } from '@/stores/instagram'
+import { useNotificationStore } from '@/stores/notifications'
 import DashboardLayout from '@/components/DashboardLayout.vue'
 import BaseCard from '@/components/BaseCard.vue'
 import BaseButton from '@/components/BaseButton.vue'
@@ -20,10 +21,12 @@ import { restaurantService, type SavedRestaurant } from '@/services/restaurantSe
 import { api } from '@/services/api'
 
 const router = useRouter()
+const route = useRoute()
 const { t } = useI18n()
 const preferencesStore = usePreferencesStore()
 const facebookStore = useFacebookStore()
 const instagramStore = useInstagramStore()
+const notificationStore = useNotificationStore()
 
 // Restaurant state
 const restaurant = ref<SavedRestaurant | null>(null)
@@ -125,8 +128,10 @@ async function loadRestaurant() {
       return
     }
 
-    // Find selected restaurant from preferences, or use first
-    const selectedId = preferencesStore.selectedRestaurantId
+    // Priority: 1) URL query param, 2) preferences store, 3) first restaurant
+    const urlRestaurantId = route.query.restaurantId as string | undefined
+    const selectedId = urlRestaurantId || preferencesStore.selectedRestaurantId
+
     let selected = selectedId
       ? restaurants.find(r => r.id === selectedId)
       : null
@@ -134,8 +139,10 @@ async function loadRestaurant() {
     if (!selected) {
       // Use first restaurant and save to preferences
       selected = restaurants[0]
-      preferencesStore.setSelectedRestaurant(selected.id)
     }
+
+    // Update preferences with the selected restaurant
+    preferencesStore.setSelectedRestaurant(selected.id)
 
     restaurant.value = selected
   } catch (err: any) {
@@ -303,6 +310,8 @@ async function continueEasyModePublish() {
           if (response.success && postUrl) {
             results.push({ platform: 'facebook', success: true, url: postUrl })
             console.log('Published to Facebook successfully:', postUrl)
+            // Add notification for successful Facebook publish
+            notificationStore.addPublishSuccess('facebook', postUrl)
           } else if ((response as any).code === 'FACEBOOK_RECONNECT_REQUIRED') {
             facebookReconnectRequired.value = true
             results.push({ platform: 'facebook', success: false, error: 'Facebook connection expired' })
@@ -341,6 +350,8 @@ async function continueEasyModePublish() {
             if (response.success && postUrl) {
               results.push({ platform: 'instagram', success: true, url: postUrl })
               console.log('Published to Instagram successfully:', postUrl)
+              // Add notification for successful Instagram publish
+              notificationStore.addPublishSuccess('instagram', postUrl)
             } else {
               results.push({ platform: 'instagram', success: false, error: response.error || 'Failed to publish to Instagram' })
             }
@@ -903,16 +914,112 @@ async function handleAdvancedModeComplete(data: {
     // If platforms and publish options provided, handle publishing directly
     if (platforms.length > 0 && data.onResult) {
       if (data.publishNow) {
-        // Publish directly (feedback already shown if needed)
-        console.log('[DEBUG] Advanced Mode: Publishing now')
-        pendingPublishData.value = {
-          type: 'advanced',
-          platforms,
-          data,
-          onResult: data.onResult
+        // Publish now to all selected platforms
+        publishing.value = true
+
+        const results: Array<{ platform: string; success: boolean; url?: string; error?: string }> = []
+        const postUrls: Record<string, string> = {}
+
+        // Build the message with post text and hashtags
+        const hashtags = data.hashtags || []
+        const message = hashtags.length > 0
+          ? `${data.postText}\n\n${hashtags.map(h => `#${h}`).join(' ')}`
+          : data.postText
+
+        // Publish to each platform
+        for (const platform of platforms) {
+          if (platform === 'facebook') {
+            const selectedPage = facebookStore.connectedPages[0]
+            if (!selectedPage) {
+              results.push({ platform: 'facebook', success: false, error: 'No Facebook page connected' })
+              continue
+            }
+
+            try {
+              const response = await api.postToFacebook(
+                selectedPage.pageId,
+                message,
+                data.imageUrl
+              )
+
+              const postUrl = (response as any).postUrl || response.data?.postUrl
+              if (response.success && postUrl) {
+                results.push({ platform: 'facebook', success: true, url: postUrl })
+                postUrls.facebook = postUrl
+                // Add notification for successful Facebook publish
+                notificationStore.addPublishSuccess('facebook', postUrl)
+              } else if ((response as any).code === 'FACEBOOK_RECONNECT_REQUIRED') {
+                results.push({ platform: 'facebook', success: false, error: 'Facebook connection expired' })
+              } else {
+                results.push({ platform: 'facebook', success: false, error: response.error || 'Failed to publish' })
+              }
+            } catch (err: any) {
+              results.push({ platform: 'facebook', success: false, error: err.message || 'Failed to publish' })
+            }
+          } else if (platform === 'instagram') {
+            const instagramAccount = instagramStore.connectedAccounts[0]
+            if (!instagramAccount) {
+              results.push({ platform: 'instagram', success: false, error: 'No Instagram account connected' })
+              continue
+            }
+
+            try {
+              const response = await api.postToInstagram(
+                instagramAccount.instagramAccountId,
+                message,
+                data.imageUrl
+              )
+
+              const postUrl = (response as any).postUrl || response.data?.postUrl
+              if (response.success && postUrl) {
+                results.push({ platform: 'instagram', success: true, url: postUrl })
+                postUrls.instagram = postUrl
+                // Add notification for successful Instagram publish
+                notificationStore.addPublishSuccess('instagram', postUrl)
+              } else {
+                results.push({ platform: 'instagram', success: false, error: response.error || 'Failed to publish' })
+              }
+            } catch (err: any) {
+              results.push({ platform: 'instagram', success: false, error: err.message || 'Failed to publish' })
+            }
+          } else {
+            results.push({ platform, success: false, error: `${platform} publishing not yet supported` })
+          }
         }
-        await continueAdvancedModePublish()
-        return
+
+        publishing.value = false
+
+        // Set publish results
+        const successfulPlatforms = results.filter(r => r.success)
+        publishResults.value = {
+          success: successfulPlatforms.length > 0,
+          platforms: results
+        }
+
+        // Save to calendar if any succeeded
+        if (successfulPlatforms.length > 0 && lastSavedPost.value?.id) {
+          const now = new Date()
+          try {
+            await api.createPublishedPost({
+              favorite_post_id: lastSavedPost.value.id,
+              published_date: now.toISOString().split('T')[0],
+              published_time: now.toTimeString().slice(0, 5),
+              platforms: successfulPlatforms.map(r => r.platform),
+              timezone: data.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone,
+              platform_post_urls: postUrls
+            })
+          } catch (calendarErr) {
+            console.warn('Failed to save to calendar:', calendarErr)
+          }
+        }
+
+        // Return result
+        if (successfulPlatforms.length > 0) {
+          data.onResult({ success: true, postUrls })
+        } else {
+          const errors = results.filter(r => !r.success).map(r => r.error).join(', ')
+          data.onResult({ success: false, error: errors || 'Failed to publish to any platform' })
+        }
       } else if (data.scheduledTime && lastSavedPost.value?.id) {
         // Schedule the post
         const scheduledDate = new Date(data.scheduledTime)
@@ -1145,6 +1252,8 @@ async function publishToFacebook() {
         success: true,
         platforms: [{ platform: 'facebook', success: true, url: postUrl }]
       }
+      // Add notification for successful Facebook publish
+      notificationStore.addPublishSuccess('facebook', postUrl)
     } else if ((response as any).code === 'FACEBOOK_RECONNECT_REQUIRED') {
       // Facebook connection expired, need to reconnect
       facebookReconnectRequired.value = true
@@ -1278,6 +1387,7 @@ function handleContentUpdated(updatedContent: { postText: string; hashtags: stri
           :publishing="publishing"
           :publish-results="publishResults"
           :error="generationError"
+          :initial-schedule-date="route.query.scheduleDate as string | undefined"
           @back="goBack"
           @generate="handleEasyModeGenerate"
           @publish="handleEasyModePublish"

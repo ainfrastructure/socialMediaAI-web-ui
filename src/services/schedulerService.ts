@@ -73,6 +73,9 @@ class SchedulerService {
       platform_settings?: any
       status?: string
       platforms?: string[]
+      post_text?: string
+      hashtags?: string[]
+      favorite_post_id?: string
     }
   ): Promise<ApiResponse<{ scheduled_post: any }>> {
     const response = await fetch(`${API_URL}/api/scheduler/${id}`, {

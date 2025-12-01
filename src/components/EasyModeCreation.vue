@@ -56,6 +56,7 @@ const props = defineProps<{
   publishing?: boolean
   publishResults?: PublishResults | null
   error?: string | null
+  initialScheduleDate?: string // Format: YYYY-MM-DD, pre-fills schedule date
 }>()
 
 const emit = defineEmits<{
@@ -884,7 +885,7 @@ onUnmounted(() => {
           class="next-button"
           :disabled="!props.generatedImageUrl"
         >
-          {{ t('easyMode.step3.nextButton', 'Publish Post') }}
+          {{ t('common.next', 'Next') }}
         </BaseButton>
       </div>
     </BaseCard>
@@ -959,6 +960,7 @@ onUnmounted(() => {
           :image-url="props.generatedImageUrl"
           :post-text="editedPostText"
           :hashtags="editedHashtags"
+          :initial-schedule-date="props.initialScheduleDate"
           @publish="handlePublish"
           @cancel="prevStep"
         />
@@ -1895,6 +1897,8 @@ onUnmounted(() => {
 /* Image Upload */
 .image-upload-section {
   margin-bottom: var(--space-xl);
+  display: flex;
+  justify-content: center;
 }
 
 .upload-button {

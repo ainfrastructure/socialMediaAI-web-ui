@@ -16,6 +16,7 @@ interface Props {
   hashtags?: string[]
   initialPlatforms?: string[]
   initialPublishType?: 'now' | 'schedule'
+  initialScheduleDate?: string // Format: YYYY-MM-DD
   forceScheduleMode?: boolean
   showCancelButton?: boolean
 }
@@ -44,10 +45,24 @@ const { t } = useI18n()
 const { platforms: socialPlatforms, isConnected } = useSocialAccounts()
 const { hours12, minutes, timezoneOptions, getDefaultTimezone } = useScheduleTime()
 
-// State
-const publishType = ref<'now' | 'schedule'>(props.forceScheduleMode ? 'schedule' : props.initialPublishType)
+// State - if initialScheduleDate is provided, default to schedule mode
+const hasInitialDate = !!props.initialScheduleDate
+const publishType = ref<'now' | 'schedule'>(
+  props.forceScheduleMode || hasInitialDate ? 'schedule' : props.initialPublishType
+)
 const selectedPlatforms = ref<string[]>(props.initialPlatforms.length > 0 ? [...props.initialPlatforms] : [])
-const scheduleDateTime = ref<Date | null>(null)
+
+// Initialize scheduleDateTime from initialScheduleDate if provided
+const initScheduleDateTime = (): Date | null => {
+  if (props.initialScheduleDate) {
+    // Parse YYYY-MM-DD format and set to noon to avoid timezone issues
+    const [year, month, day] = props.initialScheduleDate.split('-').map(Number)
+    const date = new Date(year, month - 1, day, 12, 0, 0)
+    return date
+  }
+  return null
+}
+const scheduleDateTime = ref<Date | null>(initScheduleDateTime())
 const selectedTimezone = ref(getDefaultTimezone())
 const error = ref('')
 

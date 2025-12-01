@@ -10,9 +10,12 @@ interface Props {
   modelValue: boolean
   restaurants: SavedRestaurant[]
   currentId?: string
+  showAddButton?: boolean
 }
 
-const props = defineProps<Props>()
+const props = withDefaults(defineProps<Props>(), {
+  showAddButton: true
+})
 
 const emit = defineEmits<{
   (e: 'update:modelValue', value: boolean): void
@@ -99,7 +102,7 @@ function handleDelete(event: Event, restaurant: SavedRestaurant) {
       </div>
     </div>
 
-    <template #footer>
+    <template v-if="props.showAddButton" #footer>
       <BaseButton variant="secondary" full-width @click="handleAddNew">
         {{ t('restaurantSelector.addNew') }}
       </BaseButton>

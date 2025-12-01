@@ -1,208 +1,384 @@
 <template>
-  <BaseCard v-if="day && (day.posts.length > 0 || day.holidays?.length > 0)" variant="glass-intense" class="day-detail-card">
-    <div class="detail-header">
-      <h3 class="detail-title">
-        📅 {{ formatShortDate(day) }}
-        <span v-if="day.posts.length > 0" class="post-count">
-          ({{ day.posts.length }} {{ day.posts.length === 1 ? $t('scheduler.post') : $t('scheduler.posts') }})
-        </span>
-      </h3>
-      <BaseButton variant="primary" size="medium" @click="$emit('create', day)">
-        ➕ {{ $t('scheduler.createPost', 'Create Post') }}
-      </BaseButton>
+  <div v-if="shouldShowPanel" class="day-detail-wrapper">
+    <!-- Tab Bar -->
+    <div class="tab-bar">
+      <button
+        :class="['tab-btn', { active: activeTab === 'day' }]"
+        @click="switchTab('day')"
+      >
+        {{ day ? formatShortDate(day) : 'Selected Day' }}
+        <span v-if="day && day.posts.length > 0" class="tab-count">{{ day.posts.length }}</span>
+      </button>
+      <button
+        :class="['tab-btn', { active: activeTab === 'upcoming' }]"
+        @click="switchTab('upcoming')"
+      >
+        Upcoming
+        <span v-if="upcomingPosts.length > 0" class="tab-count">{{ upcomingPosts.length }}</span>
+      </button>
     </div>
 
-    <!-- Holidays Section -->
-    <div v-if="day.holidays && day.holidays.length > 0" class="holidays-section">
-      <h4 class="section-subtitle">{{ $t('scheduler.holidays') }}</h4>
+    <!-- Holidays Section (if any) - only show in day view -->
+    <div v-if="activeTab === 'day' && day?.holidays && day.holidays.length > 0" class="holidays-section">
       <div class="holidays-list">
         <div v-for="holiday in day.holidays" :key="holiday.name" class="holiday-card">
           <div class="holiday-icon">{{ getHolidayEmoji(holiday) }}</div>
           <div class="holiday-details">
             <h5 class="holiday-name">{{ holiday.name }}</h5>
             <p v-if="holiday.description" class="holiday-description">{{ holiday.description }}</p>
-            <div class="holiday-meta">
-              <span v-if="holiday.religion" class="holiday-religion">{{ holiday.religion }}</span>
-              <span v-if="holiday.type && holiday.type.length > 0" class="holiday-type">{{ holiday.type.join(', ') }}</span>
-            </div>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Posts List -->
-    <div class="posts-list">
-      <div
-        v-for="post in paginatedPosts"
-        :key="post.id"
-        :class="['scheduled-post-card-new', post.status ? `status-${post.status}` : '']"
-        @click="$emit('view', post)"
-      >
-        <!-- Status Indicator Bar -->
-        <div :class="['status-bar', `status-${post.status || 'scheduled'}`]"></div>
+    <!-- Posts Table -->
+    <div v-if="displayPosts.length > 0" class="posts-table-container">
+      <!-- Table Header -->
+      <div :class="['table-header', { 'upcoming-view': activeTab === 'upcoming' }]">
+        <div class="th-post">{{ $t('scheduler.post') || 'Post' }}</div>
+        <div v-if="activeTab === 'upcoming'" class="th-date">Date</div>
+        <div class="th-platforms">{{ $t('dashboardNew.platforms') || 'Platforms' }}</div>
+        <div class="th-status">{{ $t('scheduler.status') || 'Status' }}</div>
+        <div class="th-restaurant">{{ $t('scheduler.restaurant') || 'Restaurant' }}</div>
+        <div class="th-expand"></div>
+      </div>
 
-        <!-- Card Content -->
-        <div class="card-content">
-          <!-- Left: Media Section -->
-          <div class="media-section">
-            <img
-              v-if="post.content_type === 'image' && post.media_url"
-              :src="getMediaUrl(post.media_url)"
-              :alt="post.post_text || 'Scheduled post'"
-              class="post-image"
-              @error="handleImageError"
-              loading="lazy"
-            />
-            <video
-              v-else-if="post.content_type === 'video' && post.media_url"
-              :src="getMediaUrl(post.media_url)"
-              class="post-image"
-              muted
-              preload="metadata"
-            ></video>
-            <div v-else class="post-image-placeholder">
-              <span class="placeholder-icon">📸</span>
+      <!-- Table Body -->
+      <div class="table-body">
+        <div
+          v-for="post in paginatedPosts"
+          :key="post.id"
+          class="table-row-wrapper"
+        >
+          <!-- Row -->
+          <div
+            :class="['table-row', { 'is-expanded': expandedPostId === post.id, 'upcoming-view': activeTab === 'upcoming' }]"
+            @click="toggleExpanded(post.id, post)"
+          >
+            <!-- Post Column -->
+            <div class="td-post">
+              <img
+                v-if="post.media_url"
+                :src="getMediaUrl(post.media_url)"
+                class="post-thumb"
+                @error="handleImageError"
+              />
+              <div v-else class="post-thumb post-thumb-placeholder">📷</div>
+              <div class="post-info">
+                <div class="post-time-row">
+                  <span class="post-time">{{ formatTime(post.scheduled_time) || '--:--' }}</span>
+                  <span class="post-time-sep">•</span>
+                  <span class="post-time-ago">{{ getPostTimeAgo(post) }}</span>
+                </div>
+                <p class="post-caption-preview">{{ truncateText(post.post_text || '', 60) }}</p>
+              </div>
             </div>
 
-            <!-- Content Type Badge on Image -->
-            <div class="media-badge">
-              {{ post.content_type === 'image' ? '📸' : '🎥' }}
+            <!-- Date Column (only for upcoming view) -->
+            <div v-if="activeTab === 'upcoming'" class="td-date">
+              <span class="date-badge">{{ formatPostDate(post.scheduled_date) }}</span>
+            </div>
+
+            <!-- Platforms Column -->
+            <div class="td-platforms">
+              <PlatformLogo
+                v-for="platform in getPostPlatforms(post)"
+                :key="platform"
+                :platform="platform as 'facebook' | 'instagram' | 'tiktok'"
+                :size="24"
+              />
+            </div>
+
+            <!-- Status Column -->
+            <div class="td-status">
+              <span :class="['status-badge', `status-${post.status || 'scheduled'}`]">
+                <span class="status-dot"></span>
+                {{ getStatusLabel(post.status) }}
+              </span>
+            </div>
+
+            <!-- Restaurant Column -->
+            <div class="td-restaurant">
+              <span class="restaurant-name">{{ getRestaurantName(post) }}</span>
+            </div>
+
+            <!-- Expand Toggle -->
+            <div class="td-expand">
+              <span :class="['expand-icon', { 'is-expanded': expandedPostId === post.id }]">
+                ▾
+              </span>
             </div>
           </div>
 
-          <!-- Right: Content Section -->
-          <div class="content-section">
-            <!-- Header Row -->
-            <div class="content-header">
-              <div class="time-badge">
-                <span class="time-icon">🕐</span>
-                <span class="time-text">{{ formatTime(post.scheduled_time) || 'No time' }}</span>
+          <!-- Expanded Details -->
+          <div v-if="expandedPostId === post.id" class="expanded-details" @click.stop>
+            <!-- EDITABLE FORM for scheduled posts (only when editing) -->
+            <div v-if="post.status !== 'published' && isEditing" class="edit-expanded">
+              <!-- Left: Image Preview -->
+              <div class="edit-image-section">
+                <label class="edit-label">Preview</label>
+                <div class="edit-image-wrapper">
+                  <img
+                    v-if="post.media_url"
+                    :src="getMediaUrl(post.media_url)"
+                    class="edit-preview-img"
+                    @error="handleImageError"
+                  />
+                  <div v-else class="edit-preview-placeholder">📷</div>
+                </div>
               </div>
 
-              <div class="status-badges">
-                <!-- Platform Badges (multiple) -->
-                <template v-if="post.platforms && post.platforms.length > 0">
-                  <span
-                    v-for="platform in post.platforms"
-                    :key="platform"
-                    :class="['platform-badge-new', `platform-${platform}`]"
+              <!-- Right: All Fields -->
+              <div class="edit-fields-section">
+                <!-- Row 1: Date, Time, Timezone, Platforms -->
+                <div class="edit-row-4">
+                  <div class="edit-field">
+                    <label class="edit-label">Date</label>
+                    <input
+                      type="date"
+                      v-model="editForm.scheduled_date"
+                      :min="todayDate"
+                      class="edit-input"
+                    />
+                  </div>
+                  <div class="edit-field">
+                    <label class="edit-label">Time</label>
+                    <input
+                      type="time"
+                      v-model="editForm.scheduled_time"
+                      class="edit-input"
+                    />
+                  </div>
+                  <div class="edit-field">
+                    <label class="edit-label">Timezone</label>
+                    <select v-model="editForm.timezone" class="edit-input edit-select">
+                      <option v-for="tz in timezoneOptions" :key="tz.value" :value="tz.value">
+                        {{ tz.label }}
+                      </option>
+                    </select>
+                  </div>
+                  <div class="edit-field">
+                    <label class="edit-label">Platforms</label>
+                    <div class="edit-platforms">
+                      <button
+                        v-for="platform in availablePlatforms"
+                        :key="platform"
+                        :class="['platform-toggle', `platform-${platform}`, { active: editForm.platforms.includes(platform) }]"
+                        @click="togglePlatform(platform)"
+                        type="button"
+                      >
+                        <PlatformLogo :platform="platform as 'facebook' | 'instagram' | 'tiktok'" :size="16" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Row 2: Caption -->
+                <div class="edit-field">
+                  <div class="edit-label-row">
+                    <label class="edit-label">Caption</label>
+                    <span class="char-count">{{ editForm.post_text.length }} chars</span>
+                  </div>
+                  <textarea
+                    v-model="editForm.post_text"
+                    class="edit-textarea"
+                    rows="3"
+                    placeholder="Write your caption..."
+                  ></textarea>
+                </div>
+
+                <!-- Row 3: Hashtags & Notes -->
+                <div class="edit-row-2">
+                  <div class="edit-field">
+                    <label class="edit-label">Hashtags</label>
+                    <div class="edit-hashtags">
+                      <span
+                        v-for="tag in editForm.hashtags"
+                        :key="tag"
+                        class="hashtag-chip editable"
+                        @click="removeHashtag(tag)"
+                      >
+                        #{{ tag }} ×
+                      </span>
+                      <input
+                        v-model="newHashtag"
+                        class="hashtag-input"
+                        placeholder="Add tag..."
+                        @keydown.enter.prevent="addHashtag"
+                        @blur="addHashtag"
+                      />
+                    </div>
+                  </div>
+                  <div class="edit-field">
+                    <label class="edit-label">Notes</label>
+                    <textarea
+                      v-model="editForm.notes"
+                      class="edit-textarea small"
+                      rows="2"
+                      placeholder="Internal notes..."
+                    ></textarea>
+                  </div>
+                </div>
+
+                <!-- Action Bar -->
+                <div class="edit-actions">
+                  <button
+                    class="action-btn back-btn"
+                    @click="cancelEdit"
+                    type="button"
                   >
-                    {{ getPlatformIcon(platform) }} {{ capitalizeFirst(platform) }}
+                    ← Back
+                  </button>
+                  <button
+                    class="action-btn delete-btn"
+                    @click="emit('delete', post.id)"
+                    type="button"
+                  >
+                    🗑️ Delete
+                  </button>
+                  <div class="action-spacer"></div>
+                  <span v-if="isDateTimeInPast" class="past-date-warning">
+                    ⚠️ Cannot schedule in the past
                   </span>
-                </template>
-                <!-- Fallback for old data structure -->
-                <span v-else-if="post.platform" :class="['platform-badge-new', `platform-${post.platform}`]">
-                  {{ getPlatformIcon(post.platform) }} {{ capitalizeFirst(post.platform) }}
-                </span>
-
-                <!-- Status Badge -->
-                <span :class="['status-badge-new', `status-${post.status || 'scheduled'}`]">
-                  <template v-if="post.status === 'published'">✅ Posted</template>
-                  <template v-else-if="post.status === 'failed'">❌ Failed</template>
-                  <template v-else>📅 Scheduled</template>
-                </span>
+                  <button
+                    v-if="hasChanges"
+                    class="action-btn save-btn"
+                    @click="saveChanges(post.id)"
+                    :disabled="savingPost || isDateTimeInPast"
+                    type="button"
+                  >
+                    {{ savingPost ? 'Saving...' : '💾 Save' }}
+                  </button>
+                </div>
               </div>
             </div>
 
-            <!-- Post Text / Description -->
-            <div class="post-content">
-              <p v-if="post.post_text" class="post-description">
-                {{ truncateText(post.post_text, 180) }}
-              </p>
-              <p v-else class="post-description empty">No description provided</p>
-            </div>
-
-            <!-- Restaurant Tag -->
-            <div v-if="post.restaurant_name" class="restaurant-badge">
-              🏪 {{ post.restaurant_name }}
-            </div>
-
-            <!-- Footer Row -->
-            <div class="content-footer">
-              <!-- Time Remaining / Published Info -->
-              <div class="footer-info">
-                <template v-if="post.status === 'published'">
-                  <span class="published-time">{{ formatPublishedDate(post.published_at) }}</span>
-                </template>
-                <template v-else>
-                  <span class="countdown">{{ getTimeRemaining(post) }}</span>
-                </template>
+            <!-- READ-ONLY view for published posts and scheduled posts (when not editing) -->
+            <div v-else class="expanded-grid">
+              <!-- Preview -->
+              <div class="detail-section">
+                <h4 class="detail-label">Preview</h4>
+                <img
+                  v-if="post.media_url"
+                  :src="getMediaUrl(post.media_url)"
+                  class="detail-preview-img"
+                />
+                <div v-else class="detail-preview-placeholder">No media</div>
               </div>
 
-              <!-- Action Buttons -->
-              <div v-if="post.status !== 'published'" class="action-buttons" @click.stop>
-                <button class="action-btn edit-btn" @click="$emit('edit', post)" title="Edit post">
-                  ✏️
-                </button>
-                <button class="action-btn delete-btn" @click="$emit('delete', post.id)" title="Cancel post">
-                  🗑️
-                </button>
+              <!-- Date/Time & Platforms -->
+              <div class="detail-section">
+                <h4 class="detail-label">{{ post.status === 'published' ? 'Published At' : 'Scheduled For' }}</h4>
+                <p class="detail-value">{{ activeTab === 'upcoming' ? formatPostDateFull(post.scheduled_date) : formatFullDate(day) }}</p>
+                <p class="detail-subvalue">{{ formatTime(post.scheduled_time) }} • {{ post.timezone || 'UTC' }}</p>
+
+                <h4 class="detail-label" style="margin-top: var(--space-lg)">Platforms</h4>
+                <div class="detail-platforms">
+                  <span
+                    v-for="platform in getPostPlatforms(post)"
+                    :key="platform"
+                    :class="['platform-pill', `platform-${platform}`]"
+                  >
+                    <PlatformLogo :platform="platform as 'facebook' | 'instagram' | 'tiktok'" :size="14" />
+                    {{ capitalizeFirst(platform) }}
+                  </span>
+                </div>
               </div>
 
-              <!-- View Post Link for Published Posts -->
-              <div v-else-if="post.platform_post_urls && Object.keys(post.platform_post_urls).length > 0" class="action-buttons" @click.stop>
-                <a
-                  v-for="(url, platform) in (post.platform_post_urls as Record<string, string>)"
-                  :key="platform"
-                  :href="url"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  class="view-post-btn"
-                >
-                  🔗 View on {{ capitalizeFirst(platform) }}
-                </a>
+              <!-- Caption -->
+              <div class="detail-section">
+                <div class="detail-label-row">
+                  <h4 class="detail-label">Caption</h4>
+                  <span class="char-count">{{ (post.post_text || '').length }} chars</span>
+                </div>
+                <div class="detail-caption-box">
+                  {{ post.post_text || 'No caption' }}
+                </div>
               </div>
-              <!-- Fallback for old single-platform posts -->
-              <div v-else-if="post.platform_post_url" class="action-buttons" @click.stop>
-                <a
-                  :href="post.platform_post_url"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  class="view-post-btn"
-                >
-                  🔗 View on {{ capitalizeFirst(post.platform || 'Platform') }}
-                </a>
-              </div>
-            </div>
 
-            <!-- Error Message (if failed) -->
-            <div v-if="post.status === 'failed' && post.error_message" class="error-banner">
-              <span class="error-icon">⚠️</span>
-              <span class="error-text">{{ truncateText(post.error_message, 100) }}</span>
+              <!-- Hashtags & Links -->
+              <div class="detail-section">
+                <h4 class="detail-label">Hashtags</h4>
+                <div v-if="getPostHashtags(post).length > 0" class="detail-hashtags">
+                  <span
+                    v-for="tag in getPostHashtags(post)"
+                    :key="tag"
+                    class="hashtag-chip"
+                  >
+                    #{{ tag }}
+                  </span>
+                </div>
+                <p v-else class="detail-empty">No hashtags</p>
+
+                <!-- View Post Links (only for published posts) -->
+                <div v-if="post.status === 'published' && post.platform_post_urls && Object.keys(post.platform_post_urls).length > 0" class="detail-links">
+                  <h4 class="detail-label" style="margin-top: var(--space-lg)">View Post</h4>
+                  <a
+                    v-for="(url, platform) in (post.platform_post_urls as Record<string, string>)"
+                    :key="platform"
+                    :href="url"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    :class="['view-link', `link-${platform}`]"
+                  >
+                    <PlatformLogo :platform="(platform as string) as 'facebook' | 'instagram' | 'tiktok'" :size="14" />
+                    View on {{ capitalizeFirst(platform as string) }} ↗
+                  </a>
+                </div>
+
+                <!-- Action buttons for scheduled posts -->
+                <div v-if="post.status !== 'published'" class="detail-actions-readonly">
+                  <button
+                    class="action-btn edit-btn"
+                    @click="startEditing(post)"
+                    type="button"
+                  >
+                    ✏️ Edit
+                  </button>
+                  <button
+                    class="action-btn delete-btn"
+                    @click="emit('delete', post.id)"
+                    type="button"
+                  >
+                    🗑️ Delete
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
 
-    <!-- Pagination Controls -->
-    <div v-if="totalPages > 1" class="detail-pagination">
-      <button
-        class="pagination-btn"
-        :disabled="currentPage === 1"
-        @click="currentPage--"
-      >
-        ← Previous
-      </button>
-      <span class="pagination-info">
-        Page {{ currentPage }} of {{ totalPages }}
-      </span>
-      <button
-        class="pagination-btn"
-        :disabled="currentPage === totalPages"
-        @click="currentPage++"
-      >
-        Next →
-      </button>
+      <!-- Pagination Controls (inside table) -->
+      <div v-if="totalPages > 1" class="detail-pagination">
+        <button
+          class="pagination-btn"
+          :disabled="currentPage === 1"
+          @click="currentPage--"
+        >
+          ← Previous
+        </button>
+        <span class="pagination-info">
+          Page {{ currentPage }} of {{ totalPages }}
+        </span>
+        <button
+          class="pagination-btn"
+          :disabled="currentPage === totalPages"
+          @click="currentPage++"
+        >
+          Next →
+        </button>
+      </div>
     </div>
-  </BaseCard>
+  </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
-import { toZonedTime, fromZonedTime } from 'date-fns-tz'
-import BaseCard from '../BaseCard.vue'
-import BaseButton from '../BaseButton.vue'
+import { useI18n } from 'vue-i18n'
+import PlatformLogo from '../PlatformLogo.vue'
+
+const { t } = useI18n()
 
 interface CalendarDay {
   day: number
@@ -215,40 +391,306 @@ interface CalendarDay {
 
 const props = defineProps<{
   day: CalendarDay | null
+  upcomingPosts?: any[]
+  activeTab?: 'day' | 'upcoming'
   postsPerPage?: number
 }>()
 
-defineEmits<{
+const emit = defineEmits<{
   (e: 'view', post: any): void
   (e: 'edit', post: any): void
   (e: 'delete', postId: string): void
   (e: 'create', day: CalendarDay): void
+  (e: 'tab-change', tab: 'day' | 'upcoming'): void
+  (e: 'save', postId: string, data: any): void
 }>()
 
-const postsPerPage = props.postsPerPage || 3
+const postsPerPage = props.postsPerPage || 5
 const currentPage = ref(1)
+const expandedPostId = ref<string | number | null>(null)
+const activeTab = ref<'day' | 'upcoming'>(props.activeTab || 'day')
 
-// Reset pagination when day changes
-watch(() => props.day, () => {
-  currentPage.value = 1
+// Edit form state
+interface EditFormData {
+  scheduled_date: string
+  scheduled_time: string
+  timezone: string
+  platforms: string[]
+  post_text: string
+  hashtags: string[]
+  notes: string
+}
+
+const editForm = ref<EditFormData>({
+  scheduled_date: '',
+  scheduled_time: '',
+  timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+  platforms: [],
+  post_text: '',
+  hashtags: [],
+  notes: ''
 })
 
+const originalForm = ref<EditFormData | null>(null)
+const newHashtag = ref('')
+const savingPost = ref(false)
+const isEditing = ref(false) // Track if currently editing a scheduled post
+
+// Timezone options
+const timezoneOptions = [
+  { value: 'Europe/Oslo', label: 'Oslo (CET)' },
+  { value: 'Europe/London', label: 'London (GMT)' },
+  { value: 'Europe/Paris', label: 'Paris (CET)' },
+  { value: 'Europe/Berlin', label: 'Berlin (CET)' },
+  { value: 'Europe/Stockholm', label: 'Stockholm (CET)' },
+  { value: 'America/New_York', label: 'New York (EST)' },
+  { value: 'America/Los_Angeles', label: 'Los Angeles (PST)' },
+  { value: 'America/Chicago', label: 'Chicago (CST)' },
+  { value: 'Asia/Tokyo', label: 'Tokyo (JST)' },
+  { value: 'Asia/Singapore', label: 'Singapore (SGT)' },
+  { value: 'Australia/Sydney', label: 'Sydney (AEDT)' },
+  { value: 'UTC', label: 'UTC' }
+]
+
+// Check if form has changes
+const hasChanges = computed(() => {
+  if (!originalForm.value) return false
+  return (
+    editForm.value.scheduled_date !== originalForm.value.scheduled_date ||
+    editForm.value.scheduled_time !== originalForm.value.scheduled_time ||
+    editForm.value.timezone !== originalForm.value.timezone ||
+    editForm.value.post_text !== originalForm.value.post_text ||
+    editForm.value.notes !== originalForm.value.notes ||
+    JSON.stringify(editForm.value.platforms) !== JSON.stringify(originalForm.value.platforms) ||
+    JSON.stringify(editForm.value.hashtags) !== JSON.stringify(originalForm.value.hashtags)
+  )
+})
+
+// Initialize edit form when expanding a scheduled post
+const initEditForm = (post: any) => {
+  const platforms = getPostPlatforms(post)
+  const hashtags = getPostHashtags(post)
+
+  // Create edit form with fresh array copies
+  editForm.value = {
+    scheduled_date: post.scheduled_date || '',
+    scheduled_time: post.scheduled_time || '',
+    timezone: post.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone,
+    platforms: [...platforms],
+    post_text: post.post_text || '',
+    hashtags: [...hashtags],
+    notes: post.notes || ''
+  }
+
+  // Create original form with separate array copies (important for change detection!)
+  originalForm.value = {
+    scheduled_date: post.scheduled_date || '',
+    scheduled_time: post.scheduled_time || '',
+    timezone: post.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone,
+    platforms: [...platforms],
+    post_text: post.post_text || '',
+    hashtags: [...hashtags],
+    notes: post.notes || ''
+  }
+}
+
+// Cancel editing - reset to original and exit edit mode
+const cancelEdit = () => {
+  if (originalForm.value) {
+    // Deep copy arrays to avoid reference issues
+    editForm.value = {
+      ...originalForm.value,
+      platforms: [...originalForm.value.platforms],
+      hashtags: [...originalForm.value.hashtags]
+    }
+  }
+  newHashtag.value = ''
+  isEditing.value = false
+}
+
+// Start editing a scheduled post
+const startEditing = (post: any) => {
+  initEditForm(post)
+  isEditing.value = true
+}
+
+// Today's date for min validation (prevent scheduling in the past)
+const todayDate = computed(() => {
+  const today = new Date()
+  const year = today.getFullYear()
+  const month = String(today.getMonth() + 1).padStart(2, '0')
+  const day = String(today.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+})
+
+// Check if selected date/time is in the past
+const isDateTimeInPast = computed(() => {
+  if (!editForm.value.scheduled_date) return false
+
+  const now = new Date()
+  const selectedDate = new Date(editForm.value.scheduled_date + 'T00:00:00')
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+
+  // If date is before today, it's in the past
+  if (selectedDate < today) return true
+
+  // If date is today, check time
+  if (selectedDate.getTime() === today.getTime() && editForm.value.scheduled_time) {
+    const [hours, minutes] = editForm.value.scheduled_time.split(':').map(Number)
+    const selectedDateTime = new Date(selectedDate)
+    selectedDateTime.setHours(hours, minutes, 0, 0)
+    return selectedDateTime <= now
+  }
+
+  return false
+})
+
+// Save changes
+const saveChanges = async (postId: string) => {
+  // Validate date is not in the past
+  if (isDateTimeInPast.value) {
+    return // Don't save if date/time is in the past
+  }
+  savingPost.value = true
+  emit('save', postId, { ...editForm.value })
+}
+
+// Platform toggle
+const availablePlatforms = ['facebook', 'instagram', 'tiktok']
+
+const togglePlatform = (platform: string) => {
+  const idx = editForm.value.platforms.indexOf(platform)
+  if (idx > -1) {
+    editForm.value.platforms.splice(idx, 1)
+  } else {
+    editForm.value.platforms.push(platform)
+  }
+}
+
+// Hashtag management
+const addHashtag = () => {
+  const tag = newHashtag.value.trim().replace(/^#/, '')
+  if (tag && !editForm.value.hashtags.includes(tag)) {
+    editForm.value.hashtags.push(tag)
+  }
+  newHashtag.value = ''
+}
+
+const removeHashtag = (tag: string) => {
+  const idx = editForm.value.hashtags.indexOf(tag)
+  if (idx > -1) {
+    editForm.value.hashtags.splice(idx, 1)
+  }
+}
+
+// Sync activeTab with prop
+watch(() => props.activeTab, (newTab) => {
+  if (newTab) activeTab.value = newTab
+})
+
+// Reset pagination and expanded state when tab or day changes
+watch([() => props.day, activeTab], () => {
+  currentPage.value = 1
+  expandedPostId.value = null
+  originalForm.value = null
+  isEditing.value = false
+})
+
+const switchTab = (tab: 'day' | 'upcoming') => {
+  activeTab.value = tab
+  emit('tab-change', tab)
+}
+
+// Sort posts by time (newest first)
+const sortPostsByTime = (posts: any[]) => {
+  return [...posts].sort((a, b) => {
+    const timeA = a.scheduled_time || '00:00'
+    const timeB = b.scheduled_time || '00:00'
+    // Sort descending (newest/latest time first)
+    return timeB.localeCompare(timeA)
+  })
+}
+
+// Computed: which posts to display based on active tab
+const displayPosts = computed(() => {
+  if (activeTab.value === 'upcoming') {
+    return sortPostsByTime(props.upcomingPosts || [])
+  }
+  return sortPostsByTime(props.day?.posts || [])
+})
+
+// Computed: should show panel at all
+const shouldShowPanel = computed(() => {
+  const hasDayContent = props.day && (props.day.posts.length > 0 || props.day.holidays?.length)
+  const hasUpcoming = (props.upcomingPosts || []).length > 0
+  return hasDayContent || hasUpcoming
+})
+
+// Use upcomingPosts for convenience
+const upcomingPosts = computed(() => props.upcomingPosts || [])
+
+const toggleExpanded = (postId: string | number, post?: any) => {
+  if (expandedPostId.value === postId) {
+    expandedPostId.value = null
+    originalForm.value = null
+    isEditing.value = false
+  } else {
+    expandedPostId.value = postId
+    isEditing.value = false // Start in view mode, not edit mode
+    originalForm.value = null
+  }
+}
+
 const totalPages = computed(() => {
-  if (!props.day) return 1
-  return Math.ceil(props.day.posts.length / postsPerPage)
+  return Math.ceil(displayPosts.value.length / postsPerPage) || 1
 })
 
 const paginatedPosts = computed(() => {
-  if (!props.day) return []
   const start = (currentPage.value - 1) * postsPerPage
   const end = start + postsPerPage
-  return props.day.posts.slice(start, end)
+  return displayPosts.value.slice(start, end)
 })
 
 const formatShortDate = (day: CalendarDay) => {
   return day.date.toLocaleDateString('en-US', {
     month: 'short',
     day: 'numeric',
+  })
+}
+
+const formatFullDate = (day: CalendarDay | null) => {
+  if (!day) return ''
+  return day.date.toLocaleDateString('en-US', {
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  })
+}
+
+// Format date string for upcoming posts
+const formatPostDate = (dateString: string) => {
+  if (!dateString) return ''
+  const date = new Date(dateString + 'T00:00:00')
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  const tomorrow = new Date(today)
+  tomorrow.setDate(tomorrow.getDate() + 1)
+
+  if (date.getTime() === today.getTime()) return 'Today'
+  if (date.getTime() === tomorrow.getTime()) return 'Tomorrow'
+
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+}
+
+const formatPostDateFull = (dateString: string) => {
+  if (!dateString) return ''
+  const date = new Date(dateString + 'T00:00:00')
+  return date.toLocaleDateString('en-US', {
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
   })
 }
 
@@ -261,43 +703,61 @@ const formatTime = (time: string | null) => {
   return `${displayHour}:${minutes} ${ampm}`
 }
 
-const formatPublishedDate = (dateString: string) => {
-  const date = new Date(dateString)
+const getPostTimeAgo = (post: any) => {
+  if (post.status === 'scheduled') return t('dashboardNew.scheduled') || 'Scheduled'
+  if (post.status === 'failed') return t('dashboardNew.failed') || 'Failed'
+  if (!post.published_at) return ''
+
+  const date = new Date(post.published_at)
   const now = new Date()
   const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000)
 
-  if (diffInSeconds < 60) return 'Just now'
+  if (diffInSeconds < 60) return t('common.justNow') || 'Just now'
   if (diffInSeconds < 3600) {
     const minutes = Math.floor(diffInSeconds / 60)
-    return `${minutes} minute${minutes > 1 ? 's' : ''} ago`
+    return `${minutes} ${minutes > 1 ? 'minutes ago' : 'minute ago'}`
   }
   if (diffInSeconds < 86400) {
     const hours = Math.floor(diffInSeconds / 3600)
-    return `${hours} hour${hours > 1 ? 's' : ''} ago`
+    return `${hours} ${hours > 1 ? 'hours ago' : 'hour ago'}`
   }
-  if (diffInSeconds < 604800) {
-    const days = Math.floor(diffInSeconds / 86400)
-    return `${days} day${days > 1 ? 's' : ''} ago`
-  }
-
-  return date.toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined,
-    hour: '2-digit',
-    minute: '2-digit'
-  })
+  const days = Math.floor(diffInSeconds / 86400)
+  return `${days} ${days > 1 ? 'days ago' : 'day ago'}`
 }
 
-const getPlatformIcon = (platform: string) => {
-  const icons: Record<string, string> = {
-    facebook: '👥',
-    instagram: '📷',
-    tiktok: '🎵',
-    twitter: '🐦',
-    linkedin: '💼'
+const getPostPlatforms = (post: any): string[] => {
+  if (post.platforms && Array.isArray(post.platforms) && post.platforms.length > 0) {
+    return post.platforms
   }
-  return icons[platform.toLowerCase()] || '📱'
+  if (post.platform) {
+    return [post.platform]
+  }
+  return []
+}
+
+const getPostHashtags = (post: any): string[] => {
+  const hashtags = post.hashtags || post.favorite_posts?.hashtags || post.favorite?.hashtags || post.favorite_post?.hashtags || []
+  if (Array.isArray(hashtags)) return hashtags
+  if (typeof hashtags === 'string') return hashtags.split(/\s+/).filter(Boolean)
+  return []
+}
+
+const getStatusLabel = (status: string | undefined) => {
+  switch (status?.toLowerCase()) {
+    case 'published': return t('dashboardNew.published') || 'Published'
+    case 'failed': return t('dashboardNew.failed') || 'Failed'
+    default: return t('dashboardNew.scheduled') || 'Scheduled'
+  }
+}
+
+const getRestaurantName = (post: any): string => {
+  // Try multiple paths where restaurant name might be stored
+  if (post.restaurant_name) return post.restaurant_name
+  if (post.favorite_posts?.saved_restaurants?.name) return post.favorite_posts.saved_restaurants.name
+  if (post.favorite_post?.saved_restaurants?.name) return post.favorite_post.saved_restaurants.name
+  if (post.favorite?.saved_restaurants?.name) return post.favorite.saved_restaurants.name
+  if (post.saved_restaurants?.name) return post.saved_restaurants.name
+  return '-'
 }
 
 const capitalizeFirst = (str: string) => {
@@ -306,50 +766,9 @@ const capitalizeFirst = (str: string) => {
 }
 
 const truncateText = (text: string, maxLength: number) => {
+  if (!text) return ''
   if (text.length <= maxLength) return text
   return text.substring(0, maxLength) + '...'
-}
-
-const getTimeRemaining = (post: any) => {
-  if (!post.scheduled_date || !post.scheduled_time) {
-    return '⏱️ No time specified'
-  }
-
-  try {
-    const dateTimeString = `${post.scheduled_date}T${post.scheduled_time}`
-    const userTimezone = post.timezone || 'UTC'
-    const scheduledDateInZone = toZonedTime(dateTimeString, userTimezone)
-    const scheduledDateTimeUTC = fromZonedTime(scheduledDateInZone, userTimezone)
-    const now = new Date()
-    const diff = scheduledDateTimeUTC.getTime() - now.getTime()
-
-    if (diff < 0) {
-      const absDiff = Math.abs(diff)
-      const hours = Math.floor(absDiff / (1000 * 60 * 60))
-      const minutes = Math.floor((absDiff % (1000 * 60 * 60)) / (1000 * 60))
-
-      if (hours > 24) {
-        const days = Math.floor(hours / 24)
-        return `⏰ Posted ${days} day${days > 1 ? 's' : ''} ago`
-      }
-      return `⏰ Posted ${hours}h ${minutes}m ago`
-    }
-
-    const totalMinutes = Math.floor(diff / (1000 * 60))
-    const hours = Math.floor(totalMinutes / 60)
-    const minutes = totalMinutes % 60
-
-    if (hours > 48) {
-      const days = Math.floor(hours / 24)
-      return `⏰ Posts in ${days} day${days > 1 ? 's' : ''}`
-    } else if (hours > 0) {
-      return `⏰ Posts in ${hours}h ${minutes}m`
-    } else {
-      return `⏰ Posts in ${minutes}m`
-    }
-  } catch {
-    return '⏱️ Invalid time'
-  }
 }
 
 const getHolidayEmoji = (holiday: any) => {
@@ -389,15 +808,25 @@ const getMediaUrl = (url: string): string => {
   return `${baseUrl}${url.startsWith('/') ? '' : '/'}${url}`
 }
 
-const handleImageError = () => {
-  // Keep the placeholder visible
+const handleImageError = (event: Event) => {
+  const img = event.target as HTMLImageElement
+  img.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><rect fill="%23333" width="100" height="100"/></svg>'
 }
+
+// Expose savingPost so parent can reset it after save completes
+defineExpose({
+  savingPost
+})
 </script>
 
 <style scoped>
-.day-detail-card {
+.day-detail-wrapper {
   margin-top: var(--space-lg);
   animation: fadeInUp 0.3s ease;
+  background: var(--bg-secondary);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  border: 1px solid var(--border-color);
 }
 
 @keyframes fadeInUp {
@@ -411,61 +840,82 @@ const handleImageError = () => {
   }
 }
 
-.detail-header {
+/* Tab Bar */
+.tab-bar {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: var(--space-lg);
-  border-bottom: 1px solid rgba(212, 175, 55, 0.2);
-  margin-bottom: var(--space-lg);
-}
-
-.detail-title {
-  font-family: var(--font-heading);
-  font-size: var(--text-xl);
-  color: var(--text-primary);
-  margin: 0;
-  display: flex;
-  align-items: center;
   gap: var(--space-sm);
+  padding: var(--space-md) var(--space-lg);
+  background: rgba(13, 13, 13, 0.8);
+  border-bottom: 1px solid var(--border-color);
 }
 
-.post-count {
+.tab-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: var(--space-sm) var(--space-lg);
+  border-radius: var(--radius-md);
   font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  border: 1px solid transparent;
+  background: transparent;
   color: var(--text-secondary);
-  font-weight: var(--font-normal);
+}
+
+.tab-btn:hover {
+  background: rgba(212, 175, 55, 0.1);
+  color: var(--gold-primary);
+}
+
+.tab-btn.active {
+  background: var(--gold-primary);
+  color: var(--text-on-gold);
+  border-color: var(--gold-primary);
+}
+
+.tab-btn:not(.active) {
+  border-color: rgba(212, 175, 55, 0.3);
+}
+
+.tab-count {
+  background: rgba(0, 0, 0, 0.2);
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  font-size: var(--text-xs);
+  font-weight: var(--font-semibold);
+}
+
+.tab-btn:not(.active) .tab-count {
+  background: rgba(212, 175, 55, 0.2);
+  color: var(--gold-primary);
 }
 
 /* Holidays Section */
 .holidays-section {
-  padding: 0 var(--space-lg);
-  margin-bottom: var(--space-lg);
-}
-
-.section-subtitle {
-  font-family: var(--font-heading);
-  font-size: var(--text-lg);
-  color: var(--text-primary);
-  margin: 0 0 var(--space-md) 0;
+  padding: var(--space-md) var(--space-lg);
+  border-bottom: 1px solid var(--border-color);
 }
 
 .holidays-list {
   display: flex;
-  flex-direction: column;
-  gap: var(--space-md);
+  flex-wrap: wrap;
+  gap: var(--space-sm);
 }
 
 .holiday-card {
-  display: flex;
-  gap: var(--space-md);
-  padding: var(--space-md);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
   background: rgba(100, 150, 255, 0.1);
   border: 1px solid rgba(100, 150, 255, 0.3);
   border-radius: var(--radius-md);
 }
 
 .holiday-icon {
-  font-size: var(--text-2xl);
+  font-size: var(--text-lg);
 }
 
 .holiday-details {
@@ -473,274 +923,496 @@ const handleImageError = () => {
 }
 
 .holiday-name {
-  font-size: var(--text-base);
-  font-weight: var(--font-semibold);
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
   color: var(--text-primary);
-  margin: 0 0 var(--space-xs) 0;
+  margin: 0;
 }
 
 .holiday-description {
-  font-size: var(--text-sm);
-  color: var(--text-secondary);
-  margin: 0 0 var(--space-xs) 0;
-}
-
-.holiday-meta {
-  display: flex;
-  gap: var(--space-sm);
   font-size: var(--text-xs);
+  color: var(--text-secondary);
+  margin: 2px 0 0 0;
+}
+
+/* Posts Table */
+.posts-table-container {
+  /* Container is now inside wrapper, no need for extra border/radius */
+}
+
+.table-header {
+  display: grid;
+  grid-template-columns: 4fr 2fr 2fr 2fr 40px;
+  gap: var(--space-md);
+  padding: var(--space-md) var(--space-lg);
+  background: rgba(13, 13, 13, 0.6);
+  border-bottom: 1px solid var(--border-color);
+}
+
+/* Upcoming view - add date column */
+.table-header.upcoming-view {
+  grid-template-columns: 3fr 1.5fr 2fr 2fr 2fr 40px;
+}
+
+.table-header > div {
+  font-size: var(--text-xs);
+  font-weight: var(--font-medium);
   color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
-/* Posts List */
-.posts-list {
-  padding: 0 var(--space-lg) var(--space-lg);
-  display: flex;
-  flex-direction: column;
+.table-body {
+  background: var(--bg-secondary);
+}
+
+.table-row-wrapper {
+  border-bottom: 1px solid var(--border-color);
+}
+
+.table-row-wrapper:last-child {
+  border-bottom: none;
+}
+
+.table-row {
+  display: grid;
+  grid-template-columns: 4fr 2fr 2fr 2fr 40px;
   gap: var(--space-md);
-}
-
-.scheduled-post-card-new {
-  display: flex;
-  background: rgba(0, 0, 0, 0.3);
-  border: 1px solid rgba(212, 175, 55, 0.2);
-  border-radius: var(--radius-lg);
-  overflow: hidden;
+  padding: var(--space-lg);
   cursor: pointer;
-  transition: all var(--transition-base);
+  transition: background var(--transition-fast);
 }
 
-.scheduled-post-card-new:hover {
-  border-color: rgba(212, 175, 55, 0.4);
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-lg);
+/* Upcoming view - add date column */
+.table-row.upcoming-view {
+  grid-template-columns: 3fr 1.5fr 2fr 2fr 2fr 40px;
 }
 
-.status-bar {
-  width: 4px;
-  flex-shrink: 0;
+.table-row:hover {
+  background: rgba(20, 20, 20, 0.8);
 }
 
-.status-bar.status-scheduled {
-  background: var(--gold-primary);
+.table-row.is-expanded {
+  background: rgba(20, 20, 20, 0.9);
 }
 
-.status-bar.status-published {
-  background: #4ade80;
-}
-
-.status-bar.status-failed {
-  background: #f87171;
-}
-
-.card-content {
-  display: flex;
-  flex: 1;
-  padding: var(--space-md);
-  gap: var(--space-md);
-}
-
-.media-section {
-  position: relative;
-  width: 100px;
-  height: 100px;
-  flex-shrink: 0;
-}
-
-.post-image {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  border-radius: var(--radius-md);
-}
-
-.post-image-placeholder {
-  width: 100%;
-  height: 100%;
+/* Date Column */
+.td-date {
   display: flex;
   align-items: center;
-  justify-content: center;
-  background: rgba(0, 0, 0, 0.4);
+}
+
+.date-badge {
+  padding: 4px 10px;
   border-radius: var(--radius-md);
-}
-
-.placeholder-icon {
-  font-size: var(--text-2xl);
-  opacity: 0.5;
-}
-
-.media-badge {
-  position: absolute;
-  bottom: var(--space-xs);
-  right: var(--space-xs);
-  background: rgba(0, 0, 0, 0.7);
-  padding: 2px 6px;
-  border-radius: var(--radius-sm);
+  background: rgba(212, 175, 55, 0.15);
+  color: var(--gold-primary);
   font-size: var(--text-xs);
+  font-weight: var(--font-semibold);
 }
 
-.content-section {
-  flex: 1;
+/* Post Column */
+.td-post {
   display: flex;
-  flex-direction: column;
-  gap: var(--space-sm);
+  align-items: center;
+  gap: var(--space-md);
   min-width: 0;
 }
 
-.content-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: var(--space-sm);
-  flex-wrap: wrap;
+.post-thumb {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-md);
+  object-fit: cover;
+  flex-shrink: 0;
+  background: var(--bg-tertiary);
 }
 
-.time-badge {
-  display: flex;
-  align-items: center;
-  gap: var(--space-xs);
-  font-size: var(--text-sm);
-  color: var(--gold-primary);
-}
-
-.status-badges {
-  display: flex;
-  gap: var(--space-xs);
-  flex-wrap: wrap;
-}
-
-.platform-badge-new,
-.status-badge-new {
-  font-size: var(--text-xs);
-  padding: 2px 8px;
-  border-radius: var(--radius-full);
-  background: rgba(255, 255, 255, 0.1);
-}
-
-.platform-badge-new.platform-facebook {
-  background: rgba(24, 119, 242, 0.2);
-  color: #4599ff;
-}
-
-.platform-badge-new.platform-instagram {
-  background: rgba(225, 48, 108, 0.2);
-  color: #e1306c;
-}
-
-.platform-badge-new.platform-tiktok {
-  background: rgba(0, 0, 0, 0.3);
-  color: #fff;
-}
-
-.status-badge-new.status-scheduled {
-  background: rgba(212, 175, 55, 0.2);
-  color: var(--gold-primary);
-}
-
-.status-badge-new.status-published {
-  background: rgba(74, 222, 128, 0.2);
-  color: #4ade80;
-}
-
-.status-badge-new.status-failed {
-  background: rgba(248, 113, 113, 0.2);
-  color: #f87171;
-}
-
-.post-content {
-  flex: 1;
-}
-
-.post-description {
-  font-size: var(--text-sm);
-  color: var(--text-secondary);
-  margin: 0;
-  line-height: 1.4;
-}
-
-.post-description.empty {
-  color: var(--text-muted);
-  font-style: italic;
-}
-
-.restaurant-badge {
-  font-size: var(--text-xs);
-  color: var(--text-muted);
-}
-
-.content-footer {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-top: auto;
-}
-
-.footer-info {
-  font-size: var(--text-xs);
-  color: var(--text-secondary);
-}
-
-.action-buttons {
-  display: flex;
-  gap: var(--space-xs);
-}
-
-.action-btn {
-  width: 32px;
-  height: 32px;
+.post-thumb-placeholder {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(255, 255, 255, 0.1);
-  border: none;
-  border-radius: var(--radius-md);
-  cursor: pointer;
-  transition: all var(--transition-base);
+  font-size: var(--text-lg);
+  color: var(--text-muted);
 }
 
-.action-btn:hover {
-  background: rgba(255, 255, 255, 0.2);
+.post-info {
+  min-width: 0;
+  flex: 1;
+}
+
+.post-time-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  margin-bottom: 4px;
+}
+
+.post-time {
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  color: var(--gold-primary);
+}
+
+.post-time-sep {
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+}
+
+.post-time-ago {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+}
+
+.post-caption-preview {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Platforms Column */
+.td-platforms {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Status Column */
+.td-status {
+  display: flex;
+  align-items: center;
+}
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+  font-size: var(--text-xs);
+  font-weight: var(--font-medium);
+}
+
+.status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+
+.status-badge.status-published {
+  background: rgba(34, 197, 94, 0.15);
+  color: #22c55e;
+}
+
+.status-badge.status-published .status-dot {
+  background: #22c55e;
+}
+
+.status-badge.status-scheduled {
+  background: rgba(251, 191, 36, 0.15);
+  color: #fbbf24;
+}
+
+.status-badge.status-scheduled .status-dot {
+  background: #fbbf24;
+}
+
+.status-badge.status-failed {
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+}
+
+.status-badge.status-failed .status-dot {
+  background: #ef4444;
+}
+
+/* Restaurant Column */
+.td-restaurant {
+  display: flex;
+  align-items: center;
+}
+
+.restaurant-name {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+}
+
+/* Expand Toggle */
+.td-expand {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.expand-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-md);
+  background: rgba(212, 175, 55, 0.15);
+  color: var(--gold-primary);
+  font-size: var(--text-lg);
+  transition: transform 0.2s ease, background 0.2s ease;
+}
+
+.expand-icon:hover {
+  background: rgba(212, 175, 55, 0.25);
+}
+
+.expand-icon.is-expanded {
+  transform: rotate(180deg);
+  background: rgba(212, 175, 55, 0.3);
+}
+
+/* Expanded Details */
+.expanded-details {
+  background: rgba(13, 13, 13, 0.9);
+  border-top: 1px solid var(--border-color);
+  padding: var(--space-xl);
+}
+
+.expanded-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-xl);
+}
+
+.detail-section {
+  min-width: 0;
+}
+
+.detail-label {
+  font-size: var(--text-xs);
+  font-weight: var(--font-medium);
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 0 0 var(--space-sm) 0;
+}
+
+.detail-label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-sm);
+}
+
+.char-count {
+  font-size: 10px;
+  color: var(--text-muted);
+  background: var(--bg-tertiary);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.detail-value {
+  font-size: var(--text-sm);
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.detail-subvalue {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  margin: 4px 0 0 0;
+}
+
+.detail-preview-img {
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: var(--radius-lg);
+  object-fit: cover;
+}
+
+.detail-preview-placeholder {
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: var(--radius-lg);
+  background: var(--bg-tertiary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+
+.detail-platforms {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+}
+
+.platform-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: var(--radius-md);
+  font-size: var(--text-xs);
+  font-weight: var(--font-medium);
+  color: white;
+}
+
+.platform-pill.platform-facebook {
+  background: #1877F2;
+}
+
+.platform-pill.platform-instagram {
+  background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);
+}
+
+.platform-pill.platform-tiktok {
+  background: #000;
+  border: 1px solid #333;
+}
+
+.detail-caption-box {
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-md);
+  padding: var(--space-md);
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  line-height: 1.5;
+  max-height: 120px;
+  overflow-y: auto;
+  border: 1px solid var(--border-color);
+}
+
+.detail-hashtags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.hashtag-chip {
+  padding: 4px 8px;
+  border-radius: 4px;
+  background: var(--bg-tertiary);
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+  transition: color 0.2s ease;
+}
+
+.hashtag-chip:hover {
+  color: var(--gold-primary);
+}
+
+.detail-empty {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  font-style: italic;
+  margin: 0;
+}
+
+.detail-error {
+  margin-top: var(--space-lg);
+}
+
+.error-label {
+  color: #ef4444;
+}
+
+.error-message {
+  font-size: var(--text-sm);
+  color: #f87171;
+  margin: 0;
+}
+
+.detail-links {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.view-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--text-xs);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.view-link.link-facebook {
+  color: #1877F2;
+}
+
+.view-link.link-instagram {
+  color: #E1306C;
+}
+
+.view-link.link-tiktok {
+  color: var(--text-secondary);
+}
+
+.view-link:hover {
+  text-decoration: underline;
+}
+
+.link-arrow {
+  font-size: 10px;
+  opacity: 0.7;
+}
+
+.detail-actions {
+  display: flex;
+  gap: var(--space-sm);
+  margin-top: var(--space-lg);
+}
+
+.action-btn {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: var(--space-sm) var(--space-md);
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: var(--text-xs);
+  font-weight: var(--font-medium);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.edit-btn {
+  background: rgba(212, 175, 55, 0.2);
+  color: var(--gold-primary);
 }
 
 .edit-btn:hover {
   background: rgba(212, 175, 55, 0.3);
 }
 
+.back-btn {
+  background: rgba(128, 128, 128, 0.2);
+  color: var(--text-secondary);
+}
+
+.back-btn:hover {
+  background: rgba(128, 128, 128, 0.3);
+  color: var(--text-primary);
+}
+
+.delete-btn {
+  background: rgba(239, 68, 68, 0.2);
+  color: #ef4444;
+}
+
 .delete-btn:hover {
-  background: rgba(248, 113, 113, 0.3);
+  background: rgba(239, 68, 68, 0.3);
 }
 
-.view-post-btn {
-  font-size: var(--text-xs);
-  color: var(--gold-primary);
-  text-decoration: none;
-  padding: var(--space-xs) var(--space-sm);
-  background: rgba(212, 175, 55, 0.1);
-  border-radius: var(--radius-md);
-  transition: all var(--transition-base);
-}
-
-.view-post-btn:hover {
-  background: rgba(212, 175, 55, 0.2);
-}
-
-.error-banner {
+/* Action buttons in read-only view for scheduled posts */
+.detail-actions-readonly {
   display: flex;
-  align-items: center;
   gap: var(--space-sm);
-  padding: var(--space-sm);
-  background: rgba(248, 113, 113, 0.1);
-  border-radius: var(--radius-md);
-  margin-top: var(--space-sm);
-}
-
-.error-icon {
-  font-size: var(--text-base);
-}
-
-.error-text {
-  font-size: var(--text-xs);
-  color: #f87171;
+  margin-top: var(--space-lg);
+  padding-top: var(--space-md);
+  border-top: 1px solid var(--border-color);
 }
 
 /* Pagination */
@@ -749,8 +1421,9 @@ const handleImageError = () => {
   align-items: center;
   justify-content: center;
   gap: var(--space-lg);
-  padding: var(--space-lg);
-  border-top: 1px solid rgba(212, 175, 55, 0.2);
+  padding: var(--space-md) var(--space-lg);
+  background: rgba(13, 13, 13, 0.6);
+  border-top: 1px solid var(--border-color);
 }
 
 .pagination-btn {
@@ -780,20 +1453,369 @@ const handleImageError = () => {
   color: var(--text-secondary);
 }
 
+@media (max-width: 1024px) {
+  .expanded-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
 @media (max-width: 768px) {
-  .detail-header {
-    flex-direction: column;
+  .table-header,
+  .table-row {
+    grid-template-columns: 1fr;
+    gap: var(--space-sm);
+  }
+
+  .table-header > div:not(.th-post) {
+    display: none;
+  }
+
+  .td-platforms,
+  .td-status,
+  .td-restaurant {
+    display: none;
+  }
+
+  .td-expand {
+    position: absolute;
+    right: var(--space-md);
+    top: 50%;
+    transform: translateY(-50%);
+  }
+
+  .table-row {
+    position: relative;
+    padding-right: 48px;
+  }
+
+  .expanded-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ========== Editable Form Styles ========== */
+.edit-expanded {
+  display: grid;
+  grid-template-columns: 120px 1fr;
+  gap: var(--space-xl);
+}
+
+/* Left column: Image preview */
+.edit-image-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.edit-image-wrapper {
+  width: 120px;
+  height: 120px;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  border: 1px solid var(--border-color);
+}
+
+.edit-preview-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.edit-preview-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-tertiary);
+  font-size: 32px;
+}
+
+/* Right column: All editable fields */
+.edit-fields-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+/* Row with 4 columns: Date, Time, Timezone, Platforms */
+.edit-row-4 {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1.2fr 1fr;
+  gap: var(--space-md);
+}
+
+/* Row with 3 columns: Date, Time, Platforms */
+.edit-row-3 {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1.5fr;
+  gap: var(--space-md);
+}
+
+/* Row with 2 columns: Hashtags, Notes */
+.edit-row-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-md);
+}
+
+.edit-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.edit-label {
+  font-size: var(--text-xs);
+  font-weight: var(--font-medium);
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.edit-label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.edit-input {
+  padding: var(--space-sm) var(--space-md);
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-size: var(--text-sm);
+  font-family: var(--font-body);
+  transition: border-color var(--transition-fast);
+}
+
+.edit-input:focus {
+  outline: none;
+  border-color: var(--gold-primary);
+}
+
+.edit-select {
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23808080' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  padding-right: 28px;
+}
+
+.edit-select option {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+}
+
+.edit-textarea {
+  padding: var(--space-sm) var(--space-md);
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-size: var(--text-sm);
+  font-family: var(--font-body);
+  resize: vertical;
+  min-height: 60px;
+  transition: border-color var(--transition-fast);
+}
+
+.edit-textarea:focus {
+  outline: none;
+  border-color: var(--gold-primary);
+}
+
+.edit-textarea.small {
+  min-height: 48px;
+}
+
+/* Platform toggles */
+.edit-platforms {
+  display: flex;
+  gap: var(--space-sm);
+}
+
+.platform-toggle {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+  background: var(--bg-tertiary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-fast);
+  opacity: 0.5;
+}
+
+.platform-toggle:hover {
+  opacity: 0.75;
+  border-color: var(--text-muted);
+}
+
+.platform-toggle.active {
+  opacity: 1;
+  border-color: var(--gold-primary);
+  box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.2);
+}
+
+.platform-toggle.active.platform-facebook {
+  border-color: #1877F2;
+  box-shadow: 0 0 0 2px rgba(24, 119, 242, 0.2);
+}
+
+.platform-toggle.active.platform-instagram {
+  border-color: #E1306C;
+  box-shadow: 0 0 0 2px rgba(225, 48, 108, 0.2);
+}
+
+.platform-toggle.active.platform-tiktok {
+  border-color: #69C9D0;
+  box-shadow: 0 0 0 2px rgba(105, 201, 208, 0.2);
+}
+
+/* Hashtags */
+.edit-hashtags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: var(--space-sm);
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  min-height: 48px;
+  align-content: flex-start;
+}
+
+.hashtag-chip.editable {
+  cursor: pointer;
+  padding: 4px 10px;
+  background: rgba(212, 175, 55, 0.15);
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  color: var(--gold-primary);
+  border-radius: var(--radius-md);
+  font-size: var(--text-xs);
+  font-weight: var(--font-medium);
+  transition: all var(--transition-fast);
+}
+
+.hashtag-chip.editable:hover {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: rgba(239, 68, 68, 0.3);
+  color: #ef4444;
+}
+
+.hashtag-input {
+  flex: 1;
+  min-width: 80px;
+  padding: 4px 8px;
+  background: transparent;
+  border: none;
+  color: var(--text-primary);
+  font-size: var(--text-xs);
+}
+
+.hashtag-input:focus {
+  outline: none;
+}
+
+.hashtag-input::placeholder {
+  color: var(--text-muted);
+}
+
+/* Action bar */
+.edit-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding-top: var(--space-md);
+  border-top: 1px solid var(--border-color);
+  margin-top: var(--space-sm);
+}
+
+.action-spacer {
+  flex: 1;
+}
+
+.action-btn.cancel-btn {
+  background: rgba(128, 128, 128, 0.2);
+  color: var(--text-secondary);
+}
+
+.action-btn.cancel-btn:hover {
+  background: rgba(128, 128, 128, 0.3);
+  color: var(--text-primary);
+}
+
+.action-btn.save-btn {
+  background: var(--gold-primary);
+  color: var(--text-on-gold);
+}
+
+.action-btn.save-btn:hover:not(:disabled) {
+  background: var(--gold-light);
+}
+
+.action-btn.save-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.past-date-warning {
+  font-size: var(--text-xs);
+  color: #ef4444;
+  font-weight: var(--font-medium);
+}
+
+/* Responsive for editable form */
+@media (max-width: 900px) {
+  .edit-expanded {
+    grid-template-columns: 1fr;
+  }
+
+  .edit-image-section {
+    flex-direction: row;
+    align-items: flex-start;
     gap: var(--space-md);
-    text-align: center;
   }
 
-  .card-content {
-    flex-direction: column;
+  .edit-image-wrapper {
+    width: 80px;
+    height: 80px;
   }
 
-  .media-section {
-    width: 100%;
-    height: 200px;
+  .edit-row-4 {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .edit-row-4 > .edit-field:nth-child(3),
+  .edit-row-4 > .edit-field:nth-child(4) {
+    grid-column: auto;
+  }
+
+  .edit-row-3 {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .edit-row-3 > .edit-field:last-child {
+    grid-column: 1 / -1;
+  }
+
+  .edit-row-2 {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 600px) {
+  .edit-row-4 {
+    grid-template-columns: 1fr;
+  }
+
+  .edit-row-3 {
+    grid-template-columns: 1fr;
   }
 }
 </style>
