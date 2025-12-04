@@ -701,30 +701,25 @@ export default {
 
     // Style Templates (Easy Mode)
     styleTemplates: {
-      vibrant: {
-        name: 'Vibrant',
-        description: 'Bold colors and energetic design',
-        preview: 'Bright, eye-catching with high contrast',
+      authentic: {
+        name: 'Authentic',
+        description: 'Keep brand colors and original presentation',
+        preview: 'Same plate, container, and brand look',
       },
       elegant: {
         name: 'Elegant',
-        description: 'Sophisticated and refined aesthetic',
-        preview: 'Clean, minimalist with subtle tones',
+        description: 'Sophisticated fine-dining aesthetic',
+        preview: 'Soft lighting, refined tones',
+      },
+      vibrant: {
+        name: 'Vibrant',
+        description: 'Bold colors and energetic feel',
+        preview: 'Bright, eye-catching with high contrast',
       },
       rustic: {
         name: 'Rustic',
-        description: 'Warm and authentic feel',
+        description: 'Warm and homemade comfort feel',
         preview: 'Earthy colors with natural textures',
-      },
-      modern: {
-        name: 'Modern',
-        description: 'Contemporary and sleek design',
-        preview: 'Bold typography with geometric shapes',
-      },
-      playful: {
-        name: 'Playful',
-        description: 'Fun and creative vibe',
-        preview: 'Colorful patterns and whimsical elements',
       },
     },
 

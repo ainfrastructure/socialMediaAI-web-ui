@@ -111,7 +111,7 @@ const totalSteps = 4
 // State
 const selectedMenuItem = ref<MenuItem | null>(null)
 const promptContext = ref('')
-const selectedStyleTemplate = ref<string>('vibrant')
+const selectedStyleTemplate = ref<string>('authentic')
 const strictnessMode = ref<'strict' | 'flexible' | 'creative'>('strict')
 const mediaType = ref<'image' | 'video'>('image')
 const holidayTheme = ref<string>('none')
@@ -139,14 +139,14 @@ const gridContainer = ref<HTMLElement | null>(null)
 const step1NavigationRef = ref<HTMLElement | null>(null)
 const generatingOverlayRef = ref<HTMLElement | null>(null)
 
-// Style templates (4 options)
+// Style templates (4 options) - Authentic is default
 const styleTemplates = computed<StyleTemplate[]>(() => [
   {
-    id: 'vibrant',
-    name: t('playground.styleTemplates.vibrant.name'),
-    description: t('playground.styleTemplates.vibrant.description'),
-    icon: 'palette',
-    preview: t('playground.styleTemplates.vibrant.preview')
+    id: 'authentic',
+    name: t('playground.styleTemplates.authentic.name'),
+    description: t('playground.styleTemplates.authentic.description'),
+    icon: 'verified',
+    preview: t('playground.styleTemplates.authentic.preview')
   },
   {
     id: 'elegant',
@@ -156,18 +156,18 @@ const styleTemplates = computed<StyleTemplate[]>(() => [
     preview: t('playground.styleTemplates.elegant.preview')
   },
   {
+    id: 'vibrant',
+    name: t('playground.styleTemplates.vibrant.name'),
+    description: t('playground.styleTemplates.vibrant.description'),
+    icon: 'palette',
+    preview: t('playground.styleTemplates.vibrant.preview')
+  },
+  {
     id: 'rustic',
     name: t('playground.styleTemplates.rustic.name'),
     description: t('playground.styleTemplates.rustic.description'),
     icon: 'cottage',
     preview: t('playground.styleTemplates.rustic.preview')
-  },
-  {
-    id: 'modern',
-    name: t('playground.styleTemplates.modern.name'),
-    description: t('playground.styleTemplates.modern.description'),
-    icon: 'circle',
-    preview: t('playground.styleTemplates.modern.preview')
   }
 ])
 
@@ -176,10 +176,10 @@ function getStyleIcon(styleId: string): string {
   const goldGradient = `<defs><linearGradient id="goldGrad-${styleId}" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#E5C775"/><stop offset="50%" style="stop-color:#D4AF37"/><stop offset="100%" style="stop-color:#B8943D"/></linearGradient></defs>`
 
   const icons: Record<string, string> = {
-    vibrant: `<svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">${goldGradient}<circle cx="12" cy="12" r="5" fill="url(#goldGrad-${styleId})"/><path d="M12 2V6M12 18V22M2 12H6M18 12H22M4.93 4.93L7.76 7.76M16.24 16.24L19.07 19.07M4.93 19.07L7.76 16.24M16.24 7.76L19.07 4.93" stroke="url(#goldGrad-${styleId})" stroke-width="2" stroke-linecap="round"/></svg>`,
+    authentic: `<svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">${goldGradient}<path d="M12 2L4 5V11.09C4 16.14 7.41 20.85 12 22C16.59 20.85 20 16.14 20 11.09V5L12 2ZM10 17L6 13L7.41 11.59L10 14.17L16.59 7.58L18 9L10 17Z" fill="url(#goldGrad-${styleId})"/></svg>`,
     elegant: `<svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">${goldGradient}<path d="M12 2L19 12L12 22L5 12L12 2Z" fill="url(#goldGrad-${styleId})"/><path d="M12 6L16 12L12 18L8 12L12 6Z" fill="url(#goldGrad-${styleId})" opacity="0.5"/></svg>`,
-    rustic: `<svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">${goldGradient}<path d="M17 8C8 10 5.9 16.17 3.82 21.34L5.71 22L6.66 19.97C7.14 19.11 8.32 17.76 10.66 17.11C10.66 17.11 11.47 19.63 12.5 22H14.5C13.46 19.63 12.66 17.11 12.66 17.11C14.92 17.11 16.14 17.63 17.66 19.11L18.66 22H20.66L18.66 13C19.86 12.33 21.55 11.5 21.55 9.38C21.55 8.38 20.66 7.5 19.66 7.5C19.39 7.5 19.14 7.57 18.91 7.68C18.58 6.09 17.5 5 16 5C14.5 5 13.42 6.09 13.09 7.68C12.86 7.57 12.61 7.5 12.34 7.5C11.34 7.5 10.45 8.38 10.45 9.38C10.45 11.5 12.14 12.33 13.34 13L13 14C12.5 14 11.5 14.5 11 15C10.5 15.5 10 16.5 10 17L10.5 18C10.5 18 10.32 17.13 10.66 17.11" fill="url(#goldGrad-${styleId})"/></svg>`,
-    modern: `<svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">${goldGradient}<rect x="3" y="3" width="7" height="7" rx="1" fill="url(#goldGrad-${styleId})"/><rect x="14" y="3" width="7" height="7" rx="1" fill="url(#goldGrad-${styleId})" opacity="0.7"/><rect x="3" y="14" width="7" height="7" rx="1" fill="url(#goldGrad-${styleId})" opacity="0.7"/><rect x="14" y="14" width="7" height="7" rx="1" fill="url(#goldGrad-${styleId})"/></svg>`
+    vibrant: `<svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">${goldGradient}<circle cx="12" cy="12" r="5" fill="url(#goldGrad-${styleId})"/><path d="M12 2V6M12 18V22M2 12H6M18 12H22M4.93 4.93L7.76 7.76M16.24 16.24L19.07 19.07M4.93 19.07L7.76 16.24M16.24 7.76L19.07 4.93" stroke="url(#goldGrad-${styleId})" stroke-width="2" stroke-linecap="round"/></svg>`,
+    rustic: `<svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">${goldGradient}<path d="M17 8C8 10 5.9 16.17 3.82 21.34L5.71 22L6.66 19.97C7.14 19.11 8.32 17.76 10.66 17.11C10.66 17.11 11.47 19.63 12.5 22H14.5C13.46 19.63 12.66 17.11 12.66 17.11C14.92 17.11 16.14 17.63 17.66 19.11L18.66 22H20.66L18.66 13C19.86 12.33 21.55 11.5 21.55 9.38C21.55 8.38 20.66 7.5 19.66 7.5C19.39 7.5 19.14 7.57 18.91 7.68C18.58 6.09 17.5 5 16 5C14.5 5 13.42 6.09 13.09 7.68C12.86 7.57 12.61 7.5 12.34 7.5C11.34 7.5 10.45 8.38 10.45 9.38C10.45 11.5 12.14 12.33 13.34 13L13 14C12.5 14 11.5 14.5 11 15C10.5 15.5 10 16.5 10 17L10.5 18C10.5 18 10.32 17.13 10.66 17.11" fill="url(#goldGrad-${styleId})"/></svg>`
   }
 
   return icons[styleId] || icons.vibrant
@@ -444,12 +444,20 @@ function nextStep() {
 
   if (currentStep.value < totalSteps) {
     currentStep.value++
+    // Scroll to top of step content on mobile to ensure user starts at the top
+    nextTick(() => {
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+    })
   }
 }
 
 function prevStep() {
   if (currentStep.value > 1) {
     currentStep.value--
+    // Scroll to top when going back too
+    nextTick(() => {
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+    })
   }
 }
 

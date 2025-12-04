@@ -701,30 +701,25 @@ export default {
 
     // Style Templates (Easy Mode)
     styleTemplates: {
-      vibrant: {
-        name: 'Livlig',
-        description: 'Sterke farger og energisk design',
-        preview: 'Lys, iøynefallende med høy kontrast',
+      authentic: {
+        name: 'Autentisk',
+        description: 'Behold merkefarger og original presentasjon',
+        preview: 'Samme tallerken, beholder og merkevare-utseende',
       },
       elegant: {
         name: 'Elegant',
-        description: 'Sofistikert og raffinert estetikk',
-        preview: 'Ren, minimalistisk med subtile toner',
+        description: 'Sofistikert fine-dining estetikk',
+        preview: 'Mykt lys, raffinerte toner',
+      },
+      vibrant: {
+        name: 'Livlig',
+        description: 'Sterke farger og energisk følelse',
+        preview: 'Lys, iøynefallende med høy kontrast',
       },
       rustic: {
         name: 'Rustikk',
-        description: 'Varm og autentisk følelse',
+        description: 'Varm og hjemmelaget komfortfølelse',
         preview: 'Jordfarger med naturlige teksturer',
-      },
-      modern: {
-        name: 'Moderne',
-        description: 'Moderne og elegant design',
-        preview: 'Fet typografi med geometriske former',
-      },
-      playful: {
-        name: 'Leken',
-        description: 'Morsom og kreativ stemning',
-        preview: 'Fargerike mønstre og fantasifulle elementer',
       },
     },
 

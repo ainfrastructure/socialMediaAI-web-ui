@@ -103,7 +103,7 @@ const stickerStyle = ref<'bold' | 'outlined' | 'ribbon' | 'badge' | 'starburst'>
 const stickerPosition = ref<'top-left' | 'top-right' | 'bottom-left' | 'bottom-right' | 'top-center' | 'center'>('top-right')
 const strictnessMode = ref<'strict' | 'flexible' | 'creative'>('strict')
 const holidayTheme = ref<string>('none')
-const visualStyle = ref<'vibrant' | 'elegant' | 'rustic' | 'modern'>('vibrant')
+const visualStyle = ref<'authentic' | 'elegant' | 'vibrant' | 'rustic'>('authentic')
 const promptContext = ref('')
 const selectedMenuItems = ref<any[]>([])
 const selectedPlatforms = ref<string[]>(['facebook'])
@@ -597,7 +597,7 @@ async function handleEasyModeGenerate(data: {
       ? data.customHolidayText
       : data.holidayTheme
     // Set visual style for image generation
-    visualStyle.value = data.styleTemplate as 'vibrant' | 'elegant' | 'rustic' | 'modern'
+    visualStyle.value = data.styleTemplate as 'authentic' | 'elegant' | 'vibrant' | 'rustic'
     logoPosition.value = 'bottom-right'
 
     // Generate prompts

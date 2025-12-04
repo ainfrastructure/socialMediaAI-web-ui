@@ -19,7 +19,7 @@ class ContentService {
     placeId?: string,
     strictnessMode?: 'strict' | 'flexible' | 'creative',
     holidayTheme?: string,
-    visualStyle?: 'vibrant' | 'elegant' | 'rustic' | 'modern'
+    visualStyle?: 'authentic' | 'elegant' | 'vibrant' | 'rustic'
   ): Promise<ApiResponse<{ imageUrl: string; usage: any; watermarked?: boolean; promotionalStickerAdded?: boolean }>> {
     const response = await fetch(`${API_URL}/api/gemini/generate-image`, {
       method: 'POST',
