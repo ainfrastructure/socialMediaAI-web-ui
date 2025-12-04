@@ -102,6 +102,8 @@ const logoPosition = ref<'top-left' | 'top-right' | 'bottom-left' | 'bottom-righ
 const stickerStyle = ref<'bold' | 'outlined' | 'ribbon' | 'badge' | 'starburst'>('bold')
 const stickerPosition = ref<'top-left' | 'top-right' | 'bottom-left' | 'bottom-right' | 'top-center' | 'center'>('top-right')
 const strictnessMode = ref<'strict' | 'flexible' | 'creative'>('strict')
+const holidayTheme = ref<string>('none')
+const visualStyle = ref<'vibrant' | 'elegant' | 'rustic' | 'modern'>('vibrant')
 const promptContext = ref('')
 const selectedMenuItems = ref<any[]>([])
 const selectedPlatforms = ref<string[]>(['facebook'])
@@ -558,6 +560,8 @@ async function handleEasyModeGenerate(data: {
   context: string
   styleTemplate: string
   strictnessMode: 'strict' | 'flexible' | 'creative'
+  holidayTheme: string
+  customHolidayText: string
   includeLogo: boolean
   uploadedImage: File | null
   uploadedLogo: File | null
@@ -588,6 +592,12 @@ async function handleEasyModeGenerate(data: {
     stickerPosition.value = selectedStyle.stickerPosition
     includeLogo.value = data.includeLogo
     strictnessMode.value = data.strictnessMode
+    // Set holiday theme - use custom text if 'custom' is selected
+    holidayTheme.value = data.holidayTheme === 'custom' && data.customHolidayText
+      ? data.customHolidayText
+      : data.holidayTheme
+    // Set visual style for image generation
+    visualStyle.value = data.styleTemplate as 'vibrant' | 'elegant' | 'rustic' | 'modern'
     logoPosition.value = 'bottom-right'
 
     // Generate prompts
@@ -801,7 +811,9 @@ async function generateImage(uploadedLogo: File | null = null, uploadedImage: Fi
       referenceImage,
       promotionalSticker,
       restaurant.value.place_id,
-      strictnessMode.value
+      strictnessMode.value,
+      holidayTheme.value !== 'none' ? holidayTheme.value : undefined,
+      visualStyle.value
     )
 
     if (!response.success) {

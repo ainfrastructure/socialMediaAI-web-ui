@@ -28,6 +28,8 @@ import GoldenHalloweenIcon from './icons/GoldenHalloweenIcon.vue'
 import GoldenThanksgivingIcon from './icons/GoldenThanksgivingIcon.vue'
 import GoldenCelebrationIcon from './icons/GoldenCelebrationIcon.vue'
 import GoldenEditIcon from './icons/GoldenEditIcon.vue'
+import GoldenImageIcon from './icons/GoldenImageIcon.vue'
+import GoldenVideoIcon from './icons/GoldenVideoIcon.vue'
 import GoldenGridIcon from './icons/GoldenGridIcon.vue'
 import { ImageUploadBox, SectionLabel, ContentDivider } from './creation'
 import { restaurantService, type SavedRestaurant } from '@/services/restaurantService'
@@ -223,6 +225,9 @@ const customization = ref<CustomizationOptions>({
   comboTextPlacement: 'bottom',
   comboItemArrangement: 'sideBySide'
 })
+
+// Media type selection
+const mediaType = ref<'image' | 'video'>('image')
 
 // Step 3: Style Variations
 const styleVariations = ref<StyleVariation[]>([])
@@ -1126,6 +1131,28 @@ defineExpose({
       <div class="customization-layout">
         <!-- Options Panel (Top) -->
         <div class="options-panel">
+          <!-- Media Type Selection -->
+          <div class="customization-group media-type-group">
+            <h4 class="group-title">{{ t('easyMode.step2.mediaTypeLabel', 'Media Type') }}</h4>
+            <div class="media-type-options">
+              <button
+                :class="['media-type-button', { 'selected': mediaType === 'image' }]"
+                @click="mediaType = 'image'"
+              >
+                <GoldenImageIcon :size="32" class="media-type-icon" />
+                <span class="media-type-label">{{ t('easyMode.step2.imageOption', 'Image') }}</span>
+              </button>
+              <button
+                :class="['media-type-button', 'disabled']"
+                disabled
+              >
+                <GoldenVideoIcon :size="32" class="media-type-icon" />
+                <span class="media-type-label">{{ t('easyMode.step2.videoOption', 'Video') }}</span>
+                <span class="coming-soon-badge">{{ t('common.comingSoon', 'Coming Soon') }}</span>
+              </button>
+            </div>
+          </div>
+
           <!-- Common customization options -->
           <AdvancedCustomizationPanel v-model="customization" :post-type="postType" />
 
@@ -2695,6 +2722,71 @@ defineExpose({
   font-size: var(--text-xl);
   font-weight: var(--font-semibold);
   color: var(--text-primary);
+}
+
+/* Media Type Options */
+.media-type-group {
+  margin-bottom: var(--space-xl);
+}
+
+.media-type-options {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-md);
+}
+
+.media-type-button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-lg);
+  background: var(--bg-secondary);
+  border: 2px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.media-type-button:hover:not(.disabled) {
+  border-color: var(--gold-primary);
+  background: var(--gold-subtle);
+}
+
+.media-type-button.selected {
+  border-color: var(--gold-primary);
+  background: var(--gold-subtle);
+  box-shadow: var(--glow-gold-sm);
+}
+
+.media-type-button.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.media-type-icon {
+  flex-shrink: 0;
+}
+
+.media-type-label {
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  color: var(--text-primary);
+}
+
+.coming-soon-badge {
+  position: absolute;
+  top: var(--space-xs);
+  right: var(--space-xs);
+  font-size: 9px;
+  font-weight: var(--font-semibold);
+  padding: 2px 6px;
+  background: var(--gold-subtle);
+  color: var(--gold-primary);
+  border-radius: var(--radius-full);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 /* Layout Options Grid */

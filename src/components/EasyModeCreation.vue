@@ -9,6 +9,18 @@ import WizardProgress from './WizardProgress.vue'
 import GoldenTargetIcon from './icons/GoldenTargetIcon.vue'
 import GoldenSparkleIcon from './icons/GoldenSparkleIcon.vue'
 import GoldenPaletteIcon from './icons/GoldenPaletteIcon.vue'
+import GoldenImageIcon from './icons/GoldenImageIcon.vue'
+import GoldenVideoIcon from './icons/GoldenVideoIcon.vue'
+import GoldenBlockIcon from './icons/GoldenBlockIcon.vue'
+import GoldenSchoolIcon from './icons/GoldenSchoolIcon.vue'
+import GoldenChristmasIcon from './icons/GoldenChristmasIcon.vue'
+import GoldenEasterIcon from './icons/GoldenEasterIcon.vue'
+import GoldenSummerIcon from './icons/GoldenSummerIcon.vue'
+import GoldenHeartIcon from './icons/GoldenHeartIcon.vue'
+import GoldenHalloweenIcon from './icons/GoldenHalloweenIcon.vue'
+import GoldenThanksgivingIcon from './icons/GoldenThanksgivingIcon.vue'
+import GoldenCelebrationIcon from './icons/GoldenCelebrationIcon.vue'
+import GoldenEditIcon from './icons/GoldenEditIcon.vue'
 import UnifiedSchedulePost from './UnifiedSchedulePost.vue'
 import { ImageUploadBox, SectionLabel, StyleTemplateGrid, MenuItemCard, ContentDivider } from './creation'
 import { VueDatePicker } from '@vuepic/vue-datepicker'
@@ -67,6 +79,8 @@ const emit = defineEmits<{
     context: string
     styleTemplate: string
     strictnessMode: 'strict' | 'flexible' | 'creative'
+    holidayTheme: string
+    customHolidayText: string
     includeLogo: boolean
     uploadedImage: File | null
     uploadedLogo: File | null
@@ -99,6 +113,9 @@ const selectedMenuItem = ref<MenuItem | null>(null)
 const promptContext = ref('')
 const selectedStyleTemplate = ref<string>('vibrant')
 const strictnessMode = ref<'strict' | 'flexible' | 'creative'>('strict')
+const mediaType = ref<'image' | 'video'>('image')
+const holidayTheme = ref<string>('none')
+const customHolidayText = ref<string>('')
 const includeLogo = ref(true)
 const uploadedImage = ref<File | null>(null)
 const uploadedImagePreview = ref<string | null>(null)
@@ -122,7 +139,7 @@ const gridContainer = ref<HTMLElement | null>(null)
 const step1NavigationRef = ref<HTMLElement | null>(null)
 const generatingOverlayRef = ref<HTMLElement | null>(null)
 
-// Style templates
+// Style templates (4 options)
 const styleTemplates = computed<StyleTemplate[]>(() => [
   {
     id: 'vibrant',
@@ -151,13 +168,6 @@ const styleTemplates = computed<StyleTemplate[]>(() => [
     description: t('playground.styleTemplates.modern.description'),
     icon: 'circle',
     preview: t('playground.styleTemplates.modern.preview')
-  },
-  {
-    id: 'playful',
-    name: t('playground.styleTemplates.playful.name'),
-    description: t('playground.styleTemplates.playful.description'),
-    icon: 'sentiment_satisfied',
-    preview: t('playground.styleTemplates.playful.preview')
   }
 ])
 
@@ -169,8 +179,7 @@ function getStyleIcon(styleId: string): string {
     vibrant: `<svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">${goldGradient}<circle cx="12" cy="12" r="5" fill="url(#goldGrad-${styleId})"/><path d="M12 2V6M12 18V22M2 12H6M18 12H22M4.93 4.93L7.76 7.76M16.24 16.24L19.07 19.07M4.93 19.07L7.76 16.24M16.24 7.76L19.07 4.93" stroke="url(#goldGrad-${styleId})" stroke-width="2" stroke-linecap="round"/></svg>`,
     elegant: `<svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">${goldGradient}<path d="M12 2L19 12L12 22L5 12L12 2Z" fill="url(#goldGrad-${styleId})"/><path d="M12 6L16 12L12 18L8 12L12 6Z" fill="url(#goldGrad-${styleId})" opacity="0.5"/></svg>`,
     rustic: `<svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">${goldGradient}<path d="M17 8C8 10 5.9 16.17 3.82 21.34L5.71 22L6.66 19.97C7.14 19.11 8.32 17.76 10.66 17.11C10.66 17.11 11.47 19.63 12.5 22H14.5C13.46 19.63 12.66 17.11 12.66 17.11C14.92 17.11 16.14 17.63 17.66 19.11L18.66 22H20.66L18.66 13C19.86 12.33 21.55 11.5 21.55 9.38C21.55 8.38 20.66 7.5 19.66 7.5C19.39 7.5 19.14 7.57 18.91 7.68C18.58 6.09 17.5 5 16 5C14.5 5 13.42 6.09 13.09 7.68C12.86 7.57 12.61 7.5 12.34 7.5C11.34 7.5 10.45 8.38 10.45 9.38C10.45 11.5 12.14 12.33 13.34 13L13 14C12.5 14 11.5 14.5 11 15C10.5 15.5 10 16.5 10 17L10.5 18C10.5 18 10.32 17.13 10.66 17.11" fill="url(#goldGrad-${styleId})"/></svg>`,
-    modern: `<svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">${goldGradient}<rect x="3" y="3" width="7" height="7" rx="1" fill="url(#goldGrad-${styleId})"/><rect x="14" y="3" width="7" height="7" rx="1" fill="url(#goldGrad-${styleId})" opacity="0.7"/><rect x="3" y="14" width="7" height="7" rx="1" fill="url(#goldGrad-${styleId})" opacity="0.7"/><rect x="14" y="14" width="7" height="7" rx="1" fill="url(#goldGrad-${styleId})"/></svg>`,
-    playful: `<svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">${goldGradient}<circle cx="12" cy="12" r="10" fill="url(#goldGrad-${styleId})"/><circle cx="8.5" cy="10" r="1.5" fill="#0a0a0a"/><circle cx="15.5" cy="10" r="1.5" fill="#0a0a0a"/><path d="M8 14C8 14 9.5 17 12 17C14.5 17 16 14 16 14" stroke="#0a0a0a" stroke-width="2" stroke-linecap="round"/></svg>`
+    modern: `<svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">${goldGradient}<rect x="3" y="3" width="7" height="7" rx="1" fill="url(#goldGrad-${styleId})"/><rect x="14" y="3" width="7" height="7" rx="1" fill="url(#goldGrad-${styleId})" opacity="0.7"/><rect x="3" y="14" width="7" height="7" rx="1" fill="url(#goldGrad-${styleId})" opacity="0.7"/><rect x="14" y="14" width="7" height="7" rx="1" fill="url(#goldGrad-${styleId})"/></svg>`
   }
 
   return icons[styleId] || icons.vibrant
@@ -347,6 +356,8 @@ function handleGenerate() {
     context: promptContext.value.trim(),
     styleTemplate: selectedStyleTemplate.value,
     strictnessMode: strictnessMode.value,
+    holidayTheme: holidayTheme.value,
+    customHolidayText: customHolidayText.value,
     includeLogo: includeLogo.value,
     uploadedImage: uploadedImage.value,
     uploadedLogo: uploadedLogo.value
@@ -712,6 +723,115 @@ onUnmounted(() => {
             <span class="strictness-label">{{ t('advancedMode.strictness.creative', 'Creative') }}</span>
             <span class="strictness-description">{{ t('advancedMode.strictness.creativeDesc', 'Artistic interpretation') }}</span>
           </button>
+        </div>
+      </div>
+
+      <!-- Media Type Selection -->
+      <div class="customization-section">
+        <SectionLabel icon="perm_media">{{ t('easyMode.step2.mediaTypeLabel', 'Media Type') }}</SectionLabel>
+        <div class="media-type-options">
+          <button
+            :class="['media-type-button', { 'selected': mediaType === 'image' }]"
+            @click="mediaType = 'image'"
+          >
+            <GoldenImageIcon :size="32" class="media-type-icon" />
+            <span class="media-type-label">{{ t('easyMode.step2.imageOption', 'Image') }}</span>
+          </button>
+          <button
+            :class="['media-type-button', 'disabled']"
+            disabled
+          >
+            <GoldenVideoIcon :size="32" class="media-type-icon" />
+            <span class="media-type-label">{{ t('easyMode.step2.videoOption', 'Video') }}</span>
+            <span class="coming-soon-badge">{{ t('common.comingSoon', 'Coming Soon') }}</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Holiday/Inspired Theme -->
+      <div class="customization-section">
+        <SectionLabel icon="celebration">{{ t('advancedMode.holidayTheme.label', 'Theme / Inspiration') }}</SectionLabel>
+        <p class="section-hint">{{ t('advancedMode.holidayTheme.hint', 'Add a seasonal or themed style to your image') }}</p>
+        <div class="holiday-theme-options">
+          <button
+            :class="['holiday-theme-button', { 'selected': holidayTheme === 'none' }]"
+            @click="holidayTheme = 'none'"
+          >
+            <GoldenBlockIcon :size="24" class="holiday-icon" />
+            <span class="holiday-label">{{ t('weeklyCustomization.themes.none', 'None') }}</span>
+          </button>
+          <button
+            :class="['holiday-theme-button', { 'selected': holidayTheme === 'studentWeek' }]"
+            @click="holidayTheme = 'studentWeek'"
+          >
+            <GoldenSchoolIcon :size="24" class="holiday-icon" />
+            <span class="holiday-label">{{ t('weeklyCustomization.themes.studentWeek', 'Student') }}</span>
+          </button>
+          <button
+            :class="['holiday-theme-button', { 'selected': holidayTheme === 'christmas' }]"
+            @click="holidayTheme = 'christmas'"
+          >
+            <GoldenChristmasIcon :size="24" class="holiday-icon" />
+            <span class="holiday-label">{{ t('weeklyCustomization.themes.christmas', 'Christmas') }}</span>
+          </button>
+          <button
+            :class="['holiday-theme-button', { 'selected': holidayTheme === 'easter' }]"
+            @click="holidayTheme = 'easter'"
+          >
+            <GoldenEasterIcon :size="24" class="holiday-icon" />
+            <span class="holiday-label">{{ t('weeklyCustomization.themes.easter', 'Easter') }}</span>
+          </button>
+          <button
+            :class="['holiday-theme-button', { 'selected': holidayTheme === 'summer' }]"
+            @click="holidayTheme = 'summer'"
+          >
+            <GoldenSummerIcon :size="24" class="holiday-icon" />
+            <span class="holiday-label">{{ t('weeklyCustomization.themes.summer', 'Summer') }}</span>
+          </button>
+          <button
+            :class="['holiday-theme-button', { 'selected': holidayTheme === 'valentines' }]"
+            @click="holidayTheme = 'valentines'"
+          >
+            <GoldenHeartIcon :size="24" class="holiday-icon" />
+            <span class="holiday-label">{{ t('weeklyCustomization.themes.valentines', 'Valentine') }}</span>
+          </button>
+          <button
+            :class="['holiday-theme-button', { 'selected': holidayTheme === 'halloween' }]"
+            @click="holidayTheme = 'halloween'"
+          >
+            <GoldenHalloweenIcon :size="24" class="holiday-icon" />
+            <span class="holiday-label">{{ t('weeklyCustomization.themes.halloween', 'Halloween') }}</span>
+          </button>
+          <button
+            :class="['holiday-theme-button', { 'selected': holidayTheme === 'thanksgiving' }]"
+            @click="holidayTheme = 'thanksgiving'"
+          >
+            <GoldenThanksgivingIcon :size="24" class="holiday-icon" />
+            <span class="holiday-label">{{ t('weeklyCustomization.themes.thanksgiving', 'Thanks') }}</span>
+          </button>
+          <button
+            :class="['holiday-theme-button', { 'selected': holidayTheme === 'newYear' }]"
+            @click="holidayTheme = 'newYear'"
+          >
+            <GoldenCelebrationIcon :size="24" class="holiday-icon" />
+            <span class="holiday-label">{{ t('weeklyCustomization.themes.newYear', 'New Year') }}</span>
+          </button>
+          <button
+            :class="['holiday-theme-button', { 'selected': holidayTheme === 'custom' }]"
+            @click="holidayTheme = 'custom'"
+          >
+            <GoldenEditIcon :size="24" class="holiday-icon" />
+            <span class="holiday-label">{{ t('weeklyCustomization.themes.custom', 'Custom') }}</span>
+          </button>
+        </div>
+        <div v-if="holidayTheme === 'custom'" class="custom-theme-input-wrapper">
+          <input
+            type="text"
+            v-model="customHolidayText"
+            class="custom-theme-text-input"
+            :placeholder="t('advancedMode.holidayTheme.customPlaceholder', 'e.g., Spring Festival, Local Event...')"
+            maxlength="50"
+          />
         </div>
       </div>
 
@@ -1731,6 +1851,138 @@ onUnmounted(() => {
   color: var(--text-secondary);
 }
 
+/* Media Type Options */
+.media-type-options {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-md);
+}
+
+.media-type-button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-lg);
+  background: var(--bg-secondary);
+  border: 2px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.media-type-button:hover:not(.disabled) {
+  border-color: var(--gold-primary);
+  background: var(--gold-subtle);
+}
+
+.media-type-button.selected {
+  border-color: var(--gold-primary);
+  background: var(--gold-subtle);
+  box-shadow: var(--glow-gold-sm);
+}
+
+.media-type-button.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.media-type-icon {
+  flex-shrink: 0;
+}
+
+.media-type-label {
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  color: var(--text-primary);
+}
+
+.coming-soon-badge {
+  position: absolute;
+  top: var(--space-xs);
+  right: var(--space-xs);
+  font-size: 9px;
+  font-weight: var(--font-semibold);
+  padding: 2px 6px;
+  background: var(--gold-subtle);
+  color: var(--gold-primary);
+  border-radius: var(--radius-full);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Holiday Theme Options */
+.holiday-theme-options {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: var(--space-sm);
+}
+
+.holiday-theme-button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: var(--space-sm) var(--space-xs);
+  background: var(--bg-secondary);
+  border: 2px solid var(--border-color);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 0;
+}
+
+.holiday-theme-button:hover {
+  border-color: var(--gold-primary);
+  background: var(--gold-subtle);
+}
+
+.holiday-theme-button.selected {
+  border-color: var(--gold-primary);
+  background: var(--gold-subtle);
+  box-shadow: var(--glow-gold-sm);
+}
+
+.holiday-icon {
+  flex-shrink: 0;
+}
+
+.holiday-label {
+  font-size: var(--text-xs);
+  font-weight: var(--font-medium);
+  color: var(--text-primary);
+  text-align: center;
+  word-break: break-word;
+  line-height: 1.2;
+  max-width: 100%;
+}
+
+.custom-theme-input-wrapper {
+  margin-top: var(--space-md);
+}
+
+.custom-theme-text-input {
+  width: 100%;
+  padding: var(--space-md);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-size: var(--text-sm);
+  transition: all 0.2s ease;
+}
+
+.custom-theme-text-input:focus {
+  outline: none;
+  border-color: var(--gold-primary);
+  box-shadow: var(--glow-gold-sm);
+}
+
+.custom-theme-text-input::placeholder {
+  color: var(--text-muted);
+}
+
 /* Logo Management */
 .logo-management {
   display: flex;
@@ -2443,6 +2695,36 @@ onUnmounted(() => {
   .strictness-description {
     font-size: 10px;
   }
+
+  /* Media Type - horizontal on mobile */
+  .media-type-options {
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-sm);
+  }
+
+  .media-type-button {
+    padding: var(--space-md);
+  }
+
+  /* Holiday Theme - smaller grid on mobile */
+  .holiday-theme-options {
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--space-xs);
+  }
+
+  .holiday-theme-button {
+    padding: var(--space-xs);
+  }
+
+  .holiday-label {
+    font-size: 9px;
+    line-height: 1.1;
+  }
+
+  .holiday-icon {
+    width: 20px;
+    height: 20px;
+  }
 }
 
 @media (max-width: 390px) {
@@ -2456,6 +2738,27 @@ onUnmounted(() => {
 
   .strictness-label {
     font-size: var(--text-xs);
+  }
+
+  /* Holiday Theme - 4 columns on small screens */
+  .holiday-theme-options {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 4px;
+  }
+
+  .holiday-theme-button {
+    padding: 4px 2px;
+    border-width: 1px;
+    border-radius: var(--radius-sm);
+  }
+
+  .holiday-label {
+    font-size: 8px;
+  }
+
+  .holiday-icon {
+    width: 16px;
+    height: 16px;
   }
 }
 

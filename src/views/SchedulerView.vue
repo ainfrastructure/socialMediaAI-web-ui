@@ -3169,19 +3169,21 @@ onMounted(async () => {
     font-size: 10px;
   }
 
-  /* Hover action buttons - icon only on mobile */
+  /* Hover action buttons - icon only on mobile, stacked vertically */
   .day-hover-actions {
-    flex-direction: row;
+    flex-direction: column;
     gap: var(--space-xs);
     padding: var(--space-xs);
+    align-items: center;
   }
 
   .hover-action-btn {
-    padding: var(--space-sm);
-    border-radius: var(--radius-full);
-    min-width: 36px;
-    min-height: 36px;
+    padding: var(--space-xs) var(--space-sm);
+    border-radius: var(--radius-md);
+    min-width: 44px;
+    min-height: 32px;
     justify-content: center;
+    width: auto;
   }
 
   .hover-action-btn .btn-label {
@@ -3313,15 +3315,15 @@ onMounted(async () => {
     padding: 2px;
   }
 
-  /* Even smaller hover buttons for 390px */
+  /* Compact hover buttons for 390px */
   .hover-action-btn {
-    min-width: 32px;
-    min-height: 32px;
-    padding: var(--space-xs);
+    min-width: 40px;
+    min-height: 28px;
+    padding: 4px var(--space-xs);
   }
 
   .hover-action-btn .material-symbols-outlined {
-    font-size: 18px;
+    font-size: 16px;
   }
 
   .calendar-title {
