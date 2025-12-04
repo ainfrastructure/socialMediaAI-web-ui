@@ -26,6 +26,8 @@
   padding: var(--space-md) 0;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   margin-bottom: var(--space-md);
+  max-width: 100%;
+  overflow: hidden;
 }
 
 .legend-item {

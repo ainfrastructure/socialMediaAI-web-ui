@@ -376,8 +376,12 @@ async function confirmDeleteAccount() {
 <style scoped>
 .profile-view {
   min-height: 100vh;
+  min-height: 100dvh;
   padding: var(--space-3xl) var(--space-2xl);
   background: var(--bg-primary);
+  width: 100%;
+  max-width: 100vw;
+  overflow-x: hidden;
 }
 
 .profile-container {
@@ -788,6 +792,88 @@ async function confirmDeleteAccount() {
 
   .modal-content {
     padding: var(--space-2xl);
+  }
+
+  .modal-overlay {
+    padding: var(--space-md);
+  }
+}
+
+@media (max-width: 480px) {
+  .profile-view {
+    padding: var(--space-lg) var(--space-sm);
+  }
+
+  .page-title {
+    font-size: var(--text-2xl);
+  }
+
+  .section-title {
+    font-size: var(--text-lg);
+  }
+
+  .section-card {
+    padding: var(--space-lg);
+  }
+
+  .info-label {
+    font-size: var(--text-xs);
+  }
+
+  .info-value {
+    font-size: var(--text-sm);
+  }
+
+  .modal-overlay {
+    padding: var(--space-sm);
+    align-items: flex-end;
+  }
+
+  .modal-content {
+    padding: var(--space-lg);
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    max-height: 95vh;
+    max-height: 95dvh;
+  }
+
+  .modal-header h2 {
+    font-size: var(--text-lg);
+  }
+
+  .form-actions button,
+  .modal-actions button {
+    min-height: var(--touch-target-min);
+  }
+
+  .plan-badge {
+    font-size: var(--text-xs);
+    padding: var(--space-xs) var(--space-sm);
+  }
+}
+
+@media (max-width: 390px) {
+  .profile-view {
+    padding: var(--space-md) var(--space-xs);
+  }
+
+  .page-title {
+    font-size: var(--text-xl);
+  }
+
+  .section-card {
+    padding: var(--space-md);
+  }
+
+  .modal-content {
+    padding: var(--space-md);
+  }
+
+  .security-item span {
+    font-size: var(--text-sm);
+  }
+
+  .usage-stat-value {
+    font-size: var(--text-xl);
   }
 }
 

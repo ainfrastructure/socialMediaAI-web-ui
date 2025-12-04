@@ -63,6 +63,8 @@ const capitalizeFirst = (str: string): string => {
   justify-content: space-between;
   padding: var(--space-md) 0;
   margin-bottom: var(--space-md);
+  max-width: 100%;
+  overflow: hidden;
 }
 
 .nav-arrow {
@@ -124,35 +126,40 @@ const capitalizeFirst = (str: string): string => {
   background: rgba(0, 0, 0, 0.3);
   border-radius: var(--radius-full);
   padding: 4px;
-  gap: 4px;
+  gap: 0;
 }
 
 .toggle-slider {
   position: absolute;
   height: calc(100% - 8px);
-  width: calc(33.33% - 4px);
+  width: calc(33.33%);
   background: var(--gold-primary);
   border-radius: var(--radius-full);
-  transition: transform var(--transition-base);
+  transition: left var(--transition-base);
   top: 4px;
   left: 4px;
 }
 
 .toggle-slider.position-month {
-  transform: translateX(0);
+  left: 4px;
 }
 
 .toggle-slider.position-week {
-  transform: translateX(calc(100% + 4px));
+  left: calc(33.33% + 4px);
 }
 
 .toggle-slider.position-day {
-  transform: translateX(calc(200% + 8px));
+  left: calc(66.66% + 4px);
 }
 
 .view-btn {
   position: relative;
   z-index: 1;
+  width: 33.33%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
   padding: var(--space-sm) var(--space-lg);
   background: transparent;
   border: none;
@@ -184,6 +191,71 @@ const capitalizeFirst = (str: string): string => {
 
   .arrow-tooltip {
     display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .calendar-header-new {
+    gap: var(--space-sm);
+    padding: var(--space-sm) 0;
+  }
+
+  .nav-arrow {
+    padding: var(--space-sm) var(--space-md);
+  }
+
+  .current-month {
+    font-size: var(--text-lg);
+  }
+
+  .view-btn {
+    padding: var(--space-xs) var(--space-md);
+    font-size: var(--text-xs);
+  }
+}
+
+@media (max-width: 390px) {
+  .calendar-header-new {
+    gap: var(--space-xs);
+  }
+
+  .nav-arrow {
+    padding: var(--space-xs) var(--space-sm);
+  }
+
+  .arrow-icon {
+    font-size: var(--text-base);
+  }
+
+  .current-month {
+    font-size: var(--text-base);
+  }
+
+  .view-mode-toggle {
+    padding: 2px;
+  }
+
+  .view-btn {
+    padding: var(--space-xs) var(--space-sm);
+    font-size: 10px;
+  }
+
+  .toggle-slider {
+    height: calc(100% - 4px);
+    width: calc(33.33%);
+    top: 2px;
+  }
+
+  .toggle-slider.position-month {
+    left: 2px;
+  }
+
+  .toggle-slider.position-week {
+    left: calc(33.33% + 2px);
+  }
+
+  .toggle-slider.position-day {
+    left: calc(66.66% + 2px);
   }
 }
 </style>

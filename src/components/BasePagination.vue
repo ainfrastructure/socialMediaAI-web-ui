@@ -223,16 +223,70 @@ const showLastEllipsis = computed(() => {
   .pagination-btn {
     padding: var(--space-sm) var(--space-md);
     font-size: var(--text-xs);
+    min-height: var(--touch-target-min);
   }
 
   .pagination-page {
-    min-width: 32px;
-    height: 32px;
+    min-width: 36px;
+    height: 36px;
     font-size: var(--text-xs);
   }
 
   .pagination-pages {
-    gap: 0.25rem;
+    gap: var(--space-xs);
+  }
+}
+
+@media (max-width: 480px) {
+  .pagination-container {
+    width: 100%;
+  }
+
+  .pagination {
+    flex-wrap: wrap;
+    gap: var(--space-sm);
+    justify-content: center;
+  }
+
+  .pagination-btn {
+    padding: var(--space-md) var(--space-lg);
+    min-height: var(--touch-target-min);
+    flex: 1;
+    max-width: 120px;
+  }
+
+  .pagination-pages {
+    order: -1;
+    width: 100%;
+    justify-content: center;
+    gap: var(--space-xs);
+    margin-bottom: var(--space-sm);
+  }
+
+  .pagination-page {
+    min-width: var(--touch-target-min);
+    height: var(--touch-target-min);
+  }
+
+  .pagination-info {
+    width: 100%;
+    text-align: center;
+  }
+}
+
+@media (max-width: 390px) {
+  .pagination-btn {
+    font-size: var(--text-xs);
+    padding: var(--space-sm) var(--space-md);
+  }
+
+  .pagination-page {
+    min-width: 40px;
+    height: 40px;
+  }
+
+  .pagination-pages {
+    gap: 2px;
   }
 }
 </style>

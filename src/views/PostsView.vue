@@ -1,116 +1,173 @@
 <template>
   <DashboardLayout>
-    <div class="posts-view">
+    <div class="content-hub-view">
     <div class="container">
-      <div class="header">
-        <h1 class="title">{{ $t('posts.title') }}</h1>
-        <p class="subtitle">{{ $t('posts.subtitle') }}</p>
-      </div>
-
-      <!-- Filters Section -->
-      <FilterBar
-        v-model="filters"
-        :restaurants="restaurants"
-        show-platform
-        show-restaurant
-        show-content-type
-        show-sort
-        @change="applyFilters"
-        @clear="resetFilters"
-      />
-
       <!-- Loading State -->
       <div v-if="loading" class="loading-container">
         <div class="spinner"></div>
-        <p>{{ $t('posts.loading') }}</p>
+        <p>{{ $t('contentHub.loading') }}</p>
       </div>
 
-      <!-- Empty State -->
-      <BaseCard v-else-if="posts.length === 0" variant="glass-intense" class="empty-state">
-        <div class="empty-content">
-          <h3>{{ $t('posts.noPosts') }}</h3>
-          <p>{{ $t('posts.noPostsDescription') }}</p>
-          <BaseButton variant="primary" @click="router.push('/cook-up')">
-            {{ $t('posts.goToCookUp') }}
-          </BaseButton>
+      <!-- Main Content -->
+      <div v-else class="content-hub">
+        <!-- Restaurant Header -->
+        <div class="restaurant-header">
+          <div class="header-content clickable-header" @click="showRestaurantSelector = true">
+            <div class="logo-container">
+              <div v-if="selectedRestaurant?.brand_dna?.logo_url" class="restaurant-logo">
+                <img :src="selectedRestaurant.brand_dna.logo_url" :alt="selectedRestaurant.name" />
+              </div>
+              <div v-else class="restaurant-logo placeholder">
+                <span class="placeholder-icon">🏪</span>
+              </div>
+            </div>
+            <div class="restaurant-info">
+              <h1 class="restaurant-name">{{ selectedRestaurant?.name }}</h1>
+              <p class="restaurant-address">{{ selectedRestaurant?.address }}</p>
+            </div>
+          </div>
         </div>
-      </BaseCard>
 
-      <!-- Posts Grid -->
-      <div v-else class="posts-grid">
-        <BaseCard
-          v-for="post in posts"
-          :key="post.id"
-          variant="glass"
-          class="post-card"
-          @click="viewDetails(post)"
-        >
-          <!-- Media Preview -->
-          <div class="media-container">
-            <img
-              v-if="post.content_type === 'image'"
-              :src="post.media_url"
-              :alt="$t('posts.postAlt')"
-              class="post-media"
-            />
-            <video
-              v-else
-              :src="post.media_url"
-              class="post-media"
-              controls
-            ></video>
+        <!-- Create Content Card -->
+        <div class="create-card" @click="goToCreate">
+          <div class="create-plus-icon">
+            <span class="plus-symbol">+</span>
+          </div>
+        </div>
 
-            <!-- Content Type Icon -->
-            <span :class="['type-icon', post.content_type]">
-              {{ post.content_type === 'image' ? '📸' : '🎥' }}
+        <!-- Posts Section -->
+        <section class="posts-section">
+          <div class="section-header">
+            <h2 class="section-title">{{ $t('contentHub.yourPosts') }}</h2>
+          </div>
+
+          <!-- Inline Filters -->
+          <div class="inline-filters">
+            <div class="filter-group">
+              <select v-model="filters.content_type" class="inline-select" @change="applyFilters">
+                <option value="">{{ $t('contentHub.filterAll') }}</option>
+                <option value="image">{{ $t('posts.image') }}</option>
+                <option value="video">{{ $t('posts.video') }}</option>
+              </select>
+            </div>
+
+            <div class="filter-group">
+              <select v-model="filters.sort" class="inline-select" @change="applyFilters">
+                <option value="newest">{{ $t('contentHub.sortNewest') }}</option>
+                <option value="oldest">{{ $t('contentHub.sortOldest') }}</option>
+              </select>
+            </div>
+
+            <span v-if="totalItems > 0" class="posts-count">
+              {{ totalItems }} {{ totalItems === 1 ? 'post' : 'posts' }}
             </span>
           </div>
 
-          <!-- Post Details -->
-          <div class="post-details">
-            <!-- Restaurant Name -->
-            <div v-if="post.saved_restaurants?.name" class="restaurant-name">
-              🏪 {{ post.saved_restaurants.name }}
-            </div>
-
-            <!-- Post Text -->
-            <p v-if="post.post_text" class="post-text">
-              {{ truncateText(post.post_text, 150) }}
-            </p>
-
-            <!-- Hashtags -->
-            <div v-if="post.hashtags && post.hashtags.length > 0" class="hashtags">
-              <span v-for="(tag, idx) in post.hashtags.slice(0, 3)" :key="idx" class="hashtag">
-                {{ tag }}
-              </span>
-              <span v-if="post.hashtags.length > 3" class="more-tags">
-                +{{ post.hashtags.length - 3 }}
-              </span>
-            </div>
-
-            <!-- Bottom Info (Created Date & Platform) -->
-            <div class="card-footer">
-              <div class="created-date">
-                {{ formatDate(post.created_at) }}
-              </div>
-              <span v-if="post.platform" :class="['platform-badge', `platform-${post.platform}`]">
-                {{ post.platform }}
-              </span>
-            </div>
+          <!-- Loading Posts -->
+          <div v-if="loadingPosts" class="loading-container small">
+            <div class="spinner"></div>
           </div>
-        </BaseCard>
-      </div>
 
-      <!-- Pagination -->
-      <BasePagination
-        v-if="!loading && posts.length > 0"
-        v-model:current-page="currentPage"
-        :total-pages="totalPages"
-        :total-items="totalItems"
-        class="pagination-container"
-        @update:current-page="handlePageChange"
-      />
+          <!-- Empty State -->
+          <BaseCard v-else-if="posts.length === 0" variant="glass" class="empty-state">
+            <div class="empty-content">
+              <span class="empty-icon">📝</span>
+              <h3>{{ $t('contentHub.noPosts') }}</h3>
+              <p>{{ $t('contentHub.noPostsDescription') }}</p>
+            </div>
+          </BaseCard>
+
+          <!-- Posts Grid -->
+          <div v-else class="posts-grid">
+            <BaseCard
+              v-for="post in posts"
+              :key="post.id"
+              variant="glass"
+              class="post-card"
+              @click="viewDetails(post)"
+            >
+              <!-- Media Preview -->
+              <div class="media-container">
+                <img
+                  v-if="post.content_type === 'image'"
+                  :src="post.media_url"
+                  :alt="$t('posts.postAlt')"
+                  class="post-media"
+                />
+                <video v-else :src="post.media_url" class="post-media"></video>
+
+                <!-- Content Type Icon -->
+                <span :class="['type-icon', post.content_type]">
+                  {{ post.content_type === 'image' ? '📸' : '🎥' }}
+                </span>
+              </div>
+
+              <!-- Post Details -->
+              <div class="post-details">
+                <!-- Post Text -->
+                <p v-if="post.post_text" class="post-text">
+                  {{ truncateText(post.post_text, 120) }}
+                </p>
+
+                <!-- Hashtags -->
+                <div v-if="post.hashtags && post.hashtags.length > 0" class="hashtags">
+                  <span v-for="(tag, idx) in post.hashtags.slice(0, 3)" :key="idx" class="hashtag">
+                    {{ tag }}
+                  </span>
+                  <span v-if="post.hashtags.length > 3" class="more-tags">
+                    +{{ post.hashtags.length - 3 }}
+                  </span>
+                </div>
+
+                <!-- Bottom Info -->
+                <div class="card-footer">
+                  <div class="created-date">
+                    {{ formatDate(post.created_at) }}
+                  </div>
+                  <div class="platform-badges">
+                    <template v-if="post.platforms && post.platforms.length > 0">
+                      <span
+                        v-for="platform in post.platforms"
+                        :key="platform"
+                        :class="['platform-badge', `platform-${platform}`]"
+                      >
+                        {{ platform }}
+                      </span>
+                    </template>
+                    <span
+                      v-else-if="post.platform"
+                      :class="['platform-badge', `platform-${post.platform}`]"
+                    >
+                      {{ post.platform }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </BaseCard>
+          </div>
+
+          <!-- Pagination -->
+          <BasePagination
+            v-if="!loadingPosts && posts.length > 0"
+            v-model:current-page="currentPage"
+            :total-pages="totalPages"
+            :total-items="totalItems"
+            class="pagination-container"
+            @update:current-page="handlePageChange"
+          />
+        </section>
+      </div>
     </div>
+
+    <!-- Restaurant Selector Modal -->
+    <RestaurantSelectorModal
+      v-model="showRestaurantSelector"
+      :restaurants="restaurants"
+      :current-id="selectedRestaurant?.id"
+      @select="handleRestaurantChange"
+      @restaurant-added="handleRestaurantAdded"
+      @delete="handleDeleteRestaurant"
+    />
 
     <!-- Schedule Modal -->
     <ScheduleModal
@@ -132,13 +189,24 @@
       @cancel="handleDeleteCancel"
     />
 
-    <!-- Detail Modal -->
+    <!-- Detail Modal (View Mode) -->
+    <PostDetailModal
+      v-if="!isEditMode"
+      v-model="showDetailModal"
+      :post="selectedPostWithDraftStatus"
+      @edit="enableEditMode"
+      @schedule="schedulePost"
+      @delete="confirmDeleteFromModal"
+      @close="closeDetailModal"
+    />
+
+    <!-- Edit Modal (Edit Mode) -->
     <Teleport to="body">
-      <div v-if="showDetailModal" class="modal-overlay" @click.self="closeDetailModal">
+      <div v-if="showDetailModal && isEditMode" class="modal-overlay" @click.self="cancelEdit">
         <BaseCard variant="glass-intense" class="detail-modal">
           <div class="modal-header">
-            <h3 class="modal-title">{{ $t('posts.postDetails') }}</h3>
-            <button class="close-btn" @click="closeDetailModal">&times;</button>
+            <h3 class="modal-title">{{ $t('posts.editPost') }}</h3>
+            <button class="close-btn" @click="cancelEdit">&times;</button>
           </div>
 
           <div v-if="selectedPost" class="modal-body">
@@ -149,42 +217,24 @@
               :alt="$t('posts.postAlt')"
               class="detail-media"
             />
-            <video
-              v-else
-              :src="selectedPost.media_url"
-              class="detail-media"
-              controls
-            ></video>
-
-            <!-- Restaurant Info -->
-            <div v-if="selectedPost.saved_restaurants?.name" class="detail-section">
-              <h4>{{ $t('posts.restaurant') }}</h4>
-              <p>{{ selectedPost.saved_restaurants.name }}</p>
-            </div>
+            <video v-else :src="selectedPost.media_url" class="detail-media" controls></video>
 
             <!-- Full Post Text -->
-            <div v-if="selectedPost.post_text" class="detail-section">
+            <div class="detail-section">
               <h4>{{ $t('posts.postText') }}</h4>
               <textarea
-                v-if="isEditMode"
                 v-model="selectedPost.post_text"
                 class="edit-textarea"
                 rows="6"
               ></textarea>
-              <p v-else class="full-text">{{ selectedPost.post_text }}</p>
             </div>
 
             <!-- Hashtags -->
-            <div v-if="(selectedPost.hashtags && selectedPost.hashtags.length > 0) || isEditMode" class="detail-section">
+            <div class="detail-section">
               <h4>{{ $t('posts.hashtags') }}</h4>
-              <!-- Edit Mode: Tag Editor -->
-              <div v-if="isEditMode" class="hashtag-editor">
+              <div class="hashtag-editor">
                 <div class="hashtag-tags">
-                  <span
-                    v-for="(tag, idx) in selectedPost.hashtags"
-                    :key="idx"
-                    class="hashtag-tag"
-                  >
+                  <span v-for="(tag, idx) in selectedPost.hashtags" :key="idx" class="hashtag-tag">
                     {{ tag }}
                     <button @click="removeHashtag(idx)" class="remove-tag">&times;</button>
                   </span>
@@ -197,57 +247,28 @@
                   class="hashtag-input"
                 />
               </div>
-              <!-- View Mode: Display Tags -->
-              <div v-else class="hashtags-full">
-                <span v-for="(tag, idx) in selectedPost.hashtags" :key="idx" class="hashtag">
-                  {{ tag }}
-                </span>
-              </div>
             </div>
 
             <!-- Platform -->
-            <div v-if="selectedPost.platform || isEditMode" class="detail-section">
+            <div class="detail-section">
               <h4>{{ $t('posts.platformSection') }}</h4>
-              <select v-if="isEditMode" v-model="selectedPost.platform" class="edit-select">
+              <select v-model="selectedPost.platform" class="edit-select">
                 <option value="instagram">{{ $t('platforms.instagram') }}</option>
                 <option value="facebook">{{ $t('platforms.facebook') }}</option>
                 <option value="tiktok">{{ $t('platforms.tiktok') }}</option>
                 <option value="twitter">{{ $t('platforms.twitter') }}</option>
                 <option value="linkedin">{{ $t('platforms.linkedin') }}</option>
               </select>
-              <p v-else class="full-text platform-name">{{ selectedPost.platform }}</p>
-            </div>
-
-            <!-- Prompt -->
-            <div v-if="selectedPost.prompt" class="detail-section">
-              <h4>{{ $t('posts.originalPrompt') }}</h4>
-              <p class="prompt-text">{{ selectedPost.prompt }}</p>
             </div>
 
             <!-- Action Buttons -->
             <div class="modal-actions">
-              <!-- Edit Mode Buttons -->
-              <template v-if="isEditMode">
-                <BaseButton variant="primary" @click="saveChanges">
-                  {{ $t('posts.saveChangesButton') }}
-                </BaseButton>
-                <BaseButton variant="ghost" @click="cancelEdit">
-                  {{ $t('posts.cancelChangesButton') }}
-                </BaseButton>
-              </template>
-
-              <!-- View Mode Buttons -->
-              <template v-else>
-                <BaseButton variant="danger" size="small" @click="confirmDeleteFromModal">
-                  🗑️ {{ $t('posts.deleteButton') }}
-                </BaseButton>
-                <BaseButton variant="secondary" @click="enableEditMode">
-                  ✏️ {{ $t('posts.editButton') }}
-                </BaseButton>
-                <BaseButton variant="primary" size="large" @click="schedulePost(selectedPost)">
-                  📅 {{ $t('posts.scheduleButton') }}
-                </BaseButton>
-              </template>
+              <BaseButton variant="primary" @click="saveChanges">
+                {{ $t('posts.saveChangesButton') }}
+              </BaseButton>
+              <BaseButton variant="ghost" @click="cancelEdit">
+                {{ $t('posts.cancelChangesButton') }}
+              </BaseButton>
             </div>
           </div>
         </BaseCard>
@@ -261,27 +282,34 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import DashboardLayout from '../components/DashboardLayout.vue'
-import BaseCard from '../components/BaseCard.vue'
-import BaseButton from '../components/BaseButton.vue'
-import BasePagination from '../components/BasePagination.vue'
-import ConfirmModal from '../components/ConfirmModal.vue'
-import ScheduleModal from '../components/ScheduleModal.vue'
-import FilterBar from '../components/FilterBar.vue'
-import { api } from '../services/api'
-import { useRestaurantsStore } from '../stores/restaurants'
+import { usePreferencesStore } from '@/stores/preferences'
+import { api } from '@/services/api'
+import { restaurantService, type SavedRestaurant } from '@/services/restaurantService'
+import DashboardLayout from '@/components/DashboardLayout.vue'
+import BaseCard from '@/components/BaseCard.vue'
+import BaseButton from '@/components/BaseButton.vue'
+import BasePagination from '@/components/BasePagination.vue'
+import ConfirmModal from '@/components/ConfirmModal.vue'
+import ScheduleModal from '@/components/ScheduleModal.vue'
+import RestaurantSelectorModal from '@/components/RestaurantSelectorModal.vue'
+import PostDetailModal from '@/components/PostDetailModal.vue'
 
 const router = useRouter()
 const { t } = useI18n()
-const restaurantsStore = useRestaurantsStore()
+const preferencesStore = usePreferencesStore()
 
 // State
+const loading = ref(true)
+const loadingPosts = ref(false)
+const restaurants = ref<SavedRestaurant[]>([])
+const selectedRestaurant = ref<SavedRestaurant | null>(null)
 const posts = ref<any[]>([])
-const restaurants = computed(() => restaurantsStore.restaurants)
-const loading = ref(false)
+const showRestaurantSelector = ref(false)
+
+// Post detail modal state
 const selectedPost = ref<any>(null)
-const showScheduleModal = ref(false)
 const showDetailModal = ref(false)
+const showScheduleModal = ref(false)
 const showDeleteModal = ref(false)
 const deletingPost = ref(false)
 const postToDelete = ref<string | null>(null)
@@ -289,10 +317,18 @@ const isEditMode = ref(false)
 const originalPost = ref<any>(null)
 const newHashtag = ref('')
 
+// Computed to add draft status for PostDetailModal
+const selectedPostWithDraftStatus = computed(() => {
+  if (!selectedPost.value) return null
+  return {
+    ...selectedPost.value,
+    status: 'draft' // ContentHub posts are favorites/drafts
+  }
+})
+
 // Filters
 const filters = ref({
   platform: '',
-  restaurant_id: '',
   content_type: '',
   sort: 'newest' as 'newest' | 'oldest',
 })
@@ -303,15 +339,54 @@ const itemsPerPage = 12
 const totalItems = ref(0)
 const totalPages = ref(0)
 
-// Fetch posts (stored as favorites in backend) with filters and pagination
-const fetchPosts = async () => {
+// Initialize
+onMounted(async () => {
   try {
-    loading.value = true
+    // Fetch restaurants
+    const response = await api.getRestaurants()
+    if (response.success) {
+      restaurants.value = response.data || []
+    }
+
+    // If no restaurants, redirect to onboarding
+    if (restaurants.value.length === 0) {
+      router.push('/onboarding')
+      return
+    }
+
+    // Auto-select restaurant
+    const savedId = preferencesStore.selectedRestaurantId
+    if (savedId) {
+      const found = restaurants.value.find((r) => r.id === savedId)
+      if (found) {
+        selectedRestaurant.value = found
+      }
+    }
+
+    // If no saved selection or invalid, use first restaurant
+    if (!selectedRestaurant.value) {
+      selectedRestaurant.value = restaurants.value[0]
+      preferencesStore.setSelectedRestaurant(restaurants.value[0].id)
+    }
+
+    // Load posts for selected restaurant
+    await fetchPosts()
+  } finally {
+    loading.value = false
+  }
+})
+
+// Fetch posts filtered by restaurant
+async function fetchPosts() {
+  if (!selectedRestaurant.value) return
+
+  try {
+    loadingPosts.value = true
     const offset = (currentPage.value - 1) * itemsPerPage
 
     const response = await api.getFavorites({
+      restaurant_id: selectedRestaurant.value.id,
       platform: filters.value.platform || undefined,
-      restaurant_id: filters.value.restaurant_id || undefined,
       content_type: filters.value.content_type as 'image' | 'video' | undefined,
       limit: itemsPerPage,
       offset,
@@ -326,75 +401,116 @@ const fetchPosts = async () => {
   } catch (error) {
     console.error('Error fetching posts:', error)
   } finally {
-    loading.value = false
+    loadingPosts.value = false
   }
 }
 
-// Fetch restaurants for filter dropdown (uses store)
-const fetchRestaurants = async () => {
-  await restaurantsStore.initialize()
-}
+// Handle restaurant change
+function handleRestaurantChange(restaurant: SavedRestaurant) {
+  selectedRestaurant.value = restaurant
+  preferencesStore.setSelectedRestaurant(restaurant.id)
+  showRestaurantSelector.value = false
 
-// Filter and pagination handlers
-const applyFilters = () => {
-  currentPage.value = 1 // Reset to first page when filters change
+  // Reset and reload posts
+  currentPage.value = 1
   fetchPosts()
 }
 
-const resetFilters = () => {
+// Navigation
+function goToCreate() {
+  // Always start in easy mode when clicking the + button
+  preferencesStore.setCreationMode('easy', true)
+  router.push('/posts/create')
+}
+
+// Handle restaurant added
+async function handleRestaurantAdded() {
+  try {
+    // Refresh restaurants list
+    const response = await api.getRestaurants()
+    if (response.success) {
+      restaurants.value = response.data || []
+    }
+  } catch (error) {
+    console.error('Failed to fetch restaurants:', error)
+  }
+}
+
+// Handle restaurant deletion
+async function handleDeleteRestaurant(restaurant: SavedRestaurant) {
+  try {
+    await restaurantService.deleteRestaurant(restaurant.place_id)
+
+    // Remove from local list
+    restaurants.value = restaurants.value.filter((r) => r.id !== restaurant.id)
+
+    // If the deleted restaurant was selected, select another one or clear
+    if (selectedRestaurant.value?.id === restaurant.id) {
+      if (restaurants.value.length > 0) {
+        selectedRestaurant.value = restaurants.value[0]
+        preferencesStore.setSelectedRestaurant(restaurants.value[0].id)
+      } else {
+        selectedRestaurant.value = null
+        preferencesStore.setSelectedRestaurant(null)
+      }
+      // Reload posts for new selection
+      fetchPosts()
+    }
+  } catch (error) {
+    console.error('Failed to delete restaurant:', error)
+  }
+}
+
+// Filter and pagination handlers
+function applyFilters() {
+  currentPage.value = 1
+  fetchPosts()
+}
+
+function resetFilters() {
   filters.value = {
     platform: '',
-    restaurant_id: '',
     content_type: '',
     sort: 'newest',
   }
   applyFilters()
 }
 
-const handlePageChange = (page: number) => {
+function handlePageChange(page: number) {
   currentPage.value = page
   fetchPosts()
-  // Scroll to top of grid
   window.scrollTo({ top: 0, behavior: 'smooth' })
 }
 
-// Post actions
-const schedulePost = (post: any) => {
-  const postToSchedule = post ? { ...post } : (selectedPost.value ? { ...selectedPost.value } : null)
-
-  if (!postToSchedule) {
-    console.error('No post selected')
-    return
-  }
-
-  // Close detail modal if it's open
-  showDetailModal.value = false
-
-  // Set the post and open schedule modal
-  selectedPost.value = postToSchedule
-  showScheduleModal.value = true
-}
-
-const viewDetails = (post: any) => {
+// Post detail functions
+function viewDetails(post: any) {
   selectedPost.value = { ...post }
   originalPost.value = { ...post }
   isEditMode.value = false
   showDetailModal.value = true
 }
 
-const closeDetailModal = () => {
+function closeDetailModal() {
   showDetailModal.value = false
   selectedPost.value = null
   originalPost.value = null
   isEditMode.value = false
 }
 
-const enableEditMode = () => {
+function enableEditMode() {
   isEditMode.value = true
   newHashtag.value = ''
 }
 
-const addHashtag = () => {
+function cancelEdit() {
+  if (originalPost.value) {
+    selectedPost.value = { ...originalPost.value }
+  }
+  isEditMode.value = false
+}
+
+// Hashtag editing
+function addHashtag() {
   if (!selectedPost.value) return
   const tag = newHashtag.value.trim().replace(/^#/, '')
   if (tag) {
@@ -408,20 +524,13 @@ const addHashtag = () => {
   newHashtag.value = ''
 }
 
-const removeHashtag = (index: number) => {
+function removeHashtag(index: number) {
   if (!selectedPost.value?.hashtags) return
   selectedPost.value.hashtags.splice(index, 1)
 }
 
-const cancelEdit = () => {
-  if (originalPost.value) {
-    selectedPost.value = { ...originalPost.value }
-  }
-  isEditMode.value = false
-}
-
-// Save changes from detail modal
-const saveChanges = async () => {
+// Save changes
+async function saveChanges() {
   if (!selectedPost.value) return
 
   try {
@@ -435,28 +544,35 @@ const saveChanges = async () => {
       await fetchPosts()
       isEditMode.value = false
       originalPost.value = { ...selectedPost.value }
-      alert('Changes saved successfully!')
     }
   } catch (error) {
     console.error('Error saving changes:', error)
-    alert('Failed to save changes')
   }
 }
 
-// Delete from detail modal
-const confirmDeleteFromModal = () => {
+// Schedule post
+function schedulePost(post: any) {
+  const postToSchedule = post ? { ...post } : selectedPost.value ? { ...selectedPost.value } : null
+  if (!postToSchedule) return
+
+  showDetailModal.value = false
+  selectedPost.value = postToSchedule
+  showScheduleModal.value = true
+}
+
+function handleScheduled() {
+  showScheduleModal.value = false
+  selectedPost.value = null
+}
+
+// Delete post
+function confirmDeleteFromModal() {
   if (!selectedPost.value) return
   postToDelete.value = selectedPost.value.id
   showDeleteModal.value = true
 }
 
-// Delete with confirmation modal
-const confirmDelete = (id: string) => {
-  postToDelete.value = id
-  showDeleteModal.value = true
-}
-
-const handleDeleteConfirm = async () => {
+async function handleDeleteConfirm() {
   if (!postToDelete.value) return
 
   try {
@@ -477,51 +593,35 @@ const handleDeleteConfirm = async () => {
   }
 }
 
-const handleDeleteCancel = () => {
+function handleDeleteCancel() {
   showDeleteModal.value = false
   postToDelete.value = null
 }
 
-const handleScheduled = () => {
-  showScheduleModal.value = false
-  selectedPost.value = null
-}
-
 // Utility functions
-const truncateText = (text: string, maxLength: number): string => {
+function truncateText(text: string, maxLength: number): string {
   if (text.length <= maxLength) return text
   return text.substring(0, maxLength) + '...'
 }
 
-const formatDate = (dateString: string): string => {
+function formatDate(dateString: string): string {
   return new Date(dateString).toLocaleDateString('en-US', {
     month: 'short',
     day: 'numeric',
     year: 'numeric',
   })
 }
-
-const copyToClipboard = async (text: string) => {
-  try {
-    await navigator.clipboard.writeText(text)
-    alert(t('posts.copiedToClipboard'))
-  } catch (error) {
-    console.error('Error copying to clipboard:', error)
-  }
-}
-
-// Initialize
-onMounted(() => {
-  fetchPosts()
-  fetchRestaurants()
-})
 </script>
 
 <style scoped>
-.posts-view {
+.content-hub-view {
   min-height: 100vh;
+  min-height: 100dvh;
   position: relative;
-  padding: 2rem 1rem;
+  padding: var(--space-2xl) var(--space-lg);
+  width: 100%;
+  max-width: 100vw;
+  overflow-x: hidden;
 }
 
 .container {
@@ -531,35 +631,16 @@ onMounted(() => {
   z-index: 1;
 }
 
-.header {
-  text-align: center;
-  margin-bottom: 2rem;
-}
-
-.title {
-  font-family: var(--font-heading);
-  font-size: 3rem;
-  font-weight: 700;
-  margin: 0 0 1rem 0;
-  background: linear-gradient(135deg, var(--text-primary) 0%, var(--gold-primary) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-.subtitle {
-  font-size: 1.125rem;
-  color: var(--text-secondary);
-  margin: 0;
-}
-
-
 .loading-container {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 3rem;
+  padding: 4rem;
   gap: 1rem;
+}
+
+.loading-container.small {
+  padding: 2rem;
 }
 
 .spinner {
@@ -577,21 +658,244 @@ onMounted(() => {
   }
 }
 
+/* Restaurant Header */
+.restaurant-header {
+  margin-bottom: var(--space-3xl);
+  padding-bottom: var(--space-2xl);
+  border-bottom: 1px solid rgba(212, 175, 55, 0.15);
+}
+
+.header-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2xl);
+  flex-wrap: wrap;
+}
+
+.clickable-header {
+  cursor: pointer;
+  position: relative;
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease;
+}
+
+.clickable-header:hover {
+  opacity: 0.9;
+  transform: scale(1.01);
+}
+
+.change-restaurant-hint {
+  position: absolute;
+  top: 0;
+  right: 0;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+  padding: var(--space-sm) var(--space-md);
+  background: rgba(212, 175, 55, 0.2);
+  border: 1px solid var(--gold-primary);
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  color: var(--gold-primary);
+  font-weight: var(--font-semibold);
+}
+
+.clickable-header:hover .change-restaurant-hint {
+  opacity: 1;
+}
+
+.logo-container {
+  flex-shrink: 0;
+  width: 100%;
+  max-width: 280px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.restaurant-logo {
+  width: 100%;
+  min-height: 80px;
+  max-height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  padding: var(--space-md);
+}
+
+.restaurant-logo img {
+  max-width: 100%;
+  max-height: 120px;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+}
+
+.restaurant-logo.placeholder {
+  background: rgba(212, 175, 55, 0.1);
+  border-radius: var(--radius-lg);
+  min-height: 120px;
+}
+
+.placeholder-icon {
+  font-size: 4rem;
+}
+
+.restaurant-info {
+  text-align: center;
+}
+
+.restaurant-name {
+  font-family: var(--font-heading);
+  font-size: var(--text-4xl);
+  font-weight: var(--font-bold);
+  color: var(--text-primary);
+  margin: 0 0 var(--space-sm) 0;
+  background: var(--gradient-gold);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  line-height: 1.2;
+}
+
+.restaurant-address {
+  font-size: var(--text-base);
+  color: var(--text-secondary);
+  margin: 0;
+  font-weight: var(--font-normal);
+}
+
+/* Create Card */
+.create-card {
+  margin-bottom: var(--space-3xl);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: var(--space-2xl);
+}
+
+.create-card:hover .create-plus-icon {
+  transform: scale(1.1);
+  box-shadow: 0 0 40px rgba(212, 175, 55, 0.4);
+}
+
+.create-plus-icon {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  background: var(--gradient-gold);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  box-shadow: 0 0 20px rgba(212, 175, 55, 0.3);
+}
+
+.plus-symbol {
+  font-size: 4rem;
+  font-weight: var(--font-light);
+  color: var(--text-on-gold);
+  line-height: 1;
+  margin-top: -4px;
+}
+
+/* Posts Section */
+.posts-section {
+  margin-top: var(--space-2xl);
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-xl);
+  flex-wrap: wrap;
+  gap: var(--space-lg);
+}
+
+.section-title {
+  font-family: var(--font-heading);
+  font-size: var(--text-2xl);
+  color: var(--text-primary);
+  margin: 0;
+}
+
+/* Inline Filters */
+.inline-filters {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  margin-bottom: var(--space-xl);
+  flex-wrap: wrap;
+}
+
+.filter-group {
+  position: relative;
+}
+
+.inline-select {
+  appearance: none;
+  background: rgba(26, 26, 26, 0.6);
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  border-radius: var(--radius-md);
+  padding: var(--space-sm) var(--space-2xl) var(--space-sm) var(--space-md);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23D4AF37' d='M6 8L2 4h8z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  min-width: 120px;
+}
+
+.inline-select:hover {
+  border-color: rgba(212, 175, 55, 0.4);
+}
+
+.inline-select:focus {
+  outline: none;
+  border-color: var(--gold-primary);
+  box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.15);
+}
+
+.inline-select option {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+.posts-count {
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+  margin-left: auto;
+}
+
+/* Empty State */
 .empty-state {
-  padding: 4rem 2rem;
+  padding: 3rem;
+  text-align: center;
 }
 
 .empty-content {
-  text-align: center;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 1.5rem;
+  gap: var(--space-md);
+}
+
+.empty-icon {
+  font-size: 3rem;
 }
 
 .empty-content h3 {
   font-family: var(--font-heading);
-  font-size: 1.5rem;
+  font-size: var(--text-xl);
   color: var(--text-primary);
   margin: 0;
 }
@@ -601,191 +905,151 @@ onMounted(() => {
   margin: 0;
 }
 
+/* Posts Grid */
 .posts-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
-  gap: 2rem;
-  margin-bottom: 2rem;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
+  gap: var(--space-xl);
 }
 
 .post-card {
   overflow: hidden;
-  display: flex;
-  flex-direction: column;
   cursor: pointer;
-  position: relative;
-  background: rgba(20, 20, 20, 0.6) !important;
-  backdrop-filter: blur(16px);
-  border: 1px solid rgba(212, 175, 55, 0.15);
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow:
-    0 4px 16px rgba(0, 0, 0, 0.2),
-    0 0 0 1px rgba(212, 175, 55, 0.1);
+  transition: all 0.3s ease;
 }
 
-.post-card:hover,
-.post-card.card-expanded {
-  transform: translateY(-8px) scale(1.02);
+.post-card:hover {
+  transform: translateY(-4px);
   border-color: rgba(212, 175, 55, 0.4);
-  box-shadow:
-    0 16px 48px rgba(0, 0, 0, 0.4),
-    0 0 40px rgba(212, 175, 55, 0.15),
-    0 0 0 1px rgba(212, 175, 55, 0.3);
-  background: rgba(20, 20, 20, 0.8) !important;
-}
-
-.post-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 4px;
-  background: linear-gradient(90deg, transparent, var(--gold-primary), transparent);
-  opacity: 1;
-  transition: opacity 0.4s ease;
-}
-
-.post-card:hover::before {
-  opacity: 1;
-  background: linear-gradient(90deg, var(--gold-primary), var(--gold-light), var(--gold-primary));
 }
 
 .media-container {
   position: relative;
   width: 100%;
-  height: 250px;
+  height: 200px;
   overflow: hidden;
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
 }
 
 .post-media {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.post-card:hover .post-media {
+  transform: scale(1.05);
 }
 
 .type-icon {
   position: absolute;
-  top: 0.75rem;
-  left: 0.75rem;
-  font-size: 1.5rem;
-  filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.5));
-  transition: transform 0.3s ease;
-}
-
-.post-card:hover .type-icon {
-  transform: scale(1.1);
-}
-
-.platform-badge {
-  padding: 0.4rem 0.875rem;
-  border-radius: 6px;
-  font-size: 0.6875rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-  transition: all 0.3s ease;
-}
-
-.platform-badge.platform-instagram {
-  background: linear-gradient(135deg, rgba(225, 48, 108, 0.9), rgba(253, 29, 29, 0.9));
-  color: white;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-.platform-badge.platform-facebook {
-  background: linear-gradient(135deg, rgba(66, 103, 178, 0.9), rgba(24, 119, 242, 0.9));
-  color: white;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-.platform-badge.platform-tiktok {
-  background: linear-gradient(135deg, rgba(0, 0, 0, 0.95), rgba(37, 244, 238, 0.3));
-  color: white;
-  border: 1px solid rgba(37, 244, 238, 0.5);
-}
-
-.platform-badge.platform-twitter {
-  background: linear-gradient(135deg, rgba(29, 161, 242, 0.9), rgba(26, 140, 216, 0.9));
-  color: white;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-.platform-badge.platform-linkedin {
-  background: linear-gradient(135deg, rgba(10, 102, 194, 0.9), rgba(0, 119, 181, 0.9));
-  color: white;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  top: var(--space-sm);
+  left: var(--space-sm);
+  font-size: 1.25rem;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
 }
 
 .post-details {
-  padding: 1.5rem;
+  padding: var(--space-lg);
   display: flex;
   flex-direction: column;
-  gap: 1rem;
-  flex: 1;
-}
-
-.restaurant-name {
-  font-size: 0.875rem;
-  color: var(--gold-primary);
-  font-weight: 600;
+  gap: var(--space-sm);
 }
 
 .post-text {
   color: var(--text-secondary);
-  line-height: 1.6;
+  line-height: 1.5;
   margin: 0;
-  flex: 1;
+  font-size: var(--text-sm);
 }
 
 .hashtags {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
+  gap: var(--space-xs);
 }
 
 .hashtag {
-  padding: 0.25rem 0.75rem;
+  padding: 0.2rem 0.5rem;
   background: rgba(212, 175, 55, 0.15);
   color: var(--gold-light);
-  border-radius: 6px;
-  font-size: 0.75rem;
-  font-weight: 500;
+  border-radius: 4px;
+  font-size: var(--text-xs);
 }
 
 .more-tags {
-  padding: 0.25rem 0.75rem;
+  padding: 0.2rem 0.5rem;
   background: rgba(212, 175, 55, 0.1);
   color: var(--text-muted);
-  border-radius: 6px;
-  font-size: 0.75rem;
+  border-radius: 4px;
+  font-size: var(--text-xs);
 }
 
-
-/* Card Footer */
 .card-footer {
   display: flex;
-  align-items: center;
   justify-content: space-between;
-  gap: 0.75rem;
-  margin-top: auto;
-  padding-top: 1rem;
-  border-top: 1px solid rgba(212, 175, 55, 0.15);
+  align-items: center;
+  margin-top: var(--space-sm);
+  padding-top: var(--space-sm);
+  border-top: 1px solid rgba(212, 175, 55, 0.1);
 }
 
 .created-date {
-  font-size: 0.75rem;
+  font-size: var(--text-xs);
   color: var(--text-muted);
+}
+
+.platform-badges {
+  display: flex;
+  gap: var(--space-xs);
+  flex-wrap: wrap;
+}
+
+.platform-badge {
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: var(--text-xs);
+  font-weight: var(--font-semibold);
+  text-transform: uppercase;
+}
+
+.platform-instagram {
+  background: linear-gradient(135deg, rgba(225, 48, 108, 0.9), rgba(253, 29, 29, 0.9));
+  color: white;
+}
+
+.platform-facebook {
+  background: linear-gradient(135deg, rgba(66, 103, 178, 0.9), rgba(24, 119, 242, 0.9));
+  color: white;
+}
+
+.platform-tiktok {
+  background: rgba(0, 0, 0, 0.9);
+  color: white;
+}
+
+.platform-twitter {
+  background: rgba(29, 161, 242, 0.9);
+  color: white;
+}
+
+.platform-linkedin {
+  background: rgba(10, 102, 194, 0.9);
+  color: white;
+}
+
+/* Pagination */
+.pagination-container {
+  margin-top: var(--space-2xl);
+  display: flex;
+  justify-content: center;
 }
 
 /* Detail Modal */
 .modal-overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  inset: 0;
   background: rgba(0, 0, 0, 0.85);
   backdrop-filter: blur(var(--blur-md));
   display: flex;
@@ -793,20 +1057,10 @@ onMounted(() => {
   justify-content: center;
   padding: var(--space-xl);
   z-index: 1000;
-  animation: fadeIn 0.2s ease;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
 }
 
 .detail-modal {
-  max-width: 800px;
+  max-width: 700px;
   width: 100%;
   max-height: 90vh;
   overflow-y: auto;
@@ -816,13 +1070,14 @@ onMounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: var(--space-xl);
+  padding-bottom: var(--space-lg);
   border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+  margin-bottom: var(--space-lg);
 }
 
 .modal-title {
   font-family: var(--font-heading);
-  font-size: var(--text-2xl);
+  font-size: var(--text-xl);
   color: var(--gold-primary);
   margin: 0;
 }
@@ -832,7 +1087,6 @@ onMounted(() => {
   border: none;
   color: var(--text-secondary);
   font-size: 2rem;
-  line-height: 1;
   cursor: pointer;
   padding: 0;
   width: 40px;
@@ -850,7 +1104,9 @@ onMounted(() => {
 }
 
 .modal-body {
-  padding: var(--space-xl);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
 }
 
 .detail-media {
@@ -858,57 +1114,69 @@ onMounted(() => {
   max-height: 400px;
   object-fit: contain;
   border-radius: var(--radius-md);
-  margin-bottom: var(--space-xl);
 }
 
 .detail-section {
-  margin-bottom: var(--space-xl);
-  padding-bottom: var(--space-xl);
+  padding-bottom: var(--space-lg);
   border-bottom: 1px solid rgba(212, 175, 55, 0.1);
-}
-
-.detail-section:last-child {
-  border-bottom: none;
 }
 
 .detail-section h4 {
   font-family: var(--font-heading);
-  font-size: var(--text-lg);
+  font-size: var(--text-base);
   color: var(--gold-primary);
-  margin: 0 0 var(--space-md) 0;
+  margin: 0 0 var(--space-sm) 0;
 }
 
-.full-text,
-.prompt-text {
+.full-text {
   color: var(--text-secondary);
   line-height: 1.6;
+  margin: 0;
   white-space: pre-wrap;
-  margin-bottom: var(--space-md);
-}
-
-.platform-name {
-  text-transform: capitalize;
 }
 
 .hashtags-full {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
-  margin-bottom: var(--space-md);
+  gap: var(--space-sm);
 }
 
-/* Hashtag Editor */
+/* Edit inputs */
+.edit-textarea,
+.edit-input,
+.edit-select {
+  width: 100%;
+  background: rgba(10, 10, 10, 0.8);
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  border-radius: var(--radius-md);
+  padding: var(--space-sm) var(--space-md);
+  color: var(--text-primary);
+  font-size: var(--text-base);
+  font-family: var(--font-body);
+  transition: all 0.3s ease;
+}
+
+.edit-textarea:focus,
+.edit-input:focus,
+.edit-select:focus {
+  outline: none;
+  border-color: var(--gold-primary);
+}
+
+.edit-textarea {
+  resize: vertical;
+}
+
+.edit-select option {
+  background: var(--bg-primary);
+}
+
+/* Hashtag editor */
 .hashtag-editor {
   background: rgba(0, 0, 0, 0.4);
-  border: 1px solid rgba(212, 175, 55, 0.3);
+  border: 1px solid rgba(212, 175, 55, 0.2);
   border-radius: var(--radius-md);
   padding: var(--space-md);
-  transition: all 0.2s ease;
-}
-
-.hashtag-editor:focus-within {
-  border-color: var(--gold-primary);
-  background: rgba(0, 0, 0, 0.5);
 }
 
 .hashtag-tags {
@@ -928,19 +1196,16 @@ onMounted(() => {
   border-radius: var(--radius-full);
   color: var(--gold-primary);
   font-size: var(--text-sm);
-  font-weight: var(--font-medium);
 }
 
 .remove-tag {
   background: none;
   border: none;
   color: var(--gold-primary);
-  font-size: var(--text-base);
   cursor: pointer;
   padding: 0;
   line-height: 1;
   opacity: 0.7;
-  transition: opacity 0.2s ease;
 }
 
 .remove-tag:hover {
@@ -965,156 +1230,281 @@ onMounted(() => {
   color: var(--text-muted);
 }
 
-/* Edit inputs in modal */
-.edit-textarea,
-.edit-input,
-.edit-select {
-  width: 100%;
-  background: rgba(10, 10, 10, 0.8);
-  border: 1px solid rgba(212, 175, 55, 0.2);
-  border-radius: var(--radius-md);
-  padding: var(--space-sm) var(--space-md);
-  color: var(--text-primary);
-  font-size: 0.9375rem;
-  font-family: var(--font-body);
-  transition: all 0.3s ease;
-  resize: vertical;
-}
-
-.edit-textarea:focus,
-.edit-input:focus,
-.edit-select:focus {
-  outline: none;
-  border-color: var(--gold-primary);
-  box-shadow: 0 0 15px rgba(212, 175, 55, 0.3);
-}
-
-.edit-select option {
-  background: var(--bg-primary);
-  color: var(--text-primary);
-}
-
 /* Modal actions */
 .modal-actions {
   display: flex;
-  gap: var(--space-lg);
-  margin-top: var(--space-xl);
-  padding-top: var(--space-xl);
+  gap: var(--space-md);
+  margin-top: var(--space-lg);
+  padding-top: var(--space-lg);
   border-top: 1px solid rgba(212, 175, 55, 0.2);
   flex-wrap: wrap;
-  align-items: stretch;
 }
 
 .modal-actions button {
-  transition: all var(--transition-base);
-}
-
-/* Visual hierarchy through sizing */
-.modal-actions button:nth-child(1) {
-  /* Delete - smallest, danger variant */
-  flex: 0 1 auto;
-  min-width: 100px;
-}
-
-.modal-actions button:nth-child(2) {
-  /* Edit - medium, secondary variant */
-  flex: 1 1 auto;
+  flex: 1;
   min-width: 120px;
-}
-
-.modal-actions button:nth-child(3) {
-  /* Schedule Post - largest, primary variant */
-  flex: 2 1 auto;
-  min-width: 160px;
-}
-
-/* Pagination */
-.pagination-container {
-  margin-top: 0;
-  padding-top: var(--space-3xl);
-  display: flex;
-  justify-content: center;
-  max-width: 1400px;
-  margin-left: auto;
-  margin-right: auto;
-  border-top: 1px solid rgba(212, 175, 55, 0.15);
-  animation: fadeInUp 0.4s ease 0.3s both;
-}
-
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
 }
 
 /* Responsive */
 @media (max-width: 768px) {
-  .title {
-    font-size: 2rem;
+  .content-hub-view {
+    padding: var(--space-xl) var(--space-md);
+  }
+
+  .restaurant-header {
+    margin-bottom: var(--space-2xl);
+    padding-bottom: var(--space-xl);
+  }
+
+  .restaurant-logo {
+    width: 100px;
+    height: 100px;
+  }
+
+  .restaurant-name {
+    font-size: var(--text-3xl);
+  }
+
+  .restaurant-address {
+    font-size: var(--text-sm);
+  }
+
+  .header-actions {
+    width: 100%;
+  }
+
+  .header-actions button {
+    width: 100%;
+  }
+
+  .create-content {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .section-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .inline-filters {
+    width: 100%;
+  }
+
+  .inline-select {
+    flex: 1;
+    min-width: 100px;
+    min-height: var(--touch-target-min);
+  }
+
+  .posts-count {
+    width: 100%;
+    text-align: right;
+    margin-left: 0;
+    margin-top: var(--space-xs);
   }
 
   .posts-grid {
     grid-template-columns: 1fr;
-    gap: 1.5rem;
   }
 
-  .pagination-container {
-    padding-top: var(--space-2xl);
+  .modal-overlay {
+    padding: var(--space-md);
   }
 
   .modal-actions {
-    flex-direction: column-reverse;
+    flex-direction: column;
   }
 
   .modal-actions button {
-    min-width: 100% !important;
-    flex: 1 1 auto !important;
+    min-width: 100%;
+    min-height: var(--touch-target-min);
   }
 
-  /* On mobile, primary action appears first (Schedule Post) */
+  .close-btn {
+    min-width: var(--touch-target-min);
+    min-height: var(--touch-target-min);
+  }
+
+  .create-plus-icon {
+    width: 80px;
+    height: 80px;
+  }
+
+  .plus-symbol {
+    font-size: 3rem;
+  }
 }
 
-/* Enhanced media container */
-.media-container {
-  overflow: hidden;
-  border-radius: var(--radius-md) var(--radius-md) 0 0;
+@media (max-width: 480px) {
+  .content-hub-view {
+    padding: var(--space-lg) var(--space-sm);
+  }
+
+  .restaurant-header {
+    margin-bottom: var(--space-xl);
+    padding-bottom: var(--space-lg);
+  }
+
+  .header-content {
+    flex-direction: column;
+    gap: var(--space-md);
+  }
+
+  .logo-container {
+    max-width: 200px;
+  }
+
+  .restaurant-logo {
+    min-height: 60px;
+    max-height: 80px;
+  }
+
+  .restaurant-logo img {
+    max-height: 80px;
+  }
+
+  .restaurant-logo.placeholder {
+    min-height: 80px;
+  }
+
+  .placeholder-icon {
+    font-size: 2.5rem;
+  }
+
+  .restaurant-name {
+    font-size: var(--text-2xl);
+  }
+
+  .restaurant-address {
+    font-size: var(--text-xs);
+  }
+
+  .create-card {
+    padding: var(--space-xl);
+    margin-bottom: var(--space-2xl);
+  }
+
+  .create-plus-icon {
+    width: 72px;
+    height: 72px;
+  }
+
+  .plus-symbol {
+    font-size: 2.5rem;
+  }
+
+  .section-title {
+    font-size: var(--text-xl);
+  }
+
+  .posts-section {
+    margin-top: var(--space-xl);
+  }
+
+  .media-container {
+    height: 180px;
+  }
+
+  .post-details {
+    padding: var(--space-md);
+  }
+
+  .post-text {
+    font-size: var(--text-xs);
+  }
+
+  .modal-overlay {
+    padding: var(--space-sm);
+    align-items: flex-end;
+  }
+
+  .detail-modal {
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    max-height: 95vh;
+  }
+
+  .modal-header {
+    padding: var(--space-md);
+  }
+
+  .modal-title {
+    font-size: var(--text-lg);
+  }
+
+  .detail-media {
+    max-height: 250px;
+  }
+
+  .loading-container {
+    padding: var(--space-2xl);
+  }
+
+  .loading-container.small {
+    padding: var(--space-lg);
+  }
+
+  .empty-state {
+    padding: var(--space-xl);
+  }
+
+  .empty-icon {
+    font-size: 2rem;
+  }
+
+  .empty-content h3 {
+    font-size: var(--text-lg);
+  }
 }
 
-.post-media {
-  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-}
+@media (max-width: 390px) {
+  .content-hub-view {
+    padding: var(--space-md) var(--space-xs);
+  }
 
-.post-card:hover .post-media {
-  transform: scale(1.05);
-}
+  .logo-container {
+    max-width: 160px;
+  }
 
-/* Restaurant name enhancement */
-.restaurant-name {
-  background: linear-gradient(135deg, rgba(212, 175, 55, 0.1), rgba(212, 175, 55, 0.05));
-  padding: 0.5rem 0.75rem;
-  border-radius: 6px;
-  border-left: 3px solid var(--gold-primary);
-}
+  .restaurant-name {
+    font-size: var(--text-xl);
+  }
 
-/* Hashtag enhancements */
-.hashtag {
-  border: 1px solid rgba(212, 175, 55, 0.3);
-  transition: all 0.2s ease;
-}
+  .create-plus-icon {
+    width: 64px;
+    height: 64px;
+  }
 
-.hashtag:hover {
-  background: rgba(212, 175, 55, 0.25);
-  border-color: var(--gold-primary);
-  transform: translateY(-2px);
-}
+  .plus-symbol {
+    font-size: 2rem;
+  }
 
-/* Smooth scroll behavior */
-html {
-  scroll-behavior: smooth;
+  .section-title {
+    font-size: var(--text-lg);
+  }
+
+  .inline-filters {
+    gap: var(--space-sm);
+  }
+
+  .inline-select {
+    font-size: var(--text-xs);
+    min-width: 90px;
+    padding: var(--space-sm) var(--space-xl) var(--space-sm) var(--space-sm);
+  }
+
+  .media-container {
+    height: 160px;
+  }
+
+  .card-footer {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-xs);
+  }
+
+  .platform-badges {
+    width: 100%;
+  }
 }
 </style>

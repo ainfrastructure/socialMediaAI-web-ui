@@ -29,7 +29,7 @@ const { t } = useI18n()
 // Navigation helper to always start in easy mode
 function goToCreateContent() {
   preferencesStore.setCreationMode('easy', true)
-  router.push('/content/create')
+  router.push('/posts/create')
 }
 
 // Real stats from API
@@ -276,8 +276,8 @@ function closePostDetailModal() {
 function handlePostEdit(post: any) {
   closePostDetailModal()
   if (post.status === 'draft') {
-    // Navigate to content hub to edit draft
-    router.push('/content')
+    // Navigate to posts hub to edit draft
+    router.push('/posts')
   } else {
     // Navigate to scheduler with post ID
     router.push(`/scheduler?post=${post.id}`)
@@ -520,7 +520,7 @@ onMounted(async () => {
 
     <div class="dashboard-content">
       <!-- Test Buttons (TEMPORARY - Remove after testing) -->
-      <div style="display: flex; gap: 12px; margin-bottom: 24px; padding: 16px; background: rgba(212, 175, 55, 0.1); border-radius: 10px; border: 1px solid rgba(212, 175, 55, 0.3);">
+      <div class="test-buttons-row">
         <BaseButton variant="secondary" size="small" @click="testFrontendError">
           🧪 Test Frontend Error
         </BaseButton>
@@ -642,7 +642,7 @@ onMounted(async () => {
             </div>
             <router-link
               v-if="selectedRestaurantFilter !== 'all'"
-              to="/content"
+              to="/posts"
               class="view-all-link"
             >
               {{ $t('dashboardNew.viewAll') }} →
@@ -874,6 +874,8 @@ onMounted(async () => {
 .dashboard-content {
   max-width: 1400px;
   margin: 0 auto;
+  width: 100%;
+  overflow-x: hidden;
 }
 
 /* Welcome Section */
@@ -1463,5 +1465,185 @@ onMounted(async () => {
   .posts-table td:nth-child(4) {
     display: none;
   }
+
+  .section-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .section-header-left {
+    flex-direction: column;
+    width: 100%;
+    gap: var(--space-sm);
+    align-items: flex-start;
+  }
+
+  .restaurant-filter {
+    width: 100%;
+    min-height: var(--touch-target-min);
+  }
+
+  .test-buttons-row {
+    flex-direction: column;
+  }
+
+  .posts-table-card {
+    overflow-x: auto;
+  }
+
+  .posts-table {
+    min-width: 500px;
+  }
+}
+
+@media (max-width: 480px) {
+  .dashboard-content {
+    padding: var(--space-md);
+  }
+
+  .welcome-name {
+    font-size: var(--text-xl);
+  }
+
+  .stats-grid {
+    gap: var(--space-md);
+  }
+
+  .stat-card {
+    padding: var(--space-lg);
+  }
+
+  .stat-icon {
+    width: 40px;
+    height: 40px;
+  }
+
+  .stat-value {
+    font-size: var(--text-2xl);
+  }
+
+  .stat-label {
+    font-size: var(--text-xs);
+  }
+
+  .section {
+    margin-bottom: var(--space-2xl);
+  }
+
+  .section-title {
+    font-size: var(--text-base);
+  }
+
+  .quick-action-card {
+    padding: var(--space-lg);
+  }
+
+  .quick-action-icon {
+    width: 40px;
+    height: 40px;
+  }
+
+  .quick-action-title {
+    font-size: var(--text-sm);
+  }
+
+  .quick-action-desc {
+    font-size: var(--text-xs);
+  }
+
+  .main-grid {
+    gap: var(--space-lg);
+  }
+
+  .platforms-card {
+    padding: var(--space-sm);
+  }
+
+  .platform-row {
+    padding: var(--space-sm);
+  }
+
+  .platform-icon-box {
+    width: 32px;
+    height: 32px;
+  }
+
+  .connect-btn {
+    min-height: var(--touch-target-min);
+    padding: var(--space-sm) var(--space-md);
+  }
+
+  .loading-state,
+  .empty-state {
+    padding: var(--space-2xl);
+  }
+
+  .posts-table th,
+  .posts-table td {
+    padding: var(--space-sm) var(--space-md);
+  }
+
+  .post-thumbnail {
+    width: 36px;
+    height: 36px;
+  }
+}
+
+@media (max-width: 390px) {
+  .welcome-name {
+    font-size: var(--text-lg);
+  }
+
+  .stat-value {
+    font-size: var(--text-xl);
+  }
+
+  .stat-icon {
+    width: 36px;
+    height: 36px;
+  }
+
+  .quick-action-card {
+    padding: var(--space-md);
+  }
+
+  .quick-action-icon {
+    width: 36px;
+    height: 36px;
+  }
+
+  .section-title {
+    font-size: var(--text-sm);
+  }
+
+  .platforms-count {
+    font-size: var(--text-xs);
+    padding: 3px 8px;
+  }
+
+  .platform-name {
+    font-size: var(--text-xs);
+  }
+
+  .post-title {
+    font-size: var(--text-xs);
+  }
+
+  .test-buttons-row {
+    padding: var(--space-sm);
+    gap: var(--space-sm);
+  }
+}
+
+/* Test buttons row */
+.test-buttons-row {
+  display: flex;
+  gap: var(--space-md);
+  margin-bottom: var(--space-xl);
+  padding: var(--space-lg);
+  background: rgba(212, 175, 55, 0.1);
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  flex-wrap: wrap;
 }
 </style>

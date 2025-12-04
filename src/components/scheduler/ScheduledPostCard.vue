@@ -26,12 +26,26 @@
           preload="metadata"
         ></video>
         <div v-else class="post-image-placeholder">
-          <span class="placeholder-icon">📸</span>
+          <span class="placeholder-icon">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+              <circle cx="8.5" cy="8.5" r="1.5"/>
+              <polyline points="21 15 16 10 5 21"/>
+            </svg>
+          </span>
         </div>
 
         <!-- Content Type Badge on Image -->
         <div class="media-badge">
-          {{ post.content_type === 'image' ? '📸' : '🎥' }}
+          <svg v-if="post.content_type === 'image'" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+            <circle cx="8.5" cy="8.5" r="1.5"/>
+            <polyline points="21 15 16 10 5 21"/>
+          </svg>
+          <svg v-else width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="23 7 16 12 23 17 23 7"/>
+            <rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
+          </svg>
         </div>
       </div>
 
@@ -40,7 +54,12 @@
         <!-- Header Row -->
         <div class="content-header">
           <div class="time-badge">
-            <span class="time-icon">🕐</span>
+            <span class="time-icon">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"/>
+                <polyline points="12 6 12 12 16 14"/>
+              </svg>
+            </span>
             <span class="time-text">{{ formatTime(post.scheduled_time) || 'No time' }}</span>
           </div>
 
@@ -52,19 +71,40 @@
                 :key="platform"
                 :class="['platform-badge-new', `platform-${platform}`]"
               >
-                {{ getPlatformIcon(platform) }} {{ capitalizeFirst(platform) }}
+                <span class="platform-icon" v-html="getPlatformSvg(platform)"></span>
+                {{ capitalizeFirst(platform) }}
               </span>
             </template>
             <!-- Fallback for old data structure -->
             <span v-else-if="post.platform" :class="['platform-badge-new', `platform-${post.platform}`]">
-              {{ getPlatformIcon(post.platform) }} {{ capitalizeFirst(post.platform) }}
+              <span class="platform-icon" v-html="getPlatformSvg(post.platform)"></span>
+              {{ capitalizeFirst(post.platform) }}
             </span>
 
             <!-- Status Badge -->
             <span :class="['status-badge-new', `status-${post.status || 'scheduled'}`]">
-              <template v-if="post.status === 'published'">✅ Posted</template>
-              <template v-else-if="post.status === 'failed'">❌ Failed</template>
-              <template v-else>📅 Scheduled</template>
+              <template v-if="post.status === 'published'">
+                <svg class="status-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="20 6 9 17 4 12"/>
+                </svg>
+                Posted
+              </template>
+              <template v-else-if="post.status === 'failed'">
+                <svg class="status-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18"/>
+                  <line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+                Failed
+              </template>
+              <template v-else>
+                <svg class="status-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                  <line x1="16" y1="2" x2="16" y2="6"/>
+                  <line x1="8" y1="2" x2="8" y2="6"/>
+                  <line x1="3" y1="10" x2="21" y2="10"/>
+                </svg>
+                Scheduled
+              </template>
             </span>
           </div>
         </div>
@@ -79,7 +119,12 @@
 
         <!-- Restaurant Tag -->
         <div v-if="post.restaurant_name" class="restaurant-badge">
-          🏪 {{ post.restaurant_name }}
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 21h18"/>
+            <path d="M5 21V7l8-4v18"/>
+            <path d="M19 21V11l-6-4"/>
+          </svg>
+          {{ post.restaurant_name }}
         </div>
 
         <!-- Footer Row -->
@@ -90,17 +135,29 @@
               <span class="published-time">{{ formatPublishedDate(post.published_at) }}</span>
             </template>
             <template v-else>
-              <span class="countdown">{{ timeRemaining }}</span>
+              <span class="countdown">
+                <svg class="countdown-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="10"/>
+                  <polyline points="12 6 12 12 16 14"/>
+                </svg>
+                {{ timeRemaining }}
+              </span>
             </template>
           </div>
 
           <!-- Action Buttons -->
           <div v-if="post.status !== 'published'" class="action-buttons" @click.stop>
             <button class="action-btn edit-btn" @click="$emit('edit', post)" title="Edit post">
-              ✏️
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+              </svg>
             </button>
             <button class="action-btn delete-btn" @click="$emit('delete', post.id)" title="Cancel post">
-              🗑️
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="3 6 5 6 21 6"/>
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+              </svg>
             </button>
           </div>
 
@@ -114,7 +171,11 @@
               rel="noopener noreferrer"
               class="view-post-btn"
             >
-              🔗 View on {{ capitalizeFirst(platform as string) }}
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+                <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+              </svg>
+              View on {{ capitalizeFirst(platform as string) }}
             </a>
           </div>
           <!-- Fallback for old single-platform posts -->
@@ -125,14 +186,24 @@
               rel="noopener noreferrer"
               class="view-post-btn"
             >
-              🔗 View on {{ capitalizeFirst(post.platform || 'Platform') }}
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+                <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+              </svg>
+              View on {{ capitalizeFirst(post.platform || 'Platform') }}
             </a>
           </div>
         </div>
 
         <!-- Error Message (if failed) -->
         <div v-if="post.status === 'failed' && post.error_message" class="error-banner">
-          <span class="error-icon">⚠️</span>
+          <span class="error-icon">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/>
+              <line x1="12" y1="9" x2="12" y2="13"/>
+              <line x1="12" y1="17" x2="12.01" y2="17"/>
+            </svg>
+          </span>
           <span class="error-text">{{ truncateText(post.error_message, 100) }}</span>
         </div>
       </div>
@@ -200,15 +271,15 @@ const truncateText = (text: string, maxLength: number): string => {
   return text.substring(0, maxLength) + '...'
 }
 
-const getPlatformIcon = (platform: string): string => {
-  const icons: Record<string, string> = {
-    facebook: '👥',
-    instagram: '📷',
-    tiktok: '🎵',
-    twitter: '🐦',
-    linkedin: '💼'
+const getPlatformSvg = (platform: string): string => {
+  const svgs: Record<string, string> = {
+    facebook: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>',
+    instagram: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>',
+    tiktok: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5"/></svg>',
+    twitter: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z"/></svg>',
+    linkedin: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>'
   }
-  return icons[platform.toLowerCase()] || '📱'
+  return svgs[platform.toLowerCase()] || '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><path d="M12 18h.01"/></svg>'
 }
 
 const capitalizeFirst = (str: string): string => {
@@ -248,7 +319,7 @@ const formatPublishedDate = (dateString: string | undefined): string => {
 const timeRemaining = computed(() => {
   const post = props.post
   if (!post.scheduled_date || !post.scheduled_time) {
-    return '⏱️ No time specified'
+    return 'No time specified'
   }
 
   try {
@@ -267,9 +338,9 @@ const timeRemaining = computed(() => {
 
       if (hours > 24) {
         const days = Math.floor(hours / 24)
-        return `⏰ Posted ${days} day${days > 1 ? 's' : ''} ago`
+        return `Posted ${days} day${days > 1 ? 's' : ''} ago`
       }
-      return `⏰ Posted ${hours}h ${minutes}m ago`
+      return `Posted ${hours}h ${minutes}m ago`
     }
 
     const totalMinutes = Math.floor(diff / (1000 * 60))
@@ -278,14 +349,14 @@ const timeRemaining = computed(() => {
 
     if (hours > 48) {
       const days = Math.floor(hours / 24)
-      return `⏰ Posts in ${days} day${days > 1 ? 's' : ''}`
+      return `Posts in ${days} day${days > 1 ? 's' : ''}`
     } else if (hours > 0) {
-      return `⏰ Posts in ${hours}h ${minutes}m`
+      return `Posts in ${hours}h ${minutes}m`
     } else {
-      return `⏰ Posts in ${minutes}m`
+      return `Posts in ${minutes}m`
     }
   } catch {
-    return '⏱️ Invalid time'
+    return 'Invalid time'
   }
 })
 </script>
@@ -369,6 +440,14 @@ const timeRemaining = computed(() => {
 .placeholder-icon {
   font-size: var(--text-3xl);
   opacity: 0.5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--gold-primary);
+}
+
+.placeholder-icon svg {
+  stroke: var(--gold-primary);
 }
 
 .media-badge {
@@ -379,6 +458,13 @@ const timeRemaining = computed(() => {
   background: rgba(0, 0, 0, 0.7);
   border-radius: var(--radius-sm);
   font-size: var(--text-xs);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.media-badge svg {
+  stroke: var(--gold-primary);
 }
 
 .content-section {
@@ -408,6 +494,15 @@ const timeRemaining = computed(() => {
   color: var(--gold-primary);
 }
 
+.time-icon {
+  display: flex;
+  align-items: center;
+}
+
+.time-icon svg {
+  stroke: var(--gold-primary);
+}
+
 .status-badges {
   display: flex;
   flex-wrap: wrap;
@@ -415,12 +510,24 @@ const timeRemaining = computed(() => {
 }
 
 .platform-badge-new {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   padding: var(--space-xs) var(--space-sm);
   border-radius: var(--radius-sm);
   font-size: var(--text-xs);
   font-weight: var(--font-medium);
   background: rgba(255, 255, 255, 0.1);
   color: var(--text-secondary);
+}
+
+.platform-icon {
+  display: flex;
+  align-items: center;
+}
+
+.platform-icon svg {
+  stroke: currentColor;
 }
 
 .platform-badge-new.platform-facebook {
@@ -439,10 +546,17 @@ const timeRemaining = computed(() => {
 }
 
 .status-badge-new {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   padding: var(--space-xs) var(--space-sm);
   border-radius: var(--radius-sm);
   font-size: var(--text-xs);
   font-weight: var(--font-medium);
+}
+
+.status-icon {
+  stroke: currentColor;
 }
 
 .status-badge-new.status-scheduled {
@@ -482,7 +596,13 @@ const timeRemaining = computed(() => {
   background: rgba(255, 255, 255, 0.05);
   padding: var(--space-xs) var(--space-sm);
   border-radius: var(--radius-sm);
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.restaurant-badge svg {
+  stroke: var(--gold-primary);
 }
 
 .content-footer {
@@ -500,7 +620,14 @@ const timeRemaining = computed(() => {
 }
 
 .countdown {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   color: var(--gold-primary);
+}
+
+.countdown-icon {
+  stroke: var(--gold-primary);
 }
 
 .action-buttons {
@@ -509,6 +636,9 @@ const timeRemaining = computed(() => {
 }
 
 .action-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   padding: var(--space-sm);
   background: rgba(255, 255, 255, 0.1);
   border: none;
@@ -516,6 +646,10 @@ const timeRemaining = computed(() => {
   cursor: pointer;
   transition: all var(--transition-base);
   font-size: var(--text-sm);
+}
+
+.action-btn svg {
+  stroke: var(--gold-primary);
 }
 
 .action-btn:hover {
@@ -530,7 +664,14 @@ const timeRemaining = computed(() => {
   background: rgba(255, 59, 48, 0.2);
 }
 
+.delete-btn:hover svg {
+  stroke: #ff3b30;
+}
+
 .view-post-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   padding: var(--space-xs) var(--space-sm);
   background: rgba(52, 199, 89, 0.2);
   border-radius: var(--radius-sm);
@@ -538,6 +679,10 @@ const timeRemaining = computed(() => {
   text-decoration: none;
   font-size: var(--text-xs);
   transition: all var(--transition-base);
+}
+
+.view-post-btn svg {
+  stroke: #34c759;
 }
 
 .view-post-btn:hover {
@@ -554,6 +699,15 @@ const timeRemaining = computed(() => {
   margin-top: var(--space-sm);
 }
 
+.error-icon {
+  display: flex;
+  align-items: center;
+}
+
+.error-icon svg {
+  stroke: #ff3b30;
+}
+
 .error-text {
   font-size: var(--text-xs);
   color: #ff3b30;
@@ -567,6 +721,62 @@ const timeRemaining = computed(() => {
   .media-section {
     width: 100%;
     height: 200px;
+  }
+
+  .action-btn {
+    min-width: var(--touch-target-min);
+    min-height: var(--touch-target-min);
+    padding: var(--space-md);
+  }
+}
+
+@media (max-width: 480px) {
+  .media-section {
+    height: 160px;
+  }
+
+  .info-section {
+    padding: var(--space-md);
+  }
+
+  .post-title {
+    font-size: var(--text-sm);
+  }
+
+  .post-caption {
+    font-size: var(--text-xs);
+  }
+
+  .time-row {
+    flex-wrap: wrap;
+    gap: var(--space-xs);
+  }
+
+  .platform-badges {
+    flex-wrap: wrap;
+  }
+
+  .platform-badge {
+    font-size: 10px;
+    padding: 2px 6px;
+  }
+
+  .action-buttons {
+    gap: var(--space-xs);
+  }
+}
+
+@media (max-width: 390px) {
+  .media-section {
+    height: 140px;
+  }
+
+  .info-section {
+    padding: var(--space-sm);
+  }
+
+  .scheduled-post-card {
+    border-radius: var(--radius-md);
   }
 }
 </style>

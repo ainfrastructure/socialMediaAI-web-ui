@@ -553,6 +553,77 @@ const truncateText = (text: string, maxLength: number): string => {
   .platform-grid {
     grid-template-columns: 1fr;
   }
+
+  .platform-card {
+    min-height: var(--touch-target-comfortable);
+  }
+}
+
+@media (max-width: 480px) {
+  .preview-media {
+    max-height: 150px;
+  }
+
+  .preview-container {
+    padding: var(--space-md);
+  }
+
+  .preview-details {
+    padding: var(--space-md);
+  }
+
+  .preview-text {
+    font-size: var(--text-sm);
+  }
+
+  .schedule-settings {
+    gap: var(--space-md);
+  }
+
+  .setting-group label {
+    font-size: var(--text-sm);
+  }
+
+  .time-select,
+  .period-select {
+    min-height: var(--touch-target-min);
+    font-size: var(--text-base);
+  }
+
+  .platform-card {
+    padding: var(--space-md);
+  }
+
+  .platform-info h4 {
+    font-size: var(--text-sm);
+  }
+
+  .platform-info p {
+    font-size: var(--text-xs);
+  }
+}
+
+@media (max-width: 390px) {
+  .preview-media {
+    max-height: 120px;
+  }
+
+  .schedule-settings {
+    gap: var(--space-sm);
+  }
+
+  .setting-group label {
+    font-size: var(--text-xs);
+  }
+
+  .platform-icon {
+    width: 36px;
+    height: 36px;
+  }
+
+  .platform-icon-inner {
+    font-size: 1.25rem;
+  }
 }
 
 /* Reduced motion */

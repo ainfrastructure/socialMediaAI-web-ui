@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, watch, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '../stores/auth'
@@ -18,6 +18,26 @@ const router = useRouter()
 const authStore = useAuthStore()
 const { t } = useI18n()
 
+// Body scroll lock for mobile menu
+watch(() => props.mobileOpen, (isOpen) => {
+  if (isOpen) {
+    document.body.style.overflow = 'hidden'
+    document.body.style.position = 'fixed'
+    document.body.style.width = '100%'
+  } else {
+    document.body.style.overflow = ''
+    document.body.style.position = ''
+    document.body.style.width = ''
+  }
+})
+
+// Cleanup on unmount
+onUnmounted(() => {
+  document.body.style.overflow = ''
+  document.body.style.position = ''
+  document.body.style.width = ''
+})
+
 // Menu items for navigation
 const menuItems = computed(() => [
   {
@@ -27,10 +47,10 @@ const menuItems = computed(() => [
     active: route.path === '/dashboard'
   },
   {
-    path: '/content',
+    path: '/posts',
     icon: 'edit_note',
     label: t('sidebar.content'),
-    active: route.path.startsWith('/content')
+    active: route.path.startsWith('/posts')
   },
   {
     path: '/scheduler',
@@ -157,8 +177,9 @@ function closeMobileMenu() {
   position: fixed;
   top: 0;
   left: 0;
-  right: 0;
-  bottom: 0;
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh;
   background: rgba(0, 0, 0, 0.7);
   z-index: calc(var(--z-fixed) - 1);
   animation: fadeIn 0.3s ease;
@@ -171,7 +192,8 @@ function closeMobileMenu() {
 
 .sidebar {
   width: 260px;
-  min-height: 100vh;
+  height: 100vh;
+  height: 100dvh;
   background: var(--bg-secondary);
   border-right: 1px solid var(--border-color);
   display: flex;
@@ -181,6 +203,7 @@ function closeMobileMenu() {
   top: 0;
   z-index: var(--z-fixed);
   transition: transform 0.3s ease;
+  overflow-y: auto;
 }
 
 /* Mobile Close Button - hidden by default */
@@ -466,6 +489,109 @@ function closeMobileMenu() {
 
   .mobile-close {
     display: flex;
+    min-width: var(--touch-target-min);
+    min-height: var(--touch-target-min);
+  }
+
+  .nav-item {
+    min-height: var(--touch-target-min);
+    padding: var(--space-md) var(--space-lg);
+  }
+
+  .action-item {
+    min-height: var(--touch-target-min);
+    padding: var(--space-md) var(--space-lg);
+  }
+
+  .upgrade-btn {
+    min-height: var(--touch-target-min);
+    padding: var(--space-md);
+  }
+}
+
+@media (max-width: 480px) {
+  .sidebar {
+    width: 85vw;
+    max-width: 320px;
+  }
+
+  .sidebar-header {
+    padding: var(--space-lg);
+    padding-right: var(--space-4xl);
+  }
+
+  .brand-logo {
+    height: 32px;
+  }
+
+  .brand-text {
+    font-size: var(--text-base);
+  }
+
+  .brand-badge {
+    font-size: 9px;
+    padding: 2px 6px;
+  }
+
+  .sidebar-nav {
+    padding: var(--space-md);
+  }
+
+  .nav-section-label {
+    padding: 0 var(--space-sm);
+    font-size: 10px;
+  }
+
+  .nav-item {
+    padding: var(--space-md);
+    font-size: var(--text-sm);
+  }
+
+  .sidebar-footer {
+    padding: var(--space-md);
+  }
+
+  .credits-card {
+    padding: var(--space-md);
+  }
+
+  .credits-count {
+    font-size: var(--text-lg);
+  }
+
+  .action-item {
+    padding: var(--space-md);
+    font-size: var(--text-sm);
+  }
+}
+
+@media (max-width: 390px) {
+  .sidebar {
+    width: 90vw;
+    max-width: 300px;
+  }
+
+  .sidebar-header {
+    padding: var(--space-md);
+    padding-right: var(--space-3xl);
+  }
+
+  .brand-logo {
+    height: 28px;
+  }
+
+  .brand-text {
+    font-size: var(--text-sm);
+  }
+
+  .nav-item {
+    gap: var(--space-sm);
+    font-size: var(--text-sm);
+  }
+
+  .nav-icon {
+    width: 20px;
+    height: 20px;
   }
 }
 </style>

@@ -88,7 +88,9 @@ const userInitial = computed(() => {
 .dashboard-layout {
   display: flex;
   min-height: 100vh;
+  min-height: 100dvh;
   background: var(--bg-primary);
+  overflow-x: hidden;
 }
 
 /* Main Content Area */
@@ -98,6 +100,9 @@ const userInitial = computed(() => {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
+  min-height: 100dvh;
+  max-width: 100%;
+  overflow-x: hidden;
 }
 
 /* Top Header */
@@ -226,6 +231,9 @@ const userInitial = computed(() => {
   flex: 1;
   padding: var(--space-2xl);
   overflow-y: auto;
+  overflow-x: hidden;
+  max-width: 100%;
+  contain: inline-size;
 }
 
 /* Responsive */
@@ -250,6 +258,8 @@ const userInitial = computed(() => {
 
   .mobile-menu-btn {
     display: flex;
+    min-width: var(--touch-target-min);
+    min-height: var(--touch-target-min);
   }
 
   .search-box {
@@ -258,6 +268,48 @@ const userInitial = computed(() => {
 
   .content-area {
     padding: var(--space-lg);
+  }
+}
+
+@media (max-width: 480px) {
+  .top-header {
+    padding: var(--space-sm) var(--space-md);
+    gap: var(--space-sm);
+  }
+
+  .header-right {
+    gap: var(--space-sm);
+  }
+
+  .content-area {
+    padding: var(--space-md);
+  }
+
+  .icon-btn,
+  .user-avatar {
+    width: 36px;
+    height: 36px;
+  }
+}
+
+@media (max-width: 390px) {
+  .top-header {
+    padding: var(--space-xs) var(--space-sm);
+  }
+
+  .content-area {
+    padding: var(--space-sm);
+  }
+
+  .header-right {
+    gap: var(--space-xs);
+  }
+
+  .icon-btn,
+  .user-avatar {
+    width: 32px;
+    height: 32px;
+    font-size: var(--text-sm);
   }
 }
 </style>

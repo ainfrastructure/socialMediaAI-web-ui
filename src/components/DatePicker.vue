@@ -351,10 +351,50 @@ const goToToday = () => {
 @media (max-width: 480px) {
   .calendar-day {
     font-size: var(--text-xs);
+    min-height: var(--touch-target-min);
   }
 
   .month-year {
     font-size: var(--text-base);
+  }
+
+  .nav-button {
+    min-width: var(--touch-target-min);
+    min-height: var(--touch-target-min);
+    padding: var(--space-sm);
+  }
+
+  .today-button {
+    min-height: var(--touch-target-min);
+    width: 100%;
+  }
+
+  .weekday-header {
+    font-size: 10px;
+    padding: var(--space-xs);
+  }
+}
+
+@media (max-width: 390px) {
+  .date-picker {
+    padding: var(--space-sm);
+  }
+
+  .calendar-header {
+    margin-bottom: var(--space-sm);
+  }
+
+  .month-year {
+    font-size: var(--text-sm);
+  }
+
+  .calendar-day {
+    font-size: 10px;
+    min-height: 40px;
+  }
+
+  .nav-button {
+    font-size: var(--text-sm);
   }
 }
 

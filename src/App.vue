@@ -23,6 +23,7 @@ import GradientBackground from './components/GradientBackground.vue'
 /* Dark Theme Base Styles */
 html {
   background: var(--bg-primary);
+  overflow-x: hidden;
 }
 
 body {
@@ -32,11 +33,17 @@ body {
   background: var(--bg-primary);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+  width: 100%;
+  max-width: 100vw;
 }
 
 #app {
   min-height: 100vh;
+  min-height: 100dvh;
   position: relative;
+  overflow-x: hidden;
+  width: 100%;
 }
 
 /* Headings with Premium Font */

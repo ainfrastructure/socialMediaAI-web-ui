@@ -25,9 +25,9 @@
 
             <!-- Empty State -->
             <div v-else-if="posts.length === 0" class="empty-state">
-              <p>No posts yet! Create content in the Playground first.</p>
-              <BaseButton variant="primary" @click="goToPlayground">
-                Go to Playground
+              <p>No posts yet! Create a post first.</p>
+              <BaseButton variant="primary" @click="goToCreatePost">
+                Create Post
               </BaseButton>
             </div>
 
@@ -494,9 +494,9 @@ const scheduleSelectedPost = async () => {
   }
 }
 
-const goToPlayground = () => {
+const goToCreatePost = () => {
   const dateParam = props.selectedDate ? `?scheduleDate=${props.selectedDate}` : ''
-  router.push(`/playground${dateParam}`)
+  router.push(`/posts/create${dateParam}`)
   closeModal()
 }
 

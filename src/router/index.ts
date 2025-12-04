@@ -15,8 +15,8 @@ const TestPostView = () => import('../views/TestPostView.vue')
 const SchedulerView = () => import('../views/SchedulerView.vue')
 const ProfileView = () => import('../views/ProfileView.vue')
 const OnboardingView = () => import('../views/OnboardingView.vue')
-const ContentHubView = () => import('../views/ContentHubView.vue')
-const ContentCreateView = () => import('../views/ContentCreateView.vue')
+const PostsView = () => import('../views/PostsView.vue')
+const PostsCreateView = () => import('../views/PostsCreateView.vue')
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -101,20 +101,28 @@ const router = createRouter({
       component: PlansView,
     },
     {
-      path: '/content',
-      name: 'content',
-      component: ContentHubView,
+      path: '/posts',
+      name: 'posts',
+      component: PostsView,
       meta: { requiresAuth: true },
+    },
+    {
+      path: '/posts/create',
+      name: 'posts-create',
+      component: PostsCreateView,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/content',
+      redirect: '/posts',
     },
     {
       path: '/content/create',
-      name: 'content-create',
-      component: ContentCreateView,
-      meta: { requiresAuth: true },
+      redirect: '/posts/create',
     },
     {
       path: '/cook-up',
-      redirect: '/content',
+      redirect: '/posts',
     },
     {
       path: '/connect-accounts',
@@ -133,10 +141,6 @@ const router = createRouter({
       name: 'scheduler',
       component: SchedulerView,
       meta: { requiresAuth: true },
-    },
-    {
-      path: '/posts',
-      redirect: '/content',
     },
     {
       path: '/profile',

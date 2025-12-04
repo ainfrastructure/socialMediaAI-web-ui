@@ -163,8 +163,8 @@ function goBack() {
     // Go back within the creation component
     activeRef?.prevStep()
   } else {
-    // Child is on step 1, navigate back to content hub
-    router.push('/content')
+    // Child is on step 1, navigate back to posts hub
+    router.push('/posts')
   }
 }
 
@@ -1659,6 +1659,71 @@ function handleContentUpdated(updatedContent: { postText: string; hashtags: stri
   .restaurant-logo {
     width: 80px;
     height: 80px;
+  }
+
+  .mode-btn {
+    min-height: var(--touch-target-min);
+  }
+
+  .back-button {
+    min-height: var(--touch-target-min);
+  }
+}
+
+@media (max-width: 480px) {
+  .content-create-view {
+    padding: var(--space-md);
+  }
+
+  .page-header {
+    gap: var(--space-sm);
+  }
+
+  .mode-toggle {
+    width: 100%;
+  }
+
+  .mode-btn {
+    flex: 1;
+    font-size: var(--text-sm);
+    padding: var(--space-sm);
+  }
+
+  .restaurant-logo {
+    width: 64px;
+    height: 64px;
+  }
+
+  .restaurant-name {
+    font-size: var(--text-xl);
+  }
+
+  .restaurant-address {
+    font-size: var(--text-xs);
+  }
+}
+
+@media (max-width: 390px) {
+  .content-create-view {
+    padding: var(--space-sm);
+  }
+
+  .restaurant-logo {
+    width: 56px;
+    height: 56px;
+  }
+
+  .restaurant-name {
+    font-size: var(--text-lg);
+  }
+
+  .mode-btn {
+    font-size: var(--text-xs);
+  }
+
+  .back-button {
+    font-size: var(--text-sm);
+    padding: var(--space-sm);
   }
 }
 </style>

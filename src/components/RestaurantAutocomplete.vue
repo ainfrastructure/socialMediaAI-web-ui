@@ -401,4 +401,68 @@ const isRestaurantSaved = (suggestion: RestaurantSuggestion): boolean => {
 .autocomplete-dropdown::-webkit-scrollbar-thumb:hover {
   background: rgba(212, 175, 55, 0.5);
 }
+
+/* Responsive */
+@media (max-width: 768px) {
+  .autocomplete-dropdown {
+    max-height: 50vh;
+    max-height: 50dvh;
+  }
+
+  .dropdown-item {
+    min-height: var(--touch-target-min);
+    padding: var(--space-md);
+  }
+}
+
+@media (max-width: 480px) {
+  .autocomplete-container :deep(.main-search-input input) {
+    min-height: var(--touch-target-comfortable);
+    font-size: var(--text-base);
+    padding: var(--space-md) var(--space-lg);
+  }
+
+  .autocomplete-dropdown {
+    max-height: 40vh;
+    max-height: 40dvh;
+    border-radius: var(--radius-md);
+  }
+
+  .dropdown-item {
+    padding: var(--space-sm) var(--space-md);
+    gap: var(--space-sm);
+  }
+
+  .restaurant-name {
+    font-size: var(--text-sm);
+  }
+
+  .restaurant-address {
+    font-size: var(--text-xs);
+  }
+
+  .modal-title {
+    font-size: var(--text-lg);
+  }
+}
+
+@media (max-width: 390px) {
+  .autocomplete-container :deep(.main-search-input input) {
+    min-height: 48px;
+    padding: var(--space-sm) var(--space-md);
+  }
+
+  .autocomplete-dropdown {
+    max-height: 35vh;
+    max-height: 35dvh;
+  }
+
+  .dropdown-item {
+    font-size: var(--text-sm);
+  }
+
+  .modal-title {
+    font-size: var(--text-base);
+  }
+}
 </style>

@@ -3,7 +3,6 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '../stores/auth'
-import { api } from '../services/api'
 import BaseCard from '../components/BaseCard.vue'
 import BaseButton from '../components/BaseButton.vue'
 import BaseAlert from '../components/BaseAlert.vue'
@@ -13,57 +12,15 @@ import GoogleIcon from '../components/icons/GoogleIcon.vue'
 
 const router = useRouter()
 const authStore = useAuthStore()
-const { t, locale } = useI18n()
+const { t } = useI18n()
 
 const showEmailLogin = ref(false)
 const email = ref('')
+const password = ref('')
 const message = ref('')
 const messageType = ref<'success' | 'error' | 'info'>('info')
-const sendingMagicLink = ref(false)
-const magicLinkSent = ref(false)
+const loggingIn = ref(false)
 
-// Email provider detection and URLs
-function getEmailDomain(emailAddress: string): string {
-  return emailAddress.split('@')[1]?.toLowerCase() || ''
-}
-
-function getEmailProviderUrl(emailAddress: string): { name: string; url: string } | null {
-  const domain = getEmailDomain(emailAddress)
-
-  const providers: Record<string, { name: string; url: string }> = {
-    'gmail.com': { name: 'Gmail', url: 'https://mail.google.com' },
-    'googlemail.com': { name: 'Gmail', url: 'https://mail.google.com' },
-    'outlook.com': { name: 'Outlook', url: 'https://outlook.live.com' },
-    'hotmail.com': { name: 'Outlook', url: 'https://outlook.live.com' },
-    'live.com': { name: 'Outlook', url: 'https://outlook.live.com' },
-    'msn.com': { name: 'Outlook', url: 'https://outlook.live.com' },
-    'yahoo.com': { name: 'Yahoo Mail', url: 'https://mail.yahoo.com' },
-    'yahoo.no': { name: 'Yahoo Mail', url: 'https://mail.yahoo.com' },
-    'icloud.com': { name: 'iCloud Mail', url: 'https://www.icloud.com/mail' },
-    'me.com': { name: 'iCloud Mail', url: 'https://www.icloud.com/mail' },
-    'mac.com': { name: 'iCloud Mail', url: 'https://www.icloud.com/mail' },
-    'proton.me': { name: 'Proton Mail', url: 'https://mail.proton.me' },
-    'protonmail.com': { name: 'Proton Mail', url: 'https://mail.proton.me' },
-  }
-
-  return providers[domain] || null
-}
-
-function openEmailClient() {
-  const provider = getEmailProviderUrl(email.value)
-  if (provider) {
-    window.open(provider.url, '_blank')
-  } else {
-    // Fallback to mailto: which opens default email client
-    window.location.href = 'mailto:'
-  }
-}
-
-function resetEmailForm() {
-  magicLinkSent.value = false
-  email.value = ''
-  message.value = ''
-}
 
 // Handle email confirmation token from URL hash
 onMounted(() => {
@@ -87,7 +44,7 @@ onMounted(() => {
       setTimeout(async () => {
         await authStore.loadProfile()
         if (authStore.isAuthenticated) {
-          router.push('/playground')
+          router.push('/posts')
         } else {
           showMessage(t('auth.pleaseLogin'), 'info')
           window.location.hash = '' // Clear hash
@@ -109,27 +66,28 @@ function toggleEmailLogin() {
 }
 
 async function handleEmailLogin() {
-  if (!email.value) {
+  if (!email.value || !password.value) {
     showMessage(t('errors.validationError'), 'error')
     return
   }
 
-  if (sendingMagicLink.value) return
+  if (loggingIn.value) return
 
-  sendingMagicLink.value = true
+  loggingIn.value = true
   try {
-    const response = await api.sendMagicLink(email.value, locale.value)
+    const result = await authStore.login(email.value, password.value)
 
-    if (!response.success) {
-      showMessage(response.error || t('errors.generic'), 'error')
+    if (!result.success) {
+      showMessage(result.error || t('errors.generic'), 'error')
       return
     }
 
-    magicLinkSent.value = true
+    // Redirect to dashboard on success
+    router.push('/posts')
   } catch (err: any) {
     showMessage(err.message || t('errors.networkError'), 'error')
   } finally {
-    sendingMagicLink.value = false
+    loggingIn.value = false
   }
 }
 
@@ -205,10 +163,8 @@ async function handleGoogleSignIn() {
           </button>
         </div>
 
-        <!-- Email Login Form (Passwordless) -->
-        <div :class="['login-content', 'email-content', { 'is-visible': showEmailLogin && !magicLinkSent }]">
-          <p class="email-description">{{ $t('auth.emailLoginDescription') }}</p>
-
+        <!-- Email Login Form (Password) -->
+        <div :class="['login-content', 'email-content', { 'is-visible': showEmailLogin }]">
           <form @submit.prevent="handleEmailLogin">
             <BaseInput
               v-model="email"
@@ -218,16 +174,29 @@ async function handleGoogleSignIn() {
               required
             />
 
+            <BaseInput
+              v-model="password"
+              type="password"
+              :label="$t('auth.password')"
+              :placeholder="$t('auth.passwordPlaceholder')"
+              required
+            />
+
             <BaseButton
               type="submit"
               variant="primary"
               size="large"
               full-width
-              :disabled="sendingMagicLink"
+              :disabled="loggingIn"
             >
-              {{ sendingMagicLink ? $t('common.sending') : $t('auth.sendLoginLink') }}
+              {{ loggingIn ? $t('common.loading') : $t('auth.signIn') }}
             </BaseButton>
           </form>
+
+          <!-- Forgot Password Link -->
+          <router-link to="/reset-password" class="forgot-password-link">
+            {{ $t('auth.forgotPassword') }}
+          </router-link>
 
           <!-- Back to Social Login -->
           <button
@@ -237,37 +206,6 @@ async function handleGoogleSignIn() {
           >
             ← {{ $t('auth.backToLogin') }}
           </button>
-        </div>
-
-        <!-- Magic Link Sent Confirmation -->
-        <div :class="['login-content', 'email-content', { 'is-visible': magicLinkSent }]">
-          <div class="magic-link-sent">
-            <div class="sent-icon">✉️</div>
-            <h3 class="sent-title">{{ $t('auth.checkYourEmail') }}</h3>
-            <p class="sent-description">
-              {{ $t('auth.magicLinkSentTo') }} <strong>{{ email }}</strong>
-            </p>
-            <p class="sent-hint">{{ $t('auth.clickLinkToSignIn') }}</p>
-
-            <BaseButton
-              variant="primary"
-              size="large"
-              full-width
-              @click="openEmailClient"
-            >
-              {{ getEmailProviderUrl(email)
-                ? $t('auth.openEmailProvider', { provider: getEmailProviderUrl(email)?.name })
-                : $t('auth.openEmailApp') }}
-            </BaseButton>
-
-            <button
-              type="button"
-              class="back-link"
-              @click="resetEmailForm"
-            >
-              {{ $t('auth.useDifferentEmail') }}
-            </button>
-          </div>
         </div>
       </div>
     </BaseCard>
@@ -444,14 +382,6 @@ form {
   position: relative;
 }
 
-/* Email Description */
-.email-description {
-  text-align: center;
-  color: var(--text-secondary);
-  font-size: var(--text-sm);
-  line-height: var(--leading-normal);
-}
-
 /* Email Sign In Link */
 .email-link {
   background: none;
@@ -487,40 +417,20 @@ form {
   color: var(--gold-primary);
 }
 
-/* Magic Link Sent Confirmation */
-.magic-link-sent {
+/* Forgot Password Link */
+.forgot-password-link {
+  display: block;
   text-align: center;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-lg);
-}
-
-.sent-icon {
-  font-size: 48px;
-  line-height: 1;
-}
-
-.sent-title {
-  font-family: var(--font-heading);
-  font-size: var(--text-2xl);
-  color: var(--text-primary);
-  margin: 0;
-}
-
-.sent-description {
   color: var(--text-secondary);
-  font-size: var(--text-base);
-  margin: 0;
-}
-
-.sent-description strong {
-  color: var(--text-primary);
-}
-
-.sent-hint {
-  color: var(--text-muted);
+  font-family: var(--font-body);
   font-size: var(--text-sm);
-  margin: 0;
+  text-decoration: none;
+  padding: var(--space-md) 0;
+  transition: color 0.15s ease;
+}
+
+.forgot-password-link:hover {
+  color: var(--gold-primary);
 }
 
 /* Responsive */

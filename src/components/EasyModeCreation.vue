@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import { useI18n } from 'vue-i18n'
 import BaseCard from './BaseCard.vue'
 import BaseButton from './BaseButton.vue'
@@ -119,6 +119,8 @@ const step1Error = ref<string>('')
 const currentPage = ref(1)
 const itemsPerPage = ref(12)
 const gridContainer = ref<HTMLElement | null>(null)
+const step1NavigationRef = ref<HTMLElement | null>(null)
+const generatingOverlayRef = ref<HTMLElement | null>(null)
 
 // Style templates
 const styleTemplates = computed<StyleTemplate[]>(() => [
@@ -224,6 +226,13 @@ const highestCompletedStep = computed(() => {
 function calculateItemsPerPage() {
   if (!gridContainer.value) return
 
+  // On mobile (< 480px), limit to 6 items to reduce scrolling
+  const isMobile = window.innerWidth < 480
+  if (isMobile) {
+    itemsPerPage.value = 6
+    return
+  }
+
   const containerWidth = gridContainer.value.offsetWidth
   const containerHeight = window.innerHeight - gridContainer.value.getBoundingClientRect().top - 250 // Reserve space for pagination and other elements
 
@@ -255,6 +264,10 @@ function selectMenuItem(item: MenuItem) {
   // Clear uploaded image if menu item is selected
   uploadedImage.value = null
   uploadedImagePreview.value = null
+  // Scroll to next button for better mobile UX
+  nextTick(() => {
+    step1NavigationRef.value?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+  })
 }
 
 function selectStyleTemplate(templateId: string) {
@@ -339,6 +352,16 @@ function handleGenerate() {
     uploadedLogo: uploadedLogo.value
   })
 }
+
+// Watch for generation start to scroll loader into view
+watch(() => props.generating, (isGenerating) => {
+  if (isGenerating) {
+    // Use setTimeout to ensure DOM is fully rendered after v-if becomes true
+    setTimeout(() => {
+      generatingOverlayRef.value?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    }, 100)
+  }
+})
 
 // Watch for generation complete to auto-advance to Step 3
 watch(() => [props.generating, props.generatedImageUrl, props.postText], ([generating, imageUrl, postText]) => {
@@ -621,7 +644,7 @@ onUnmounted(() => {
       </div>
 
       <!-- Step 1 Navigation -->
-      <div class="step-navigation">
+      <div ref="step1NavigationRef" class="step-navigation">
         <BaseButton
           variant="primary"
           size="large"
@@ -636,7 +659,7 @@ onUnmounted(() => {
     <!-- Step 2: Customize (Style + Promo + Logo) -->
     <BaseCard v-show="currentStep === 2" variant="glass" class="step-card generate-section">
       <!-- Generating Loading State -->
-      <div v-if="props.generating" class="step-generating-overlay">
+      <div v-if="props.generating" ref="generatingOverlayRef" class="step-generating-overlay">
         <img src="/socialchef_logo.svg" alt="Social Chef" class="loading-logo" />
         <p class="loading-title">{{ t('easyMode.step2.generatingTitle', 'Creating your post') }}</p>
         <p class="loading-subtitle">{{ t('easyMode.step2.generatingSubtitle', 'Designing your image and writing captions') }}</p>
@@ -2388,6 +2411,51 @@ onUnmounted(() => {
 @media (max-width: 480px) {
   .platform-grid {
     grid-template-columns: 1fr;
+  }
+
+  /* Strictness options - stack vertically on mobile */
+  .strictness-options {
+    grid-template-columns: 1fr;
+    gap: var(--space-sm);
+  }
+
+  .strictness-button {
+    flex-direction: row;
+    justify-content: flex-start;
+    padding: var(--space-md);
+    min-height: auto;
+    gap: var(--space-md);
+  }
+
+  .strictness-icon {
+    flex-shrink: 0;
+  }
+
+  .strictness-button > div,
+  .strictness-button > span:not(.strictness-icon) {
+    text-align: left;
+  }
+
+  .strictness-label {
+    font-size: var(--text-sm);
+  }
+
+  .strictness-description {
+    font-size: 10px;
+  }
+}
+
+@media (max-width: 390px) {
+  .strictness-button {
+    padding: var(--space-sm);
+  }
+
+  .strictness-icon {
+    font-size: 24px;
+  }
+
+  .strictness-label {
+    font-size: var(--text-xs);
   }
 }
 

@@ -13,8 +13,8 @@ async function handleComplete() {
   // Update auth store
   await authStore.refreshProfile()
 
-  // Redirect to playground
-  router.push('/playground')
+  // Redirect to posts
+  router.push('/posts')
 }
 </script>
 

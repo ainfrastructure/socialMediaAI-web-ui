@@ -22,7 +22,7 @@
     <div v-if="activeTab === 'day' && day?.holidays && day.holidays.length > 0" class="holidays-section">
       <div class="holidays-list">
         <div v-for="holiday in day.holidays" :key="holiday.name" class="holiday-card">
-          <div class="holiday-icon">{{ getHolidayEmoji(holiday) }}</div>
+          <div class="holiday-icon" v-html="getHolidayIcon(holiday)"></div>
           <div class="holiday-details">
             <h5 class="holiday-name">{{ holiday.name }}</h5>
             <p v-if="holiday.description" class="holiday-description">{{ holiday.description }}</p>
@@ -49,6 +49,7 @@
           v-for="post in paginatedPosts"
           :key="post.id"
           class="table-row-wrapper"
+          :data-post-id="post.id"
         >
           <!-- Row -->
           <div
@@ -63,7 +64,13 @@
                 class="post-thumb"
                 @error="handleImageError"
               />
-              <div v-else class="post-thumb post-thumb-placeholder">📷</div>
+              <div v-else class="post-thumb post-thumb-placeholder">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                  <circle cx="8.5" cy="8.5" r="1.5"/>
+                  <polyline points="21 15 16 10 5 21"/>
+                </svg>
+              </div>
               <div class="post-info">
                 <div class="post-time-row">
                   <span class="post-time">{{ formatTime(post.scheduled_time) || '--:--' }}</span>
@@ -124,7 +131,13 @@
                     class="edit-preview-img"
                     @error="handleImageError"
                   />
-                  <div v-else class="edit-preview-placeholder">📷</div>
+                  <div v-else class="edit-preview-placeholder">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                      <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                      <circle cx="8.5" cy="8.5" r="1.5"/>
+                      <polyline points="21 15 16 10 5 21"/>
+                    </svg>
+                  </div>
                 </div>
               </div>
 
@@ -234,11 +247,20 @@
                     @click="emit('delete', post.id)"
                     type="button"
                   >
-                    🗑️ Delete
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <polyline points="3 6 5 6 21 6"/>
+                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                    </svg>
+                    Delete
                   </button>
                   <div class="action-spacer"></div>
                   <span v-if="isDateTimeInPast" class="past-date-warning">
-                    ⚠️ Cannot schedule in the past
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/>
+                      <line x1="12" y1="9" x2="12" y2="13"/>
+                      <line x1="12" y1="17" x2="12.01" y2="17"/>
+                    </svg>
+                    Cannot schedule in the past
                   </span>
                   <button
                     v-if="hasChanges"
@@ -247,7 +269,12 @@
                     :disabled="savingPost || isDateTimeInPast"
                     type="button"
                   >
-                    {{ savingPost ? 'Saving...' : '💾 Save' }}
+                    <svg v-if="!savingPost" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+                      <polyline points="17 21 17 13 7 13 7 21"/>
+                      <polyline points="7 3 7 8 15 8"/>
+                    </svg>
+                    {{ savingPost ? 'Saving...' : 'Save' }}
                   </button>
                 </div>
               </div>
@@ -333,14 +360,22 @@
                     @click="startEditing(post)"
                     type="button"
                   >
-                    ✏️ Edit
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                    </svg>
+                    Edit
                   </button>
                   <button
                     class="action-btn delete-btn"
                     @click="emit('delete', post.id)"
                     type="button"
                   >
-                    🗑️ Delete
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <polyline points="3 6 5 6 21 6"/>
+                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                    </svg>
+                    Delete
                   </button>
                 </div>
               </div>
@@ -374,7 +409,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, nextTick } from 'vue'
 import { useI18n } from 'vue-i18n'
 import PlatformLogo from '../PlatformLogo.vue'
 
@@ -630,6 +665,8 @@ const shouldShowPanel = computed(() => {
 const upcomingPosts = computed(() => props.upcomingPosts || [])
 
 const toggleExpanded = (postId: string | number, post?: any) => {
+  const isExpanding = expandedPostId.value !== postId
+
   if (expandedPostId.value === postId) {
     expandedPostId.value = null
     originalForm.value = null
@@ -638,6 +675,16 @@ const toggleExpanded = (postId: string | number, post?: any) => {
     expandedPostId.value = postId
     isEditing.value = false // Start in view mode, not edit mode
     originalForm.value = null
+  }
+
+  // Scroll expanded row into view
+  if (isExpanding) {
+    nextTick(() => {
+      const expandedElement = document.querySelector(`[data-post-id="${postId}"]`)
+      if (expandedElement) {
+        expandedElement.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+      }
+    })
   }
 }
 
@@ -771,28 +818,31 @@ const truncateText = (text: string, maxLength: number) => {
   return text.substring(0, maxLength) + '...'
 }
 
-const getHolidayEmoji = (holiday: any) => {
+const getHolidayIcon = (holiday: any) => {
+  // Star/sparkle icon for celebrations - gold colored
+  const starIcon = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>'
+  // Calendar icon for national holidays
+  const calendarIcon = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>'
+  // Gift/present icon for Christmas-like holidays
+  const giftIcon = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg>'
+  // Sun icon for spring/summer holidays
+  const sunIcon = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>'
+  // Heart icon for love-related holidays
+  const heartIcon = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>'
+
   const name = holiday.name.toLowerCase()
 
-  if (name.includes('christmas')) return '🎄'
-  if (name.includes('easter')) return '🐰'
-  if (name.includes('new year')) return '🎆'
-  if (name.includes('independence') || name.includes('constitution')) return '🇳🇴'
-  if (name.includes('labor') || name.includes('labour') || name.includes('workers')) return '👷'
+  if (name.includes('christmas') || name.includes('jul')) return giftIcon
+  if (name.includes('easter') || name.includes('påske')) return sunIcon
+  if (name.includes('new year') || name.includes('nyttår')) return starIcon
+  if (name.includes('valentine')) return heartIcon
+  if (name.includes('independence') || name.includes('constitution') || name.includes('national')) return calendarIcon
+  if (name.includes('labor') || name.includes('labour') || name.includes('workers')) return calendarIcon
 
-  if (holiday.religion) {
-    const religion = holiday.religion.toLowerCase()
-    if (religion === 'christian') return '✝️'
-    if (religion === 'muslim') return '☪️'
-    if (religion === 'jewish') return '✡️'
-    if (religion === 'hindu') return '🕉️'
-    if (religion === 'buddhist') return '☸️'
-  }
+  if (holiday.type && holiday.type.includes('national')) return calendarIcon
+  if (holiday.type && holiday.type.includes('religious')) return starIcon
 
-  if (holiday.type && holiday.type.includes('national')) return '🎌'
-  if (holiday.type && holiday.type.includes('religious')) return '🙏'
-
-  return '🎉'
+  return starIcon
 }
 
 const getMediaUrl = (url: string): string => {
@@ -916,6 +966,13 @@ defineExpose({
 
 .holiday-icon {
   font-size: var(--text-lg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.holiday-icon svg {
+  stroke: var(--gold-primary);
 }
 
 .holiday-details {
@@ -1034,6 +1091,10 @@ defineExpose({
   justify-content: center;
   font-size: var(--text-lg);
   color: var(--text-muted);
+}
+
+.post-thumb-placeholder svg {
+  stroke: var(--gold-primary);
 }
 
 .post-info {
@@ -1383,6 +1444,10 @@ defineExpose({
   color: var(--gold-primary);
 }
 
+.edit-btn svg {
+  stroke: var(--gold-primary);
+}
+
 .edit-btn:hover {
   background: rgba(212, 175, 55, 0.3);
 }
@@ -1400,6 +1465,10 @@ defineExpose({
 .delete-btn {
   background: rgba(239, 68, 68, 0.2);
   color: #ef4444;
+}
+
+.delete-btn svg {
+  stroke: #ef4444;
 }
 
 .delete-btn:hover {
@@ -1529,6 +1598,10 @@ defineExpose({
   justify-content: center;
   background: var(--bg-tertiary);
   font-size: 32px;
+}
+
+.edit-preview-placeholder svg {
+  stroke: var(--gold-primary);
 }
 
 /* Right column: All editable fields */
@@ -1755,6 +1828,10 @@ defineExpose({
   color: var(--text-on-gold);
 }
 
+.action-btn.save-btn svg {
+  stroke: var(--text-on-gold);
+}
+
 .action-btn.save-btn:hover:not(:disabled) {
   background: var(--gold-light);
 }
@@ -1765,9 +1842,16 @@ defineExpose({
 }
 
 .past-date-warning {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   font-size: var(--text-xs);
   color: #ef4444;
   font-weight: var(--font-medium);
+}
+
+.past-date-warning svg {
+  stroke: #ef4444;
 }
 
 /* Responsive for editable form */

@@ -972,6 +972,11 @@ export default {
       label: 'Sesonginspirasjon',
       hint: 'Legg til sesongbasert tema til innlegget',
     },
+    holidayTheme: {
+      label: 'Tema / Inspirasjon',
+      hint: 'Legg til en sesongbasert eller tematisk stil til bildet',
+      customPlaceholder: 'Skriv inn ditt egendefinerte tema...',
+    },
     comboOptions: {
       textPlacement: 'Tekstplassering',
       textPlacementHint: 'Hvor komboteksten vises',

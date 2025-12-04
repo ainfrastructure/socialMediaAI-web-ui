@@ -594,15 +594,15 @@ async function completeOnboarding() {
     if (selectedRestaurant.value?.id) {
       preferencesStore.setSelectedRestaurant(selectedRestaurant.value.id)
     }
-    // Redirect to content hub
-    router.push('/content')
+    // Redirect to posts hub
+    router.push('/posts')
   } catch (error) {
     console.error('Failed to complete onboarding:', error)
     // Save restaurant and redirect anyway to improve UX
     if (selectedRestaurant.value?.id) {
       preferencesStore.setSelectedRestaurant(selectedRestaurant.value.id)
     }
-    router.push('/content')
+    router.push('/posts')
   }
 }
 

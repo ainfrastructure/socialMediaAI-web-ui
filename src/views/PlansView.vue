@@ -76,7 +76,7 @@ async function subscribe(tier: string) {
   }
 
   try {
-    const successUrl = `${window.location.origin}/playground?success=true`
+    const successUrl = `${window.location.origin}/posts?success=true`
     const cancelUrl = `${window.location.origin}/plans?canceled=true`
 
     console.log('[Checkout] Creating checkout session for tier:', tier)
@@ -148,7 +148,7 @@ function showMessage(msg: string, type: 'success' | 'error' | 'info') {
 
 function goBack() {
   if (authStore.isAuthenticated) {
-    router.push('/playground')
+    router.push('/posts')
   } else {
     router.push('/login')
   }
@@ -176,7 +176,7 @@ if (urlParams.get('success') === 'true') {
   setTimeout(() => {
     if (authStore.isAuthenticated) {
       authStore.refreshProfile()
-      router.push('/playground')
+      router.push('/posts')
     }
   }, 2000)
 } else if (urlParams.get('canceled') === 'true') {

@@ -125,8 +125,8 @@ function cancelSwitch() {
   position: absolute;
   top: var(--space-xs);
   left: var(--space-xs);
-  width: calc(50% - 6px);
-  height: calc(100% - 8px);
+  width: calc(50% - var(--space-xs));
+  height: calc(100% - calc(var(--space-xs) * 2));
   background: var(--gradient-gold);
   border-radius: var(--radius-sm);
   transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -135,7 +135,7 @@ function cancelSwitch() {
 }
 
 .toggle-slider.slider-advanced {
-  transform: translateX(calc(100% + 4px));
+  transform: translateX(100%);
 }
 
 /* Responsive */

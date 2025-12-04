@@ -972,6 +972,11 @@ export default {
       label: 'Holiday Inspiration',
       hint: 'Add seasonal theming to your post',
     },
+    holidayTheme: {
+      label: 'Theme / Inspiration',
+      hint: 'Add a seasonal or themed style to your image',
+      customPlaceholder: 'Enter your custom theme...',
+    },
     comboOptions: {
       textPlacement: 'Text Placement',
       textPlacementHint: 'Where to display combo text',

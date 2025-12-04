@@ -151,6 +151,7 @@
                     v-for="post in paginatedDayPosts(day.posts)"
                     :key="post.id"
                     class="table-row-wrapper"
+                    :data-post-id="post.id"
                   >
                     <!-- Row -->
                     <div
@@ -475,9 +476,20 @@ const expandedPostId = ref<string | number | null>(null)
 const bottomPanelTab = ref<'day' | 'upcoming'>('day')
 const selectedDayDetailRef = ref<any>(null)
 
-// Toggle expanded row
-const toggleExpandedPost = (postId: string | number) => {
+// Toggle expanded row with scroll into view
+const toggleExpandedPost = (postId: string | number, event?: Event) => {
+  const isExpanding = expandedPostId.value !== postId
   expandedPostId.value = expandedPostId.value === postId ? null : postId
+
+  // Scroll expanded row into view after DOM updates
+  if (isExpanding) {
+    nextTick(() => {
+      const expandedElement = document.querySelector(`[data-post-id="${postId}"]`)
+      if (expandedElement) {
+        expandedElement.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+      }
+    })
+  }
 }
 
 // Toast and confirmation state
@@ -1491,8 +1503,8 @@ const proceedWithCreationMethod = (method: 'saved' | 'new', restaurantId?: strin
   if (method === 'new') {
     // Always start in easy mode when creating new content
     preferencesStore.setCreationMode('easy', true)
-    // Go to content create page with optional restaurant ID
-    let url = `/content/create?scheduleDate=${selectedDateForScheduling.value}`
+    // Go to posts create page with optional restaurant ID
+    let url = `/posts/create?scheduleDate=${selectedDateForScheduling.value}`
     if (restaurantId) {
       url += `&restaurantId=${restaurantId}`
     }
@@ -1520,7 +1532,7 @@ const createNewPost = (day: any) => {
   const month = String(day.date.getMonth() + 1).padStart(2, '0')
   const dayNum = String(day.date.getDate()).padStart(2, '0')
   const dateString = `${year}-${month}-${dayNum}`
-  router.push(`/content/create?scheduleDate=${dateString}`)
+  router.push(`/posts/create?scheduleDate=${dateString}`)
 }
 
 const pickPostForDate = (day: any) => {
@@ -1689,15 +1701,22 @@ onMounted(async () => {
 <style scoped>
 .scheduler-view {
   min-height: 100vh;
+  min-height: 100dvh;
   position: relative;
   padding: var(--space-lg) var(--space-md) var(--space-5xl);
+  width: 100%;
+  max-width: 100vw;
+  overflow-x: hidden;
+  contain: inline-size;
 }
 
 .container {
   max-width: 1400px;
+  width: 100%;
   margin: 0 auto;
   position: relative;
   z-index: 1;
+  overflow-x: hidden;
 }
 
 .header {
@@ -1769,20 +1788,27 @@ onMounted(async () => {
   margin-bottom: var(--space-lg);
   position: relative;
   min-height: 400px;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+  contain: inline-size;
 }
 
 .calendar-grid {
   display: grid;
-  grid-template-columns: repeat(7, 1fr);
+  grid-template-columns: repeat(7, minmax(0, 1fr));
   gap: 1px;
   background: var(--border-color);
   border-radius: var(--radius-lg);
   overflow: hidden;
   border: 1px solid var(--border-color);
+  min-width: 0;
+  width: 100%;
+  max-width: 100%;
 }
 
 .calendar-grid.view-week {
-  grid-template-columns: repeat(7, 1fr);
+  grid-template-columns: repeat(7, minmax(0, 1fr));
 }
 
 .calendar-grid.view-day {
@@ -2389,6 +2415,10 @@ onMounted(async () => {
   text-transform: uppercase;
   letter-spacing: 0.05em;
   border-bottom: 1px solid var(--border-color);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .calendar-day {
@@ -2401,6 +2431,8 @@ onMounted(async () => {
   display: flex;
   flex-direction: column;
   border: 1px solid var(--border-color);
+  min-width: 0;
+  overflow: hidden;
 }
 
 .calendar-day:hover {
@@ -2553,6 +2585,9 @@ onMounted(async () => {
   flex-direction: column;
   gap: 0.25rem;
   margin-bottom: 0.5rem;
+  max-width: 100%;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .holiday-indicator {
@@ -2566,6 +2601,8 @@ onMounted(async () => {
   overflow: hidden;
   text-overflow: ellipsis;
   line-height: 1.2;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .more-holidays {
@@ -2580,6 +2617,9 @@ onMounted(async () => {
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
+  max-width: 100%;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .post-indicator {
@@ -2591,6 +2631,8 @@ onMounted(async () => {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .post-indicator.platform-instagram {
@@ -3094,6 +3136,230 @@ onMounted(async () => {
   }
 }
 
+@media (max-width: 480px) {
+  .scheduler-view {
+    padding: var(--space-sm);
+  }
+
+  .title {
+    font-size: var(--text-lg);
+  }
+
+  .subtitle {
+    font-size: var(--text-xs);
+    display: none;
+  }
+
+  .calendar-card {
+    padding: var(--space-sm);
+    min-height: auto;
+  }
+
+  .calendar-day {
+    min-height: 48px;
+    padding: 2px;
+  }
+
+  .day-number {
+    font-size: var(--text-xs);
+  }
+
+  .calendar-day-header {
+    padding: var(--space-xs);
+    font-size: 10px;
+  }
+
+  /* Hover action buttons - icon only on mobile */
+  .day-hover-actions {
+    flex-direction: row;
+    gap: var(--space-xs);
+    padding: var(--space-xs);
+  }
+
+  .hover-action-btn {
+    padding: var(--space-sm);
+    border-radius: var(--radius-full);
+    min-width: 36px;
+    min-height: 36px;
+    justify-content: center;
+  }
+
+  .hover-action-btn .btn-label {
+    display: none;
+  }
+
+  .hover-action-btn .material-symbols-outlined {
+    font-size: 20px;
+  }
+
+  .calendar-nav {
+    flex-wrap: wrap;
+    gap: var(--space-xs);
+    padding: var(--space-sm);
+  }
+
+  .nav-button {
+    min-height: var(--touch-target-min);
+    padding: var(--space-xs) var(--space-sm);
+    font-size: var(--text-xs);
+  }
+
+  .calendar-title {
+    font-size: var(--text-base);
+  }
+
+  .view-mode-selector {
+    width: 100%;
+    order: -1;
+  }
+
+  .view-mode-btn {
+    min-height: var(--touch-target-min);
+    font-size: 10px;
+    padding: var(--space-xs) var(--space-sm);
+  }
+
+  /* Hide holiday text, only show emoji */
+  .holiday-indicator {
+    padding: 2px;
+    font-size: 10px;
+    background: transparent;
+    border: none;
+  }
+
+  /* Hide post indicator text on small calendar */
+  .post-indicator {
+    font-size: 8px;
+    padding: 1px 3px;
+    max-width: 100%;
+  }
+
+  .post-time-mini {
+    display: none;
+  }
+
+  .more-posts {
+    font-size: 10px;
+  }
+
+  /* Day view mobile */
+  .day-view-header {
+    padding: var(--space-md);
+  }
+
+  .day-view-title {
+    font-size: var(--text-lg);
+  }
+
+  .day-view-posts,
+  .day-view-holidays {
+    padding: var(--space-md);
+  }
+
+  .action-button {
+    min-height: var(--touch-target-min);
+  }
+
+  /* Posts table */
+  .post-thumbnail,
+  .post-thumbnail-placeholder {
+    height: 160px;
+  }
+
+  .scheduled-post-card {
+    gap: var(--space-sm);
+  }
+
+  /* Day view table mobile - make scrollable */
+  .day-view-table {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    max-width: 100%;
+  }
+
+  .table-header,
+  .table-row {
+    min-width: 500px;
+  }
+}
+
+@media (max-width: 390px) {
+  .scheduler-view {
+    padding: var(--space-xs);
+  }
+
+  .header {
+    margin-bottom: var(--space-sm);
+  }
+
+  .title {
+    font-size: var(--text-base);
+  }
+
+  .calendar-card {
+    padding: var(--space-xs);
+  }
+
+  .calendar-day {
+    min-height: 40px;
+  }
+
+  .day-number {
+    font-size: 10px;
+  }
+
+  .calendar-day-header {
+    font-size: 9px;
+    padding: 2px;
+  }
+
+  /* Even smaller hover buttons for 390px */
+  .hover-action-btn {
+    min-width: 32px;
+    min-height: 32px;
+    padding: var(--space-xs);
+  }
+
+  .hover-action-btn .material-symbols-outlined {
+    font-size: 18px;
+  }
+
+  .calendar-title {
+    font-size: var(--text-sm);
+  }
+
+  .nav-button {
+    padding: var(--space-xs);
+    font-size: 10px;
+  }
+
+  .day-view-title {
+    font-size: var(--text-base);
+  }
+
+  /* Compact holiday display */
+  .holiday-indicator {
+    font-size: 8px;
+    padding: 1px;
+    display: none; /* Hide text, we'll show via CSS content */
+  }
+
+  .day-holidays::before {
+    content: attr(data-holidays);
+    font-size: 10px;
+  }
+
+  /* Hide post text on smallest screens */
+  .post-indicator {
+    font-size: 6px;
+    padding: 1px 2px;
+  }
+
+  .more-posts {
+    font-size: 8px;
+  }
+}
+
 /* Post Detail Modal */
 .modal-overlay {
   position: fixed;
@@ -3413,6 +3679,70 @@ onMounted(async () => {
 
   .modal-actions {
     flex-direction: column;
+  }
+
+  .modal-close {
+    min-width: var(--touch-target-min);
+    min-height: var(--touch-target-min);
+  }
+}
+
+@media (max-width: 480px) {
+  .modal-overlay {
+    padding: var(--space-sm);
+    align-items: flex-end;
+  }
+
+  .modal-content {
+    max-width: 100%;
+    max-height: 95vh;
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  }
+
+  .modal-body {
+    padding: var(--space-lg) var(--space-md);
+  }
+
+  .modal-close {
+    top: var(--space-md);
+    right: var(--space-md);
+    width: 40px;
+    height: 40px;
+    font-size: 1.5rem;
+  }
+
+  .modal-title {
+    font-size: var(--text-xl);
+  }
+
+  .modal-media {
+    max-height: 200px;
+  }
+
+  .modal-actions button {
+    min-height: var(--touch-target-min);
+  }
+}
+
+@media (max-width: 390px) {
+  .modal-overlay {
+    padding: var(--space-xs);
+  }
+
+  .modal-body {
+    padding: var(--space-md) var(--space-sm);
+  }
+
+  .modal-title {
+    font-size: var(--text-lg);
+  }
+
+  .modal-close {
+    width: 36px;
+    height: 36px;
+    font-size: 1.25rem;
+    top: var(--space-sm);
+    right: var(--space-sm);
   }
 }
 

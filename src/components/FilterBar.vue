@@ -496,5 +496,66 @@ const getRestaurantName = (id: string) => {
   .checkbox-group {
     max-height: 150px;
   }
+
+  .filter-btn {
+    min-height: var(--touch-target-min);
+  }
+
+  .clear-btn {
+    min-height: var(--touch-target-min);
+  }
+}
+
+@media (max-width: 480px) {
+  .filter-bar {
+    padding: var(--space-md);
+  }
+
+  .filter-bar-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--space-sm);
+  }
+
+  .filter-title {
+    font-size: var(--text-base);
+  }
+
+  .filter-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .filter-actions {
+    width: 100%;
+  }
+
+  .clear-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .filter-tags {
+    flex-wrap: wrap;
+  }
+
+  .filter-tag {
+    font-size: var(--text-xs);
+  }
+}
+
+@media (max-width: 390px) {
+  .filter-bar {
+    padding: var(--space-sm);
+  }
+
+  .filter-title {
+    font-size: var(--text-sm);
+  }
+
+  .filter-btn {
+    font-size: var(--text-xs);
+    padding: var(--space-sm);
+  }
 }
 </style>

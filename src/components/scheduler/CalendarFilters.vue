@@ -1,15 +1,20 @@
 <template>
   <div class="filter-accordion">
-    <button class="filter-toggle" @click="expanded = !expanded">
+    <button class="filter-toggle" @click="toggleExpanded">
       <span class="filter-toggle-left">
-        <span class="filter-icon">🔍</span>
+        <span class="filter-icon">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"/>
+            <path d="m21 21-4.35-4.35"/>
+          </svg>
+        </span>
         <span class="filter-label">{{ $t('scheduler.filters', 'Filters') }}</span>
         <span v-if="activeFilterCount > 0" class="filter-badge">{{ activeFilterCount }}</span>
       </span>
       <span :class="['filter-arrow', { expanded }]">▼</span>
     </button>
 
-    <div v-show="expanded" class="filter-content">
+    <div v-show="expanded" ref="filterContentRef" class="filter-content">
       <div class="inline-filters">
         <!-- Platform Filter -->
         <div class="inline-filter-group" @mouseleave="platformOpen = false">
@@ -17,7 +22,12 @@
             class="inline-filter-btn"
             @click.stop="platformOpen = !platformOpen; restaurantOpen = false"
           >
-            <span class="inline-filter-icon">📱</span>
+            <span class="inline-filter-icon">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="5" y="2" width="14" height="20" rx="2" ry="2"/>
+                <path d="M12 18h.01"/>
+              </svg>
+            </span>
             <span class="inline-filter-label">{{ $t('scheduler.platforms', 'Platforms') }}</span>
             <span v-if="selectedPlatforms.length > 0" class="inline-filter-count">({{ selectedPlatforms.length }})</span>
             <span :class="['inline-filter-arrow', { open: platformOpen }]">▼</span>
@@ -54,7 +64,17 @@
             class="inline-filter-btn"
             @click.stop="restaurantOpen = !restaurantOpen; platformOpen = false"
           >
-            <span class="inline-filter-icon">🏪</span>
+            <span class="inline-filter-icon">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 21h18"/>
+                <path d="M5 21V7l8-4v18"/>
+                <path d="M19 21V11l-6-4"/>
+                <path d="M9 9v.01"/>
+                <path d="M9 12v.01"/>
+                <path d="M9 15v.01"/>
+                <path d="M9 18v.01"/>
+              </svg>
+            </span>
             <span class="inline-filter-label">{{ $t('scheduler.restaurants', 'Restaurants') }}</span>
             <span v-if="selectedRestaurants.length > 0" class="inline-filter-count">({{ selectedRestaurants.length }})</span>
             <span :class="['inline-filter-arrow', { open: restaurantOpen }]">▼</span>
@@ -119,7 +139,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, nextTick } from 'vue'
 
 interface Platform {
   id: string
@@ -148,6 +168,17 @@ const emit = defineEmits<{
 const expanded = ref(false)
 const platformOpen = ref(false)
 const restaurantOpen = ref(false)
+const filterContentRef = ref<HTMLElement | null>(null)
+
+// Toggle with scroll into view
+const toggleExpanded = () => {
+  expanded.value = !expanded.value
+  if (expanded.value) {
+    nextTick(() => {
+      filterContentRef.value?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+    })
+  }
+}
 
 const activeFilterCount = computed(() => {
   return props.selectedPlatforms.length + props.selectedRestaurants.length
@@ -225,6 +256,8 @@ const getRestaurantName = (restaurantId: string): string => {
 <style scoped>
 .filter-accordion {
   margin-bottom: var(--space-lg);
+  max-width: 100%;
+  overflow: hidden;
 }
 
 .filter-toggle {
@@ -254,6 +287,13 @@ const getRestaurantName = (restaurantId: string): string => {
 
 .filter-icon {
   font-size: var(--text-lg);
+  display: flex;
+  align-items: center;
+  color: var(--gold-primary);
+}
+
+.filter-icon svg {
+  stroke: var(--gold-primary);
 }
 
 .filter-label {
@@ -319,6 +359,13 @@ const getRestaurantName = (restaurantId: string): string => {
 
 .inline-filter-icon {
   font-size: var(--text-base);
+  display: flex;
+  align-items: center;
+  color: var(--gold-primary);
+}
+
+.inline-filter-icon svg {
+  stroke: var(--gold-primary);
 }
 
 .inline-filter-count {

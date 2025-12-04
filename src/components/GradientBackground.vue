@@ -16,11 +16,15 @@
   position: fixed;
   top: 0;
   left: 0;
-  width: 100%;
-  height: 100%;
+  right: 0;
+  bottom: 0;
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh;
   z-index: -1;
   background: var(--bg-primary);
   overflow: hidden;
+  pointer-events: none;
 }
 
 /* Subtle animated gradient layers */

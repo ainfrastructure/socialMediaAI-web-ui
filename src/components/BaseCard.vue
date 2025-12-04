@@ -28,6 +28,8 @@ const variantClass = computed(() => `card-${props.variant}`)
   padding: var(--space-2xl);
   transition: var(--transition-base);
   position: relative;
+  max-width: 100%;
+  overflow: hidden;
 }
 
 /* Glass Variants */

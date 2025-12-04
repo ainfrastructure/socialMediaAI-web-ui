@@ -181,4 +181,49 @@ const handleClick = (event: MouseEvent) => {
   width: 300px;
   height: 300px;
 }
+
+/* Mobile touch target optimization */
+@media (max-width: 768px) {
+  .button-small {
+    padding: var(--space-md) var(--space-lg);
+    min-height: var(--touch-target-min);
+    font-size: var(--text-sm);
+  }
+
+  .button-medium {
+    padding: var(--space-md) var(--space-xl);
+    min-height: var(--touch-target-min);
+  }
+
+  .button-large {
+    padding: var(--space-lg) var(--space-2xl);
+    min-height: var(--touch-target-comfortable);
+  }
+}
+
+@media (max-width: 480px) {
+  .button-small {
+    padding: var(--space-md) var(--space-md);
+    font-size: var(--text-xs);
+  }
+
+  .button-medium {
+    padding: var(--space-md) var(--space-lg);
+    font-size: var(--text-sm);
+  }
+
+  .button-large {
+    padding: var(--space-md) var(--space-xl);
+    font-size: var(--text-base);
+  }
+
+  /* Disable transform on mobile for better touch feedback */
+  .base-button:hover:not(.disabled) {
+    transform: none;
+  }
+
+  .base-button:active:not(.disabled) {
+    transform: scale(0.98);
+  }
+}
 </style>

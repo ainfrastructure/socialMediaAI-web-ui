@@ -166,6 +166,7 @@ watch(() => props.modelValue, (isOpen) => {
   position: relative;
   width: 100%;
   max-height: 90vh;
+  max-height: 90dvh;
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -191,6 +192,7 @@ watch(() => props.modelValue, (isOpen) => {
 .modal-full {
   max-width: calc(100vw - var(--space-2xl) * 2);
   max-height: calc(100vh - var(--space-2xl) * 2);
+  max-height: calc(100dvh - var(--space-2xl) * 2);
 }
 
 /* Close button */
@@ -202,13 +204,15 @@ watch(() => props.modelValue, (isOpen) => {
   border: 1px solid rgba(255, 255, 255, 0.1);
   color: var(--text-muted);
   cursor: pointer;
-  padding: var(--space-xs);
+  padding: var(--space-sm);
   border-radius: var(--radius-sm);
   transition: var(--transition-fast);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 10;
+  min-width: var(--touch-target-min);
+  min-height: var(--touch-target-min);
 }
 
 .base-modal-close:hover {
@@ -259,6 +263,66 @@ watch(() => props.modelValue, (isOpen) => {
   .modal-lg,
   .modal-xl {
     max-width: 100%;
+  }
+
+  .base-modal-body {
+    padding: var(--space-lg);
+  }
+
+  .base-modal-header {
+    padding: var(--space-lg) var(--space-lg) var(--space-md);
+    padding-right: var(--space-3xl);
+  }
+
+  .base-modal-footer {
+    padding: var(--space-md) var(--space-lg);
+    flex-wrap: wrap;
+  }
+
+  .base-modal-title {
+    font-size: var(--text-lg);
+  }
+}
+
+@media (max-width: 480px) {
+  .base-modal-overlay {
+    padding: var(--space-sm);
+    align-items: flex-end;
+  }
+
+  .base-modal-card {
+    max-height: 95vh;
+    max-height: 95dvh;
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  }
+
+  .base-modal-body {
+    padding: var(--space-md);
+  }
+
+  .base-modal-header {
+    padding: var(--space-md) var(--space-md) var(--space-sm);
+    padding-right: var(--space-3xl);
+  }
+
+  .base-modal-footer {
+    padding: var(--space-md);
+    gap: var(--space-sm);
+  }
+
+  .base-modal-close {
+    top: var(--space-sm);
+    right: var(--space-sm);
+  }
+}
+
+@media (max-width: 390px) {
+  .base-modal-overlay {
+    padding: var(--space-xs);
+  }
+
+  .base-modal-title {
+    font-size: var(--text-base);
   }
 }
 

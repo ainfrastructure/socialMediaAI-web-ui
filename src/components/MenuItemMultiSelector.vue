@@ -79,6 +79,13 @@ function handlePageChange(page: number) {
 function calculateItemsPerPage() {
   if (!gridContainer.value) return
 
+  // On mobile (< 480px), limit to 6 items to reduce scrolling
+  const isMobile = window.innerWidth < 480
+  if (isMobile) {
+    itemsPerPage.value = 6
+    return
+  }
+
   const containerWidth = gridContainer.value.offsetWidth
   const containerHeight = window.innerHeight - gridContainer.value.getBoundingClientRect().top - 250
 

@@ -171,6 +171,35 @@ function updateComboItemArrangement(arrangement: CustomizationOptions['comboItem
       </div>
     </div>
 
+    <!-- Holiday/Inspired Theme -->
+    <div class="customization-section">
+      <label class="section-label">
+        {{ t('advancedMode.holidayTheme.label', 'Theme / Inspiration') }}
+        <span class="section-hint">{{ t('advancedMode.holidayTheme.hint', 'Add a seasonal or themed style to your image') }}</span>
+      </label>
+      <div class="option-grid holiday-themes">
+        <button
+          v-for="theme in holidayThemes"
+          :key="theme.value"
+          :class="['option-button holiday-button', { 'selected': props.modelValue.holidayTheme === theme.value }]"
+          @click="selectHolidayTheme(theme.value)"
+        >
+          <span class="option-icon"><MaterialIcon :icon="theme.icon" size="md" :color="'var(--gold-primary)'" /></span>
+          <span class="option-label">{{ theme.label }}</span>
+        </button>
+      </div>
+      <!-- Custom theme text input -->
+      <div v-if="props.modelValue.holidayTheme === 'custom'" class="custom-theme-input-wrapper">
+        <input
+          type="text"
+          class="custom-theme-text-input"
+          :value="props.modelValue.customHolidayText"
+          @input="updateCustomHolidayText(($event.target as HTMLInputElement).value)"
+          :placeholder="t('advancedMode.holidayTheme.customPlaceholder', 'Enter your custom theme...')"
+        />
+      </div>
+    </div>
+
     <!-- Combo-Specific Options -->
     <template v-if="postType === 'combo'">
       <!-- Text Placement -->
@@ -490,6 +519,70 @@ function updateComboItemArrangement(arrangement: CustomizationOptions['comboItem
 
   .holiday-themes {
     grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+  }
+}
+
+@media (max-width: 480px) {
+  .strictness-grid {
+    gap: var(--space-sm);
+  }
+
+  .strictness-button {
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: center;
+    min-height: auto;
+    padding: var(--space-md);
+    gap: var(--space-md);
+  }
+
+  .strictness-button .option-icon {
+    font-size: 24px;
+    flex-shrink: 0;
+  }
+
+  .strictness-button .option-label {
+    text-align: left;
+  }
+
+  .option-description {
+    display: none;
+  }
+
+  .option-button {
+    min-height: 60px;
+    padding: var(--space-md);
+  }
+
+  .logo-positions {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 390px) {
+  .strictness-button {
+    padding: var(--space-sm) var(--space-md);
+  }
+
+  .strictness-button .option-icon {
+    font-size: 20px;
+  }
+
+  .option-button {
+    min-height: 50px;
+    padding: var(--space-sm);
+  }
+
+  .option-icon {
+    font-size: 18px;
+  }
+
+  .option-label {
+    font-size: var(--text-xs);
+  }
+
+  .logo-positions {
+    grid-template-columns: repeat(2, 1fr);
   }
 }
 </style>

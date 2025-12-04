@@ -462,5 +462,47 @@ onUnmounted(() => {
     width: auto;
     max-height: calc(100vh - 80px);
   }
+
+  .notification-item {
+    padding: var(--space-md);
+    min-height: var(--touch-target-comfortable);
+  }
+
+  .notification-btn {
+    min-width: var(--touch-target-min);
+    min-height: var(--touch-target-min);
+  }
+}
+
+@media (max-width: 390px) {
+  .notification-dropdown {
+    left: var(--space-sm);
+    right: var(--space-sm);
+    max-height: calc(100vh - 70px);
+  }
+
+  .dropdown-header {
+    padding: var(--space-md);
+  }
+
+  .dropdown-header h3 {
+    font-size: var(--text-base);
+  }
+
+  .notification-item {
+    padding: var(--space-sm) var(--space-md);
+  }
+
+  .notification-title {
+    font-size: var(--text-sm);
+  }
+
+  .notification-message {
+    font-size: var(--text-xs);
+  }
+
+  .notification-time {
+    font-size: 10px;
+  }
 }
 </style>

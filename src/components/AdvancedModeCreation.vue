@@ -262,6 +262,12 @@ const newHashtag = ref('')
 // Wizard progress tracking
 const highestCompletedStep = ref(0)
 
+// Ref for scroll-into-view on menu selection
+const step1NavigationRef = ref<HTMLElement | null>(null)
+
+// Ref for scroll-into-view when generating
+const generatingOverlayRef = ref<HTMLElement | null>(null)
+
 // Computed
 const canProceedStep1 = computed(() => {
   // Allow proceeding with uploaded image for single/combo posts
@@ -365,6 +371,29 @@ watch(currentStep, async (newStep, oldStep) => {
       editedPostText.value = postText.value
       editedHashtags.value = [...hashtags.value]
     }
+  }
+})
+
+// Watch for menu selection completion to scroll to next button (mobile UX)
+watch(selectedMenuItems, (items) => {
+  const shouldScroll =
+    (postType.value === 'single' && items.length === 1) ||
+    (postType.value === 'combo' && items.length === 2)
+
+  if (shouldScroll && step1NavigationRef.value) {
+    nextTick(() => {
+      step1NavigationRef.value?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+    })
+  }
+}, { deep: true })
+
+// Watch for generation start to scroll loader into view
+watch([generatingImage, generatingContent], ([isGeneratingImg, isGeneratingContent]) => {
+  if (isGeneratingImg || isGeneratingContent) {
+    // Use setTimeout to ensure DOM is fully rendered after v-if becomes true
+    setTimeout(() => {
+      generatingOverlayRef.value?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    }, 100)
   }
 })
 
@@ -1072,7 +1101,7 @@ defineExpose({
         </div>
       </div>
 
-      <div class="step-navigation">
+      <div ref="step1NavigationRef" class="step-navigation">
         <BaseButton variant="ghost" @click="emit('back')">
           {{ t('advancedMode.navigation.back') }}
         </BaseButton>
@@ -1260,7 +1289,7 @@ defineExpose({
       </div>
 
       <!-- Loading State -->
-      <div v-if="generatingImage || generatingContent" class="preview-loading">
+      <div v-if="generatingImage || generatingContent" ref="generatingOverlayRef" class="preview-loading">
         <img src="/socialchef_logo.svg" alt="Social Chef" class="loading-logo" />
         <p class="loading-title">{{ t('advancedMode.step4.generating') }}</p>
         <p class="loading-subtitle">{{ t('advancedMode.step4.generatingSubtitle') }}</p>
