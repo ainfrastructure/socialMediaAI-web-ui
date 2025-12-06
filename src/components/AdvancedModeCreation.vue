@@ -2253,10 +2253,27 @@ defineExpose({
   transform: translateY(-2px);
 }
 
+.menu-item-card:active {
+  transform: scale(0.98);
+  border-color: var(--gold-primary);
+}
+
+/* Better touch target for mobile */
+@media (max-width: 768px) {
+  .menu-item-card {
+    min-height: 44px; /* Minimum touch target size */
+    -webkit-tap-highlight-color: transparent;
+  }
+}
+
 .menu-item-image {
   width: 100%;
   height: 120px;
   object-fit: cover;
+  pointer-events: none; /* Allow clicks to pass through to parent card */
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none; /* Prevent long-press menu on iOS */
 }
 
 .menu-item-info {
@@ -2264,6 +2281,7 @@ defineExpose({
   display: flex;
   flex-direction: column;
   gap: var(--space-xs);
+  pointer-events: none; /* Allow clicks to pass through to parent card */
 }
 
 .menu-item-name {

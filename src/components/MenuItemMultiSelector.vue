@@ -274,11 +274,11 @@ onUnmounted(() => {
   overflow: hidden;     /* Hide overflow, pagination handles rest */
 }
 
-/* Responsive: Single column on mobile */
+/* Responsive: 2 columns on mobile */
 @media (max-width: 768px) {
   .menu-items-grid {
-    grid-template-columns: 1fr;
-    grid-template-rows: repeat(6, 1fr);
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-md);
     max-height: none;
   }
 }
