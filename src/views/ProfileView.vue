@@ -85,11 +85,22 @@
           </div>
 
           <div class="plan-details">
-            <div class="info-item">
+            <!-- For monthly users, show monthly limit -->
+            <div v-if="!isLifetimeMember && !isYearlyMember" class="info-item">
               <span class="info-label">{{ $t('profile.monthlyCredits') }}</span>
               <span class="info-value">{{ usage?.monthly_limit || 0 }}</span>
             </div>
-            <div class="info-item">
+            <!-- For yearly users, show total allocation -->
+            <div v-if="isYearlyMember" class="info-item">
+              <span class="info-label">{{ $t('plans.creditsUpfront') }}</span>
+              <span class="info-value">600</span>
+            </div>
+            <!-- For lifetime users, show total allocation -->
+            <div v-if="isLifetimeMember" class="info-item">
+              <span class="info-label">{{ $t('plans.creditsTotal') }}</span>
+              <span class="info-value">5000</span>
+            </div>
+            <div v-if="!isLifetimeMember && !isYearlyMember" class="info-item">
               <span class="info-label">{{ $t('profile.creditsUsedThisMonth') }}</span>
               <span class="info-value">{{ usage?.credits_this_month || 0 }}</span>
             </div>
@@ -97,7 +108,7 @@
               <span class="info-label">{{ $t('profile.remainingCredits') }}</span>
               <span class="info-value credits-remaining">{{ usage?.remaining_credits || 0 }}</span>
             </div>
-            <div v-if="subscription?.current_period_end" class="info-item">
+            <div v-if="subscription?.current_period_end && !isLifetimeMember" class="info-item">
               <span class="info-label">
                 {{ subscription.cancel_at_period_end ? $t('profile.subscriptionEnds') : $t('profile.nextBillingDate') }}
               </span>
@@ -109,7 +120,16 @@
             {{ $t('profile.cancelNotice') }}
           </div>
 
-          <div v-if="subscription?.tier !== 'free'" class="plan-actions">
+          <!-- Lifetime users don't need upgrade/cancel buttons -->
+          <div v-if="isLifetimeMember" class="plan-actions">
+            <router-link to="/plans">
+              <BaseButton variant="secondary">
+                {{ $t('profile.viewPlans') }}
+              </BaseButton>
+            </router-link>
+          </div>
+          <!-- Regular subscription users -->
+          <div v-else class="plan-actions">
             <router-link to="/plans">
               <BaseButton variant="primary">
                 {{ $t('profile.upgradePlan') }}
@@ -122,13 +142,6 @@
             >
               {{ $t('profile.cancelSubscription') }}
             </BaseButton>
-          </div>
-          <div v-else class="plan-actions">
-            <router-link to="/plans">
-              <BaseButton variant="primary">
-                {{ $t('profile.upgradeToPremium') }}
-              </BaseButton>
-            </router-link>
           </div>
         </div>
       </BaseCard>
@@ -276,14 +289,17 @@ const subscription = computed(() => authStore.user?.subscription)
 const usage = computed(() => authStore.user?.usage)
 
 const planDisplayName = computed(() => {
-  const tier = subscription.value?.tier || 'free'
+  const tier = subscription.value?.tier || 'monthly'
   return tier.charAt(0).toUpperCase() + tier.slice(1)
 })
 
 const planBadgeClass = computed(() => {
-  const tier = subscription.value?.tier || 'free'
+  const tier = subscription.value?.tier || 'monthly'
   return `plan-${tier}`
 })
+
+const isLifetimeMember = computed(() => subscription.value?.tier === 'lifetime')
+const isYearlyMember = computed(() => subscription.value?.tier === 'yearly')
 
 const statusBadgeClass = computed(() => {
   const status = subscription.value?.status || 'inactive'
@@ -567,6 +583,25 @@ async function confirmDeleteAccount() {
   border: 1px solid rgba(128, 128, 128, 0.3);
 }
 
+.plan-monthly {
+  background: rgba(59, 130, 246, 0.2);
+  color: #93c5fd;
+  border: 1px solid rgba(59, 130, 246, 0.3);
+}
+
+.plan-yearly {
+  background: rgba(212, 175, 55, 0.2);
+  color: var(--gold-primary);
+  border: 1px solid rgba(212, 175, 55, 0.3);
+}
+
+.plan-lifetime {
+  background: rgba(168, 85, 247, 0.2);
+  color: #c4b5fd;
+  border: 1px solid rgba(168, 85, 247, 0.3);
+}
+
+/* Legacy tier classes for backwards compatibility */
 .plan-basic {
   background: rgba(59, 130, 246, 0.2);
   color: #93c5fd;

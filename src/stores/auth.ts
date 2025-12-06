@@ -20,8 +20,10 @@ export const useAuthStore = defineStore('auth', () => {
 
   // Computed
   const isAuthenticated = computed(() => !!accessToken.value && !!user.value)
-  const subscriptionTier = computed(() => user.value?.subscription.tier || 'free')
+  const subscriptionTier = computed(() => user.value?.subscription.tier || 'monthly')
   const usageStats = computed(() => user.value?.usage)
+  const isLifetimeMember = computed(() => subscriptionTier.value === 'lifetime')
+  const isYearlyMember = computed(() => subscriptionTier.value === 'yearly')
   const canGenerateContent = computed(() => {
     if (!user.value) return false
     return user.value.usage.remaining_credits > 0
@@ -460,6 +462,8 @@ export const useAuthStore = defineStore('auth', () => {
     isAuthenticated,
     subscriptionTier,
     usageStats,
+    isLifetimeMember,
+    isYearlyMember,
     canGenerateContent,
     canGenerateVideo,
 

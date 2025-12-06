@@ -11,7 +11,9 @@
       "Bash(npm run type-check:*)",
       "Bash(node -e:*)",
       "Bash(npm install:*)",
-      "Bash(node test-mobile.cjs:*)"
+      "Bash(node test-mobile.cjs:*)",
+      "Bash(grep:*)",
+      "Bash(find:*)"
     ],
     "deny": [],
     "ask": []

@@ -3,18 +3,46 @@ import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '../stores/auth'
-import { api, type SubscriptionPlan } from '../services/api'
+import { api } from '../services/api'
 import DashboardLayout from '../components/DashboardLayout.vue'
 import BaseCard from '../components/BaseCard.vue'
 import BaseButton from '../components/BaseButton.vue'
 import BaseAlert from '../components/BaseAlert.vue'
 import MaterialIcon from '../components/MaterialIcon.vue'
 
+interface Plan {
+  tier: string
+  name: string
+  price: number
+  formatted_price: string
+  currency: string
+  stripe_price_id: string
+  interval: string
+  credits: number
+  is_recurring: boolean
+  features: string[]
+  savings?: string
+  badge?: string
+  limited_to?: number
+}
+
+interface PlansResponse {
+  success: boolean
+  currency: string
+  credit_costs: {
+    image: number
+    video: number
+  }
+  plans: Plan[]
+}
+
 const router = useRouter()
 const authStore = useAuthStore()
 const { t } = useI18n()
 
-const plans = ref<SubscriptionPlan[]>([])
+const plans = ref<Plan[]>([])
+const currency = ref<string>('usd')
+const creditCosts = ref({ image: 1, video: 5 })
 const loading = ref(true)
 const portalLoading = ref(false)
 const message = ref('')
@@ -22,16 +50,16 @@ const messageType = ref<'success' | 'error' | 'info'>('info')
 
 // Plan tier icons
 const tierIcons: Record<string, string> = {
-  free: 'star',
-  pro: 'bolt',
-  enterprise: 'diamond'
+  monthly: 'calendar_month',
+  yearly: 'event_repeat',
+  lifetime: 'all_inclusive'
 }
 
 // Computed: check if user has an active paid subscription
 const hasActiveSubscription = computed(() => {
   return authStore.isAuthenticated &&
     authStore.subscriptionTier &&
-    authStore.subscriptionTier !== 'free'
+    ['monthly', 'yearly', 'lifetime'].includes(authStore.subscriptionTier)
 })
 
 onMounted(async () => {
@@ -42,14 +70,12 @@ async function loadPlans() {
   loading.value = true
 
   try {
-    const response = await api.getPlans()
+    const response = await api.getPlans() as PlansResponse
 
     if (response.success) {
-      // Handle both response formats: { plans: [...] } and { data: { plans: [...] } }
-      const plansData = (response as any).plans || response.data?.plans
-      if (plansData) {
-        plans.value = plansData
-      }
+      plans.value = response.plans || []
+      currency.value = response.currency || 'usd'
+      creditCosts.value = response.credit_costs || { image: 1, video: 5 }
     }
   } catch (error) {
     showMessage(t('plans.failedToLoad'), 'error')
@@ -61,17 +87,6 @@ async function loadPlans() {
 async function subscribe(tier: string) {
   if (!authStore.isAuthenticated) {
     router.push('/login')
-    return
-  }
-
-  if (tier === 'free') {
-    showMessage(t('plans.alreadyOnFreePlan'), 'info')
-    return
-  }
-
-  // For enterprise, open contact form or email
-  if (tier === 'enterprise') {
-    window.location.href = 'mailto:hello@socialchef.ai?subject=Enterprise%20Plan%20Inquiry'
     return
   }
 
@@ -90,7 +105,6 @@ async function subscribe(tier: string) {
       return
     }
 
-    // The API returns checkout_url directly, not wrapped in data
     const checkoutUrl = (response as any).checkout_url || response.data?.checkout_url
 
     if (!checkoutUrl) {
@@ -100,7 +114,6 @@ async function subscribe(tier: string) {
     }
 
     console.log('[Checkout] Redirecting to:', checkoutUrl)
-    // Redirect to Stripe Checkout
     window.location.href = checkoutUrl
   } catch (error: any) {
     console.error('[Checkout] Error:', error)
@@ -122,7 +135,6 @@ async function openBillingPortal() {
     const response = await api.createCustomerPortal(returnUrl)
     console.log('[Portal] Response:', response)
 
-    // The API returns portal_url directly, not wrapped in data
     const portalUrl = (response as any).portal_url || response.data?.url
 
     if (response.success && portalUrl) {
@@ -146,14 +158,6 @@ function showMessage(msg: string, type: 'success' | 'error' | 'info') {
   setTimeout(() => (message.value = ''), 5000)
 }
 
-function goBack() {
-  if (authStore.isAuthenticated) {
-    router.push('/posts')
-  } else {
-    router.push('/login')
-  }
-}
-
 function getTierIcon(tier: string): string {
   return tierIcons[tier] || 'star'
 }
@@ -162,11 +166,65 @@ function isCurrentPlan(tier: string): boolean {
   return authStore.subscriptionTier === tier
 }
 
-function canUpgrade(tier: string): boolean {
-  const tierOrder = ['free', 'pro', 'enterprise']
-  const currentIndex = tierOrder.indexOf(authStore.subscriptionTier || 'free')
-  const targetIndex = tierOrder.indexOf(tier)
-  return targetIndex > currentIndex
+function getPriceInterval(plan: Plan): string {
+  if (plan.interval === 'month') return t('plans.perMonth')
+  if (plan.interval === 'year') return t('plans.perYear')
+  if (plan.interval === 'lifetime') return t('plans.oneTime')
+  return ''
+}
+
+function getButtonText(plan: Plan): string {
+  // Lifetime is always "Buy"
+  if (plan.tier === 'lifetime') {
+    return t('plans.buy')
+  }
+
+  // If user has monthly subscription and looking at yearly, show "Upgrade"
+  if (authStore.subscriptionTier === 'monthly' && plan.tier === 'yearly') {
+    return t('plans.upgrade')
+  }
+
+  // Default to "Get Started"
+  return t('plans.getStarted')
+}
+
+function getBadgeText(badge: string): string {
+  // Map API badge values to i18n keys
+  const badgeMap: Record<string, string> = {
+    'Best value': 'plans.bestValue',
+    'Launch Deal': 'plans.launchDeal',
+    'Most Popular': 'plans.mostPopular',
+  }
+
+  const key = badgeMap[badge]
+  return key ? t(key) : badge
+}
+
+function getFeatureText(feature: string): string {
+  // Map API feature values to i18n keys
+  const featureMap: Record<string, string> = {
+    'AI image generation': 'plans.imageGeneration',
+    'AI video generation': 'plans.videoGeneration',
+    'Facebook publishing': 'plans.facebookPublishing',
+    'Instagram publishing': 'plans.instagramPublishing',
+    'Post scheduling': 'plans.postScheduling',
+    'Unlimited restaurants': 'plans.unlimitedRestaurants',
+    'Credits never expire': 'plans.noExpiration',
+  }
+
+  const key = featureMap[feature]
+  if (key) return t(key)
+
+  // Handle dynamic "X credits upfront/total" features - convert to images/videos
+  const creditsMatch = feature.match(/^(\d+)\s+credits?\s+(upfront|total|per month)$/i)
+  if (creditsMatch) {
+    const credits = parseInt(creditsMatch[1])
+    const images = Math.floor(credits / creditCosts.value.image)
+    const videos = Math.floor(credits / creditCosts.value.video)
+    return `${images} ${t('plans.images')} ${t('plans.orEquivalent')} ${videos} ${t('plans.videos')}`
+  }
+
+  return feature
 }
 
 // Check for success/canceled parameters
@@ -202,6 +260,7 @@ if (urlParams.get('success') === 'true') {
       <h2 class="section-title">{{ $t('plans.chooseYourPlan') }}</h2>
       <p class="section-subtitle">{{ $t('plans.unlockPower') }}</p>
 
+
       <!-- Manage Subscription Button for existing subscribers -->
       <div v-if="hasActiveSubscription" class="manage-subscription-section">
         <BaseButton
@@ -224,17 +283,26 @@ if (urlParams.get('success') === 'true') {
         <BaseCard
           v-for="plan in plans"
           :key="plan.tier"
-          :variant="plan.tier === 'pro' ? 'glass-intense' : 'glass'"
-          :class="['plan-card', { featured: plan.tier === 'pro', enterprise: plan.tier === 'enterprise' }]"
-          :hoverable="plan.tier !== 'free'"
+          :variant="plan.tier === 'yearly' ? 'glass-intense' : 'glass'"
+          :class="['plan-card', { featured: plan.tier === 'yearly', lifetime: plan.tier === 'lifetime' }]"
+          hoverable
         >
-          <div v-if="plan.tier === 'pro'" class="featured-badge">{{ $t('plans.mostPopular') }}</div>
-          <div v-if="plan.tier === 'enterprise'" class="enterprise-badge">{{ $t('plans.bestValue') }}</div>
+          <!-- Badges -->
+          <div v-if="plan.badge" class="plan-badge" :class="{ 'lifetime-badge': plan.tier === 'lifetime' }">
+            {{ getBadgeText(plan.badge) }}
+          </div>
+          <div v-if="plan.limited_to" class="limited-badge">
+            {{ $t('plans.limitedTo', { count: plan.limited_to }) }}
+          </div>
           <div v-if="isCurrentPlan(plan.tier)" class="current-badge">{{ $t('plans.currentPlan') }}</div>
 
           <!-- Tier Icon -->
           <div class="tier-icon-wrapper">
-            <MaterialIcon :icon="getTierIcon(plan.tier)" size="lg" :color="plan.tier === 'enterprise' ? 'var(--gold-primary)' : plan.tier === 'pro' ? 'var(--gold-light)' : plan.tier === 'free' ? 'var(--gold-primary)' : 'var(--text-secondary)'" />
+            <MaterialIcon
+              :icon="getTierIcon(plan.tier)"
+              size="lg"
+              :color="plan.tier === 'lifetime' ? 'var(--gold-primary)' : plan.tier === 'yearly' ? 'var(--gold-light)' : 'var(--text-secondary)'"
+            />
           </div>
 
           <h3 class="plan-name">{{ plan.name }}</h3>
@@ -242,88 +310,75 @@ if (urlParams.get('success') === 'true') {
           <!-- Price Display -->
           <div class="price-wrapper">
             <div class="price">{{ plan.formatted_price }}</div>
-            <span v-if="plan.tier !== 'free' && plan.tier !== 'enterprise'" class="price-period">{{ $t('plans.perMonth') }}</span>
-            <span v-if="plan.tier === 'enterprise'" class="price-custom">{{ $t('plans.customPricing') }}</span>
+            <span class="price-period">{{ getPriceInterval(plan) }}</span>
+            <div v-if="plan.savings" class="savings-badge">
+              {{ plan.savings }}
+            </div>
           </div>
 
-          <!-- Token/Credit Highlight -->
+          <!-- Credits as Images/Videos -->
           <div class="credits-highlight">
-            <MaterialIcon icon="token" size="sm" :color="'var(--gold-primary)'" />
-            <span>{{ plan.monthly_limit }} {{ $t('plans.tokensPerMonth') }}</span>
+            <div class="credit-line">
+              <MaterialIcon icon="image" size="sm" color="var(--gold-primary)" />
+              <span>{{ Math.floor(plan.credits / creditCosts.image) }} {{ $t('plans.images') }}</span>
+            </div>
+            <span class="or-divider">{{ $t('plans.orEquivalent') }}</span>
+            <div class="credit-line">
+              <MaterialIcon icon="videocam" size="sm" color="var(--gold-primary)" />
+              <span>{{ Math.floor(plan.credits / creditCosts.video) }} {{ $t('plans.videos') }}</span>
+            </div>
           </div>
 
           <ul class="features">
             <li v-for="(feature, index) in plan.features" :key="index">
-              <MaterialIcon icon="check_circle" size="sm" :color="'var(--gold-primary)'" class="check-icon" />
-              {{ feature }}
+              <MaterialIcon icon="check_circle" size="sm" color="var(--gold-primary)" class="check-icon" />
+              {{ getFeatureText(feature) }}
             </li>
           </ul>
 
           <!-- Action Buttons -->
           <div class="plan-actions">
-            <template v-if="plan.tier === 'free'">
-              <div v-if="isCurrentPlan(plan.tier)" class="free-label current">{{ $t('plans.currentPlan') }}</div>
-              <div v-else class="free-label">{{ $t('plans.freeForever') }}</div>
-            </template>
-
-            <template v-else-if="plan.tier === 'enterprise'">
-              <BaseButton
-                variant="secondary"
-                size="large"
-                full-width
-                @click="subscribe(plan.tier)"
-              >
-                <MaterialIcon icon="mail" size="sm" />
-                {{ $t('plans.contactSales') }}
-              </BaseButton>
-            </template>
-
-            <template v-else>
-              <BaseButton
-                v-if="isCurrentPlan(plan.tier)"
-                variant="secondary"
-                size="large"
-                full-width
-                @click="openBillingPortal"
-                :disabled="portalLoading"
-              >
-                {{ $t('plans.manageSubscription') }}
-              </BaseButton>
-              <BaseButton
-                v-else-if="canUpgrade(plan.tier)"
-                variant="primary"
-                size="large"
-                full-width
-                @click="subscribe(plan.tier)"
-              >
-                {{ $t('plans.upgradeTo') }} {{ plan.name }}
-              </BaseButton>
-              <BaseButton
-                v-else
-                variant="ghost"
-                size="large"
-                full-width
-                @click="subscribe(plan.tier)"
-              >
-                {{ $t('plans.subscribeNow') }}
-              </BaseButton>
-            </template>
+            <BaseButton
+              v-if="isCurrentPlan(plan.tier)"
+              variant="secondary"
+              size="large"
+              full-width
+              @click="openBillingPortal"
+              :disabled="portalLoading"
+            >
+              {{ $t('plans.manageSubscription') }}
+            </BaseButton>
+            <BaseButton
+              v-else
+              :variant="plan.tier === 'yearly' || plan.tier === 'lifetime' ? 'primary' : 'secondary'"
+              size="large"
+              full-width
+              @click="subscribe(plan.tier)"
+            >
+              {{ getButtonText(plan) }}
+            </BaseButton>
           </div>
         </BaseCard>
       </div>
 
-      <!-- FAQ / Trust Section -->
+      <!-- Promo Code Info -->
+      <div class="promo-info">
+        <MaterialIcon icon="local_offer" size="sm" color="var(--gold-primary)" />
+        <span>{{ $t('plans.promoCodeHint') }}</span>
+      </div>
+
+      <!-- Trust Section -->
       <div class="trust-section">
         <div class="trust-item">
-          <MaterialIcon icon="lock" size="sm" :color="'var(--gold-primary)'" />
+          <MaterialIcon icon="lock" size="sm" color="var(--gold-primary)" />
           <span>{{ $t('plans.securePayment') }}</span>
         </div>
         <div class="trust-item">
-          <MaterialIcon icon="sync" size="sm" :color="'var(--gold-primary)'" />
+          <MaterialIcon icon="sync" size="sm" color="var(--gold-primary)" />
           <span>{{ $t('plans.cancelAnytime') }}</span>
         </div>
         <div class="trust-item">
-          <MaterialIcon icon="support_agent" size="sm" :color="'var(--gold-primary)'" />
+          <MaterialIcon icon="support_agent" size="sm" color="var(--gold-primary)" />
           <span>{{ $t('plans.prioritySupport') }}</span>
         </div>
       </div>
@@ -372,9 +427,10 @@ if (urlParams.get('success') === 'true') {
 .section-subtitle {
   text-align: center;
   color: var(--text-secondary);
-  margin-bottom: var(--space-2xl);
+  margin-bottom: var(--space-lg);
   font-size: var(--text-lg);
 }
+
 
 .manage-subscription-section {
   text-align: center;
@@ -417,7 +473,7 @@ if (urlParams.get('success') === 'true') {
 
 .plans-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   gap: var(--space-2xl);
   margin-bottom: var(--space-3xl);
 }
@@ -431,17 +487,9 @@ if (urlParams.get('success') === 'true') {
   flex-direction: column;
 }
 
-.plan-card:nth-child(1) {
-  animation-delay: 0.1s;
-}
-
-.plan-card:nth-child(2) {
-  animation-delay: 0.2s;
-}
-
-.plan-card:nth-child(3) {
-  animation-delay: 0.3s;
-}
+.plan-card:nth-child(1) { animation-delay: 0.1s; }
+.plan-card:nth-child(2) { animation-delay: 0.2s; }
+.plan-card:nth-child(3) { animation-delay: 0.3s; }
 
 @keyframes fadeInUp {
   from {
@@ -472,40 +520,39 @@ if (urlParams.get('success') === 'true') {
   animation: pulse-glow 3s ease-in-out infinite;
 }
 
-.plan-card.enterprise {
-  position: relative;
+.plan-card.lifetime {
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.15) 0%, rgba(26, 26, 26, 0.9) 100%);
+  border: 2px solid var(--gold-primary);
+  box-shadow: 0 0 30px rgba(212, 175, 55, 0.2), var(--shadow-lg);
 }
 
-.plan-card.enterprise::before {
+.plan-card.lifetime::before {
   content: '';
   position: absolute;
-  top: -2px;
-  left: -2px;
-  right: -2px;
-  bottom: -2px;
+  top: -3px;
+  left: -3px;
+  right: -3px;
+  bottom: -3px;
   background: linear-gradient(135deg, var(--gold-dark) 0%, var(--gold-primary) 50%, var(--gold-light) 100%);
   border-radius: var(--radius-lg);
   z-index: -1;
-  opacity: 0.3;
+  opacity: 0.6;
+  animation: pulse-glow 2s ease-in-out infinite;
 }
 
 @keyframes pulse-glow {
-  0%, 100% {
-    opacity: 0.5;
-  }
-  50% {
-    opacity: 0.8;
-  }
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 0.8; }
 }
 
-.featured-badge {
+.plan-badge {
   position: absolute;
-  top: -12px;
+  top: var(--space-lg);
   left: 50%;
   transform: translateX(-50%);
   background: var(--gradient-gold);
   color: var(--text-on-gold);
-  padding: var(--space-xs) var(--space-lg);
+  padding: var(--space-xs) var(--space-md);
   border-radius: var(--radius-full);
   font-size: var(--text-xs);
   font-weight: var(--font-semibold);
@@ -513,22 +560,25 @@ if (urlParams.get('success') === 'true') {
   letter-spacing: 0.05em;
   box-shadow: var(--shadow-md);
   white-space: nowrap;
+  z-index: 1;
 }
 
-.enterprise-badge {
+.plan-badge.lifetime-badge {
+  background: linear-gradient(135deg, var(--gold-dark), var(--gold-primary));
+}
+
+.limited-badge {
   position: absolute;
-  top: -12px;
+  top: calc(var(--space-lg) + var(--space-2xl));
   left: 50%;
   transform: translateX(-50%);
-  background: linear-gradient(135deg, var(--gold-dark), var(--gold-primary));
-  color: var(--text-on-gold);
-  padding: var(--space-xs) var(--space-lg);
+  background: var(--gold-subtle);
+  color: var(--gold-primary);
+  padding: var(--space-xs) var(--space-md);
   border-radius: var(--radius-full);
   font-size: var(--text-xs);
   font-weight: var(--font-semibold);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  box-shadow: var(--shadow-md);
+  border: var(--border-width) solid var(--gold-primary);
   white-space: nowrap;
 }
 
@@ -546,7 +596,7 @@ if (urlParams.get('success') === 'true') {
 }
 
 .tier-icon-wrapper {
-  margin-top: var(--space-xl);
+  margin-top: var(--space-5xl);
   display: flex;
   justify-content: center;
 }
@@ -582,14 +632,19 @@ if (urlParams.get('success') === 'true') {
   font-size: var(--text-sm);
 }
 
-.price-custom {
-  color: var(--gold-primary);
-  font-size: var(--text-sm);
-  font-weight: var(--font-medium);
+.savings-badge {
+  background: var(--success-bg);
+  color: var(--success-text);
+  padding: var(--space-xs) var(--space-md);
+  border-radius: var(--radius-full);
+  font-size: var(--text-xs);
+  font-weight: var(--font-semibold);
+  margin-top: var(--space-xs);
 }
 
 .credits-highlight {
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: var(--space-sm);
@@ -599,10 +654,22 @@ if (urlParams.get('success') === 'true') {
   margin: var(--space-lg) 0;
 }
 
-.credits-highlight span {
+.credit-line {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.credit-line span {
   color: var(--gold-primary);
   font-weight: var(--font-semibold);
   font-size: var(--text-sm);
+}
+
+.or-divider {
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+  font-style: italic;
 }
 
 .features {
@@ -646,18 +713,15 @@ if (urlParams.get('success') === 'true') {
   gap: var(--space-sm);
 }
 
-.free-label {
+/* Promo Info */
+.promo-info {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: var(--space-sm);
   color: var(--text-muted);
-  font-weight: var(--font-semibold);
-  padding: var(--space-lg);
-  font-size: var(--text-base);
-}
-
-.free-label.current {
-  color: var(--success-text);
-  background: var(--success-bg);
-  border-radius: var(--radius-md);
-  border: var(--border-width) solid var(--success-border);
+  font-size: var(--text-sm);
+  margin-bottom: var(--space-2xl);
 }
 
 /* Trust Section */
@@ -692,13 +756,22 @@ if (urlParams.get('success') === 'true') {
     font-size: var(--text-3xl);
   }
 
+  .credit-info {
+    flex-direction: column;
+    gap: var(--space-sm);
+  }
+
+  .credit-divider {
+    display: none;
+  }
+
   .plans-grid {
     grid-template-columns: 1fr;
     gap: var(--space-xl);
   }
 
   .plan-card.featured::before,
-  .plan-card.enterprise::before {
+  .plan-card.lifetime::before {
     display: none;
   }
 

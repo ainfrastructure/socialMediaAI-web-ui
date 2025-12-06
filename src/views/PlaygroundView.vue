@@ -257,15 +257,15 @@
               :disabled="!selectedPrompt || generatingImage || !canGenerate"
               @click="generateImage"
             >
-              {{ generatingImage ? 'Generating Image...' : 'Generate Image (1 credit)' }}
+              {{ generatingImage ? $t('playground.generatingImage') : $t('playground.generateImageButton') }}
             </BaseButton>
 
             <div v-if="generatedImageUrl" class="generated-content">
-              <h4>Generated Image:</h4>
-              <img :src="generatedImageUrl" alt="Generated marketing image" class="generated-image" />
+              <h4>{{ $t('playground.generatedImageTitle') }}</h4>
+              <img :src="generatedImageUrl" :alt="$t('playground.generatedMarketingImageAlt')" class="generated-image" />
               <div class="content-actions">
                 <a :href="generatedImageUrl" download class="download-btn">
-                  ⬇️ Download Image
+                  ⬇️ {{ $t('playground.downloadImage') }}
                 </a>
                 <BaseButton
                   v-if="lastSavedPost || generatedPostContent"
@@ -273,7 +273,7 @@
                   size="medium"
                   @click="openScheduleModal"
                 >
-                  📅 Schedule Post
+                  📅 {{ $t('playground.schedulePost') }}
                 </BaseButton>
                 <BaseButton
                   v-if="(lastSavedPost || generatedPostContent) && selectedPlatforms.includes('facebook')"
@@ -282,7 +282,7 @@
                   @click="publishToFacebook"
                   :disabled="publishingToFacebook"
                 >
-                  {{ publishingToFacebook ? 'Publishing...' : '📤 Publish to Facebook' }}
+                  {{ publishingToFacebook ? $t('playground.publishing') : '📤 ' + $t('playground.publishToFacebook') }}
                 </BaseButton>
               </div>
             </div>
@@ -290,7 +290,7 @@
             <!-- Post Content Section -->
             <div v-if="generatedPostContent && generatedImageUrl" class="post-content-section">
               <div class="post-content-header">
-                <h4 class="post-content-title">Post Content</h4>
+                <h4 class="post-content-title">{{ $t('playground.postContentTitle') }}</h4>
                 <div class="platform-badges">
                   <span
                     v-for="platformValue in selectedPlatforms"
@@ -345,7 +345,7 @@
               :disabled="!selectedPrompt || generatingVideo || !canGenerate"
               @click="generateVideo"
             >
-              {{ generatingVideo ? `Generating Video... ${videoProgress}%` : 'Generate Video (5 credits)' }}
+              {{ generatingVideo ? $t('playground.generatingVideoProgress', { progress: videoProgress }) : $t('playground.generateVideoButton') }}
             </BaseButton>
 
             <div v-if="generatingVideo" class="progress-bar">
@@ -353,11 +353,11 @@
             </div>
 
             <div v-if="generatedVideoUrl" class="generated-content">
-              <h4>Generated Video:</h4>
+              <h4>{{ $t('playground.generatedVideoTitle') }}</h4>
               <video :src="generatedVideoUrl" controls class="generated-video"></video>
               <div class="content-actions">
                 <a :href="generatedVideoUrl" download class="download-btn">
-                  ⬇️ Download Video
+                  ⬇️ {{ $t('playground.downloadVideo') }}
                 </a>
                 <BaseButton
                   v-if="lastSavedPost || generatedPostContent"
@@ -365,7 +365,7 @@
                   size="medium"
                   @click="openScheduleModal"
                 >
-                  📅 Schedule Post
+                  📅 {{ $t('playground.schedulePost') }}
                 </BaseButton>
                 <BaseButton
                   v-if="(lastSavedPost || generatedPostContent) && selectedPlatforms.includes('facebook')"
@@ -374,7 +374,7 @@
                   @click="publishToFacebook"
                   :disabled="publishingToFacebook"
                 >
-                  {{ publishingToFacebook ? 'Publishing...' : '📤 Publish to Facebook' }}
+                  {{ publishingToFacebook ? $t('playground.publishing') : '📤 ' + $t('playground.publishToFacebook') }}
                 </BaseButton>
               </div>
             </div>
@@ -382,7 +382,7 @@
             <!-- Post Content Section -->
             <div v-if="generatedPostContent && generatedVideoUrl" class="post-content-section">
               <div class="post-content-header">
-                <h4 class="post-content-title">Post Content</h4>
+                <h4 class="post-content-title">{{ $t('playground.postContentTitle') }}</h4>
                 <div class="platform-badges">
                   <span
                     v-for="platformValue in selectedPlatforms"

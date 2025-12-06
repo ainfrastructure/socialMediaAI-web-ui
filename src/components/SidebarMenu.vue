@@ -66,14 +66,49 @@ const menuItems = computed(() => [
   }
 ])
 
-const tierDisplayName = computed(() =>
-  authStore.user?.subscription.tier.toUpperCase() || 'FREE'
-)
+const tierDisplayName = computed(() => {
+  const tier = authStore.user?.subscription.tier || 'monthly'
+  return tier.charAt(0).toUpperCase() + tier.slice(1)
+})
+
+const isLifetimeMember = computed(() => authStore.subscriptionTier === 'lifetime')
+const isYearlyMember = computed(() => authStore.subscriptionTier === 'yearly')
+const isLifetimeOrYearly = computed(() => isLifetimeMember.value || isYearlyMember.value)
 
 const progressPercent = computed(() => {
   if (!authStore.usageStats) return 0
-  const { credits_this_month, monthly_limit } = authStore.usageStats
+  const { credits_this_month, monthly_limit, remaining_credits } = authStore.usageStats
+
+  // For lifetime/yearly, show remaining credits as percentage of total
+  if (isLifetimeOrYearly.value) {
+    // Calculate used percentage (inverse - remaining out of total)
+    const totalCredits = isLifetimeMember.value ? 5000 : 600
+    const used = totalCredits - remaining_credits
+    return Math.min((used / totalCredits) * 100, 100)
+  }
+
+  // For monthly, show used out of monthly limit
   return Math.min((credits_this_month / monthly_limit) * 100, 100)
+})
+
+const creditsDisplay = computed(() => {
+  if (!authStore.usageStats) return { used: 0, total: 0, remaining: 0 }
+  const { credits_this_month, monthly_limit, remaining_credits } = authStore.usageStats
+
+  if (isLifetimeOrYearly.value) {
+    const totalCredits = isLifetimeMember.value ? 5000 : 600
+    return {
+      used: totalCredits - remaining_credits,
+      total: totalCredits,
+      remaining: remaining_credits
+    }
+  }
+
+  return {
+    used: credits_this_month,
+    total: monthly_limit,
+    remaining: remaining_credits
+  }
 })
 
 function navigateTo(path: string) {
@@ -147,10 +182,10 @@ function closeMobileMenu() {
           <div class="credits-progress" :style="{ width: `${progressPercent}%` }"></div>
         </div>
         <div class="credits-info">
-          <span class="credits-count">{{ authStore.usageStats?.credits_this_month || 0 }}</span>
-          <span class="credits-total">/{{ authStore.usageStats?.monthly_limit || 0 }}</span>
+          <span class="credits-count">{{ creditsDisplay.used }}</span>
+          <span class="credits-total">/{{ creditsDisplay.total }}</span>
         </div>
-        <button class="upgrade-btn" @click="navigateTo('/plans')">
+        <button v-if="!isLifetimeMember" class="upgrade-btn" @click="navigateTo('/plans')">
           {{ $t('sidebar.upgrade') }}
         </button>
       </div>
