@@ -148,6 +148,7 @@ export default {
     pleaseLogin: 'Please sign in to continue',
     privacyPolicy: 'Privacy Policy',
     termsOfService: 'Terms of Service',
+    lastUsed: 'Last used',
   },
 
   // Waitlist Landing Page

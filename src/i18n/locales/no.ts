@@ -148,6 +148,7 @@ export default {
     pleaseLogin: 'Vennligst logg inn for å fortsette',
     privacyPolicy: 'Personvernerklæring',
     termsOfService: 'Tjenestevilkår',
+    lastUsed: 'Sist brukt',
   },
 
   // Waitlist Landing Page

@@ -21,6 +21,7 @@ const password = ref('')
 const message = ref('')
 const messageType = ref<'success' | 'error' | 'info'>('info')
 const loggingIn = ref(false)
+const lastUsedProvider = ref<string | null>(localStorage.getItem('last_login_provider'))
 
 
 // Handle email confirmation token from URL hash
@@ -93,6 +94,7 @@ async function handleEmailLogin() {
 }
 
 async function handleAppleSignIn() {
+  localStorage.setItem('last_login_provider', 'apple')
   const result = await authStore.signInWithApple()
 
   if (!result.success) {
@@ -101,6 +103,7 @@ async function handleAppleSignIn() {
 }
 
 async function handleGoogleSignIn() {
+  localStorage.setItem('last_login_provider', 'google')
   const result = await authStore.signInWithGoogle()
 
   if (!result.success) {
@@ -109,6 +112,7 @@ async function handleGoogleSignIn() {
 }
 
 async function handleFacebookSignIn() {
+  localStorage.setItem('last_login_provider', 'facebook')
   const result = await authStore.signInWithFacebook()
 
   if (!result.success) {
@@ -141,35 +145,50 @@ async function handleFacebookSignIn() {
         <div :class="['login-content', { 'is-hidden': showEmailLogin }]">
           <!-- Social Sign In Buttons -->
           <div class="social-buttons">
-            <button
-              type="button"
-              class="social-sign-in-button apple-button"
-              :disabled="authStore.loading"
-              @click="handleAppleSignIn"
-            >
-              <AppleIcon :size="20" />
-              <span>{{ $t('auth.continueWithApple') }}</span>
-            </button>
+            <div class="social-button-wrapper">
+              <button
+                type="button"
+                class="social-sign-in-button apple-button"
+                :disabled="authStore.loading"
+                @click="handleAppleSignIn"
+              >
+                <AppleIcon :size="20" />
+                <span>{{ $t('auth.continueWithApple') }}</span>
+              </button>
+              <span v-if="lastUsedProvider === 'apple'" class="last-used-badge">
+                {{ $t('auth.lastUsed') }}
+              </span>
+            </div>
 
-            <button
-              type="button"
-              class="social-sign-in-button google-button"
-              :disabled="authStore.loading"
-              @click="handleGoogleSignIn"
-            >
-              <GoogleIcon :size="20" />
-              <span>{{ $t('auth.continueWithGoogle') }}</span>
-            </button>
+            <div class="social-button-wrapper">
+              <button
+                type="button"
+                class="social-sign-in-button google-button"
+                :disabled="authStore.loading"
+                @click="handleGoogleSignIn"
+              >
+                <GoogleIcon :size="20" />
+                <span>{{ $t('auth.continueWithGoogle') }}</span>
+              </button>
+              <span v-if="lastUsedProvider === 'google'" class="last-used-badge">
+                {{ $t('auth.lastUsed') }}
+              </span>
+            </div>
 
-            <button
-              type="button"
-              class="social-sign-in-button facebook-button"
-              :disabled="authStore.loading"
-              @click="handleFacebookSignIn"
-            >
-              <FacebookIcon :size="20" />
-              <span>{{ $t('auth.continueWithFacebook') }}</span>
-            </button>
+            <div class="social-button-wrapper">
+              <button
+                type="button"
+                class="social-sign-in-button facebook-button"
+                :disabled="authStore.loading"
+                @click="handleFacebookSignIn"
+              >
+                <FacebookIcon :size="20" />
+                <span>{{ $t('auth.continueWithFacebook') }}</span>
+              </button>
+              <span v-if="lastUsedProvider === 'facebook'" class="last-used-badge">
+                {{ $t('auth.lastUsed') }}
+              </span>
+            </div>
           </div>
 
           <!-- Email Sign In Link -->
@@ -314,6 +333,29 @@ form {
   gap: var(--space-md);
 }
 
+.social-button-wrapper {
+  position: relative;
+  transition: transform var(--transition-base);
+}
+
+.social-button-wrapper:hover {
+  transform: translateY(-1px);
+}
+
+.last-used-badge {
+  position: absolute;
+  top: -8px;
+  right: -4px;
+  background: var(--bg-secondary);
+  color: var(--gold-primary);
+  font-size: var(--text-xs);
+  font-weight: var(--font-medium);
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--gold-primary);
+  pointer-events: none;
+}
+
 .social-sign-in-button {
   display: flex;
   align-items: center;
@@ -330,12 +372,8 @@ form {
   transition: var(--transition-base);
 }
 
-.social-sign-in-button:hover:not(:disabled) {
-  transform: translateY(-1px);
-}
-
 .social-sign-in-button:active:not(:disabled) {
-  transform: translateY(0);
+  transform: translateY(1px);
 }
 
 .social-sign-in-button:disabled {
