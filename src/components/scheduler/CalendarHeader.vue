@@ -132,30 +132,31 @@ const capitalizeFirst = (str: string): string => {
 .toggle-slider {
   position: absolute;
   height: calc(100% - 8px);
-  width: calc(33.33%);
+  width: calc((100% - 8px) / 3);
   background: var(--gold-primary);
   border-radius: var(--radius-full);
-  transition: left var(--transition-base);
+  transition: transform var(--transition-base);
   top: 4px;
   left: 4px;
+  transform: translateX(0);
 }
 
 .toggle-slider.position-month {
-  left: 4px;
+  transform: translateX(0);
 }
 
 .toggle-slider.position-week {
-  left: calc(33.33% + 4px);
+  transform: translateX(100%);
 }
 
 .toggle-slider.position-day {
-  left: calc(66.66% + 4px);
+  transform: translateX(200%);
 }
 
 .view-btn {
   position: relative;
   z-index: 1;
-  width: 33.33%;
+  flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -169,6 +170,7 @@ const capitalizeFirst = (str: string): string => {
   cursor: pointer;
   transition: color var(--transition-base);
   border-radius: var(--radius-full);
+  min-width: 60px;
 }
 
 .view-btn.active {
@@ -232,30 +234,20 @@ const capitalizeFirst = (str: string): string => {
   }
 
   .view-mode-toggle {
-    padding: 2px;
+    padding: 3px;
   }
 
   .view-btn {
     padding: var(--space-xs) var(--space-sm);
-    font-size: 10px;
+    font-size: var(--text-xs);
+    min-width: 50px;
   }
 
   .toggle-slider {
-    height: calc(100% - 4px);
-    width: calc(33.33%);
-    top: 2px;
-  }
-
-  .toggle-slider.position-month {
-    left: 2px;
-  }
-
-  .toggle-slider.position-week {
-    left: calc(33.33% + 2px);
-  }
-
-  .toggle-slider.position-day {
-    left: calc(66.66% + 2px);
+    height: calc(100% - 6px);
+    width: calc((100% - 6px) / 3);
+    top: 3px;
+    left: 3px;
   }
 }
 </style>

@@ -82,9 +82,9 @@ function cancelSwitch() {
 <style scoped>
 .mode-toggle {
   position: relative;
-  display: inline-flex;
+  display: flex;
   background: var(--bg-tertiary);
-  padding: var(--space-xs);
+  padding: 4px;
   border-radius: var(--radius-md);
   border: var(--border-width) solid var(--border-color);
 }
@@ -92,10 +92,11 @@ function cancelSwitch() {
 .mode-button {
   position: relative;
   z-index: 2;
+  flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: var(--space-sm) var(--space-md);
+  padding: var(--space-sm) var(--space-lg);
   background: transparent;
   border: none;
   border-radius: var(--radius-sm);
@@ -106,7 +107,8 @@ function cancelSwitch() {
   cursor: pointer;
   transition: var(--transition-base);
   white-space: nowrap;
-  min-width: 90px;
+  min-width: 80px;
+  text-align: center;
 }
 
 .mode-button:hover {
@@ -118,15 +120,15 @@ function cancelSwitch() {
 }
 
 .mode-label {
-  font-size: var(--text-sm);
+  font-size: inherit;
 }
 
 .toggle-slider {
   position: absolute;
-  top: var(--space-xs);
-  left: var(--space-xs);
-  width: calc(50% - var(--space-xs));
-  height: calc(100% - calc(var(--space-xs) * 2));
+  top: 4px;
+  left: 4px;
+  width: calc(50% - 4px);
+  height: calc(100% - 8px);
   background: var(--gradient-gold);
   border-radius: var(--radius-sm);
   transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -140,10 +142,21 @@ function cancelSwitch() {
 
 /* Responsive */
 @media (max-width: 640px) {
+  .mode-toggle {
+    padding: 3px;
+  }
+
   .mode-button {
     min-width: 70px;
-    padding: var(--space-sm);
-    font-size: var(--text-xs);
+    padding: var(--space-sm) var(--space-md);
+    font-size: var(--text-sm);
+  }
+
+  .toggle-slider {
+    top: 3px;
+    left: 3px;
+    width: calc(50% - 3px);
+    height: calc(100% - 6px);
   }
 }
 
