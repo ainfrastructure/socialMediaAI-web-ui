@@ -2301,7 +2301,9 @@ defineExpose({
   .schedule-preview {
     grid-template-columns: 1fr;
   }
+}
 
+@media (max-width: 640px) {
   .post-type-options {
     grid-template-columns: 1fr;
   }
@@ -2322,6 +2324,11 @@ defineExpose({
 
   .menu-items-grid {
     grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-sm);
+  }
+
+  .post-type-card {
+    padding: var(--space-lg);
   }
 }
 

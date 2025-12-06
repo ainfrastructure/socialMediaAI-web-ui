@@ -2701,7 +2701,7 @@ onUnmounted(() => {
   }
 
   .strictness-description {
-    font-size: 10px;
+    font-size: 11px;
   }
 
   /* Media Type - horizontal on mobile */
@@ -2725,8 +2725,8 @@ onUnmounted(() => {
   }
 
   .holiday-label {
-    font-size: 9px;
-    line-height: 1.1;
+    font-size: 10px;
+    line-height: 1.2;
   }
 
   .holiday-icon {
@@ -2755,8 +2755,9 @@ onUnmounted(() => {
   }
 
   .holiday-theme-button {
-    padding: 4px 2px;
+    padding: 6px 4px;
     border-width: 1px;
+    min-height: 44px;
     border-radius: var(--radius-sm);
   }
 

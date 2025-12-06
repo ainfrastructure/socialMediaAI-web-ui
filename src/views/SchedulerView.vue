@@ -3147,7 +3147,10 @@ onMounted(async () => {
 
   .subtitle {
     font-size: var(--text-xs);
-    display: none;
+    /* Keep visible but truncate if needed */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .calendar-card {
@@ -3303,16 +3306,16 @@ onMounted(async () => {
   }
 
   .calendar-day {
-    min-height: 40px;
+    min-height: 48px;
   }
 
   .day-number {
-    font-size: 10px;
+    font-size: 11px;
   }
 
   .calendar-day-header {
-    font-size: 9px;
-    padding: 2px;
+    font-size: 10px;
+    padding: 4px 2px;
   }
 
   /* Compact hover buttons for 390px */
