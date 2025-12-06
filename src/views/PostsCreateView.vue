@@ -13,10 +13,8 @@ import BaseAlert from '@/components/BaseAlert.vue'
 import EasyModeCreation from '@/components/EasyModeCreation.vue'
 import AdvancedModeCreation from '@/components/AdvancedModeCreation.vue'
 import ModeToggle from '@/components/ModeToggle.vue'
-import GenerationResultModal from '@/components/GenerationResultModal.vue'
 import FacebookOnboardingModal from '@/components/FacebookOnboardingModal.vue'
 import ScheduleModal from '@/components/ScheduleModal.vue'
-import FeedbackModal from '@/components/FeedbackModal.vue'
 import { restaurantService, type SavedRestaurant } from '@/services/restaurantService'
 import { api } from '@/services/api'
 
@@ -37,14 +35,6 @@ const error = ref('')
 const menuItems = computed(() => {
   if (!restaurant.value?.menu?.items) return []
   return restaurant.value.menu.items.filter((item: any) => item.imageUrl)
-})
-
-// Computed properties for backward compatibility with GenerationResultModal
-const isPublished = computed(() => publishResults.value?.success === true)
-const facebookPostUrl = computed(() => {
-  if (!publishResults.value?.platforms) return undefined
-  const facebookResult = publishResults.value.platforms.find(p => p.platform === 'facebook' && p.success)
-  return facebookResult?.url
 })
 
 // Generation state (Easy Mode)
@@ -74,10 +64,8 @@ const easyModeCreationRef = ref<any>(null)
 const advancedModeCreationRef = ref<any>(null)
 
 // Modal state
-const showResultModal = ref(false)
 const showFacebookOnboardingModal = ref(false)
 const showScheduleModal = ref(false)
-const showFeedbackModal = ref(false)
 const pendingAction = ref<'publish' | 'schedule' | null>(null)
 
 // Publishing state
@@ -1096,9 +1084,6 @@ async function handleAdvancedModeComplete(data: {
           data.onResult({ success: false, error: 'Failed to schedule post' })
         }
       }
-    } else {
-      // Show result modal for user to choose publish or schedule
-      showResultModal.value = true
     }
   } catch (err: any) {
     console.error('Failed to handle advanced mode:', err)
@@ -1136,30 +1121,13 @@ async function autoSaveAdvancedPost() {
   }
 }
 
-// Facebook actions
-function handleResultPublish() {
-  console.log('[DEBUG] handleResultPublish called')
-  console.log('[DEBUG] Facebook pages connected:', facebookStore.connectedPages.length)
-  console.log('[DEBUG] Has seen onboarding:', preferencesStore.hasSeenFacebookOnboarding)
+// Handle inline feedback from child components (fire-and-forget)
+async function handleInlineFeedback(feedbackText: string) {
+  console.log('[DEBUG] Received inline feedback:', feedbackText)
 
-  if (facebookStore.connectedPages.length === 0 && !preferencesStore.hasSeenFacebookOnboarding) {
-    console.log('[DEBUG] Showing Facebook onboarding modal')
-    pendingAction.value = 'publish'
-    showFacebookOnboardingModal.value = true
-  } else {
-    // Show feedback modal before publishing
-    console.log('[DEBUG] Showing feedback modal')
-    showFeedbackModal.value = true
-    console.log('[DEBUG] showFeedbackModal.value =', showFeedbackModal.value)
-  }
-}
-
-async function handleFeedbackSubmit(feedback: any) {
-  console.log('[DEBUG] handleFeedbackSubmit called with feedback:', feedback)
-
-  // Submit feedback to backend
+  // Submit feedback to backend (non-blocking)
   try {
-    const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/feedback`, {
+    await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/feedback`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -1167,114 +1135,13 @@ async function handleFeedbackSubmit(feedback: any) {
       },
       body: JSON.stringify({
         favoritePostId: lastSavedPost.value?.id,
-        imageRating: feedback.imageRating,
-        contentRating: feedback.contentRating,
-        hashtagsRating: feedback.hashtagsRating,
-        additionalFeedback: feedback.additionalFeedback,
+        feedbackText: feedbackText,
       })
     })
-
-    if (response.ok) {
-      console.log('[DEBUG] Feedback submitted successfully')
-    } else {
-      console.error('Failed to submit feedback:', await response.text())
-    }
+    console.log('[DEBUG] Inline feedback submitted successfully')
   } catch (error) {
-    console.error('Failed to submit feedback:', error)
-    // Don't block publishing if feedback fails
-  }
-
-  // Close feedback modal
-  showFeedbackModal.value = false
-  console.log('[DEBUG] Proceeding after feedback')
-
-  // Check which flow to continue
-  if (pendingPublishData.value) {
-    if (pendingPublishData.value.type === 'easyModeStep4') {
-      // Easy Mode: Continue to step 4 (platform selection)
-      console.log('[DEBUG] Continuing to Easy Mode step 4')
-      easyModeCreationRef.value?.continueToPublishStep()
-      pendingPublishData.value = null
-    } else if (pendingPublishData.value.type === 'advancedModeStep5') {
-      // Advanced Mode: Continue to step 5 (generation)
-      console.log('[DEBUG] Continuing to Advanced Mode step 5')
-      advancedModeCreationRef.value?.continueToGenerateStep()
-      pendingPublishData.value = null
-    } else if (pendingPublishData.value.type === 'advanced') {
-      // Advanced Mode flow
-      await continueAdvancedModePublish()
-    } else {
-      // Easy Mode publish flow
-      await continueEasyModePublish()
-    }
-  } else {
-    // Result Modal flow
-    publishToFacebook()
-  }
-}
-
-function handleFeedbackSkip() {
-  console.log('[DEBUG] User skipped feedback')
-  // User skipped feedback
-  showFeedbackModal.value = false
-
-  // Check which flow to continue
-  if (pendingPublishData.value) {
-    if (pendingPublishData.value.type === 'easyModeStep4') {
-      // Easy Mode: Continue to step 4 (platform selection)
-      console.log('[DEBUG] Skipped feedback, continuing to Easy Mode step 4')
-      easyModeCreationRef.value?.continueToPublishStep()
-      pendingPublishData.value = null
-    } else if (pendingPublishData.value.type === 'advancedModeStep5') {
-      // Advanced Mode: Continue to step 5 (generation)
-      console.log('[DEBUG] Skipped feedback, continuing to Advanced Mode step 5')
-      advancedModeCreationRef.value?.continueToGenerateStep()
-      pendingPublishData.value = null
-    } else if (pendingPublishData.value.type === 'advanced') {
-      // Advanced Mode flow
-      continueAdvancedModePublish()
-    } else {
-      // Easy Mode publish flow
-      continueEasyModePublish()
-    }
-  } else {
-    // Result Modal flow
-    publishToFacebook()
-  }
-}
-
-// Handle request for feedback from Easy Mode (step 3 -> step 4)
-function handleRequestFeedback() {
-  console.log('[DEBUG] Easy Mode requesting feedback before step 4')
-  pendingPublishData.value = {
-    type: 'easyModeStep4'
-  }
-  showFeedbackModal.value = true
-}
-
-// Handle request for feedback from Advanced Mode (step 4 -> step 5)
-function handleAdvancedRequestFeedback(previewData: { imageUrl: string; postText: string; hashtags: string[] }) {
-  console.log('[DEBUG] Advanced Mode requesting feedback before step 5', previewData)
-
-  // Update current preview data so feedback modal shows the correct image
-  generatedImageUrl.value = previewData.imageUrl
-  generatedPostContent.value = {
-    postText: previewData.postText,
-    hashtags: previewData.hashtags
-  }
-
-  pendingPublishData.value = {
-    type: 'advancedModeStep5'
-  }
-  showFeedbackModal.value = true
-}
-
-function handleResultSchedule() {
-  if (facebookStore.connectedPages.length === 0 && !preferencesStore.hasSeenFacebookOnboarding) {
-    pendingAction.value = 'schedule'
-    showFacebookOnboardingModal.value = true
-  } else {
-    openScheduleModal()
+    console.error('Failed to submit inline feedback:', error)
+    // Don't block the flow if feedback fails
   }
 }
 
@@ -1332,17 +1199,6 @@ function openScheduleModal() {
   if (lastSavedPost.value) {
     postToSchedule.value = lastSavedPost.value
     showScheduleModal.value = true
-  }
-}
-
-async function handleResultConnectFacebook() {
-  showResultModal.value = false
-  try {
-    await facebookStore.connectFacebook()
-    showResultModal.value = true
-  } catch (err: any) {
-    generationError.value = err.message || t('contentCreate.connectError', 'Failed to connect Facebook')
-    showResultModal.value = true
   }
 }
 
@@ -1450,7 +1306,7 @@ function handleContentUpdated(updatedContent: { postText: string; hashtags: stri
           @back="goBack"
           @generate="handleEasyModeGenerate"
           @publish="handleEasyModePublish"
-          @request-feedback="handleRequestFeedback"
+          @feedback="handleInlineFeedback"
           @reset="handleEasyModeReset"
         />
 
@@ -1461,30 +1317,11 @@ function handleContentUpdated(updatedContent: { postText: string; hashtags: stri
           :restaurant="restaurant"
           :menu-items="menuItems"
           @back="goBack"
-          @request-feedback="handleAdvancedRequestFeedback"
+          @feedback="handleInlineFeedback"
           @complete="handleAdvancedModeComplete"
         />
       </div>
     </div>
-
-    <!-- Generation Result Modal -->
-    <GenerationResultModal
-      v-model="showResultModal"
-      :image-url="generatedImageUrl"
-      :post-content="generatedPostContent"
-      :is-generating-image="generatingImage"
-      :is-generating-content="generatingPostContent"
-      :is-publishing="publishing"
-      :is-published="isPublished"
-      :facebook-post-url="facebookPostUrl"
-      :generation-error="generationError"
-      :facebook-reconnect-required="facebookReconnectRequired"
-      @publish="handleResultPublish"
-      @schedule="handleResultSchedule"
-      @connect-facebook="handleResultConnectFacebook"
-      @retry="handleRetryGeneration"
-      @content-updated="handleContentUpdated"
-    />
 
     <!-- Facebook Onboarding Modal -->
     <FacebookOnboardingModal
@@ -1501,15 +1338,6 @@ function handleContentUpdated(updatedContent: { postText: string; hashtags: stri
       @scheduled="handleScheduled"
     />
 
-    <!-- Feedback Modal -->
-    <FeedbackModal
-      v-model="showFeedbackModal"
-      :favorite-post-id="lastSavedPost?.id"
-      :image-url="generatedImageUrl"
-      :post-content="generatedPostContent"
-      @submit="handleFeedbackSubmit"
-      @skip="handleFeedbackSkip"
-    />
     </div>
   </DashboardLayout>
 </template>

@@ -12,7 +12,6 @@ import MaterialIcon from '../MaterialIcon.vue'
 import EasyModeCreation from '../EasyModeCreation.vue'
 import AdvancedModeCreation from '../AdvancedModeCreation.vue'
 import ModeToggle from '../ModeToggle.vue'
-import FeedbackModal from '../FeedbackModal.vue'
 import { useFacebookStore } from '@/stores/facebook'
 import { useInstagramStore } from '@/stores/instagram'
 import { useNotificationStore } from '@/stores/notifications'
@@ -78,8 +77,7 @@ const publishResults = ref<{
 // Success state
 const showSuccess = ref(false)
 
-// Feedback modal state
-const showFeedbackModal = ref(false)
+// Component refs
 const easyModeCreationRef = ref<InstanceType<typeof EasyModeCreation> | null>(null)
 const advancedModeCreationRef = ref<InstanceType<typeof AdvancedModeCreation> | null>(null)
 
@@ -694,19 +692,13 @@ function handleEasyModeReset() {
   imagePrompts.value = []
 }
 
-// Handle request for feedback (step 3 -> 4 transition)
-function handleRequestFeedback() {
-  console.log('[FullCreationWizard] Showing feedback modal')
-  showFeedbackModal.value = true
-}
+// Handle inline feedback from child components (fire-and-forget)
+async function handleInlineFeedback(feedbackText: string) {
+  console.log('[FullCreationWizard] Received inline feedback:', feedbackText)
 
-// Handle feedback submission
-async function handleFeedbackSubmit(feedback: any) {
-  console.log('[FullCreationWizard] Feedback submitted:', feedback)
-
-  // Submit feedback to backend
+  // Submit feedback to backend (non-blocking)
   try {
-    const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/feedback`, {
+    await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/feedback`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -714,33 +706,14 @@ async function handleFeedbackSubmit(feedback: any) {
       },
       body: JSON.stringify({
         favoritePostId: lastSavedPost.value?.id,
-        imageRating: feedback.imageRating,
-        contentRating: feedback.contentRating,
-        hashtagsRating: feedback.hashtagsRating,
-        additionalFeedback: feedback.additionalFeedback,
+        feedbackText: feedbackText,
       })
     })
-
-    if (response.ok) {
-      console.log('[FullCreationWizard] Feedback submitted successfully')
-    } else {
-      console.error('Failed to submit feedback:', await response.text())
-    }
+    console.log('[FullCreationWizard] Inline feedback submitted successfully')
   } catch (error) {
-    console.error('Failed to submit feedback:', error)
-    // Don't block publishing if feedback fails
+    console.error('Failed to submit inline feedback:', error)
+    // Don't block the flow if feedback fails
   }
-
-  // Close feedback modal and continue to step 4
-  showFeedbackModal.value = false
-  easyModeCreationRef.value?.continueToPublishStep()
-}
-
-// Handle feedback skip
-function handleFeedbackSkip() {
-  console.log('[FullCreationWizard] Feedback skipped')
-  showFeedbackModal.value = false
-  easyModeCreationRef.value?.continueToPublishStep()
 }
 </script>
 
@@ -881,7 +854,7 @@ function handleFeedbackSkip() {
             @generate="handleEasyModeGenerate"
             @publish="handleEasyModePublish"
             @reset="handleEasyModeReset"
-            @request-feedback="handleRequestFeedback"
+            @feedback="handleInlineFeedback"
           />
 
           <!-- Advanced Mode -->
@@ -893,6 +866,7 @@ function handleFeedbackSkip() {
             :initial-schedule-date="props.selectedDate || undefined"
             :lock-date="true"
             @back="goBack"
+            @feedback="handleInlineFeedback"
             @complete="handleAdvancedModeComplete"
           />
         </div>
@@ -909,15 +883,6 @@ function handleFeedbackSkip() {
         </div>
       </BaseCard>
 
-      <!-- Feedback Modal -->
-      <FeedbackModal
-        v-model="showFeedbackModal"
-        :favorite-post-id="lastSavedPost?.id"
-        :image-url="generatedImageUrl"
-        :post-content="{ postText, hashtags }"
-        @submit="handleFeedbackSubmit"
-        @skip="handleFeedbackSkip"
-      />
     </div>
   </Teleport>
 </template>

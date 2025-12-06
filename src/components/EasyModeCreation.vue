@@ -94,7 +94,7 @@ const emit = defineEmits<{
     postText?: string
     hashtags?: string[]
   }): void
-  (e: 'requestFeedback'): void
+  (e: 'feedback', feedbackText: string): void
   (e: 'reset'): void
 }>()
 
@@ -128,6 +128,9 @@ const uploadedLogoPreview = ref<string | null>(null)
 const editedPostText = ref('')
 const editedHashtags = ref<string[]>([])
 const newHashtag = ref('')
+
+// Inline feedback state
+const feedbackText = ref('')
 
 // Validation state
 const step1Error = ref<string>('')
@@ -435,11 +438,12 @@ function nextStep() {
     step1Error.value = ''
   }
 
-  // Step 3 -> 4: Show feedback modal before going to publish options
+  // Step 3 -> 4: Emit feedback if provided, then continue to publish options
   if (currentStep.value === 3) {
-    console.log('[EasyMode] Step 3 -> Requesting feedback before step 4')
-    emit('requestFeedback')
-    return
+    console.log('[EasyMode] Step 3 -> 4, emitting feedback:', feedbackText.value)
+    if (feedbackText.value.trim()) {
+      emit('feedback', feedbackText.value.trim())
+    }
   }
 
   if (currentStep.value < totalSteps) {
@@ -461,15 +465,8 @@ function prevStep() {
   }
 }
 
-// Function to continue to step 4 after feedback (called from parent)
-function continueToPublishStep() {
-  console.log('[EasyMode] Continuing to step 4 after feedback')
-  currentStep.value = 4
-}
-
 // Expose functions and state so parent can call them
 defineExpose({
-  continueToPublishStep,
   currentStep,
   prevStep
 })
@@ -1021,6 +1018,24 @@ onUnmounted(() => {
             </div>
           </div>
         </div>
+      </div>
+
+      <!-- Inline Feedback Section -->
+      <div class="inline-feedback-section">
+        <div class="feedback-header">
+          <MaterialIcon icon="lightbulb" size="md" class="feedback-icon" />
+          <div class="feedback-header-text">
+            <h4 class="feedback-title">{{ t('feedback.inlineTitle') }}</h4>
+            <p class="feedback-subtitle">{{ t('feedback.inlineSubtitle') }}</p>
+          </div>
+        </div>
+        <label class="feedback-label">{{ t('feedback.whatDidYouLike') }}</label>
+        <textarea
+          v-model="feedbackText"
+          class="feedback-textarea"
+          :placeholder="t('feedback.feedbackPlaceholder')"
+          rows="3"
+        ></textarea>
       </div>
 
       <!-- Step 3 Navigation -->
@@ -1580,6 +1595,79 @@ onUnmounted(() => {
   margin: 0;
 }
 
+/* Inline Feedback Section */
+.inline-feedback-section {
+  margin-top: var(--space-2xl);
+  padding: var(--space-xl);
+  background: var(--gold-subtle);
+  border: 1px dashed var(--gold-primary);
+  border-radius: var(--radius-lg);
+}
+
+.inline-feedback-section .feedback-header {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-md);
+  margin-bottom: var(--space-lg);
+}
+
+.inline-feedback-section .feedback-icon {
+  color: var(--gold-primary);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.inline-feedback-section .feedback-header-text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.inline-feedback-section .feedback-title {
+  font-family: var(--font-heading);
+  font-size: var(--text-lg);
+  font-weight: var(--font-semibold);
+  color: var(--gold-primary);
+  margin: 0;
+}
+
+.inline-feedback-section .feedback-subtitle {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.inline-feedback-section .feedback-label {
+  display: block;
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  color: var(--text-secondary);
+  margin-bottom: var(--space-sm);
+}
+
+.inline-feedback-section .feedback-textarea {
+  width: 100%;
+  padding: var(--space-md);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  line-height: var(--leading-normal);
+  resize: vertical;
+  transition: all var(--transition-base);
+}
+
+.inline-feedback-section .feedback-textarea:focus {
+  outline: none;
+  border-color: var(--gold-primary);
+  background: var(--bg-elevated);
+}
+
+.inline-feedback-section .feedback-textarea::placeholder {
+  color: var(--text-muted);
+}
 
 /* Step Navigation */
 .step-navigation {

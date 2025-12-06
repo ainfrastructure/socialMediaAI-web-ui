@@ -1843,30 +1843,11 @@ export default {
     },
   },
 
-  // Feedback Modal
+  // Inline Feedback
   feedback: {
-    title: 'Hvor fornøyd er du med dette innlegget?',
-    subtitle: 'Din tilbakemelding hjelper oss med å forbedre AI-genereringen',
-    imageQuality: 'Bildekvalitet',
-    contentQuality: 'Innholdskvalitet',
-    hashtagsQuality: 'Hashtag-kvalitet',
-    ratingLabels: {
-      1: 'Dårlig',
-      2: 'Greit',
-      3: 'Bra',
-      4: 'Veldig bra',
-      5: 'Utmerket',
-    },
-    additionalFeedback: 'Noe annet? Hva kan vi forbedre?',
-    additionalFeedbackPlaceholder: 'Del dine tanker eller forslag...',
-    submitAndPublish: 'Send tilbakemelding og publiser',
-    skipAndPublish: 'Hopp over og publiser',
-    submit: 'Send',
-    skip: 'Hopp over',
-    submitting: 'Sender...',
-    thankYou: 'Takk for tilbakemeldingen!',
-    rateImage: 'Hvordan vil du vurdere det genererte bildet?',
-    rateContent: 'Hvordan vil du vurdere innholdet?',
-    rateHashtags: 'Hvordan vil du vurdere hashtagene?',
+    inlineTitle: 'Hjelp oss bli bedre',
+    inlineSubtitle: 'Dette er ikke en del av innlegget',
+    whatDidYouLike: 'Hva likte du eller likte du ikke med dette innlegget?',
+    feedbackPlaceholder: 'Del hva som fungerte bra eller hva som kunne vært bedre...',
   },
 }

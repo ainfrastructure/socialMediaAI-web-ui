@@ -100,7 +100,7 @@ interface WeeklyMenuDataItem {
 
 const emit = defineEmits<{
   (e: 'back'): void
-  (e: 'requestFeedback', previewData: { imageUrl: string; postText: string; hashtags: string[] }): void
+  (e: 'feedback', feedbackText: string): void
   (e: 'complete', data: {
     imageUrl: string
     postText: string
@@ -264,6 +264,9 @@ const editedPostText = ref('')
 const editedHashtags = ref<string[]>([])
 const newHashtag = ref('')
 
+// Inline feedback state
+const feedbackText = ref('')
+
 // Wizard progress tracking
 const highestCompletedStep = ref(0)
 
@@ -406,28 +409,16 @@ watch([generatingImage, generatingContent], ([isGeneratingImg, isGeneratingConte
 
 // Navigation
 function nextStep() {
-  // Intercept Step 4 → Step 5 transition to show feedback modal
+  // Step 4 → Step 5: Emit feedback if provided, then continue to generate step
   if (currentStep.value === 4) {
-    emit('requestFeedback', {
-      imageUrl: generatedImageUrl.value,
-      postText: editedPostText.value || postText.value,
-      hashtags: editedHashtags.value.length > 0 ? editedHashtags.value : hashtags.value
-    })
-    return
+    console.log('[AdvancedMode] Step 4 -> 5, emitting feedback:', feedbackText.value)
+    if (feedbackText.value.trim()) {
+      emit('feedback', feedbackText.value.trim())
+    }
   }
 
   if (currentStep.value < totalSteps) {
     // Update highest completed step
-    if (currentStep.value > highestCompletedStep.value) {
-      highestCompletedStep.value = currentStep.value
-    }
-    currentStep.value++
-  }
-}
-
-function continueToGenerateStep() {
-  // Called after feedback modal is submitted/skipped
-  if (currentStep.value === 4 && currentStep.value < totalSteps) {
     if (currentStep.value > highestCompletedStep.value) {
       highestCompletedStep.value = currentStep.value
     }
@@ -926,7 +917,6 @@ function handlePreviewHashtagKeydown(event: KeyboardEvent) {
 
 // Expose methods and state for parent component
 defineExpose({
-  continueToGenerateStep,
   currentStep,
   prevStep
 })
@@ -1373,6 +1363,24 @@ defineExpose({
             </div>
           </div>
         </div>
+
+        <!-- Inline Feedback Section -->
+        <div class="inline-feedback-section">
+          <div class="feedback-header">
+            <MaterialIcon icon="lightbulb" size="md" class="feedback-icon" />
+            <div class="feedback-header-text">
+              <h4 class="feedback-title">{{ t('feedback.inlineTitle') }}</h4>
+              <p class="feedback-subtitle">{{ t('feedback.inlineSubtitle') }}</p>
+            </div>
+          </div>
+          <label class="feedback-label">{{ t('feedback.whatDidYouLike') }}</label>
+          <textarea
+            v-model="feedbackText"
+            class="feedback-textarea"
+            :placeholder="t('feedback.feedbackPlaceholder')"
+            rows="3"
+          ></textarea>
+        </div>
       </div>
 
       <!-- Navigation -->
@@ -1591,6 +1599,80 @@ defineExpose({
 .step-subtitle {
   font-size: var(--text-lg);
   color: var(--text-secondary);
+}
+
+/* Inline Feedback Section */
+.inline-feedback-section {
+  margin-top: var(--space-2xl);
+  padding: var(--space-xl);
+  background: var(--gold-subtle);
+  border: 1px dashed var(--gold-primary);
+  border-radius: var(--radius-lg);
+}
+
+.inline-feedback-section .feedback-header {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-md);
+  margin-bottom: var(--space-lg);
+}
+
+.inline-feedback-section .feedback-icon {
+  color: var(--gold-primary);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.inline-feedback-section .feedback-header-text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.inline-feedback-section .feedback-title {
+  font-family: var(--font-heading);
+  font-size: var(--text-lg);
+  font-weight: var(--font-semibold);
+  color: var(--gold-primary);
+  margin: 0;
+}
+
+.inline-feedback-section .feedback-subtitle {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.inline-feedback-section .feedback-label {
+  display: block;
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  color: var(--text-secondary);
+  margin-bottom: var(--space-sm);
+}
+
+.inline-feedback-section .feedback-textarea {
+  width: 100%;
+  padding: var(--space-md);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  line-height: var(--leading-normal);
+  resize: vertical;
+  transition: all var(--transition-base);
+}
+
+.inline-feedback-section .feedback-textarea:focus {
+  outline: none;
+  border-color: var(--gold-primary);
+  background: var(--bg-elevated);
+}
+
+.inline-feedback-section .feedback-textarea::placeholder {
+  color: var(--text-muted);
 }
 
 /* Step Navigation */

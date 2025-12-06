@@ -1843,30 +1843,11 @@ export default {
     },
   },
 
-  // Feedback Modal
+  // Inline Feedback
   feedback: {
-    title: 'How satisfied are you with this post?',
-    subtitle: 'Your feedback helps us improve our AI generation',
-    imageQuality: 'Image Quality',
-    contentQuality: 'Content Quality',
-    hashtagsQuality: 'Hashtags Quality',
-    ratingLabels: {
-      1: 'Poor',
-      2: 'Fair',
-      3: 'Good',
-      4: 'Very Good',
-      5: 'Excellent',
-    },
-    additionalFeedback: 'Anything else? What can we improve?',
-    additionalFeedbackPlaceholder: 'Share your thoughts or suggestions...',
-    submitAndPublish: 'Submit Feedback & Publish',
-    skipAndPublish: 'Skip & Publish',
-    submit: 'Submit',
-    skip: 'Skip',
-    submitting: 'Submitting...',
-    thankYou: 'Thank you for your feedback!',
-    rateImage: 'How would you rate the generated image?',
-    rateContent: 'How would you rate the post content?',
-    rateHashtags: 'How would you rate the hashtags?',
+    inlineTitle: 'Help us improve',
+    inlineSubtitle: 'This won\'t be included in your post',
+    whatDidYouLike: 'What did you like or dislike about this post?',
+    feedbackPlaceholder: 'Share what worked well or what could be better...',
   },
 }
