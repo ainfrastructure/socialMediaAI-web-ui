@@ -132,6 +132,7 @@ export default {
     sendMagicLink: 'Send Magic Link',
     continueWithApple: 'Fortsett med Apple',
     continueWithGoogle: 'Fortsett med Google',
+    continueWithFacebook: 'Fortsett med Facebook',
     orContinueWithEmail: 'eller fortsett med e-post',
     signInWithEmail: 'Logg inn med e-post',
     emailLoginDescription: 'Skriv inn e-posten din, så sender vi deg en lenke for å logge inn. Ingen passord nødvendig.',
@@ -145,6 +146,8 @@ export default {
     useDifferentEmail: 'Bruk en annen e-post',
     emailConfirmed: 'Suksess! Laster profilen din...',
     pleaseLogin: 'Vennligst logg inn for å fortsette',
+    privacyPolicy: 'Personvernerklæring',
+    termsOfService: 'Tjenestevilkår',
   },
 
   // Waitlist Landing Page
@@ -1634,6 +1637,182 @@ export default {
     failed: 'Mislykket',
     cancelled: 'Avbrutt',
     draft: 'Utkast',
+  },
+
+  // Privacy Policy
+  privacy: {
+    title: 'Personvernerklæring',
+    lastUpdated: 'Sist oppdatert: 5. desember 2025',
+    sections: {
+      introduction: {
+        title: '1. Introduksjon',
+        content: 'Velkommen til SocialChef ("vi", "vår" eller "oss"). Vi er forpliktet til å beskytte personvernet ditt og sikre sikkerheten til din personlige informasjon. Denne personvernerklæringen forklarer hvordan vi samler inn, bruker, deler og beskytter informasjonen din når du bruker vår AI-drevne plattform for sosiale medier for restauranter.',
+      },
+      informationWeCollect: {
+        title: '2. Informasjon vi samler inn',
+        intro: 'Vi samler inn følgende typer informasjon:',
+        items: {
+          accountInfo: 'Kontoinformasjon: Navn, e-postadresse, passord og profildetaljer når du oppretter en konto.',
+          socialMedia: 'Sosiale medier-data: Når du kobler til dine sosiale mediekontoer (Facebook, Instagram, osv.), får vi tilgang til dataene som er nødvendige for å publisere innhold på dine vegne, inkludert sideinformasjon og publiseringstillatelser.',
+          content: 'Innholdsdata: Bilder, bildetekster, hashtags og annet innhold du oppretter eller laster opp gjennom plattformen vår.',
+          usage: 'Bruksinformasjon: Hvordan du samhandler med plattformen vår, inkludert funksjoner som brukes, innlegg som opprettes og planleggingspreferanser.',
+          device: 'Enhetsinformasjon: Nettlesertype, IP-adresse, enhetsidentifikatorer og operativsystem for sikkerhets- og analyseformål.',
+        },
+      },
+      howWeUse: {
+        title: '3. Hvordan vi bruker informasjonen din',
+        intro: 'Vi bruker informasjonen din til å:',
+        items: {
+          provideService: 'Tilby og drive våre AI-drevne innholdsgenerings- og sosiale medieadministrasjonstjenester.',
+          improveService: 'Forbedre og tilpasse opplevelsen din, inkludert opplæring av våre AI-modeller for å bedre betjene restaurantinnholdsbehov.',
+          communicate: 'Sende deg tjenesterelatert kommunikasjon, oppdateringer og markedsføringsmateriell (med ditt samtykke).',
+          security: 'Sikre sikkerheten til plattformen vår og beskytte mot svindel eller uautorisert tilgang.',
+          legal: 'Overholde juridiske forpliktelser og håndheve våre tjenestevilkår.',
+        },
+      },
+      dataSharing: {
+        title: '4. Datadeling og utlevering',
+        intro: 'Vi kan dele informasjonen din med:',
+        items: {
+          socialPlatforms: 'Sosiale medieplattformer: For å publisere innhold på dine tilkoblede kontoer (Facebook, Instagram, osv.).',
+          serviceProviders: 'Tjenesteleverandører: Tredjepartsleverandører som hjelper oss med å drive plattformen vår (hosting, analyse, betalingsbehandling).',
+          legal: 'Juridiske krav: Når det kreves av lov, rettsordre eller myndighetspålegg.',
+          businessTransfer: 'Virksomhetsoverdragelser: I forbindelse med fusjon, oppkjøp eller salg av eiendeler.',
+        },
+        noSelling: 'Vi selger ikke din personlige informasjon til tredjeparter.',
+      },
+      dataSecurity: {
+        title: '5. Datasikkerhet',
+        content: 'Vi implementerer bransjestandardens sikkerhetstiltak for å beskytte informasjonen din, inkludert kryptering, sikre servere og regelmessige sikkerhetsrevisjoner. Ingen overføringsmetode over Internett er imidlertid 100% sikker, og vi kan ikke garantere absolutt sikkerhet.',
+      },
+      dataRetention: {
+        title: '6. Dataoppbevaring',
+        content: 'Vi beholder din personlige informasjon så lenge kontoen din er aktiv eller etter behov for å gi deg tjenester. Du kan når som helst be om sletting av dataene dine ved å kontakte oss eller gjennom kontoinnstillingene dine.',
+      },
+      yourRights: {
+        title: '7. Dine rettigheter',
+        intro: 'Avhengig av hvor du befinner deg, kan du ha følgende rettigheter:',
+        items: {
+          access: 'Tilgang: Be om en kopi av den personlige informasjonen vi har om deg.',
+          correction: 'Retting: Be om retting av unøyaktig eller ufullstendig informasjon.',
+          deletion: 'Sletting: Be om sletting av din personlige informasjon.',
+          portability: 'Dataportabilitet: Be om en kopi av dataene dine i et portabelt format.',
+          withdraw: 'Trekke tilbake samtykke: Trekke tilbake samtykke til behandling der samtykke er det rettslige grunnlaget.',
+        },
+        contact: 'For å utøve disse rettighetene, vennligst kontakt oss på e-postadressen nedenfor.',
+      },
+      cookies: {
+        title: '8. Informasjonskapsler og sporing',
+        content: 'Vi bruker informasjonskapsler og lignende teknologier for å forbedre opplevelsen din, analysere bruk og tilpasse innhold. Du kan kontrollere informasjonskapselpreferanser gjennom nettleserinnstillingene dine. Noen funksjoner fungerer kanskje ikke riktig hvis informasjonskapsler er deaktivert.',
+      },
+      thirdParty: {
+        title: '9. Tredjepartslenker',
+        content: 'Plattformen vår kan inneholde lenker til tredjepartsnettsteder eller -tjenester. Vi er ikke ansvarlige for personvernpraksisen til disse eksterne nettstedene. Vi oppfordrer deg til å gjennomgå deres personvernerklæringer før du oppgir personlig informasjon.',
+      },
+      children: {
+        title: '10. Barns personvern',
+        content: 'Våre tjenester er ikke beregnet på personer under 18 år. Vi samler ikke bevisst inn personlig informasjon fra barn. Hvis du tror vi har samlet inn informasjon fra et barn, vennligst kontakt oss umiddelbart.',
+      },
+      changes: {
+        title: '11. Endringer i denne erklæringen',
+        content: 'Vi kan oppdatere denne personvernerklæringen fra tid til annen. Vi vil varsle deg om betydelige endringer ved å legge ut den nye erklæringen på plattformen vår og oppdatere "Sist oppdatert"-datoen. Din fortsatte bruk av våre tjenester etter endringer utgjør aksept av den oppdaterte erklæringen.',
+      },
+      contact: {
+        title: '12. Kontakt oss',
+        content: 'Hvis du har spørsmål om denne personvernerklæringen eller vår datapraksis, vennligst kontakt oss på:',
+      },
+    },
+  },
+
+  // Terms of Service
+  terms: {
+    title: 'Tjenestevilkår',
+    lastUpdated: 'Sist oppdatert: 5. desember 2025',
+    sections: {
+      acceptance: {
+        title: '1. Aksept av vilkår',
+        content: 'Ved å få tilgang til eller bruke SocialChef ("Tjenesten"), samtykker du til å være bundet av disse tjenestevilkårene ("Vilkår"). Hvis du ikke godtar disse vilkårene, vennligst ikke bruk vår tjeneste. Disse vilkårene gjelder for alle brukere, inkludert besøkende, registrerte brukere og abonnenter.',
+      },
+      description: {
+        title: '2. Beskrivelse av tjenesten',
+        content: 'SocialChef er en AI-drevet plattform for sosiale medier, spesielt designet for restauranter. Vår tjeneste lar deg generere markedsføringsinnhold, lage bilder og bildetekster, planlegge innlegg og publisere innhold til tilkoblede sosiale medieplattformer. Funksjoner kan variere basert på abonnementsplanen din.',
+      },
+      eligibility: {
+        title: '3. Kvalifisering',
+        content: 'Du må være minst 18 år og i stand til å inngå en bindende avtale for å bruke vår tjeneste. Ved å bruke SocialChef bekrefter du at du oppfyller disse kvalifiseringskravene.',
+      },
+      account: {
+        title: '4. Kontoregistrering og sikkerhet',
+        intro: 'For å bruke visse funksjoner må du opprette en konto. Du samtykker til å:',
+        items: {
+          accurate: 'Oppgi nøyaktig, aktuell og fullstendig informasjon under registrering.',
+          security: 'Opprettholde sikkerheten til passordet og kontolegitimasjonen din.',
+          notify: 'Varsle oss umiddelbart om uautorisert tilgang eller sikkerhetsbrudd.',
+          responsible: 'Akseptere ansvar for alle aktiviteter som skjer under kontoen din.',
+        },
+      },
+      acceptableUse: {
+        title: '5. Retningslinjer for akseptabel bruk',
+        intro: 'Du samtykker til ikke å bruke tjenesten til å:',
+        items: {
+          illegal: 'Bryte gjeldende lover, forskrifter eller tredjeparts rettigheter.',
+          harmful: 'Laste opp eller distribuere skadelig, støtende eller upassende innhold.',
+          infringe: 'Krenke andres immaterielle rettigheter.',
+          spam: 'Sende spam, uønskede meldinger eller delta i villedende praksis.',
+          interfere: 'Forstyrre eller avbryte tjenesten eller dens infrastruktur.',
+          impersonate: 'Utgi seg for en person eller enhet eller feilaktig fremstille din tilknytning.',
+          reverse: 'Forsøke å reversere, dekompilere eller trekke ut kildekode fra vår tjeneste.',
+        },
+      },
+      content: {
+        title: '6. Brukerinnhold',
+        ownership: 'Du beholder eierskapet til alt innhold du oppretter eller laster opp til SocialChef. Ved å bruke vår tjeneste gir du oss imidlertid en begrenset lisens til å bruke, lagre og behandle innholdet ditt utelukkende for å levere tjenesten.',
+        license: 'For AI-generert innhold opprettet gjennom plattformen vår, mottar du en lisens til å bruke slikt innhold for forretningsformål, underlagt eventuelle begrensninger i abonnementsplanen din.',
+        responsibility: 'Du er eneansvarlig for å sikre at innholdet ditt overholder gjeldende lover og ikke krenker tredjeparts rettigheter.',
+      },
+      socialMedia: {
+        title: '7. Sosiale medier-integrasjon',
+        content: 'Når du kobler til tredjepartskontoer for sosiale medier, autoriserer du oss til å få tilgang til og samhandle med disse kontoene på dine vegne. Du er ansvarlig for å overholde tjenestevilkårene til hver tilkoblet plattform. Vi er ikke ansvarlige for handlinger utført av eller begrensninger pålagt av tredjepartsplattformer.',
+      },
+      subscription: {
+        title: '8. Abonnement og betaling',
+        billing: 'Betalte abonnementer faktureres i henhold til planen du velger. Alle avgifter er ikke-refunderbare med mindre annet er oppgitt eller påkrevd ved lov.',
+        cancellation: 'Du kan når som helst kansellere abonnementet ditt gjennom kontoinnstillingene dine. Kanselleringen trer i kraft ved slutten av gjeldende faktureringsperiode.',
+        changes: 'Vi forbeholder oss retten til å endre prisene med rimelig varsel. Fortsatt bruk etter prisendringer utgjør aksept av nye priser.',
+      },
+      intellectual: {
+        title: '9. Immaterielle rettigheter',
+        content: 'SocialChef og dets originale innhold, funksjoner og funksjonalitet eies av oss og er beskyttet av internasjonale opphavsretts-, varemerke- og andre immaterielle rettigheter. Vår AI-teknologi, algoritmer og plattformdesign forblir vår eksklusive eiendom.',
+      },
+      disclaimer: {
+        title: '10. Ansvarsfraskrivelse',
+        content: 'TJENESTEN LEVERES "SOM DEN ER" OG "SOM TILGJENGELIG" UTEN GARANTIER AV NOE SLAG, ENTEN UTTRYKTE ELLER UNDERFORSTÅTTE. VI GARANTERER IKKE AT TJENESTEN VIL VÆRE UAVBRUTT, FEILFRI ELLER SIKKER. AI-GENERERT INNHOLD KAN INNEHOLDE FEIL ELLER UNØYAKTIGHETER, OG DU ER ANSVARLIG FOR Å GJENNOMGÅ ALT INNHOLD FØR PUBLISERING.',
+      },
+      limitation: {
+        title: '11. Ansvarsbegrensning',
+        content: 'I DEN MAKSIMALE UTSTREKNING TILLATT AV LOV, SKAL SOCIALCHEF IKKE VÆRE ANSVARLIG FOR NOEN INDIREKTE, TILFELDIGE, SPESIELLE, FØLGESKADER ELLER STRAFFEERSTATNING, INKLUDERT TAP AV FORTJENESTE, DATA ELLER FORRETNINGSMULIGHETER, SOM OPPSTÅR FRA DIN BRUK AV TJENESTEN.',
+      },
+      indemnification: {
+        title: '12. Skadesløsholdelse',
+        content: 'Du samtykker til å holde SocialChef, dets ledere, direktører, ansatte og agenter skadesløse fra eventuelle krav, skader, tap eller utgifter som oppstår fra din bruk av tjenesten, brudd på disse vilkårene eller krenkelse av tredjeparts rettigheter.',
+      },
+      termination: {
+        title: '13. Oppsigelse',
+        content: 'Vi kan suspendere eller avslutte tilgangen din til tjenesten når som helst for brudd på disse vilkårene eller av annen grunn etter vårt skjønn. Ved oppsigelse opphører retten din til å bruke tjenesten umiddelbart, selv om visse bestemmelser i disse vilkårene vil overleve.',
+      },
+      changes: {
+        title: '14. Endringer i vilkårene',
+        content: 'Vi forbeholder oss retten til å endre disse vilkårene når som helst. Vi vil varsle brukere om vesentlige endringer ved å legge ut de oppdaterte vilkårene på plattformen vår. Din fortsatte bruk av tjenesten etter endringer utgjør aksept av de endrede vilkårene.',
+      },
+      governing: {
+        title: '15. Gjeldende lov',
+        content: 'Disse vilkårene skal styres av og tolkes i samsvar med lovene i Norge, uten hensyn til lovvalgsprinsipper. Eventuelle tvister som oppstår fra disse vilkårene skal løses i norske domstoler.',
+      },
+      contact: {
+        title: '16. Kontaktinformasjon',
+        content: 'For spørsmål om disse tjenestevilkårene, vennligst kontakt oss på:',
+      },
+    },
   },
 
   // Feedback Modal

@@ -259,6 +259,29 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
+  async function signInWithFacebook() {
+    loading.value = true
+    error.value = null
+
+    try {
+      const response = await api.signInWithFacebook()
+
+      if (!response.success || !response.data?.url) {
+        error.value = response.error || 'Failed to initiate Facebook Sign In'
+        return { success: false, error: error.value }
+      }
+
+      // Redirect to Facebook OAuth
+      window.location.href = response.data.url
+      return { success: true }
+    } catch (err: any) {
+      error.value = err.message || 'Network error'
+      return { success: false, error: error.value }
+    } finally {
+      loading.value = false
+    }
+  }
+
   async function loadProfile() {
     // Check localStorage for token if not in state
     if (!accessToken.value) {
@@ -446,6 +469,7 @@ export const useAuthStore = defineStore('auth', () => {
     logout,
     signInWithApple,
     signInWithGoogle,
+    signInWithFacebook,
     loadProfile,
     refreshProfile,
     refreshAccessToken,

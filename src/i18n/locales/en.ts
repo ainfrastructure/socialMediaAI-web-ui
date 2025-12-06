@@ -132,6 +132,7 @@ export default {
     sendMagicLink: 'Send Magic Link',
     continueWithApple: 'Continue with Apple',
     continueWithGoogle: 'Continue with Google',
+    continueWithFacebook: 'Continue with Facebook',
     orContinueWithEmail: 'or continue with email',
     signInWithEmail: 'Sign in with email',
     emailLoginDescription: 'Enter your email and we\'ll send you a link to sign in. No password needed.',
@@ -145,6 +146,8 @@ export default {
     useDifferentEmail: 'Use a different email',
     emailConfirmed: 'Success! Loading your profile...',
     pleaseLogin: 'Please sign in to continue',
+    privacyPolicy: 'Privacy Policy',
+    termsOfService: 'Terms of Service',
   },
 
   // Waitlist Landing Page
@@ -1634,6 +1637,182 @@ export default {
     failed: 'Failed',
     cancelled: 'Cancelled',
     draft: 'Draft',
+  },
+
+  // Privacy Policy
+  privacy: {
+    title: 'Privacy Policy',
+    lastUpdated: 'Last updated: December 5th 2025',
+    sections: {
+      introduction: {
+        title: '1. Introduction',
+        content: 'Welcome to SocialChef ("we," "our," or "us"). We are committed to protecting your privacy and ensuring the security of your personal information. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our AI-powered social media management platform for restaurants.',
+      },
+      informationWeCollect: {
+        title: '2. Information We Collect',
+        intro: 'We collect the following types of information:',
+        items: {
+          accountInfo: 'Account Information: Name, email address, password, and profile details when you create an account.',
+          socialMedia: 'Social Media Data: When you connect your social media accounts (Facebook, Instagram, etc.), we access the data necessary to post content on your behalf, including page information and posting permissions.',
+          content: 'Content Data: Images, captions, hashtags, and other content you create or upload through our platform.',
+          usage: 'Usage Information: How you interact with our platform, including features used, posts created, and scheduling preferences.',
+          device: 'Device Information: Browser type, IP address, device identifiers, and operating system for security and analytics purposes.',
+        },
+      },
+      howWeUse: {
+        title: '3. How We Use Your Information',
+        intro: 'We use your information to:',
+        items: {
+          provideService: 'Provide and operate our AI-powered content generation and social media management services.',
+          improveService: 'Improve and personalize your experience, including training our AI models to better serve restaurant content needs.',
+          communicate: 'Send you service-related communications, updates, and marketing materials (with your consent).',
+          security: 'Ensure the security of our platform and protect against fraud or unauthorized access.',
+          legal: 'Comply with legal obligations and enforce our terms of service.',
+        },
+      },
+      dataSharing: {
+        title: '4. Data Sharing and Disclosure',
+        intro: 'We may share your information with:',
+        items: {
+          socialPlatforms: 'Social Media Platforms: To publish content on your connected accounts (Facebook, Instagram, etc.).',
+          serviceProviders: 'Service Providers: Third-party vendors who help us operate our platform (hosting, analytics, payment processing).',
+          legal: 'Legal Requirements: When required by law, court order, or government request.',
+          businessTransfer: 'Business Transfers: In connection with a merger, acquisition, or sale of assets.',
+        },
+        noSelling: 'We do not sell your personal information to third parties.',
+      },
+      dataSecurity: {
+        title: '5. Data Security',
+        content: 'We implement industry-standard security measures to protect your information, including encryption, secure servers, and regular security audits. However, no method of transmission over the Internet is 100% secure, and we cannot guarantee absolute security.',
+      },
+      dataRetention: {
+        title: '6. Data Retention',
+        content: 'We retain your personal information for as long as your account is active or as needed to provide you services. You may request deletion of your data at any time by contacting us or through your account settings.',
+      },
+      yourRights: {
+        title: '7. Your Rights',
+        intro: 'Depending on your location, you may have the following rights:',
+        items: {
+          access: 'Access: Request a copy of the personal information we hold about you.',
+          correction: 'Correction: Request correction of inaccurate or incomplete information.',
+          deletion: 'Deletion: Request deletion of your personal information.',
+          portability: 'Portability: Request a copy of your data in a portable format.',
+          withdraw: 'Withdraw Consent: Withdraw consent for processing where consent is the legal basis.',
+        },
+        contact: 'To exercise these rights, please contact us at the email address below.',
+      },
+      cookies: {
+        title: '8. Cookies and Tracking',
+        content: 'We use cookies and similar technologies to improve your experience, analyze usage, and personalize content. You can control cookie preferences through your browser settings. Some features may not function properly if cookies are disabled.',
+      },
+      thirdParty: {
+        title: '9. Third-Party Links',
+        content: 'Our platform may contain links to third-party websites or services. We are not responsible for the privacy practices of these external sites. We encourage you to review their privacy policies before providing any personal information.',
+      },
+      children: {
+        title: '10. Children\'s Privacy',
+        content: 'Our services are not intended for individuals under 18 years of age. We do not knowingly collect personal information from children. If you believe we have collected information from a child, please contact us immediately.',
+      },
+      changes: {
+        title: '11. Changes to This Policy',
+        content: 'We may update this Privacy Policy from time to time. We will notify you of significant changes by posting the new policy on our platform and updating the "Last Updated" date. Your continued use of our services after changes constitutes acceptance of the updated policy.',
+      },
+      contact: {
+        title: '12. Contact Us',
+        content: 'If you have questions about this Privacy Policy or our data practices, please contact us at:',
+      },
+    },
+  },
+
+  // Terms of Service
+  terms: {
+    title: 'Terms of Service',
+    lastUpdated: 'Last updated: December 5th 2025',
+    sections: {
+      acceptance: {
+        title: '1. Acceptance of Terms',
+        content: 'By accessing or using SocialChef ("Service"), you agree to be bound by these Terms of Service ("Terms"). If you do not agree to these Terms, please do not use our Service. These Terms apply to all users, including visitors, registered users, and subscribers.',
+      },
+      description: {
+        title: '2. Description of Service',
+        content: 'SocialChef is an AI-powered social media management platform designed specifically for restaurants. Our Service enables you to generate marketing content, create images and captions, schedule posts, and publish content to connected social media platforms. Features may vary based on your subscription plan.',
+      },
+      eligibility: {
+        title: '3. Eligibility',
+        content: 'You must be at least 18 years old and capable of forming a binding contract to use our Service. By using SocialChef, you represent and warrant that you meet these eligibility requirements.',
+      },
+      account: {
+        title: '4. Account Registration and Security',
+        intro: 'To use certain features, you must create an account. You agree to:',
+        items: {
+          accurate: 'Provide accurate, current, and complete information during registration.',
+          security: 'Maintain the security of your password and account credentials.',
+          notify: 'Notify us immediately of any unauthorized access or security breach.',
+          responsible: 'Accept responsibility for all activities that occur under your account.',
+        },
+      },
+      acceptableUse: {
+        title: '5. Acceptable Use Policy',
+        intro: 'You agree not to use the Service to:',
+        items: {
+          illegal: 'Violate any applicable laws, regulations, or third-party rights.',
+          harmful: 'Upload or distribute harmful, offensive, or inappropriate content.',
+          infringe: 'Infringe on intellectual property rights of others.',
+          spam: 'Send spam, unsolicited messages, or engage in deceptive practices.',
+          interfere: 'Interfere with or disrupt the Service or its infrastructure.',
+          impersonate: 'Impersonate any person or entity or misrepresent your affiliation.',
+          reverse: 'Attempt to reverse engineer, decompile, or extract source code from our Service.',
+        },
+      },
+      content: {
+        title: '6. User Content',
+        ownership: 'You retain ownership of any content you create or upload to SocialChef. However, by using our Service, you grant us a limited license to use, store, and process your content solely for the purpose of providing the Service.',
+        license: 'For AI-generated content created through our platform, you receive a license to use such content for your business purposes, subject to any restrictions in your subscription plan.',
+        responsibility: 'You are solely responsible for ensuring that your content complies with applicable laws and does not infringe on third-party rights.',
+      },
+      socialMedia: {
+        title: '7. Social Media Integration',
+        content: 'When you connect third-party social media accounts, you authorize us to access and interact with those accounts on your behalf. You are responsible for complying with the terms of service of each connected platform. We are not liable for any actions taken by or restrictions imposed by third-party platforms.',
+      },
+      subscription: {
+        title: '8. Subscription and Payment',
+        billing: 'Paid subscriptions are billed according to the plan you select. All fees are non-refundable unless otherwise stated or required by law.',
+        cancellation: 'You may cancel your subscription at any time through your account settings. Cancellation takes effect at the end of the current billing period.',
+        changes: 'We reserve the right to change our pricing with reasonable notice. Continued use after price changes constitutes acceptance of new pricing.',
+      },
+      intellectual: {
+        title: '9. Intellectual Property',
+        content: 'SocialChef and its original content, features, and functionality are owned by us and protected by international copyright, trademark, and other intellectual property laws. Our AI technology, algorithms, and platform design remain our exclusive property.',
+      },
+      disclaimer: {
+        title: '10. Disclaimer of Warranties',
+        content: 'THE SERVICE IS PROVIDED "AS IS" AND "AS AVAILABLE" WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED. WE DO NOT WARRANT THAT THE SERVICE WILL BE UNINTERRUPTED, ERROR-FREE, OR SECURE. AI-GENERATED CONTENT MAY CONTAIN ERRORS OR INACCURACIES, AND YOU ARE RESPONSIBLE FOR REVIEWING ALL CONTENT BEFORE PUBLICATION.',
+      },
+      limitation: {
+        title: '11. Limitation of Liability',
+        content: 'TO THE MAXIMUM EXTENT PERMITTED BY LAW, SOCIALCHEF SHALL NOT BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES, INCLUDING LOSS OF PROFITS, DATA, OR BUSINESS OPPORTUNITIES, ARISING FROM YOUR USE OF THE SERVICE.',
+      },
+      indemnification: {
+        title: '12. Indemnification',
+        content: 'You agree to indemnify and hold harmless SocialChef, its officers, directors, employees, and agents from any claims, damages, losses, or expenses arising from your use of the Service, violation of these Terms, or infringement of any third-party rights.',
+      },
+      termination: {
+        title: '13. Termination',
+        content: 'We may suspend or terminate your access to the Service at any time for violation of these Terms or for any other reason at our discretion. Upon termination, your right to use the Service ceases immediately, though certain provisions of these Terms will survive.',
+      },
+      changes: {
+        title: '14. Changes to Terms',
+        content: 'We reserve the right to modify these Terms at any time. We will notify users of material changes by posting the updated Terms on our platform. Your continued use of the Service after changes constitutes acceptance of the modified Terms.',
+      },
+      governing: {
+        title: '15. Governing Law',
+        content: 'These Terms shall be governed by and construed in accordance with the laws of Norway, without regard to its conflict of law provisions. Any disputes arising from these Terms shall be resolved in the courts of Norway.',
+      },
+      contact: {
+        title: '16. Contact Information',
+        content: 'For questions about these Terms of Service, please contact us at:',
+      },
+    },
   },
 
   // Feedback Modal

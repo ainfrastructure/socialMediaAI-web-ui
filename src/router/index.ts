@@ -17,6 +17,8 @@ const ProfileView = () => import('../views/ProfileView.vue')
 const OnboardingView = () => import('../views/OnboardingView.vue')
 const PostsView = () => import('../views/PostsView.vue')
 const PostsCreateView = () => import('../views/PostsCreateView.vue')
+const PrivacyPolicyView = () => import('../views/PrivacyPolicyView.vue')
+const TermsView = () => import('../views/TermsView.vue')
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -147,6 +149,16 @@ const router = createRouter({
       name: 'profile',
       component: ProfileView,
       meta: { requiresAuth: true },
+    },
+    {
+      path: '/privacy-policy',
+      name: 'privacy-policy',
+      component: PrivacyPolicyView,
+    },
+    {
+      path: '/terms',
+      name: 'terms',
+      component: TermsView,
     },
   ],
 })

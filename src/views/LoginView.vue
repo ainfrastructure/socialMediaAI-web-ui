@@ -9,6 +9,7 @@ import BaseAlert from '../components/BaseAlert.vue'
 import BaseInput from '../components/BaseInput.vue'
 import AppleIcon from '../components/icons/AppleIcon.vue'
 import GoogleIcon from '../components/icons/GoogleIcon.vue'
+import FacebookIcon from '../components/icons/FacebookIcon.vue'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -106,6 +107,14 @@ async function handleGoogleSignIn() {
     showMessage(result.error || t('errors.generic'), 'error')
   }
 }
+
+async function handleFacebookSignIn() {
+  const result = await authStore.signInWithFacebook()
+
+  if (!result.success) {
+    showMessage(result.error || t('errors.generic'), 'error')
+  }
+}
 </script>
 
 <template>
@@ -150,6 +159,16 @@ async function handleGoogleSignIn() {
             >
               <GoogleIcon :size="20" />
               <span>{{ $t('auth.continueWithGoogle') }}</span>
+            </button>
+
+            <button
+              type="button"
+              class="social-sign-in-button facebook-button"
+              :disabled="authStore.loading"
+              @click="handleFacebookSignIn"
+            >
+              <FacebookIcon :size="20" />
+              <span>{{ $t('auth.continueWithFacebook') }}</span>
             </button>
           </div>
 
@@ -207,6 +226,13 @@ async function handleGoogleSignIn() {
             ← {{ $t('auth.backToLogin') }}
           </button>
         </div>
+      </div>
+
+      <!-- Legal Links -->
+      <div class="legal-links">
+        <router-link to="/privacy-policy">{{ $t('auth.privacyPolicy') }}</router-link>
+        <span class="separator">·</span>
+        <router-link to="/terms">{{ $t('auth.termsOfService') }}</router-link>
       </div>
     </BaseCard>
   </div>
@@ -338,6 +364,16 @@ form {
   background: #f5f5f5;
 }
 
+/* Facebook Button */
+.facebook-button {
+  background: #1877F2;
+  color: #ffffff;
+}
+
+.facebook-button:hover:not(:disabled) {
+  background: #166fe5;
+}
+
 /* Login Content Wrapper - enables smooth crossfade */
 .login-content-wrapper {
   position: relative;
@@ -431,6 +467,33 @@ form {
 
 .forgot-password-link:hover {
   color: var(--gold-primary);
+}
+
+/* Legal Links */
+.legal-links {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-sm);
+  margin-top: var(--space-2xl);
+  padding-top: var(--space-xl);
+  border-top: 1px solid var(--border-color);
+}
+
+.legal-links a {
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+
+.legal-links a:hover {
+  color: var(--gold-primary);
+}
+
+.legal-links .separator {
+  color: var(--text-muted);
+  font-size: var(--text-xs);
 }
 
 /* Responsive */
