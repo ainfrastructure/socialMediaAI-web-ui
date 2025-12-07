@@ -19,12 +19,12 @@ const { t } = useI18n()
 const {
   showEmailLogin,
   email,
-  password,
   message,
   messageType,
   loggingIn,
   lastUsedProvider,
   loading,
+  isDev,
   showMessage,
   toggleEmailLogin,
   handleEmailLogin: doEmailLogin,
@@ -153,7 +153,7 @@ async function handleEmailLogin() {
           </button>
         </div>
 
-        <!-- Email Login Form (Password) -->
+        <!-- Email Login Form -->
         <div :class="['login-content', 'email-content', { 'is-visible': showEmailLogin }]">
           <form @submit.prevent="handleEmailLogin">
             <BaseInput
@@ -164,14 +164,6 @@ async function handleEmailLogin() {
               required
             />
 
-            <BaseInput
-              v-model="password"
-              type="password"
-              :label="$t('auth.password')"
-              :placeholder="$t('auth.passwordPlaceholder')"
-              required
-            />
-
             <BaseButton
               type="submit"
               variant="primary"
@@ -179,14 +171,9 @@ async function handleEmailLogin() {
               full-width
               :disabled="loggingIn"
             >
-              {{ loggingIn ? $t('common.loading') : $t('auth.signIn') }}
+              {{ loggingIn ? $t('common.loading') : (isDev ? 'Dev Login (bypass)' : $t('auth.signIn')) }}
             </BaseButton>
           </form>
-
-          <!-- Forgot Password Link -->
-          <router-link to="/reset-password" class="forgot-password-link">
-            {{ $t('auth.forgotPassword') }}
-          </router-link>
 
           <!-- Back to Social Login -->
           <button
@@ -440,22 +427,6 @@ form {
 }
 
 .back-link:hover {
-  color: var(--gold-primary);
-}
-
-/* Forgot Password Link */
-.forgot-password-link {
-  display: block;
-  text-align: center;
-  color: var(--text-secondary);
-  font-family: var(--font-body);
-  font-size: var(--text-sm);
-  text-decoration: none;
-  padding: var(--space-md) 0;
-  transition: color 0.15s ease;
-}
-
-.forgot-password-link:hover {
   color: var(--gold-primary);
 }
 

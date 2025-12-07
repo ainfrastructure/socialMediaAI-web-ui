@@ -1,6 +1,7 @@
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '../stores/auth'
+import { api } from '../services/api'
 
 export function useLogin() {
   const authStore = useAuthStore()
@@ -8,11 +9,13 @@ export function useLogin() {
 
   const showEmailLogin = ref(false)
   const email = ref('')
-  const password = ref('')
   const message = ref('')
   const messageType = ref<'success' | 'error' | 'info'>('info')
   const loggingIn = ref(false)
   const lastUsedProvider = ref<string | null>(localStorage.getItem('last_login_provider'))
+
+  // Check if we're in development mode
+  const isDev = computed(() => import.meta.env.DEV)
 
   function showMessage(msg: string, type: 'success' | 'error' | 'info') {
     message.value = msg
@@ -32,12 +35,11 @@ export function useLogin() {
   function resetForm() {
     showEmailLogin.value = false
     email.value = ''
-    password.value = ''
     message.value = ''
   }
 
   async function handleEmailLogin(): Promise<{ success: boolean }> {
-    if (!email.value || !password.value) {
+    if (!email.value) {
       showMessage(t('errors.validationError'), 'error')
       return { success: false }
     }
@@ -46,14 +48,30 @@ export function useLogin() {
 
     loggingIn.value = true
     try {
-      const result = await authStore.login(email.value, password.value)
+      // In development: use dev login (direct login without email)
+      // In production: use magic link (sends email with login link)
+      if (isDev.value) {
+        const result = await authStore.devLogin(email.value)
 
-      if (!result.success) {
-        showMessage(result.error || t('errors.generic'), 'error')
-        return { success: false }
+        if (!result.success) {
+          showMessage(result.error || t('errors.generic'), 'error')
+          return { success: false }
+        }
+
+        return { success: true }
+      } else {
+        // Production: send magic link
+        const result = await api.sendMagicLink(email.value)
+
+        if (!result.success) {
+          showMessage(result.error || t('errors.generic'), 'error')
+          return { success: false }
+        }
+
+        // Show success message - user needs to check their email
+        showMessage(t('auth.checkEmailForLink'), 'success')
+        return { success: false } // Return false so we don't navigate away
       }
-
-      return { success: true }
     } catch (err: any) {
       showMessage(err.message || t('errors.networkError'), 'error')
       return { success: false }
@@ -100,12 +118,12 @@ export function useLogin() {
     // State
     showEmailLogin,
     email,
-    password,
     message,
     messageType,
     loggingIn,
     lastUsedProvider,
     loading: authStore.loading,
+    isDev,
 
     // Methods
     showMessage,

@@ -25,6 +25,7 @@ class ApiService {
   signup = authService.signup.bind(authService)
   login = authService.login.bind(authService)
   logout = authService.logout.bind(authService)
+  devLogin = authService.devLogin.bind(authService)
   signInWithApple = authService.signInWithApple.bind(authService)
   signInWithGoogle = authService.signInWithGoogle.bind(authService)
   signInWithFacebook = authService.signInWithFacebook.bind(authService)

@@ -293,6 +293,33 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
+  async function devLogin(email: string) {
+    loading.value = true
+    error.value = null
+
+    try {
+      const response = await api.devLogin(email)
+
+      if (!response.success || !response.session) {
+        error.value = response.error || 'Dev login failed'
+        return { success: false, error: error.value }
+      }
+
+      storeSession(response.session)
+      await loadProfile()
+
+      // Connect to SSE for real-time notifications
+      sseService.connect(response.session.access_token)
+
+      return { success: true }
+    } catch (err: any) {
+      error.value = err.message || 'Network error'
+      return { success: false, error: error.value }
+    } finally {
+      loading.value = false
+    }
+  }
+
   async function loadProfile() {
     // Check localStorage for token if not in state
     if (!accessToken.value) {
@@ -495,6 +522,7 @@ export const useAuthStore = defineStore('auth', () => {
     signup,
     login,
     logout,
+    devLogin,
     signInWithApple,
     signInWithGoogle,
     signInWithFacebook,

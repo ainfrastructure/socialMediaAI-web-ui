@@ -8,7 +8,6 @@ const LoginView = () => import('../views/LoginView.vue')
 const DashboardView = () => import('../views/DashboardView.vue')
 const PlansView = () => import('../views/PlansView.vue')
 const AuthCallbackView = () => import('../views/AuthCallbackView.vue')
-const ResetPasswordView = () => import('../views/ResetPasswordView.vue')
 const ConnectAccountsView = () => import('../views/ConnectAccountsView.vue')
 const FacebookCallbackView = () => import('../views/FacebookCallbackView.vue')
 const InstagramCallbackView = () => import('../views/InstagramCallbackView.vue')
@@ -93,11 +92,6 @@ const router = createRouter({
       name: 'instagram-callback',
       component: InstagramCallbackView,
       meta: { requiresAuth: true },
-    },
-    {
-      path: '/auth/reset-password',
-      name: 'reset-password',
-      component: ResetPasswordView,
     },
     {
       path: '/plans',

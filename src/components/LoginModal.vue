@@ -23,12 +23,12 @@ const emit = defineEmits<{
 const {
   showEmailLogin,
   email,
-  password,
   message,
   messageType,
   loggingIn,
   lastUsedProvider,
   loading,
+  isDev,
   toggleEmailLogin,
   resetForm,
   handleEmailLogin: doEmailLogin,
@@ -154,14 +154,6 @@ async function handleEmailLogin() {
               required
             />
 
-            <BaseInput
-              v-model="password"
-              type="password"
-              :label="$t('auth.password')"
-              :placeholder="$t('auth.passwordPlaceholder')"
-              required
-            />
-
             <BaseButton
               type="submit"
               variant="primary"
@@ -169,13 +161,9 @@ async function handleEmailLogin() {
               full-width
               :disabled="loggingIn"
             >
-              {{ loggingIn ? $t('common.loading') : $t('auth.signIn') }}
+              {{ loggingIn ? $t('common.loading') : (isDev ? 'Dev Login (bypass)' : $t('auth.signIn')) }}
             </BaseButton>
           </form>
-
-          <router-link to="/auth/reset-password" class="forgot-password-link" @click="close">
-            {{ $t('auth.forgotPassword') }}
-          </router-link>
 
           <button
             type="button"
@@ -390,21 +378,6 @@ form {
 }
 
 .back-link:hover {
-  color: var(--gold-primary);
-}
-
-/* Forgot Password */
-.forgot-password-link {
-  display: block;
-  text-align: center;
-  color: var(--text-secondary);
-  font-size: var(--text-sm);
-  text-decoration: none;
-  padding: var(--space-md) 0;
-  transition: color 0.15s ease;
-}
-
-.forgot-password-link:hover {
   color: var(--gold-primary);
 }
 

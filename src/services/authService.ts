@@ -167,6 +167,15 @@ class AuthService {
     return response.json()
   }
 
+  async devLogin(email: string): Promise<LoginResponse> {
+    const response = await fetch(`${API_URL}/api/auth/dev-login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email }),
+    })
+    return response.json()
+  }
+
   async deleteAccount(request: {
     reason?: string
     confirmations: {

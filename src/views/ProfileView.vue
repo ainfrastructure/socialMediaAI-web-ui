@@ -176,20 +176,6 @@
         <div class="security-actions">
           <div class="security-item">
             <div class="security-info">
-              <h3 class="security-title">{{ $t('profile.password') }}</h3>
-              <p class="security-description">{{ $t('profile.resetPasswordDescription') }}</p>
-            </div>
-            <router-link to="/auth/reset-password">
-              <BaseButton variant="ghost" size="small">
-                {{ $t('profile.resetPassword') }}
-              </BaseButton>
-            </router-link>
-          </div>
-
-          <div class="security-divider"></div>
-
-          <div class="security-item">
-            <div class="security-info">
               <h3 class="security-title danger-text">{{ $t('profile.deleteAccountDanger') }}</h3>
               <p class="security-description">{{ $t('profile.deleteAccountDescription') }}</p>
             </div>
