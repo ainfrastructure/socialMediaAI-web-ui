@@ -1210,6 +1210,9 @@ export default {
       generating: 'Generating your content...',
       generationSuccess: 'Your post is ready!',
       generationError: 'Failed to generate. Please try again.',
+      captionGenerationFailed: 'Caption Generation Failed',
+      imageGenerationFailed: 'Image Generation Failed',
+      unexpectedError: 'An unexpected error occurred. Please try again.',
       savingDraft: 'Saving draft...',
       draftSaved: 'Draft saved successfully!',
     },
@@ -1352,6 +1355,10 @@ export default {
     posts: 'posts',
     timeLeft: 'left',
     publishTime: 'Publish Time',
+    captionGenerationFailed: 'Caption Generation Failed',
+    imageGenerationFailed: 'Image Generation Failed',
+    generationFailed: 'Generation Failed',
+    unexpectedError: 'An unexpected error occurred. Please try again.',
   },
 
   // Edit Scheduled Post Modal
@@ -1413,6 +1420,12 @@ export default {
     publishing: 'Publishing...',
     publishSuccess: 'Successfully published to Instagram!',
     publishError: 'Failed to publish to Instagram',
+    create: {
+      captionGenerationFailed: 'Caption Generation Failed',
+      imageGenerationFailed: 'Image Generation Failed',
+      generationFailed: 'Generation Failed',
+      unexpectedError: 'An unexpected error occurred. Please try again.',
+    },
   },
 
   // Content Hub View

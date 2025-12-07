@@ -33,6 +33,7 @@ import { api } from '@/services/api'
 import { okamService } from '@/services/okamService'
 import { useFacebookStore } from '@/stores/facebook'
 import { useInstagramStore } from '@/stores/instagram'
+import { useNotificationStore } from '@/stores/notifications'
 
 interface MenuItem {
   name: string
@@ -124,6 +125,7 @@ const router = useRouter()
 // Stores
 const facebookStore = useFacebookStore()
 const instagramStore = useInstagramStore()
+const notificationStore = useNotificationStore()
 
 // Platform configuration
 type PlatformType = 'facebook' | 'instagram' | 'tiktok' | 'twitter' | 'linkedin' | 'youtube'
@@ -708,7 +710,13 @@ async function generateImage() {
     }
   } catch (error: any) {
     console.error('Error generating image:', error)
-    imageError.value = error.message || t('advancedMode.messages.generationError')
+    const errorMessage = error.message || t('advancedMode.messages.generationError')
+    imageError.value = errorMessage
+    notificationStore.addNotification({
+      type: 'error',
+      title: t('advancedMode.messages.imageGenerationFailed'),
+      message: errorMessage,
+    })
   } finally {
     generatingImage.value = false
   }
@@ -745,10 +753,22 @@ async function generatePostContent() {
     if (response.success && response.data) {
       postText.value = response.data.postText || ''
       hashtags.value = response.data.hashtags || []
+    } else if (!response.success) {
+      const errorMessage = response.error || response.message || t('advancedMode.messages.captionGenerationFailed')
+      console.error('Error generating post content:', errorMessage)
+      notificationStore.addNotification({
+        type: 'error',
+        title: t('advancedMode.messages.captionGenerationFailed'),
+        message: errorMessage,
+      })
     }
   } catch (error: any) {
     console.error('Error generating post content:', error)
-    // Don't show error - content is optional and can be edited
+    notificationStore.addNotification({
+      type: 'error',
+      title: t('advancedMode.messages.captionGenerationFailed'),
+      message: error.message || t('advancedMode.messages.unexpectedError'),
+    })
   } finally {
     generatingContent.value = false
   }

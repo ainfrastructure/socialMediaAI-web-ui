@@ -291,9 +291,22 @@ async function generatePostContent() {
       const content = response.data || response
       postText.value = (content as any).postText || ''
       hashtags.value = (content as any).hashtags || []
+    } else {
+      const errorMessage = response.error || response.message || t('scheduler.captionGenerationFailed')
+      console.error('Failed to generate post content:', errorMessage)
+      notificationStore.addNotification({
+        type: 'error',
+        title: t('scheduler.captionGenerationFailed'),
+        message: errorMessage,
+      })
     }
-  } catch (err) {
+  } catch (err: any) {
     console.error('Failed to generate post content:', err)
+    notificationStore.addNotification({
+      type: 'error',
+      title: t('scheduler.captionGenerationFailed'),
+      message: err.message || t('scheduler.unexpectedError'),
+    })
   }
 }
 
@@ -479,11 +492,23 @@ async function handleEasyModeGenerate(data: {
     } else {
       // No prompts generated - show error
       generating.value = false
-      generationError.value = t('contentCreate.noPrompts', 'No prompts were generated. Please try again.')
+      const errorMessage = t('contentCreate.noPrompts', 'No prompts were generated. Please try again.')
+      generationError.value = errorMessage
+      notificationStore.addNotification({
+        type: 'error',
+        title: t('scheduler.generationFailed'),
+        message: errorMessage,
+      })
     }
   } catch (err: any) {
     generating.value = false
-    generationError.value = err.message || t('contentCreate.generateError', 'Failed to generate content')
+    const errorMessage = err.message || t('contentCreate.generateError', 'Failed to generate content')
+    generationError.value = errorMessage
+    notificationStore.addNotification({
+      type: 'error',
+      title: t('scheduler.imageGenerationFailed'),
+      message: errorMessage,
+    })
   }
 }
 

@@ -1210,6 +1210,9 @@ export default {
       generating: 'Genererer innholdet ditt...',
       generationSuccess: 'Innlegget ditt er klart!',
       generationError: 'Kunne ikke generere. Prøv igjen.',
+      captionGenerationFailed: 'Kunne ikke generere bildetekst',
+      imageGenerationFailed: 'Kunne ikke generere bilde',
+      unexpectedError: 'En uventet feil oppstod. Prøv igjen.',
       savingDraft: 'Lagrer utkast...',
       draftSaved: 'Utkast lagret!',
     },
@@ -1352,6 +1355,10 @@ export default {
     posts: 'innlegg',
     timeLeft: 'igjen',
     publishTime: 'Publiseringstid',
+    captionGenerationFailed: 'Kunne ikke generere bildetekst',
+    imageGenerationFailed: 'Kunne ikke generere bilde',
+    generationFailed: 'Generering mislyktes',
+    unexpectedError: 'En uventet feil oppstod. Prøv igjen.',
   },
 
   // Edit Scheduled Post Modal
@@ -1413,6 +1420,12 @@ export default {
     publishing: 'Publiserer...',
     publishSuccess: 'Publisert til Instagram!',
     publishError: 'Kunne ikke publisere til Instagram',
+    create: {
+      captionGenerationFailed: 'Kunne ikke generere bildetekst',
+      imageGenerationFailed: 'Kunne ikke generere bilde',
+      generationFailed: 'Generering mislyktes',
+      unexpectedError: 'En uventet feil oppstod. Prøv igjen.',
+    },
   },
 
   // Content Hub View

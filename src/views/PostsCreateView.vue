@@ -215,6 +215,8 @@ async function handleEasyModePublish(data: {
   scheduleDate?: string
   scheduleTime?: string
   timezone?: string
+  postText?: string
+  hashtags?: string[]
 }) {
   try {
     if (!generatedImageUrl.value || !generatedPostContent.value) {
@@ -228,6 +230,10 @@ async function handleEasyModePublish(data: {
       return
     }
 
+    // Use edited values if provided, otherwise fall back to generated values
+    const finalPostText = data.postText ?? generatedPostContent.value.postText
+    const finalHashtags = data.hashtags ?? generatedPostContent.value.hashtags
+
     // Use existing saved post if available (from autoSavePost), otherwise save new
     let favoritePostId: string
 
@@ -236,10 +242,12 @@ async function handleEasyModePublish(data: {
       favoritePostId = lastSavedPost.value.id
       console.log('Using existing saved post ID:', favoritePostId)
 
-      // Update the saved post with the user's selected platforms
+      // Update the saved post with edited content and selected platforms
       await api.updateFavorite(favoritePostId, {
         platform: platforms[0],
-        platforms: platforms
+        platforms: platforms,
+        post_text: finalPostText,
+        hashtags: finalHashtags
       })
     } else {
       // No existing saved post, save a new one
@@ -248,8 +256,8 @@ async function handleEasyModePublish(data: {
         restaurant_id: restaurant.value?.id,
         content_type: 'image',
         media_url: generatedImageUrl.value,
-        post_text: generatedPostContent.value.postText,
-        hashtags: generatedPostContent.value.hashtags,
+        post_text: finalPostText,
+        hashtags: finalHashtags,
         platform: platforms[0], // Primary platform (for backward compatibility)
         platforms: platforms, // All selected platforms
         prompt: editablePrompt.value,
@@ -682,19 +690,37 @@ async function handleEasyModeGenerate(data: {
         generationError.value = null
         easyModeGenerating.value = false // Generation complete
       } catch (imageError: any) {
-        generationError.value = imageError.message || t('contentCreate.imageError', 'Failed to generate image. Please try again.')
+        const errorMessage = imageError.message || t('contentCreate.imageError', 'Failed to generate image. Please try again.')
+        generationError.value = errorMessage
         console.error('[EasyMode] Image generation error:', imageError)
+        notificationStore.addNotification({
+          type: 'error',
+          title: t('posts.create.imageGenerationFailed'),
+          message: errorMessage,
+        })
         easyModeGenerating.value = false // Generation failed
       }
     } else {
       // No prompts generated - show error
       console.warn('[EasyMode] No prompts were generated')
       easyModeGenerating.value = false
-      generationError.value = t('contentCreate.noPrompts', 'No prompts were generated. Please try again.')
+      const errorMessage = t('contentCreate.noPrompts', 'No prompts were generated. Please try again.')
+      generationError.value = errorMessage
+      notificationStore.addNotification({
+        type: 'error',
+        title: t('posts.create.generationFailed'),
+        message: errorMessage,
+      })
     }
   } catch (err: any) {
     easyModeGenerating.value = false
-    generationError.value = err.message || t('contentCreate.generateError', 'Failed to generate content')
+    const errorMessage = err.message || t('contentCreate.generateError', 'Failed to generate content')
+    generationError.value = errorMessage
+    notificationStore.addNotification({
+      type: 'error',
+      title: t('posts.create.generationFailed'),
+      message: errorMessage,
+    })
   }
 }
 
@@ -913,9 +939,22 @@ async function generatePostContent() {
         postText: (content as any).postText || '',
         hashtags: (content as any).hashtags || [],
       }
+    } else {
+      const errorMessage = response.error || response.message || t('posts.create.captionGenerationFailed')
+      console.error('Failed to generate post content:', errorMessage)
+      notificationStore.addNotification({
+        type: 'error',
+        title: t('posts.create.captionGenerationFailed'),
+        message: errorMessage,
+      })
     }
-  } catch (err) {
+  } catch (err: any) {
     console.error('Failed to generate post content:', err)
+    notificationStore.addNotification({
+      type: 'error',
+      title: t('posts.create.captionGenerationFailed'),
+      message: err.message || t('posts.create.unexpectedError'),
+    })
   } finally {
     generatingPostContent.value = false
   }
@@ -1005,11 +1044,13 @@ async function handleAdvancedModeComplete(data: {
 
     const platforms = data.platforms || []
 
-    // Update saved post with the actual platforms user selected
+    // Update saved post with the actual platforms and content user selected/edited
     if (platforms.length > 0 && lastSavedPost.value?.id) {
       await api.updateFavorite(lastSavedPost.value.id, {
         platform: platforms[0],
-        platforms: platforms
+        platforms: platforms,
+        post_text: data.postText,
+        hashtags: data.hashtags
       })
     }
 
