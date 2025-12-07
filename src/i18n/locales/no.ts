@@ -388,6 +388,8 @@ export default {
     enterprise: 'Enterprise',
     perMonth: '/måned',
     perYear: '/år',
+    perMonthBilledYearly: '/mnd, betalt årlig',
+    monthsFree: '{count} mnd gratis',
     oneTime: 'engangsbetaling',
     customPricing: 'Tilpasset pris',
     tokensPerMonth: 'tokens/måned',
@@ -1714,19 +1716,6 @@ export default {
     confirmTitle: 'Bytte modus?',
     confirmMessage: 'Du har ulagret arbeid. Å bytte modus vil forkaste din nåværende fremdrift.',
     switchAnyway: 'Bytt likevel',
-  },
-
-  // Facebook Onboarding Modal
-  facebookOnboarding: {
-    title: 'Koble til Facebook',
-    description: 'For å publisere eller planlegge innlegg til Facebook-sidene dine, må du først koble til Facebook-kontoen din.',
-    benefit1: 'Publiser direkte til sidene dine',
-    benefit2: 'Planlegg innlegg på forhånd',
-    benefit3: 'Administrer flere sider fra ett sted',
-    securityNote: 'Påloggingsinformasjonen din er sikret med industristandard kryptering',
-    connecting: 'Kobler til...',
-    connectButton: 'Koble til Facebook',
-    remindLater: 'Minn meg på senere',
   },
 
   // Confirm Modal

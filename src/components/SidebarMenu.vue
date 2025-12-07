@@ -83,12 +83,14 @@ const progressPercent = computed(() => {
   if (isLifetimeOrYearly.value) {
     // Calculate used percentage (inverse - remaining out of total)
     const totalCredits = isLifetimeMember.value ? 5000 : 600
-    const used = totalCredits - remaining_credits
+    const used = totalCredits - (remaining_credits || 0)
     return Math.min((used / totalCredits) * 100, 100)
   }
 
   // For monthly, show used out of monthly limit
-  return Math.min((credits_this_month / monthly_limit) * 100, 100)
+  // Guard against division by zero or undefined
+  if (!monthly_limit || monthly_limit === 0) return 0
+  return Math.min(((credits_this_month || 0) / monthly_limit) * 100, 100)
 })
 
 const creditsDisplay = computed(() => {

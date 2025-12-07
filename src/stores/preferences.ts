@@ -9,16 +9,6 @@ export const usePreferencesStore = defineStore('preferences', () => {
     (localStorage.getItem('creationMode') as CreationMode) || 'easy'
   )
 
-  // Track if user has seen Facebook onboarding
-  const hasSeenFacebookOnboarding = ref<boolean>(
-    localStorage.getItem('hasSeenFacebookOnboarding') === 'true'
-  )
-
-  // Track if this is user's first time in playground
-  const isFirstTimeUser = ref<boolean>(
-    localStorage.getItem('isFirstTimeUser') !== 'false' // default true
-  )
-
   // Selected restaurant ID with localStorage persistence
   const selectedRestaurantId = ref<string | null>(
     localStorage.getItem('selectedRestaurantId')
@@ -61,25 +51,12 @@ export const usePreferencesStore = defineStore('preferences', () => {
     setCreationMode(newMode)
   }
 
-  // Mark Facebook onboarding as seen
-  function markFacebookOnboardingSeen() {
-    hasSeenFacebookOnboarding.value = true
-    localStorage.setItem('hasSeenFacebookOnboarding', 'true')
-  }
-
-  // Mark user as no longer first-time
-  function markUserExperienced() {
-    isFirstTimeUser.value = false
-    localStorage.setItem('isFirstTimeUser', 'false')
-  }
-
-  // Reset onboarding (for testing)
-  function resetOnboarding() {
-    hasSeenFacebookOnboarding.value = false
-    isFirstTimeUser.value = true
+  // Reset all user-specific preferences (called on logout)
+  function resetPreferences() {
+    creationMode.value = 'easy'
     selectedRestaurantId.value = null
-    localStorage.removeItem('hasSeenFacebookOnboarding')
-    localStorage.removeItem('isFirstTimeUser')
+    hasStartedFlow.value = false
+    localStorage.removeItem('creationMode')
     localStorage.removeItem('selectedRestaurantId')
   }
 
@@ -101,17 +78,13 @@ export const usePreferencesStore = defineStore('preferences', () => {
 
   return {
     creationMode,
-    hasSeenFacebookOnboarding,
-    isFirstTimeUser,
     selectedRestaurantId,
     hasStartedFlow,
     setCreationMode,
     toggleMode,
     markFlowStarted,
     clearFlowState,
-    markFacebookOnboardingSeen,
-    markUserExperienced,
-    resetOnboarding,
+    resetPreferences,
     setSelectedRestaurant,
     clearSelectedRestaurant
   }

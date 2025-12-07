@@ -275,12 +275,16 @@ async function generatePostContent() {
   if (!selectedRestaurant.value) return
 
   try {
-    const menuItemNames = selectedMenuItems.value.map(item => item.name)
+    // Send name and description for better captions (description is optional, from Okam menu)
+    const menuItemsWithDescriptions = selectedMenuItems.value.map(item => ({
+      name: item.name,
+      description: item.description || undefined
+    }))
 
     const response = await api.generatePostContent(
       'facebook', // platform
       selectedRestaurant.value.name,
-      menuItemNames,
+      menuItemsWithDescriptions,
       'image', // content type
       promptContext.value,
       selectedRestaurant.value.brand_dna,

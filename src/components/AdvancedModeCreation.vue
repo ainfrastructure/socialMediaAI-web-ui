@@ -730,7 +730,11 @@ async function generatePostContent() {
 
   try {
     const menuItemsForApi = getMenuItemsForApi()
-    const menuItemNames = menuItemsForApi.map(item => item.name)
+    // Send name and description for better captions (description is optional, from Okam menu)
+    const menuItemsWithDescriptions = menuItemsForApi.map(item => ({
+      name: item.name,
+      description: item.description || undefined
+    }))
 
     // Build context based on post type
     let context: string | undefined
@@ -743,7 +747,7 @@ async function generatePostContent() {
     const response = await api.generatePostContent(
       'facebook',
       props.restaurant.name,
-      menuItemNames,
+      menuItemsWithDescriptions,
       'image',
       context,
       props.restaurant.brand_dna,

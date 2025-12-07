@@ -3,6 +3,8 @@ import { ref, computed } from 'vue'
 import { api } from '../services/api'
 import type { User } from '../services/authService'
 import { sseService } from '../services/sseService'
+import { useNotificationStore } from './notifications'
+import { usePreferencesStore } from './preferences'
 
 export const useAuthStore = defineStore('auth', () => {
   // State
@@ -204,6 +206,13 @@ export const useAuthStore = defineStore('auth', () => {
 
     // Disconnect SSE before logout
     sseService.disconnect()
+
+    // Clear user-specific data to prevent data leakage between accounts
+    const notificationStore = useNotificationStore()
+    notificationStore.clearAll()
+
+    const preferencesStore = usePreferencesStore()
+    preferencesStore.resetPreferences()
 
     try {
       await api.logout()

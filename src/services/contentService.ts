@@ -195,7 +195,7 @@ class ContentService {
   async generatePostContent(
     platform: string,
     restaurantName: string,
-    menuItems: string[],
+    menuItems: Array<string | { name: string; description?: string }>,
     contentType: 'image' | 'video',
     context?: string,
     brandDNA?: any,

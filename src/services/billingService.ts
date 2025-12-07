@@ -43,9 +43,9 @@ class BillingService {
       }),
     })
     const data = await response.json()
-    // Map portal_url to url for compatibility
-    if (data.success && data.data?.portal_url) {
-      return { ...data, data: { url: data.data.portal_url } }
+    // Map portal_url to url for compatibility - backend returns portal_url at root level
+    if (data.success && data.portal_url) {
+      return { ...data, data: { url: data.portal_url } }
     }
     return data
   }

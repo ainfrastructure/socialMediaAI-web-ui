@@ -388,6 +388,8 @@ export default {
     enterprise: 'Enterprise',
     perMonth: '/month',
     perYear: '/year',
+    perMonthBilledYearly: '/mo, billed yearly',
+    monthsFree: '{count} months free',
     oneTime: 'one-time',
     customPricing: 'Custom pricing',
     tokensPerMonth: 'tokens/month',
@@ -1714,19 +1716,6 @@ export default {
     confirmTitle: 'Switch Mode?',
     confirmMessage: 'You have unsaved work. Switching modes will discard your current progress.',
     switchAnyway: 'Switch Anyway',
-  },
-
-  // Facebook Onboarding Modal
-  facebookOnboarding: {
-    title: 'Connect to Facebook',
-    description: 'To publish or schedule posts to your Facebook pages, you\'ll need to connect your Facebook account first.',
-    benefit1: 'Publish directly to your pages',
-    benefit2: 'Schedule posts in advance',
-    benefit3: 'Manage multiple pages from one place',
-    securityNote: 'Your credentials are secured with industry-standard encryption',
-    connecting: 'Connecting...',
-    connectButton: 'Connect Facebook',
-    remindLater: 'Remind Me Later',
   },
 
   // Confirm Modal

@@ -168,10 +168,29 @@ function isCurrentPlan(tier: string): boolean {
 
 function getPriceInterval(plan: Plan): string {
   if (plan.interval === 'month') return t('plans.perMonth')
-  if (plan.interval === 'year') return t('plans.perYear')
+  if (plan.interval === 'year') return t('plans.perMonthBilledYearly')
   if (plan.interval === 'lifetime') return t('plans.oneTime')
   return ''
 }
+
+function getDisplayPrice(plan: Plan): string {
+  if (plan.interval === 'year') {
+    // Show monthly equivalent for yearly plans
+    const monthlyPrice = plan.price / 12
+    const currencySymbol = plan.formatted_price.replace(/[\d\s.,]+/g, '').trim()
+    return `${currencySymbol}${Math.round(monthlyPrice)}`
+  }
+  return plan.formatted_price
+}
+
+function getMonthsFree(plan: Plan, monthlyPlan: Plan | undefined): number {
+  if (!monthlyPlan || plan.interval !== 'year') return 0
+  // Calculate how many months free: 12 - (yearly_price / monthly_price)
+  const monthsPaid = plan.price / monthlyPlan.price
+  return Math.round(12 - monthsPaid)
+}
+
+const monthlyPlan = computed(() => plans.value.find(p => p.tier === 'monthly'))
 
 function getButtonText(plan: Plan): string {
   // Lifetime is always "Buy"
@@ -309,9 +328,12 @@ if (urlParams.get('success') === 'true') {
 
           <!-- Price Display -->
           <div class="price-wrapper">
-            <div class="price">{{ plan.formatted_price }}</div>
+            <div class="price">{{ getDisplayPrice(plan) }}</div>
             <span class="price-period">{{ getPriceInterval(plan) }}</span>
-            <div v-if="plan.savings" class="savings-badge">
+            <div v-if="plan.tier === 'yearly' && getMonthsFree(plan, monthlyPlan)" class="savings-badge">
+              {{ $t('plans.monthsFree', { count: getMonthsFree(plan, monthlyPlan) }) }}
+            </div>
+            <div v-else-if="plan.savings && plan.tier !== 'yearly'" class="savings-badge">
               {{ plan.savings }}
             </div>
           </div>

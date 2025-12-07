@@ -13,7 +13,6 @@ import BaseAlert from '@/components/BaseAlert.vue'
 import EasyModeCreation from '@/components/EasyModeCreation.vue'
 import AdvancedModeCreation from '@/components/AdvancedModeCreation.vue'
 import ModeToggle from '@/components/ModeToggle.vue'
-import FacebookOnboardingModal from '@/components/FacebookOnboardingModal.vue'
 import ScheduleModal from '@/components/ScheduleModal.vue'
 import AddRestaurantModal from '@/components/AddRestaurantModal.vue'
 import RestaurantSelectorModal from '@/components/RestaurantSelectorModal.vue'
@@ -75,7 +74,6 @@ const easyModeCreationRef = ref<any>(null)
 const advancedModeCreationRef = ref<any>(null)
 
 // Modal state
-const showFacebookOnboardingModal = ref(false)
 const showScheduleModal = ref(false)
 const showAddRestaurantModal = ref(false)
 const pendingAction = ref<'publish' | 'schedule' | null>(null)
@@ -920,12 +918,16 @@ async function generatePostContent() {
   try {
     generatingPostContent.value = true
 
-    const menuItemNames = selectedMenuItems.value.map(item => item.name)
+    // Send name and description for better captions (description is optional, from Okam menu)
+    const menuItemsWithDescriptions = selectedMenuItems.value.map(item => ({
+      name: item.name,
+      description: item.description || undefined
+    }))
 
     const response = await api.generatePostContent(
       selectedPlatforms.value[0] || 'facebook',
       restaurant.value.name,
-      menuItemNames,
+      menuItemsWithDescriptions,
       'image',
       promptContext.value,
       restaurant.value.brand_dna,
@@ -1298,25 +1300,6 @@ function openScheduleModal() {
   }
 }
 
-function handleFacebookOnboardingComplete() {
-  showFacebookOnboardingModal.value = false
-  preferencesStore.markFacebookOnboardingSeen()
-
-  if (facebookStore.connectedPages.length > 0 && pendingAction.value) {
-    if (pendingAction.value === 'publish') {
-      publishToFacebook()
-    } else if (pendingAction.value === 'schedule') {
-      openScheduleModal()
-    }
-  }
-  pendingAction.value = null
-}
-
-function handleFacebookOnboardingClose() {
-  showFacebookOnboardingModal.value = false
-  pendingAction.value = null
-}
-
 function handleScheduled(_scheduledPost: any) {
   showScheduleModal.value = false
 }
@@ -1439,13 +1422,6 @@ function _handleContentUpdated(updatedContent: { postText: string; hashtags: str
         />
       </div>
     </div>
-
-    <!-- Facebook Onboarding Modal -->
-    <FacebookOnboardingModal
-      v-model="showFacebookOnboardingModal"
-      @update:modelValue="handleFacebookOnboardingClose"
-      @connected="handleFacebookOnboardingComplete"
-    />
 
     <!-- Schedule Modal -->
     <ScheduleModal
