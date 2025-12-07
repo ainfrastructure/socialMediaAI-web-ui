@@ -41,6 +41,14 @@ const totalPages = computed(() => {
 
 const maxSelectableItems = computed(() => props.maxItems || 5)
 
+// Trim selected items when maxItems decreases
+watch(maxSelectableItems, (newMax) => {
+  if (selectedItems.value.length > newMax) {
+    selectedItems.value = selectedItems.value.slice(-newMax)
+    emit('update:selectedItems', selectedItems.value)
+  }
+})
+
 const selectionCount = computed(() => selectedItems.value.length)
 
 const canSelectMore = computed(() => {
@@ -62,8 +70,11 @@ function toggleItem(item: MenuItem) {
   if (index >= 0) {
     // Remove item
     selectedItems.value.splice(index, 1)
-  } else if (canSelectMore.value) {
-    // Add item (if under max)
+  } else {
+    // Add item, remove oldest if at max
+    if (!canSelectMore.value) {
+      selectedItems.value.shift()
+    }
     selectedItems.value.push(item)
   }
 
@@ -147,9 +158,6 @@ onUnmounted(() => {
         </span>
         <span class="count-label">{{ selectionText }}</span>
       </div>
-      <div v-if="!canSelectMore" class="max-warning">
-        {{ t('advancedMode.step1.maxItemsReached', { count: maxSelectableItems }) }}
-      </div>
     </div>
 
     <!-- Menu Items Grid -->
@@ -158,10 +166,7 @@ onUnmounted(() => {
         <div
           v-for="(item, index) in paginatedMenuItems"
           :key="index"
-          :class="['menu-item-card', {
-            'selected': isSelected(item),
-            'disabled': !isSelected(item) && !canSelectMore
-          }]"
+          :class="['menu-item-card', { 'selected': isSelected(item) }]"
           @click="toggleItem(item)"
         >
           <!-- Image -->
@@ -249,20 +254,14 @@ onUnmounted(() => {
 }
 
 .count-badge.max-reached {
-  background: var(--error-bg);
-  border-color: var(--error-border);
-  color: var(--error-text);
+  background: var(--success-bg);
+  border-color: var(--success-border);
+  color: var(--success-text);
 }
 
 .count-label {
   color: var(--text-secondary);
   font-size: var(--text-sm);
-}
-
-.max-warning {
-  color: var(--error-text);
-  font-size: var(--text-sm);
-  font-weight: var(--font-medium);
 }
 
 /* Menu Items Grid - 4 items per row */

@@ -1,20 +1,24 @@
 <script setup lang="ts">
-import { onMounted } from 'vue'
-import { useRouter } from 'vue-router'
-import { useI18n } from 'vue-i18n'
-import { useAuthStore } from '../stores/auth'
+import { watch } from 'vue'
 import { useLogin } from '../composables/useLogin'
-import BaseCard from '../components/BaseCard.vue'
-import BaseButton from '../components/BaseButton.vue'
-import BaseAlert from '../components/BaseAlert.vue'
-import BaseInput from '../components/BaseInput.vue'
-import AppleIcon from '../components/icons/AppleIcon.vue'
-import GoogleIcon from '../components/icons/GoogleIcon.vue'
-import FacebookIcon from '../components/icons/FacebookIcon.vue'
+import BaseModal from './BaseModal.vue'
+import BaseButton from './BaseButton.vue'
+import BaseAlert from './BaseAlert.vue'
+import BaseInput from './BaseInput.vue'
+import AppleIcon from './icons/AppleIcon.vue'
+import GoogleIcon from './icons/GoogleIcon.vue'
+import FacebookIcon from './icons/FacebookIcon.vue'
 
-const router = useRouter()
-const authStore = useAuthStore()
-const { t } = useI18n()
+interface Props {
+  modelValue: boolean
+}
+
+const props = defineProps<Props>()
+
+const emit = defineEmits<{
+  (e: 'update:modelValue', value: boolean): void
+  (e: 'login-success'): void
+}>()
 
 const {
   showEmailLogin,
@@ -25,77 +29,64 @@ const {
   loggingIn,
   lastUsedProvider,
   loading,
-  showMessage,
   toggleEmailLogin,
+  resetForm,
   handleEmailLogin: doEmailLogin,
   handleAppleSignIn,
   handleGoogleSignIn,
   handleFacebookSignIn,
 } = useLogin()
 
-// Handle email confirmation token from URL hash
-onMounted(() => {
-  const hash = window.location.hash
-  if (hash) {
-    const params = new URLSearchParams(hash.substring(1))
-    const accessToken = params.get('access_token')
-    const refreshToken = params.get('refresh_token')
-    const type = params.get('type')
-
-    if (accessToken && (type === 'signup' || type === 'magiclink')) {
-      // Store the tokens
-      localStorage.setItem('access_token', accessToken)
-      if (refreshToken) {
-        localStorage.setItem('refresh_token', refreshToken)
-      }
-
-      showMessage(t('auth.emailConfirmed'), 'success')
-
-      // Load profile and redirect
-      setTimeout(async () => {
-        await authStore.loadProfile()
-        if (authStore.isAuthenticated) {
-          router.push('/posts')
-        } else {
-          showMessage(t('auth.pleaseLogin'), 'info')
-          window.location.hash = '' // Clear hash
-        }
-      }, 1000)
-    }
+// Reset form when modal closes
+watch(() => props.modelValue, (isOpen) => {
+  if (!isOpen) {
+    resetForm()
   }
 })
+
+function close() {
+  emit('update:modelValue', false)
+}
 
 async function handleEmailLogin() {
   const result = await doEmailLogin()
   if (result.success) {
-    router.push('/posts')
+    emit('login-success')
+    close()
   }
 }
 </script>
 
 <template>
-  <div class="login-container">
-    <BaseCard variant="glass-intense" class="login-card">
-      <div class="header">
-        <img src="../assets/socialchef_logo.svg" alt="SocialChef Logo" class="brand-logo" />
-        <h1 class="brand-title">SocialChef</h1>
-        <p class="brand-subtitle">{{ $t('auth.brandSubtitle') }}</p>
+  <BaseModal
+    :model-value="modelValue"
+    size="sm"
+    @update:model-value="emit('update:modelValue', $event)"
+    @close="close"
+  >
+    <div class="login-modal">
+      <!-- Header -->
+      <div class="login-header">
+        <img src="../assets/socialchef_logo.svg" alt="SocialChef" class="login-logo" />
+        <h2 class="login-title">{{ $t('landing.loginModal.title') }}</h2>
+        <p class="login-subtitle">{{ $t('landing.loginModal.subtitle') }}</p>
       </div>
 
+      <!-- Alert -->
       <BaseAlert
         v-if="message"
         :type="messageType"
         :model-value="!!message"
         @update:model-value="message = ''"
+        class="login-alert"
       >
         {{ message }}
       </BaseAlert>
 
-      <!-- Login Content Wrapper -->
+      <!-- Content Wrapper -->
       <div class="login-content-wrapper">
-        <!-- Main Login View: Social Sign In -->
+        <!-- Social Login -->
         <div :class="['login-content', { 'is-hidden': showEmailLogin }]">
-          <!-- Social Sign In Buttons -->
           <div class="social-buttons">
             <div class="social-button-wrapper">
               <button
@@ -143,7 +134,6 @@ async function handleEmailLogin() {
             </div>
           </div>
 
-          <!-- Email Sign In Link -->
           <button
             type="button"
             class="email-link"
@@ -153,7 +143,7 @@ async function handleEmailLogin() {
           </button>
         </div>
 
-        <!-- Email Login Form (Password) -->
+        <!-- Email Login -->
         <div :class="['login-content', 'email-content', { 'is-visible': showEmailLogin }]">
           <form @submit.prevent="handleEmailLogin">
             <BaseInput
@@ -183,12 +173,10 @@ async function handleEmailLogin() {
             </BaseButton>
           </form>
 
-          <!-- Forgot Password Link -->
-          <router-link to="/reset-password" class="forgot-password-link">
+          <router-link to="/auth/reset-password" class="forgot-password-link" @click="close">
             {{ $t('auth.forgotPassword') }}
           </router-link>
 
-          <!-- Back to Social Login -->
           <button
             type="button"
             class="back-link"
@@ -201,84 +189,89 @@ async function handleEmailLogin() {
 
       <!-- Legal Links -->
       <div class="legal-links">
-        <router-link to="/privacy-policy">{{ $t('auth.privacyPolicy') }}</router-link>
+        <router-link to="/privacy-policy" @click="close">{{ $t('auth.privacyPolicy') }}</router-link>
         <span class="separator">·</span>
-        <router-link to="/terms">{{ $t('auth.termsOfService') }}</router-link>
+        <router-link to="/terms" @click="close">{{ $t('auth.termsOfService') }}</router-link>
       </div>
-    </BaseCard>
-  </div>
+    </div>
+  </BaseModal>
 </template>
 
 <style scoped>
-.login-container {
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: var(--space-xl);
-}
-
-.login-card {
-  max-width: 440px;
-  width: 100%;
-  animation: fadeInUp 0.6s var(--ease-smooth);
-}
-
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.header {
+.login-modal {
   text-align: center;
-  margin-bottom: var(--space-3xl);
 }
 
-.brand-logo {
-  height: 80px;
+.login-header {
+  margin-bottom: var(--space-2xl);
+}
+
+.login-logo {
+  height: 60px;
   width: auto;
-  margin: 0 auto var(--space-xl);
+  margin: 0 auto var(--space-lg);
   display: block;
   filter: drop-shadow(0 4px 12px rgba(212, 175, 55, 0.3));
-  transition: var(--transition-base);
 }
 
-.brand-logo:hover {
-  filter: drop-shadow(0 6px 16px rgba(212, 175, 55, 0.4));
-  transform: scale(1.05);
-}
-
-.brand-title {
+.login-title {
   font-family: var(--font-heading);
-  font-size: var(--text-4xl);
+  font-size: var(--text-2xl);
   font-weight: var(--font-bold);
   color: var(--text-primary);
-  margin-bottom: var(--space-md);
-  background: var(--gradient-gold);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  margin-bottom: var(--space-sm);
 }
 
-.brand-subtitle {
+.login-subtitle {
   font-size: var(--text-base);
   color: var(--text-secondary);
-  font-weight: var(--font-normal);
 }
 
-form {
+.login-alert {
+  margin-bottom: var(--space-lg);
+}
+
+/* Content Wrapper */
+.login-content-wrapper {
+  position: relative;
+  min-height: 220px;
+}
+
+.login-content {
   display: flex;
   flex-direction: column;
-  gap: var(--space-md);
+  gap: var(--space-lg);
+  transition: opacity 0.2s ease, transform 0.2s ease;
 }
 
-/* Social Sign In Buttons */
+.login-content.is-hidden {
+  opacity: 0;
+  transform: translateY(-8px);
+  pointer-events: none;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+}
+
+.login-content.email-content {
+  opacity: 0;
+  transform: translateY(8px);
+  pointer-events: none;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+}
+
+.login-content.email-content.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+  position: relative;
+}
+
+/* Social Buttons */
 .social-buttons {
   display: flex;
   flex-direction: column;
@@ -333,7 +326,6 @@ form {
   cursor: not-allowed;
 }
 
-/* Apple Button */
 .apple-button {
   background: #000000;
   color: #ffffff;
@@ -343,7 +335,6 @@ form {
   background: #1a1a1a;
 }
 
-/* Google Button */
 .google-button {
   background: #ffffff;
   color: #1f1f1f;
@@ -354,7 +345,6 @@ form {
   background: #f5f5f5;
 }
 
-/* Facebook Button */
 .facebook-button {
   background: #1877F2;
   color: #ffffff;
@@ -364,51 +354,7 @@ form {
   background: #166fe5;
 }
 
-/* Login Content Wrapper - enables smooth crossfade */
-.login-content-wrapper {
-  position: relative;
-  min-height: 200px;
-}
-
-/* Login Content Container */
-.login-content {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-lg);
-  transition: opacity 0.2s ease, transform 0.2s ease;
-}
-
-/* Social login - default visible */
-.login-content.is-hidden {
-  opacity: 0;
-  transform: translateY(-8px);
-  pointer-events: none;
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-}
-
-/* Email login - initially hidden */
-.login-content.email-content {
-  opacity: 0;
-  transform: translateY(8px);
-  pointer-events: none;
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-}
-
-/* Email login - visible state */
-.login-content.email-content.is-visible {
-  opacity: 1;
-  transform: translateY(0);
-  pointer-events: auto;
-  position: relative;
-}
-
-/* Email Sign In Link */
+/* Email Link */
 .email-link {
   background: none;
   border: none;
@@ -418,12 +364,17 @@ form {
   cursor: pointer;
   padding: var(--space-md) 0;
   transition: color 0.15s ease;
-  text-align: center;
-  margin-top: var(--space-sm);
 }
 
 .email-link:hover {
   color: var(--gold-primary);
+}
+
+/* Form */
+form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
 }
 
 /* Back Link */
@@ -436,19 +387,17 @@ form {
   cursor: pointer;
   padding: var(--space-md) 0;
   transition: color 0.15s ease;
-  text-align: center;
 }
 
 .back-link:hover {
   color: var(--gold-primary);
 }
 
-/* Forgot Password Link */
+/* Forgot Password */
 .forgot-password-link {
   display: block;
   text-align: center;
   color: var(--text-secondary);
-  font-family: var(--font-body);
   font-size: var(--text-sm);
   text-decoration: none;
   padding: var(--space-md) 0;
@@ -488,16 +437,12 @@ form {
 
 /* Responsive */
 @media (max-width: 480px) {
-  .login-container {
-    padding: var(--space-lg);
+  .login-logo {
+    height: 50px;
   }
 
-  .brand-logo {
-    height: 60px;
-  }
-
-  .brand-title {
-    font-size: var(--text-3xl);
+  .login-title {
+    font-size: var(--text-xl);
   }
 }
 </style>

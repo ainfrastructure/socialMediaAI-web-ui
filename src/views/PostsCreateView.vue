@@ -16,6 +16,7 @@ import ModeToggle from '@/components/ModeToggle.vue'
 import FacebookOnboardingModal from '@/components/FacebookOnboardingModal.vue'
 import ScheduleModal from '@/components/ScheduleModal.vue'
 import AddRestaurantModal from '@/components/AddRestaurantModal.vue'
+import RestaurantSelectorModal from '@/components/RestaurantSelectorModal.vue'
 import { restaurantService, type SavedRestaurant } from '@/services/restaurantService'
 import { api } from '@/services/api'
 
@@ -29,13 +30,21 @@ const notificationStore = useNotificationStore()
 
 // Restaurant state
 const restaurant = ref<SavedRestaurant | null>(null)
+const allRestaurants = ref<SavedRestaurant[]>([])
 const loading = ref(true)
 const error = ref('')
+const showRestaurantSelector = ref(false)
 
-// Menu items
+// Menu items (filtered for images and deduplicated by name)
 const menuItems = computed(() => {
   if (!restaurant.value?.menu?.items) return []
-  return restaurant.value.menu.items.filter((item: any) => item.imageUrl)
+  const itemsWithImages = restaurant.value.menu.items.filter((item: any) => item.imageUrl)
+  const seen = new Set<string>()
+  return itemsWithImages.filter((item: any) => {
+    if (seen.has(item.name)) return false
+    seen.add(item.name)
+    return true
+  })
 })
 
 // Generation state (Easy Mode)
@@ -114,6 +123,7 @@ async function loadRestaurant() {
 
   try {
     const restaurants = await restaurantService.getSavedRestaurants()
+    allRestaurants.value = restaurants
 
     if (restaurants.length === 0) {
       // No restaurants, show inline prompt instead of redirecting
@@ -153,6 +163,32 @@ async function handleRestaurantAddedFromPrompt() {
   showAddRestaurantModal.value = false
   // Reload the restaurant data
   await loadRestaurant()
+}
+
+// Handle restaurant selection from selector modal
+function handleRestaurantSelect(selected: SavedRestaurant) {
+  restaurant.value = selected
+  preferencesStore.setSelectedRestaurant(selected.id)
+  showRestaurantSelector.value = false
+
+  // Reset generation state when switching restaurants
+  handleEasyModeReset()
+}
+
+// Handle restaurant added from selector modal
+async function handleRestaurantAddedFromSelector() {
+  await loadRestaurant()
+}
+
+// Handle restaurant deletion from selector modal
+async function handleRestaurantDelete(restaurantToDelete: SavedRestaurant) {
+  try {
+    await restaurantService.deleteRestaurant(restaurantToDelete.place_id)
+    // Reload the list
+    await loadRestaurant()
+  } catch (err) {
+    console.error('Failed to delete restaurant:', err)
+  }
 }
 
 function goBack() {
@@ -1298,8 +1334,13 @@ function handleContentUpdated(updatedContent: { postText: string; hashtags: stri
           <ModeToggle class="mode-toggle" />
         </div>
 
-        <!-- Restaurant Header -->
-        <BaseCard variant="glass-intense" class="restaurant-header">
+        <!-- Restaurant Header (clickable to switch) -->
+        <BaseCard
+          variant="glass-intense"
+          class="restaurant-header"
+          :class="{ clickable: allRestaurants.length > 1 }"
+          @click="allRestaurants.length > 1 && (showRestaurantSelector = true)"
+        >
           <div class="restaurant-info">
             <div v-if="restaurant.brand_dna?.logo_url" class="restaurant-logo">
               <img :src="restaurant.brand_dna.logo_url" :alt="restaurant.name" />
@@ -1310,6 +1351,10 @@ function handleContentUpdated(updatedContent: { postText: string; hashtags: stri
             <div class="restaurant-details">
               <h2 class="restaurant-name">{{ restaurant.name }}</h2>
               <p class="restaurant-address">{{ restaurant.address }}</p>
+            </div>
+            <div v-if="allRestaurants.length > 1" class="switch-indicator">
+              <span class="switch-icon">⌄</span>
+              <span class="switch-text">{{ t('contentCreate.switchRestaurant', 'Switch') }}</span>
             </div>
           </div>
         </BaseCard>
@@ -1366,8 +1411,18 @@ function handleContentUpdated(updatedContent: { postText: string; hashtags: stri
     <!-- Add Restaurant Modal (for no-restaurant state) -->
     <AddRestaurantModal
       v-model="showAddRestaurantModal"
-      :saved-restaurants="[]"
+      :saved-restaurants="allRestaurants"
       @restaurant-added="handleRestaurantAddedFromPrompt"
+    />
+
+    <!-- Restaurant Selector Modal -->
+    <RestaurantSelectorModal
+      v-model="showRestaurantSelector"
+      :restaurants="allRestaurants"
+      :current-id="restaurant?.id"
+      @select="handleRestaurantSelect"
+      @restaurant-added="handleRestaurantAddedFromSelector"
+      @delete="handleRestaurantDelete"
     />
 
     </div>
@@ -1490,10 +1545,49 @@ function handleContentUpdated(updatedContent: { postText: string; hashtags: stri
   animation: fadeInUp 0.5s var(--ease-smooth);
 }
 
+.restaurant-header.clickable {
+  cursor: pointer;
+  transition: all var(--transition-base);
+}
+
+.restaurant-header.clickable:hover {
+  border-color: rgba(212, 175, 55, 0.4);
+  transform: translateY(-2px);
+}
+
 .restaurant-info {
   display: flex;
   align-items: center;
   gap: var(--space-lg);
+}
+
+.switch-indicator {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: var(--space-sm) var(--space-md);
+  background: rgba(212, 175, 55, 0.1);
+  border-radius: var(--radius-md);
+  margin-left: auto;
+  transition: all var(--transition-base);
+}
+
+.restaurant-header.clickable:hover .switch-indicator {
+  background: rgba(212, 175, 55, 0.2);
+}
+
+.switch-icon {
+  font-size: var(--text-lg);
+  color: var(--gold-primary);
+  line-height: 1;
+}
+
+.switch-text {
+  font-size: var(--text-xs);
+  color: var(--gold-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 .restaurant-logo {
@@ -1579,6 +1673,13 @@ function handleContentUpdated(updatedContent: { postText: string; hashtags: stri
   .restaurant-logo {
     width: 80px;
     height: 80px;
+  }
+
+  .switch-indicator {
+    margin-left: 0;
+    margin-top: var(--space-sm);
+    flex-direction: row;
+    gap: var(--space-sm);
   }
 
   .mode-btn {

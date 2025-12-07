@@ -177,9 +177,15 @@ async function loadMenuItems() {
   generationError.value = null
 
   try {
-    // Menu items are stored in the restaurant object
+    // Menu items are stored in the restaurant object (deduplicated by name)
     if (selectedRestaurant.value.menu?.items) {
-      menuItems.value = selectedRestaurant.value.menu.items.filter((item: any) => item.imageUrl) || []
+      const itemsWithImages = selectedRestaurant.value.menu.items.filter((item: any) => item.imageUrl) || []
+      const seen = new Set<string>()
+      menuItems.value = itemsWithImages.filter((item: any) => {
+        if (seen.has(item.name)) return false
+        seen.add(item.name)
+        return true
+      })
     } else {
       menuItems.value = []
     }

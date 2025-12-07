@@ -6,6 +6,7 @@
     :show-close-button="true"
     :close-on-overlay-click="!savingRestaurant"
     :close-on-escape="!savingRestaurant"
+    :allow-overflow="true"
     @update:model-value="(val: boolean) => !val && closeModal()"
     @close="closeModal"
   >

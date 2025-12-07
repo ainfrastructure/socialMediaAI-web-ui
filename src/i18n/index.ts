@@ -30,7 +30,7 @@ function detectBrowserLocale(): 'en' | 'no' {
 
 const detectedLocale = detectBrowserLocale()
 
-export type MessageSchema = typeof en
+type MessageSchema = typeof en
 
 const i18n = createI18n<[MessageSchema], 'en' | 'no'>({
   legacy: false, // Use Composition API mode

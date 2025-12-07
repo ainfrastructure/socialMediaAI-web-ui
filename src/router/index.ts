@@ -3,6 +3,7 @@ import { useAuthStore } from '../stores/auth'
 
 // Lazy load views for better code splitting
 const WaitlistView = () => import('../views/WaitlistView.vue')
+const LandingView = () => import('../views/LandingView.vue')
 const LoginView = () => import('../views/LoginView.vue')
 const DashboardView = () => import('../views/DashboardView.vue')
 const PlansView = () => import('../views/PlansView.vue')
@@ -55,6 +56,12 @@ const router = createRouter({
       name: 'waitlist',
       component: WaitlistView,
       meta: { requiresGuest: true },
+    },
+    {
+      path: '/landing',
+      name: 'landing',
+      component: LandingView,
+      // No requiresGuest - authenticated users can view landing page (work in progress)
     },
     {
       path: '/dashboard',

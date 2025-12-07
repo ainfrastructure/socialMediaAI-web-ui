@@ -18,7 +18,14 @@
       "Bash(npx husky)",
       "Bash(npx husky:*)",
       "Bash(sh:*)",
-      "Bash(git config:*)"
+      "Bash(git config:*)",
+      "Bash(ls:*)",
+      "Bash(xargs:*)",
+      "Bash(npm info:*)",
+      "Bash(while read f)",
+      "Bash(do name=$f%.vue if ! grep -r $name /Users/sharghi/Documents/ainfrastructure/socialMediaAI-web-ui/socialMediaAI-web-ui/src --include=*.vue --include=*.ts -q)",
+      "Bash(then echo 'POSSIBLY UNUSED: $f' fi done)",
+      "Bash(oxlint --version:*)"
     ],
     "deny": [],
     "ask": []

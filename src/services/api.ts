@@ -1,33 +1,9 @@
 /**
  * API Service Facade
  *
- * This file maintains backward compatibility with existing code while delegating
- * to domain-specific services. New code should import from the specific services directly.
- *
- * Services:
- * - authService: Authentication, profile, password management
- * - billingService: Subscriptions, checkout, billing portal
- * - contentService: Image/video generation, prompts
- * - facebookService: Facebook OAuth and posting
- * - instagramService: Instagram OAuth and posting
- * - favoritesService: Saved posts/favorites
- * - schedulerService: Post scheduling, calendar, holidays
- * - restaurantService: Restaurant management (existing)
- * - waitlistService: Waitlist management
+ * This file provides a unified API object for backward compatibility.
+ * New code should import from the specific services directly.
  */
-
-// Re-export types for backward compatibility
-export type { ApiResponse } from './apiBase'
-export type { User, LoginResponse } from './authService'
-export { authService } from './authService'
-export type { SubscriptionPlan } from './billingService'
-export { billingService } from './billingService'
-export { contentService } from './contentService'
-export { facebookService } from './facebookService'
-export { instagramService } from './instagramService'
-export { favoritesService } from './favoritesService'
-export { schedulerService } from './schedulerService'
-export { waitlistService } from './waitlistService'
 
 // Import services for the facade
 import { authService } from './authService'

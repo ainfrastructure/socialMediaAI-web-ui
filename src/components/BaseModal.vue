@@ -12,6 +12,7 @@ interface Props {
   preventBodyScroll?: boolean
   cardVariant?: 'glass' | 'glass-intense' | 'solid'
   zIndex?: number
+  allowOverflow?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -22,6 +23,7 @@ const props = withDefaults(defineProps<Props>(), {
   preventBodyScroll: true,
   cardVariant: 'glass-intense',
   zIndex: 9999,
+  allowOverflow: false,
 })
 
 const emit = defineEmits<{
@@ -87,7 +89,7 @@ watch(() => props.modelValue, (isOpen) => {
       >
         <BaseCard
           :variant="cardVariant"
-          :class="['base-modal-card', sizeClasses[size]]"
+          :class="['base-modal-card', sizeClasses[size], { 'allow-overflow': allowOverflow }]"
         >
           <!-- Close Button -->
           <button
@@ -170,6 +172,16 @@ watch(() => props.modelValue, (isOpen) => {
   overflow: hidden;
   display: flex;
   flex-direction: column;
+}
+
+/* Allow content to overflow (for dropdowns, autocomplete, etc.) */
+.base-modal-card.allow-overflow {
+  overflow: visible;
+}
+
+.base-modal-card.allow-overflow .base-modal-body {
+  overflow: visible;
+  min-height: 350px;
 }
 
 /* Size variants */

@@ -270,9 +270,6 @@ const feedbackText = ref('')
 // Wizard progress tracking
 const highestCompletedStep = ref(0)
 
-// Ref for scroll-into-view on menu selection
-const step1NavigationRef = ref<HTMLElement | null>(null)
-
 // Ref for scroll-into-view when generating
 const generatingOverlayRef = ref<HTMLElement | null>(null)
 
@@ -382,18 +379,6 @@ watch(currentStep, async (newStep, oldStep) => {
   }
 })
 
-// Watch for menu selection completion to scroll to next button (mobile UX)
-watch(selectedMenuItems, (items) => {
-  const shouldScroll =
-    (postType.value === 'single' && items.length === 1) ||
-    (postType.value === 'combo' && items.length === 2)
-
-  if (shouldScroll && step1NavigationRef.value) {
-    nextTick(() => {
-      step1NavigationRef.value?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
-    })
-  }
-}, { deep: true })
 
 // Watch for generation start to scroll loader into view
 watch([generatingImage, generatingContent], ([isGeneratingImg, isGeneratingContent]) => {
@@ -1096,7 +1081,7 @@ defineExpose({
         </div>
       </div>
 
-      <div ref="step1NavigationRef" class="step-navigation">
+      <div class="step-navigation">
         <BaseButton variant="ghost" @click="emit('back')">
           {{ t('advancedMode.navigation.back') }}
         </BaseButton>

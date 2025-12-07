@@ -169,6 +169,115 @@ export default {
     comingSoon: 'Kommer snart',
   },
 
+  // Landing Page
+  landing: {
+    // Hero Section
+    hero: {
+      headline: 'Din Restaurants Sosiale Medie-Kokk',
+      subheadline: 'Endelig, vakre sosiale medier-innlegg som publiserer seg selv. Ingen tekniske ferdigheter nødvendig.',
+      cta: 'Lag Ditt Første Innlegg',
+      imagePlaceholder: 'Telefon-mockup som viser Instagram-feed med profesjonelle matbilder',
+    },
+
+    // How It Works
+    howItWorks: {
+      title: '3 Enkle Steg. Null Hodebry.',
+      step1Title: 'Fortell oss om retten din',
+      step1Description: 'Velg fra menyen eller ta et bilde. Det er alt.',
+      step1Image: 'Hånd som holder telefon og fotograferer en rett',
+      step2Title: 'AI lager innlegget ditt',
+      step2Description: 'Vakre bilder, engasjerende tekster, perfekte hashtags - alt gjort for deg.',
+      step2Image: 'AI-gnister som genererer innholdskort',
+      step3Title: 'Det publiseres automatisk',
+      step3Description: 'Innleggene dine går live på Instagram og Facebook. Du fokuserer på matlagingen.',
+      step3Image: 'Kalender med innlegg som flyr til sosiale plattformer',
+    },
+
+    // Auto-Posting Feature (KEY DIFFERENTIATOR)
+    autoPosting: {
+      badge: 'Nøkkelfunksjon',
+      title: 'Sett Det & Glem Det',
+      headline: 'Innleggene dine publiseres automatisk. Virkelig.',
+      description: 'Slutt å huske på å poste. Slutt å logge inn i apper. SocialChef håndterer alt - fra opprettelse til publisering. Du vil se ut som om du har en dedikert sosiale medier-ansvarlig.',
+      imagePlaceholder: 'Delt skjerm - stresset eier til venstre, avslappet eier til høyre med innlegg som auto-publiseres',
+      feature1: 'Innlegg går live mens du lager mat',
+      feature2: 'Fungerer med Instagram & Facebook',
+      feature3: 'Planlegg uker i forveien',
+    },
+
+    // Benefits
+    benefits: {
+      title: 'Hvorfor Restauranteiere Elsker SocialChef',
+      time: {
+        title: 'Spar 10+ Timer Per Uke',
+        description: 'Slutt å slite med innholdsproduksjon. Bruk tiden på det som betyr noe - maten og kundene dine.',
+      },
+      professional: {
+        title: 'Se Alltid Profesjonell Ut',
+        description: 'Hvert innlegg ser ut som det ble laget av en proff designer. Fordi det ble det. En AI-designer.',
+      },
+      growth: {
+        title: 'Øk Følgerskaren',
+        description: 'Konsekvent posting betyr mer engasjement. Mer engasjement betyr flere kunder.',
+      },
+      easy: {
+        title: 'Ingen Tekniske Ferdigheter Nødvendig',
+        description: 'Hvis du kan ta et bilde av mat, kan du bruke SocialChef. Det er hele ferdighetskravet.',
+      },
+    },
+
+    // Social Proof
+    socialProof: {
+      title: 'Stolt Av Restauranteiere',
+      stat1: 'Restauranter',
+      stat2: 'Innlegg Generert',
+      stat3: 'Vurdering',
+      testimonial1Quote: 'Jeg pleide å bruke timer på Instagram. Nå velger jeg bare retten min og det er gjort.',
+      testimonial2Quote: 'Kundene mine tror jeg har ansatt et markedsføringsteam. Nei, bare SocialChef.',
+      testimonial3Quote: 'Endelig noe som faktisk sparer tid. Ikke enda en app å lære.',
+    },
+
+    // Pricing Preview
+    pricing: {
+      title: 'Enkel, Ærlig Prising',
+      subtitle: 'Start i dag. Avslutt når som helst.',
+      monthly: 'Månedlig',
+      yearly: 'Årlig',
+      lifetime: 'Livstid',
+      perMonth: 'måned',
+      perYear: 'år',
+      oneTime: 'engangs',
+      images: 'bilder',
+      mostPopular: 'Mest Populær',
+      viewAll: 'Se Full Prisliste',
+    },
+
+    // Final CTA
+    finalCta: {
+      title: 'Klar Til Å Si Opp Sosiale Medier-Bekymringene?',
+      subtitle: 'Bli med hundrevis av restauranteiere som sluttet å stresse over sosiale medier.',
+    },
+
+    // Login Modal
+    loginModal: {
+      title: 'La Oss Komme I Gang',
+      subtitle: 'Logg inn for å generere ditt første innlegg',
+    },
+
+    // Paywall Modal
+    paywall: {
+      title: 'Velg Din Plan',
+      subtitle: 'Lås opp automatisk posting og spar timer hver uke',
+      autoPostingReminder: 'Alle planer inkluderer automatisk posting til Instagram & Facebook',
+    },
+
+    // Footer
+    footer: {
+      madeWith: 'Laget med kjærlighet for restauranteiere',
+      copyright: '© 2024 SocialChef. Alle rettigheter reservert.',
+    },
+  },
+
   // Dashboard View
   dashboard: {
     title: 'Dashbord',
@@ -1340,6 +1449,7 @@ export default {
     advancedMode: 'Avansert modus',
     advancedDescription: 'Avansert modus med full tilpasning kommer snart.',
     switchToEasy: 'Bytt til enkel modus',
+    switchRestaurant: 'Bytt',
     imageError: 'Kunne ikke generere bilde. Prøv igjen.',
     noPrompts: 'Ingen ledetekster ble generert',
     generateError: 'Kunne ikke generere innhold',
@@ -1359,6 +1469,7 @@ export default {
     addNew: '+ Legg til ny restaurant',
     menuItems: '{count} menyelementer',
     delete: 'Fjern restaurant',
+    deleteTitle: 'Fjern restaurant',
     confirmDelete: 'Er du sikker på at du vil fjerne "{name}" fra dine lagrede restauranter?',
     restaurantAdded: 'Restaurant lagt til!',
   },

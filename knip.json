@@ -1,0 +1,9 @@
+{
+  "$schema": "https://unpkg.com/knip@latest/schema.json",
+  "entry": ["src/main.ts"],
+  "project": ["src/**/*.{ts,tsx,vue}"],
+  "ignore": ["src/**/*.d.ts"],
+  "vue": {
+    "entry": ["src/**/*.vue"]
+  }
+}

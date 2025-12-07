@@ -5,6 +5,7 @@ import type { SavedRestaurant } from '@/services/restaurantService'
 import BaseModal from './BaseModal.vue'
 import BaseButton from './BaseButton.vue'
 import AddRestaurantModal from './AddRestaurantModal.vue'
+import ConfirmModal from './ConfirmModal.vue'
 
 interface Props {
   modelValue: boolean
@@ -27,6 +28,8 @@ const emit = defineEmits<{
 const { t } = useI18n()
 
 const showAddModal = ref(false)
+const showDeleteConfirm = ref(false)
+const restaurantToDelete = ref<SavedRestaurant | null>(null)
 
 const isOpen = computed({
   get: () => props.modelValue,
@@ -50,11 +53,23 @@ function handleRestaurantAdded(restaurant: any) {
   emit('restaurant-added')
 }
 
-function handleDelete(event: Event, restaurant: SavedRestaurant) {
+function handleDeleteClick(event: Event, restaurant: SavedRestaurant) {
   event.stopPropagation()
-  if (confirm(t('restaurantSelector.confirmDelete', { name: restaurant.name }))) {
-    emit('delete', restaurant)
+  restaurantToDelete.value = restaurant
+  showDeleteConfirm.value = true
+}
+
+function confirmDelete() {
+  if (restaurantToDelete.value) {
+    emit('delete', restaurantToDelete.value)
   }
+  showDeleteConfirm.value = false
+  restaurantToDelete.value = null
+}
+
+function cancelDelete() {
+  showDeleteConfirm.value = false
+  restaurantToDelete.value = null
 }
 </script>
 
@@ -93,7 +108,7 @@ function handleDelete(event: Event, restaurant: SavedRestaurant) {
           <span v-if="restaurant.id === currentId" class="check-icon">✓</span>
           <button
             class="delete-btn"
-            @click="handleDelete($event, restaurant)"
+            @click="handleDeleteClick($event, restaurant)"
             :title="t('restaurantSelector.delete')"
           >
             <span class="delete-icon">×</span>
@@ -114,6 +129,19 @@ function handleDelete(event: Event, restaurant: SavedRestaurant) {
     v-model="showAddModal"
     :saved-restaurants="restaurants"
     @restaurant-added="handleRestaurantAdded"
+  />
+
+  <!-- Delete Confirmation Modal -->
+  <ConfirmModal
+    v-model="showDeleteConfirm"
+    :title="t('restaurantSelector.deleteTitle', 'Remove Restaurant')"
+    :message="t('restaurantSelector.confirmDelete', { name: restaurantToDelete?.name || '' })"
+    :confirm-text="t('common.delete', 'Delete')"
+    :cancel-text="t('common.cancel', 'Cancel')"
+    type="danger"
+    :auto-close-seconds="0"
+    @confirm="confirmDelete"
+    @cancel="cancelDelete"
   />
 </template>
 

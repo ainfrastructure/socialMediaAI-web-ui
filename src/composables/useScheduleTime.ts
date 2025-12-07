@@ -223,20 +223,3 @@ export function useScheduleTime() {
     getDefaultTimezone,
   }
 }
-
-// Export types for TypeScript users
-export interface TimeOption {
-  value: string
-  label: string
-}
-
-export interface TimezoneOption {
-  value: string
-  label: string
-}
-
-export interface ParsedTime {
-  hour: number
-  minute: number
-  period: 'AM' | 'PM'
-}

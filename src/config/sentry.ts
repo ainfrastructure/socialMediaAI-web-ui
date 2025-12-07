@@ -57,27 +57,3 @@ export function captureError(error: Error, context?: Record<string, any>) {
     extra: context,
   })
 }
-
-// Helper to set user context
-export function setUserContext(user: { id: string; email?: string; username?: string }) {
-  Sentry.setUser({
-    id: user.id,
-    email: user.email,
-    username: user.username,
-  })
-}
-
-// Helper to clear user context (on logout)
-export function clearUserContext() {
-  Sentry.setUser(null)
-}
-
-// Helper to add custom breadcrumbs
-export function addBreadcrumb(message: string, category: string, data?: Record<string, any>) {
-  Sentry.addBreadcrumb({
-    message,
-    category,
-    data,
-    level: 'info',
-  })
-}

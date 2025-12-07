@@ -169,6 +169,115 @@ export default {
     comingSoon: 'Coming soon',
   },
 
+  // Landing Page
+  landing: {
+    // Hero Section
+    hero: {
+      headline: "Your Restaurant's Social Media Chef",
+      subheadline: 'Finally, beautiful social media posts that publish themselves. No tech skills needed.',
+      cta: 'Generate Your First Post',
+      imagePlaceholder: 'Phone mockup showing Instagram feed with professional food photos',
+    },
+
+    // How It Works
+    howItWorks: {
+      title: '3 Simple Steps. Zero Headaches.',
+      step1Title: 'Tell us about your dish',
+      step1Description: "Pick from your menu or snap a photo. That's it.",
+      step1Image: 'Hand holding phone photographing a dish',
+      step2Title: 'AI creates your post',
+      step2Description: 'Beautiful images, engaging captions, perfect hashtags - all done for you.',
+      step2Image: 'AI sparkles generating content cards',
+      step3Title: 'It posts automatically',
+      step3Description: 'Your posts go live on Instagram and Facebook. You focus on cooking.',
+      step3Image: 'Calendar with posts flying to social platforms',
+    },
+
+    // Auto-Posting Feature (KEY DIFFERENTIATOR)
+    autoPosting: {
+      badge: 'Key Feature',
+      title: 'Set It & Forget It',
+      headline: 'Your posts publish automatically. Really.',
+      description: "No more remembering to post. No more logging into apps. SocialChef handles everything - from creation to publishing. You'll look like you have a dedicated social media manager.",
+      imagePlaceholder: 'Split screen - stressed owner on left, relaxed owner on right with posts auto-publishing',
+      feature1: 'Posts go live while you cook',
+      feature2: 'Works with Instagram & Facebook',
+      feature3: 'Schedule weeks in advance',
+    },
+
+    // Benefits
+    benefits: {
+      title: 'Why Restaurant Owners Love SocialChef',
+      time: {
+        title: 'Save 10+ Hours Per Week',
+        description: 'Stop wrestling with content creation. Spend that time on what matters - your food and customers.',
+      },
+      professional: {
+        title: 'Always Look Professional',
+        description: 'Every post looks like it was made by a pro designer. Because it was. An AI one.',
+      },
+      growth: {
+        title: 'Grow Your Following',
+        description: 'Consistent posting means more engagement. More engagement means more customers.',
+      },
+      easy: {
+        title: 'No Tech Skills Needed',
+        description: 'If you can take a photo of food, you can use SocialChef. That\'s the whole skill requirement.',
+      },
+    },
+
+    // Social Proof
+    socialProof: {
+      title: 'Trusted by Restaurant Owners',
+      stat1: 'Restaurants',
+      stat2: 'Posts Generated',
+      stat3: 'Rating',
+      testimonial1Quote: 'I used to spend hours on Instagram. Now I just pick my dish and it\'s done.',
+      testimonial2Quote: 'My customers think I hired a marketing team. Nope, just SocialChef.',
+      testimonial3Quote: 'Finally, something that actually saves time. Not another app to learn.',
+    },
+
+    // Pricing Preview
+    pricing: {
+      title: 'Simple, Honest Pricing',
+      subtitle: 'Start today. Cancel anytime.',
+      monthly: 'Monthly',
+      yearly: 'Yearly',
+      lifetime: 'Lifetime',
+      perMonth: 'month',
+      perYear: 'year',
+      oneTime: 'one time',
+      images: 'images',
+      mostPopular: 'Most Popular',
+      viewAll: 'See Full Pricing',
+    },
+
+    // Final CTA
+    finalCta: {
+      title: 'Ready to Fire Your Social Media Worries?',
+      subtitle: 'Join hundreds of restaurant owners who stopped stressing about social media.',
+    },
+
+    // Login Modal
+    loginModal: {
+      title: "Let's Get Started",
+      subtitle: 'Sign in to generate your first post',
+    },
+
+    // Paywall Modal
+    paywall: {
+      title: 'Choose Your Plan',
+      subtitle: 'Unlock automatic posting and save hours every week',
+      autoPostingReminder: 'All plans include automatic posting to Instagram & Facebook',
+    },
+
+    // Footer
+    footer: {
+      madeWith: 'Made with love for restaurant owners',
+      copyright: '© 2024 SocialChef. All rights reserved.',
+    },
+  },
+
   // Dashboard View
   dashboard: {
     title: 'Dashboard',
@@ -1340,6 +1449,7 @@ export default {
     advancedMode: 'Advanced Mode',
     advancedDescription: 'Advanced mode with full customization options is coming soon.',
     switchToEasy: 'Switch to Easy Mode',
+    switchRestaurant: 'Switch',
     imageError: 'Failed to generate image. Please try again.',
     noPrompts: 'No prompts were generated',
     generateError: 'Failed to generate content',
@@ -1359,6 +1469,7 @@ export default {
     addNew: '+ Add New Restaurant',
     menuItems: '{count} menu items',
     delete: 'Remove restaurant',
+    deleteTitle: 'Remove Restaurant',
     confirmDelete: 'Are you sure you want to remove "{name}" from your saved restaurants?',
     restaurantAdded: 'Restaurant added successfully!',
   },

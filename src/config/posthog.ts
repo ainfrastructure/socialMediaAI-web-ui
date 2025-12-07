@@ -62,44 +62,7 @@ export function initPostHog(router: Router) {
   console.log('✅ PostHog analytics initialized')
 }
 
-// Helper to identify a user (call after login)
-export function identifyUser(userId: string, properties?: Record<string, any>) {
-  posthog.identify(userId, properties)
-}
-
-// Helper to reset user (call on logout)
-export function resetUser() {
-  posthog.reset()
-}
-
 // Helper to track custom events
 export function trackEvent(eventName: string, properties?: Record<string, any>) {
   posthog.capture(eventName, properties)
 }
-
-// Helper to track feature flags
-export function getFeatureFlag(flagKey: string): boolean | string {
-  return posthog.getFeatureFlag(flagKey) || false
-}
-
-// Helper to check if a feature flag is enabled
-export function isFeatureEnabled(flagKey: string): boolean {
-  return posthog.isFeatureEnabled(flagKey) || false
-}
-
-// Helper to set user properties (without identifying)
-export function setUserProperties(properties: Record<string, any>) {
-  posthog.setPersonProperties(properties)
-}
-
-// Helper to track conversions/revenue
-export function trackRevenue(amount: number, currency: string = 'USD', properties?: Record<string, any>) {
-  posthog.capture('purchase', {
-    revenue: amount,
-    currency,
-    ...properties,
-  })
-}
-
-// Export the posthog instance for advanced usage
-export { posthog }
