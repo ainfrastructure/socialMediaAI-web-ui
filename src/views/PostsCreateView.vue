@@ -15,6 +15,7 @@ import AdvancedModeCreation from '@/components/AdvancedModeCreation.vue'
 import ModeToggle from '@/components/ModeToggle.vue'
 import FacebookOnboardingModal from '@/components/FacebookOnboardingModal.vue'
 import ScheduleModal from '@/components/ScheduleModal.vue'
+import AddRestaurantModal from '@/components/AddRestaurantModal.vue'
 import { restaurantService, type SavedRestaurant } from '@/services/restaurantService'
 import { api } from '@/services/api'
 
@@ -66,7 +67,9 @@ const advancedModeCreationRef = ref<any>(null)
 // Modal state
 const showFacebookOnboardingModal = ref(false)
 const showScheduleModal = ref(false)
+const showAddRestaurantModal = ref(false)
 const pendingAction = ref<'publish' | 'schedule' | null>(null)
+const noRestaurants = ref(false)
 
 // Publishing state
 const publishing = ref(false)
@@ -113,10 +116,13 @@ async function loadRestaurant() {
     const restaurants = await restaurantService.getSavedRestaurants()
 
     if (restaurants.length === 0) {
-      // No restaurants, redirect to onboarding
-      router.push('/onboarding')
+      // No restaurants, show inline prompt instead of redirecting
+      noRestaurants.value = true
+      loading.value = false
       return
     }
+
+    noRestaurants.value = false
 
     // Priority: 1) URL query param, 2) preferences store, 3) first restaurant
     const urlRestaurantId = route.query.restaurantId as string | undefined
@@ -140,6 +146,13 @@ async function loadRestaurant() {
   } finally {
     loading.value = false
   }
+}
+
+// Handle restaurant added from inline prompt
+async function handleRestaurantAddedFromPrompt() {
+  showAddRestaurantModal.value = false
+  // Reload the restaurant data
+  await loadRestaurant()
 }
 
 function goBack() {
@@ -1263,6 +1276,18 @@ function handleContentUpdated(updatedContent: { postText: string; hashtags: stri
         </BaseButton>
       </BaseAlert>
 
+      <!-- No Restaurants State -->
+      <div v-else-if="noRestaurants" class="no-restaurant-state">
+        <BaseCard variant="glass-intense" class="no-restaurant-card">
+          <div class="no-restaurant-icon">🏪</div>
+          <h2 class="no-restaurant-title">{{ t('contentHub.noRestaurantPrompt') }}</h2>
+          <p class="no-restaurant-description">{{ t('contentHub.addFirstRestaurantDescription') }}</p>
+          <BaseButton variant="primary" size="large" @click="showAddRestaurantModal = true">
+            {{ t('contentHub.addFirstRestaurant') }}
+          </BaseButton>
+        </BaseCard>
+      </div>
+
       <!-- Main Content -->
       <div v-else-if="restaurant" class="create-content">
         <!-- Header with back button and mode toggle -->
@@ -1338,6 +1363,13 @@ function handleContentUpdated(updatedContent: { postText: string; hashtags: stri
       @scheduled="handleScheduled"
     />
 
+    <!-- Add Restaurant Modal (for no-restaurant state) -->
+    <AddRestaurantModal
+      v-model="showAddRestaurantModal"
+      :saved-restaurants="[]"
+      @restaurant-added="handleRestaurantAddedFromPrompt"
+    />
+
     </div>
   </DashboardLayout>
 </template>
@@ -1390,6 +1422,54 @@ function handleContentUpdated(updatedContent: { postText: string; hashtags: stri
   flex-direction: column;
   gap: var(--space-md);
   align-items: center;
+}
+
+/* No Restaurant State */
+.no-restaurant-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  animation: fadeInUp 0.6s var(--ease-smooth);
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.no-restaurant-card {
+  max-width: 450px;
+  padding: var(--space-3xl);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: var(--space-lg);
+}
+
+.no-restaurant-icon {
+  font-size: 3rem;
+}
+
+.no-restaurant-title {
+  font-family: var(--font-heading);
+  font-size: var(--text-xl);
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.no-restaurant-description {
+  font-size: var(--text-base);
+  color: var(--text-secondary);
+  margin: 0;
+  line-height: 1.5;
 }
 
 /* Header */

@@ -1324,6 +1324,12 @@ export default {
     sortNewest: 'Nyeste først',
     sortOldest: 'Eldste først',
     menuItems: '{count} menyelementer',
+    // Welcome state for new users
+    welcomeTitle: 'Velkommen!',
+    welcomeSubtitle: 'La oss starte med å legge til din første restaurant.',
+    addFirstRestaurant: 'Legg til din første restaurant',
+    addFirstRestaurantDescription: 'Søk etter restauranten din, så importerer vi automatisk menyen og merkevaren.',
+    noRestaurantPrompt: 'Legg til en restaurant for å begynne å lage innlegg.',
   },
 
   // Content Create View

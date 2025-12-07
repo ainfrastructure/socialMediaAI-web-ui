@@ -14,7 +14,6 @@ const InstagramCallbackView = () => import('../views/InstagramCallbackView.vue')
 const TestPostView = () => import('../views/TestPostView.vue')
 const SchedulerView = () => import('../views/SchedulerView.vue')
 const ProfileView = () => import('../views/ProfileView.vue')
-const OnboardingView = () => import('../views/OnboardingView.vue')
 const PostsView = () => import('../views/PostsView.vue')
 const PostsCreateView = () => import('../views/PostsCreateView.vue')
 const PrivacyPolicyView = () => import('../views/PrivacyPolicyView.vue')
@@ -61,12 +60,6 @@ const router = createRouter({
       path: '/dashboard',
       name: 'dashboard',
       component: DashboardView,
-      meta: { requiresAuth: true },
-    },
-    {
-      path: '/onboarding',
-      name: 'onboarding',
-      component: OnboardingView,
       meta: { requiresAuth: true },
     },
     {

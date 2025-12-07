@@ -8,7 +8,25 @@
         <p>{{ $t('contentHub.loading') }}</p>
       </div>
 
-      <!-- Main Content -->
+      <!-- Welcome State for New Users (No Restaurants) -->
+      <div v-else-if="restaurants.length === 0" class="welcome-state">
+        <div class="welcome-content">
+          <div class="welcome-icon">✨</div>
+          <h1 class="welcome-title">{{ $t('contentHub.welcomeTitle') }}</h1>
+          <p class="welcome-subtitle">{{ $t('contentHub.welcomeSubtitle') }}</p>
+
+          <BaseCard variant="glass" hoverable class="add-restaurant-card" @click="showAddRestaurantModal = true">
+            <div class="card-icon">🏪</div>
+            <h3 class="card-title">{{ $t('contentHub.addFirstRestaurant') }}</h3>
+            <p class="card-description">{{ $t('contentHub.addFirstRestaurantDescription') }}</p>
+            <BaseButton variant="primary" size="large">
+              {{ $t('restaurantSelector.addNew') }}
+            </BaseButton>
+          </BaseCard>
+        </div>
+      </div>
+
+      <!-- Main Content (Has Restaurants) -->
       <div v-else class="content-hub">
         <!-- Restaurant Header -->
         <div class="restaurant-header">
@@ -169,6 +187,13 @@
       @delete="handleDeleteRestaurant"
     />
 
+    <!-- Add Restaurant Modal (for welcome state) -->
+    <AddRestaurantModal
+      v-model="showAddRestaurantModal"
+      :saved-restaurants="restaurants"
+      @restaurant-added="handleRestaurantAdded"
+    />
+
     <!-- Schedule Modal -->
     <ScheduleModal
       v-model="showScheduleModal"
@@ -293,6 +318,7 @@ import ConfirmModal from '@/components/ConfirmModal.vue'
 import ScheduleModal from '@/components/ScheduleModal.vue'
 import RestaurantSelectorModal from '@/components/RestaurantSelectorModal.vue'
 import PostDetailModal from '@/components/PostDetailModal.vue'
+import AddRestaurantModal from '@/components/AddRestaurantModal.vue'
 
 const router = useRouter()
 const { t } = useI18n()
@@ -305,6 +331,7 @@ const restaurants = ref<SavedRestaurant[]>([])
 const selectedRestaurant = ref<SavedRestaurant | null>(null)
 const posts = ref<any[]>([])
 const showRestaurantSelector = ref(false)
+const showAddRestaurantModal = ref(false)
 
 // Post detail modal state
 const selectedPost = ref<any>(null)
@@ -348,9 +375,9 @@ onMounted(async () => {
       restaurants.value = response.data || []
     }
 
-    // If no restaurants, redirect to onboarding
+    // If no restaurants, show welcome state (don't redirect)
     if (restaurants.value.length === 0) {
-      router.push('/onboarding')
+      loading.value = false
       return
     }
 
@@ -430,7 +457,15 @@ async function handleRestaurantAdded() {
     const response = await api.getRestaurants()
     if (response.success) {
       restaurants.value = response.data || []
+
+      // If this is the first restaurant, auto-select it and load posts
+      if (restaurants.value.length > 0 && !selectedRestaurant.value) {
+        selectedRestaurant.value = restaurants.value[0]
+        preferencesStore.setSelectedRestaurant(restaurants.value[0].id)
+        await fetchPosts()
+      }
     }
+    showAddRestaurantModal.value = false
   } catch (error) {
     console.error('Failed to fetch restaurants:', error)
   }
@@ -656,6 +691,99 @@ function formatDate(dateString: string): string {
   to {
     transform: rotate(360deg);
   }
+}
+
+/* Welcome State */
+.welcome-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  animation: fadeInUp 0.6s var(--ease-smooth);
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.welcome-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  max-width: 500px;
+  padding: var(--space-2xl);
+}
+
+.welcome-icon {
+  font-size: 4rem;
+  margin-bottom: var(--space-xl);
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+
+.welcome-title {
+  font-family: var(--font-heading);
+  font-size: var(--text-4xl);
+  font-weight: var(--font-bold);
+  margin: 0 0 var(--space-md) 0;
+  background: var(--gradient-gold);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.welcome-subtitle {
+  font-size: var(--text-lg);
+  color: var(--text-secondary);
+  margin: 0 0 var(--space-3xl) 0;
+  line-height: 1.5;
+}
+
+.add-restaurant-card {
+  padding: var(--space-3xl);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-lg);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  width: 100%;
+}
+
+.add-restaurant-card:hover {
+  transform: translateY(-4px);
+  border-color: var(--gold-primary);
+  box-shadow: 0 0 30px rgba(212, 175, 55, 0.2);
+}
+
+.add-restaurant-card .card-icon {
+  font-size: 3rem;
+}
+
+.add-restaurant-card .card-title {
+  font-family: var(--font-heading);
+  font-size: var(--text-xl);
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.add-restaurant-card .card-description {
+  font-size: var(--text-base);
+  color: var(--text-secondary);
+  margin: 0;
+  line-height: 1.5;
 }
 
 /* Restaurant Header */
@@ -1249,6 +1377,22 @@ function formatDate(dateString: string): string {
 @media (max-width: 768px) {
   .content-hub-view {
     padding: var(--space-xl) var(--space-md);
+  }
+
+  .welcome-title {
+    font-size: var(--text-3xl);
+  }
+
+  .welcome-subtitle {
+    font-size: var(--text-base);
+  }
+
+  .welcome-icon {
+    font-size: 3rem;
+  }
+
+  .add-restaurant-card {
+    padding: var(--space-2xl);
   }
 
   .restaurant-header {

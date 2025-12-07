@@ -1324,6 +1324,12 @@ export default {
     sortNewest: 'Newest First',
     sortOldest: 'Oldest First',
     menuItems: '{count} menu items',
+    // Welcome state for new users
+    welcomeTitle: 'Welcome!',
+    welcomeSubtitle: "Let's get started by adding your first restaurant.",
+    addFirstRestaurant: 'Add Your First Restaurant',
+    addFirstRestaurantDescription: "Search for your restaurant and we'll automatically import your menu and branding.",
+    noRestaurantPrompt: 'Add a restaurant to start creating posts.',
   },
 
   // Content Create View
