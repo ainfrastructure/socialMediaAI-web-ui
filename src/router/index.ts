@@ -19,6 +19,8 @@ const PostsView = () => import('../views/PostsView.vue')
 const PostsCreateView = () => import('../views/PostsCreateView.vue')
 const PrivacyPolicyView = () => import('../views/PrivacyPolicyView.vue')
 const TermsView = () => import('../views/TermsView.vue')
+const DeleteAccountView = () => import('../views/DeleteAccountView.vue')
+const GoodbyeView = () => import('../views/GoodbyeView.vue')
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -159,6 +161,17 @@ const router = createRouter({
       path: '/terms',
       name: 'terms',
       component: TermsView,
+    },
+    {
+      path: '/delete-me',
+      name: 'delete-account',
+      component: DeleteAccountView,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/goodbye',
+      name: 'goodbye',
+      component: GoodbyeView,
     },
   ],
 })

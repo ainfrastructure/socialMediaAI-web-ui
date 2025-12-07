@@ -1995,4 +1995,60 @@ export default {
       finalizing: 'Finalizing',
     },
   },
+
+  // Delete Account Page
+  deleteAccount: {
+    pageTitle: 'Delete Your Account',
+    warning: 'Warning: This action cannot be undone',
+
+    // Step 1 - Warning
+    step1Title: 'Are you sure?',
+    step1Description: 'Deleting your account will permanently remove all your data. This includes:',
+    dataList: {
+      restaurants: 'All saved restaurants and their settings',
+      posts: 'All generated posts and images',
+      favorites: 'All saved favorites and scheduled posts',
+      connections: 'All connected social media accounts',
+      subscription: 'Your subscription (will be cancelled immediately)',
+      history: 'All usage history and analytics',
+    },
+
+    // Step 2 - Confirmations
+    step2Title: 'Confirm you understand',
+    confirmDataLoss: 'I understand that all my data will be permanently deleted',
+    confirmNoRecovery: 'I understand that my account cannot be recovered after deletion',
+    confirmImmediateEffect: 'I understand that deletion takes effect immediately and I will be logged out',
+
+    // Step 3 - Type DELETE
+    step3Title: 'Final confirmation',
+    step3Description: 'Type DELETE below to confirm you want to delete your account:',
+    typeDelete: 'Type DELETE to confirm',
+    deletePlaceholder: 'DELETE',
+
+    // Reason
+    reasonTitle: 'Help us improve (optional)',
+    reasonDescription: 'Please let us know why you\'re leaving:',
+    reasonPlaceholder: 'What could we have done better?',
+
+    // Buttons
+    continueButton: 'Continue',
+    backButton: 'Go Back',
+    cancelButton: 'Cancel',
+    deleteButton: 'Delete My Account',
+    deleting: 'Deleting...',
+
+    // Final modal
+    finalModalTitle: 'Last chance!',
+    finalModalDescription: 'Are you absolutely sure you want to delete your account? This action is irreversible.',
+
+    // Success/Goodbye
+    goodbyeTitle: 'Goodbye!',
+    goodbyeMessage: 'Your account has been successfully deleted. We\'re sorry to see you go.',
+    goodbyeSubtext: 'If you ever want to come back, you\'re always welcome to create a new account.',
+    returnToHome: 'Return to Home',
+
+    // Errors
+    errorGeneric: 'An error occurred while deleting your account. Please try again.',
+    errorValidation: 'Please complete all required confirmations',
+  },
 }

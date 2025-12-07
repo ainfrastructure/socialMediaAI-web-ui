@@ -1995,4 +1995,60 @@ export default {
       finalizing: 'Fullfører',
     },
   },
+
+  // Delete Account Page
+  deleteAccount: {
+    pageTitle: 'Slett kontoen din',
+    warning: 'Advarsel: Denne handlingen kan ikke angres',
+
+    // Step 1 - Warning
+    step1Title: 'Er du sikker?',
+    step1Description: 'Sletting av kontoen din vil permanent fjerne all din data. Dette inkluderer:',
+    dataList: {
+      restaurants: 'Alle lagrede restauranter og deres innstillinger',
+      posts: 'Alle genererte innlegg og bilder',
+      favorites: 'Alle lagrede favoritter og planlagte innlegg',
+      connections: 'Alle tilkoblede sosiale medier-kontoer',
+      subscription: 'Ditt abonnement (vil bli kansellert umiddelbart)',
+      history: 'All brukshistorikk og analyse',
+    },
+
+    // Step 2 - Confirmations
+    step2Title: 'Bekreft at du forstår',
+    confirmDataLoss: 'Jeg forstår at all min data vil bli permanent slettet',
+    confirmNoRecovery: 'Jeg forstår at kontoen min ikke kan gjenopprettes etter sletting',
+    confirmImmediateEffect: 'Jeg forstår at sletting trer i kraft umiddelbart og jeg vil bli logget ut',
+
+    // Step 3 - Type DELETE
+    step3Title: 'Siste bekreftelse',
+    step3Description: 'Skriv DELETE nedenfor for å bekrefte at du vil slette kontoen din:',
+    typeDelete: 'Skriv DELETE for å bekrefte',
+    deletePlaceholder: 'DELETE',
+
+    // Reason
+    reasonTitle: 'Hjelp oss bli bedre (valgfritt)',
+    reasonDescription: 'Fortell oss hvorfor du forlater oss:',
+    reasonPlaceholder: 'Hva kunne vi gjort bedre?',
+
+    // Buttons
+    continueButton: 'Fortsett',
+    backButton: 'Gå tilbake',
+    cancelButton: 'Avbryt',
+    deleteButton: 'Slett kontoen min',
+    deleting: 'Sletter...',
+
+    // Final modal
+    finalModalTitle: 'Siste sjanse!',
+    finalModalDescription: 'Er du helt sikker på at du vil slette kontoen din? Denne handlingen kan ikke angres.',
+
+    // Success/Goodbye
+    goodbyeTitle: 'Ha det!',
+    goodbyeMessage: 'Kontoen din har blitt slettet. Vi er lei for at du forlater oss.',
+    goodbyeSubtext: 'Hvis du noen gang vil komme tilbake, er du alltid velkommen til å opprette en ny konto.',
+    returnToHome: 'Tilbake til forsiden',
+
+    // Errors
+    errorGeneric: 'En feil oppstod under sletting av kontoen din. Vennligst prøv igjen.',
+    errorValidation: 'Vennligst fullfør alle nødvendige bekreftelser',
+  },
 }

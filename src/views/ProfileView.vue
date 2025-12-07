@@ -193,9 +193,11 @@
               <h3 class="security-title danger-text">{{ $t('profile.deleteAccountDanger') }}</h3>
               <p class="security-description">{{ $t('profile.deleteAccountDescription') }}</p>
             </div>
-            <BaseButton variant="danger" size="small" @click="showDeleteModal = true">
-              {{ $t('profile.deleteAccount') }}
-            </BaseButton>
+            <router-link to="/delete-me">
+              <BaseButton variant="danger" size="small">
+                {{ $t('profile.deleteAccount') }}
+              </BaseButton>
+            </router-link>
           </div>
         </div>
       </BaseCard>
@@ -221,41 +223,12 @@
       </div>
     </Teleport>
 
-    <!-- Delete Account Modal -->
-    <Teleport to="body">
-      <div v-if="showDeleteModal" class="modal-overlay" @click="showDeleteModal = false">
-        <div class="modal-content" @click.stop>
-          <h3 class="modal-title danger-text">{{ $t('profile.deleteAccountTitle') }}</h3>
-          <p class="modal-text">
-            {{ $t('profile.deleteAccountMessage') }}
-          </p>
-          <BaseInput
-            v-model="deleteConfirmText"
-            :label="$t('profile.typeDeleteConfirm')"
-            :placeholder="$t('profile.typeDeletePlaceholder')"
-          />
-          <div class="modal-actions">
-            <BaseButton variant="ghost" @click="showDeleteModal = false">
-              {{ $t('profile.cancel') }}
-            </BaseButton>
-            <BaseButton
-              variant="danger"
-              @click="confirmDeleteAccount"
-              :disabled="deleteConfirmText !== 'DELETE'"
-            >
-              {{ $t('profile.deleteMyAccount') }}
-            </BaseButton>
-          </div>
         </div>
-      </div>
-    </Teleport>
-    </div>
   </DashboardLayout>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, reactive } from 'vue'
-import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '../stores/auth'
 import { api } from '../services/api'
@@ -265,7 +238,6 @@ import BaseButton from '../components/BaseButton.vue'
 import BaseInput from '../components/BaseInput.vue'
 import BaseAlert from '../components/BaseAlert.vue'
 
-const router = useRouter()
 const authStore = useAuthStore()
 const { t } = useI18n()
 
@@ -280,8 +252,6 @@ const personalForm = reactive({
 
 // Modals
 const showCancelModal = ref(false)
-const showDeleteModal = ref(false)
-const deleteConfirmText = ref('')
 const loadingPortal = ref(false)
 
 // Computed
@@ -370,21 +340,6 @@ async function confirmCancelSubscription() {
   } catch (err) {
 
     alert(t('profile.failedToCancelSubscription'))
-  }
-}
-
-async function confirmDeleteAccount() {
-  if (deleteConfirmText.value !== 'DELETE') return
-
-  try {
-    // API call to delete account would go here
-    await new Promise(resolve => setTimeout(resolve, 1000)) // Simulated API call
-
-    await authStore.logout()
-    router.push('/login')
-  } catch (err) {
-
-    alert(t('profile.failedToDeleteAccount'))
   }
 }
 </script>

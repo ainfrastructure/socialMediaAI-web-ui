@@ -166,6 +166,22 @@ class AuthService {
     })
     return response.json()
   }
+
+  async deleteAccount(request: {
+    reason?: string
+    confirmations: {
+      understandDataLoss: boolean
+      understandNoRecovery: boolean
+      understandImmediateEffect: boolean
+    }
+  }): Promise<ApiResponse> {
+    const response = await fetch(`${API_URL}/api/auth/delete-account`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(request),
+    })
+    return response.json()
+  }
 }
 
 export const authService = new AuthService()
