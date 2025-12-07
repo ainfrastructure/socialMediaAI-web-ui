@@ -128,8 +128,7 @@ export const useAuthStore = defineStore('auth', () => {
 
       storeSession(response.session)
       return true
-    } catch (err: any) {
-
+    } catch {
       // Don't logout on network errors, let them retry
       return false
     }
@@ -208,7 +207,7 @@ export const useAuthStore = defineStore('auth', () => {
 
     try {
       await api.logout()
-    } catch (err) {
+    } catch {
       // Continue logout even if API call fails
     } finally {
       clearSession()
@@ -355,8 +354,8 @@ export const useAuthStore = defineStore('auth', () => {
             user.value = retryResponse.data.user
             syncSubscriptionInBackground()
           }
-        } catch (retryErr) {
-
+        } catch {
+          // Silent fail on retry
         }
       }
     } finally {
@@ -378,12 +377,9 @@ export const useAuthStore = defineStore('auth', () => {
         if (profileResponse.success && profileResponse.data?.user) {
           user.value = profileResponse.data.user
         }
-      } else {
-
       }
-    } catch (err: any) {
+    } catch {
       // Silent fail - don't disrupt user experience
-
     }
   }
 

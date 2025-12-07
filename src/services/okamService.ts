@@ -130,7 +130,7 @@ class OkamService {
           name: product.name,
           description: product.description || '',
           price: this.formatPrice(product.amount, product.currency),
-          imageUrl: product.imageUrl,
+          imageUrl: this.proxyImageUrl(product.imageUrl),
         })
       }
     }
@@ -151,6 +151,24 @@ class OkamService {
       return `${mainAmount} ${currencySymbol}`
     }
     return `${mainAmount.toFixed(2)} ${currencySymbol}`
+  }
+
+  /**
+   * Proxy an Okam CDN URL through our backend to avoid CORS issues
+   * Only proxies URLs from known Okam CDN domains
+   * @param url - The original Okam CDN URL
+   * @returns Proxied URL that goes through our backend
+   */
+  proxyImageUrl(url: string | undefined): string | undefined {
+    if (!url) return undefined
+
+    // Only proxy Okam CDN URLs
+    if (url.includes('okamapicdn.azureedge.net') || url.includes('okamapi.blob.core.windows.net')) {
+      return `${API_URL}/api/okam/proxy-image?url=${encodeURIComponent(url)}`
+    }
+
+    // Return other URLs as-is
+    return url
   }
 }
 

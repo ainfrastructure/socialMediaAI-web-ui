@@ -17,7 +17,6 @@ onMounted(async () => {
 
     const accessToken = params.get('access_token')
     const refreshToken = params.get('refresh_token')
-    const type = params.get('type')
     const errorParam = params.get('error')
     const errorDescription = params.get('error_description')
 

@@ -49,7 +49,7 @@ function handleAddNew() {
   showAddModal.value = true
 }
 
-function handleRestaurantAdded(restaurant: any) {
+function handleRestaurantAdded(_restaurant: any) {
   emit('restaurant-added')
 }
 

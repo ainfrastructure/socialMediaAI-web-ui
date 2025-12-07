@@ -19,10 +19,11 @@ import AddRestaurantModal from '@/components/AddRestaurantModal.vue'
 import RestaurantSelectorModal from '@/components/RestaurantSelectorModal.vue'
 import { restaurantService, type SavedRestaurant } from '@/services/restaurantService'
 import { api } from '@/services/api'
+import { okamService } from '@/services/okamService'
 
 const router = useRouter()
 const route = useRoute()
-const { t } = useI18n()
+const { t, locale } = useI18n()
 const preferencesStore = usePreferencesStore()
 const facebookStore = useFacebookStore()
 const instagramStore = useInstagramStore()
@@ -466,7 +467,7 @@ async function continueEasyModePublish() {
 }
 
 // Continue publishing after feedback (for Advanced Mode)
-async function continueAdvancedModePublish() {
+async function _continueAdvancedModePublish() {
   if (!pendingPublishData.value || pendingPublishData.value.type !== 'advanced') {
     console.error('No pending advanced mode publish data')
     return
@@ -808,7 +809,9 @@ async function generateImage(uploadedLogo: File | null = null, uploadedImage: Fi
     else if (selectedMenuItems.value.length > 0 && selectedMenuItems.value[0].imageUrl) {
       try {
         const firstItem = selectedMenuItems.value[0]
-        const imageResponse = await fetch(firstItem.imageUrl)
+        // Proxy Okam CDN URLs to avoid CORS issues
+        const imageUrl = okamService.proxyImageUrl(firstItem.imageUrl) || firstItem.imageUrl
+        const imageResponse = await fetch(imageUrl)
         if (imageResponse.ok) {
           const imageBlob = await imageResponse.blob()
           const base64Data = await new Promise<string>((resolve) => {
@@ -819,9 +822,14 @@ async function generateImage(uploadedLogo: File | null = null, uploadedImage: Fi
             }
             reader.readAsDataURL(imageBlob)
           })
+          // Handle 'application/octet-stream' by defaulting to image/png
+          let mimeType = imageBlob.type
+          if (!mimeType || mimeType === 'application/octet-stream') {
+            mimeType = 'image/png'
+          }
           referenceImage = {
             base64Data,
-            mimeType: imageBlob.type,
+            mimeType,
           }
         }
       } catch {
@@ -866,9 +874,6 @@ async function generateImage(uploadedLogo: File | null = null, uploadedImage: Fi
 
     // Auto-save post after generation
     await autoSavePost()
-
-  } catch (err: any) {
-    throw err
   } finally {
     generatingImage.value = false
   }
@@ -897,7 +902,8 @@ async function generatePostContent() {
       menuItemNames,
       'image',
       promptContext.value,
-      restaurant.value.brand_dna
+      restaurant.value.brand_dna,
+      locale.value as 'en' | 'no'
     )
 
     if (response.success) {
@@ -950,7 +956,7 @@ async function autoSavePost() {
 }
 
 // Retry generation
-async function handleRetryGeneration() {
+async function _handleRetryGeneration() {
   if (lastEasyModeData.value) {
     await handleEasyModeGenerate(lastEasyModeData.value)
   }
@@ -1270,11 +1276,11 @@ function handleFacebookOnboardingClose() {
   pendingAction.value = null
 }
 
-function handleScheduled(scheduledPost: any) {
+function handleScheduled(_scheduledPost: any) {
   showScheduleModal.value = false
 }
 
-function handleContentUpdated(updatedContent: { postText: string; hashtags: string[] }) {
+function _handleContentUpdated(updatedContent: { postText: string; hashtags: string[] }) {
   if (generatedPostContent.value) {
     generatedPostContent.value = {
       ...generatedPostContent.value,

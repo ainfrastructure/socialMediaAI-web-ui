@@ -1439,6 +1439,7 @@ export default {
     addFirstRestaurant: 'Legg til din første restaurant',
     addFirstRestaurantDescription: 'Søk etter restauranten din, så importerer vi automatisk menyen og merkevaren.',
     noRestaurantPrompt: 'Legg til en restaurant for å begynne å lage innlegg.',
+    createPost: 'Lag innlegg',
   },
 
   // Content Create View

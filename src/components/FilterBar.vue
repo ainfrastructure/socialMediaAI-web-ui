@@ -162,11 +162,6 @@ const platforms = [
   { value: 'linkedin', label: 'LinkedIn' },
 ]
 
-const contentTypes = [
-  { value: 'image', label: 'Images' },
-  { value: 'video', label: 'Videos' },
-]
-
 const showRestaurantModal = ref(false)
 const showPlatformModal = ref(false)
 const showContentTypeModal = ref(false)
@@ -199,11 +194,6 @@ const updateContentTypes = (contentTypes: string[]) => {
   const newFilters = { ...props.modelValue, content_types: contentTypes }
   emit('update:modelValue', newFilters)
   emit('change')
-}
-
-const isChecked = (key: keyof Filters, value: string) => {
-  const values = props.modelValue[key] as string[] | undefined
-  return values?.includes(value) || false
 }
 
 const toggleCheckbox = (key: keyof Filters, value: string) => {

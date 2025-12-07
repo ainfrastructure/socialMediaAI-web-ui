@@ -22,9 +22,7 @@ import GoldenThanksgivingIcon from './icons/GoldenThanksgivingIcon.vue'
 import GoldenCelebrationIcon from './icons/GoldenCelebrationIcon.vue'
 import GoldenEditIcon from './icons/GoldenEditIcon.vue'
 import UnifiedSchedulePost from './UnifiedSchedulePost.vue'
-import { ImageUploadBox, SectionLabel, StyleTemplateGrid, MenuItemCard, ContentDivider } from './creation'
-import { VueDatePicker } from '@vuepic/vue-datepicker'
-import '@vuepic/vue-datepicker/dist/main.css'
+import { ImageUploadBox, SectionLabel, StyleTemplateGrid, ContentDivider } from './creation'
 import { useFacebookStore } from '@/stores/facebook'
 import { useInstagramStore } from '@/stores/instagram'
 import { usePreferencesStore } from '@/stores/preferences'
@@ -101,7 +99,7 @@ const emit = defineEmits<{
 const facebookStore = useFacebookStore()
 const instagramStore = useInstagramStore()
 const preferencesStore = usePreferencesStore()
-const { isConnected } = useSocialAccounts()
+const { isConnected: _isConnected } = useSocialAccounts()
 const { t } = useI18n()
 
 // Wizard State
@@ -175,7 +173,7 @@ const styleTemplates = computed<StyleTemplate[]>(() => [
 ])
 
 // Gold SVG icons for style templates
-function getStyleIcon(styleId: string): string {
+function _getStyleIcon(styleId: string): string {
   const goldGradient = `<defs><linearGradient id="goldGrad-${styleId}" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#E5C775"/><stop offset="50%" style="stop-color:#D4AF37"/><stop offset="100%" style="stop-color:#B8943D"/></linearGradient></defs>`
 
   const icons: Record<string, string> = {
@@ -282,7 +280,7 @@ function selectMenuItem(item: MenuItem) {
   })
 }
 
-function selectStyleTemplate(templateId: string) {
+function _selectStyleTemplate(templateId: string) {
   selectedStyleTemplate.value = templateId
 }
 
@@ -302,7 +300,7 @@ function handleImageUploadFile(file: File) {
   reader.readAsDataURL(file)
 }
 
-function handleImageUpload(event: Event) {
+function _handleImageUpload(event: Event) {
   const target = event.target as HTMLInputElement
   const file = target.files?.[0]
 

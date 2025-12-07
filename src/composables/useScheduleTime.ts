@@ -154,7 +154,7 @@ export function useScheduleTime() {
    * @param timezone - Optional timezone
    * @returns Human-readable time remaining string
    */
-  const getTimeRemaining = (scheduledDate: string, scheduledTime: string, timezone?: string): string => {
+  const getTimeRemaining = (scheduledDate: string, scheduledTime: string, _timezone?: string): string => {
     if (!scheduledDate || !scheduledTime) return ''
 
     try {

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import MaterialIcon from './MaterialIcon.vue'
 
@@ -43,8 +43,8 @@ const logoPositions = computed(() => [
   { value: 'none', label: t('advancedMode.logoPositions.none'), icon: 'block' },
 ])
 
-// Font Options
-const fonts = computed(() => [
+// Font Options (reserved for future text overlay feature)
+const _fonts = computed(() => [
   { value: 'playfair', label: t('advancedMode.fonts.playfair') },
   { value: 'inter', label: t('advancedMode.fonts.inter') },
   { value: 'montserrat', label: t('advancedMode.fonts.montserrat') },

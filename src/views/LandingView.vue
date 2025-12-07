@@ -1,9 +1,8 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '../stores/auth'
-import { api } from '../services/api'
 import BaseCard from '../components/BaseCard.vue'
 import BaseButton from '../components/BaseButton.vue'
 import MaterialIcon from '../components/MaterialIcon.vue'
@@ -12,7 +11,7 @@ import PaywallModal from '../components/PaywallModal.vue'
 
 const router = useRouter()
 const authStore = useAuthStore()
-const { t } = useI18n()
+useI18n()
 
 const showLoginModal = ref(false)
 const showPaywallModal = ref(false)

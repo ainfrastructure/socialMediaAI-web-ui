@@ -9,7 +9,7 @@ import BaseAlert from '../components/BaseAlert.vue'
 import BaseInput from '../components/BaseInput.vue'
 
 const router = useRouter()
-const { t } = useI18n()
+useI18n()
 const password = ref('')
 const confirmPassword = ref('')
 const message = ref('')

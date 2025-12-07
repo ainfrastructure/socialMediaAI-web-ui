@@ -110,27 +110,22 @@ class RestaurantService {
    * @returns Saved restaurant object or error
    */
   async saveRestaurant(restaurantData: SaveRestaurantData): Promise<SaveRestaurantResponse> {
-    try {
-      const response = await fetch(`${API_URL}/api/restaurants/save`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...this.getAuthHeader(),
-        },
-        body: JSON.stringify(restaurantData),
-      })
+    const response = await fetch(`${API_URL}/api/restaurants/save`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...this.getAuthHeader(),
+      },
+      body: JSON.stringify(restaurantData),
+    })
 
-      const data: SaveRestaurantResponse = await response.json()
+    const data: SaveRestaurantResponse = await response.json()
 
-      if (!response.ok) {
-        throw new Error(data.error || `HTTP error! status: ${response.status}`)
-      }
-
-      return data
-    } catch (error) {
-
-      throw error
+    if (!response.ok) {
+      throw new Error(data.error || `HTTP error! status: ${response.status}`)
     }
+
+    return data
   }
 
   /**
@@ -139,33 +134,28 @@ class RestaurantService {
    * @returns Array of saved restaurants
    */
   async getSavedRestaurants(limit: number = 100): Promise<SavedRestaurant[]> {
-    try {
-      const response = await fetch(
-        `${API_URL}/api/restaurants?limit=${limit}`,
-        {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            ...this.getAuthHeader(),
-          },
-        }
-      )
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
+    const response = await fetch(
+      `${API_URL}/api/restaurants?limit=${limit}`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          ...this.getAuthHeader(),
+        },
       }
+    )
 
-      const data: GetRestaurantsResponse = await response.json()
-
-      if (!data.success) {
-        throw new Error(data.error || 'Failed to get saved restaurants')
-      }
-
-      return data.data || []
-    } catch (error) {
-
-      throw error
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`)
     }
+
+    const data: GetRestaurantsResponse = await response.json()
+
+    if (!data.success) {
+      throw new Error(data.error || 'Failed to get saved restaurants')
+    }
+
+    return data.data || []
   }
 
   /**
@@ -178,37 +168,32 @@ class RestaurantService {
       return null
     }
 
-    try {
-      const response = await fetch(
-        `${API_URL}/api/restaurants/${encodeURIComponent(placeId)}`,
-        {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            ...this.getAuthHeader(),
-          },
-        }
-      )
-
-      if (response.status === 404) {
-        return null
+    const response = await fetch(
+      `${API_URL}/api/restaurants/${encodeURIComponent(placeId)}`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          ...this.getAuthHeader(),
+        },
       }
+    )
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
-      }
-
-      const data: GetRestaurantResponse = await response.json()
-
-      if (!data.success || !data.data) {
-        return null
-      }
-
-      return data.data
-    } catch (error) {
-
-      throw error
+    if (response.status === 404) {
+      return null
     }
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`)
+    }
+
+    const data: GetRestaurantResponse = await response.json()
+
+    if (!data.success || !data.data) {
+      return null
+    }
+
+    return data.data
   }
 
   /**
@@ -225,30 +210,25 @@ class RestaurantService {
       throw new Error('Place ID is required')
     }
 
-    try {
-      const response = await fetch(
-        `${API_URL}/api/restaurants/${encodeURIComponent(placeId)}`,
-        {
-          method: 'PATCH',
-          headers: {
-            'Content-Type': 'application/json',
-            ...this.getAuthHeader(),
-          },
-          body: JSON.stringify(updateData),
-        }
-      )
-
-      const data: UpdateRestaurantResponse = await response.json()
-
-      if (!response.ok) {
-        throw new Error(data.error || `HTTP error! status: ${response.status}`)
+    const response = await fetch(
+      `${API_URL}/api/restaurants/${encodeURIComponent(placeId)}`,
+      {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          ...this.getAuthHeader(),
+        },
+        body: JSON.stringify(updateData),
       }
+    )
 
-      return data
-    } catch (error) {
+    const data: UpdateRestaurantResponse = await response.json()
 
-      throw error
+    if (!response.ok) {
+      throw new Error(data.error || `HTTP error! status: ${response.status}`)
     }
+
+    return data
   }
 
   /**
@@ -261,29 +241,24 @@ class RestaurantService {
       return false
     }
 
-    try {
-      const response = await fetch(
-        `${API_URL}/api/restaurants/${encodeURIComponent(placeId)}`,
-        {
-          method: 'DELETE',
-          headers: {
-            'Content-Type': 'application/json',
-            ...this.getAuthHeader(),
-          },
-        }
-      )
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
+    const response = await fetch(
+      `${API_URL}/api/restaurants/${encodeURIComponent(placeId)}`,
+      {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          ...this.getAuthHeader(),
+        },
       }
+    )
 
-      const data: DeleteRestaurantResponse = await response.json()
-
-      return data.success
-    } catch (error) {
-
-      throw error
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`)
     }
+
+    const data: DeleteRestaurantResponse = await response.json()
+
+    return data.success
   }
 
   /**
@@ -295,8 +270,7 @@ class RestaurantService {
     try {
       const restaurant = await this.getRestaurantByPlaceId(placeId)
       return restaurant !== null
-    } catch (error) {
-
+    } catch {
       return false
     }
   }
@@ -319,42 +293,37 @@ class RestaurantService {
       throw new Error('No files provided')
     }
 
-    try {
-      const formData = new FormData()
+    const formData = new FormData()
 
-      // Append all files to FormData
-      files.forEach((file) => {
-        formData.append('images', file)
-      })
+    // Append all files to FormData
+    files.forEach((file) => {
+      formData.append('images', file)
+    })
 
-      const response = await fetch(
-        `${API_URL}/api/restaurants/${encodeURIComponent(placeId)}/images`,
-        {
-          method: 'POST',
-          headers: {
-            ...this.getAuthHeader(),
-            // Don't set Content-Type for FormData - browser will set it with boundary
-          },
-          body: formData,
-        }
-      )
-
-      if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.error || `HTTP error! status: ${response.status}`)
+    const response = await fetch(
+      `${API_URL}/api/restaurants/${encodeURIComponent(placeId)}/images`,
+      {
+        method: 'POST',
+        headers: {
+          ...this.getAuthHeader(),
+          // Don't set Content-Type for FormData - browser will set it with boundary
+        },
+        body: formData,
       }
+    )
 
-      const data = await response.json()
-
-      if (!data.success) {
-        throw new Error(data.error || 'Failed to upload images')
-      }
-
-      return data.data
-    } catch (error) {
-
-      throw error
+    if (!response.ok) {
+      const errorData = await response.json()
+      throw new Error(errorData.error || `HTTP error! status: ${response.status}`)
     }
+
+    const data = await response.json()
+
+    if (!data.success) {
+      throw new Error(data.error || 'Failed to upload images')
+    }
+
+    return data.data
   }
 
   /**
@@ -372,30 +341,25 @@ class RestaurantService {
       throw new Error('Image ID is required')
     }
 
-    try {
-      const response = await fetch(
-        `${API_URL}/api/restaurants/${encodeURIComponent(placeId)}/images/${encodeURIComponent(imageId)}`,
-        {
-          method: 'DELETE',
-          headers: {
-            'Content-Type': 'application/json',
-            ...this.getAuthHeader(),
-          },
-        }
-      )
-
-      if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.error || `HTTP error! status: ${response.status}`)
+    const response = await fetch(
+      `${API_URL}/api/restaurants/${encodeURIComponent(placeId)}/images/${encodeURIComponent(imageId)}`,
+      {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          ...this.getAuthHeader(),
+        },
       }
+    )
 
-      const data = await response.json()
-
-      return data.success
-    } catch (error) {
-
-      throw error
+    if (!response.ok) {
+      const errorData = await response.json()
+      throw new Error(errorData.error || `HTTP error! status: ${response.status}`)
     }
+
+    const data = await response.json()
+
+    return data.success
   }
 }
 

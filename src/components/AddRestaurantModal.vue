@@ -177,10 +177,10 @@ async function fetchRestaurantDetails(restaurant: any) {
         }
         menuSource = 'okam'
 
-        // If Okam has a logo, use it
+        // If Okam has a logo, use it (proxy through our backend to avoid CORS issues)
         if (okamMenu.logoUrl) {
           brandDNA = {
-            logo_url: okamMenu.logoUrl,
+            logo_url: okamService.proxyImageUrl(okamMenu.logoUrl) || okamMenu.logoUrl,
             brand_name: okamMenu.storeName,
             primary_color: null,
             secondary_color: null,

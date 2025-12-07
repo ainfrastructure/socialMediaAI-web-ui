@@ -35,14 +35,15 @@
         <CalendarLegend />
         <div :class="['calendar-grid', `view-${viewMode}`]">
           <!-- Day headers (only show for month and week views) -->
-          <div
-            v-if="viewMode !== 'day'"
-            v-for="day in displayedWeekDays"
-            :key="day"
-            class="calendar-day-header"
-          >
-            {{ day }}
-          </div>
+          <template v-if="viewMode !== 'day'">
+            <div
+              v-for="day in displayedWeekDays"
+              :key="day"
+              class="calendar-day-header"
+            >
+              {{ day }}
+            </div>
+          </template>
 
           <!-- Calendar days -->
           <div
@@ -428,7 +429,6 @@
 import { ref, computed, onMounted, watch, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import { toZonedTime, fromZonedTime } from 'date-fns-tz'
 import DashboardLayout from '../components/DashboardLayout.vue'
 import BaseCard from '../components/BaseCard.vue'
 import BaseButton from '../components/BaseButton.vue'
@@ -438,7 +438,7 @@ import Toast from '../components/Toast.vue'
 import ConfirmModal from '../components/ConfirmModal.vue'
 import PostDetailModal from '../components/PostDetailModal.vue'
 import RestaurantSelectorModal from '../components/RestaurantSelectorModal.vue'
-import { CalendarHeader, CalendarLegend, CreatePostWizard, DayPostCard, CalendarFilters, SelectedDayDetail, FullCreationWizardModal } from '../components/scheduler'
+import { CalendarHeader, CalendarLegend, CreatePostWizard, CalendarFilters, SelectedDayDetail, FullCreationWizardModal } from '../components/scheduler'
 import PlatformLogo from '../components/PlatformLogo.vue'
 import { api } from '../services/api'
 import { schedulerService } from '../services/schedulerService'
@@ -477,7 +477,7 @@ const bottomPanelTab = ref<'day' | 'upcoming'>('day')
 const selectedDayDetailRef = ref<any>(null)
 
 // Toggle expanded row with scroll into view
-const toggleExpandedPost = (postId: string | number, event?: Event) => {
+const toggleExpandedPost = (postId: string | number, _event?: Event) => {
   const isExpanding = expandedPostId.value !== postId
   expandedPostId.value = expandedPostId.value === postId ? null : postId
 
@@ -523,10 +523,6 @@ const availablePlatforms = [
   { id: 'instagram', name: 'Instagram', icon: '📷' },
   { id: 'tiktok', name: 'TikTok', icon: '🎵' },
 ]
-
-const activeFilterCount = computed(() => {
-  return filters.value.platforms.length + filters.value.restaurant_ids.length
-})
 
 // Transform restaurants for CalendarFilters component
 const restaurantsForFilter = computed(() => {
@@ -659,13 +655,6 @@ const formatDateString = (date: Date) => {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
 }
 
-// Helper to normalize a date string to YYYY-MM-DD format
-const normalizeDate = (dateStr: string | undefined) => {
-  if (!dateStr) return ''
-  // Handle both "2025-11-30" and "2025-11-30T..." formats
-  return dateStr.split('T')[0]
-}
-
 const calendarDays = computed(() => {
   const year = currentDate.value.getFullYear()
   const month = currentDate.value.getMonth()
@@ -754,18 +743,6 @@ const isToday = (date: Date) => {
   )
 }
 
-const previousMonth = () => {
-  currentDate.value = new Date(currentDate.value.getFullYear(), currentDate.value.getMonth() - 1)
-  fetchScheduledPosts()
-  fetchHolidays()
-}
-
-const nextMonth = () => {
-  currentDate.value = new Date(currentDate.value.getFullYear(), currentDate.value.getMonth() + 1)
-  fetchScheduledPosts()
-  fetchHolidays()
-}
-
 const isPastDate = (date: Date) => {
   const today = new Date()
   today.setHours(0, 0, 0, 0)
@@ -836,46 +813,8 @@ const handleBottomPanelTabChange = (tab: 'day' | 'upcoming') => {
   bottomPanelTab.value = tab
 }
 
-const formatUpcomingDate = (dateString: string) => {
-  const date = new Date(dateString + 'T00:00:00')
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
-  const tomorrow = new Date(today)
-  tomorrow.setDate(tomorrow.getDate() + 1)
-
-  if (date.getTime() === today.getTime()) {
-    return 'Today'
-  }
-  if (date.getTime() === tomorrow.getTime()) {
-    return 'Tomorrow'
-  }
-  return date.toLocaleDateString('en-US', {
-    weekday: 'short',
-    month: 'short',
-    day: 'numeric',
-  })
-}
-
 const formatSelectedDate = (day: any) => {
   return day.date.toLocaleDateString('en-US', {
-    weekday: 'long',
-    month: 'long',
-    day: 'numeric',
-    year: 'numeric',
-  })
-}
-
-const formatShortDate = (day: any) => {
-  return day.date.toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-  })
-}
-
-const formatWizardDate = (dateString: string | null) => {
-  if (!dateString) return ''
-  const date = new Date(dateString + 'T00:00:00')
-  return date.toLocaleDateString('en-US', {
     weekday: 'long',
     month: 'long',
     day: 'numeric',
@@ -936,11 +875,6 @@ const getHolidayEmoji = (holiday: any) => {
 
   // Default
   return '🎉'
-}
-
-const truncateText = (text: string, maxLength: number) => {
-  if (text.length <= maxLength) return text
-  return text.substring(0, maxLength) + '...'
 }
 
 const formatTime = (time: string | null) => {
@@ -1006,102 +940,6 @@ const capitalizeFirst = (str: string): string => {
   return str.charAt(0).toUpperCase() + str.slice(1)
 }
 
-const formatPublishedDate = (dateString: string) => {
-  const date = new Date(dateString)
-  const now = new Date()
-  const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000)
-
-  // Less than a minute
-  if (diffInSeconds < 60) {
-    return 'Just now'
-  }
-
-  // Less than an hour
-  if (diffInSeconds < 3600) {
-    const minutes = Math.floor(diffInSeconds / 60)
-    return `${minutes} minute${minutes > 1 ? 's' : ''} ago`
-  }
-
-  // Less than a day
-  if (diffInSeconds < 86400) {
-    const hours = Math.floor(diffInSeconds / 3600)
-    return `${hours} hour${hours > 1 ? 's' : ''} ago`
-  }
-
-  // Less than a week
-  if (diffInSeconds < 604800) {
-    const days = Math.floor(diffInSeconds / 86400)
-    return `${days} day${days > 1 ? 's' : ''} ago`
-  }
-
-  // Format as date
-  return date.toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined,
-    hour: '2-digit',
-    minute: '2-digit'
-  })
-}
-
-const getPlatformIcon = (platform: string) => {
-  const icons: Record<string, string> = {
-    facebook: '👥',
-    instagram: '📷',
-    tiktok: '🎵',
-    twitter: '🐦',
-    linkedin: '💼'
-  }
-  return icons[platform.toLowerCase()] || '📱'
-}
-
-const getTimeRemaining = (post: any) => {
-  if (!post.scheduled_date || !post.scheduled_time) {
-    return '⏱️ No time specified'
-  }
-
-  try {
-    // Combine date and time with timezone awareness
-    const dateTimeString = `${post.scheduled_date}T${post.scheduled_time}`
-    const userTimezone = post.timezone || 'UTC'
-
-    // Parse the date in the user's timezone, then convert to UTC for comparison
-    const scheduledDateInZone = toZonedTime(dateTimeString, userTimezone)
-    const scheduledDateTimeUTC = fromZonedTime(scheduledDateInZone, userTimezone)
-    const now = new Date()
-    const diff = scheduledDateTimeUTC.getTime() - now.getTime()
-
-    // If in the past
-    if (diff < 0) {
-      const absDiff = Math.abs(diff)
-      const hours = Math.floor(absDiff / (1000 * 60 * 60))
-      const minutes = Math.floor((absDiff % (1000 * 60 * 60)) / (1000 * 60))
-
-      if (hours > 24) {
-        const days = Math.floor(hours / 24)
-        return `⏰ Posted ${days} day${days > 1 ? 's' : ''} ago`
-      }
-      return `⏰ Posted ${hours}h ${minutes}m ago`
-    }
-
-    // Future - calculate time remaining
-    const totalMinutes = Math.floor(diff / (1000 * 60))
-    const hours = Math.floor(totalMinutes / 60)
-    const minutes = totalMinutes % 60
-
-    if (hours > 48) {
-      const days = Math.floor(hours / 24)
-      return `⏰ Posts in ${days} day${days > 1 ? 's' : ''}`
-    } else if (hours > 0) {
-      return `⏰ Posts in ${hours}h ${minutes}m`
-    } else {
-      return `⏰ Posts in ${minutes}m`
-    }
-  } catch (error) {
-    return '⏱️ Invalid time'
-  }
-}
-
 const detectContentTypeFromUrl = (mediaUrl: string): string => {
   if (!mediaUrl) return 'image'
 
@@ -1162,7 +1000,7 @@ const fetchScheduledPosts = async () => {
     ])
 
     // If filters are active, also fetch unfiltered posts for "Upcoming" tab
-    let unfilteredPosts: any[] = []
+    const unfilteredPosts: any[] = []
     if (hasFilters) {
       const [unfilteredCurrent, unfilteredPrev, unfilteredNext] = await Promise.all([
         api.getScheduledPosts({ month, year }),
@@ -1388,7 +1226,6 @@ const confirmCancelPost = async () => {
 
       // Re-select the same day if it was selected
       if (currentSelectedDay) {
-        const dateString = currentSelectedDay.date.toISOString().split('T')[0]
         const year = currentSelectedDay.date.getFullYear()
         const month = String(currentSelectedDay.date.getMonth() + 1).padStart(2, '0')
         const day = String(currentSelectedDay.date.getDate()).padStart(2, '0')
@@ -1524,27 +1361,6 @@ const handleRestaurantSelected = (restaurant: any) => {
   }
 }
 
-const createNewPost = (day: any) => {
-  // Always start in easy mode when creating new content
-  preferencesStore.setCreationMode('easy', true)
-  // Use local date string to avoid timezone shifts
-  const year = day.date.getFullYear()
-  const month = String(day.date.getMonth() + 1).padStart(2, '0')
-  const dayNum = String(day.date.getDate()).padStart(2, '0')
-  const dateString = `${year}-${month}-${dayNum}`
-  router.push(`/posts/create?scheduleDate=${dateString}`)
-}
-
-const pickPostForDate = (day: any) => {
-  // Use local date string to avoid timezone shifts
-  const year = day.date.getFullYear()
-  const month = String(day.date.getMonth() + 1).padStart(2, '0')
-  const dayNum = String(day.date.getDate()).padStart(2, '0')
-  const dateString = `${year}-${month}-${dayNum}`
-  selectedDateForScheduling.value = dateString
-  showPickPostModal.value = true
-}
-
 const handlePostScheduled = async () => {
   // Keep the currently selected day to reload its posts
   const currentSelectedDate = selectedDateForScheduling.value
@@ -1651,12 +1467,6 @@ const getMediaUrl = (url: string): string => {
   return `${baseUrl}${url.startsWith('/') ? '' : '/'}${url}`
 }
 
-const handleImageError = (event: Event, post: any) => {
-  const img = event.target as HTMLImageElement
-
-  // Keep the placeholder visible instead of hiding
-}
-
 // Fetch restaurants for filter dropdown (uses store)
 const fetchRestaurants = async () => {
   await restaurantsStore.initialize()
@@ -1667,20 +1477,10 @@ const applyFilters = () => {
   fetchScheduledPosts()
 }
 
-// Reset filters
-const resetFilters = () => {
-  filters.value = {
-    platforms: [],
-    restaurant_ids: [],
-  }
-  fetchScheduledPosts()
-}
-
 onMounted(async () => {
   await Promise.all([fetchScheduledPosts(), fetchHolidays(), fetchRestaurants()])
 
   // Auto-select today's date
-  const today = new Date()
   const todayDay = calendarDays.value.find((day) => !day.isOtherMonth && day.isToday)
 
   if (todayDay) {

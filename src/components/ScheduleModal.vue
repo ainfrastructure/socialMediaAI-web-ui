@@ -68,7 +68,7 @@ import UnifiedSchedulePost from './UnifiedSchedulePost.vue'
 import { api } from '../services/api'
 import { useSocialAccounts } from '../composables/useSocialAccounts'
 
-const { t } = useI18n()
+useI18n()
 
 const router = useRouter()
 

@@ -1439,6 +1439,7 @@ export default {
     addFirstRestaurant: 'Add Your First Restaurant',
     addFirstRestaurantDescription: "Search for your restaurant and we'll automatically import your menu and branding.",
     noRestaurantPrompt: 'Add a restaurant to start creating posts.',
+    createPost: 'Create Post',
   },
 
   // Content Create View

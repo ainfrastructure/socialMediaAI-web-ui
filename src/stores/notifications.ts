@@ -1,6 +1,5 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import { schedulerService } from '../services/schedulerService'
 
 export interface Notification {
   id: string

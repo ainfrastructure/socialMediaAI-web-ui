@@ -5,20 +5,10 @@ interface Props {
   showBackground?: boolean
 }
 
-const props = withDefaults(defineProps<Props>(), {
+withDefaults(defineProps<Props>(), {
   size: 24,
   showBackground: true
 })
-
-const platformColors: Record<string, string> = {
-  facebook: '#1877f2',
-  instagram: 'url(#instagram-gradient)',
-  tiktok: '#000000',
-  twitter: '#000000',
-  linkedin: '#0a66c2',
-  youtube: '#ff0000',
-  wolt: '#009de0'
-}
 
 const platformBackgrounds: Record<string, string> = {
   facebook: 'linear-gradient(135deg, #1877f2, #0d5dbf)',

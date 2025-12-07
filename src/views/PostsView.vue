@@ -51,6 +51,7 @@
           <div class="create-plus-icon">
             <span class="plus-symbol">+</span>
           </div>
+          <span class="create-label">{{ $t('contentHub.createPost') }}</span>
         </div>
 
         <!-- Posts Section -->
@@ -321,7 +322,7 @@ import PostDetailModal from '@/components/PostDetailModal.vue'
 import AddRestaurantModal from '@/components/AddRestaurantModal.vue'
 
 const router = useRouter()
-const { t } = useI18n()
+useI18n()
 const preferencesStore = usePreferencesStore()
 
 // State
@@ -500,15 +501,6 @@ async function handleDeleteRestaurant(restaurant: SavedRestaurant) {
 function applyFilters() {
   currentPage.value = 1
   fetchPosts()
-}
-
-function resetFilters() {
-  filters.value = {
-    platform: '',
-    content_type: '',
-    sort: 'newest',
-  }
-  applyFilters()
 }
 
 function handlePageChange(page: number) {
@@ -902,6 +894,7 @@ function formatDate(dateString: string): string {
   cursor: pointer;
   transition: all 0.3s ease;
   display: flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
   padding: var(--space-2xl);
@@ -930,6 +923,14 @@ function formatDate(dateString: string): string {
   color: var(--text-on-gold);
   line-height: 1;
   margin-top: -4px;
+}
+
+.create-label {
+  font-family: var(--font-heading);
+  font-size: var(--text-xl);
+  font-weight: var(--font-semibold);
+  color: var(--gold-primary);
+  margin-top: var(--space-lg);
 }
 
 /* Posts Section */

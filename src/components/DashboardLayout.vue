@@ -8,7 +8,7 @@ import MaterialIcon from './MaterialIcon.vue'
 import NotificationDropdown from './NotificationDropdown.vue'
 
 const authStore = useAuthStore()
-const { t } = useI18n()
+useI18n()
 
 // Mobile menu state
 const mobileMenuOpen = ref(false)

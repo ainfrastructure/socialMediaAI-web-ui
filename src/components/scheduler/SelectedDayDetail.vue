@@ -664,7 +664,7 @@ const shouldShowPanel = computed(() => {
 // Use upcomingPosts for convenience
 const upcomingPosts = computed(() => props.upcomingPosts || [])
 
-const toggleExpanded = (postId: string | number, post?: any) => {
+const toggleExpanded = (postId: string | number, _post?: any) => {
   const isExpanding = expandedPostId.value !== postId
 
   if (expandedPostId.value === postId) {

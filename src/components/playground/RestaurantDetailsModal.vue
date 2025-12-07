@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
-import BaseCard from '../BaseCard.vue'
 import BaseButton from '../BaseButton.vue'
 import BaseAlert from '../BaseAlert.vue'
 import BaseModal from '../BaseModal.vue'

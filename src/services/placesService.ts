@@ -118,32 +118,27 @@ class PlacesService {
       return []
     }
 
-    try {
-      const response = await fetch(
-        `${API_URL}/api/places/search?query=${encodeURIComponent(query)}`,
-        {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        }
-      )
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
+    const response = await fetch(
+      `${API_URL}/api/places/search?query=${encodeURIComponent(query)}`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
       }
+    )
 
-      const data: SearchRestaurantsResponse = await response.json()
-
-      if (!data.success) {
-        throw new Error(data.error || 'Failed to search restaurants')
-      }
-
-      return data.data.suggestions
-    } catch (error) {
-
-      throw error
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`)
     }
+
+    const data: SearchRestaurantsResponse = await response.json()
+
+    if (!data.success) {
+      throw new Error(data.error || 'Failed to search restaurants')
+    }
+
+    return data.data.suggestions
   }
 
   /**
@@ -156,32 +151,27 @@ class PlacesService {
       return null
     }
 
-    try {
-      const response = await fetch(
-        `${API_URL}/api/places/${encodeURIComponent(placeId)}`,
-        {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        }
-      )
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
+    const response = await fetch(
+      `${API_URL}/api/places/${encodeURIComponent(placeId)}`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
       }
+    )
 
-      const data: PlaceDetailsResponse = await response.json()
-
-      if (!data.success || !data.data) {
-        throw new Error(data.error || 'Failed to get place details')
-      }
-
-      return data.data
-    } catch (error) {
-
-      throw error
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`)
     }
+
+    const data: PlaceDetailsResponse = await response.json()
+
+    if (!data.success || !data.data) {
+      throw new Error(data.error || 'Failed to get place details')
+    }
+
+    return data.data
   }
 
   /**
@@ -198,32 +188,27 @@ class PlacesService {
       return null
     }
 
-    try {
-      const response = await fetch(
-        `${API_URL}/api/places/${encodeURIComponent(placeId)}/competitors?radius=${radiusKm}`,
-        {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        }
-      )
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
+    const response = await fetch(
+      `${API_URL}/api/places/${encodeURIComponent(placeId)}/competitors?radius=${radiusKm}`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
       }
+    )
 
-      const data: CompetitorApiResponse = await response.json()
-
-      if (!data.success || !data.data) {
-        throw new Error(data.error || 'Failed to find competitors')
-      }
-
-      return data.data
-    } catch (error) {
-
-      throw error
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`)
     }
+
+    const data: CompetitorApiResponse = await response.json()
+
+    if (!data.success || !data.data) {
+      throw new Error(data.error || 'Failed to find competitors')
+    }
+
+    return data.data
   }
 }
 

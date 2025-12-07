@@ -47,8 +47,8 @@ const emit = defineEmits<{
   (e: 'payment-success'): void
 }>()
 
-const router = useRouter()
-const authStore = useAuthStore()
+useRouter()
+useAuthStore()
 const { t } = useI18n()
 
 const plans = ref<Plan[]>([])

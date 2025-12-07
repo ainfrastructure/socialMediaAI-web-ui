@@ -47,7 +47,6 @@ const emit = defineEmits<{
 }>()
 
 const visible = ref(props.modelValue)
-let timeoutId: number | null = null
 
 const icon = computed(() => {
   switch (props.type) {
@@ -71,7 +70,7 @@ const close = () => {
 
 const startAutoClose = () => {
   if (props.duration > 0) {
-    timeoutId = window.setTimeout(() => {
+    window.setTimeout(() => {
       close()
     }, props.duration)
   }

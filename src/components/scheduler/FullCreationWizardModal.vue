@@ -6,7 +6,6 @@
 import { ref, computed, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import BaseCard from '../BaseCard.vue'
-import BaseButton from '../BaseButton.vue'
 import BaseAlert from '../BaseAlert.vue'
 import MaterialIcon from '../MaterialIcon.vue'
 import EasyModeCreation from '../EasyModeCreation.vue'
@@ -17,6 +16,7 @@ import { useInstagramStore } from '@/stores/instagram'
 import { useNotificationStore } from '@/stores/notifications'
 import { restaurantService, type SavedRestaurant } from '@/services/restaurantService'
 import { api } from '@/services/api'
+import { okamService } from '@/services/okamService'
 
 interface MenuItem {
   name: string
@@ -46,7 +46,7 @@ const emit = defineEmits<{
   (e: 'open-pick-post-modal'): void
 }>()
 
-const { t } = useI18n()
+const { t, locale } = useI18n()
 const facebookStore = useFacebookStore()
 const instagramStore = useInstagramStore()
 const notificationStore = useNotificationStore()
@@ -283,7 +283,8 @@ async function generatePostContent() {
       menuItemNames,
       'image', // content type
       promptContext.value,
-      selectedRestaurant.value.brand_dna
+      selectedRestaurant.value.brand_dna,
+      locale.value as 'en' | 'no'
     )
 
     if (response.success) {
@@ -346,7 +347,9 @@ async function generateImage(uploadedLogo: File | null = null, uploadedImage: Fi
   else if (selectedMenuItems.value.length > 0 && selectedMenuItems.value[0].imageUrl) {
     try {
       const firstItem = selectedMenuItems.value[0]
-      const imageResponse = await fetch(firstItem.imageUrl)
+      // Proxy Okam CDN URLs to avoid CORS issues
+      const imageUrl = okamService.proxyImageUrl(firstItem.imageUrl) || firstItem.imageUrl
+      const imageResponse = await fetch(imageUrl)
       if (imageResponse.ok) {
         const imageBlob = await imageResponse.blob()
         const base64Data = await new Promise<string>((resolve) => {
@@ -357,9 +360,14 @@ async function generateImage(uploadedLogo: File | null = null, uploadedImage: Fi
           }
           reader.readAsDataURL(imageBlob)
         })
+        // Handle 'application/octet-stream' by defaulting to image/png
+        let mimeType = imageBlob.type
+        if (!mimeType || mimeType === 'application/octet-stream') {
+          mimeType = 'image/png'
+        }
         referenceImage = {
           base64Data,
-          mimeType: imageBlob.type,
+          mimeType,
         }
       }
     } catch {

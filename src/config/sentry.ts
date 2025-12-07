@@ -41,7 +41,7 @@ export function initSentry(app: App, router: Router) {
     ],
 
     // Add context to errors
-    beforeSend(event, hint) {
+    beforeSend(event, _hint) {
       // Filter out localhost/development noise if needed
       if (environment === 'development' && event.request?.url?.includes('localhost')) {
         return null

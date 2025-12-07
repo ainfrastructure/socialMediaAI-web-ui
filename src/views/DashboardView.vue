@@ -71,24 +71,6 @@ const disconnectModalTitle = ref('')
 const disconnectModalMessage = ref('')
 const pendingDisconnect = ref<{ type: 'facebook' | 'instagram'; id: string; name: string } | null>(null)
 
-function requestDisconnectFacebook() {
-  const page = facebookStore.connectedPages[0]
-  if (!page) return
-  pendingDisconnect.value = { type: 'facebook', id: page.pageId, name: page.pageName }
-  disconnectModalTitle.value = t('connectAccounts.disconnectTitle')
-  disconnectModalMessage.value = t('connectAccounts.confirmDisconnect', { name: page.pageName })
-  showDisconnectModal.value = true
-}
-
-function requestDisconnectInstagram() {
-  const account = instagramStore.connectedAccounts[0]
-  if (!account) return
-  pendingDisconnect.value = { type: 'instagram', id: account.instagramAccountId, name: `@${account.username}` }
-  disconnectModalTitle.value = t('connectAccounts.disconnectTitle')
-  disconnectModalMessage.value = t('connectAccounts.confirmDisconnect', { name: `@${account.username}` })
-  showDisconnectModal.value = true
-}
-
 async function handleConfirmDisconnect() {
   showDisconnectModal.value = false
   if (!pendingDisconnect.value) return
@@ -291,7 +273,7 @@ function handlePostSchedule(post: any) {
 }
 
 // Handle delete action from modal
-function handlePostDelete(post: any) {
+function handlePostDelete(_post: any) {
   // For now, just close the modal - delete functionality can be implemented later
   closePostDetailModal()
   // TODO: Show delete confirmation modal and handle deletion
@@ -321,43 +303,6 @@ function testAnalytics() {
     timestamp: new Date().toISOString()
   })
   alert('✅ Analytics event sent to PostHog! Check Live Events.')
-}
-
-// Get content type from post
-function getPostContentType(post: any): string {
-  if (post.content_type) return post.content_type
-  if (post.favorite_posts?.content_type) return post.favorite_posts.content_type
-  if (post.favorite_post?.content_type) return post.favorite_post.content_type
-
-  // Detect from URL
-  const url = getPostMediaUrl(post)
-  if (url) {
-    if (url.match(/\.(mp4|webm|mov|avi)$/i)) return 'video'
-  }
-  return 'image'
-}
-
-// Format date for display
-function formatPostDate(post: any): string {
-  const date = post.scheduled_date || post.published_at || post.created_at
-  if (!date) return ''
-  return new Date(date).toLocaleDateString(undefined, {
-    weekday: 'short',
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric'
-  })
-}
-
-// Format time for display
-function formatPostTime(time: string | null): string {
-  if (!time) return ''
-  // Handle HH:MM format
-  if (time.includes(':')) {
-    const [hours, minutes] = time.split(':')
-    return `${hours}:${minutes}`
-  }
-  return time
 }
 
 // Computed to check if showing all restaurants

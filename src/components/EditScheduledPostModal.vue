@@ -22,10 +22,10 @@ const emit = defineEmits<{
   (e: 'save', updates: any): void
 }>()
 
-const { t } = useI18n()
+useI18n()
 
 // Social accounts integration
-const { availablePlatforms, isConnected } = useSocialAccounts()
+const { availablePlatforms } = useSocialAccounts()
 
 // Schedule time utilities
 const { hours12, minutes: minutesList, timezones, getDefaultTimezone } = useScheduleTime()
@@ -71,7 +71,7 @@ const populateForm = (post: any) => {
     // Parse time like "14:30:00" or "2:30 PM"
     const timeParts = post.scheduled_time.match(/(\d+):(\d+)/)
     if (timeParts) {
-      let hour = parseInt(timeParts[1])
+      const hour = parseInt(timeParts[1])
       const minute = timeParts[2]
 
       // Convert 24-hour to 12-hour format

@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import BaseButton from './BaseButton.vue'
 
 interface Props {
   modelValue?: File[]

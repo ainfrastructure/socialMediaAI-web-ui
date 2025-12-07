@@ -10,14 +10,11 @@ import MenuItemMultiSelector from './MenuItemMultiSelector.vue'
 import AdvancedCustomizationPanel from './AdvancedCustomizationPanel.vue'
 import CustomizationPreview from './CustomizationPreview.vue'
 import PromptVariationSelector from './PromptVariationSelector.vue'
-import LogoTogglePreview from './LogoTogglePreview.vue'
 import UnifiedSchedulePost from './UnifiedSchedulePost.vue'
 import WizardProgress from './WizardProgress.vue'
 import GoldenDishIcon from './icons/GoldenDishIcon.vue'
 import GoldenComboIcon from './icons/GoldenComboIcon.vue'
 import GoldenCalendarIcon from './icons/GoldenCalendarIcon.vue'
-import GoldenUploadIcon from './icons/GoldenUploadIcon.vue'
-import GoldenSparkleIcon from './icons/GoldenSparkleIcon.vue'
 import GoldenBlockIcon from './icons/GoldenBlockIcon.vue'
 import GoldenSchoolIcon from './icons/GoldenSchoolIcon.vue'
 import GoldenChristmasIcon from './icons/GoldenChristmasIcon.vue'
@@ -30,10 +27,10 @@ import GoldenCelebrationIcon from './icons/GoldenCelebrationIcon.vue'
 import GoldenEditIcon from './icons/GoldenEditIcon.vue'
 import GoldenImageIcon from './icons/GoldenImageIcon.vue'
 import GoldenVideoIcon from './icons/GoldenVideoIcon.vue'
-import GoldenGridIcon from './icons/GoldenGridIcon.vue'
 import { ImageUploadBox, SectionLabel, ContentDivider } from './creation'
 import { restaurantService, type SavedRestaurant } from '@/services/restaurantService'
 import { api } from '@/services/api'
+import { okamService } from '@/services/okamService'
 import { useFacebookStore } from '@/stores/facebook'
 import { useInstagramStore } from '@/stores/instagram'
 
@@ -248,9 +245,9 @@ const generatingContent = ref(false)
 
 // Publishing state
 const selectedPlatform = ref<PlatformType>('facebook')
-const publishType = ref<'now' | 'schedule'>('now')
-const scheduleDate = ref('')
-const scheduleTime = ref('')
+const _publishType = ref<'now' | 'schedule'>('now')
+const _scheduleDate = ref('')
+const _scheduleTime = ref('')
 const publishing = ref(false)
 const publishSuccess = ref(false)
 const publishError = ref('')
@@ -424,7 +421,7 @@ function navigateToStep(stepNumber: number) {
   }
 }
 
-function goToStep(step: number) {
+function _goToStep(step: number) {
   if (step >= 1 && step <= totalSteps) {
     currentStep.value = step
   }
@@ -477,7 +474,7 @@ function closeDaySelector() {
 }
 
 // Image upload handlers
-function handleImageUpload(event: Event) {
+function _handleImageUpload(event: Event) {
   const target = event.target as HTMLInputElement
   const file = target.files?.[0]
 
@@ -650,7 +647,8 @@ async function generateImage() {
     // If no uploaded image, try to use menu item image (for single posts)
     else if (postType.value === 'single' && selectedMenuItems.value.length > 0 && selectedMenuItems.value[0].imageUrl) {
       try {
-        const imageUrl = selectedMenuItems.value[0].imageUrl
+        // Proxy Okam CDN URLs to avoid CORS issues
+        const imageUrl = okamService.proxyImageUrl(selectedMenuItems.value[0].imageUrl) || selectedMenuItems.value[0].imageUrl
         const imageResponse = await fetch(imageUrl)
         const blob = await imageResponse.blob()
         const base64Data = await new Promise<string>((resolve) => {
@@ -661,9 +659,14 @@ async function generateImage() {
           }
           reader.readAsDataURL(blob)
         })
+        // Handle 'application/octet-stream' by defaulting to image/png
+        let mimeType = blob.type
+        if (!mimeType || mimeType === 'application/octet-stream') {
+          mimeType = 'image/png'
+        }
         referenceImage = {
           base64Data,
-          mimeType: blob.type,
+          mimeType,
         }
       } catch {
         console.error('Failed to fetch menu item image')
@@ -765,7 +768,7 @@ function removeHashtag(index: number) {
 }
 
 // Handle logo selection
-function handleLogoSelect(variant: LogoVariant) {
+function _handleLogoSelect(variant: LogoVariant) {
   selectedLogoVariant.value = variant
 }
 

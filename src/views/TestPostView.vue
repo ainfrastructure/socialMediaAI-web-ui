@@ -191,7 +191,7 @@ import BaseInput from '../components/BaseInput.vue'
 import BaseAlert from '../components/BaseAlert.vue'
 import ImageUpload from '../components/ImageUpload.vue'
 
-const router = useRouter()
+useRouter()
 const facebookStore = useFacebookStore()
 
 const formData = ref({
