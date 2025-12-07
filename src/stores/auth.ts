@@ -306,6 +306,13 @@ export const useAuthStore = defineStore('auth', () => {
       // Handle both response structures: response.data.user OR response.user
       const userData = response.data?.user || (response as any).user
 
+      // Check if account was deleted - clear everything and let user login fresh
+      if ((response as any).code === 'ACCOUNT_DELETED') {
+        clearSession()
+        initialized.value = true
+        return
+      }
+
       if (!response.success || !userData) {
 
         // Token is invalid, try to refresh
@@ -315,6 +322,13 @@ export const useAuthStore = defineStore('auth', () => {
           // Try loading profile again with new token (but only once to avoid infinite loop)
           loading.value = true
           const retryResponse = await api.getProfile()
+
+          // Check for account deleted on retry too
+          if ((retryResponse as any).code === 'ACCOUNT_DELETED') {
+            clearSession()
+            initialized.value = true
+            return
+          }
 
           // Handle both response structures
           const retryUserData = retryResponse.data?.user || (retryResponse as any).user
@@ -350,6 +364,10 @@ export const useAuthStore = defineStore('auth', () => {
         // Retry profile load after successful refresh
         try {
           const retryResponse = await api.getProfile()
+          if ((retryResponse as any).code === 'ACCOUNT_DELETED') {
+            clearSession()
+            return
+          }
           if (retryResponse.success && retryResponse.data?.user) {
             user.value = retryResponse.data.user
             syncSubscriptionInBackground()

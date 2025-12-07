@@ -30,6 +30,11 @@ onMounted(async () => {
 
     // Handle successful authentication
     if (accessToken && refreshToken) {
+      // Clear any old tokens first (important for deleted account re-login)
+      localStorage.removeItem('access_token')
+      localStorage.removeItem('refresh_token')
+      localStorage.removeItem('token_expires_at')
+
       // Store tokens with expiration (default to 1 hour)
       const expiresIn = params.get('expires_in')
       const expiresAt = expiresIn ? Date.now() + parseInt(expiresIn) * 1000 : Date.now() + 3600 * 1000
