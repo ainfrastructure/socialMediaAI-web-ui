@@ -406,8 +406,8 @@ function handleSchedule() {
               <!-- Draft actions -->
               <template v-if="postStatus === 'draft'">
                 <BaseButton variant="primary" size="medium" @click="handleSchedule">
-                  <MaterialIcon icon="schedule" size="sm" />
-                  {{ $t('posts.scheduleButton') }}
+                  <MaterialIcon icon="send" size="sm" />
+                  {{ $t('posts.publishButton') }}
                 </BaseButton>
                 <BaseButton variant="secondary" size="medium" @click="handleEdit">
                   <MaterialIcon icon="edit" size="sm" />

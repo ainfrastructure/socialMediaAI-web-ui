@@ -45,7 +45,6 @@
     <!-- Unified Schedule Component -->
     <UnifiedSchedulePost
       :disabled="scheduling"
-      :force-schedule-mode="true"
       :show-cancel-button="true"
       :initial-platforms="initialPlatforms"
       @publish="handleUnifiedPublish"
@@ -137,28 +136,42 @@ const handleUnifiedPublish = async (data: {
     scheduling.value = true
     error.value = ''
 
-    // Single API call with all selected platforms
-    const scheduleData = {
-      favorite_post_id: props.favoritePost.id,
-      scheduled_date: data.scheduledDate,
-      scheduled_time: data.scheduledTime || undefined,
-      timezone: data.timezone,
-      notes: formData.value.notes || undefined,
-      platforms: data.platforms,
+    let response
+
+    if (data.publishType === 'now') {
+      // Publish immediately
+      const now = new Date()
+      const publishData = {
+        favorite_post_id: props.favoritePost.id,
+        published_date: now.toISOString().split('T')[0],
+        published_time: `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`,
+        timezone: data.timezone,
+        platforms: data.platforms,
+      }
+      response = await api.createPublishedPost(publishData)
+    } else {
+      // Schedule for later
+      const scheduleData = {
+        favorite_post_id: props.favoritePost.id,
+        scheduled_date: data.scheduledDate,
+        scheduled_time: data.scheduledTime || undefined,
+        timezone: data.timezone,
+        notes: formData.value.notes || undefined,
+        platforms: data.platforms,
+      }
+      response = await api.schedulePost(scheduleData)
     }
 
-    const response = await api.schedulePost(scheduleData)
-
     if (response.success) {
-      emit('scheduled', { success: true })
+      emit('scheduled', { success: true, publishType: data.publishType })
       closeModal()
       router.push('/scheduler')
     } else {
-      error.value = response.error || 'Failed to schedule post'
+      error.value = response.error || (data.publishType === 'now' ? 'Failed to publish post' : 'Failed to schedule post')
     }
 
   } catch (err: any) {
-    error.value = err.message || 'Failed to schedule post'
+    error.value = err.message || 'Failed to process post'
   } finally {
     scheduling.value = false
   }

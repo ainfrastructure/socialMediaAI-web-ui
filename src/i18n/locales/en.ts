@@ -1406,6 +1406,7 @@ export default {
     cancelChangesButton: 'Cancel',
     editButton: 'Edit',
     scheduleButton: 'Schedule',
+    publishButton: 'Publish',
     deleteButton: 'Delete',
     postAlt: 'Post',
     publishToInstagram: 'Publish to Instagram',
@@ -1647,7 +1648,7 @@ export default {
 
   // Schedule Modal
   scheduleModal: {
-    title: 'Schedule Post',
+    title: 'Publish Post',
     preview: 'Preview',
     dateLabel: 'Date',
     dateHint: 'Date pre-filled from calendar selection',
@@ -1967,5 +1968,18 @@ export default {
     inlineSubtitle: 'This won\'t be included in your post',
     whatDidYouLike: 'What did you like or dislike about this post?',
     feedbackPlaceholder: 'Share what worked well or what could be better...',
+  },
+
+  // Generating Progress
+  generatingProgress: {
+    title: 'Creating your post',
+    hint: 'This usually takes 20-50 seconds',
+    steps: {
+      analyzing: 'Analyzing',
+      designing: 'Designing',
+      generating: 'Generating',
+      refining: 'Refining',
+      finalizing: 'Finalizing',
+    },
   },
 }

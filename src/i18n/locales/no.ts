@@ -1406,6 +1406,7 @@ export default {
     cancelChangesButton: 'Avbryt',
     editButton: 'Rediger',
     scheduleButton: 'Planlegg',
+    publishButton: 'Publiser',
     deleteButton: 'Slett',
     postAlt: 'Innlegg',
     publishToInstagram: 'Publiser til Instagram',
@@ -1647,7 +1648,7 @@ export default {
 
   // Schedule Modal
   scheduleModal: {
-    title: 'Planlegg innlegg',
+    title: 'Publiser innlegg',
     preview: 'Forhåndsvisning',
     dateLabel: 'Dato',
     dateHint: ' Dato forhåndsutfylt fra kalendervalg',
@@ -1967,5 +1968,18 @@ export default {
     inlineSubtitle: 'Dette er ikke en del av innlegget',
     whatDidYouLike: 'Hva likte du eller likte du ikke med dette innlegget?',
     feedbackPlaceholder: 'Del hva som fungerte bra eller hva som kunne vært bedre...',
+  },
+
+  // Generating Progress
+  generatingProgress: {
+    title: 'Lager innlegget ditt',
+    hint: 'Dette tar vanligvis 20-50 sekunder',
+    steps: {
+      analyzing: 'Analyserer',
+      designing: 'Designer',
+      generating: 'Genererer',
+      refining: 'Forbedrer',
+      finalizing: 'Fullfører',
+    },
   },
 }

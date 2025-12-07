@@ -22,6 +22,7 @@ import GoldenThanksgivingIcon from './icons/GoldenThanksgivingIcon.vue'
 import GoldenCelebrationIcon from './icons/GoldenCelebrationIcon.vue'
 import GoldenEditIcon from './icons/GoldenEditIcon.vue'
 import UnifiedSchedulePost from './UnifiedSchedulePost.vue'
+import GeneratingProgress from './GeneratingProgress.vue'
 import { ImageUploadBox, SectionLabel, StyleTemplateGrid, ContentDivider } from './creation'
 import { useFacebookStore } from '@/stores/facebook'
 import { useInstagramStore } from '@/stores/instagram'
@@ -672,11 +673,9 @@ onUnmounted(() => {
 
     <!-- Step 2: Customize (Style + Promo + Logo) -->
     <BaseCard v-show="currentStep === 2" variant="glass" class="step-card generate-section">
-      <!-- Generating Loading State -->
-      <div v-if="props.generating" ref="generatingOverlayRef" class="step-generating-overlay">
-        <img src="/socialchef_logo.svg" alt="Social Chef" class="loading-logo" />
-        <p class="loading-title">{{ t('easyMode.step2.generatingTitle', 'Creating your post') }}</p>
-        <p class="loading-subtitle">{{ t('easyMode.step2.generatingSubtitle', 'Designing your image and writing captions') }}</p>
+      <!-- Generating Loading State with Progress -->
+      <div v-if="props.generating" ref="generatingOverlayRef">
+        <GeneratingProgress :active="props.generating" :estimated-duration="35" />
       </div>
 
       <!-- Normal customization form -->
@@ -946,9 +945,7 @@ onUnmounted(() => {
           <div class="preview-image-container">
             <!-- Loading State for Image -->
             <div v-if="props.generating && !props.generatedImageUrl" class="image-loading">
-              <img src="/socialchef_logo.svg" alt="Social Chef" class="loading-logo" />
-              <p class="loading-title">{{ t('easyMode.step2.generatingTitle', 'Creating your post') }}</p>
-              <p class="loading-subtitle">{{ t('easyMode.step2.generatingSubtitle', 'Designing your image and writing captions') }}</p>
+              <GeneratingProgress :active="props.generating" :estimated-duration="35" />
             </div>
             <!-- Generated Image (when ready) -->
             <img v-else-if="props.generatedImageUrl" :src="props.generatedImageUrl" alt="Generated post image" class="preview-image-display" />
