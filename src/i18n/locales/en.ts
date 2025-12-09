@@ -134,6 +134,7 @@ export default {
     continueWithGoogle: 'Continue with Google',
     continueWithFacebook: 'Continue with Facebook',
     orContinueWithEmail: 'or continue with email',
+    orContinueWith: 'or',
     signInWithEmail: 'Sign in with email',
     emailLoginDescription: 'Enter your email and we\'ll send you a link to sign in. No password needed.',
     sendLoginLink: 'Send Login Link',
@@ -173,10 +174,51 @@ export default {
   landing: {
     // Hero Section
     hero: {
-      headline: "Your Restaurant's Social Media Chef",
+      headline: "Your restaurant's AI social-media manager",
       subheadline: 'Finally, beautiful social media posts that publish themselves. No tech skills needed.',
       cta: 'Generate Your First Post',
       imagePlaceholder: 'Phone mockup showing Instagram feed with professional food photos',
+    },
+
+    // Login Box (inline in hero)
+    loginBox: {
+      title: 'Get Started',
+      subtitle: 'Create your first post in minutes',
+      goToDashboard: 'Go to Dashboard',
+    },
+
+    // How It Works Showcase Section
+    examples: {
+      title: 'How It Works',
+      subtitle: 'From your phone to professional posts in seconds',
+      originalPhoto: 'Your Photo',
+      aiGenerated: 'AI Enhanced',
+      approveAndPost: 'Review & Approve',
+      flow: {
+        step1Title: 'Upload Your Photo',
+        step1Description: 'Take a photo of your dish with your phone. No professional camera needed.',
+        step2Title: 'AI Creates Multiple Versions',
+        step2Description: 'Our AI generates beautiful variations in different styles, each with engaging captions.',
+        step3Title: 'Review & Approve',
+        step3Description: 'Choose your favorite version. Nothing gets posted without your approval.',
+        step4Title: 'Auto-Published',
+        step4Description: 'Once approved, your post goes live on Facebook and Instagram automatically.',
+      },
+      gallery: {
+        title: 'Before & After',
+        subtitle: 'Drag to compare',
+        before: 'Before',
+        after: 'After',
+      },
+      templates: {
+        behindTheScenes: 'Behind the Scenes',
+        studioShot: 'Studio Shot',
+        oneBite: 'One Bite',
+        zoomIn: 'Zoom In',
+        cleanStrict: 'Clean Strict',
+        infographic: 'Infographic',
+        custom: 'Custom',
+      },
     },
 
     // How It Works
@@ -228,7 +270,7 @@ export default {
 
     // Social Proof
     socialProof: {
-      title: 'Trusted by Restaurant Owners',
+      title: '',
       stat1: 'Restaurants',
       stat2: 'Posts Generated',
       stat3: 'Rating',
@@ -274,7 +316,7 @@ export default {
     // Footer
     footer: {
       madeWith: 'Made with love for restaurant owners',
-      copyright: '© 2024 SocialChef. All rights reserved.',
+      copyright: '© 2025 SocialChef. All rights reserved.',
     },
   },
 

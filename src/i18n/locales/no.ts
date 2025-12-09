@@ -134,6 +134,7 @@ export default {
     continueWithGoogle: 'Fortsett med Google',
     continueWithFacebook: 'Fortsett med Facebook',
     orContinueWithEmail: 'eller fortsett med e-post',
+    orContinueWith: 'eller',
     signInWithEmail: 'Logg inn med e-post',
     emailLoginDescription: 'Skriv inn e-posten din, så sender vi deg en lenke for å logge inn. Ingen passord nødvendig.',
     sendLoginLink: 'Send innloggingslenke',
@@ -173,15 +174,56 @@ export default {
   landing: {
     // Hero Section
     hero: {
-      headline: 'Din Restaurants Sosiale Medie-Kokk',
-      subheadline: 'Endelig, vakre sosiale medier-innlegg som publiserer seg selv. Ingen tekniske ferdigheter nødvendig.',
-      cta: 'Lag Ditt Første Innlegg',
+      headline: 'Din restaurants AI sosiale medie-manager',
+      subheadline: 'Sparer deg for flere timer i uka',
+      cta: 'Lag ditt første innlegg',
       imagePlaceholder: 'Telefon-mockup som viser Instagram-feed med profesjonelle matbilder',
+    },
+
+    // Login Box (inline in hero)
+    loginBox: {
+      title: 'Kom i gang',
+      subtitle: 'Lag ditt første innlegg på minutter',
+      goToDashboard: 'Gå til dashboard',
+    },
+
+    // How It Works Showcase Section
+    examples: {
+      title: 'Slik fungerer det',
+      subtitle: 'Fra telefonen din til profesjonelle innlegg på sekunder',
+      originalPhoto: 'Ditt bilde',
+      aiGenerated: 'AI-forbedret',
+      approveAndPost: 'Gjennomgå og godkjenn',
+      flow: {
+        step1Title: 'Last opp bildet ditt',
+        step1Description: 'Ta et bilde av retten din med telefonen. Ingen profesjonelt kamera nødvendig.',
+        step2Title: 'AI lager flere versjoner',
+        step2Description: 'Vår AI genererer vakre varianter i forskjellige stiler, hver med engasjerende tekst.',
+        step3Title: 'Gjennomgå og godkjenn',
+        step3Description: 'Velg din favorittversjon. Ingenting blir publisert uten din godkjenning.',
+        step4Title: 'Auto-publisert',
+        step4Description: 'Når godkjent, publiseres innlegget ditt på Facebook og Instagram automatisk.',
+      },
+      gallery: {
+        title: 'Før og etter',
+        subtitle: 'Dra for å sammenligne',
+        before: 'Før',
+        after: 'Etter',
+      },
+      templates: {
+        behindTheScenes: 'Bak kulissene',
+        studioShot: 'Studioopptak',
+        oneBite: 'En bit',
+        zoomIn: 'Zoom inn',
+        cleanStrict: 'Ren streng',
+        infographic: 'Infografikk',
+        custom: 'Egendefinert',
+      },
     },
 
     // How It Works
     howItWorks: {
-      title: '3 Enkle Steg. Null Hodebry.',
+      title: '3 enkle steg. Null hodebry.',
       step1Title: 'Fortell oss om retten din',
       step1Description: 'Velg fra menyen eller ta et bilde. Det er alt.',
       step1Image: 'Hånd som holder telefon og fotograferer en rett',
@@ -196,41 +238,41 @@ export default {
     // Auto-Posting Feature (KEY DIFFERENTIATOR)
     autoPosting: {
       badge: 'Nøkkelfunksjon',
-      title: 'Sett Det & Glem Det',
+      title: 'Sett det og glem det',
       headline: 'Innleggene dine publiseres automatisk. Virkelig.',
       description: 'Slutt å huske på å poste. Slutt å logge inn i apper. SocialChef håndterer alt - fra opprettelse til publisering. Du vil se ut som om du har en dedikert sosiale medier-ansvarlig.',
       imagePlaceholder: 'Delt skjerm - stresset eier til venstre, avslappet eier til høyre med innlegg som auto-publiseres',
       feature1: 'Innlegg går live mens du lager mat',
-      feature2: 'Fungerer med Instagram & Facebook',
+      feature2: 'Fungerer med Instagram og Facebook',
       feature3: 'Planlegg uker i forveien',
     },
 
     // Benefits
     benefits: {
-      title: 'Hvorfor Restauranteiere Elsker SocialChef',
+      title: 'Hvorfor restauranteiere elsker SocialChef',
       time: {
-        title: 'Spar 10+ Timer Per Uke',
+        title: 'Spar 10+ timer per uke',
         description: 'Slutt å slite med innholdsproduksjon. Bruk tiden på det som betyr noe - maten og kundene dine.',
       },
       professional: {
-        title: 'Se Alltid Profesjonell Ut',
+        title: 'Se alltid profesjonell ut',
         description: 'Hvert innlegg ser ut som det ble laget av en proff designer. Fordi det ble det. En AI-designer.',
       },
       growth: {
-        title: 'Øk Følgerskaren',
+        title: 'Øk følgerskaren',
         description: 'Konsekvent posting betyr mer engasjement. Mer engasjement betyr flere kunder.',
       },
       easy: {
-        title: 'Ingen Tekniske Ferdigheter Nødvendig',
+        title: 'Ingen tekniske ferdigheter nødvendig',
         description: 'Hvis du kan ta et bilde av mat, kan du bruke SocialChef. Det er hele ferdighetskravet.',
       },
     },
 
     // Social Proof
     socialProof: {
-      title: 'Stolt Av Restauranteiere',
+      title: '',
       stat1: 'Restauranter',
-      stat2: 'Innlegg Generert',
+      stat2: 'Innlegg generert',
       stat3: 'Vurdering',
       testimonial1Quote: 'Jeg pleide å bruke timer på Instagram. Nå velger jeg bare retten min og det er gjort.',
       testimonial2Quote: 'Kundene mine tror jeg har ansatt et markedsføringsteam. Nei, bare SocialChef.',
@@ -239,7 +281,7 @@ export default {
 
     // Pricing Preview
     pricing: {
-      title: 'Enkel, Ærlig Prising',
+      title: 'Enkel, ærlig prising',
       subtitle: 'Start i dag. Avslutt når som helst.',
       monthly: 'Månedlig',
       yearly: 'Årlig',
@@ -248,33 +290,33 @@ export default {
       perYear: 'år',
       oneTime: 'engangs',
       images: 'bilder',
-      mostPopular: 'Mest Populær',
-      viewAll: 'Se Full Prisliste',
+      mostPopular: 'Mest populær',
+      viewAll: 'Se full prisliste',
     },
 
     // Final CTA
     finalCta: {
-      title: 'Klar Til Å Si Opp Sosiale Medier-Bekymringene?',
+      title: 'Klar til å si opp sosiale medier-bekymringene?',
       subtitle: 'Bli med hundrevis av restauranteiere som sluttet å stresse over sosiale medier.',
     },
 
     // Login Modal
     loginModal: {
-      title: 'La Oss Komme I Gang',
+      title: 'La oss komme i gang',
       subtitle: 'Logg inn for å generere ditt første innlegg',
     },
 
     // Paywall Modal
     paywall: {
-      title: 'Velg Din Plan',
+      title: 'Velg din plan',
       subtitle: 'Lås opp automatisk posting og spar timer hver uke',
-      autoPostingReminder: 'Alle planer inkluderer automatisk posting til Instagram & Facebook',
+      autoPostingReminder: 'Alle planer inkluderer automatisk posting til Instagram og Facebook',
     },
 
     // Footer
     footer: {
       madeWith: 'Laget med kjærlighet for restauranteiere',
-      copyright: '© 2024 SocialChef. Alle rettigheter reservert.',
+      copyright: '© 2025 SocialChef. Alle rettigheter reservert.',
     },
   },
 
