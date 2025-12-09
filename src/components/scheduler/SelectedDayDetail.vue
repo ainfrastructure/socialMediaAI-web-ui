@@ -1,7 +1,7 @@
 <template>
-  <div v-if="shouldShowPanel" class="day-detail-wrapper">
-    <!-- Tab Bar -->
-    <div class="tab-bar">
+  <div v-if="shouldShowPanel" :class="['day-detail-wrapper', { 'no-tab-bar': hideTabBar }]">
+    <!-- Tab Bar (hidden when hideTabBar is true) -->
+    <div v-if="!hideTabBar" class="tab-bar">
       <button
         :class="['tab-btn', { active: activeTab === 'day' }]"
         @click="switchTab('day')"
@@ -94,6 +94,21 @@
                 :platform="platform as 'facebook' | 'instagram' | 'tiktok'"
                 :size="24"
               />
+            </div>
+
+            <!-- Mobile-only compact info row -->
+            <div class="td-mobile-info">
+              <span v-if="activeTab === 'upcoming'" class="mobile-date-badge">{{ formatPostDate(post.scheduled_date) }}</span>
+              <span class="mobile-time">{{ formatTime(post.scheduled_time) || '--:--' }}</span>
+              <span class="mobile-status">{{ getStatusLabel(post.status) }}</span>
+              <div class="mobile-platforms">
+                <PlatformLogo
+                  v-for="platform in getPostPlatforms(post)"
+                  :key="platform"
+                  :platform="platform as 'facebook' | 'instagram' | 'tiktok'"
+                  :size="18"
+                />
+              </div>
             </div>
 
             <!-- Status Column -->
@@ -405,6 +420,12 @@
         </button>
       </div>
     </div>
+
+    <!-- Empty State -->
+    <div v-else class="empty-state">
+      <div class="empty-icon">📅</div>
+      <p class="empty-text">{{ $t('scheduler.noPostsForDay', 'No posts scheduled') }}</p>
+    </div>
   </div>
 </template>
 
@@ -429,6 +450,7 @@ const props = defineProps<{
   upcomingPosts?: any[]
   activeTab?: 'day' | 'upcoming'
   postsPerPage?: number
+  hideTabBar?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -721,11 +743,8 @@ const formatPostDate = (dateString: string) => {
   const date = new Date(dateString + 'T00:00:00')
   const today = new Date()
   today.setHours(0, 0, 0, 0)
-  const tomorrow = new Date(today)
-  tomorrow.setDate(tomorrow.getDate() + 1)
 
   if (date.getTime() === today.getTime()) return 'Today'
-  if (date.getTime() === tomorrow.getTime()) return 'Tomorrow'
 
   return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
 }
@@ -744,10 +763,7 @@ const formatPostDateFull = (dateString: string) => {
 const formatTime = (time: string | null) => {
   if (!time) return null
   const [hours, minutes] = time.split(':')
-  const hour = parseInt(hours)
-  const ampm = hour >= 12 ? 'PM' : 'AM'
-  const displayHour = hour % 12 || 12
-  return `${displayHour}:${minutes} ${ampm}`
+  return `${hours}:${minutes}`
 }
 
 const getPostTimeAgo = (post: any) => {
@@ -877,6 +893,14 @@ defineExpose({
   border-radius: var(--radius-lg);
   overflow: hidden;
   border: 1px solid var(--border-color);
+}
+
+/* When tab bar is hidden (day view mode) */
+.day-detail-wrapper.no-tab-bar {
+  margin-top: 0;
+  border-radius: 0;
+  border: none;
+  border-top: 1px solid var(--border-color);
 }
 
 @keyframes fadeInUp {
@@ -1066,6 +1090,11 @@ defineExpose({
   color: var(--gold-primary);
   font-size: var(--text-xs);
   font-weight: var(--font-semibold);
+}
+
+/* Mobile-only info row - hidden on desktop */
+.td-mobile-info {
+  display: none;
 }
 
 /* Post Column */
@@ -1529,36 +1558,178 @@ defineExpose({
 }
 
 @media (max-width: 768px) {
-  .table-header,
-  .table-row {
-    grid-template-columns: 1fr;
-    gap: var(--space-sm);
-  }
-
-  .table-header > div:not(.th-post) {
+  /* Hide table header completely on mobile */
+  .table-header {
     display: none;
   }
 
+  .table-row {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    padding: var(--space-md);
+    position: relative;
+  }
+
+  /* Hide desktop columns on mobile */
+  .td-date,
   .td-platforms,
   .td-status,
-  .td-restaurant {
+  .td-restaurant,
+  .post-info {
     display: none;
+  }
+
+  /* Show mobile info row */
+  .td-mobile-info {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    flex: 1;
+    min-width: 0;
+    flex-wrap: wrap;
+  }
+
+  .mobile-date-badge {
+    padding: 2px 8px;
+    border-radius: var(--radius-sm);
+    background: rgba(212, 175, 55, 0.15);
+    color: var(--gold-primary);
+    font-size: var(--text-xs);
+    font-weight: var(--font-semibold);
+    white-space: nowrap;
+  }
+
+  .mobile-time {
+    font-size: var(--text-sm);
+    font-weight: var(--font-semibold);
+    color: var(--text-primary);
+    white-space: nowrap;
+  }
+
+  .mobile-status {
+    font-size: var(--text-xs);
+    color: var(--text-muted);
+    white-space: nowrap;
+  }
+
+  .mobile-platforms {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-left: auto;
   }
 
   .td-expand {
-    position: absolute;
-    right: var(--space-md);
-    top: 50%;
-    transform: translateY(-50%);
+    flex-shrink: 0;
   }
 
-  .table-row {
-    position: relative;
-    padding-right: 48px;
+  /* Compact thumbnail on mobile */
+  .td-post {
+    flex-shrink: 0;
+  }
+
+  .post-thumb {
+    width: 48px;
+    height: 48px;
+  }
+
+  /* Expanded details - stack vertically on mobile */
+  .expanded-details {
+    padding: var(--space-md);
   }
 
   .expanded-grid {
     grid-template-columns: 1fr;
+    gap: var(--space-md);
+  }
+
+  .detail-section {
+    padding: var(--space-md);
+    background: var(--bg-tertiary);
+    border-radius: var(--radius-md);
+  }
+
+  .detail-preview-img {
+    max-height: 200px;
+    width: 100%;
+    object-fit: contain;
+  }
+
+  .detail-label {
+    font-size: var(--text-xs);
+    margin-bottom: var(--space-xs);
+  }
+
+  .detail-value {
+    font-size: var(--text-sm);
+  }
+
+  .detail-subvalue {
+    font-size: var(--text-xs);
+  }
+
+  .detail-caption-box {
+    font-size: var(--text-sm);
+    max-height: 120px;
+    padding: var(--space-sm);
+  }
+
+  .detail-platforms {
+    flex-wrap: wrap;
+  }
+
+  .platform-pill {
+    font-size: var(--text-xs);
+    padding: var(--space-xs) var(--space-sm);
+  }
+
+  .detail-actions-readonly {
+    flex-direction: column;
+    gap: var(--space-sm);
+  }
+
+  .detail-actions-readonly .action-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* Edit form mobile styles */
+  .edit-expanded {
+    grid-template-columns: 1fr;
+    gap: var(--space-md);
+  }
+
+  .edit-image-section {
+    align-items: center;
+  }
+
+  .edit-row-4,
+  .edit-row-3,
+  .edit-row-2 {
+    grid-template-columns: 1fr;
+    gap: var(--space-sm);
+  }
+
+  .edit-actions {
+    flex-wrap: wrap;
+    gap: var(--space-sm);
+  }
+
+  .edit-actions .action-btn {
+    flex: 1;
+    min-width: 80px;
+    justify-content: center;
+  }
+
+  .action-spacer {
+    display: none;
+  }
+
+  .past-date-warning {
+    width: 100%;
+    justify-content: center;
+    order: -1;
   }
 }
 
@@ -1901,5 +2072,27 @@ defineExpose({
   .edit-row-3 {
     grid-template-columns: 1fr;
   }
+}
+
+/* Empty State */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-3xl) var(--space-xl);
+  text-align: center;
+}
+
+.empty-icon {
+  font-size: 48px;
+  margin-bottom: var(--space-md);
+  opacity: 0.5;
+}
+
+.empty-text {
+  font-size: var(--text-base);
+  color: var(--text-muted);
+  margin: 0;
 }
 </style>

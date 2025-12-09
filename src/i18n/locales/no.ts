@@ -843,25 +843,40 @@ export default {
 
     // Style Templates (Easy Mode)
     styleTemplates: {
-      authentic: {
-        name: 'Autentisk',
-        description: 'Behold merkefarger og original presentasjon',
-        preview: 'Samme tallerken, beholder og merkevare-utseende',
+      behindTheScenes: {
+        name: 'Bak kulissene',
+        description: 'Autentisk kjøkkenøyeblikk',
+        preview: 'Dokumentarstil, ekte atmosfære',
       },
-      elegant: {
-        name: 'Elegant',
-        description: 'Sofistikert fine-dining estetikk',
-        preview: 'Mykt lys, raffinerte toner',
+      cleanStrict: {
+        name: 'Ren og stram',
+        description: 'Profesjonell studiokvalitet',
+        preview: 'Ren overflate, fargekorrigert',
       },
-      vibrant: {
-        name: 'Livlig',
-        description: 'Sterke farger og energisk følelse',
-        preview: 'Lys, iøynefallende med høy kontrast',
+      zoomIn: {
+        name: 'Zoom inn',
+        description: 'Ekstrem makronærbilde',
+        preview: 'Teksturdetaljer, vignetteringseffekt',
       },
-      rustic: {
-        name: 'Rustikk',
-        description: 'Varm og hjemmelaget komfortfølelse',
-        preview: 'Jordfarger med naturlige teksturer',
+      oneBite: {
+        name: 'En bit',
+        description: 'Klar-til-å-spise presentasjon',
+        preview: 'Bestikk holder en fristende bit',
+      },
+      studioShot: {
+        name: 'Studiobilde',
+        description: 'Profesjonelt reklameutseende',
+        preview: 'Hovedbilde, minimal bakgrunn',
+      },
+      infographic: {
+        name: 'Infografikk',
+        description: 'Dekonstruert ingrediensoversikt',
+        preview: 'Merkede lag og smaker',
+      },
+      custom: {
+        name: 'Egendefinert',
+        description: 'Skriv din egen prompt',
+        preview: 'Full kreativ kontroll',
       },
     },
 
@@ -893,6 +908,7 @@ export default {
       title: 'Tilpass innlegget ditt',
       subtitle: 'Velg stil, legg til kampanjer og merkevarebygging',
       styleLabel: 'Visuell stil',
+      customPromptPlaceholder: 'Beskriv hvordan du vil at retten skal fotograferes...',
       mediaTypeLabel: 'Medietype',
       imageOption: 'Bilde',
       videoOption: 'Video',

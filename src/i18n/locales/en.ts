@@ -843,25 +843,40 @@ export default {
 
     // Style Templates (Easy Mode)
     styleTemplates: {
-      authentic: {
-        name: 'Authentic',
-        description: 'Keep brand colors and original presentation',
-        preview: 'Same plate, container, and brand look',
+      behindTheScenes: {
+        name: 'Behind the Scenes',
+        description: 'Authentic kitchen moment',
+        preview: 'Documentary-style, genuine atmosphere',
       },
-      elegant: {
-        name: 'Elegant',
-        description: 'Sophisticated fine-dining aesthetic',
-        preview: 'Soft lighting, refined tones',
+      cleanStrict: {
+        name: 'Clean Strict',
+        description: 'Professional studio quality',
+        preview: 'Clean surface, color corrected',
       },
-      vibrant: {
-        name: 'Vibrant',
-        description: 'Bold colors and energetic feel',
-        preview: 'Bright, eye-catching with high contrast',
+      zoomIn: {
+        name: 'Zoom In',
+        description: 'Extreme macro close-up',
+        preview: 'Texture details, vignette effect',
       },
-      rustic: {
-        name: 'Rustic',
-        description: 'Warm and homemade comfort feel',
-        preview: 'Earthy colors with natural textures',
+      oneBite: {
+        name: 'One Bite',
+        description: 'Ready-to-eat presentation',
+        preview: 'Utensil holding a tempting piece',
+      },
+      studioShot: {
+        name: 'Studio Shot',
+        description: 'Professional advertisement look',
+        preview: 'Hero shot, minimal background',
+      },
+      infographic: {
+        name: 'Infographic',
+        description: 'Deconstructed ingredients view',
+        preview: 'Labeled layers and flavors',
+      },
+      custom: {
+        name: 'Custom',
+        description: 'Write your own prompt',
+        preview: 'Full creative control',
       },
     },
 
@@ -893,6 +908,7 @@ export default {
       title: 'Customize Your Post',
       subtitle: 'Choose style, add promotions, and branding',
       styleLabel: 'Visual Style',
+      customPromptPlaceholder: 'Describe how you want your dish photographed...',
       mediaTypeLabel: 'Media Type',
       imageOption: 'Image',
       videoOption: 'Video',

@@ -15,8 +15,6 @@ import MaterialIcon from '../components/MaterialIcon.vue'
 import PlatformLogo from '../components/PlatformLogo.vue'
 import ConfirmModal from '../components/ConfirmModal.vue'
 import PostDetailModal from '../components/PostDetailModal.vue'
-import { captureError } from '../config/sentry'
-import { trackEvent } from '../utils/monitoring'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -279,32 +277,6 @@ function handlePostDelete(_post: any) {
   // TODO: Show delete confirmation modal and handle deletion
 }
 
-// Test monitoring integrations (TEMPORARY - for testing Discord/Sentry)
-function testFrontendError() {
-  const error = new Error('🧪 Test Discord notification - Frontend error!')
-  captureError(error, {
-    test: true,
-    source: 'dashboard',
-    timestamp: new Date().toISOString()
-  })
-  alert('✅ Frontend error sent to Sentry! Check Discord.')
-}
-
-function testBackendError() {
-  fetch('http://localhost:3000/api/test-sentry-discord')
-    .then(() => alert('✅ Backend error triggered! Check Discord.'))
-    .catch(() => alert('⚠️ Make sure backend is running on port 3000'))
-}
-
-function testAnalytics() {
-  trackEvent('test_analytics_event', {
-    test: true,
-    source: 'dashboard',
-    timestamp: new Date().toISOString()
-  })
-  alert('✅ Analytics event sent to PostHog! Check Live Events.')
-}
-
 // Computed to check if showing all restaurants
 const showRestaurantColumn = computed(() => selectedRestaurantFilter.value === 'all')
 
@@ -464,19 +436,6 @@ onMounted(async () => {
     </template>
 
     <div class="dashboard-content">
-      <!-- Test Buttons (TEMPORARY - Remove after testing) -->
-      <div class="test-buttons-row">
-        <BaseButton variant="secondary" size="small" @click="testFrontendError">
-          🧪 Test Frontend Error
-        </BaseButton>
-        <BaseButton variant="secondary" size="small" @click="testBackendError">
-          🧪 Test Backend Error
-        </BaseButton>
-        <BaseButton variant="secondary" size="small" @click="testAnalytics">
-          🧪 Test Analytics
-        </BaseButton>
-      </div>
-
       <!-- Stats Cards Row -->
       <section class="stats-grid">
         <div class="stat-card stat-card-orange">
@@ -1428,10 +1387,6 @@ onMounted(async () => {
     min-height: var(--touch-target-min);
   }
 
-  .test-buttons-row {
-    flex-direction: column;
-  }
-
   .posts-table-card {
     overflow-x: auto;
   }
@@ -1573,22 +1528,5 @@ onMounted(async () => {
   .post-title {
     font-size: var(--text-xs);
   }
-
-  .test-buttons-row {
-    padding: var(--space-sm);
-    gap: var(--space-sm);
-  }
-}
-
-/* Test buttons row */
-.test-buttons-row {
-  display: flex;
-  gap: var(--space-md);
-  margin-bottom: var(--space-xl);
-  padding: var(--space-lg);
-  background: rgba(212, 175, 55, 0.1);
-  border-radius: var(--radius-md);
-  border: 1px solid rgba(212, 175, 55, 0.3);
-  flex-wrap: wrap;
 }
 </style>

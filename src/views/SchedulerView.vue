@@ -31,8 +31,8 @@
           @next="nextPeriod"
         />
 
-        <!-- Color Legend -->
-        <CalendarLegend />
+        <!-- Color Legend (hidden on mobile in day view) -->
+        <CalendarLegend :class="{ 'hide-on-mobile-day': viewMode === 'day' }" />
         <div :class="['calendar-grid', `view-${viewMode}`]">
           <!-- Day headers (only show for month and week views) -->
           <template v-if="viewMode !== 'day'">
@@ -87,8 +87,8 @@
               </div>
             </div>
 
-            <!-- Day View Header -->
-            <div v-if="viewMode === 'day'" class="day-view-header">
+            <!-- Day View Header (hidden on mobile - info shown in CalendarHeader) -->
+            <div v-if="viewMode === 'day'" class="day-view-header desktop-only">
               <h2 class="day-view-title">
                 {{ formatSelectedDate(day) }}
                 <span v-if="day.posts.length > 0" class="post-count">({{ day.posts.length }} {{ day.posts.length === 1 ? 'post' : 'posts' }})</span>
@@ -98,6 +98,14 @@
                   ➕ Create Post
                 </BaseButton>
               </div>
+            </div>
+
+            <!-- Mobile Day View Create Button -->
+            <div v-if="viewMode === 'day'" class="mobile-day-create">
+              <BaseButton variant="primary" size="large" full-width @click.stop="openCreatePostWizard(day)">
+                <span class="material-symbols-outlined">add</span>
+                {{ $t('scheduler.createPost', 'Create Post') }}
+              </BaseButton>
             </div>
 
             <!-- Holidays -->
@@ -345,6 +353,8 @@
         :upcoming-posts="upcomingPosts"
         :active-tab="bottomPanelTab"
         :posts-per-page="postsPerPage"
+        :hide-tab-bar="viewMode === 'day'"
+        :class="{ 'day-view-panel': viewMode === 'day' }"
         @view="viewPostDetail"
         @edit="editScheduledPost"
         @delete="cancelPost"
@@ -879,12 +889,8 @@ const getHolidayEmoji = (holiday: any) => {
 
 const formatTime = (time: string | null) => {
   if (!time) return null
-  // Convert 24-hour time to 12-hour format
   const [hours, minutes] = time.split(':')
-  const hour = parseInt(hours)
-  const ampm = hour >= 12 ? 'PM' : 'AM'
-  const displayHour = hour % 12 || 12
-  return `${displayHour}:${minutes} ${ampm}`
+  return `${hours}:${minutes}`
 }
 
 // Helper functions for expandable table
@@ -1306,17 +1312,29 @@ const saveScheduledPost = async (postId: string, data: any) => {
   }
 }
 
-// Open the create post wizard
+// Open the create post wizard - navigates to posts page
 const openCreatePostWizard = (day: any) => {
   const year = day.date.getFullYear()
   const month = String(day.date.getMonth() + 1).padStart(2, '0')
   const dayNum = String(day.date.getDate()).padStart(2, '0')
   const dateString = `${year}-${month}-${dayNum}`
   selectedDateForScheduling.value = dateString
-  wizardStep.value = 1
-  selectedCreationMethod.value = null
-  // Open the full creation wizard modal instead of the simple wizard
-  showFullCreationWizard.value = true
+
+  // Navigate to posts page with the selected date
+  // If user has more than one restaurant, show restaurant selector first
+  if (restaurants.value.length > 1) {
+    pendingCreationMethod.value = 'new'
+    showRestaurantSelector.value = true
+  } else {
+    // Single restaurant or no restaurants - go directly to posts page
+    const restaurantId = restaurants.value.length === 1 ? restaurants.value[0].id : undefined
+    preferencesStore.setCreationMode('easy', true)
+    let url = `/posts/create?scheduleDate=${dateString}`
+    if (restaurantId) {
+      url += `&restaurantId=${restaurantId}`
+    }
+    router.push(url)
+  }
 }
 
 // Select creation method in wizard
@@ -2933,6 +2951,32 @@ onMounted(async () => {
     flex: 1;
     padding: var(--space-sm) var(--space-md);
     font-size: var(--text-sm);
+  }
+
+  /* Mobile Day View - clean layout */
+  .hide-on-mobile-day {
+    display: none;
+  }
+
+  .desktop-only {
+    display: none;
+  }
+
+  .mobile-day-create {
+    display: block;
+    padding: var(--space-md);
+  }
+
+  .mobile-day-create .material-symbols-outlined {
+    font-size: 20px;
+    margin-right: var(--space-xs);
+  }
+}
+
+/* Desktop - hide mobile elements */
+@media (min-width: 769px) {
+  .mobile-day-create {
+    display: none;
   }
 }
 

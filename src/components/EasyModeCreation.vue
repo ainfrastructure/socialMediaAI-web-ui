@@ -77,6 +77,7 @@ const emit = defineEmits<{
     menuItem: MenuItem | null
     context: string
     styleTemplate: string
+    customPrompt?: string
     strictnessMode: 'strict' | 'flexible' | 'creative'
     holidayTheme: string
     customHolidayText: string
@@ -110,7 +111,8 @@ const totalSteps = 4
 // State
 const selectedMenuItem = ref<MenuItem | null>(null)
 const promptContext = ref('')
-const selectedStyleTemplate = ref<string>('authentic')
+const selectedStyleTemplate = ref<string>('behindTheScenes')
+const customPrompt = ref<string>('')  // For custom style prompt
 const strictnessMode = ref<'strict' | 'flexible' | 'creative'>('strict')
 const mediaType = ref<'image' | 'video'>('image')
 const holidayTheme = ref<string>('none')
@@ -140,36 +142,58 @@ const itemsPerPage = ref(12)
 const gridContainer = ref<HTMLElement | null>(null)
 const step1NavigationRef = ref<HTMLElement | null>(null)
 const generatingOverlayRef = ref<HTMLElement | null>(null)
+const componentRoot = ref<HTMLElement | null>(null)
 
-// Style templates (4 options) - Authentic is default
+// Style templates (7 options) - Behind the Scenes is default
 const styleTemplates = computed<StyleTemplate[]>(() => [
   {
-    id: 'authentic',
-    name: t('playground.styleTemplates.authentic.name'),
-    description: t('playground.styleTemplates.authentic.description'),
-    icon: 'verified',
-    preview: t('playground.styleTemplates.authentic.preview')
+    id: 'behindTheScenes',
+    name: t('playground.styleTemplates.behindTheScenes.name'),
+    description: t('playground.styleTemplates.behindTheScenes.description'),
+    icon: 'videocam',
+    preview: t('playground.styleTemplates.behindTheScenes.preview')
   },
   {
-    id: 'elegant',
-    name: t('playground.styleTemplates.elegant.name'),
-    description: t('playground.styleTemplates.elegant.description'),
-    icon: 'auto_awesome',
-    preview: t('playground.styleTemplates.elegant.preview')
+    id: 'cleanStrict',
+    name: t('playground.styleTemplates.cleanStrict.name'),
+    description: t('playground.styleTemplates.cleanStrict.description'),
+    icon: 'photo_camera',
+    preview: t('playground.styleTemplates.cleanStrict.preview')
   },
   {
-    id: 'vibrant',
-    name: t('playground.styleTemplates.vibrant.name'),
-    description: t('playground.styleTemplates.vibrant.description'),
-    icon: 'palette',
-    preview: t('playground.styleTemplates.vibrant.preview')
+    id: 'zoomIn',
+    name: t('playground.styleTemplates.zoomIn.name'),
+    description: t('playground.styleTemplates.zoomIn.description'),
+    icon: 'zoom_in',
+    preview: t('playground.styleTemplates.zoomIn.preview')
   },
   {
-    id: 'rustic',
-    name: t('playground.styleTemplates.rustic.name'),
-    description: t('playground.styleTemplates.rustic.description'),
-    icon: 'cottage',
-    preview: t('playground.styleTemplates.rustic.preview')
+    id: 'oneBite',
+    name: t('playground.styleTemplates.oneBite.name'),
+    description: t('playground.styleTemplates.oneBite.description'),
+    icon: 'restaurant',
+    preview: t('playground.styleTemplates.oneBite.preview')
+  },
+  {
+    id: 'studioShot',
+    name: t('playground.styleTemplates.studioShot.name'),
+    description: t('playground.styleTemplates.studioShot.description'),
+    icon: 'light',
+    preview: t('playground.styleTemplates.studioShot.preview')
+  },
+  {
+    id: 'infographic',
+    name: t('playground.styleTemplates.infographic.name'),
+    description: t('playground.styleTemplates.infographic.description'),
+    icon: 'schema',
+    preview: t('playground.styleTemplates.infographic.preview')
+  },
+  {
+    id: 'custom',
+    name: t('playground.styleTemplates.custom.name'),
+    description: t('playground.styleTemplates.custom.description'),
+    icon: 'edit',
+    preview: t('playground.styleTemplates.custom.preview')
   }
 ])
 
@@ -178,13 +202,16 @@ function _getStyleIcon(styleId: string): string {
   const goldGradient = `<defs><linearGradient id="goldGrad-${styleId}" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#E5C775"/><stop offset="50%" style="stop-color:#D4AF37"/><stop offset="100%" style="stop-color:#B8943D"/></linearGradient></defs>`
 
   const icons: Record<string, string> = {
-    authentic: `<svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">${goldGradient}<path d="M12 2L4 5V11.09C4 16.14 7.41 20.85 12 22C16.59 20.85 20 16.14 20 11.09V5L12 2ZM10 17L6 13L7.41 11.59L10 14.17L16.59 7.58L18 9L10 17Z" fill="url(#goldGrad-${styleId})"/></svg>`,
-    elegant: `<svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">${goldGradient}<path d="M12 2L19 12L12 22L5 12L12 2Z" fill="url(#goldGrad-${styleId})"/><path d="M12 6L16 12L12 18L8 12L12 6Z" fill="url(#goldGrad-${styleId})" opacity="0.5"/></svg>`,
-    vibrant: `<svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">${goldGradient}<circle cx="12" cy="12" r="5" fill="url(#goldGrad-${styleId})"/><path d="M12 2V6M12 18V22M2 12H6M18 12H22M4.93 4.93L7.76 7.76M16.24 16.24L19.07 19.07M4.93 19.07L7.76 16.24M16.24 7.76L19.07 4.93" stroke="url(#goldGrad-${styleId})" stroke-width="2" stroke-linecap="round"/></svg>`,
-    rustic: `<svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">${goldGradient}<path d="M17 8C8 10 5.9 16.17 3.82 21.34L5.71 22L6.66 19.97C7.14 19.11 8.32 17.76 10.66 17.11C10.66 17.11 11.47 19.63 12.5 22H14.5C13.46 19.63 12.66 17.11 12.66 17.11C14.92 17.11 16.14 17.63 17.66 19.11L18.66 22H20.66L18.66 13C19.86 12.33 21.55 11.5 21.55 9.38C21.55 8.38 20.66 7.5 19.66 7.5C19.39 7.5 19.14 7.57 18.91 7.68C18.58 6.09 17.5 5 16 5C14.5 5 13.42 6.09 13.09 7.68C12.86 7.57 12.61 7.5 12.34 7.5C11.34 7.5 10.45 8.38 10.45 9.38C10.45 11.5 12.14 12.33 13.34 13L13 14C12.5 14 11.5 14.5 11 15C10.5 15.5 10 16.5 10 17L10.5 18C10.5 18 10.32 17.13 10.66 17.11" fill="url(#goldGrad-${styleId})"/></svg>`
+    behindTheScenes: `<svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">${goldGradient}<path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z" fill="url(#goldGrad-${styleId})"/></svg>`,
+    cleanStrict: `<svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">${goldGradient}<circle cx="12" cy="12" r="3.2" fill="url(#goldGrad-${styleId})"/><path d="M9 2L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-3.17L15 2H9zm3 15c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z" fill="url(#goldGrad-${styleId})"/></svg>`,
+    zoomIn: `<svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">${goldGradient}<path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" fill="url(#goldGrad-${styleId})"/><path d="M12 10h-2v2H8v-2H6V8h2V6h2v2h2v2z" fill="url(#goldGrad-${styleId})"/></svg>`,
+    oneBite: `<svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">${goldGradient}<path d="M11 9H9V2H7v7H5V2H3v7c0 2.12 1.66 3.84 3.75 3.97V22h2.5v-9.03C11.34 12.84 13 11.12 13 9V2h-2v7zm5-3v8h2.5v8H21V2c-2.76 0-5 2.24-5 4z" fill="url(#goldGrad-${styleId})"/></svg>`,
+    studioShot: `<svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">${goldGradient}<path d="M9 21c0 .55.45 1 1 1h4c.55 0 1-.45 1-1v-1H9v1zm3-19C8.14 2 5 5.14 5 9c0 2.38 1.19 4.47 3 5.74V17c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.86-3.14-7-7-7zm2.85 11.1l-.85.6V16h-4v-2.3l-.85-.6C7.8 12.16 7 10.63 7 9c0-2.76 2.24-5 5-5s5 2.24 5 5c0 1.63-.8 3.16-2.15 4.1z" fill="url(#goldGrad-${styleId})"/></svg>`,
+    infographic: `<svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">${goldGradient}<path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z" fill="url(#goldGrad-${styleId})"/></svg>`,
+    custom: `<svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">${goldGradient}<path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" fill="url(#goldGrad-${styleId})"/></svg>`
   }
 
-  return icons[styleId] || icons.vibrant
+  return icons[styleId] || icons.behindTheScenes
 }
 
 // Computed
@@ -357,6 +384,7 @@ function handleGenerate() {
     menuItem: selectedMenuItem.value,
     context: promptContext.value.trim(),
     styleTemplate: selectedStyleTemplate.value,
+    customPrompt: selectedStyleTemplate.value === 'custom' ? customPrompt.value.trim() : undefined,
     strictnessMode: strictnessMode.value,
     holidayTheme: holidayTheme.value,
     customHolidayText: customHolidayText.value,
@@ -407,7 +435,8 @@ function resetAndCreateNew() {
   currentStep.value = 1
   selectedMenuItem.value = null
   promptContext.value = ''
-  selectedStyleTemplate.value = 'vibrant'
+  selectedStyleTemplate.value = 'behindTheScenes'
+  customPrompt.value = ''
   includeLogo.value = true
   uploadedImage.value = null
   uploadedImagePreview.value = null
@@ -424,6 +453,18 @@ function resetAndCreateNew() {
 
   // Emit reset event to parent
   emit('reset')
+}
+
+// Helper function to scroll to top of component (works in scrollable containers)
+function scrollToComponentTop() {
+  nextTick(() => {
+    // First try to scroll the component into view (works in scrollable containers like DashboardLayout)
+    if (componentRoot.value) {
+      componentRoot.value.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
+    // Also try window scroll as fallback
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  })
 }
 
 // Step navigation
@@ -447,10 +488,8 @@ function nextStep() {
 
   if (currentStep.value < totalSteps) {
     currentStep.value++
-    // Scroll to top of step content on mobile to ensure user starts at the top
-    nextTick(() => {
-      window.scrollTo({ top: 0, behavior: 'smooth' })
-    })
+    // Scroll to top of component to ensure user starts at the top
+    scrollToComponentTop()
   }
 }
 
@@ -458,9 +497,7 @@ function prevStep() {
   if (currentStep.value > 1) {
     currentStep.value--
     // Scroll to top when going back too
-    nextTick(() => {
-      window.scrollTo({ top: 0, behavior: 'smooth' })
-    })
+    scrollToComponentTop()
   }
 }
 
@@ -562,7 +599,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="easy-mode-creation">
+  <div ref="componentRoot" class="easy-mode-creation">
     <!-- Progress Indicator - Reusable Component -->
     <WizardProgress
       :current-step="currentStep"
@@ -694,6 +731,15 @@ onUnmounted(() => {
           v-model="selectedStyleTemplate"
           :templates="styleTemplates"
         />
+        <!-- Custom Prompt Input (shown when 'custom' style is selected) -->
+        <div v-if="selectedStyleTemplate === 'custom'" class="custom-prompt-section">
+          <textarea
+            v-model="customPrompt"
+            :placeholder="t('easyMode.step2.customPromptPlaceholder', 'Describe how you want your dish photographed...')"
+            class="custom-prompt-input"
+            rows="4"
+          ></textarea>
+        </div>
       </div>
 
       <!-- Image Style (Strictness Mode) -->
@@ -1863,6 +1909,42 @@ onUnmounted(() => {
   border-bottom: none;
   margin-bottom: var(--space-xl);
   padding-bottom: 0;
+}
+
+/* Custom Prompt Input */
+.custom-prompt-section {
+  margin-top: var(--space-lg);
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.custom-prompt-input {
+  width: 100%;
+  padding: var(--space-lg);
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  line-height: 1.6;
+  resize: vertical;
+  min-height: 100px;
+  transition: var(--transition-base);
+}
+
+.custom-prompt-input:focus {
+  outline: none;
+  border-color: var(--gold-primary);
+  box-shadow: 0 0 0 2px var(--gold-subtle);
+}
+
+.custom-prompt-input::placeholder {
+  color: var(--text-muted);
 }
 
 .section-label {

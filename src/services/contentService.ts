@@ -19,12 +19,13 @@ class ContentService {
     placeId?: string,
     strictnessMode?: 'strict' | 'flexible' | 'creative',
     holidayTheme?: string,
-    visualStyle?: 'authentic' | 'elegant' | 'vibrant' | 'rustic'
+    visualStyle?: 'behindTheScenes' | 'cleanStrict' | 'zoomIn' | 'oneBite' | 'studioShot' | 'infographic' | 'custom',
+    customPrompt?: string
   ): Promise<ApiResponse<{ imageUrl: string; usage: any; watermarked?: boolean; promotionalStickerAdded?: boolean }>> {
     const response = await fetch(`${API_URL}/api/gemini/generate-image`, {
       method: 'POST',
       headers: getAuthHeaders(),
-      body: JSON.stringify({ prompt, watermark, referenceImage, promotionalSticker, placeId, strictnessMode, holidayTheme, visualStyle }),
+      body: JSON.stringify({ prompt, watermark, referenceImage, promotionalSticker, placeId, strictnessMode, holidayTheme, visualStyle, customPrompt }),
     })
     return response.json()
   }

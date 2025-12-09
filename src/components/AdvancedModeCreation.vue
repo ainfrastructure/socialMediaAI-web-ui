@@ -43,7 +43,7 @@ interface MenuItem {
 }
 
 interface StyleVariation {
-  style: 'elegant' | 'vibrant' | 'rustic' | 'modern'
+  style: 'behindTheScenes' | 'cleanStrict' | 'zoomIn' | 'oneBite' | 'studioShot' | 'infographic' | 'custom'
   title: string
   hashtags: string[]
   prompt: string
@@ -141,6 +141,7 @@ const allPlatforms = computed(() => [
 // State
 const currentStep = ref(1)
 const totalSteps = 5
+const componentRoot = ref<HTMLElement | null>(null)
 
 // Post Type Selection (part of Step 1)
 const postType = ref<PostType>('single')
@@ -391,6 +392,18 @@ watch([generatingImage, generatingContent], ([isGeneratingImg, isGeneratingConte
 
 // Methods
 
+// Helper function to scroll to top of component (works in scrollable containers)
+function scrollToComponentTop() {
+  nextTick(() => {
+    // First try to scroll the component into view (works in scrollable containers like DashboardLayout)
+    if (componentRoot.value) {
+      componentRoot.value.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
+    // Also try window scroll as fallback
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  })
+}
+
 // Navigation
 function nextStep() {
   // Step 4 → Step 5: Emit feedback if provided, then continue to generate step
@@ -407,12 +420,16 @@ function nextStep() {
       highestCompletedStep.value = currentStep.value
     }
     currentStep.value++
+    // Scroll to top of component to ensure user starts at the top
+    scrollToComponentTop()
   }
 }
 
 function prevStep() {
   if (currentStep.value > 1) {
     currentStep.value--
+    // Scroll to top when going back too
+    scrollToComponentTop()
   }
 }
 
@@ -935,7 +952,7 @@ defineExpose({
 </script>
 
 <template>
-  <div class="advanced-mode-creation">
+  <div ref="componentRoot" class="advanced-mode-creation">
     <!-- Wizard Progress -->
     <WizardProgress
       :current-step="currentStep"

@@ -413,3 +413,11 @@
   background: var(--gold-primary);
   color: var(--text-on-gold);
 }
+
+/* Modal Open State - Prevents background scroll on mobile */
+html.modal-open,
+html.modal-open body {
+  overflow: hidden;
+  touch-action: none;
+  -webkit-overflow-scrolling: none;
+}

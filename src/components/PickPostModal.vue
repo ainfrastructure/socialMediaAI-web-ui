@@ -197,13 +197,15 @@
               <label for="schedule_date" class="form-label">
                 Date <span class="required">*</span>
               </label>
-              <DatePicker
+              <VueDatePicker
                 v-model="scheduleDate"
                 :min-date="today"
+                :enable-time-picker="false"
+                inline
+                auto-apply
+                dark
+                class="date-picker-inline"
               />
-              <p class="date-preview">
-                Scheduling for: <strong>{{ formatDate(scheduleDate) }}</strong>
-              </p>
             </div>
 
             <!-- Time, Timezone, and Platform Selection -->
@@ -212,24 +214,12 @@
               <label class="form-label">
                 Time <span class="required">*</span>
               </label>
-              <div class="time-picker">
-                <select v-model="selectedHour" class="time-select">
-                  <option v-for="hour in hours" :key="hour" :value="hour">
-                    {{ hour }}
-                  </option>
-                </select>
-                <span class="time-separator">:</span>
-                <select v-model="selectedMinute" class="time-select">
-                  <option v-for="minute in minutes" :key="minute" :value="minute">
-                    {{ minute }}
-                  </option>
-                </select>
-                <select v-model="selectedPeriod" class="period-select">
-                  <option value="AM">AM</option>
-                  <option value="PM">PM</option>
-                </select>
+              <div class="time-picker-wrapper">
+                <MobileTimePicker
+                  v-model="selectedTime"
+                  :minutes-increment="1"
+                />
               </div>
-              <p class="time-hint">{{ selectedHour }}:{{ selectedMinute }} {{ selectedPeriod }}</p>
             </div>
 
             <div class="form-group">
@@ -302,7 +292,9 @@ import { useRouter } from 'vue-router'
 import BaseModal from './BaseModal.vue'
 import BaseButton from './BaseButton.vue'
 import BasePagination from './BasePagination.vue'
-import DatePicker from './DatePicker.vue'
+import { VueDatePicker } from '@vuepic/vue-datepicker'
+import '@vuepic/vue-datepicker/dist/main.css'
+import MobileTimePicker from './MobileTimePicker.vue'
 import { api } from '../services/api'
 import { useScheduleTime } from '../composables/useScheduleTime'
 
@@ -320,11 +312,8 @@ const emit = defineEmits<{
 const router = useRouter()
 const posts = ref<any[]>([])
 const loading = ref(false)
-const scheduledTime = ref('')
 const selectedPlatform = ref('')
-const selectedHour = ref('12')
-const selectedMinute = ref('00')
-const selectedPeriod = ref<'AM' | 'PM'>('PM')
+const selectedTime = ref<{ hours: number; minutes: number }>({ hours: 12, minutes: 0 })
 const currentPage = ref(1)
 const itemsPerPage = 6
 
@@ -340,15 +329,19 @@ const editedHashtags = ref<string[]>([])
 const newHashtag = ref('')
 
 // Schedule time utilities from composable
-const { hours12, minutes: minutesList, getDefaultTimezone } = useScheduleTime()
+const { getDefaultTimezone } = useScheduleTime()
 const defaultTimezone = getDefaultTimezone()
 const timezone = ref(defaultTimezone)
 
-const scheduleDate = ref(props.selectedDate || '')
-
-// Extract simple arrays for template usage
-const hours = computed(() => hours12.value.map(h => h.value))
-const minutes = computed(() => minutesList.value.map(m => m.value))
+// Initialize scheduleDate from prop or null
+const initScheduleDate = (): Date | null => {
+  if (props.selectedDate) {
+    const [year, month, day] = props.selectedDate.split('-').map(Number)
+    return new Date(year, month - 1, day, 12, 0, 0)
+  }
+  return null
+}
+const scheduleDate = ref<Date | null>(initScheduleDate())
 
 // Pagination computed properties
 const totalPages = computed(() => Math.ceil(posts.value.length / itemsPerPage))
@@ -361,25 +354,16 @@ const paginatedPosts = computed(() => {
 
 const today = computed(() => {
   const now = new Date()
-  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
+  now.setHours(0, 0, 0, 0)
+  return now
 })
 
 // Update scheduleDate when selectedDate prop changes
 watch(() => props.selectedDate, (newDate) => {
   if (newDate) {
-    scheduleDate.value = newDate
+    const [year, month, day] = newDate.split('-').map(Number)
+    scheduleDate.value = new Date(year, month - 1, day, 12, 0, 0)
   }
-})
-
-// Convert time picker values to 24-hour format
-watch([selectedHour, selectedMinute, selectedPeriod], () => {
-  const hour24 = selectedPeriod.value === 'PM' && selectedHour.value !== '12'
-    ? (parseInt(selectedHour.value) + 12).toString().padStart(2, '0')
-    : selectedPeriod.value === 'AM' && selectedHour.value === '12'
-    ? '00'
-    : selectedHour.value
-
-  scheduledTime.value = `${hour24}:${selectedMinute.value}`
 })
 
 // Set default time to current time when modal opens
@@ -387,13 +371,7 @@ watch(() => props.modelValue, async (newValue) => {
   if (newValue) {
     // Set default time to current time
     const now = new Date()
-    const currentHour = now.getHours()
-    const currentMinute = now.getMinutes()
-
-    // Convert to 12-hour format
-    selectedPeriod.value = currentHour >= 12 ? 'PM' : 'AM'
-    selectedHour.value = (currentHour % 12 || 12).toString().padStart(2, '0')
-    selectedMinute.value = currentMinute.toString().padStart(2, '0')
+    selectedTime.value = { hours: now.getHours(), minutes: now.getMinutes() }
 
     // Reset timezone to auto-detected
     timezone.value = defaultTimezone
@@ -458,11 +436,6 @@ const scheduleSelectedPost = async () => {
     return
   }
 
-  if (!scheduledTime.value) {
-    alert('Please select a time')
-    return
-  }
-
   if (!selectedPlatform.value) {
     alert('Please select a platform')
     return
@@ -473,17 +446,28 @@ const scheduleSelectedPost = async () => {
     return
   }
 
+  // Format date as YYYY-MM-DD
+  const year = scheduleDate.value.getFullYear()
+  const month = String(scheduleDate.value.getMonth() + 1).padStart(2, '0')
+  const day = String(scheduleDate.value.getDate()).padStart(2, '0')
+  const formattedDate = `${year}-${month}-${day}`
+
+  // Format time as HH:MM
+  const hours = String(selectedTime.value.hours).padStart(2, '0')
+  const minutes = String(selectedTime.value.minutes).padStart(2, '0')
+  const formattedTime = `${hours}:${minutes}`
+
   try {
     const response = await api.schedulePost({
       favorite_post_id: post.id,
-      scheduled_date: scheduleDate.value,
-      scheduled_time: scheduledTime.value,
+      scheduled_date: formattedDate,
+      scheduled_time: formattedTime,
       timezone: timezone.value,
       platforms: [selectedPlatform.value],
     })
 
     if (response.success) {
-      emit('scheduled', { post, date: scheduleDate.value })
+      emit('scheduled', { post, date: formattedDate })
       closeModal()
     } else {
       alert(response.error || 'Failed to schedule post')
@@ -500,18 +484,6 @@ const goToCreatePost = () => {
   closeModal()
 }
 
-const formatDate = (dateString: string): string => {
-  // Parse date string (YYYY-MM-DD) and create date in local timezone
-  const [year, month, day] = dateString.split('-').map(Number)
-  const date = new Date(year, month - 1, day) // month is 0-indexed
-
-  return date.toLocaleDateString('en-US', {
-    weekday: 'long',
-    month: 'long',
-    day: 'numeric',
-    year: 'numeric',
-  })
-}
 
 const truncateText = (text: string, maxLength: number): string => {
   if (text.length <= maxLength) return text
@@ -642,19 +614,194 @@ const handlePageChange = (page: number) => {
   margin-bottom: var(--space-xl);
 }
 
-.date-preview {
-  text-align: center;
-  margin-top: var(--space-md);
+/* Inline Date Picker Container */
+.date-picker-inline {
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  border-radius: var(--radius-lg);
   padding: var(--space-sm);
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Force the calendar to not have minimum widths */
+.date-picker-inline :deep(.dp__menu) {
+  border: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  min-width: unset !important;
+}
+
+.date-picker-inline :deep(.dp__instance_calendar) {
+  min-width: unset !important;
+}
+
+.date-picker-inline :deep(.dp__calendar) {
+  min-width: unset !important;
+}
+
+.date-picker-inline :deep(.dp__calendar_header_item) {
+  padding: 4px 2px !important;
+  font-size: 11px !important;
+  width: auto !important;
+  flex: 1 1 0 !important;
+  min-width: 28px !important;
+}
+
+.date-picker-inline :deep(.dp__calendar_item) {
+  width: auto !important;
+  flex: 1 1 0 !important;
+  min-width: 28px !important;
+}
+
+.date-picker-inline :deep(.dp__cell_inner) {
+  width: 28px !important;
+  height: 28px !important;
+  font-size: 12px !important;
+  padding: 0 !important;
+}
+
+.date-picker-inline :deep(.dp__cell_offset) {
+  width: 28px !important;
+  height: 28px !important;
+}
+
+/* Month/year header */
+.date-picker-inline :deep(.dp__month_year_row) {
+  padding: 0 4px;
+}
+
+.date-picker-inline :deep(.dp__inner_nav) {
+  width: 28px !important;
+  height: 28px !important;
+}
+
+/* Hide the time picker toggle button at bottom of calendar */
+.date-picker-inline :deep(.dp__action_row),
+.date-picker-inline :deep(.dp__selection_preview),
+.date-picker-inline :deep(.dp__action_buttons),
+.date-picker-inline :deep(.dp__time_picker_inline_container),
+.date-picker-inline :deep(.dp__button) {
+  display: none !important;
+}
+
+/* Time Picker Wrapper */
+.time-picker-wrapper {
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  border-radius: var(--radius-lg);
+  padding: var(--space-lg);
+  display: flex;
+  justify-content: center;
+}
+
+/* Date/Time Picker Dark Theme Override */
+:deep(.dp__theme_dark) {
+  --dp-background-color: transparent;
+  --dp-text-color: var(--text-primary);
+  --dp-hover-color: rgba(212, 175, 55, 0.15);
+  --dp-hover-text-color: var(--text-primary);
+  --dp-primary-color: var(--gold-primary);
+  --dp-primary-text-color: var(--text-on-gold);
+  --dp-secondary-color: rgba(212, 175, 55, 0.1);
+  --dp-border-color: rgba(212, 175, 55, 0.3);
+  --dp-menu-border-color: transparent;
+  --dp-border-color-hover: var(--gold-primary);
+  --dp-disabled-color: var(--text-muted);
+  --dp-disabled-color-text: var(--text-muted);
+  --dp-success-color: var(--gold-primary);
+  --dp-icon-color: var(--gold-primary);
+  --dp-danger-color: #ef4444;
+  --dp-highlight-color: rgba(212, 175, 55, 0.1);
+}
+
+/* Inline picker - remove default styling */
+:deep(.dp__main) {
+  width: 100%;
+}
+
+:deep(.dp__menu) {
+  border: none;
+  background: transparent;
+  box-shadow: none;
+}
+
+/* Calendar header */
+:deep(.dp__calendar_header) {
+  font-weight: var(--font-semibold);
+}
+
+:deep(.dp__calendar_header_item) {
+  color: var(--gold-primary);
+  font-weight: var(--font-medium);
+  text-transform: uppercase;
+  font-size: var(--text-xs);
+}
+
+/* Month/Year navigation */
+:deep(.dp__month_year_row) {
+  margin-bottom: var(--space-md);
+}
+
+:deep(.dp__month_year_select) {
+  color: var(--text-primary);
+  font-weight: var(--font-semibold);
+  font-size: var(--text-lg);
+}
+
+:deep(.dp__month_year_select:hover) {
+  color: var(--gold-primary);
   background: rgba(212, 175, 55, 0.1);
   border-radius: var(--radius-sm);
+}
+
+/* Navigation arrows */
+:deep(.dp__inner_nav) {
   color: var(--text-secondary);
+  width: 36px;
+  height: 36px;
+}
+
+:deep(.dp__inner_nav:hover) {
+  background: rgba(212, 175, 55, 0.15);
+  color: var(--gold-primary);
+  border-radius: var(--radius-sm);
+}
+
+/* Calendar days */
+:deep(.dp__calendar_item) {
+  border-radius: var(--radius-sm);
+}
+
+:deep(.dp__cell_inner) {
+  border-radius: var(--radius-sm);
+  width: 36px;
+  height: 36px;
   font-size: var(--text-sm);
 }
 
-.date-preview strong {
-  color: var(--gold-primary);
-  font-weight: 600;
+:deep(.dp__today) {
+  border: 2px solid var(--gold-primary);
+}
+
+:deep(.dp__active_date) {
+  background: var(--gold-primary);
+  color: var(--text-on-gold);
+}
+
+:deep(.dp__cell_offset) {
+  color: var(--text-muted);
+  opacity: 0.4;
+}
+
+:deep(.dp__cell_disabled) {
+  color: var(--text-muted);
+  opacity: 0.3;
+}
+
+/* Hide action row in inline mode */
+:deep(.dp__action_row) {
+  display: none;
 }
 
 .schedule-settings {
@@ -699,77 +846,6 @@ const handlePageChange = (page: number) => {
   margin-left: var(--space-sm);
 }
 
-/* Time Picker Styles */
-.time-picker {
-  display: flex;
-  align-items: center;
-  gap: var(--space-sm);
-}
-
-.time-select {
-  flex: 1;
-  padding: var(--space-md);
-  background: rgba(0, 0, 0, 0.4);
-  border: 1px solid rgba(212, 175, 55, 0.3);
-  border-radius: var(--radius-md);
-  color: var(--text-primary);
-  font-family: var(--font-body);
-  font-size: var(--text-lg);
-  font-weight: var(--font-semibold);
-  text-align: center;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.time-select:focus {
-  outline: none;
-  border-color: var(--gold-primary);
-  background: rgba(0, 0, 0, 0.5);
-}
-
-.time-select option {
-  background: var(--bg-secondary);
-  color: var(--text-primary);
-}
-
-.time-separator {
-  font-size: var(--text-2xl);
-  font-weight: var(--font-bold);
-  color: var(--gold-primary);
-  user-select: none;
-}
-
-.period-select {
-  flex: 0.8;
-  padding: var(--space-md);
-  background: rgba(212, 175, 55, 0.15);
-  border: 1px solid var(--gold-primary);
-  border-radius: var(--radius-md);
-  color: var(--gold-primary);
-  font-family: var(--font-body);
-  font-size: var(--text-lg);
-  font-weight: var(--font-bold);
-  text-align: center;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.period-select:focus {
-  outline: none;
-  background: rgba(212, 175, 55, 0.25);
-}
-
-.period-select option {
-  background: var(--bg-secondary);
-  color: var(--text-primary);
-}
-
-.time-hint {
-  margin: 0;
-  font-size: var(--text-sm);
-  color: var(--text-secondary);
-  font-weight: var(--font-medium);
-}
 
 .form-input,
 .form-select {

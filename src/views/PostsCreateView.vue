@@ -102,7 +102,8 @@ const stickerStyle = ref<'bold' | 'outlined' | 'ribbon' | 'badge' | 'starburst'>
 const stickerPosition = ref<'top-left' | 'top-right' | 'bottom-left' | 'bottom-right' | 'top-center' | 'center'>('top-right')
 const strictnessMode = ref<'strict' | 'flexible' | 'creative'>('strict')
 const holidayTheme = ref<string>('none')
-const visualStyle = ref<'authentic' | 'elegant' | 'vibrant' | 'rustic'>('authentic')
+const visualStyle = ref<'behindTheScenes' | 'cleanStrict' | 'zoomIn' | 'oneBite' | 'studioShot' | 'infographic' | 'custom'>('behindTheScenes')
+const customVisualPrompt = ref<string>('')
 const promptContext = ref('')
 const selectedMenuItems = ref<any[]>([])
 const selectedPlatforms = ref<string[]>(['facebook'])
@@ -603,6 +604,7 @@ async function handleEasyModeGenerate(data: {
   menuItem: any | null
   context: string
   styleTemplate: string
+  customPrompt?: string
   strictnessMode: 'strict' | 'flexible' | 'creative'
   holidayTheme: string
   customHolidayText: string
@@ -621,16 +623,18 @@ async function handleEasyModeGenerate(data: {
     }
     promptContext.value = data.context
 
-    // Apply style template settings
+    // Apply style template settings - map styles to sticker settings
     const styleMapping = {
-      vibrant: { stickerStyle: 'bold' as const, stickerPosition: 'top-right' as const },
-      elegant: { stickerStyle: 'outlined' as const, stickerPosition: 'top-left' as const },
-      minimal: { stickerStyle: 'bold' as const, stickerPosition: 'center' as const },
-      rustic: { stickerStyle: 'ribbon' as const, stickerPosition: 'bottom-left' as const },
-      luxury: { stickerStyle: 'badge' as const, stickerPosition: 'top-right' as const }
+      behindTheScenes: { stickerStyle: 'bold' as const, stickerPosition: 'top-right' as const },
+      cleanStrict: { stickerStyle: 'outlined' as const, stickerPosition: 'top-left' as const },
+      zoomIn: { stickerStyle: 'bold' as const, stickerPosition: 'center' as const },
+      oneBite: { stickerStyle: 'ribbon' as const, stickerPosition: 'bottom-left' as const },
+      studioShot: { stickerStyle: 'badge' as const, stickerPosition: 'top-right' as const },
+      infographic: { stickerStyle: 'outlined' as const, stickerPosition: 'top-left' as const },
+      custom: { stickerStyle: 'bold' as const, stickerPosition: 'top-right' as const }
     }
 
-    const selectedStyle = styleMapping[data.styleTemplate as keyof typeof styleMapping] || styleMapping.vibrant
+    const selectedStyle = styleMapping[data.styleTemplate as keyof typeof styleMapping] || styleMapping.behindTheScenes
 
     stickerStyle.value = selectedStyle.stickerStyle
     stickerPosition.value = selectedStyle.stickerPosition
@@ -641,7 +645,9 @@ async function handleEasyModeGenerate(data: {
       ? data.customHolidayText
       : data.holidayTheme
     // Set visual style for image generation
-    visualStyle.value = data.styleTemplate as 'authentic' | 'elegant' | 'vibrant' | 'rustic'
+    visualStyle.value = data.styleTemplate as 'behindTheScenes' | 'cleanStrict' | 'zoomIn' | 'oneBite' | 'studioShot' | 'infographic' | 'custom'
+    // Store custom prompt if using custom style
+    customVisualPrompt.value = data.customPrompt || ''
     logoPosition.value = 'bottom-right'
 
     // Generate prompts
@@ -882,7 +888,8 @@ async function generateImage(uploadedLogo: File | null = null, uploadedImage: Fi
       restaurant.value.place_id,
       strictnessMode.value,
       holidayTheme.value !== 'none' ? holidayTheme.value : undefined,
-      visualStyle.value
+      visualStyle.value,
+      visualStyle.value === 'custom' ? customVisualPrompt.value : undefined
     )
 
     if (!response.success) {
@@ -1383,7 +1390,6 @@ function _handleContentUpdated(updatedContent: { postText: string; hashtags: str
               <p class="restaurant-address">{{ restaurant.address }}</p>
             </div>
             <div v-if="allRestaurants.length > 1" class="switch-indicator">
-              <span class="switch-icon">⌄</span>
               <span class="switch-text">{{ t('contentCreate.switchRestaurant', 'Switch') }}</span>
             </div>
           </div>
@@ -1598,12 +1604,6 @@ function _handleContentUpdated(updatedContent: { postText: string; hashtags: str
 
 .restaurant-header.clickable:hover .switch-indicator {
   background: rgba(212, 175, 55, 0.2);
-}
-
-.switch-icon {
-  font-size: var(--text-lg);
-  color: var(--gold-primary);
-  line-height: 1;
 }
 
 .switch-text {

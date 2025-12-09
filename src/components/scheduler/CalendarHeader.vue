@@ -1,5 +1,5 @@
 <template>
-  <div class="calendar-header-new">
+  <div :class="['calendar-header-new', { 'day-view-mode': viewMode === 'day' }]">
     <button
       class="nav-arrow"
       @click="$emit('previous')"
@@ -183,16 +183,19 @@ const capitalizeFirst = (str: string): string => {
 
 @media (max-width: 768px) {
   .calendar-header-new {
-    flex-direction: column;
-    gap: var(--space-md);
+    gap: var(--space-sm);
   }
 
   .nav-arrow {
-    width: 100%;
+    padding: var(--space-sm) var(--space-md);
   }
 
   .arrow-tooltip {
     display: none;
+  }
+
+  .current-month {
+    font-size: var(--text-xl);
   }
 }
 
@@ -248,6 +251,17 @@ const capitalizeFirst = (str: string): string => {
     width: calc((100% - 6px) / 3);
     top: 3px;
     left: 3px;
+  }
+}
+
+/* Mobile Day View - keep view toggle visible so user can switch views */
+@media (max-width: 768px) {
+  .calendar-header-new.day-view-mode {
+    padding: var(--space-sm) 0;
+  }
+
+  .calendar-header-new.day-view-mode .current-month {
+    font-size: var(--text-base);
   }
 }
 </style>
