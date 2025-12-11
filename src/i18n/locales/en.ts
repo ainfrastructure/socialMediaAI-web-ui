@@ -1129,10 +1129,6 @@ export default {
       creative: 'Creative',
       creativeDesc: 'Artistic reimagining with extras and garnishes',
     },
-    holidayInspiration: {
-      label: 'Holiday Inspiration',
-      hint: 'Add seasonal theming to your post',
-    },
     holidayTheme: {
       label: 'Theme / Inspiration',
       hint: 'Add a seasonal or themed style to your image',
@@ -1181,6 +1177,11 @@ export default {
       goldOutline: 'Gold Outline',
       generateButton: 'Generate Image (1 credit)',
       regenerate: 'Regenerate',
+      imagePreview: 'Image Preview',
+      postTextLabel: 'Post Text',
+      postTextPlaceholder: 'Write your post caption...',
+      hashtagsLabel: 'Hashtags',
+      addHashtag: 'Add hashtag...',
     },
     step6: {
       title: 'Publish Your Post',

@@ -1129,10 +1129,6 @@ export default {
       creative: 'Kreativ',
       creativeDesc: 'Kunstnerisk nytenkning med tilbehør og garnityr',
     },
-    holidayInspiration: {
-      label: 'Sesonginspirasjon',
-      hint: 'Legg til sesongbasert tema til innlegget',
-    },
     holidayTheme: {
       label: 'Tema / Inspirasjon',
       hint: 'Legg til en sesongbasert eller tematisk stil til bildet',
@@ -1181,6 +1177,11 @@ export default {
       goldOutline: 'Gull kontur',
       generateButton: 'Generer bilde (1 poeng)',
       regenerate: 'Regenerer',
+      imagePreview: 'Bildeforhåndsvisning',
+      postTextLabel: 'Innleggstekst',
+      postTextPlaceholder: 'Skriv bildeteksten din...',
+      hashtagsLabel: 'Emneknagger',
+      addHashtag: 'Legg til emneknagg...',
     },
     step6: {
       title: 'Publiser innlegget ditt',

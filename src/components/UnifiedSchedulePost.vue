@@ -492,8 +492,8 @@ onMounted(() => {
 
 /* Schedule Section */
 .schedule-section {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   gap: var(--space-xl);
   padding: var(--space-xl);
   background: var(--glass-bg);
@@ -886,6 +886,10 @@ onMounted(() => {
 
 /* Responsive */
 @media (max-width: 768px) {
+  .schedule-section {
+    grid-template-columns: 1fr;
+  }
+
   .platform-grid {
     grid-template-columns: 1fr;
   }

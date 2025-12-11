@@ -1192,7 +1192,8 @@ function formatDate(dateString: string): string {
 .pagination-container {
   margin-top: var(--space-2xl);
   display: flex;
-  justify-content: center;
+  flex-direction: column;
+  align-items: center;
 }
 
 /* Detail Modal */

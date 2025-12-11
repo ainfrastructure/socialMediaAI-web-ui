@@ -28,7 +28,7 @@ const { t } = useI18n()
 // Navigation helper to always start in easy mode
 function goToCreateContent() {
   preferencesStore.setCreationMode('easy', true)
-  router.push('/posts/create')
+  router.push('/posts')
 }
 
 // Real stats from API

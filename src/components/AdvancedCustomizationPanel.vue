@@ -200,6 +200,24 @@ function updateComboItemArrangement(arrangement: CustomizationOptions['comboItem
       </div>
     </div>
 
+    <!-- Text Overlay (for Single & Combo) -->
+    <div v-if="postType === 'single' || postType === 'combo'" class="customization-section">
+      <label class="section-label">
+        {{ t('advancedMode.textOverlay.label', 'Text Overlay') }}
+        <span class="section-hint">{{ t('advancedMode.textOverlay.hint', 'Add custom text to your image (optional)') }}</span>
+      </label>
+      <div class="text-overlay-input-wrapper">
+        <input
+          type="text"
+          class="text-overlay-input"
+          :value="props.modelValue.textOverlay?.text || ''"
+          @input="emit('update:modelValue', { ...props.modelValue, textOverlay: { ...props.modelValue.textOverlay, text: ($event.target as HTMLInputElement).value, font: 'playfair', size: 24, color: '#FFFFFF' } })"
+          :placeholder="t('advancedMode.textOverlay.placeholder', 'Enter text to overlay on image...')"
+          maxlength="50"
+        />
+      </div>
+    </div>
+
     <!-- Combo-Specific Options -->
     <template v-if="postType === 'combo'">
       <!-- Text Placement -->
@@ -496,6 +514,32 @@ function updateComboItemArrangement(arrangement: CustomizationOptions['comboItem
 }
 
 .custom-theme-text-input::placeholder {
+  color: var(--text-muted);
+}
+
+/* Text Overlay Input */
+.text-overlay-input-wrapper {
+  margin-top: var(--space-sm);
+}
+
+.text-overlay-input {
+  width: 100%;
+  padding: var(--space-md);
+  background: var(--bg-secondary);
+  border: var(--border-width) solid var(--border-color);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-size: var(--text-base);
+  transition: var(--transition-base);
+}
+
+.text-overlay-input:focus {
+  outline: none;
+  border-color: var(--gold-primary);
+  box-shadow: 0 0 0 3px var(--gold-subtle);
+}
+
+.text-overlay-input::placeholder {
   color: var(--text-muted);
 }
 

@@ -12,6 +12,7 @@ import CustomizationPreview from './CustomizationPreview.vue'
 import PromptVariationSelector from './PromptVariationSelector.vue'
 import UnifiedSchedulePost from './UnifiedSchedulePost.vue'
 import WizardProgress from './WizardProgress.vue'
+import GeneratingProgress from './GeneratingProgress.vue'
 import GoldenDishIcon from './icons/GoldenDishIcon.vue'
 import GoldenComboIcon from './icons/GoldenComboIcon.vue'
 import GoldenCalendarIcon from './icons/GoldenCalendarIcon.vue'
@@ -219,7 +220,7 @@ const customization = ref<CustomizationOptions>({
     size: 24,
     color: '#FFFFFF'
   },
-  strictnessMode: 'flexible',
+  strictnessMode: 'strict',
   holidayTheme: 'none',
   customHolidayText: '',
   comboTextPlacement: 'bottom',
@@ -617,7 +618,15 @@ async function goToStep4AndGenerate() {
   currentStep.value = 4
   // Auto-start generation after a brief moment for UI to update
   await nextTick()
-  await generateImage()
+
+  // Only generate image if not already generated
+  if (!generatedImageUrl.value) {
+    await generateImage()
+  }
+  // Only generate content if not already generated
+  else if (!postText.value) {
+    await generatePostContent()
+  }
 }
 
 // Step 4: Generate Image
@@ -663,8 +672,8 @@ async function generateImage() {
         console.error('Failed to process uploaded image')
       }
     }
-    // If no uploaded image, try to use menu item image (for single posts)
-    else if (postType.value === 'single' && selectedMenuItems.value.length > 0 && selectedMenuItems.value[0].imageUrl) {
+    // If no uploaded image, try to use menu item image (for single and combo posts)
+    else if ((postType.value === 'single' || postType.value === 'combo') && selectedMenuItems.value.length > 0 && selectedMenuItems.value[0].imageUrl) {
       try {
         // Proxy Okam CDN URLs to avoid CORS issues
         const imageUrl = okamService.proxyImageUrl(selectedMenuItems.value[0].imageUrl) || selectedMenuItems.value[0].imageUrl
@@ -1336,9 +1345,7 @@ defineExpose({
 
       <!-- Loading State -->
       <div v-if="generatingImage || generatingContent" ref="generatingOverlayRef" class="preview-loading">
-        <img src="/socialchef_logo.svg" alt="Social Chef" class="loading-logo" />
-        <p class="loading-title">{{ t('advancedMode.step4.generating') }}</p>
-        <p class="loading-subtitle">{{ t('advancedMode.step4.generatingSubtitle') }}</p>
+        <GeneratingProgress :active="true" :estimated-duration="20" />
       </div>
 
       <!-- Preview Content -->

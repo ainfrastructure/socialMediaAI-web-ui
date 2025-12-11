@@ -72,13 +72,16 @@
               <div class="notification-time">{{ formatTimeAgo(notification.timestamp) }}</div>
             </div>
 
-            <!-- External link indicator -->
-            <div v-if="notification.postUrl" class="notification-link">
-              <MaterialIcon icon="open_in_new" size="xs" />
-            </div>
-
-            <!-- Unread dot -->
-            <div v-if="!notification.read" class="unread-dot"></div>
+            <!-- Open post button - golden and clickable -->
+            <button
+              v-if="notification.postUrl"
+              class="notification-link"
+              @click.stop="openPostUrl(notification.postUrl)"
+              :aria-label="'View post'"
+              title="View post"
+            >
+              <MaterialIcon icon="open_in_new" size="sm" />
+            </button>
           </div>
         </div>
 
@@ -131,15 +134,14 @@ const clearAll = () => {
 }
 
 const handleNotificationClick = (notification: Notification) => {
-  // Mark as read
+  // Only mark as read - don't open URL (that's handled by the golden button)
   if (!notification.read) {
     notificationStore.markAsRead(notification.id)
   }
+}
 
-  // Open post URL if available
-  if (notification.postUrl) {
-    window.open(notification.postUrl, '_blank', 'noopener,noreferrer')
-  }
+const openPostUrl = (url: string) => {
+  window.open(url, '_blank', 'noopener,noreferrer')
 }
 
 // Format time ago
@@ -382,22 +384,32 @@ onUnmounted(() => {
   color: var(--text-muted);
 }
 
-/* Link indicator */
+/* Open post button - golden and clickable */
 .notification-link {
-  color: var(--text-muted);
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: rgba(212, 175, 55, 0.1);
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  border-radius: var(--radius-md);
+  color: var(--gold-primary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  padding: 0;
 }
 
-/* Unread dot */
-.unread-dot {
-  position: absolute;
-  top: 50%;
-  right: var(--space-md);
-  transform: translateY(-50%);
-  width: 8px;
-  height: 8px;
-  background: var(--gold-primary);
-  border-radius: 50%;
+.notification-link:hover {
+  background: rgba(212, 175, 55, 0.2);
+  border-color: var(--gold-primary);
+  transform: scale(1.1);
+  box-shadow: 0 0 8px rgba(212, 175, 55, 0.4);
+}
+
+.notification-link:active {
+  transform: scale(0.95);
 }
 
 /* Empty State */
