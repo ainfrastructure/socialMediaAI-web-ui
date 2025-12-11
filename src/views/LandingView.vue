@@ -122,6 +122,35 @@ function getBadgeText(badge: string): string {
   return key ? t(key) : badge
 }
 
+// Calculate "before" price for yearly and lifetime plans
+const cheapestMonthlyPrice = computed(() => {
+  const monthlyPlans = plans.value.filter((p) => p.interval === 'month')
+  if (monthlyPlans.length === 0) return 0
+  return Math.min(...monthlyPlans.map((p) => p.price))
+})
+
+function getBeforePrice(plan: Plan): number | null {
+  if (cheapestMonthlyPrice.value === 0) return null
+  if (plan.interval === 'year') {
+    return cheapestMonthlyPrice.value * 12
+  }
+  if (plan.interval === 'lifetime') {
+    return cheapestMonthlyPrice.value * 120
+  }
+  return null // monthly plans don't show before price
+}
+
+function formatBeforePrice(price: number): string {
+  // Format the price with currency symbol (assumes same currency as plan)
+  const currency = plans.value[0]?.currency || 'USD'
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: currency,
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(price)
+}
+
 function handleCTAClick() {
   if (authStore.isAuthenticated) {
     if (hasSubscription.value) {
@@ -265,7 +294,34 @@ function stopHintAnimation() {
   }
 }
 
-// Start hint animation on mount
+// AI versions carousel state
+const currentTemplateIndex = ref(0)
+let carouselInterval: ReturnType<typeof setInterval> | null = null
+
+const currentTemplate = computed(() => multiExample.generated[currentTemplateIndex.value])
+
+function selectTemplate(index: number) {
+  currentTemplateIndex.value = index
+  // Reset auto-rotation timer when manually selecting
+  stopCarouselRotation()
+  startCarouselRotation()
+}
+
+function startCarouselRotation() {
+  if (carouselInterval) return
+  carouselInterval = setInterval(() => {
+    currentTemplateIndex.value = (currentTemplateIndex.value + 1) % multiExample.generated.length
+  }, 3500)
+}
+
+function stopCarouselRotation() {
+  if (carouselInterval) {
+    clearInterval(carouselInterval)
+    carouselInterval = null
+  }
+}
+
+// Start animations on mount
 onMounted(async () => {
   await loadPlans()
   // Delay start of hint animation
@@ -274,6 +330,8 @@ onMounted(async () => {
       startHintAnimation()
     }
   }, 1000)
+  // Start carousel auto-rotation
+  startCarouselRotation()
 })
 
 // Benefits data
@@ -376,7 +434,11 @@ const benefits = [
                     :disabled="loggingIn"
                   >
                     {{
-                      loggingIn ? $t('common.loading') : isDev ? 'Dev Login' : $t('auth.sendLoginLink')
+                      loggingIn
+                        ? $t('common.loading')
+                        : isDev
+                          ? 'Dev Login'
+                          : $t('auth.sendLoginLink')
                     }}
                   </BaseButton>
                 </form>
@@ -456,9 +518,12 @@ const benefits = [
           <!-- Step 1 -->
           <div class="step-card">
             <div class="step-number">1</div>
-            <div class="step-image-placeholder">
-              <MaterialIcon icon="photo_camera" size="lg" />
-              <span>{{ $t('landing.howItWorks.step1Image') }}</span>
+            <div class="step-image-wrapper">
+              <img
+                src="/step-1.png"
+                :alt="$t('landing.howItWorks.step1Image')"
+                class="step-image"
+              />
             </div>
             <h3 class="step-title">{{ $t('landing.howItWorks.step1Title') }}</h3>
             <p class="step-description">{{ $t('landing.howItWorks.step1Description') }}</p>
@@ -467,9 +532,12 @@ const benefits = [
           <!-- Step 2 -->
           <div class="step-card">
             <div class="step-number">2</div>
-            <div class="step-image-placeholder">
-              <MaterialIcon icon="auto_awesome" size="lg" />
-              <span>{{ $t('landing.howItWorks.step2Image') }}</span>
+            <div class="step-image-wrapper">
+              <img
+                src="/step-2.png"
+                :alt="$t('landing.howItWorks.step2Image')"
+                class="step-image"
+              />
             </div>
             <h3 class="step-title">{{ $t('landing.howItWorks.step2Title') }}</h3>
             <p class="step-description">{{ $t('landing.howItWorks.step2Description') }}</p>
@@ -478,9 +546,12 @@ const benefits = [
           <!-- Step 3 -->
           <div class="step-card">
             <div class="step-number">3</div>
-            <div class="step-image-placeholder">
-              <MaterialIcon icon="send" size="lg" />
-              <span>{{ $t('landing.howItWorks.step3Image') }}</span>
+            <div class="step-image-wrapper">
+              <img
+                src="/step-3.png"
+                :alt="$t('landing.howItWorks.step3Image')"
+                class="step-image"
+              />
             </div>
             <h3 class="step-title">{{ $t('landing.howItWorks.step3Title') }}</h3>
             <p class="step-description">{{ $t('landing.howItWorks.step3Description') }}</p>
@@ -495,107 +566,8 @@ const benefits = [
         <h2 class="section-title">{{ $t('landing.examples.title') }}</h2>
         <p class="section-subtitle">{{ $t('landing.examples.subtitle') }}</p>
 
-        <!-- Main Example: Full workflow with detailed explanations -->
-        <div class="main-example-flow">
-          <!-- Step 1: Upload -->
-          <div class="flow-step-card">
-            <div class="step-header">
-              <span class="step-badge">1</span>
-              <h3 class="step-title">{{ $t('landing.examples.flow.step1Title') }}</h3>
-            </div>
-            <p class="step-description">{{ $t('landing.examples.flow.step1Description') }}</p>
-            <div class="step-visual">
-              <div class="example-image-wrapper xlarge">
-                <img
-                  :src="multiExample.original"
-                  :alt="$t('landing.examples.originalPhoto')"
-                  class="example-image"
-                />
-              </div>
-            </div>
-          </div>
-
-          <!-- Arrow -->
-          <div class="flow-arrow">
-            <MaterialIcon icon="arrow_forward" size="lg" color="var(--gold-primary)" />
-          </div>
-
-          <!-- Step 2: AI Generates -->
-          <div class="flow-step-card wide">
-            <div class="step-header">
-              <span class="step-badge">2</span>
-              <h3 class="step-title">{{ $t('landing.examples.flow.step2Title') }}</h3>
-            </div>
-            <p class="step-description">{{ $t('landing.examples.flow.step2Description') }}</p>
-            <div class="step-visual">
-              <div class="generated-versions">
-                <div
-                  v-for="(gen, idx) in multiExample.generated"
-                  :key="idx"
-                  class="example-post-card medium"
-                >
-                  <div class="template-badge">
-                    {{ $t(`landing.examples.templates.${gen.templateKey}`) }}
-                  </div>
-                  <img
-                    :src="gen.src"
-                    :alt="$t('landing.examples.aiGenerated')"
-                    class="example-image"
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Arrow -->
-          <div class="flow-arrow">
-            <MaterialIcon icon="arrow_forward" size="lg" color="var(--gold-primary)" />
-          </div>
-
-          <!-- Step 3: Review & Approve -->
-          <div class="flow-step-card">
-            <div class="step-header">
-              <span class="step-badge">3</span>
-              <h3 class="step-title">{{ $t('landing.examples.flow.step3Title') }}</h3>
-            </div>
-            <p class="step-description">{{ $t('landing.examples.flow.step3Description') }}</p>
-            <div class="step-visual">
-              <div class="approve-visual">
-                <MaterialIcon icon="check_circle" size="lg" color="var(--success-text)" />
-                <span class="approve-text">{{ $t('landing.examples.approveAndPost') }}</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Arrow -->
-          <div class="flow-arrow">
-            <MaterialIcon icon="arrow_forward" size="lg" color="var(--gold-primary)" />
-          </div>
-
-          <!-- Step 4: Published -->
-          <div class="flow-step-card">
-            <div class="step-header">
-              <span class="step-badge">4</span>
-              <h3 class="step-title">{{ $t('landing.examples.flow.step4Title') }}</h3>
-            </div>
-            <p class="step-description">{{ $t('landing.examples.flow.step4Description') }}</p>
-            <div class="step-visual">
-              <div class="posted-platforms vertical">
-                <div class="platform-icon large">
-                  <MaterialIcon icon="check_circle" size="sm" color="var(--success-text)" />
-                  <span>Facebook</span>
-                </div>
-                <div class="platform-icon large">
-                  <MaterialIcon icon="check_circle" size="sm" color="var(--success-text)" />
-                  <span>Instagram</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Before/After Interactive Slider -->
-        <div class="before-after-gallery">
+        <!-- Before/After Interactive Slider (moved up) -->
+        <div class="before-after-gallery top-gallery">
           <h3 class="gallery-title">{{ $t('landing.examples.gallery.title') }}</h3>
           <p class="gallery-subtitle">{{ $t('landing.examples.gallery.subtitle') }}</p>
 
@@ -670,6 +642,111 @@ const benefits = [
             </button>
           </div>
         </div>
+
+        <!-- Main Example: Full workflow with detailed explanations -->
+        <div class="main-example-flow">
+          <!-- Step 1: Upload -->
+          <div class="flow-step-card">
+            <div class="step-header">
+              <span class="step-badge">1</span>
+              <h3 class="step-title">{{ $t('landing.examples.flow.step1Title') }}</h3>
+            </div>
+            <p class="step-description">{{ $t('landing.examples.flow.step1Description') }}</p>
+            <div class="step-visual">
+              <div class="example-image-wrapper xlarge with-label">
+                <div class="original-label">{{ $t('landing.examples.originalLabel') }}</div>
+                <img
+                  :src="multiExample.original"
+                  :alt="$t('landing.examples.originalPhoto')"
+                  class="example-image"
+                />
+              </div>
+            </div>
+          </div>
+
+          <!-- Arrow -->
+          <div class="flow-arrow">
+            <MaterialIcon icon="arrow_forward" size="lg" color="var(--gold-primary)" />
+          </div>
+
+          <!-- Step 2: AI Generates (Carousel) -->
+          <div class="flow-step-card wide">
+            <div class="step-header">
+              <span class="step-badge">2</span>
+              <h3 class="step-title">{{ $t('landing.examples.flow.step2Title') }}</h3>
+            </div>
+            <p class="step-description">{{ $t('landing.examples.flow.step2Description') }}</p>
+            <div class="step-visual">
+              <!-- Single image carousel -->
+              <div class="carousel-container">
+                <div class="carousel-image-wrapper">
+                  <div class="template-badge">
+                    {{
+                      $t(
+                        `landing.examples.templates.${multiExample.generated[currentTemplateIndex].templateKey}`,
+                      )
+                    }}
+                  </div>
+                  <img
+                    :src="multiExample.generated[currentTemplateIndex].src"
+                    :alt="$t('landing.examples.aiGenerated')"
+                    class="carousel-image"
+                  />
+                </div>
+                <!-- Template badge selectors with progress bars -->
+                <div class="carousel-badges">
+                  <button
+                    v-for="(gen, idx) in multiExample.generated"
+                    :key="idx"
+                    :class="['carousel-badge', { active: currentTemplateIndex === idx }]"
+                    @click="selectTemplate(idx)"
+                  >
+                    <span class="badge-text">{{
+                      $t(`landing.examples.templates.${gen.templateKey}`)
+                    }}</span>
+                    <div class="badge-progress-bar">
+                      <div
+                        v-if="currentTemplateIndex === idx"
+                        :key="`progress-${idx}-${currentTemplateIndex}`"
+                        class="badge-progress-fill animating"
+                      />
+                    </div>
+                  </button>
+                  <!-- And many more badge -->
+                  <span class="carousel-badge more-badge">
+                    {{ $t('landing.examples.templates.andMore') }}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Arrow -->
+          <div class="flow-arrow">
+            <MaterialIcon icon="arrow_forward" size="lg" color="var(--gold-primary)" />
+          </div>
+
+          <!-- Step 3: Approve & Published (merged) -->
+          <div class="flow-step-card">
+            <div class="step-header">
+              <span class="step-badge">3</span>
+              <h3 class="step-title">{{ $t('landing.examples.flow.step3Title') }}</h3>
+            </div>
+            <p class="step-description">{{ $t('landing.examples.flow.step3Description') }}</p>
+            <div class="step-visual">
+              <div class="posted-platforms vertical">
+                <div class="platform-icon large">
+                  <MaterialIcon icon="check_circle" size="sm" color="var(--success-text)" />
+                  <span>Facebook</span>
+                </div>
+                <div class="platform-icon large">
+                  <MaterialIcon icon="check_circle" size="sm" color="var(--success-text)" />
+                  <span>Instagram</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -696,12 +773,6 @@ const benefits = [
                 <MaterialIcon icon="check_circle" size="sm" color="var(--gold-primary)" />
                 <span>{{ $t('landing.autoPosting.feature3') }}</span>
               </div>
-            </div>
-          </div>
-          <div class="auto-posting-image">
-            <div class="image-placeholder large">
-              <MaterialIcon icon="compare" size="lg" />
-              <span>{{ $t('landing.autoPosting.imagePlaceholder') }}</span>
             </div>
           </div>
         </div>
@@ -786,6 +857,9 @@ const benefits = [
 
             <!-- Price -->
             <div class="price-wrapper">
+              <div v-if="getBeforePrice(plan)" class="original-price">
+                {{ formatBeforePrice(getBeforePrice(plan)!) }}
+              </div>
               <div class="pricing-price">{{ plan.formatted_price }}</div>
               <span class="price-period">{{ getPriceInterval(plan) }}</span>
               <div v-if="plan.savings" class="savings-badge">
@@ -807,6 +881,20 @@ const benefits = [
                 <span
                   >{{ Math.floor(plan.credits / creditCosts.video) }} {{ $t('plans.videos') }}</span
                 >
+              </div>
+            </div>
+
+            <!-- Social Media Posting Included -->
+            <div class="social-posting-included">
+              <div class="posting-line">
+                <span class="platform-icon-small facebook"></span>
+                <span>{{ $t('plans.facebookPublishing') }}</span>
+                <span class="included-badge">{{ $t('plans.included') }}</span>
+              </div>
+              <div class="posting-line">
+                <span class="platform-icon-small instagram"></span>
+                <span>{{ $t('plans.instagramPublishing') }}</span>
+                <span class="included-badge">{{ $t('plans.included') }}</span>
               </div>
             </div>
 
@@ -1096,7 +1184,6 @@ const benefits = [
   background: #166fe5;
 }
 
-
 /* Legal Links */
 .legal-links {
   display: flex;
@@ -1207,24 +1294,18 @@ const benefits = [
   margin: 0 auto var(--space-xl);
 }
 
-.step-image-placeholder {
-  background: var(--bg-tertiary);
-  border: 2px dashed var(--border-color);
+.step-image-wrapper {
   border-radius: var(--radius-lg);
-  padding: var(--space-2xl);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-sm);
-  color: var(--text-muted);
-  text-align: center;
-  min-height: 180px;
+  overflow: hidden;
   margin-bottom: var(--space-lg);
+  aspect-ratio: 1;
+  background: var(--bg-tertiary);
 }
 
-.step-image-placeholder span {
-  font-size: var(--text-xs);
+.step-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .step-title {
@@ -1246,12 +1327,15 @@ const benefits = [
 
 /* Main Example Flow - Horizontal Steps */
 .main-example-flow {
-  display: flex;
-  align-items: flex-start;
+  display: grid;
+  grid-template-columns: minmax(200px, 1fr) auto minmax(280px, 1.2fr) auto minmax(200px, 1fr);
+  align-items: start;
   justify-content: center;
   gap: var(--space-lg);
   margin-bottom: var(--space-5xl);
-  flex-wrap: wrap;
+  max-width: 1100px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .flow-step-card {
@@ -1260,12 +1344,7 @@ const benefits = [
   border-radius: var(--radius-lg);
   padding: var(--space-xl);
   text-align: center;
-  max-width: 280px;
   backdrop-filter: blur(var(--blur-md));
-}
-
-.flow-step-card.wide {
-  max-width: 100%;
 }
 
 .step-header {
@@ -1314,7 +1393,7 @@ const benefits = [
   display: flex;
   align-items: center;
   justify-content: center;
-  padding-top: var(--space-4xl);
+  margin-top: 120px;
 }
 
 /* Approve Visual */
@@ -1372,8 +1451,26 @@ const benefits = [
 }
 
 .example-image-wrapper.xlarge {
-  width: 280px;
-  height: 280px;
+  width: 220px;
+  height: 220px;
+}
+
+.example-image-wrapper.with-label {
+  position: relative;
+}
+
+.original-label {
+  position: absolute;
+  top: var(--space-sm);
+  left: var(--space-sm);
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  padding: var(--space-xs) var(--space-sm);
+  border-radius: var(--radius-full);
+  font-size: var(--text-xs);
+  font-weight: var(--font-semibold);
+  z-index: 1;
+  border: 1px solid var(--border-color);
 }
 
 .example-image {
@@ -1427,11 +1524,131 @@ const benefits = [
   z-index: 1;
 }
 
+/* AI Versions Carousel */
+.carousel-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-lg);
+  width: 100%;
+}
+
+.carousel-image-wrapper {
+  position: relative;
+  width: 100%;
+  max-width: 320px;
+  aspect-ratio: 1;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  border: 2px solid var(--gold-primary);
+  box-shadow: var(--shadow-lg), var(--glow-gold-sm);
+}
+
+.carousel-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: opacity 0.3s ease;
+}
+
+.carousel-badges {
+  display: flex;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+  justify-content: center;
+  max-width: 100%;
+}
+
+.carousel-badge {
+  position: relative;
+  padding: var(--space-sm) var(--space-md);
+  background: var(--glass-bg);
+  border: 2px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  cursor: pointer;
+  transition: var(--transition-base);
+  min-height: 44px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-xs);
+  overflow: hidden;
+}
+
+.carousel-badge:hover {
+  border-color: var(--gold-primary);
+  color: var(--text-primary);
+}
+
+.carousel-badge.active {
+  border-color: var(--gold-primary);
+  color: var(--text-primary);
+  box-shadow: var(--glow-gold-sm);
+}
+
+.badge-text {
+  position: relative;
+  z-index: 1;
+}
+
+.badge-progress-bar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--border-color);
+  overflow: hidden;
+}
+
+.badge-progress-fill {
+  height: 100%;
+  width: 0;
+  background: var(--gold-primary);
+}
+
+.badge-progress-fill.animating {
+  animation: progressFill 3.5s linear forwards;
+}
+
+@keyframes progressFill {
+  from {
+    width: 0;
+  }
+  to {
+    width: 100%;
+  }
+}
+
+/* "And many more" transparent badge */
+.carousel-badge.more-badge {
+  background: transparent;
+  border: 2px dashed var(--border-color);
+  color: var(--text-muted);
+  cursor: default;
+  font-style: italic;
+}
+
+.carousel-badge.more-badge:hover {
+  border-color: var(--border-color);
+  color: var(--text-muted);
+}
+
 /* Before/After Interactive Slider */
 .before-after-gallery {
   margin-top: var(--space-4xl);
   padding-top: var(--space-4xl);
   border-top: 1px solid var(--border-color);
+}
+
+.before-after-gallery.top-gallery {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: none;
+  margin-bottom: var(--space-4xl);
 }
 
 .gallery-title {
@@ -1755,16 +1972,25 @@ const benefits = [
 }
 
 .limited-badge {
+  position: absolute;
+  top: calc(var(--space-md) + 28px);
+  left: 50%;
+  transform: translateX(-50%);
   font-size: var(--text-xs);
   color: var(--warning-text);
   background: var(--warning-bg);
   border: 1px solid var(--warning-border);
   padding: var(--space-xs) var(--space-sm);
   border-radius: var(--radius-sm);
+  white-space: nowrap;
 }
 
 .tier-icon-wrapper {
   margin-top: var(--space-lg);
+}
+
+.pricing-card.lifetime .tier-icon-wrapper {
+  margin-top: var(--space-3xl);
 }
 
 .pricing-tier {
@@ -1779,6 +2005,16 @@ const benefits = [
   flex-direction: column;
   align-items: center;
   gap: var(--space-xs);
+}
+
+.original-price {
+  text-decoration: line-through;
+  font-size: var(--text-lg);
+  opacity: 0.7;
+  background: var(--gradient-gold);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .pricing-price {
@@ -1827,6 +2063,47 @@ const benefits = [
 .or-divider {
   font-size: var(--text-xs);
   color: var(--text-muted);
+}
+
+/* Social Posting Included */
+.social-posting-included {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  padding: var(--space-md);
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-md);
+  margin-top: var(--space-sm);
+}
+
+.posting-line {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+}
+
+.platform-icon-small {
+  width: 18px;
+  height: 18px;
+  border-radius: var(--radius-sm);
+  flex-shrink: 0;
+}
+
+.platform-icon-small.facebook {
+  background: var(--gradient-facebook);
+}
+
+.platform-icon-small.instagram {
+  background: var(--gradient-instagram);
+}
+
+.included-badge {
+  margin-left: auto;
+  color: var(--success-text);
+  font-size: var(--text-xs);
+  font-weight: var(--font-medium);
 }
 
 .pricing-credits {
@@ -1932,16 +2209,13 @@ const benefits = [
     text-align: center;
   }
 
-  .auto-posting-image {
-    order: -1;
-  }
-
   .auto-posting-features {
     align-items: center;
   }
 
   /* Examples responsive */
   .main-example-flow {
+    display: flex;
     flex-direction: column;
     align-items: center;
   }
@@ -1952,12 +2226,8 @@ const benefits = [
   }
 
   .flow-step-card {
-    max-width: 100%;
     width: 100%;
-  }
-
-  .flow-step-card.wide {
-    max-width: 100%;
+    max-width: 500px;
   }
 
   /* Slider responsive */

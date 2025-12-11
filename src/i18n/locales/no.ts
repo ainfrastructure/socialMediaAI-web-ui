@@ -19,6 +19,7 @@ export default {
 
   // Common
   common: {
+    welcome: 'Velkommen',
     loading: 'Laster...',
     error: 'Feil',
     success: 'Suksess',
@@ -192,6 +193,7 @@ export default {
       title: 'Slik fungerer det',
       subtitle: 'Fra telefonen din til profesjonelle innlegg på sekunder',
       originalPhoto: 'Ditt bilde',
+      originalLabel: 'Original',
       aiGenerated: 'AI-forbedret',
       approveAndPost: 'Gjennomgå og godkjenn',
       flow: {
@@ -199,10 +201,8 @@ export default {
         step1Description: 'Ta et bilde av retten din med telefonen. Ingen profesjonelt kamera nødvendig.',
         step2Title: 'AI lager flere versjoner',
         step2Description: 'Vår AI genererer vakre varianter i forskjellige stiler, hver med engasjerende tekst.',
-        step3Title: 'Gjennomgå og godkjenn',
-        step3Description: 'Velg din favorittversjon. Ingenting blir publisert uten din godkjenning.',
-        step4Title: 'Auto-publisert',
-        step4Description: 'Når godkjent, publiseres innlegget ditt på Facebook og Instagram automatisk.',
+        step3Title: 'Godkjenn og publiser',
+        step3Description: 'Velg din favorittversjon og den publiseres automatisk til Facebook og Instagram.',
       },
       gallery: {
         title: 'Før og etter',
@@ -218,6 +218,7 @@ export default {
         cleanStrict: 'Ren streng',
         infographic: 'Infografikk',
         custom: 'Egendefinert',
+        andMore: 'Og mange flere...',
       },
     },
 
@@ -241,7 +242,6 @@ export default {
       title: 'Sett det og glem det',
       headline: 'Innleggene dine publiseres automatisk. Virkelig.',
       description: 'Slutt å huske på å poste. Slutt å logge inn i apper. SocialChef håndterer alt - fra opprettelse til publisering. Du vil se ut som om du har en dedikert sosiale medier-ansvarlig.',
-      imagePlaceholder: 'Delt skjerm - stresset eier til venstre, avslappet eier til høyre med innlegg som auto-publiseres',
       feature1: 'Innlegg går live mens du lager mat',
       feature2: 'Fungerer med Instagram og Facebook',
       feature3: 'Planlegg uker i forveien',
@@ -466,7 +466,7 @@ export default {
     orEquivalent: 'eller',
     limitedTo: 'Begrenset til {count} personer',
     launchDeal: 'Lanseringstilbud',
-    getStarted: 'Kom i gang',
+    getStarted: 'Abonner',
     upgrade: 'Oppgrader',
     buy: 'Kjøp',
     promoCodeHint: 'Har du en rabattkode? Skriv den inn ved betaling.',
@@ -476,6 +476,7 @@ export default {
     videoGeneration: 'AI-videogenerering',
     facebookPublishing: 'Facebook-publisering',
     instagramPublishing: 'Instagram-publisering',
+    included: 'Inkludert',
     postScheduling: 'Innleggsplanlegging',
     unlimitedRestaurants: 'Ubegrensede restauranter',
     noExpiration: 'Poeng utløper aldri',

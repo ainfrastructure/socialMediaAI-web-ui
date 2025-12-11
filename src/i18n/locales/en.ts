@@ -19,6 +19,7 @@ export default {
 
   // Common
   common: {
+    welcome: 'Welcome',
     loading: 'Loading...',
     error: 'Error',
     success: 'Success',
@@ -192,6 +193,7 @@ export default {
       title: 'How It Works',
       subtitle: 'From your phone to professional posts in seconds',
       originalPhoto: 'Your Photo',
+      originalLabel: 'Original',
       aiGenerated: 'AI Enhanced',
       approveAndPost: 'Review & Approve',
       flow: {
@@ -199,10 +201,8 @@ export default {
         step1Description: 'Take a photo of your dish with your phone. No professional camera needed.',
         step2Title: 'AI Creates Multiple Versions',
         step2Description: 'Our AI generates beautiful variations in different styles, each with engaging captions.',
-        step3Title: 'Review & Approve',
-        step3Description: 'Choose your favorite version. Nothing gets posted without your approval.',
-        step4Title: 'Auto-Published',
-        step4Description: 'Once approved, your post goes live on Facebook and Instagram automatically.',
+        step3Title: 'Approve & Publish',
+        step3Description: 'Choose your favorite version and it gets published automatically to Facebook and Instagram.',
       },
       gallery: {
         title: 'Before & After',
@@ -218,6 +218,7 @@ export default {
         cleanStrict: 'Clean Strict',
         infographic: 'Infographic',
         custom: 'Custom',
+        andMore: 'And many more...',
       },
     },
 
@@ -241,7 +242,6 @@ export default {
       title: 'Set It & Forget It',
       headline: 'Your posts publish automatically. Really.',
       description: "No more remembering to post. No more logging into apps. SocialChef handles everything - from creation to publishing. You'll look like you have a dedicated social media manager.",
-      imagePlaceholder: 'Split screen - stressed owner on left, relaxed owner on right with posts auto-publishing',
       feature1: 'Posts go live while you cook',
       feature2: 'Works with Instagram & Facebook',
       feature3: 'Schedule weeks in advance',
@@ -466,7 +466,7 @@ export default {
     orEquivalent: 'or',
     limitedTo: 'Limited to {count} people',
     launchDeal: 'Launch Deal',
-    getStarted: 'Get Started',
+    getStarted: 'Subscribe',
     upgrade: 'Upgrade',
     buy: 'Buy',
     promoCodeHint: 'Have a promo code? Enter it at checkout.',
@@ -474,8 +474,9 @@ export default {
     savePercent: 'Save {percent}%',
     imageGeneration: 'AI image generation',
     videoGeneration: 'AI video generation',
-    facebookPublishing: 'Facebook publishing',
-    instagramPublishing: 'Instagram publishing',
+    facebookPublishing: 'Facebook posting',
+    instagramPublishing: 'Instagram posting',
+    included: 'Included',
     postScheduling: 'Post scheduling',
     unlimitedRestaurants: 'Unlimited restaurants',
     noExpiration: 'Credits never expire',
