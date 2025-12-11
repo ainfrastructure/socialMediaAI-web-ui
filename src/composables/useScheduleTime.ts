@@ -1,10 +1,20 @@
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 
 /**
  * Composable for schedule time utilities
  * Consolidates time/timezone constants and formatting functions used across scheduling components
  */
 export function useScheduleTime() {
+  // Detected browser timezone
+  const detectedTimezone = ref(
+    (() => {
+      try {
+        return Intl.DateTimeFormat().resolvedOptions().timeZone
+      } catch {
+        return 'Europe/Oslo'
+      }
+    })()
+  )
   // Generate hours 1-12 for 12-hour format
   const hours12 = computed(() =>
     Array.from({ length: 12 }, (_, i) => ({
@@ -37,29 +47,16 @@ export function useScheduleTime() {
     }))
   )
 
-  // Common timezones with labels
+  // Common timezones with labels - condensed list for better mobile UX
   const timezoneOptions = [
-    { value: 'Europe/Oslo', label: 'Oslo (CET/CEST)' },
-    { value: 'Europe/Stockholm', label: 'Stockholm (CET/CEST)' },
-    { value: 'Europe/Copenhagen', label: 'Copenhagen (CET/CEST)' },
-    { value: 'Europe/London', label: 'London (GMT/BST)' },
-    { value: 'Europe/Paris', label: 'Paris (CET/CEST)' },
-    { value: 'Europe/Berlin', label: 'Berlin (CET/CEST)' },
-    { value: 'Europe/Amsterdam', label: 'Amsterdam (CET/CEST)' },
-    { value: 'Europe/Rome', label: 'Rome (CET/CEST)' },
-    { value: 'Europe/Madrid', label: 'Madrid (CET/CEST)' },
-    { value: 'America/New_York', label: 'New York (EST/EDT)' },
-    { value: 'America/Chicago', label: 'Chicago (CST/CDT)' },
-    { value: 'America/Denver', label: 'Denver (MST/MDT)' },
-    { value: 'America/Los_Angeles', label: 'Los Angeles (PST/PDT)' },
-    { value: 'America/Phoenix', label: 'Phoenix (MST)' },
-    { value: 'America/Anchorage', label: 'Anchorage (AKST/AKDT)' },
-    { value: 'Pacific/Honolulu', label: 'Honolulu (HST)' },
+    { value: 'Europe/Oslo', label: 'Oslo (CET)' },
+    { value: 'Europe/London', label: 'London (GMT)' },
+    { value: 'Europe/Paris', label: 'Paris (CET)' },
+    { value: 'America/New_York', label: 'New York (ET)' },
+    { value: 'America/Chicago', label: 'Chicago (CT)' },
+    { value: 'America/Los_Angeles', label: 'Los Angeles (PT)' },
     { value: 'Asia/Tokyo', label: 'Tokyo (JST)' },
-    { value: 'Asia/Shanghai', label: 'Shanghai (CST)' },
-    { value: 'Asia/Dubai', label: 'Dubai (GST)' },
-    { value: 'Australia/Sydney', label: 'Sydney (AEST/AEDT)' },
-    { value: 'Pacific/Auckland', label: 'Auckland (NZST/NZDT)' },
+    { value: 'Australia/Sydney', label: 'Sydney (AEST)' },
     { value: 'UTC', label: 'UTC' },
   ]
 
@@ -208,6 +205,7 @@ export function useScheduleTime() {
     // Timezone options
     timezoneOptions,
     timezones,
+    detectedTimezone,
 
     // Formatting functions
     formatTime12,

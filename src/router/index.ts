@@ -20,6 +20,7 @@ const PrivacyPolicyView = () => import('../views/PrivacyPolicyView.vue')
 const TermsView = () => import('../views/TermsView.vue')
 const DeleteAccountView = () => import('../views/DeleteAccountView.vue')
 const GoodbyeView = () => import('../views/GoodbyeView.vue')
+const AnalyticsView = () => import('../views/AnalyticsView.vue')
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -138,6 +139,12 @@ const router = createRouter({
       path: '/scheduler',
       name: 'scheduler',
       component: SchedulerView,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/analytics',
+      name: 'analytics',
+      component: AnalyticsView,
       meta: { requiresAuth: true },
     },
     {

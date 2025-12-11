@@ -4,7 +4,9 @@ import { useI18n } from 'vue-i18n'
 import BaseModal from './BaseModal.vue'
 import BaseButton from './BaseButton.vue'
 import BaseAlert from './BaseAlert.vue'
-import DatePicker from './DatePicker.vue'
+import { VueDatePicker } from '@vuepic/vue-datepicker'
+import '@vuepic/vue-datepicker/dist/main.css'
+import MobileTimePicker from './MobileTimePicker.vue'
 import MaterialIcon from './MaterialIcon.vue'
 import PlatformLogo from './PlatformLogo.vue'
 import { useSocialAccounts } from '../composables/useSocialAccounts'
@@ -28,13 +30,11 @@ useI18n()
 const { availablePlatforms } = useSocialAccounts()
 
 // Schedule time utilities
-const { hours12, minutes: minutesList, timezones, getDefaultTimezone } = useScheduleTime()
+const { timezones, getDefaultTimezone, detectedTimezone } = useScheduleTime()
 
 // Form state
-const scheduledDate = ref('')
-const hours = ref('12')
-const minutes = ref('00')
-const ampm = ref('AM')
+const scheduledDate = ref<Date | null>(null)
+const selectedTime = ref<{ hours: number; minutes: number }>({ hours: 12, minutes: 0 })
 const timezone = ref(getDefaultTimezone())
 const selectedPlatforms = ref<string[]>([])
 const notes = ref('')
@@ -47,13 +47,6 @@ const showImagePicker = ref(false)
 const availableFavorites = ref<any[]>([])
 const selectedFavoriteId = ref<string | null>(null)
 
-// Time options from composable
-const hourOptions = hours12
-const minuteOptions = minutesList
-
-// Detected timezone for display
-const detectedTimezone = getDefaultTimezone()
-
 // Watch for post changes and populate form
 watch(() => props.post, (newPost) => {
   if (newPost) {
@@ -64,32 +57,19 @@ watch(() => props.post, (newPost) => {
 // Populate form from post data
 const populateForm = (post: any) => {
   if (post.scheduled_date) {
-    scheduledDate.value = post.scheduled_date
+    // Parse YYYY-MM-DD to Date object
+    const [year, month, day] = post.scheduled_date.split('-').map(Number)
+    scheduledDate.value = new Date(year, month - 1, day)
   }
 
   if (post.scheduled_time) {
-    // Parse time like "14:30:00" or "2:30 PM"
+    // Parse time like "14:30:00" or "14:30"
     const timeParts = post.scheduled_time.match(/(\d+):(\d+)/)
     if (timeParts) {
-      const hour = parseInt(timeParts[1])
-      const minute = timeParts[2]
-
-      // Convert 24-hour to 12-hour format
-      if (hour === 0) {
-        hours.value = '12'
-        ampm.value = 'AM'
-      } else if (hour < 12) {
-        hours.value = String(hour).padStart(2, '0')
-        ampm.value = 'AM'
-      } else if (hour === 12) {
-        hours.value = '12'
-        ampm.value = 'PM'
-      } else {
-        hours.value = String(hour - 12).padStart(2, '0')
-        ampm.value = 'PM'
+      selectedTime.value = {
+        hours: parseInt(timeParts[1]),
+        minutes: parseInt(timeParts[2])
       }
-
-      minutes.value = minute
     }
   }
 
@@ -133,23 +113,25 @@ const populateForm = (post: any) => {
   }
 }
 
-// Format time for display
-const formattedTime = computed(() => {
-  return `${hours.value}:${minutes.value} ${ampm.value}`
-})
-
-// Convert to 24-hour format for backend
+// Get time for backend (already in 24-hour format)
 const get24HourTime = () => {
-  let hour = parseInt(hours.value)
-
-  if (ampm.value === 'AM') {
-    if (hour === 12) hour = 0
-  } else {
-    if (hour !== 12) hour += 12
-  }
-
-  return `${String(hour).padStart(2, '0')}:${minutes.value}:00`
+  const hours = String(selectedTime.value.hours).padStart(2, '0')
+  const minutes = String(selectedTime.value.minutes).padStart(2, '0')
+  return `${hours}:${minutes}:00`
 }
+
+// Get date string for backend (YYYY-MM-DD)
+const getDateString = () => {
+  if (!scheduledDate.value) return ''
+  const year = scheduledDate.value.getFullYear()
+  const month = String(scheduledDate.value.getMonth() + 1).padStart(2, '0')
+  const day = String(scheduledDate.value.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
+// Today's date for min-date
+const today = new Date()
+today.setHours(0, 0, 0, 0)
 
 // Hashtag functions
 const addHashtag = () => {
@@ -233,7 +215,7 @@ const saveChanges = async () => {
 
   try {
     const updates = {
-      scheduled_date: scheduledDate.value,
+      scheduled_date: getDateString(),
       scheduled_time: get24HourTime(),
       timezone: timezone.value,
       platforms: selectedPlatforms.value,
@@ -252,17 +234,6 @@ const saveChanges = async () => {
   }
 }
 
-// Format date for display
-const formatDisplayDate = (dateStr: string) => {
-  if (!dateStr) return ''
-  const date = new Date(dateStr)
-  return date.toLocaleDateString('en-US', {
-    weekday: 'short',
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric'
-  })
-}
 </script>
 
 <template>
@@ -356,13 +327,15 @@ const formatDisplayDate = (dateStr: string) => {
             <MaterialIcon icon="calendar_today" size="sm" />
             <span>{{ $t('scheduleModal.dateLabel') }} <span class="required">*</span></span>
           </div>
-          <DatePicker
+          <VueDatePicker
             v-model="scheduledDate"
-            :min-date="new Date().toISOString().split('T')[0]"
+            :min-date="today"
+            :enable-time-picker="false"
+            inline
+            auto-apply
+            dark
+            class="date-picker-inline"
           />
-          <div v-if="scheduledDate" class="date-preview">
-            {{ formatDisplayDate(scheduledDate) }}
-          </div>
         </div>
 
         <div class="info-section">
@@ -370,24 +343,12 @@ const formatDisplayDate = (dateStr: string) => {
             <MaterialIcon icon="schedule" size="sm" />
             <span>{{ $t('scheduleModal.timeLabel') }}</span>
           </div>
-          <div class="time-picker">
-            <select v-model="hours" class="time-select">
-              <option v-for="opt in hourOptions" :key="opt.value" :value="opt.value">
-                {{ opt.label }}
-              </option>
-            </select>
-            <span class="time-separator">:</span>
-            <select v-model="minutes" class="time-select">
-              <option v-for="opt in minuteOptions" :key="opt.value" :value="opt.value">
-                {{ opt.label }}
-              </option>
-            </select>
-            <select v-model="ampm" class="time-select ampm-select">
-              <option value="AM">AM</option>
-              <option value="PM">PM</option>
-            </select>
+          <div class="time-picker-wrapper">
+            <MobileTimePicker
+              v-model="selectedTime"
+              :minutes-increment="1"
+            />
           </div>
-          <div class="time-preview">{{ formattedTime }}</div>
         </div>
 
         <!-- Platforms -->
@@ -692,50 +653,194 @@ const formatDisplayDate = (dateStr: string) => {
   color: var(--text-muted);
 }
 
-/* Date & Time */
-.date-preview,
-.time-preview {
-  font-size: var(--text-sm);
+/* Inline Date Picker Container */
+.date-picker-inline {
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  border-radius: var(--radius-lg);
+  padding: var(--space-sm);
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Force the calendar to not have minimum widths */
+.date-picker-inline :deep(.dp__menu) {
+  border: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  min-width: unset !important;
+}
+
+.date-picker-inline :deep(.dp__instance_calendar) {
+  min-width: unset !important;
+}
+
+.date-picker-inline :deep(.dp__calendar) {
+  min-width: unset !important;
+}
+
+.date-picker-inline :deep(.dp__calendar_header_item) {
+  padding: 4px 2px !important;
+  font-size: 11px !important;
+  width: auto !important;
+  flex: 1 1 0 !important;
+  min-width: 28px !important;
+}
+
+.date-picker-inline :deep(.dp__calendar_item) {
+  width: auto !important;
+  flex: 1 1 0 !important;
+  min-width: 28px !important;
+}
+
+.date-picker-inline :deep(.dp__cell_inner) {
+  width: 28px !important;
+  height: 28px !important;
+  font-size: 12px !important;
+  padding: 0 !important;
+}
+
+.date-picker-inline :deep(.dp__cell_offset) {
+  width: 28px !important;
+  height: 28px !important;
+}
+
+/* Month/year header */
+.date-picker-inline :deep(.dp__month_year_row) {
+  padding: 0 4px;
+}
+
+.date-picker-inline :deep(.dp__inner_nav) {
+  width: 28px !important;
+  height: 28px !important;
+}
+
+/* Hide the time picker toggle button at bottom of calendar */
+.date-picker-inline :deep(.dp__action_row),
+.date-picker-inline :deep(.dp__selection_preview),
+.date-picker-inline :deep(.dp__action_buttons),
+.date-picker-inline :deep(.dp__time_picker_inline_container),
+.date-picker-inline :deep(.dp__button) {
+  display: none !important;
+}
+
+/* Time Picker Wrapper */
+.time-picker-wrapper {
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  border-radius: var(--radius-lg);
+  padding: var(--space-lg);
+  display: flex;
+  justify-content: center;
+}
+
+/* Date/Time Picker Dark Theme Override */
+:deep(.dp__theme_dark) {
+  --dp-background-color: transparent;
+  --dp-text-color: var(--text-primary);
+  --dp-hover-color: rgba(212, 175, 55, 0.15);
+  --dp-hover-text-color: var(--text-primary);
+  --dp-primary-color: var(--gold-primary);
+  --dp-primary-text-color: var(--text-on-gold);
+  --dp-secondary-color: rgba(212, 175, 55, 0.1);
+  --dp-border-color: rgba(212, 175, 55, 0.3);
+  --dp-menu-border-color: transparent;
+  --dp-border-color-hover: var(--gold-primary);
+  --dp-disabled-color: var(--text-muted);
+  --dp-disabled-color-text: var(--text-muted);
+  --dp-success-color: var(--gold-primary);
+  --dp-icon-color: var(--gold-primary);
+  --dp-danger-color: #ef4444;
+  --dp-highlight-color: rgba(212, 175, 55, 0.1);
+}
+
+/* Inline picker - remove default styling */
+:deep(.dp__main) {
+  width: 100%;
+}
+
+:deep(.dp__menu) {
+  border: none;
+  background: transparent;
+  box-shadow: none;
+}
+
+/* Calendar header */
+:deep(.dp__calendar_header) {
+  font-weight: var(--font-semibold);
+}
+
+:deep(.dp__calendar_header_item) {
   color: var(--gold-primary);
   font-weight: var(--font-medium);
-  margin-top: var(--space-xs);
+  text-transform: uppercase;
+  font-size: var(--text-xs);
 }
 
-.time-picker {
-  display: flex;
-  align-items: center;
-  gap: var(--space-sm);
+/* Month/Year navigation */
+:deep(.dp__month_year_row) {
+  margin-bottom: var(--space-md);
 }
 
-.time-select {
-  padding: var(--space-sm) var(--space-md);
-  background: var(--bg-primary);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
+:deep(.dp__month_year_select) {
   color: var(--text-primary);
-  font-size: var(--text-sm);
-  cursor: pointer;
-  transition: var(--transition-base);
-}
-
-.time-select option {
-  background: var(--bg-secondary);
-  color: var(--text-primary);
-}
-
-.time-select:focus {
-  outline: none;
-  border-color: var(--gold-primary);
-}
-
-.ampm-select {
-  flex: 0 0 70px;
-}
-
-.time-separator {
+  font-weight: var(--font-semibold);
   font-size: var(--text-lg);
-  font-weight: var(--font-bold);
-  color: var(--text-primary);
+}
+
+:deep(.dp__month_year_select:hover) {
+  color: var(--gold-primary);
+  background: rgba(212, 175, 55, 0.1);
+  border-radius: var(--radius-sm);
+}
+
+/* Navigation arrows */
+:deep(.dp__inner_nav) {
+  color: var(--text-secondary);
+  width: 36px;
+  height: 36px;
+}
+
+:deep(.dp__inner_nav:hover) {
+  background: rgba(212, 175, 55, 0.15);
+  color: var(--gold-primary);
+  border-radius: var(--radius-sm);
+}
+
+/* Calendar days */
+:deep(.dp__calendar_item) {
+  border-radius: var(--radius-sm);
+}
+
+:deep(.dp__cell_inner) {
+  border-radius: var(--radius-sm);
+  width: 36px;
+  height: 36px;
+  font-size: var(--text-sm);
+}
+
+:deep(.dp__today) {
+  border: 2px solid var(--gold-primary);
+}
+
+:deep(.dp__active_date) {
+  background: var(--gold-primary);
+  color: var(--text-on-gold);
+}
+
+:deep(.dp__cell_offset) {
+  color: var(--text-muted);
+  opacity: 0.4;
+}
+
+:deep(.dp__cell_disabled) {
+  color: var(--text-muted);
+  opacity: 0.3;
+}
+
+/* Hide action row in inline mode */
+:deep(.dp__action_row) {
+  display: none;
 }
 
 .timezone-hint {
@@ -1000,10 +1105,6 @@ const formatDisplayDate = (dateStr: string) => {
 
   .modal-actions > * {
     width: 100%;
-  }
-
-  .time-picker {
-    flex-wrap: wrap;
   }
 }
 </style>

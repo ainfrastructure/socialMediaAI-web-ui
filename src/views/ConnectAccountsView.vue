@@ -1,21 +1,25 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useFacebookStore } from '../stores/facebook'
 import { useInstagramStore } from '../stores/instagram'
 import DashboardLayout from '../components/DashboardLayout.vue'
 import BaseCard from '../components/BaseCard.vue'
 import BaseButton from '../components/BaseButton.vue'
-import BaseAlert from '../components/BaseAlert.vue'
+import Toast from '../components/Toast.vue'
 import ConfirmModal from '../components/ConfirmModal.vue'
 
+const router = useRouter()
+const route = useRoute()
 const facebookStore = useFacebookStore()
 const instagramStore = useInstagramStore()
 const { t } = useI18n()
 
-const showSuccessMessage = ref(false)
-const showErrorMessage = ref(false)
-const successMessage = ref('')
+const showSuccessToast = ref(false)
+const showErrorToast = ref(false)
+const toastMessage = ref('')
+const errorMessage = ref('')
 
 // Confirm modal state
 const showConfirmModal = ref(false)
@@ -43,8 +47,18 @@ onMounted(async () => {
     const totalAccounts =
       facebookStore.connectedPages.length + instagramStore.connectedAccounts.length
     if (totalAccounts > 0) {
-      successMessage.value = t('connectAccounts.successfullyConnected', { count: totalAccounts })
-      showSuccessMessage.value = true
+      // Check if we have a returnTo URL stored in localStorage (from before OAuth redirect)
+      const storedReturnTo = localStorage.getItem('oauth_return_to')
+      if (storedReturnTo) {
+        // Clear the stored URL
+        localStorage.removeItem('oauth_return_to')
+        // Redirect back to the original page after successful connection
+        router.replace(decodeURIComponent(storedReturnTo))
+        return
+      }
+
+      toastMessage.value = t('connectAccounts.successfullyConnected', { count: totalAccounts })
+      showSuccessToast.value = true
       // Clean up URL
       window.history.replaceState({}, '', '/connect-accounts')
     }
@@ -52,15 +66,22 @@ onMounted(async () => {
 })
 
 async function handleConnectFacebook() {
-  showSuccessMessage.value = false
-  showErrorMessage.value = false
+  showSuccessToast.value = false
+  showErrorToast.value = false
 
   try {
+    // Store returnTo URL before OAuth redirect if present
+    const returnTo = route.query.returnTo as string
+    if (returnTo) {
+      localStorage.setItem('oauth_return_to', returnTo)
+    }
+
     // This will redirect to Facebook - no success message needed here
     // Success message will be shown after OAuth callback when returning to this page
     await facebookStore.connectFacebook()
   } catch (error: any) {
-    showErrorMessage.value = true
+    errorMessage.value = facebookStore.error || t('connectAccounts.errorOccurred')
+    showErrorToast.value = true
   }
 }
 
@@ -72,26 +93,34 @@ function requestDisconnectPage(pageId: string, pageName: string) {
 }
 
 async function executeDisconnectPage(pageId: string, pageName: string) {
-  showSuccessMessage.value = false
-  showErrorMessage.value = false
+  showSuccessToast.value = false
+  showErrorToast.value = false
 
   try {
     await facebookStore.disconnectPage(pageId)
-    successMessage.value = t('connectAccounts.successfullyDisconnected', { name: pageName })
-    showSuccessMessage.value = true
+    toastMessage.value = t('connectAccounts.successfullyDisconnected', { name: pageName })
+    showSuccessToast.value = true
   } catch (error: any) {
-    showErrorMessage.value = true
+    errorMessage.value = facebookStore.error || t('connectAccounts.errorOccurred')
+    showErrorToast.value = true
   }
 }
 
 async function handleConnectInstagram() {
-  showSuccessMessage.value = false
-  showErrorMessage.value = false
+  showSuccessToast.value = false
+  showErrorToast.value = false
 
   try {
+    // Store returnTo URL before OAuth redirect if present
+    const returnTo = route.query.returnTo as string
+    if (returnTo) {
+      localStorage.setItem('oauth_return_to', returnTo)
+    }
+
     await instagramStore.connectInstagram()
   } catch (error: any) {
-    showErrorMessage.value = true
+    errorMessage.value = instagramStore.error || t('connectAccounts.errorOccurred')
+    showErrorToast.value = true
   }
 }
 
@@ -103,15 +132,16 @@ function requestDisconnectInstagramAccount(accountId: string, username: string) 
 }
 
 async function executeDisconnectInstagramAccount(accountId: string, username: string) {
-  showSuccessMessage.value = false
-  showErrorMessage.value = false
+  showSuccessToast.value = false
+  showErrorToast.value = false
 
   try {
     await instagramStore.disconnectAccount(accountId)
-    successMessage.value = t('connectAccounts.successfullyDisconnected', { name: `@${username}` })
-    showSuccessMessage.value = true
+    toastMessage.value = t('connectAccounts.successfullyDisconnected', { name: `@${username}` })
+    showSuccessToast.value = true
   } catch (error: any) {
-    showErrorMessage.value = true
+    errorMessage.value = instagramStore.error || t('connectAccounts.errorOccurred')
+    showErrorToast.value = true
   }
 }
 
@@ -150,26 +180,19 @@ function handleCancelDisconnect() {
         </p>
       </header>
 
-      <!-- Success/Error Messages -->
-      <BaseAlert v-if="showSuccessMessage" type="success" @close="showSuccessMessage = false">
-        {{ successMessage }}
-      </BaseAlert>
-
-      <!-- Error Alerts -->
-      <BaseAlert
-        v-if="showErrorMessage && facebookStore.error"
+      <!-- Toast Notifications -->
+      <Toast
+        v-model="showSuccessToast"
+        :message="toastMessage"
+        type="success"
+        :duration="4000"
+      />
+      <Toast
+        v-model="showErrorToast"
+        :message="errorMessage"
         type="error"
-        @close="showErrorMessage = false"
-      >
-        {{ facebookStore.error || $t('connectAccounts.errorOccurred') }}
-      </BaseAlert>
-      <BaseAlert
-        v-if="showErrorMessage && instagramStore.error"
-        type="error"
-        @close="showErrorMessage = false"
-      >
-        {{ instagramStore.error || $t('connectAccounts.errorOccurred') }}
-      </BaseAlert>
+        :duration="5000"
+      />
 
       <!-- Connected Platforms List -->
       <section class="platforms-section">
@@ -220,7 +243,7 @@ function handleCancelDisconnect() {
                 {{
                   facebookStore.loading
                     ? $t('connectAccounts.connecting')
-                    : $t('connectAccounts.connectToFacebook')
+                    : $t('connectAccounts.connect')
                 }}
               </BaseButton>
             </div>
@@ -269,7 +292,7 @@ function handleCancelDisconnect() {
                 size="small"
                 :disabled="instagramStore.loading"
               >
-                {{ instagramStore.loading ? $t('connectAccounts.connecting') : 'Connect' }}
+                {{ instagramStore.loading ? $t('connectAccounts.connecting') : $t('connectAccounts.connect') }}
               </BaseButton>
             </div>
           </div>

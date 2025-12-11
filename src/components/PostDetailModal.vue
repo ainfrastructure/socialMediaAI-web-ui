@@ -76,6 +76,9 @@ function getPlatforms(): string[] {
   const p = props.post
   if (!p) return []
 
+  // Don't show platforms for draft/saved posts or posts without a status
+  if (!p.status || p.status === 'draft' || p.status === 'saved') return []
+
   // Check for published post URLs first
   if (p.platform_post_urls && Object.keys(p.platform_post_urls).length > 0) {
     return Object.keys(p.platform_post_urls)
@@ -459,7 +462,6 @@ function handleSchedule() {
 .modal-content {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  max-height: 90vh;
 }
 
 /* Media Section */
@@ -468,15 +470,14 @@ function handleSchedule() {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 400px;
-  max-height: 90vh;
+  min-height: 300px;
   overflow: hidden;
 }
 
 .media-image,
 .media-video {
   max-width: 100%;
-  max-height: 90vh;
+  max-height: 60vh;
   object-fit: contain;
 }
 
@@ -493,8 +494,6 @@ function handleSchedule() {
 /* Info Section */
 .modal-info {
   padding: var(--space-2xl);
-  overflow-y: auto;
-  max-height: 90vh;
   display: flex;
   flex-direction: column;
   gap: var(--space-lg);
@@ -715,17 +714,12 @@ function handleSchedule() {
   }
 
   .modal-media {
-    min-height: 250px;
-    max-height: 40vh;
+    min-height: 200px;
   }
 
   .media-image,
   .media-video {
-    max-height: 40vh;
-  }
-
-  .modal-info {
-    max-height: 50vh;
+    max-height: 35vh;
   }
 }
 
@@ -740,6 +734,7 @@ function handleSchedule() {
 
   .modal-actions {
     flex-direction: column;
+    gap: var(--space-sm);
   }
 
   .modal-actions > * {

@@ -142,14 +142,20 @@ function cancelSwitch() {
 
 /* Responsive */
 @media (max-width: 640px) {
+  .mode-toggle-wrapper {
+    width: 100%;
+  }
+
   .mode-toggle {
+    width: 100%;
     padding: 3px;
   }
 
   .mode-button {
-    min-width: 70px;
-    padding: var(--space-sm) var(--space-md);
-    font-size: var(--text-sm);
+    flex: 1;
+    min-width: 0;
+    padding: var(--space-md) var(--space-lg);
+    font-size: var(--text-base);
   }
 
   .toggle-slider {

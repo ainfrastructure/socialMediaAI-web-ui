@@ -355,6 +355,11 @@ export default {
 
     launchOnboarding: 'Start',
 
+    // Welcome Modal
+    welcomeModalTitle: 'Welcome to SocialChef!',
+    welcomeModalMessage: "Looks like you haven't added a restaurant yet. Let's get started by adding your first restaurant and creating some amazing content!",
+    welcomeModalButton: "Let's Go",
+
     // Stats
     postsCreated: 'Posts Created',
     postsSaved: 'Posts Saved',
@@ -886,25 +891,40 @@ export default {
 
     // Style Templates (Easy Mode)
     styleTemplates: {
-      authentic: {
-        name: 'Authentic',
-        description: 'Keep brand colors and original presentation',
-        preview: 'Same plate, container, and brand look',
+      behindTheScenes: {
+        name: 'Behind the Scenes',
+        description: 'Authentic kitchen moment',
+        preview: 'Documentary-style, genuine atmosphere',
       },
-      elegant: {
-        name: 'Elegant',
-        description: 'Sophisticated fine-dining aesthetic',
-        preview: 'Soft lighting, refined tones',
+      cleanStrict: {
+        name: 'Clean Strict',
+        description: 'Professional studio quality',
+        preview: 'Clean surface, color corrected',
       },
-      vibrant: {
-        name: 'Vibrant',
-        description: 'Bold colors and energetic feel',
-        preview: 'Bright, eye-catching with high contrast',
+      zoomIn: {
+        name: 'Zoom In',
+        description: 'Extreme macro close-up',
+        preview: 'Texture details, vignette effect',
       },
-      rustic: {
-        name: 'Rustic',
-        description: 'Warm and homemade comfort feel',
-        preview: 'Earthy colors with natural textures',
+      oneBite: {
+        name: 'One Bite',
+        description: 'Ready-to-eat presentation',
+        preview: 'Utensil holding a tempting piece',
+      },
+      studioShot: {
+        name: 'Studio Shot',
+        description: 'Professional advertisement look',
+        preview: 'Hero shot, minimal background',
+      },
+      infographic: {
+        name: 'Infographic',
+        description: 'Deconstructed ingredients view',
+        preview: 'Labeled layers and flavors',
+      },
+      custom: {
+        name: 'Custom',
+        description: 'Write your own prompt',
+        preview: 'Full creative control',
       },
     },
 
@@ -936,6 +956,7 @@ export default {
       title: 'Customize Your Post',
       subtitle: 'Choose style, add promotions, and branding',
       styleLabel: 'Visual Style',
+      customPromptPlaceholder: 'Describe how you want your dish photographed...',
       mediaTypeLabel: 'Media Type',
       imageOption: 'Image',
       videoOption: 'Video',
@@ -1151,10 +1172,6 @@ export default {
       creative: 'Creative',
       creativeDesc: 'Artistic reimagining with extras and garnishes',
     },
-    holidayInspiration: {
-      label: 'Holiday Inspiration',
-      hint: 'Add seasonal theming to your post',
-    },
     holidayTheme: {
       label: 'Theme / Inspiration',
       hint: 'Add a seasonal or themed style to your image',
@@ -1203,6 +1220,11 @@ export default {
       goldOutline: 'Gold Outline',
       generateButton: 'Generate Image (1 credit)',
       regenerate: 'Regenerate',
+      imagePreview: 'Image Preview',
+      postTextLabel: 'Post Text',
+      postTextPlaceholder: 'Write your post caption...',
+      hashtagsLabel: 'Hashtags',
+      addHashtag: 'Add hashtag...',
     },
     step6: {
       title: 'Publish Your Post',
@@ -1742,6 +1764,7 @@ export default {
     timezone: 'Timezone',
     connected: 'Connected',
     notConnected: 'Not connected',
+    tapToConnect: 'Tap to connect',
     comingSoon: 'Coming Soon',
     publish: 'Publish',
     schedule: 'Schedule Post',
@@ -1793,6 +1816,7 @@ export default {
     dashboard: 'Dashboard',
     content: 'Posts',
     calendar: 'Schedule',
+    analytics: 'Analytics',
     platforms: 'Platforms',
     creditsUsed: 'Credits Used',
     upgrade: 'Upgrade',
@@ -1814,6 +1838,9 @@ export default {
     settingsDesc: 'Manage account',
     recentPosts: 'Recent Posts',
     viewAll: 'View All',
+    viewCalendar: 'View Calendar',
+    manageSaved: 'Manage Saved',
+    openSettings: 'Open Settings',
     noRecentPosts: 'No posts yet',
     createFirstPost: 'Create Your First Post',
     post: 'Post',
@@ -1829,6 +1856,16 @@ export default {
     failed: 'Failed',
     cancelled: 'Cancelled',
     draft: 'Draft',
+    upcoming: 'upcoming',
+    creditsLeft: 'credits left',
+    drafts: 'drafts',
+    today: 'today',
+    thisWeek: 'this week',
+    week: 'week',
+    month: 'month',
+    tierLifetimeDesc: 'Unlimited access forever',
+    tierYearlyDesc: 'Best value, billed annually',
+    tierMonthlyDesc: 'Flexible monthly billing',
   },
 
   // Privacy Policy
@@ -2082,5 +2119,80 @@ export default {
     // Errors
     errorGeneric: 'An error occurred while deleting your account. Please try again.',
     errorValidation: 'Please complete all required confirmations',
+  },
+
+  // Analytics Page
+  analytics: {
+    title: 'Analytics',
+    subtitle: 'Track your content performance and growth',
+    days: 'Days',
+    allTime: 'All Time',
+
+    // Metrics
+    totalPosts: 'Total Posts',
+    postsCreated: 'Posts Created',
+    savedPosts: 'Saved Content',
+    scheduledPosts: 'Scheduled',
+    publishedPosts: 'Published',
+
+    // Charts
+    postingActivity: 'Posting Activity',
+    postsOverTime: 'Posts scheduled and published over time',
+    postsActivity: 'Posts',
+    platformDistribution: 'Platform Distribution',
+    postsByPlatform: 'Posts breakdown by social platform',
+    postStatus: 'Post Status',
+    byStatus: 'Overview of all scheduled posts',
+
+    // Status labels
+    published: 'Published',
+    scheduled: 'Scheduled',
+    cancelled: 'Cancelled',
+    failed: 'Failed',
+    pending: 'Pending',
+    draft: 'Draft',
+    allStatuses: 'All',
+
+    // Usage
+    usageOverview: 'Usage Overview',
+    monthlyUsage: 'Your current billing cycle',
+    creditsUsed: 'Credits Used',
+    used: 'used',
+    subscription: 'Subscription',
+    restaurants: 'Restaurants',
+
+    // Recent Activity
+    recentActivity: 'Recent Activity',
+    latestPosts: 'Your latest scheduled posts',
+    noText: 'No text content',
+    noRecentActivity: 'No recent activity to show',
+    noDataYet: 'No data available yet',
+    postImage: 'Post image',
+    viewOn: 'View on {platform}',
+
+    // Table headers
+    post: 'Post',
+    platforms: 'Platforms',
+    restaurant: 'Restaurant',
+    status: 'Status',
+    date: 'Date',
+    links: 'Links',
+    video: 'Video',
+    errorReason: 'Error',
+    unknownError: 'Post failed to publish. Please try again or contact support.',
+
+    // Pagination
+    page: 'Page',
+    of: 'of',
+
+    // Post Modal
+    postDetails: 'Post Details',
+    postContent: 'Post Content',
+    viewOnPlatforms: 'View on Platforms',
+
+    // Empty State
+    emptyStateTitle: 'Time to cook up some posts!',
+    emptyStateDescription: 'Once you start creating and scheduling content, your analytics will appear here. Let\'s get started!',
+    createFirstPost: 'Create Your First Post',
   },
 }

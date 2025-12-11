@@ -11,6 +11,11 @@ const status = ref('Processing your Facebook connection...')
 const isError = ref(false)
 
 onMounted(async () => {
+  // Get stored return URL (if any)
+  const returnUrl = localStorage.getItem('oauth_return_url')
+  const defaultRedirect = '/connect-accounts'
+  console.log('[FacebookCallback] Return URL from localStorage:', returnUrl)
+
   try {
     // Get code and state from URL parameters
     const urlParams = new URLSearchParams(window.location.search)
@@ -23,28 +28,32 @@ onMounted(async () => {
     if (error) {
       isError.value = true
       status.value = `Facebook error: ${errorDescription || error}`
-      setTimeout(() => router.push('/connect-accounts'), 3000)
+      localStorage.removeItem('oauth_return_url')
+      setTimeout(() => router.push(returnUrl || defaultRedirect), 3000)
       return
     }
 
     if (!code || !state) {
       isError.value = true
       status.value = 'Missing authorization code or state'
-      setTimeout(() => router.push('/connect-accounts'), 3000)
+      localStorage.removeItem('oauth_return_url')
+      setTimeout(() => router.push(returnUrl || defaultRedirect), 3000)
       return
     }
 
     // Complete OAuth flow
     await facebookStore.handleOAuthCallback(code, state)
 
-    // Success!
+    // Success! Clear return URL and redirect
     status.value = `Success! Connected ${facebookStore.connectedPages.length} Facebook page(s)`
-    setTimeout(() => router.push('/connect-accounts?connected=true'), 2000)
+    localStorage.removeItem('oauth_return_url')
+    setTimeout(() => router.push(returnUrl || '/connect-accounts?connected=true'), 2000)
   } catch (error: any) {
 
     isError.value = true
     status.value = error.message || 'Failed to complete Facebook connection'
-    setTimeout(() => router.push('/connect-accounts'), 3000)
+    localStorage.removeItem('oauth_return_url')
+    setTimeout(() => router.push(returnUrl || defaultRedirect), 3000)
   }
 })
 </script>

@@ -865,6 +865,9 @@ async function handleInlineFeedback(feedbackText: string) {
               <div class="item-info">
                 <h4 class="item-name">{{ restaurant.name }}</h4>
                 <p class="item-address">{{ restaurant.address }}</p>
+                <p v-if="restaurant.menu?.items?.length" class="item-menu-count">
+                  {{ restaurant.menu.items.length }} {{ $t('scheduler.menuItems', 'menu items') }}
+                </p>
               </div>
             </div>
           </div>
@@ -1187,6 +1190,12 @@ async function handleInlineFeedback(feedbackText: string) {
   text-overflow: ellipsis;
 }
 
+.item-menu-count {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  margin: var(--space-xs) 0 0 0;
+}
+
 /* Creation Step */
 .creation-step {
   text-align: left;
@@ -1288,24 +1297,70 @@ async function handleInlineFeedback(feedbackText: string) {
 
 /* Responsive */
 @media (max-width: 768px) {
-  .wizard-modal {
-    max-width: 100%;
-    margin: var(--space-sm);
+  .modal-overlay {
+    align-items: flex-start;
+    padding: var(--space-md);
+    padding-top: env(safe-area-inset-top, var(--space-md));
   }
 
-  .creation-options {
-    grid-template-columns: 1fr;
+  .wizard-modal {
+    max-width: 100%;
+    max-height: calc(100vh - env(safe-area-inset-top, 0px) - var(--space-xl));
   }
 
   .wizard-header {
     flex-direction: column;
     align-items: flex-start;
-    gap: var(--space-md);
+    gap: var(--space-sm);
+    padding-bottom: var(--space-md);
+    margin-bottom: var(--space-md);
   }
 
   .header-right {
     width: 100%;
     justify-content: space-between;
+  }
+
+  .wizard-title {
+    font-size: var(--text-lg);
+  }
+
+  .wizard-description {
+    margin-bottom: var(--space-lg);
+    font-size: var(--text-sm);
+  }
+
+  .creation-options {
+    grid-template-columns: 1fr;
+    gap: var(--space-md);
+  }
+
+  .creation-option-card {
+    padding: var(--space-lg) var(--space-md);
+  }
+
+  /* Restaurant list compact for mobile */
+  .restaurants-list {
+    gap: var(--space-sm);
+    max-height: calc(100vh - 220px);
+  }
+
+  .restaurant-item {
+    padding: var(--space-md);
+    gap: var(--space-md);
+  }
+
+  .item-logo {
+    width: 48px;
+    height: 48px;
+  }
+
+  .item-name {
+    font-size: var(--text-base);
+  }
+
+  .item-address {
+    font-size: var(--text-xs);
   }
 }
 </style>

@@ -54,12 +54,40 @@ class FacebookService {
     message: string,
     imageUrl?: string
   ): Promise<ApiResponse<{ postId: string; postUrl: string }>> {
-    const response = await fetch(`${API_URL}/api/facebook/pages/${pageId}/post`, {
-      method: 'POST',
-      headers: getAuthHeaders(),
-      body: JSON.stringify({ message, imageUrl }),
-    })
-    return response.json()
+    console.log('[FacebookService] Posting to Facebook:', { pageId, messageLength: message.length, hasImage: !!imageUrl, apiUrl: `${API_URL}/api/facebook/pages/${pageId}/post` })
+
+    try {
+      const response = await fetch(`${API_URL}/api/facebook/pages/${pageId}/post`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ message, imageUrl }),
+      })
+
+      console.log('[FacebookService] Response status:', response.status, response.statusText)
+
+      if (!response.ok) {
+        const text = await response.text()
+        console.error('[FacebookService] Response not OK:', text)
+        try {
+          return JSON.parse(text)
+        } catch {
+          return {
+            success: false,
+            error: `HTTP ${response.status}: ${text || response.statusText}`
+          }
+        }
+      }
+
+      const data = await response.json()
+      console.log('[FacebookService] Response data:', data)
+      return data
+    } catch (error) {
+      console.error('[FacebookService] Network or parse error:', error)
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Network request failed'
+      }
+    }
   }
 
   async uploadImage(file: File): Promise<ApiResponse<{ imageUrl: string; imageId: string; width: number; height: number }>> {

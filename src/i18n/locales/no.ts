@@ -355,6 +355,11 @@ export default {
 
     launchOnboarding: 'Start',
 
+    // Welcome Modal
+    welcomeModalTitle: 'Velkommen til SocialChef!',
+    welcomeModalMessage: 'Det ser ut som du ikke har lagt til en restaurant ennå. La oss komme i gang med å legge til din første restaurant og lage fantastisk innhold!',
+    welcomeModalButton: 'La oss starte',
+
     // Stats
     postsCreated: 'Innlegg opprettet',
     postsSaved: 'Innlegg lagret',
@@ -886,25 +891,40 @@ export default {
 
     // Style Templates (Easy Mode)
     styleTemplates: {
-      authentic: {
-        name: 'Autentisk',
-        description: 'Behold merkefarger og original presentasjon',
-        preview: 'Samme tallerken, beholder og merkevare-utseende',
+      behindTheScenes: {
+        name: 'Bak kulissene',
+        description: 'Autentisk kjøkkenøyeblikk',
+        preview: 'Dokumentarstil, ekte atmosfære',
       },
-      elegant: {
-        name: 'Elegant',
-        description: 'Sofistikert fine-dining estetikk',
-        preview: 'Mykt lys, raffinerte toner',
+      cleanStrict: {
+        name: 'Ren og stram',
+        description: 'Profesjonell studiokvalitet',
+        preview: 'Ren overflate, fargekorrigert',
       },
-      vibrant: {
-        name: 'Livlig',
-        description: 'Sterke farger og energisk følelse',
-        preview: 'Lys, iøynefallende med høy kontrast',
+      zoomIn: {
+        name: 'Zoom inn',
+        description: 'Ekstrem makronærbilde',
+        preview: 'Teksturdetaljer, vignetteringseffekt',
       },
-      rustic: {
-        name: 'Rustikk',
-        description: 'Varm og hjemmelaget komfortfølelse',
-        preview: 'Jordfarger med naturlige teksturer',
+      oneBite: {
+        name: 'En bit',
+        description: 'Klar-til-å-spise presentasjon',
+        preview: 'Bestikk holder en fristende bit',
+      },
+      studioShot: {
+        name: 'Studiobilde',
+        description: 'Profesjonelt reklameutseende',
+        preview: 'Hovedbilde, minimal bakgrunn',
+      },
+      infographic: {
+        name: 'Infografikk',
+        description: 'Dekonstruert ingrediensoversikt',
+        preview: 'Merkede lag og smaker',
+      },
+      custom: {
+        name: 'Egendefinert',
+        description: 'Skriv din egen prompt',
+        preview: 'Full kreativ kontroll',
       },
     },
 
@@ -936,6 +956,7 @@ export default {
       title: 'Tilpass innlegget ditt',
       subtitle: 'Velg stil, legg til kampanjer og merkevarebygging',
       styleLabel: 'Visuell stil',
+      customPromptPlaceholder: 'Beskriv hvordan du vil at retten skal fotograferes...',
       mediaTypeLabel: 'Medietype',
       imageOption: 'Bilde',
       videoOption: 'Video',
@@ -1151,10 +1172,6 @@ export default {
       creative: 'Kreativ',
       creativeDesc: 'Kunstnerisk nytenkning med tilbehør og garnityr',
     },
-    holidayInspiration: {
-      label: 'Sesonginspirasjon',
-      hint: 'Legg til sesongbasert tema til innlegget',
-    },
     holidayTheme: {
       label: 'Tema / Inspirasjon',
       hint: 'Legg til en sesongbasert eller tematisk stil til bildet',
@@ -1203,6 +1220,11 @@ export default {
       goldOutline: 'Gull kontur',
       generateButton: 'Generer bilde (1 poeng)',
       regenerate: 'Regenerer',
+      imagePreview: 'Bildeforhåndsvisning',
+      postTextLabel: 'Innleggstekst',
+      postTextPlaceholder: 'Skriv bildeteksten din...',
+      hashtagsLabel: 'Emneknagger',
+      addHashtag: 'Legg til emneknagg...',
     },
     step6: {
       title: 'Publiser innlegget ditt',
@@ -1742,6 +1764,7 @@ export default {
     timezone: 'Tidssone',
     connected: 'Tilkoblet',
     notConnected: 'Ikke tilkoblet',
+    tapToConnect: 'Trykk for å koble til',
     comingSoon: 'Kommer snart',
     publish: 'Publiser',
     schedule: 'Planlegg innlegg',
@@ -1793,6 +1816,7 @@ export default {
     dashboard: 'Dashbord',
     content: 'Innlegg',
     calendar: 'Tidsplan',
+    analytics: 'Analyse',
     platforms: 'Plattformer',
     creditsUsed: 'Poeng brukt',
     upgrade: 'Oppgrader',
@@ -1814,6 +1838,9 @@ export default {
     settingsDesc: 'Administrer konto',
     recentPosts: 'Nylige innlegg',
     viewAll: 'Se alle',
+    viewCalendar: 'Se kalender',
+    manageSaved: 'Administrer lagrede',
+    openSettings: 'Åpne innstillinger',
     noRecentPosts: 'Ingen innlegg ennå',
     createFirstPost: 'Lag ditt første innlegg',
     post: 'Innlegg',
@@ -1829,6 +1856,16 @@ export default {
     failed: 'Mislykket',
     cancelled: 'Avbrutt',
     draft: 'Utkast',
+    upcoming: 'kommende',
+    creditsLeft: 'kreditter igjen',
+    drafts: 'utkast',
+    today: 'i dag',
+    thisWeek: 'denne uken',
+    week: 'uke',
+    month: 'måned',
+    tierLifetimeDesc: 'Ubegrenset tilgang for alltid',
+    tierYearlyDesc: 'Best verdi, fakturert årlig',
+    tierMonthlyDesc: 'Fleksibel månedlig fakturering',
   },
 
   // Privacy Policy
@@ -2082,5 +2119,80 @@ export default {
     // Errors
     errorGeneric: 'En feil oppstod under sletting av kontoen din. Vennligst prøv igjen.',
     errorValidation: 'Vennligst fullfør alle nødvendige bekreftelser',
+  },
+
+  // Analytics Page
+  analytics: {
+    title: 'Analyse',
+    subtitle: 'Følg med på innholdets ytelse og vekst',
+    days: 'Dager',
+    allTime: 'All tid',
+
+    // Metrics
+    totalPosts: 'Totalt innlegg',
+    postsCreated: 'Innlegg opprettet',
+    savedPosts: 'Lagret innhold',
+    scheduledPosts: 'Planlagt',
+    publishedPosts: 'Publisert',
+
+    // Charts
+    postingActivity: 'Publiseringsaktivitet',
+    postsOverTime: 'Planlagte og publiserte innlegg over tid',
+    postsActivity: 'Innlegg',
+    platformDistribution: 'Plattformdistribusjon',
+    postsByPlatform: 'Fordeling av innlegg per plattform',
+    postStatus: 'Innleggsstatus',
+    byStatus: 'Oversikt over alle planlagte innlegg',
+
+    // Status labels
+    published: 'Publisert',
+    scheduled: 'Planlagt',
+    cancelled: 'Avbrutt',
+    failed: 'Mislyktes',
+    pending: 'Ventende',
+    draft: 'Utkast',
+    allStatuses: 'Alle',
+
+    // Usage
+    usageOverview: 'Bruksoversikt',
+    monthlyUsage: 'Din nåværende faktureringsperiode',
+    creditsUsed: 'Poeng brukt',
+    used: 'brukt',
+    subscription: 'Abonnement',
+    restaurants: 'Restauranter',
+
+    // Recent Activity
+    recentActivity: 'Nylig aktivitet',
+    latestPosts: 'Dine siste planlagte innlegg',
+    noText: 'Ingen tekstinnhold',
+    noRecentActivity: 'Ingen nylig aktivitet å vise',
+    noDataYet: 'Ingen data tilgjengelig ennå',
+    postImage: 'Innleggsbilde',
+    viewOn: 'Se på {platform}',
+
+    // Table headers
+    post: 'Innlegg',
+    platforms: 'Plattformer',
+    restaurant: 'Restaurant',
+    status: 'Status',
+    date: 'Dato',
+    links: 'Lenker',
+    video: 'Video',
+    errorReason: 'Feil',
+    unknownError: 'Innlegget kunne ikke publiseres. Prøv igjen eller kontakt support.',
+
+    // Pagination
+    page: 'Side',
+    of: 'av',
+
+    // Post Modal
+    postDetails: 'Innleggsdetaljer',
+    postContent: 'Innleggsinnhold',
+    viewOnPlatforms: 'Se på plattformer',
+
+    // Empty State
+    emptyStateTitle: 'På tide å lage noen innlegg!',
+    emptyStateDescription: 'Når du begynner å lage og planlegge innhold, vil analysene dine vises her. La oss komme i gang!',
+    createFirstPost: 'Lag ditt første innlegg',
   },
 }

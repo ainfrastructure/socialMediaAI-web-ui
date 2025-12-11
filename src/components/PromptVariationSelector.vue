@@ -5,7 +5,7 @@ import BaseCard from './BaseCard.vue'
 import BaseButton from './BaseButton.vue'
 
 export interface StyleVariation {
-  style: 'elegant' | 'vibrant' | 'rustic' | 'modern'
+  style: 'behindTheScenes' | 'cleanStrict' | 'zoomIn' | 'oneBite' | 'studioShot' | 'infographic' | 'custom'
   title: string
   hashtags: string[]
   prompt: string

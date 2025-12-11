@@ -413,3 +413,38 @@
   background: var(--gold-primary);
   color: var(--text-on-gold);
 }
+
+/* Modal Open State - Prevents background scroll on mobile */
+html.modal-open,
+html.modal-open body {
+  overflow: hidden;
+  touch-action: none;
+  -webkit-overflow-scrolling: none;
+}
+
+/* Logo Images - Prevent cursor/focus behavior */
+img[src*="socialchef_logo"],
+.success-logo,
+.publishing-logo,
+.progress-logo,
+.loading-logo,
+.brand-logo,
+.hero-logo,
+.login-logo,
+.chef-logo-icon {
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  pointer-events: none;
+  outline: none;
+  cursor: default;
+}
+
+/* Allow parent containers to be clickable while logos remain non-interactive */
+.success-logo:focus,
+.publishing-logo:focus,
+.progress-logo:focus,
+.loading-logo:focus {
+  outline: none;
+}

@@ -53,16 +53,6 @@ const userInitial = computed(() => {
         </div>
 
         <div class="header-right">
-          <!-- Search (placeholder for future) -->
-          <div class="search-box">
-            <MaterialIcon icon="search" size="sm" color="var(--text-muted)" />
-            <input
-              type="text"
-              :placeholder="$t('common.search') + '...'"
-              class="search-input"
-            />
-          </div>
-
           <!-- Language Selector -->
           <LanguageSelector />
 
@@ -152,37 +142,6 @@ const userInitial = computed(() => {
   color: var(--gold-primary);
 }
 
-/* Search Box */
-.search-box {
-  display: flex;
-  align-items: center;
-  gap: var(--space-sm);
-  padding: var(--space-sm) var(--space-lg);
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-full);
-  min-width: 200px;
-  transition: var(--transition-base);
-}
-
-.search-box:focus-within {
-  border-color: var(--gold-primary);
-  box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.1);
-}
-
-.search-input {
-  flex: 1;
-  background: transparent;
-  border: none;
-  outline: none;
-  color: var(--text-primary);
-  font-size: var(--text-sm);
-}
-
-.search-input::placeholder {
-  color: var(--text-muted);
-}
-
 /* Icon Button */
 .icon-btn {
   width: 40px;
@@ -241,10 +200,6 @@ const userInitial = computed(() => {
   .main-area {
     margin-left: 220px;
   }
-
-  .search-box {
-    min-width: 160px;
-  }
 }
 
 @media (max-width: 768px) {
@@ -260,10 +215,6 @@ const userInitial = computed(() => {
     display: flex;
     min-width: var(--touch-target-min);
     min-height: var(--touch-target-min);
-  }
-
-  .search-box {
-    display: none;
   }
 
   .content-area {

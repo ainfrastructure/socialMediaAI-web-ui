@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { watch } from 'vue'
+import { watch, ref, onUnmounted } from 'vue'
 import BaseCard from './BaseCard.vue'
 
 interface Props {
@@ -60,22 +60,67 @@ function handleKeydown(event: KeyboardEvent) {
   }
 }
 
+// Store scroll position for iOS fix
+const scrollPosition = ref(0)
+
+// Lock body scroll (iOS-compatible)
+function lockBodyScroll() {
+  // Store current scroll position
+  scrollPosition.value = window.scrollY
+
+  // Apply styles to lock scroll
+  document.body.style.overflow = 'hidden'
+  document.body.style.position = 'fixed'
+  document.body.style.top = `-${scrollPosition.value}px`
+  document.body.style.left = '0'
+  document.body.style.right = '0'
+  document.body.style.width = '100%'
+
+  // Add class for additional CSS control
+  document.documentElement.classList.add('modal-open')
+}
+
+// Unlock body scroll
+function unlockBodyScroll() {
+  // Remove styles
+  document.body.style.overflow = ''
+  document.body.style.position = ''
+  document.body.style.top = ''
+  document.body.style.left = ''
+  document.body.style.right = ''
+  document.body.style.width = ''
+
+  // Remove class
+  document.documentElement.classList.remove('modal-open')
+
+  // Restore scroll position
+  window.scrollTo(0, scrollPosition.value)
+}
+
 // Manage body scroll and escape listener
 watch(() => props.modelValue, (isOpen) => {
   if (isOpen) {
     if (props.preventBodyScroll) {
-      document.body.style.overflow = 'hidden'
+      lockBodyScroll()
     }
     if (props.closeOnEscape) {
       document.addEventListener('keydown', handleKeydown)
     }
   } else {
     if (props.preventBodyScroll) {
-      document.body.style.overflow = ''
+      unlockBodyScroll()
     }
     document.removeEventListener('keydown', handleKeydown)
   }
 }, { immediate: true })
+
+// Cleanup on unmount
+onUnmounted(() => {
+  if (props.modelValue && props.preventBodyScroll) {
+    unlockBodyScroll()
+  }
+  document.removeEventListener('keydown', handleKeydown)
+})
 </script>
 
 <template>
@@ -299,13 +344,13 @@ watch(() => props.modelValue, (isOpen) => {
 @media (max-width: 480px) {
   .base-modal-overlay {
     padding: var(--space-sm);
-    align-items: flex-end;
+    align-items: center;
   }
 
   .base-modal-card {
-    max-height: 95vh;
-    max-height: 95dvh;
-    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    max-height: 90vh;
+    max-height: 90dvh;
+    border-radius: var(--radius-lg);
   }
 
   .base-modal-body {

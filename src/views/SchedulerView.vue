@@ -31,8 +31,8 @@
           @next="nextPeriod"
         />
 
-        <!-- Color Legend -->
-        <CalendarLegend />
+        <!-- Color Legend (hidden on mobile in day view) -->
+        <CalendarLegend :class="{ 'hide-on-mobile-day': viewMode === 'day' }" />
         <div :class="['calendar-grid', `view-${viewMode}`]">
           <!-- Day headers (only show for month and week views) -->
           <template v-if="viewMode !== 'day'">
@@ -87,8 +87,8 @@
               </div>
             </div>
 
-            <!-- Day View Header -->
-            <div v-if="viewMode === 'day'" class="day-view-header">
+            <!-- Day View Header (hidden on mobile - info shown in CalendarHeader) -->
+            <div v-if="viewMode === 'day'" class="day-view-header desktop-only">
               <h2 class="day-view-title">
                 {{ formatSelectedDate(day) }}
                 <span v-if="day.posts.length > 0" class="post-count">({{ day.posts.length }} {{ day.posts.length === 1 ? 'post' : 'posts' }})</span>
@@ -98,6 +98,14 @@
                   ➕ Create Post
                 </BaseButton>
               </div>
+            </div>
+
+            <!-- Mobile Day View Create Button -->
+            <div v-if="viewMode === 'day'" class="mobile-day-create">
+              <BaseButton variant="primary" size="large" full-width @click.stop="openCreatePostWizard(day)">
+                <span class="material-symbols-outlined">add</span>
+                {{ $t('scheduler.createPost', 'Create Post') }}
+              </BaseButton>
             </div>
 
             <!-- Holidays -->
@@ -345,6 +353,8 @@
         :upcoming-posts="upcomingPosts"
         :active-tab="bottomPanelTab"
         :posts-per-page="postsPerPage"
+        :hide-tab-bar="viewMode === 'day'"
+        :class="{ 'day-view-panel': viewMode === 'day' }"
         @view="viewPostDetail"
         @edit="editScheduledPost"
         @delete="cancelPost"
@@ -359,6 +369,7 @@
     <PickPostModal
       v-model="showPickPostModal"
       :selected-date="selectedDateForScheduling"
+      :restaurant-id="selectedRestaurantIdForPosts"
       @scheduled="handlePostScheduled"
     />
 
@@ -470,6 +481,7 @@ const wizardStep = ref(1) // 1 = Choose Method, 2 = Create/Select Content
 const selectedCreationMethod = ref<'saved' | 'new' | null>(null)
 const showRestaurantSelector = ref(false)
 const pendingCreationMethod = ref<'saved' | 'new' | null>(null)
+const selectedRestaurantIdForPosts = ref<string | undefined>(undefined)
 const dayViewPage = ref(1)
 const postsPerPage = 5
 const expandedPostId = ref<string | number | null>(null)
@@ -879,12 +891,8 @@ const getHolidayEmoji = (holiday: any) => {
 
 const formatTime = (time: string | null) => {
   if (!time) return null
-  // Convert 24-hour time to 12-hour format
   const [hours, minutes] = time.split(':')
-  const hour = parseInt(hours)
-  const ampm = hour >= 12 ? 'PM' : 'AM'
-  const displayHour = hour % 12 || 12
-  return `${displayHour}:${minutes} ${ampm}`
+  return `${hours}:${minutes}`
 }
 
 // Helper functions for expandable table
@@ -1306,17 +1314,16 @@ const saveScheduledPost = async (postId: string, data: any) => {
   }
 }
 
-// Open the create post wizard
+// Open the create post wizard - shows choice between saved posts or create new
 const openCreatePostWizard = (day: any) => {
   const year = day.date.getFullYear()
   const month = String(day.date.getMonth() + 1).padStart(2, '0')
   const dayNum = String(day.date.getDate()).padStart(2, '0')
   const dateString = `${year}-${month}-${dayNum}`
   selectedDateForScheduling.value = dateString
-  wizardStep.value = 1
-  selectedCreationMethod.value = null
-  // Open the full creation wizard modal instead of the simple wizard
-  showFullCreationWizard.value = true
+
+  // Show the wizard to let user choose between saved posts or create new
+  showCreatePostWizard.value = true
 }
 
 // Select creation method in wizard
@@ -1347,7 +1354,8 @@ const proceedWithCreationMethod = (method: 'saved' | 'new', restaurantId?: strin
     }
     router.push(url)
   } else if (method === 'saved') {
-    // Open pick post modal
+    // Set the restaurant filter and open pick post modal
+    selectedRestaurantIdForPosts.value = restaurantId
     showPickPostModal.value = true
   }
 }
@@ -1503,7 +1511,7 @@ onMounted(async () => {
   min-height: 100vh;
   min-height: 100dvh;
   position: relative;
-  padding: var(--space-lg) var(--space-md) var(--space-5xl);
+  padding: var(--space-md);
   width: 100%;
   max-width: 100vw;
   overflow-x: hidden;
@@ -1511,7 +1519,6 @@ onMounted(async () => {
 }
 
 .container {
-  max-width: 1400px;
   width: 100%;
   margin: 0 auto;
   position: relative;
@@ -2223,7 +2230,7 @@ onMounted(async () => {
 
 .calendar-day {
   background: var(--bg-secondary);
-  min-height: 120px;
+  min-height: 160px;
   padding: var(--space-md);
   cursor: pointer;
   transition: var(--transition-base);
@@ -2834,7 +2841,7 @@ onMounted(async () => {
 /* Responsive */
 @media (max-width: 1024px) {
   .calendar-day {
-    min-height: 100px;
+    min-height: 140px;
   }
 
   .scheduled-post-card {
@@ -2933,6 +2940,32 @@ onMounted(async () => {
     flex: 1;
     padding: var(--space-sm) var(--space-md);
     font-size: var(--text-sm);
+  }
+
+  /* Mobile Day View - clean layout */
+  .hide-on-mobile-day {
+    display: none;
+  }
+
+  .desktop-only {
+    display: none;
+  }
+
+  .mobile-day-create {
+    display: block;
+    padding: var(--space-md);
+  }
+
+  .mobile-day-create .material-symbols-outlined {
+    font-size: 20px;
+    margin-right: var(--space-xs);
+  }
+}
+
+/* Desktop - hide mobile elements */
+@media (min-width: 769px) {
+  .mobile-day-create {
+    display: none;
   }
 }
 
