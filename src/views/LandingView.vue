@@ -2008,13 +2008,24 @@ const benefits = [
 }
 
 .original-price {
-  text-decoration: line-through;
+  position: relative;
   font-size: var(--text-lg);
   opacity: 0.7;
   background: var(--gradient-gold);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+}
+
+.original-price::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 2px;
+  background: var(--gradient-gold);
+  transform: translateY(-50%);
 }
 
 .pricing-price {
