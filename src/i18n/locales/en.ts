@@ -313,6 +313,11 @@ export default {
 
     launchOnboarding: 'Start',
 
+    // Welcome Modal
+    welcomeModalTitle: 'Welcome to SocialChef!',
+    welcomeModalMessage: "Looks like you haven't added a restaurant yet. Let's get started by adding your first restaurant and creating some amazing content!",
+    welcomeModalButton: "Let's Go",
+
     // Stats
     postsCreated: 'Posts Created',
     postsSaved: 'Posts Saved',
@@ -1715,6 +1720,7 @@ export default {
     timezone: 'Timezone',
     connected: 'Connected',
     notConnected: 'Not connected',
+    tapToConnect: 'Tap to connect',
     comingSoon: 'Coming Soon',
     publish: 'Publish',
     schedule: 'Schedule Post',
@@ -1766,6 +1772,7 @@ export default {
     dashboard: 'Dashboard',
     content: 'Posts',
     calendar: 'Schedule',
+    analytics: 'Analytics',
     platforms: 'Platforms',
     creditsUsed: 'Credits Used',
     upgrade: 'Upgrade',
@@ -1787,6 +1794,9 @@ export default {
     settingsDesc: 'Manage account',
     recentPosts: 'Recent Posts',
     viewAll: 'View All',
+    viewCalendar: 'View Calendar',
+    manageSaved: 'Manage Saved',
+    openSettings: 'Open Settings',
     noRecentPosts: 'No posts yet',
     createFirstPost: 'Create Your First Post',
     post: 'Post',
@@ -1802,6 +1812,16 @@ export default {
     failed: 'Failed',
     cancelled: 'Cancelled',
     draft: 'Draft',
+    upcoming: 'upcoming',
+    creditsLeft: 'credits left',
+    drafts: 'drafts',
+    today: 'today',
+    thisWeek: 'this week',
+    week: 'week',
+    month: 'month',
+    tierLifetimeDesc: 'Unlimited access forever',
+    tierYearlyDesc: 'Best value, billed annually',
+    tierMonthlyDesc: 'Flexible monthly billing',
   },
 
   // Privacy Policy
@@ -2055,5 +2075,80 @@ export default {
     // Errors
     errorGeneric: 'An error occurred while deleting your account. Please try again.',
     errorValidation: 'Please complete all required confirmations',
+  },
+
+  // Analytics Page
+  analytics: {
+    title: 'Analytics',
+    subtitle: 'Track your content performance and growth',
+    days: 'Days',
+    allTime: 'All Time',
+
+    // Metrics
+    totalPosts: 'Total Posts',
+    postsCreated: 'Posts Created',
+    savedPosts: 'Saved Content',
+    scheduledPosts: 'Scheduled',
+    publishedPosts: 'Published',
+
+    // Charts
+    postingActivity: 'Posting Activity',
+    postsOverTime: 'Posts scheduled and published over time',
+    postsActivity: 'Posts',
+    platformDistribution: 'Platform Distribution',
+    postsByPlatform: 'Posts breakdown by social platform',
+    postStatus: 'Post Status',
+    byStatus: 'Overview of all scheduled posts',
+
+    // Status labels
+    published: 'Published',
+    scheduled: 'Scheduled',
+    cancelled: 'Cancelled',
+    failed: 'Failed',
+    pending: 'Pending',
+    draft: 'Draft',
+    allStatuses: 'All',
+
+    // Usage
+    usageOverview: 'Usage Overview',
+    monthlyUsage: 'Your current billing cycle',
+    creditsUsed: 'Credits Used',
+    used: 'used',
+    subscription: 'Subscription',
+    restaurants: 'Restaurants',
+
+    // Recent Activity
+    recentActivity: 'Recent Activity',
+    latestPosts: 'Your latest scheduled posts',
+    noText: 'No text content',
+    noRecentActivity: 'No recent activity to show',
+    noDataYet: 'No data available yet',
+    postImage: 'Post image',
+    viewOn: 'View on {platform}',
+
+    // Table headers
+    post: 'Post',
+    platforms: 'Platforms',
+    restaurant: 'Restaurant',
+    status: 'Status',
+    date: 'Date',
+    links: 'Links',
+    video: 'Video',
+    errorReason: 'Error',
+    unknownError: 'Post failed to publish. Please try again or contact support.',
+
+    // Pagination
+    page: 'Page',
+    of: 'of',
+
+    // Post Modal
+    postDetails: 'Post Details',
+    postContent: 'Post Content',
+    viewOnPlatforms: 'View on Platforms',
+
+    // Empty State
+    emptyStateTitle: 'Time to cook up some posts!',
+    emptyStateDescription: 'Once you start creating and scheduling content, your analytics will appear here. Let\'s get started!',
+    createFirstPost: 'Create Your First Post',
   },
 }

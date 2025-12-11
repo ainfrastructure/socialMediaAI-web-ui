@@ -369,6 +369,7 @@
     <PickPostModal
       v-model="showPickPostModal"
       :selected-date="selectedDateForScheduling"
+      :restaurant-id="selectedRestaurantIdForPosts"
       @scheduled="handlePostScheduled"
     />
 
@@ -480,6 +481,7 @@ const wizardStep = ref(1) // 1 = Choose Method, 2 = Create/Select Content
 const selectedCreationMethod = ref<'saved' | 'new' | null>(null)
 const showRestaurantSelector = ref(false)
 const pendingCreationMethod = ref<'saved' | 'new' | null>(null)
+const selectedRestaurantIdForPosts = ref<string | undefined>(undefined)
 const dayViewPage = ref(1)
 const postsPerPage = 5
 const expandedPostId = ref<string | number | null>(null)
@@ -1312,7 +1314,7 @@ const saveScheduledPost = async (postId: string, data: any) => {
   }
 }
 
-// Open the create post wizard - navigates to posts page
+// Open the create post wizard - shows choice between saved posts or create new
 const openCreatePostWizard = (day: any) => {
   const year = day.date.getFullYear()
   const month = String(day.date.getMonth() + 1).padStart(2, '0')
@@ -1320,21 +1322,8 @@ const openCreatePostWizard = (day: any) => {
   const dateString = `${year}-${month}-${dayNum}`
   selectedDateForScheduling.value = dateString
 
-  // Navigate to posts page with the selected date
-  // If user has more than one restaurant, show restaurant selector first
-  if (restaurants.value.length > 1) {
-    pendingCreationMethod.value = 'new'
-    showRestaurantSelector.value = true
-  } else {
-    // Single restaurant or no restaurants - go directly to posts page
-    const restaurantId = restaurants.value.length === 1 ? restaurants.value[0].id : undefined
-    preferencesStore.setCreationMode('easy', true)
-    let url = `/posts/create?scheduleDate=${dateString}`
-    if (restaurantId) {
-      url += `&restaurantId=${restaurantId}`
-    }
-    router.push(url)
-  }
+  // Show the wizard to let user choose between saved posts or create new
+  showCreatePostWizard.value = true
 }
 
 // Select creation method in wizard
@@ -1365,7 +1354,8 @@ const proceedWithCreationMethod = (method: 'saved' | 'new', restaurantId?: strin
     }
     router.push(url)
   } else if (method === 'saved') {
-    // Open pick post modal
+    // Set the restaurant filter and open pick post modal
+    selectedRestaurantIdForPosts.value = restaurantId
     showPickPostModal.value = true
   }
 }
@@ -1521,7 +1511,7 @@ onMounted(async () => {
   min-height: 100vh;
   min-height: 100dvh;
   position: relative;
-  padding: var(--space-lg) var(--space-md) var(--space-5xl);
+  padding: var(--space-md);
   width: 100%;
   max-width: 100vw;
   overflow-x: hidden;
@@ -1529,7 +1519,6 @@ onMounted(async () => {
 }
 
 .container {
-  max-width: 1400px;
   width: 100%;
   margin: 0 auto;
   position: relative;
@@ -2241,7 +2230,7 @@ onMounted(async () => {
 
 .calendar-day {
   background: var(--bg-secondary);
-  min-height: 120px;
+  min-height: 160px;
   padding: var(--space-md);
   cursor: pointer;
   transition: var(--transition-base);
@@ -2852,7 +2841,7 @@ onMounted(async () => {
 /* Responsive */
 @media (max-width: 1024px) {
   .calendar-day {
-    min-height: 100px;
+    min-height: 140px;
   }
 
   .scheduled-post-card {

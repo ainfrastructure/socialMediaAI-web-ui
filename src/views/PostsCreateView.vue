@@ -16,6 +16,7 @@ import ModeToggle from '@/components/ModeToggle.vue'
 import ScheduleModal from '@/components/ScheduleModal.vue'
 import AddRestaurantModal from '@/components/AddRestaurantModal.vue'
 import RestaurantSelectorModal from '@/components/RestaurantSelectorModal.vue'
+import GoldenRestaurantIcon from '@/components/icons/GoldenRestaurantIcon.vue'
 import { restaurantService, type SavedRestaurant } from '@/services/restaurantService'
 import { api } from '@/services/api'
 import { okamService } from '@/services/okamService'
@@ -1352,7 +1353,9 @@ function _handleContentUpdated(updatedContent: { postText: string; hashtags: str
       <!-- No Restaurants State -->
       <div v-else-if="noRestaurants" class="no-restaurant-state">
         <BaseCard variant="glass-intense" class="no-restaurant-card">
-          <div class="no-restaurant-icon">🏪</div>
+          <div class="no-restaurant-icon">
+            <GoldenRestaurantIcon :size="64" />
+          </div>
           <h2 class="no-restaurant-title">{{ t('contentHub.noRestaurantPrompt') }}</h2>
           <p class="no-restaurant-description">{{ t('contentHub.addFirstRestaurantDescription') }}</p>
           <BaseButton variant="primary" size="large" @click="showAddRestaurantModal = true">
@@ -1539,7 +1542,9 @@ function _handleContentUpdated(updatedContent: { postText: string; hashtags: str
 }
 
 .no-restaurant-icon {
-  font-size: 3rem;
+  display: flex;
+  justify-content: center;
+  margin-bottom: var(--space-sm);
 }
 
 .no-restaurant-title {

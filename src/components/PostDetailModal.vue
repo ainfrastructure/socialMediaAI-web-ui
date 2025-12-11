@@ -76,6 +76,9 @@ function getPlatforms(): string[] {
   const p = props.post
   if (!p) return []
 
+  // Don't show platforms for draft/saved posts or posts without a status
+  if (!p.status || p.status === 'draft' || p.status === 'saved') return []
+
   // Check for published post URLs first
   if (p.platform_post_urls && Object.keys(p.platform_post_urls).length > 0) {
     return Object.keys(p.platform_post_urls)
@@ -731,6 +734,7 @@ function handleSchedule() {
 
   .modal-actions {
     flex-direction: column;
+    gap: var(--space-sm);
   }
 
   .modal-actions > * {

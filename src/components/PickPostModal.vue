@@ -24,7 +24,7 @@
             </div>
 
             <!-- Empty State -->
-            <div v-else-if="posts.length === 0" class="empty-state">
+            <div v-else-if="filteredPosts.length === 0" class="empty-state">
               <p>No posts yet! Create a post first.</p>
               <BaseButton variant="primary" @click="goToCreatePost">
                 Create Post
@@ -56,7 +56,7 @@
 
                     <!-- Type Badge -->
                     <span :class="['type-badge', post.content_type]">
-                      {{ post.content_type === 'image' ? 'photo_camera' : 'videocam' }}
+                      <span class="material-symbols-outlined">{{ post.content_type === 'image' ? 'photo_camera' : 'videocam' }}</span>
                     </span>
 
                     <!-- Platform Badge -->
@@ -66,7 +66,7 @@
 
                     <!-- Selection Indicator -->
                     <div v-if="selectedPost?.id === post.id" class="selection-check">
-                      check_circle
+                      <span class="material-symbols-outlined">check_circle</span>
                     </div>
                   </div>
 
@@ -86,7 +86,7 @@
               <BasePagination
                 v-model:current-page="currentPage"
                 :total-pages="totalPages"
-                :total-items="posts.length"
+                :total-items="filteredPosts.length"
                 @update:current-page="handlePageChange"
               />
 
@@ -192,77 +192,122 @@
               </div>
             </div>
 
-            <!-- Date Selection -->
-            <div class="form-group-full">
-              <label for="schedule_date" class="form-label">
-                Date <span class="required">*</span>
-              </label>
-              <VueDatePicker
-                v-model="scheduleDate"
-                :min-date="today"
-                :enable-time-picker="false"
-                inline
-                auto-apply
-                dark
-                class="date-picker-inline"
-              />
-            </div>
-
-            <!-- Time, Timezone, and Platform Selection -->
-            <div class="schedule-settings">
-            <div class="form-group">
-              <label class="form-label">
-                Time <span class="required">*</span>
-              </label>
-              <div class="time-picker-wrapper">
-                <MobileTimePicker
-                  v-model="selectedTime"
-                  :minutes-increment="1"
+            <!-- Schedule Settings Grid -->
+            <div class="schedule-grid">
+              <!-- Date Selection -->
+              <div class="schedule-section date-section">
+                <label class="form-label">
+                  Date <span class="required">*</span>
+                </label>
+                <VueDatePicker
+                  v-model="scheduleDate"
+                  :min-date="today"
+                  :enable-time-picker="false"
+                  inline
+                  auto-apply
+                  dark
+                  class="date-picker-inline"
                 />
               </div>
-            </div>
 
-            <div class="form-group">
-              <label for="timezone" class="form-label">
-                Timezone
-                <span v-if="timezone === defaultTimezone" class="detected-badge">
-                  (Auto-detected)
-                </span>
-              </label>
-              <select id="timezone" v-model="timezone" class="form-select">
-                <option value="UTC">UTC (Coordinated Universal Time)</option>
-                <option value="America/New_York">Eastern Time (ET)</option>
-                <option value="America/Chicago">Central Time (CT)</option>
-                <option value="America/Denver">Mountain Time (MT)</option>
-                <option value="America/Los_Angeles">Pacific Time (PT)</option>
-                <option value="Europe/London">London (GMT/BST)</option>
-                <option value="Europe/Paris">Paris (CET/CEST)</option>
-                <option value="Europe/Oslo">Oslo (CET/CEST)</option>
-                <option value="Asia/Tokyo">Tokyo (JST)</option>
-                <option value="Asia/Dubai">Dubai (GST)</option>
-                <option value="Australia/Sydney">Sydney (AEDT/AEST)</option>
-              </select>
-            </div>
+              <!-- Time & Timezone Section -->
+              <div class="schedule-section time-section">
+                <div class="form-group">
+                  <label class="form-label">
+                    Time <span class="required">*</span>
+                  </label>
+                  <div class="time-picker-wrapper">
+                    <MobileTimePicker
+                      v-model="selectedTime"
+                      :minutes-increment="1"
+                    />
+                  </div>
+                </div>
 
-            <div class="form-group form-group-full">
-              <label for="platform" class="form-label">
-                Platform <span class="required">*</span>
-              </label>
-              <select id="platform" v-model="selectedPlatform" class="form-select platform-select">
-                <option value="">Select a platform...</option>
-                <option value="facebook">group Facebook</option>
-                <option value="instagram">photo_camera Instagram</option>
-                <option value="tiktok">music_note TikTok</option>
-                <option value="twitter">flutter_dash Twitter/X</option>
-                <option value="linkedin">work LinkedIn</option>
-              </select>
-              <p v-if="!selectedPlatform" class="platform-hint error">
-                warning Please select a platform to publish to
-              </p>
-              <p v-else-if="selectedPlatform !== 'facebook'" class="platform-hint warning">
-                warning Only Facebook is currently supported. Other platforms coming soon.
-              </p>
-            </div>
+                <div class="form-group">
+                  <label for="timezone" class="form-label">
+                    Timezone
+                    <span v-if="timezone === defaultTimezone" class="detected-badge">
+                      (Auto-detected)
+                    </span>
+                  </label>
+                  <select id="timezone" v-model="timezone" class="form-select">
+                    <option value="UTC">UTC (Coordinated Universal Time)</option>
+                    <option value="America/New_York">Eastern Time (ET)</option>
+                    <option value="America/Chicago">Central Time (CT)</option>
+                    <option value="America/Denver">Mountain Time (MT)</option>
+                    <option value="America/Los_Angeles">Pacific Time (PT)</option>
+                    <option value="Europe/London">London (GMT/BST)</option>
+                    <option value="Europe/Paris">Paris (CET/CEST)</option>
+                    <option value="Europe/Oslo">Oslo (CET/CEST)</option>
+                    <option value="Asia/Tokyo">Tokyo (JST)</option>
+                    <option value="Asia/Dubai">Dubai (GST)</option>
+                    <option value="Australia/Sydney">Sydney (AEDT/AEST)</option>
+                  </select>
+                </div>
+
+                <!-- Platform Selection -->
+                <div class="form-group">
+                  <label class="form-label">
+                    Platform <span class="required">*</span>
+                  </label>
+                  <div class="platform-grid">
+                    <div
+                      v-for="platform in availablePlatforms"
+                      :key="platform.id"
+                      :class="[
+                        'platform-card',
+                        {
+                          selected: selectedPlatforms.includes(platform.id),
+                          'not-connected': !platform.isConnected && !platform.comingSoon,
+                          'coming-soon': platform.comingSoon
+                        }
+                      ]"
+                      @click="handlePlatformClick(platform)"
+                    >
+                      <!-- Platform Icon -->
+                      <div class="platform-icon" :style="getPlatformIconStyle(platform.id)">
+                        <!-- Facebook -->
+                        <svg v-if="platform.id === 'facebook'" width="20" height="20" viewBox="0 0 24 24" fill="white">
+                          <path d="M9.101 23.691v-7.98H6.627v-3.667h2.474v-1.58c0-4.085 1.848-5.978 5.858-5.978.401 0 .955.042 1.468.103a8.68 8.68 0 0 1 1.141.195v3.325a8.623 8.623 0 0 0-.653-.036 26.805 26.805 0 0 0-.733-.009c-.707 0-1.259.096-1.675.309a1.686 1.686 0 0 0-.679.622c-.258.42-.374.995-.374 1.752v1.297h3.919l-.386 2.103-.287 1.564h-3.246v8.245C19.396 23.238 24 18.179 24 12.044c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.628 3.874 10.35 9.101 11.647Z"/>
+                        </svg>
+                        <!-- Instagram -->
+                        <svg v-else-if="platform.id === 'instagram'" width="20" height="20" viewBox="0 0 24 24" fill="white">
+                          <path d="M7.8 2h8.4C19.4 2 22 4.6 22 7.8v8.4a5.8 5.8 0 0 1-5.8 5.8H7.8C4.6 22 2 19.4 2 16.2V7.8A5.8 5.8 0 0 1 7.8 2m-.2 2A3.6 3.6 0 0 0 4 7.6v8.8C4 18.39 5.61 20 7.6 20h8.8a3.6 3.6 0 0 0 3.6-3.6V7.6C20 5.61 18.39 4 16.4 4H7.6m9.65 1.5a1.25 1.25 0 0 1 1.25 1.25A1.25 1.25 0 0 1 17.25 8 1.25 1.25 0 0 1 16 6.75a1.25 1.25 0 0 1 1.25-1.25M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3z"/>
+                        </svg>
+                        <!-- TikTok -->
+                        <svg v-else-if="platform.id === 'tiktok'" width="18" height="18" viewBox="0 0 24 24" fill="white">
+                          <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z"/>
+                        </svg>
+                      </div>
+
+                      <!-- Platform Info -->
+                      <div class="platform-info">
+                        <span class="platform-name">{{ platform.name }}</span>
+                        <span v-if="platform.comingSoon" class="status coming-soon">
+                          Coming Soon
+                        </span>
+                        <span v-else-if="!platform.isConnected" class="status not-connected">
+                          Tap to connect
+                        </span>
+                      </div>
+
+                      <!-- Connected indicator (green dot) or Selection Checkmark -->
+                      <div v-if="selectedPlatforms.includes(platform.id)" class="platform-check">
+                        <svg viewBox="0 0 24 24" fill="none" width="24" height="24">
+                          <circle cx="12" cy="12" r="10" fill="var(--gold-primary)"/>
+                          <path d="M9 12L11 14L15 10" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                      </div>
+                      <div v-else-if="platform.isConnected" class="connected-dot"></div>
+                    </div>
+                  </div>
+                  <p v-if="selectedPlatforms.length === 0" class="platform-hint error">
+                    <span class="material-symbols-outlined">warning</span>
+                    Please select a platform to publish to
+                  </p>
+                </div>
+              </div>
             </div>
 
             <!-- Wizard Actions for Step 2 -->
@@ -288,7 +333,7 @@
 
 <script setup lang="ts">
 import { ref, watch, computed } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import BaseModal from './BaseModal.vue'
 import BaseButton from './BaseButton.vue'
 import BasePagination from './BasePagination.vue'
@@ -297,10 +342,14 @@ import '@vuepic/vue-datepicker/dist/main.css'
 import MobileTimePicker from './MobileTimePicker.vue'
 import { api } from '../services/api'
 import { useScheduleTime } from '../composables/useScheduleTime'
+import { useSocialAccounts } from '../composables/useSocialAccounts'
+import { useFacebookStore } from '../stores/facebook'
+import { useInstagramStore } from '../stores/instagram'
 
 interface Props {
   modelValue: boolean
   selectedDate: string | null
+  restaurantId?: string
 }
 
 const props = defineProps<Props>()
@@ -310,9 +359,79 @@ const emit = defineEmits<{
 }>()
 
 const router = useRouter()
+const route = useRoute()
+const facebookStore = useFacebookStore()
+const instagramStore = useInstagramStore()
 const posts = ref<any[]>([])
 const loading = ref(false)
-const selectedPlatform = ref('')
+const selectedPlatforms = ref<string[]>([])
+const { platforms: socialPlatforms, isConnected } = useSocialAccounts()
+
+// Platform display info
+const availablePlatforms = computed(() => {
+  return [
+    {
+      id: 'facebook',
+      name: 'Facebook',
+      isConnected: isConnected('facebook'),
+      connectedAccounts: socialPlatforms.value.find(p => p.id === 'facebook')?.connectedAccounts || [],
+      comingSoon: false,
+      bgColor: '#1877F2'
+    },
+    {
+      id: 'instagram',
+      name: 'Instagram',
+      isConnected: isConnected('instagram'),
+      connectedAccounts: socialPlatforms.value.find(p => p.id === 'instagram')?.connectedAccounts || [],
+      comingSoon: false,
+      bgColor: '#E4405F'
+    },
+    {
+      id: 'tiktok',
+      name: 'TikTok',
+      isConnected: false,
+      connectedAccounts: [],
+      comingSoon: true,
+      bgColor: '#000000'
+    }
+  ]
+})
+
+function togglePlatform(platformId: string) {
+  const index = selectedPlatforms.value.indexOf(platformId)
+  if (index > -1) {
+    selectedPlatforms.value.splice(index, 1)
+  } else {
+    selectedPlatforms.value.push(platformId)
+  }
+}
+
+async function handlePlatformClick(platform: typeof availablePlatforms.value[0]) {
+  if (platform.isConnected) {
+    togglePlatform(platform.id)
+  } else if (!platform.comingSoon) {
+    // Trigger connection directly based on platform
+    // Pass current URL so user returns here after OAuth
+    const returnUrl = window.location.pathname + window.location.search
+    try {
+      if (platform.id === 'facebook') {
+        await facebookStore.connectFacebook(returnUrl)
+      } else if (platform.id === 'instagram') {
+        await instagramStore.connectInstagram(returnUrl)
+      }
+      // The stores are reactive, so UI will update automatically after connection
+    } catch (error) {
+      console.error('Failed to connect:', error)
+    }
+  }
+}
+
+function getPlatformIconStyle(platformId: string) {
+  const platform = availablePlatforms.value.find(p => p.id === platformId)
+  return {
+    backgroundColor: platform?.bgColor || '#666'
+  }
+}
 const selectedTime = ref<{ hours: number; minutes: number }>({ hours: 12, minutes: 0 })
 const currentPage = ref(1)
 const itemsPerPage = 6
@@ -343,13 +462,19 @@ const initScheduleDate = (): Date | null => {
 }
 const scheduleDate = ref<Date | null>(initScheduleDate())
 
+// Filter posts by restaurant if restaurantId is provided
+const filteredPosts = computed(() => {
+  if (!props.restaurantId) return posts.value
+  return posts.value.filter(post => post.restaurant_id === props.restaurantId)
+})
+
 // Pagination computed properties
-const totalPages = computed(() => Math.ceil(posts.value.length / itemsPerPage))
+const totalPages = computed(() => Math.ceil(filteredPosts.value.length / itemsPerPage))
 
 const paginatedPosts = computed(() => {
   const start = (currentPage.value - 1) * itemsPerPage
   const end = start + itemsPerPage
-  return posts.value.slice(start, end)
+  return filteredPosts.value.slice(start, end)
 })
 
 const today = computed(() => {
@@ -377,7 +502,7 @@ watch(() => props.modelValue, async (newValue) => {
     timezone.value = defaultTimezone
 
     // Reset platform selection and pagination
-    selectedPlatform.value = ''
+    selectedPlatforms.value = []
     currentPage.value = 1
 
     // Reset wizard state
@@ -436,13 +561,8 @@ const scheduleSelectedPost = async () => {
     return
   }
 
-  if (!selectedPlatform.value) {
-    alert('Please select a platform')
-    return
-  }
-
-  if (selectedPlatform.value !== 'facebook') {
-    alert('Only Facebook is currently supported. Other platforms coming soon.')
+  if (selectedPlatforms.value.length === 0) {
+    alert('Please select at least one platform')
     return
   }
 
@@ -463,7 +583,7 @@ const scheduleSelectedPost = async () => {
       scheduled_date: formattedDate,
       scheduled_time: formattedTime,
       timezone: timezone.value,
-      platforms: [selectedPlatform.value],
+      platforms: selectedPlatforms.value,
     })
 
     if (response.success) {
@@ -610,16 +730,8 @@ const handlePageChange = (page: number) => {
   }
 }
 
-.form-group-full {
-  margin-bottom: var(--space-xl);
-}
-
 /* Inline Date Picker Container */
 .date-picker-inline {
-  background: rgba(0, 0, 0, 0.3);
-  border: 1px solid rgba(212, 175, 55, 0.2);
-  border-radius: var(--radius-lg);
-  padding: var(--space-sm);
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
 }
@@ -804,19 +916,127 @@ const handlePageChange = (page: number) => {
   display: none;
 }
 
-.schedule-settings {
+/* Schedule Grid - side by side on desktop */
+.schedule-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: var(--space-lg);
+  grid-template-columns: auto 1fr;
+  gap: var(--space-xl);
   margin-bottom: var(--space-xl);
-  padding: var(--space-lg);
-  background: rgba(0, 0, 0, 0.3);
-  border-radius: var(--radius-lg);
-  border: 1px solid rgba(212, 175, 55, 0.2);
 }
 
-.form-group-full {
-  grid-column: 1 / -1;
+.schedule-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.date-section {
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  border-radius: var(--radius-lg);
+  padding: var(--space-lg);
+  align-self: start;
+}
+
+.time-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+
+/* Platform Grid & Cards */
+.platform-grid {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.platform-card {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-md);
+  background: var(--bg-tertiary);
+  border: 2px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  transition: all var(--transition-base);
+}
+
+.platform-card:hover:not(.coming-soon) {
+  border-color: var(--gold-primary);
+}
+
+.platform-card.selected {
+  border-color: var(--gold-primary);
+  background: var(--gold-subtle);
+}
+
+.platform-card.not-connected {
+  border-style: dashed;
+}
+
+.platform-card.not-connected:hover {
+  border-color: var(--gold-primary);
+  background: var(--gold-subtle);
+}
+
+.platform-card.coming-soon {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.platform-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.platform-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.platform-name {
+  font-weight: var(--font-semibold);
+  color: var(--text-primary);
+  font-size: var(--text-sm);
+}
+
+.platform-info .status {
+  font-size: var(--text-xs);
+}
+
+.platform-info .status.connected {
+  color: #4ade80;
+}
+
+.platform-info .status.coming-soon {
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.platform-info .status.not-connected {
+  color: var(--gold-primary);
+}
+
+.platform-check {
+  flex-shrink: 0;
+}
+
+.connected-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #4ade80;
+  flex-shrink: 0;
 }
 
 .form-group {
@@ -870,11 +1090,6 @@ const handlePageChange = (page: number) => {
 .form-select option {
   background: var(--bg-secondary);
   color: var(--text-primary);
-}
-
-.platform-select {
-  cursor: pointer;
-  font-size: var(--text-base);
 }
 
 .platform-hint {
@@ -978,13 +1193,18 @@ const handlePageChange = (page: number) => {
   position: absolute;
   top: 0.5rem;
   left: 0.5rem;
-  padding: 0.375rem 0.75rem;
+  padding: 0.375rem;
   background: rgba(0, 0, 0, 0.8);
   backdrop-filter: blur(10px);
   border-radius: 6px;
-  font-size: 0.75rem;
-  font-weight: 600;
   color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.type-badge .material-symbols-outlined {
+  font-size: 18px;
 }
 
 .type-badge.image {
@@ -1061,11 +1281,13 @@ const handlePageChange = (page: number) => {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 2rem;
   color: var(--text-on-gold);
-  font-weight: var(--font-bold);
   box-shadow: var(--glow-gold-md);
   animation: scaleIn 0.3s ease;
+}
+
+.selection-check .material-symbols-outlined {
+  font-size: 36px;
 }
 
 @keyframes scaleIn {
@@ -1267,7 +1489,7 @@ const handlePageChange = (page: number) => {
 
 /* Responsive */
 @media (max-width: 768px) {
-  .schedule-settings {
+  .schedule-grid {
     grid-template-columns: 1fr;
   }
 

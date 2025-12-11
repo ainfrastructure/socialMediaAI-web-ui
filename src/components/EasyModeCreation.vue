@@ -6,9 +6,6 @@ import BaseButton from './BaseButton.vue'
 import BaseAlert from './BaseAlert.vue'
 import MaterialIcon from './MaterialIcon.vue'
 import WizardProgress from './WizardProgress.vue'
-import GoldenTargetIcon from './icons/GoldenTargetIcon.vue'
-import GoldenSparkleIcon from './icons/GoldenSparkleIcon.vue'
-import GoldenPaletteIcon from './icons/GoldenPaletteIcon.vue'
 import GoldenImageIcon from './icons/GoldenImageIcon.vue'
 import GoldenVideoIcon from './icons/GoldenVideoIcon.vue'
 import GoldenBlockIcon from './icons/GoldenBlockIcon.vue'
@@ -712,7 +709,7 @@ onUnmounted(() => {
     <BaseCard v-show="currentStep === 2" variant="glass" class="step-card generate-section">
       <!-- Generating Loading State with Progress -->
       <div v-if="props.generating" ref="generatingOverlayRef">
-        <GeneratingProgress :active="props.generating" :estimated-duration="35" />
+        <GeneratingProgress :active="props.generating" :estimated-duration="20" />
       </div>
 
       <!-- Normal customization form -->
@@ -739,38 +736,6 @@ onUnmounted(() => {
             class="custom-prompt-input"
             rows="4"
           ></textarea>
-        </div>
-      </div>
-
-      <!-- Image Style (Strictness Mode) -->
-      <div class="customization-section">
-        <SectionLabel icon="tune">{{ t('advancedMode.strictness.label', 'Image Style') }}</SectionLabel>
-        <p class="section-hint">{{ t('advancedMode.strictness.hint', 'How closely should the AI follow your dish presentation') }}</p>
-        <div class="strictness-options">
-          <button
-            :class="['strictness-button', { 'selected': strictnessMode === 'strict' }]"
-            @click="strictnessMode = 'strict'"
-          >
-            <GoldenTargetIcon :size="32" class="strictness-icon" />
-            <span class="strictness-label">{{ t('advancedMode.strictness.strict', 'Strict') }}</span>
-            <span class="strictness-description">{{ t('advancedMode.strictness.strictDesc', 'Exact match to menu item') }}</span>
-          </button>
-          <button
-            :class="['strictness-button', { 'selected': strictnessMode === 'flexible' }]"
-            @click="strictnessMode = 'flexible'"
-          >
-            <GoldenSparkleIcon :size="32" class="strictness-icon" />
-            <span class="strictness-label">{{ t('advancedMode.strictness.flexible', 'Flexible') }}</span>
-            <span class="strictness-description">{{ t('advancedMode.strictness.flexibleDesc', 'Balanced creativity') }}</span>
-          </button>
-          <button
-            :class="['strictness-button', { 'selected': strictnessMode === 'creative' }]"
-            @click="strictnessMode = 'creative'"
-          >
-            <GoldenPaletteIcon :size="32" class="strictness-icon" />
-            <span class="strictness-label">{{ t('advancedMode.strictness.creative', 'Creative') }}</span>
-            <span class="strictness-description">{{ t('advancedMode.strictness.creativeDesc', 'Artistic interpretation') }}</span>
-          </button>
         </div>
       </div>
 
@@ -991,7 +956,7 @@ onUnmounted(() => {
           <div class="preview-image-container">
             <!-- Loading State for Image -->
             <div v-if="props.generating && !props.generatedImageUrl" class="image-loading">
-              <GeneratingProgress :active="props.generating" :estimated-duration="35" />
+              <GeneratingProgress :active="props.generating" :estimated-duration="20" />
             </div>
             <!-- Generated Image (when ready) -->
             <img v-else-if="props.generatedImageUrl" :src="props.generatedImageUrl" alt="Generated post image" class="preview-image-display" />
@@ -1962,68 +1927,6 @@ onUnmounted(() => {
   line-height: 1.4;
 }
 
-/* Strictness Options */
-.strictness-options {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: var(--space-md);
-}
-
-.strictness-button {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-sm);
-  padding: var(--space-xl);
-  background: var(--glass-bg);
-  border: var(--border-width) solid var(--glass-border);
-  border-radius: var(--radius-md);
-  cursor: pointer;
-  transition: var(--transition-base);
-  backdrop-filter: blur(var(--blur-md));
-  min-height: 120px;
-}
-
-.strictness-button:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
-  border-color: var(--gold-primary);
-}
-
-.strictness-button.selected {
-  background: var(--gold-subtle);
-  border-color: var(--gold-primary);
-  box-shadow: var(--glow-gold-sm);
-}
-
-.strictness-icon {
-  font-size: 32px;
-  color: var(--gold-primary);
-}
-
-.strictness-label {
-  font-size: var(--text-base);
-  color: var(--text-secondary);
-  text-align: center;
-  font-weight: var(--font-semibold);
-}
-
-.strictness-button.selected .strictness-label {
-  color: var(--gold-primary);
-}
-
-.strictness-description {
-  font-size: var(--text-xs);
-  color: var(--text-muted);
-  text-align: center;
-  line-height: 1.4;
-}
-
-.strictness-button.selected .strictness-description {
-  color: var(--text-secondary);
-}
-
 /* Media Type Options */
 .media-type-options {
   display: grid;
@@ -2761,6 +2664,7 @@ onUnmounted(() => {
   .step-navigation .next-button,
   .step-navigation .prev-button {
     max-width: none;
+    width: 100%;
   }
 
   .menu-items-grid-easy {

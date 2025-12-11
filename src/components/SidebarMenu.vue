@@ -59,6 +59,12 @@ const menuItems = computed(() => [
     active: route.path === '/scheduler'
   },
   {
+    path: '/analytics',
+    icon: 'bar_chart',
+    label: t('sidebar.analytics'),
+    active: route.path === '/analytics'
+  },
+  {
     path: '/connect-accounts',
     icon: 'share',
     label: t('sidebar.platforms'),

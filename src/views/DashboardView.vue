@@ -11,6 +11,7 @@ import { api } from '../services/api'
 import DashboardLayout from '../components/DashboardLayout.vue'
 import BaseCard from '../components/BaseCard.vue'
 import BaseButton from '../components/BaseButton.vue'
+import BaseModal from '../components/BaseModal.vue'
 import MaterialIcon from '../components/MaterialIcon.vue'
 import PlatformLogo from '../components/PlatformLogo.vue'
 import ConfirmModal from '../components/ConfirmModal.vue'
@@ -87,6 +88,39 @@ async function handleConfirmDisconnect() {
 function handleCancelDisconnect() {
   showDisconnectModal.value = false
   pendingDisconnect.value = null
+}
+
+// Direct connect functions for platforms
+async function handleConnectFacebook() {
+  try {
+    await facebookStore.connectFacebook()
+  } catch (error) {
+    console.error('Failed to connect Facebook:', error)
+  }
+}
+
+async function handleConnectInstagram() {
+  try {
+    await instagramStore.connectInstagram()
+  } catch (error) {
+    console.error('Failed to connect Instagram:', error)
+  }
+}
+
+function handlePlatformClick(platform: 'facebook' | 'instagram') {
+  if (platform === 'facebook') {
+    if (isFacebookConnected.value) {
+      router.push('/connect-accounts')
+    } else {
+      handleConnectFacebook()
+    }
+  } else if (platform === 'instagram') {
+    if (isInstagramConnected.value) {
+      router.push('/connect-accounts')
+    } else {
+      handleConnectInstagram()
+    }
+  }
 }
 
 function getStatusClass(status: string) {
@@ -240,6 +274,27 @@ function getPostPlatforms(post: any): string[] {
 const showPostDetailModal = ref(false)
 const selectedPost = ref<any>(null)
 
+// Welcome modal for first-time users
+const showWelcomeModal = ref(false)
+const WELCOME_DISMISSED_KEY = 'socialchef_welcome_dismissed'
+
+// Check if welcome modal was already dismissed
+function wasWelcomeDismissed(): boolean {
+  return localStorage.getItem(WELCOME_DISMISSED_KEY) === 'true'
+}
+
+// Dismiss welcome modal and remember
+function dismissWelcome() {
+  showWelcomeModal.value = false
+  localStorage.setItem(WELCOME_DISMISSED_KEY, 'true')
+}
+
+// Handle "Let's Go" action - navigate to posts hub
+function handleWelcomeLetsGo() {
+  dismissWelcome()
+  router.push('/posts')
+}
+
 // Open post detail modal
 function viewPostDetail(post: any) {
   selectedPost.value = post
@@ -279,6 +334,28 @@ function handlePostDelete(_post: any) {
 
 // Computed to check if showing all restaurants
 const showRestaurantColumn = computed(() => selectedRestaurantFilter.value === 'all')
+
+
+// User subscription tier display with price
+const userTierDisplay = computed(() => {
+  const tier = authStore.subscriptionTier
+  if (tier === 'lifetime') return 'Lifetime'
+  if (tier === 'yearly') return '$99/yr'
+  return '$19/mo'
+})
+
+// Tier description and perks
+const tierDescription = computed(() => {
+  const tier = authStore.subscriptionTier
+  if (tier === 'lifetime') return t('dashboardNew.tierLifetimeDesc')
+  if (tier === 'yearly') return t('dashboardNew.tierYearlyDesc')
+  return t('dashboardNew.tierMonthlyDesc')
+})
+
+// Credits remaining
+const creditsRemaining = computed(() => {
+  return authStore.usageStats?.remaining_credits ?? 0
+})
 
 // Load recent posts (scheduled/published + drafts) with optional restaurant filter
 async function loadRecentPosts() {
@@ -417,6 +494,11 @@ onMounted(async () => {
 
     // Load recent posts (favorites)
     await loadRecentPosts()
+
+    // Show welcome modal for first-time users (no restaurants and not dismissed)
+    if (stats.value.restaurantsAdded === 0 && !wasWelcomeDismissed()) {
+      showWelcomeModal.value = true
+    }
   } catch (error) {
     console.error('Failed to load dashboard data:', error)
   } finally {
@@ -436,87 +518,85 @@ onMounted(async () => {
     </template>
 
     <div class="dashboard-content">
-      <!-- Stats Cards Row -->
-      <section class="stats-grid">
-        <div class="stat-card stat-card-orange">
-          <div class="stat-card-header">
-            <div class="stat-icon stat-icon-orange">
-              <MaterialIcon icon="palette" size="lg" color="#fff" />
+      <!-- Dashboard Cards Grid - 2x2 layout -->
+      <section class="dashboard-cards-grid">
+        <!-- Posts Created Card -->
+        <div class="dashboard-card" @click="router.push('/posts')">
+          <div class="card-header">
+            <div class="card-icon-wrapper">
+              <MaterialIcon icon="palette" size="lg" />
             </div>
-            <span v-if="stats.postsCreated > 0" class="stat-badge">+12%</span>
           </div>
-          <div class="stat-value">{{ stats.postsCreated }}</div>
-          <div class="stat-label">{{ $t('dashboard.postsCreated') }}</div>
+          <div class="card-body">
+            <div class="card-value">{{ stats.postsCreated }}</div>
+            <div class="card-label">{{ $t('dashboard.postsCreated') }}</div>
+          </div>
+          <div class="card-footer">
+            <span class="card-link">{{ $t('dashboardNew.viewAll') }} →</span>
+          </div>
         </div>
 
-        <div class="stat-card stat-card-yellow">
-          <div class="stat-card-header">
-            <div class="stat-icon stat-icon-yellow">
-              <MaterialIcon icon="star" size="lg" color="#fff" />
+        <!-- Scheduled Posts Card -->
+        <div class="dashboard-card" @click="router.push('/scheduler')">
+          <div class="card-header">
+            <div class="card-icon-wrapper">
+              <MaterialIcon icon="calendar_month" size="lg" />
             </div>
-            <span v-if="stats.postsSaved > 0" class="stat-badge">+8%</span>
           </div>
-          <div class="stat-value">{{ stats.postsSaved }}</div>
-          <div class="stat-label">{{ $t('dashboard.postsSaved') }}</div>
+          <div class="card-body">
+            <div class="card-value">{{ stats.scheduledPosts }}</div>
+            <div class="card-label">{{ $t('dashboard.scheduledPosts') }}</div>
+          </div>
+          <div class="card-footer">
+            <span class="card-link">{{ $t('dashboardNew.viewCalendar') }} →</span>
+          </div>
         </div>
 
-        <div class="stat-card stat-card-blue">
-          <div class="stat-card-header">
-            <div class="stat-icon stat-icon-blue">
-              <MaterialIcon icon="calendar_month" size="lg" color="#fff" />
+        <!-- Saved & Restaurants Card -->
+        <div class="dashboard-card" @click="router.push('/posts')">
+          <div class="card-header">
+            <div class="card-icon-wrapper">
+              <MaterialIcon icon="bookmark" size="lg" />
             </div>
-            <span v-if="stats.scheduledPosts > 0" class="stat-badge">+3</span>
           </div>
-          <div class="stat-value">{{ stats.scheduledPosts }}</div>
-          <div class="stat-label">{{ $t('dashboard.scheduledPosts') }}</div>
+          <div class="card-body">
+            <div class="card-stats-row">
+              <div class="card-stat">
+                <span class="card-stat-value">{{ stats.postsSaved }}</span>
+                <span class="card-stat-label">{{ $t('dashboard.postsSaved') }}</span>
+              </div>
+              <div class="card-stat-divider"></div>
+              <div class="card-stat">
+                <span class="card-stat-value">{{ stats.restaurantsAdded }}</span>
+                <span class="card-stat-label">{{ $t('dashboard.restaurants') }}</span>
+              </div>
+            </div>
+          </div>
+          <div class="card-footer">
+            <span class="card-link">{{ $t('dashboardNew.manageSaved') }} →</span>
+          </div>
         </div>
 
-        <div class="stat-card stat-card-green">
-          <div class="stat-card-header">
-            <div class="stat-icon stat-icon-green">
-              <MaterialIcon icon="restaurant" size="lg" color="#fff" />
+        <!-- Settings Card -->
+        <div class="dashboard-card" @click="router.push('/profile')">
+          <div class="card-header">
+            <div class="card-icon-wrapper">
+              <MaterialIcon icon="settings" size="lg" />
             </div>
-            <span class="stat-badge-active">{{ $t('dashboardNew.active') }}</span>
+            <span class="tier-badge" :class="`tier-${authStore.subscriptionTier}`">{{ userTierDisplay }}</span>
           </div>
-          <div class="stat-value">{{ stats.restaurantsAdded }}</div>
-          <div class="stat-label">{{ $t('dashboard.restaurants') }}</div>
-        </div>
-      </section>
-
-      <!-- Quick Actions -->
-      <section class="section">
-        <h2 class="section-title">{{ $t('dashboard.quickActions') }}</h2>
-        <div class="quick-actions-grid">
-          <div class="quick-action-card" @click="goToCreateContent">
-            <div class="quick-action-icon quick-action-icon-pink">
-              <MaterialIcon icon="add" size="xl" color="#fff" />
+          <div class="card-body">
+            <div class="card-title">{{ $t('dashboardNew.settings') }}</div>
+            <div class="tier-description">{{ tierDescription }}</div>
+            <div class="card-mini-stats settings-stats">
+              <span class="mini-stat">
+                <span class="mini-stat-value">{{ creditsRemaining }}</span>
+                <span class="mini-stat-label">{{ $t('dashboardNew.creditsLeft') }}</span>
+              </span>
             </div>
-            <h3 class="quick-action-title">{{ $t('dashboardNew.createPost') }}</h3>
-            <p class="quick-action-desc">{{ $t('dashboardNew.createPostDesc') }}</p>
           </div>
-
-          <div class="quick-action-card" @click="router.push('/scheduler')">
-            <div class="quick-action-icon quick-action-icon-teal">
-              <MaterialIcon icon="schedule" size="xl" color="#fff" />
-            </div>
-            <h3 class="quick-action-title">{{ $t('dashboardNew.schedule') }}</h3>
-            <p class="quick-action-desc">{{ $t('dashboardNew.scheduleDesc') }}</p>
-          </div>
-
-          <div class="quick-action-card" @click="router.push('/connect-accounts')">
-            <div class="quick-action-icon quick-action-icon-purple">
-              <MaterialIcon icon="insights" size="xl" color="#fff" />
-            </div>
-            <h3 class="quick-action-title">{{ $t('dashboardNew.analytics') }}</h3>
-            <p class="quick-action-desc">{{ $t('dashboardNew.analyticsDesc') }}</p>
-          </div>
-
-          <div class="quick-action-card" @click="router.push('/profile')">
-            <div class="quick-action-icon quick-action-icon-gray">
-              <MaterialIcon icon="settings" size="xl" color="#fff" />
-            </div>
-            <h3 class="quick-action-title">{{ $t('dashboardNew.settings') }}</h3>
-            <p class="quick-action-desc">{{ $t('dashboardNew.settingsDesc') }}</p>
+          <div class="card-footer">
+            <span class="card-link">{{ $t('dashboardNew.openSettings') }} →</span>
           </div>
         </div>
       </section>
@@ -636,7 +716,7 @@ onMounted(async () => {
 
           <BaseCard variant="glass" class="platforms-card">
             <!-- Facebook -->
-            <div class="platform-row">
+            <div class="platform-row platform-row-clickable" @click="handlePlatformClick('facebook')">
               <div class="platform-info">
                 <div class="platform-icon-box platform-bg-facebook">
                   <PlatformLogo platform="facebook" :size="20" />
@@ -650,18 +730,14 @@ onMounted(async () => {
               </div>
               <div class="platform-status">
                 <span v-if="isFacebookConnected" class="status-dot-online"></span>
-                <button
-                  v-if="!isFacebookConnected"
-                  class="connect-btn"
-                  @click="router.push('/connect-accounts')"
-                >
+                <span v-if="!isFacebookConnected" class="connect-btn">
                   {{ $t('dashboard.connect') }}
-                </button>
+                </span>
               </div>
             </div>
 
             <!-- Instagram -->
-            <div class="platform-row">
+            <div class="platform-row platform-row-clickable" @click="handlePlatformClick('instagram')">
               <div class="platform-info">
                 <div class="platform-icon-box platform-bg-instagram">
                   <PlatformLogo platform="instagram" :size="20" />
@@ -675,13 +751,9 @@ onMounted(async () => {
               </div>
               <div class="platform-status">
                 <span v-if="isInstagramConnected" class="status-dot-online"></span>
-                <button
-                  v-if="!isInstagramConnected"
-                  class="connect-btn"
-                  @click="router.push('/connect-accounts')"
-                >
+                <span v-if="!isInstagramConnected" class="connect-btn">
                   {{ $t('dashboard.connect') }}
-                </button>
+                </span>
               </div>
             </div>
 
@@ -771,6 +843,22 @@ onMounted(async () => {
       @delete="handlePostDelete"
       @close="closePostDetailModal"
     />
+
+    <!-- Welcome Modal for First-Time Users -->
+    <Teleport to="body">
+      <BaseModal v-model="showWelcomeModal" size="sm" @close="dismissWelcome">
+        <div class="welcome-modal">
+          <div class="welcome-icon">
+            <MaterialIcon icon="restaurant" size="xl" />
+          </div>
+          <h2 class="welcome-title">{{ $t('dashboard.welcomeModalTitle') }}</h2>
+          <p class="welcome-message">{{ $t('dashboard.welcomeModalMessage') }}</p>
+          <BaseButton variant="primary" full-width @click="handleWelcomeLetsGo">
+            {{ $t('dashboard.welcomeModalButton') }}
+          </BaseButton>
+        </div>
+      </BaseModal>
+    </Teleport>
   </DashboardLayout>
 </template>
 
@@ -802,82 +890,226 @@ onMounted(async () => {
   margin: 0;
 }
 
-/* Stats Grid */
-.stats-grid {
+/* Dashboard Cards Grid - 2x2 layout */
+.dashboard-cards-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: var(--space-lg);
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-xl);
   margin-bottom: var(--space-3xl);
 }
 
-.stat-card {
+.dashboard-card {
   background: var(--bg-secondary);
-  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-xl);
   padding: var(--space-xl);
-  border-top: 3px solid transparent;
+  cursor: pointer;
   transition: var(--transition-base);
-}
-
-.stat-card:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-lg);
-}
-
-.stat-card-orange { border-top-color: #f97316; }
-.stat-card-yellow { border-top-color: #eab308; }
-.stat-card-blue { border-top-color: #3b82f6; }
-.stat-card-green { border-top-color: #22c55e; }
-
-.stat-card-header {
   display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: var(--space-lg);
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  min-height: 180px;
 }
 
-.stat-icon {
+.dashboard-card:hover {
+  border-color: var(--gold-primary);
+  box-shadow: var(--glow-gold-sm);
+}
+
+.dashboard-card:active {
+  background: var(--bg-tertiary);
+}
+
+/* Card Header - Icon + Action Button */
+.card-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-lg);
+  width: 100%;
+  position: relative;
+}
+
+.card-icon-wrapper {
   width: 48px;
   height: 48px;
   border-radius: var(--radius-md);
+  background: var(--gold-subtle);
   display: flex;
   align-items: center;
   justify-content: center;
+  color: var(--gold-primary);
 }
 
-.stat-icon-orange { background: #f97316; }
-.stat-icon-yellow { background: #eab308; }
-.stat-icon-blue { background: #3b82f6; }
-.stat-icon-green { background: #22c55e; }
+/* Card Body */
+.card-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
 
-.stat-badge {
-  font-size: var(--text-xs);
+/* Mini Stats (for scheduled posts card) */
+.card-mini-stats {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  margin-top: var(--space-sm);
+}
+
+.mini-stat {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+.mini-stat-value {
+  font-size: var(--text-sm);
   font-weight: var(--font-semibold);
-  color: #22c55e;
-  background: rgba(34, 197, 94, 0.15);
-  padding: 2px 8px;
+  color: var(--text-primary);
+}
+
+.mini-stat-label {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+}
+
+.mini-stat-divider {
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+}
+
+.settings-stats {
+  margin-top: var(--space-md);
+}
+
+/* Tier Badge */
+.tier-badge {
+  position: absolute;
+  top: 0;
+  right: 0;
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
   border-radius: var(--radius-full);
-}
-
-.stat-badge-active {
   font-size: var(--text-xs);
   font-weight: var(--font-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.tier-badge.tier-lifetime {
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.2), rgba(212, 175, 55, 0.1));
+  color: var(--gold-primary);
+  border: 1px solid var(--gold-primary);
+}
+
+.tier-badge.tier-yearly {
+  background: rgba(59, 130, 246, 0.15);
+  color: #3b82f6;
+  border: 1px solid rgba(59, 130, 246, 0.4);
+}
+
+.tier-badge.tier-monthly {
+  background: rgba(156, 163, 175, 0.15);
   color: var(--text-secondary);
-  background: var(--bg-elevated);
-  padding: 2px 8px;
-  border-radius: var(--radius-full);
+  border: 1px solid var(--border-color);
 }
 
-.stat-value {
+.tier-description {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  line-height: var(--leading-relaxed);
+  margin-bottom: var(--space-sm);
+}
+
+.card-value {
   font-family: var(--font-heading);
-  font-size: var(--text-4xl);
+  font-size: var(--text-5xl);
   font-weight: var(--font-bold);
+  line-height: 1;
+  margin-bottom: var(--space-sm);
+  background: var(--gradient-gold);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.card-label {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  font-weight: var(--font-medium);
+}
+
+.card-title {
+  font-family: var(--font-heading);
+  font-size: var(--text-xl);
+  font-weight: var(--font-semibold);
   color: var(--text-primary);
   margin-bottom: var(--space-xs);
 }
 
-.stat-label {
+.card-description {
   font-size: var(--text-sm);
-  color: var(--text-secondary);
+  color: var(--text-muted);
+  line-height: var(--leading-relaxed);
+}
+
+/* Card Footer */
+.card-footer {
+  margin-top: var(--space-lg);
+  padding-top: var(--space-md);
+  border-top: 1px solid var(--border-color);
+}
+
+.card-link {
+  font-size: var(--text-sm);
+  color: var(--gold-primary);
+  font-weight: var(--font-medium);
+  transition: var(--transition-fast);
+}
+
+.dashboard-card:hover .card-link {
+  color: var(--gold-light);
+}
+
+/* Combined Stats Row (for Saved & Restaurants) */
+.card-stats-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2xl);
+}
+
+.card-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.card-stat-value {
+  font-family: var(--font-heading);
+  font-size: var(--text-4xl);
+  font-weight: var(--font-bold);
+  line-height: 1;
+  background: var(--gradient-gold);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.card-stat-label {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  font-weight: var(--font-medium);
+}
+
+.card-stat-divider {
+  width: 1px;
+  height: 50px;
+  background: var(--border-color);
 }
 
 /* Section */
@@ -953,55 +1185,6 @@ onMounted(async () => {
   color: var(--gold-light);
 }
 
-/* Quick Actions Grid */
-.quick-actions-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: var(--space-lg);
-}
-
-.quick-action-card {
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-lg);
-  padding: var(--space-xl);
-  cursor: pointer;
-  transition: var(--transition-base);
-}
-
-.quick-action-card:hover {
-  border-color: var(--gold-primary);
-  transform: translateY(-2px);
-}
-
-.quick-action-icon {
-  width: 48px;
-  height: 48px;
-  border-radius: var(--radius-md);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: var(--space-md);
-}
-
-.quick-action-icon-pink { background: #ec4899; }
-.quick-action-icon-teal { background: #14b8a6; }
-.quick-action-icon-purple { background: #8b5cf6; }
-.quick-action-icon-gray { background: #6b7280; }
-
-.quick-action-title {
-  font-family: var(--font-heading);
-  font-size: var(--text-base);
-  font-weight: var(--font-semibold);
-  color: var(--text-primary);
-  margin: 0 0 var(--space-xs) 0;
-}
-
-.quick-action-desc {
-  font-size: var(--text-sm);
-  color: var(--text-muted);
-  margin: 0;
-}
 
 /* Main Grid: Posts + Platforms */
 .main-grid {
@@ -1271,6 +1454,10 @@ onMounted(async () => {
   background: var(--bg-elevated);
 }
 
+.platform-row-clickable {
+  cursor: pointer;
+}
+
 .platform-row.platform-disabled {
   opacity: 0.5;
 }
@@ -1341,26 +1528,18 @@ onMounted(async () => {
 
 /* Responsive */
 @media (max-width: 1200px) {
-  .stats-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  .quick-actions-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
   .main-grid {
     grid-template-columns: 1fr;
   }
 }
 
 @media (max-width: 768px) {
-  .stats-grid {
-    grid-template-columns: 1fr;
+  .dashboard-cards-grid {
+    gap: var(--space-md);
   }
 
-  .quick-actions-grid {
-    grid-template-columns: 1fr;
+  .dashboard-card {
+    min-height: 160px;
   }
 
   .posts-table th:nth-child(3),
@@ -1396,6 +1575,78 @@ onMounted(async () => {
   }
 }
 
+@media (max-width: 540px) {
+  .dashboard-cards-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-md);
+  }
+
+  .dashboard-card {
+    min-height: auto;
+    padding: var(--space-md);
+  }
+
+  .card-header {
+    margin-bottom: var(--space-md);
+  }
+
+  .card-icon-wrapper {
+    width: 40px;
+    height: 40px;
+  }
+
+  /* Hide mini stats on mobile */
+  .card-mini-stats {
+    display: none;
+  }
+
+  /* Hide tier badge on small screens */
+  .tier-badge {
+    display: none;
+  }
+
+  .card-value {
+    font-size: var(--text-3xl);
+  }
+
+  .card-label {
+    font-size: var(--text-xs);
+  }
+
+  .card-stat-value {
+    font-size: var(--text-2xl);
+  }
+
+  .card-stat-label {
+    font-size: 10px;
+  }
+
+  .card-stats-row {
+    gap: var(--space-lg);
+  }
+
+  .card-stat-divider {
+    height: 36px;
+  }
+
+  .card-footer {
+    margin-top: var(--space-md);
+    padding-top: var(--space-sm);
+  }
+
+  .card-link {
+    font-size: var(--text-xs);
+  }
+
+  .card-title {
+    font-size: var(--text-base);
+  }
+
+  .card-description {
+    font-size: var(--text-xs);
+  }
+}
+
 @media (max-width: 480px) {
   .dashboard-content {
     padding: var(--space-md);
@@ -1405,50 +1656,12 @@ onMounted(async () => {
     font-size: var(--text-xl);
   }
 
-  .stats-grid {
-    gap: var(--space-md);
-  }
-
-  .stat-card {
-    padding: var(--space-lg);
-  }
-
-  .stat-icon {
-    width: 40px;
-    height: 40px;
-  }
-
-  .stat-value {
-    font-size: var(--text-2xl);
-  }
-
-  .stat-label {
-    font-size: var(--text-xs);
-  }
-
   .section {
     margin-bottom: var(--space-2xl);
   }
 
   .section-title {
     font-size: var(--text-base);
-  }
-
-  .quick-action-card {
-    padding: var(--space-lg);
-  }
-
-  .quick-action-icon {
-    width: 40px;
-    height: 40px;
-  }
-
-  .quick-action-title {
-    font-size: var(--text-sm);
-  }
-
-  .quick-action-desc {
-    font-size: var(--text-xs);
   }
 
   .main-grid {
@@ -1494,22 +1707,24 @@ onMounted(async () => {
     font-size: var(--text-lg);
   }
 
-  .stat-value {
+  .card-value {
+    font-size: var(--text-2xl);
+  }
+
+  .card-stat-value {
     font-size: var(--text-xl);
   }
 
-  .stat-icon {
-    width: 36px;
-    height: 36px;
+  .card-stat-label {
+    font-size: 9px;
   }
 
-  .quick-action-card {
-    padding: var(--space-md);
+  .card-stats-row {
+    gap: var(--space-md);
   }
 
-  .quick-action-icon {
-    width: 36px;
-    height: 36px;
+  .card-stat-divider {
+    height: 30px;
   }
 
   .section-title {
@@ -1528,5 +1743,40 @@ onMounted(async () => {
   .post-title {
     font-size: var(--text-xs);
   }
+}
+
+/* Welcome Modal */
+.welcome-modal {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: var(--space-lg);
+}
+
+.welcome-icon {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: var(--gold-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: var(--space-lg);
+  color: var(--gold-primary);
+}
+
+.welcome-title {
+  font-family: var(--font-heading);
+  font-size: var(--text-2xl);
+  color: var(--text-primary);
+  margin: 0 0 var(--space-md) 0;
+}
+
+.welcome-message {
+  font-size: var(--text-base);
+  color: var(--text-secondary);
+  margin: 0 0 var(--space-xl) 0;
+  line-height: 1.5;
 }
 </style>

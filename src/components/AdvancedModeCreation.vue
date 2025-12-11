@@ -2433,6 +2433,10 @@ defineExpose({
     flex-direction: column;
   }
 
+  .step-navigation :deep(button) {
+    width: 100%;
+  }
+
   .menu-items-grid {
     grid-template-columns: repeat(2, 1fr);
     gap: var(--space-sm);

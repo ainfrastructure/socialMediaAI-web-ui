@@ -19,8 +19,9 @@ export const useFacebookStore = defineStore('facebook', () => {
 
   /**
    * Initialize Facebook OAuth flow with redirect (no popup)
+   * @param returnUrl - Optional URL to return to after OAuth completes
    */
-  async function connectFacebook(): Promise<void> {
+  async function connectFacebook(returnUrl?: string): Promise<void> {
     loading.value = true
     error.value = null
 
@@ -44,6 +45,14 @@ export const useFacebookStore = defineStore('facebook', () => {
 
       // Step 2: Store state in localStorage for verification after redirect
       localStorage.setItem('facebook_oauth_state', state)
+
+      // Step 2b: Store return URL if provided
+      if (returnUrl) {
+        console.log('[FacebookStore] Storing return URL:', returnUrl)
+        localStorage.setItem('oauth_return_url', returnUrl)
+      } else {
+        localStorage.removeItem('oauth_return_url')
+      }
 
       // Step 3: Redirect to Facebook (instead of opening popup)
 

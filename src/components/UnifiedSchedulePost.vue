@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import BaseButton from './BaseButton.vue'
 import BaseAlert from './BaseAlert.vue'
@@ -8,6 +9,8 @@ import '@vuepic/vue-datepicker/dist/main.css'
 import MobileTimePicker from './MobileTimePicker.vue'
 import { useSocialAccounts } from '@/composables/useSocialAccounts'
 import { useScheduleTime } from '@/composables/useScheduleTime'
+import { useFacebookStore } from '@/stores/facebook'
+import { useInstagramStore } from '@/stores/instagram'
 
 interface Props {
   disabled?: boolean
@@ -45,6 +48,10 @@ const emit = defineEmits<{
 }>()
 
 const { t } = useI18n()
+const router = useRouter()
+const route = useRoute()
+const facebookStore = useFacebookStore()
+const instagramStore = useInstagramStore()
 const { platforms: socialPlatforms, isConnected } = useSocialAccounts()
 const { timezoneOptions, getDefaultTimezone } = useScheduleTime()
 
@@ -146,6 +153,26 @@ function togglePlatform(platformId: string) {
     selectedPlatforms.value.splice(index, 1)
   } else {
     selectedPlatforms.value.push(platformId)
+  }
+}
+
+async function handlePlatformClick(platform: typeof availablePlatforms.value[0]) {
+  if (platform.isConnected) {
+    togglePlatform(platform.id)
+  } else if (!platform.comingSoon) {
+    // Trigger connection directly based on platform
+    // Pass current URL so user returns here after OAuth
+    const returnUrl = route.fullPath
+    try {
+      if (platform.id === 'facebook') {
+        await facebookStore.connectFacebook(returnUrl)
+      } else if (platform.id === 'instagram') {
+        await instagramStore.connectInstagram(returnUrl)
+      }
+      // The stores are reactive, so UI will update automatically after connection
+    } catch (error) {
+      console.error('Failed to connect:', error)
+    }
   }
 }
 
@@ -305,11 +332,11 @@ onMounted(() => {
             'platform-card',
             {
               selected: selectedPlatforms.includes(platform.id),
-              disabled: !platform.isConnected,
+              'not-connected': !platform.isConnected && !platform.comingSoon,
               'coming-soon': platform.comingSoon
             }
           ]"
-          @click="platform.isConnected ? togglePlatform(platform.id) : null"
+          @click="handlePlatformClick(platform)"
         >
           <!-- Platform Icon -->
           <div class="platform-icon" :style="getPlatformIconStyle(platform.id)">
@@ -338,24 +365,22 @@ onMounted(() => {
           <!-- Platform Info -->
           <div class="platform-info">
             <span class="platform-name">{{ platform.name }}</span>
-            <span v-if="platform.isConnected" class="status connected">
-              ✓ {{ t('unifiedSchedule.connected', 'Connected') }} ({{ platform.connectedAccounts.length }})
-            </span>
-            <span v-else-if="platform.comingSoon" class="status coming-soon">
+            <span v-if="platform.comingSoon" class="status coming-soon">
               {{ t('unifiedSchedule.comingSoon', 'Coming Soon') }}
             </span>
-            <span v-else class="status not-connected">
-              {{ t('unifiedSchedule.notConnected', 'Not connected') }}
+            <span v-else-if="!platform.isConnected" class="status not-connected">
+              {{ t('unifiedSchedule.tapToConnect', 'Tap to connect') }}
             </span>
           </div>
 
-          <!-- Selection Checkmark -->
+          <!-- Connected indicator (green dot) or Selection Checkmark -->
           <div v-if="selectedPlatforms.includes(platform.id)" class="selection-check">
             <svg viewBox="0 0 24 24" fill="none" width="24" height="24">
               <circle cx="12" cy="12" r="10" fill="var(--gold-primary)"/>
               <path d="M9 12L11 14L15 10" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
           </div>
+          <div v-else-if="platform.isConnected" class="connected-dot"></div>
         </div>
       </div>
     </div>
@@ -584,13 +609,18 @@ onMounted(() => {
   background: var(--gold-subtle);
 }
 
-.platform-card.disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
+.platform-card.not-connected {
+  border-style: dashed;
+}
+
+.platform-card.not-connected:hover {
+  border-color: var(--gold-primary);
+  background: var(--gold-subtle);
 }
 
 .platform-card.coming-soon {
-  opacity: 0.6;
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .platform-icon {
@@ -631,13 +661,23 @@ onMounted(() => {
 }
 
 .status.not-connected {
-  color: var(--text-muted);
+  color: var(--gold-primary);
 }
 
 .selection-check {
   position: absolute;
   top: var(--space-sm);
   right: var(--space-sm);
+}
+
+.connected-dot {
+  position: absolute;
+  top: var(--space-sm);
+  right: var(--space-sm);
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #4ade80;
 }
 
 /* Error Alert */

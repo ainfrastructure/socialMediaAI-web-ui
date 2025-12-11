@@ -11,12 +11,16 @@
       <!-- Welcome State for New Users (No Restaurants) -->
       <div v-else-if="restaurants.length === 0" class="welcome-state">
         <div class="welcome-content">
-          <div class="welcome-icon">✨</div>
+          <div class="welcome-icon">
+            <img src="@/assets/socialchef_logo.svg" alt="Social Chef" class="logo-svg" />
+          </div>
           <h1 class="welcome-title">{{ $t('contentHub.welcomeTitle') }}</h1>
           <p class="welcome-subtitle">{{ $t('contentHub.welcomeSubtitle') }}</p>
 
           <BaseCard variant="glass" hoverable class="add-restaurant-card" @click="showAddRestaurantModal = true">
-            <div class="card-icon">🏪</div>
+            <div class="card-icon">
+              <MaterialIcon icon="storefront" size="3xl" color="#D4AF37" class="restaurant-material-icon" />
+            </div>
             <h3 class="card-title">{{ $t('contentHub.addFirstRestaurant') }}</h3>
             <p class="card-description">{{ $t('contentHub.addFirstRestaurantDescription') }}</p>
             <BaseButton variant="primary" size="large">
@@ -143,7 +147,7 @@
                   <div class="created-date">
                     {{ formatDate(post.created_at) }}
                   </div>
-                  <div class="platform-badges">
+                  <div v-if="post.status && post.status !== 'draft' && post.status !== 'saved' && ((post.platforms && post.platforms.length > 0) || post.platform)" class="platform-badges">
                     <template v-if="post.platforms && post.platforms.length > 0">
                       <span
                         v-for="platform in post.platforms"
@@ -320,6 +324,7 @@ import ScheduleModal from '@/components/ScheduleModal.vue'
 import RestaurantSelectorModal from '@/components/RestaurantSelectorModal.vue'
 import PostDetailModal from '@/components/PostDetailModal.vue'
 import AddRestaurantModal from '@/components/AddRestaurantModal.vue'
+import MaterialIcon from '@/components/MaterialIcon.vue'
 
 const router = useRouter()
 useI18n()
@@ -715,14 +720,19 @@ function formatDate(dateString: string): string {
 }
 
 .welcome-icon {
-  font-size: 4rem;
   margin-bottom: var(--space-xl);
   animation: pulse 2s ease-in-out infinite;
 }
 
+.welcome-icon .logo-svg {
+  width: 120px;
+  height: auto;
+  filter: drop-shadow(0 0 20px rgba(212, 175, 55, 0.3));
+}
+
 @keyframes pulse {
   0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.1); }
+  50% { transform: scale(1.05); }
 }
 
 .welcome-title {
@@ -761,7 +771,17 @@ function formatDate(dateString: string): string {
 }
 
 .add-restaurant-card .card-icon {
-  font-size: 3rem;
+  width: 64px;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.add-restaurant-card .restaurant-material-icon {
+  color: var(--gold-primary);
+  filter: drop-shadow(0 0 12px rgba(212, 175, 55, 0.3));
+  font-size: 48px;
 }
 
 .add-restaurant-card .card-title {
@@ -1388,8 +1408,8 @@ function formatDate(dateString: string): string {
     font-size: var(--text-base);
   }
 
-  .welcome-icon {
-    font-size: 3rem;
+  .welcome-icon .logo-svg {
+    width: 80px;
   }
 
   .add-restaurant-card {

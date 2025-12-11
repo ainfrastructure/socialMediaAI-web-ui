@@ -18,8 +18,9 @@ export const useInstagramStore = defineStore('instagram', () => {
 
   /**
    * Initialize Instagram OAuth flow with redirect
+   * @param returnUrl - Optional URL to return to after OAuth completes
    */
-  async function connectInstagram(): Promise<void> {
+  async function connectInstagram(returnUrl?: string): Promise<void> {
     loading.value = true
     error.value = null
 
@@ -40,6 +41,14 @@ export const useInstagramStore = defineStore('instagram', () => {
 
       // Step 2: Store state in localStorage for verification after redirect
       localStorage.setItem('instagram_oauth_state', state)
+
+      // Step 2b: Store return URL if provided
+      if (returnUrl) {
+        console.log('[InstagramStore] Storing return URL:', returnUrl)
+        localStorage.setItem('oauth_return_url', returnUrl)
+      } else {
+        localStorage.removeItem('oauth_return_url')
+      }
 
       // Step 3: Redirect to Facebook OAuth (Instagram uses Facebook OAuth)
       window.location.href = authUrl
