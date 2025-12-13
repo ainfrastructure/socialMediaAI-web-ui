@@ -6,6 +6,10 @@ export default {
     content: 'Content',
     calendar: 'Calendar',
     login: 'Login',
+    getStarted: 'Get Started',
+    examples: 'Examples',
+    pricing: 'Pricing',
+    howItWorks: 'How it works',
   },
 
   // Burger Menu
@@ -175,9 +179,22 @@ export default {
   landing: {
     // Hero Section
     hero: {
+      tagline: 'AI-Powered Social Media for Restaurants',
+      headlinePart1: 'The most powerful &',
+      headlinePart2: 'effortless AI content',
+      headlinePart3: 'generator for restaurants',
       headline: "Your restaurant's AI social-media manager",
-      subheadline: 'Finally, beautiful social media posts that publish themselves. No tech skills needed.',
-      cta: 'Generate Your First Post',
+      subheadline: 'Get stunning social media posts that publish themselves. No photographer, no designer, no tech skills needed.',
+      cta: 'Get started now',
+      ctaSecondary: 'See how it works',
+      seenOn: 'As seen on:',
+      features: {
+        images: 'Generate images',
+        videos: 'Create videos',
+        posts: 'Write posts',
+        publish: 'Auto-publish',
+        analytics: 'Track analytics',
+      },
       imagePlaceholder: 'Phone mockup showing Instagram feed with professional food photos',
     },
 
@@ -194,13 +211,13 @@ export default {
       subtitle: 'From your phone to professional posts in seconds',
       originalPhoto: 'Your Photo',
       originalLabel: 'Original',
-      aiGenerated: 'AI Enhanced',
+      aiGenerated: 'SocialChef Enhanced',
       approveAndPost: 'Review & Approve',
       flow: {
         step1Title: 'Upload Your Photo',
         step1Description: 'Take a photo of your dish with your phone. No professional camera needed.',
-        step2Title: 'AI Creates Multiple Versions',
-        step2Description: 'Our AI generates beautiful variations in different styles, each with engaging captions.',
+        step2Title: 'SocialChef Creates Multiple Versions',
+        step2Description: 'SocialChef generates beautiful variations in different styles, each with engaging captions.',
         step3Title: 'Approve & Publish',
         step3Description: 'Choose your favorite version and it gets published automatically to Facebook and Instagram.',
       },
@@ -224,16 +241,7 @@ export default {
 
     // How It Works
     howItWorks: {
-      title: '3 Simple Steps. Zero Headaches.',
-      step1Title: 'Tell us about your dish',
-      step1Description: "Pick from your menu or snap a photo. That's it.",
-      step1Image: 'Hand holding phone photographing a dish',
-      step2Title: 'AI creates your post',
-      step2Description: 'Beautiful images, engaging captions, perfect hashtags - all done for you.',
-      step2Image: 'AI sparkles generating content cards',
-      step3Title: 'It posts automatically',
-      step3Description: 'Your posts go live on Instagram and Facebook. You focus on cooking.',
-      step3Image: 'Calendar with posts flying to social platforms',
+      comingSoon: 'Soon',
     },
 
     // Auto-Posting Feature (KEY DIFFERENTIATOR)
@@ -251,7 +259,7 @@ export default {
     benefits: {
       title: 'Why Restaurant Owners Love SocialChef',
       time: {
-        title: 'Save 10+ Hours Per Week',
+        title: 'Save Countless Hours',
         description: 'Stop wrestling with content creation. Spend that time on what matters - your food and customers.',
       },
       professional: {

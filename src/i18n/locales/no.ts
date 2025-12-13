@@ -6,6 +6,10 @@ export default {
     content: 'Innhold',
     calendar: 'Kalender',
     login: 'Logg inn',
+    getStarted: 'Kom i gang',
+    examples: 'Eksempler',
+    pricing: 'Priser',
+    howItWorks: 'Slik fungerer det',
   },
 
   // Burger Menu
@@ -175,9 +179,22 @@ export default {
   landing: {
     // Hero Section
     hero: {
+      tagline: 'AI-drevet sosiale medier for restauranter',
+      headlinePart1: 'Den kraftigste og',
+      headlinePart2: 'enkleste AI-innholds',
+      headlinePart3: 'generator for restauranter',
       headline: 'Din restaurants AI sosiale medie-manager',
-      subheadline: 'Sparer deg for flere timer i uka',
-      cta: 'Lag ditt første innlegg',
+      subheadline: 'Få flotte innlegg på sosiale medier som publiserer seg selv. Ingen fotograf, ingen designer, ingen tekniske ferdigheter nødvendig.',
+      cta: 'Kom i gang nå',
+      ctaSecondary: 'Se hvordan det fungerer',
+      seenOn: 'Omtalt i:',
+      features: {
+        images: 'Generer bilder',
+        videos: 'Lag videoer',
+        posts: 'Skriv innlegg',
+        publish: 'Auto-publiser',
+        analytics: 'Spor analyse',
+      },
       imagePlaceholder: 'Telefon-mockup som viser Instagram-feed med profesjonelle matbilder',
     },
 
@@ -194,13 +211,13 @@ export default {
       subtitle: 'Fra telefonen din til profesjonelle innlegg på sekunder',
       originalPhoto: 'Ditt bilde',
       originalLabel: 'Original',
-      aiGenerated: 'AI-forbedret',
+      aiGenerated: 'SocialChef-forbedret',
       approveAndPost: 'Gjennomgå og godkjenn',
       flow: {
         step1Title: 'Last opp bildet ditt',
         step1Description: 'Ta et bilde av retten din med telefonen. Ingen profesjonelt kamera nødvendig.',
-        step2Title: 'AI lager flere versjoner',
-        step2Description: 'Vår AI genererer vakre varianter i forskjellige stiler, hver med engasjerende tekst.',
+        step2Title: 'SocialChef lager flere versjoner',
+        step2Description: 'SocialChef genererer vakre varianter i forskjellige stiler, hver med engasjerende tekst.',
         step3Title: 'Godkjenn og publiser',
         step3Description: 'Velg din favorittversjon og den publiseres automatisk til Facebook og Instagram.',
       },
@@ -224,16 +241,7 @@ export default {
 
     // How It Works
     howItWorks: {
-      title: '3 enkle steg. Null hodebry.',
-      step1Title: 'Fortell oss om retten din',
-      step1Description: 'Velg fra menyen eller ta et bilde. Det er alt.',
-      step1Image: 'Hånd som holder telefon og fotograferer en rett',
-      step2Title: 'AI lager innlegget ditt',
-      step2Description: 'Vakre bilder, engasjerende tekster, perfekte hashtags - alt gjort for deg.',
-      step2Image: 'AI-gnister som genererer innholdskort',
-      step3Title: 'Det publiseres automatisk',
-      step3Description: 'Innleggene dine går live på Instagram og Facebook. Du fokuserer på matlagingen.',
-      step3Image: 'Kalender med innlegg som flyr til sosiale plattformer',
+      comingSoon: 'Snart',
     },
 
     // Auto-Posting Feature (KEY DIFFERENTIATOR)
@@ -251,7 +259,7 @@ export default {
     benefits: {
       title: 'Hvorfor restauranteiere elsker SocialChef',
       time: {
-        title: 'Spar 10+ timer per uke',
+        title: 'Spar utallige timer',
         description: 'Slutt å slite med innholdsproduksjon. Bruk tiden på det som betyr noe - maten og kundene dine.',
       },
       professional: {

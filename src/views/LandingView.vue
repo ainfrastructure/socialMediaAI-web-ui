@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '../stores/auth'
@@ -7,35 +7,40 @@ import { useLogin } from '../composables/useLogin'
 import { api } from '../services/api'
 import BaseCard from '../components/BaseCard.vue'
 import BaseButton from '../components/BaseButton.vue'
-import BaseInput from '../components/BaseInput.vue'
-import BaseAlert from '../components/BaseAlert.vue'
 import MaterialIcon from '../components/MaterialIcon.vue'
 import LoginModal from '../components/LoginModal.vue'
 import PaywallModal from '../components/PaywallModal.vue'
 import LanguageSelector from '../components/LanguageSelector.vue'
-import AppleIcon from '../components/icons/AppleIcon.vue'
-import GoogleIcon from '../components/icons/GoogleIcon.vue'
-import FacebookIcon from '../components/icons/FacebookIcon.vue'
 
 const router = useRouter()
 const authStore = useAuthStore()
 const { t } = useI18n()
 
-// Login composable for inline login box
-const {
-  email,
-  message,
-  messageType,
-  loggingIn,
-  lastUsedProvider,
-  loading: loginLoading,
-  isDev,
-  resetForm,
-  handleEmailLogin: doEmailLogin,
-  handleAppleSignIn,
-  handleGoogleSignIn,
-  handleFacebookSignIn,
-} = useLogin()
+// Mobile menu state
+const isMobileMenuOpen = ref(false)
+const isHeaderScrolled = ref(false)
+
+// Handle scroll for header background
+function handleScroll() {
+  isHeaderScrolled.value = window.scrollY > 50
+}
+
+// Smooth scroll to section
+function scrollToSection(sectionId: string) {
+  const element = document.getElementById(sectionId)
+  if (element) {
+    element.scrollIntoView({ behavior: 'smooth' })
+    isMobileMenuOpen.value = false
+  }
+}
+
+// Toggle mobile menu
+function toggleMobileMenu() {
+  isMobileMenuOpen.value = !isMobileMenuOpen.value
+}
+
+// Login composable - only need resetForm for modal callback
+const { resetForm } = useLogin()
 
 const showLoginModal = ref(false)
 const showPaywallModal = ref(false)
@@ -163,13 +168,6 @@ function handleCTAClick() {
   }
 }
 
-async function handleInlineEmailLogin() {
-  const result = await doEmailLogin()
-  if (result.success) {
-    onLoginSuccess()
-  }
-}
-
 function onLoginSuccess() {
   showLoginModal.value = false
   resetForm()
@@ -237,6 +235,7 @@ function selectComparison(index: number) {
 }
 
 function startDragging(e: MouseEvent | TouchEvent) {
+  e.preventDefault() // Prevent scrolling on touch devices
   isDragging.value = true
   hasInteracted.value = true // User has interacted, stop animation
   stopHintAnimation()
@@ -249,6 +248,7 @@ function stopDragging() {
 
 function handleDrag(e: MouseEvent | TouchEvent) {
   if (!isDragging.value) return
+  e.preventDefault() // Prevent scrolling while dragging
   updateSliderPosition(e)
 }
 
@@ -332,6 +332,16 @@ onMounted(async () => {
   }, 1000)
   // Start carousel auto-rotation
   startCarouselRotation()
+  // Add scroll listener for header
+  window.addEventListener('scroll', handleScroll)
+  handleScroll() // Check initial scroll position
+})
+
+// Cleanup on unmount
+onUnmounted(() => {
+  window.removeEventListener('scroll', handleScroll)
+  stopCarouselRotation()
+  stopHintAnimation()
 })
 
 // Benefits data
@@ -365,283 +375,266 @@ const benefits = [
 
 <template>
   <div class="landing-page">
-    <!-- Language Selector Header -->
-    <div class="landing-header">
-      <LanguageSelector />
-    </div>
+    <!-- Sticky Header Navigation -->
+    <header class="site-header" :class="{ scrolled: isHeaderScrolled }">
+      <!-- Desktop Header Container -->
+      <div class="header-container desktop-header">
+        <!-- Logo -->
+        <div class="header-logo">
+          <img src="../assets/socialchef_logo.svg" alt="SocialChef" class="logo-image" />
+          <span class="logo-text">SocialChef</span>
+        </div>
+
+        <!-- Desktop Navigation -->
+        <nav class="header-nav desktop-nav">
+          <button class="nav-link" @click="scrollToSection('examples')">
+            {{ $t('nav.howItWorks') }}
+          </button>
+          <button class="nav-link" @click="scrollToSection('pricing')">
+            {{ $t('nav.pricing') }}
+          </button>
+        </nav>
+
+        <!-- Header Actions -->
+        <div class="header-actions">
+          <LanguageSelector />
+          <template v-if="authStore.isAuthenticated">
+            <BaseButton variant="primary" size="small" @click="goToDashboard">
+              {{ $t('landing.loginBox.goToDashboard') }}
+            </BaseButton>
+          </template>
+          <template v-else>
+            <button class="login-link" @click="showLoginModal = true">
+              {{ $t('nav.login') }}
+            </button>
+            <BaseButton variant="primary" size="small" @click="handleCTAClick">
+              {{ $t('nav.getStarted') }}
+            </BaseButton>
+          </template>
+        </div>
+      </div>
+
+      <!-- Mobile Header - Pill Style -->
+      <div class="mobile-header-pill">
+        <div class="pill-content">
+          <!-- Logo -->
+          <div class="header-logo">
+            <img src="../assets/socialchef_logo.svg" alt="SocialChef" class="logo-image" />
+            <span class="logo-text">SocialChef</span>
+          </div>
+
+          <!-- Right side actions -->
+          <div class="pill-actions">
+            <LanguageSelector />
+            <template v-if="authStore.isAuthenticated">
+              <button class="pill-login-btn" @click="goToDashboard">
+                {{ $t('landing.loginBox.goToDashboard') }}
+              </button>
+            </template>
+            <template v-else>
+              <button class="pill-login-btn" @click="showLoginModal = true">
+                {{ $t('nav.login') }}
+              </button>
+            </template>
+            <button
+              class="pill-menu-button"
+              :class="{ active: isMobileMenuOpen }"
+              @click="toggleMobileMenu"
+              :aria-label="isMobileMenuOpen ? 'Close menu' : 'Open menu'"
+              aria-expanded="false"
+            >
+              <span class="hamburger-line"></span>
+              <span class="hamburger-line"></span>
+              <span class="hamburger-line"></span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Mobile Navigation Dropdown -->
+      <nav class="mobile-nav" :class="{ open: isMobileMenuOpen }">
+        <button class="mobile-nav-link" @click="scrollToSection('examples')">
+          {{ $t('nav.howItWorks') }}
+        </button>
+        <button class="mobile-nav-link" @click="scrollToSection('pricing')">
+          {{ $t('nav.pricing') }}
+        </button>
+        <div class="mobile-nav-divider"></div>
+        <template v-if="authStore.isAuthenticated">
+          <BaseButton variant="primary" size="medium" full-width @click="goToDashboard">
+            {{ $t('landing.loginBox.goToDashboard') }}
+          </BaseButton>
+        </template>
+        <template v-else>
+          <BaseButton variant="primary" size="medium" full-width @click="handleCTAClick">
+            {{ $t('nav.getStarted') }}
+          </BaseButton>
+        </template>
+      </nav>
+    </header>
 
     <!-- Hero Section -->
     <section class="hero-section">
       <div class="hero-content">
         <div class="hero-text">
-          <img src="../assets/socialchef_logo.svg" alt="SocialChef" class="hero-logo" />
-          <h1 class="hero-headline">{{ $t('landing.hero.headline') }}</h1>
+          <!-- Tagline pill -->
+          <div class="hero-tagline-pill">
+            <MaterialIcon icon="auto_awesome" size="sm" color="var(--gold-primary)" />
+            <span>{{ $t('landing.hero.tagline') }}</span>
+          </div>
+
+          <h1 class="hero-headline">
+            <span class="headline-regular">{{ $t('landing.hero.headlinePart1') }}</span>
+            <span class="headline-gold">{{ $t('landing.hero.headlinePart2') }}</span>
+            <span class="headline-regular">{{ $t('landing.hero.headlinePart3') }}</span>
+          </h1>
           <p class="hero-subheadline">{{ $t('landing.hero.subheadline') }}</p>
-          <BaseButton variant="primary" size="large" class="hero-cta" @click="handleCTAClick">
-            {{ $t('landing.hero.cta') }}
-          </BaseButton>
+
+          <!-- Feature points -->
+          <div class="hero-features">
+            <div class="hero-feature">
+              <MaterialIcon icon="image" size="sm" color="var(--gold-primary)" />
+              <span>{{ $t('landing.hero.features.images') }}</span>
+            </div>
+            <div class="hero-feature">
+              <MaterialIcon icon="videocam" size="sm" color="var(--gold-primary)" />
+              <span>{{ $t('landing.hero.features.videos') }}</span>
+            </div>
+            <div class="hero-feature">
+              <MaterialIcon icon="article" size="sm" color="var(--gold-primary)" />
+              <span>{{ $t('landing.hero.features.posts') }}</span>
+            </div>
+            <div class="hero-feature">
+              <MaterialIcon icon="send" size="sm" color="var(--gold-primary)" />
+              <span>{{ $t('landing.hero.features.publish') }}</span>
+            </div>
+            <div class="hero-feature">
+              <MaterialIcon icon="analytics" size="sm" color="var(--gold-primary)" />
+              <span>{{ $t('landing.hero.features.analytics') }}</span>
+            </div>
+          </div>
+
+          <!-- CTA Buttons -->
+          <div class="hero-cta-group">
+            <BaseButton variant="primary" size="large" class="hero-cta-primary" @click="handleCTAClick">
+              {{ $t('landing.hero.cta') }}
+              <MaterialIcon icon="auto_awesome" size="sm" color="var(--text-on-gold)" />
+            </BaseButton>
+            <BaseButton variant="secondary" size="large" class="hero-cta-secondary" @click="scrollToSection('how-it-works')">
+              {{ $t('landing.hero.ctaSecondary') }}
+              <MaterialIcon icon="play_arrow" size="sm" />
+            </BaseButton>
+          </div>
+
+          <!-- As seen on -->
+          <div class="hero-seen-on">
+            <span class="seen-on-label">{{ $t('landing.hero.seenOn') }}</span>
+            <div class="seen-on-logos">
+              <a href="https://news.ycombinator.com" target="_blank" rel="noopener noreferrer" class="seen-on-logo" aria-label="Hacker News">
+                <svg class="logo-icon hn-logo" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M0 0v24h24V0H0zm12.5 14.3V19h-1v-4.7L8.1 8h1.1l2.8 5.2 2.8-5.2h1.1l-3.4 6.3z"/>
+                </svg>
+                <span>Hacker News</span>
+              </a>
+              <a href="https://www.producthunt.com" target="_blank" rel="noopener noreferrer" class="seen-on-logo" aria-label="Product Hunt">
+                <svg class="logo-icon ph-logo" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm1.2 14.4H10v3.6H8.4V6h4.8c2.319 0 4.2 1.881 4.2 4.2s-1.881 4.2-4.2 4.2zm-.001-6.6H10v4.8h3.199c1.322 0 2.4-1.078 2.4-2.4s-1.078-2.4-2.4-2.4z"/>
+                </svg>
+                <span>Product Hunt</span>
+              </a>
+              <a href="https://www.linkedin.com" target="_blank" rel="noopener noreferrer" class="seen-on-logo" aria-label="LinkedIn">
+                <svg class="logo-icon li-logo" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+                </svg>
+                <span>LinkedIn</span>
+              </a>
+            </div>
+          </div>
         </div>
 
-        <!-- Inline Login Box -->
-        <div class="hero-login">
-          <BaseCard variant="glass-intense" class="login-box">
-            <!-- If authenticated, show dashboard button -->
-            <template v-if="authStore.isAuthenticated">
-              <div class="login-header">
-                <h2 class="login-title">{{ $t('common.welcome') }}</h2>
-                <p class="login-subtitle">{{ authStore.user?.email }}</p>
+        <!-- Before/After Interactive Slider -->
+        <div class="hero-slider">
+          <div class="before-after-gallery">
+            <!-- Main Slider -->
+            <div
+              ref="sliderContainerRef"
+              class="comparison-slider"
+              @mousedown="startDragging"
+              @mousemove="handleDrag"
+              @mouseup="stopDragging"
+              @mouseleave="stopDragging"
+              @touchstart="startDragging"
+              @touchmove="handleDrag"
+              @touchend="stopDragging"
+            >
+              <!-- After Image (Background - full) -->
+              <div class="slider-image-container">
+                <img
+                  :src="selectedComparison.generated"
+                  :alt="$t('landing.examples.gallery.after')"
+                  class="slider-image"
+                  draggable="false"
+                />
+                <div class="image-label after-label">
+                  {{ $t('landing.examples.gallery.after') }}
+                </div>
               </div>
-              <BaseButton variant="primary" size="large" full-width @click="goToDashboard">
-                {{ $t('landing.loginBox.goToDashboard') }}
-              </BaseButton>
-            </template>
 
-            <!-- If not authenticated, show login form -->
-            <template v-else>
-              <div class="login-header">
-                <h2 class="login-title">{{ $t('landing.loginBox.title') }}</h2>
-                <p class="login-subtitle">{{ $t('landing.loginBox.subtitle') }}</p>
-              </div>
-
-              <!-- Alert -->
-              <BaseAlert
-                v-if="message"
-                :type="messageType"
-                :model-value="!!message"
-                @update:model-value="message = ''"
-                class="login-alert"
+              <!-- Before Image (Foreground - clipped) -->
+              <div
+                class="slider-image-container before-container"
+                :style="{ clipPath: `inset(0 ${100 - sliderPosition}% 0 0)` }"
               >
-                {{ message }}
-              </BaseAlert>
-
-              <!-- Login Content -->
-              <div class="login-content">
-                <!-- Email Login (Primary) -->
-                <form @submit.prevent="handleInlineEmailLogin" class="email-form">
-                  <BaseInput
-                    v-model="email"
-                    type="email"
-                    :label="$t('auth.email')"
-                    :placeholder="$t('auth.emailPlaceholder')"
-                    required
-                  />
-
-                  <BaseButton
-                    type="submit"
-                    variant="primary"
-                    size="large"
-                    full-width
-                    :disabled="loggingIn"
-                  >
-                    {{
-                      loggingIn
-                        ? $t('common.loading')
-                        : isDev
-                          ? 'Dev Login'
-                          : $t('auth.sendLoginLink')
-                    }}
-                  </BaseButton>
-                </form>
-
-                <!-- Divider -->
-                <div class="login-divider">
-                  <span>{{ $t('auth.orContinueWith') }}</span>
-                </div>
-
-                <!-- Social Login (Secondary) -->
-                <div class="social-buttons">
-                  <div class="social-button-wrapper">
-                    <button
-                      type="button"
-                      class="social-sign-in-button apple-button"
-                      :disabled="loginLoading"
-                      @click="handleAppleSignIn"
-                    >
-                      <AppleIcon :size="20" />
-                      <span>{{ $t('auth.continueWithApple') }}</span>
-                    </button>
-                    <span v-if="lastUsedProvider === 'apple'" class="last-used-badge">
-                      {{ $t('auth.lastUsed') }}
-                    </span>
-                  </div>
-
-                  <div class="social-button-wrapper">
-                    <button
-                      type="button"
-                      class="social-sign-in-button google-button"
-                      :disabled="loginLoading"
-                      @click="handleGoogleSignIn"
-                    >
-                      <GoogleIcon :size="20" />
-                      <span>{{ $t('auth.continueWithGoogle') }}</span>
-                    </button>
-                    <span v-if="lastUsedProvider === 'google'" class="last-used-badge">
-                      {{ $t('auth.lastUsed') }}
-                    </span>
-                  </div>
-
-                  <div class="social-button-wrapper">
-                    <button
-                      type="button"
-                      class="social-sign-in-button facebook-button"
-                      :disabled="loginLoading"
-                      @click="handleFacebookSignIn"
-                    >
-                      <FacebookIcon :size="20" />
-                      <span>{{ $t('auth.continueWithFacebook') }}</span>
-                    </button>
-                    <span v-if="lastUsedProvider === 'facebook'" class="last-used-badge">
-                      {{ $t('auth.lastUsed') }}
-                    </span>
-                  </div>
+                <img
+                  :src="selectedComparison.original"
+                  :alt="$t('landing.examples.gallery.before')"
+                  class="slider-image"
+                  draggable="false"
+                />
+                <div class="image-label before-label">
+                  {{ $t('landing.examples.gallery.before') }}
                 </div>
               </div>
 
-              <!-- Legal Links -->
-              <div class="legal-links">
-                <router-link to="/privacy-policy">{{ $t('auth.privacyPolicy') }}</router-link>
-                <span class="separator">·</span>
-                <router-link to="/terms">{{ $t('auth.termsOfService') }}</router-link>
+              <!-- Slider Handle -->
+              <div
+                class="slider-handle"
+                :class="{ 'is-dragging': isDragging }"
+                :style="{ left: `${sliderPosition}%` }"
+              >
+                <div class="handle-line"></div>
+                <div class="handle-button">
+                  <MaterialIcon icon="drag_handle" size="sm" color="var(--text-on-gold)" />
+                </div>
+                <div class="handle-line"></div>
               </div>
-            </template>
-          </BaseCard>
-        </div>
-      </div>
-    </section>
-
-    <!-- How It Works Section -->
-    <section class="how-it-works-section">
-      <div class="section-container">
-        <h2 class="section-title">{{ $t('landing.howItWorks.title') }}</h2>
-
-        <div class="steps-grid">
-          <!-- Step 1 -->
-          <div class="step-card">
-            <div class="step-number">1</div>
-            <div class="step-image-wrapper">
-              <img
-                src="/step-1.png"
-                :alt="$t('landing.howItWorks.step1Image')"
-                class="step-image"
-              />
             </div>
-            <h3 class="step-title">{{ $t('landing.howItWorks.step1Title') }}</h3>
-            <p class="step-description">{{ $t('landing.howItWorks.step1Description') }}</p>
-          </div>
 
-          <!-- Step 2 -->
-          <div class="step-card">
-            <div class="step-number">2</div>
-            <div class="step-image-wrapper">
-              <img
-                src="/step-2.png"
-                :alt="$t('landing.howItWorks.step2Image')"
-                class="step-image"
-              />
+            <!-- Thumbnail Selector -->
+            <div class="comparison-thumbnails">
+              <button
+                v-for="(example, index) in comparisonExamples"
+                :key="example.id"
+                :class="['thumbnail-button', { active: selectedComparisonIndex === index }]"
+                @click="selectComparison(index)"
+              >
+                <img
+                  :src="example.original"
+                  :alt="$t(`landing.examples.templates.${example.templateKey}`)"
+                  class="thumbnail-image"
+                />
+              </button>
             </div>
-            <h3 class="step-title">{{ $t('landing.howItWorks.step2Title') }}</h3>
-            <p class="step-description">{{ $t('landing.howItWorks.step2Description') }}</p>
-          </div>
-
-          <!-- Step 3 -->
-          <div class="step-card">
-            <div class="step-number">3</div>
-            <div class="step-image-wrapper">
-              <img
-                src="/step-3.png"
-                :alt="$t('landing.howItWorks.step3Image')"
-                class="step-image"
-              />
-            </div>
-            <h3 class="step-title">{{ $t('landing.howItWorks.step3Title') }}</h3>
-            <p class="step-description">{{ $t('landing.howItWorks.step3Description') }}</p>
           </div>
         </div>
       </div>
     </section>
 
     <!-- Examples Showcase Section -->
-    <section class="examples-section">
+    <section id="examples" class="examples-section">
       <div class="section-container">
         <h2 class="section-title">{{ $t('landing.examples.title') }}</h2>
         <p class="section-subtitle">{{ $t('landing.examples.subtitle') }}</p>
-
-        <!-- Before/After Interactive Slider (moved up) -->
-        <div class="before-after-gallery top-gallery">
-          <h3 class="gallery-title">{{ $t('landing.examples.gallery.title') }}</h3>
-          <p class="gallery-subtitle">{{ $t('landing.examples.gallery.subtitle') }}</p>
-
-          <!-- Main Slider -->
-          <div
-            ref="sliderContainerRef"
-            class="comparison-slider"
-            @mousedown="startDragging"
-            @mousemove="handleDrag"
-            @mouseup="stopDragging"
-            @mouseleave="stopDragging"
-            @touchstart="startDragging"
-            @touchmove="handleDrag"
-            @touchend="stopDragging"
-          >
-            <!-- After Image (Background - full) -->
-            <div class="slider-image-container">
-              <img
-                :src="selectedComparison.generated"
-                :alt="$t('landing.examples.gallery.after')"
-                class="slider-image"
-                draggable="false"
-              />
-              <div class="image-label after-label">
-                {{ $t('landing.examples.gallery.after') }}
-              </div>
-            </div>
-
-            <!-- Before Image (Foreground - clipped) -->
-            <div
-              class="slider-image-container before-container"
-              :style="{ clipPath: `inset(0 ${100 - sliderPosition}% 0 0)` }"
-            >
-              <img
-                :src="selectedComparison.original"
-                :alt="$t('landing.examples.gallery.before')"
-                class="slider-image"
-                draggable="false"
-              />
-              <div class="image-label before-label">
-                {{ $t('landing.examples.gallery.before') }}
-              </div>
-            </div>
-
-            <!-- Slider Handle -->
-            <div
-              class="slider-handle"
-              :class="{ 'is-dragging': isDragging }"
-              :style="{ left: `${sliderPosition}%` }"
-            >
-              <div class="handle-line"></div>
-              <div class="handle-button">
-                <MaterialIcon icon="drag_handle" size="sm" color="var(--text-on-gold)" />
-              </div>
-              <div class="handle-line"></div>
-            </div>
-          </div>
-
-          <!-- Thumbnail Selector -->
-          <div class="comparison-thumbnails">
-            <button
-              v-for="(example, index) in comparisonExamples"
-              :key="example.id"
-              :class="['thumbnail-button', { active: selectedComparisonIndex === index }]"
-              @click="selectComparison(index)"
-            >
-              <img
-                :src="example.original"
-                :alt="$t(`landing.examples.templates.${example.templateKey}`)"
-                class="thumbnail-image"
-              />
-            </button>
-          </div>
-        </div>
 
         <!-- Main Example: Full workflow with detailed explanations -->
         <div class="main-example-flow">
@@ -653,7 +646,7 @@ const benefits = [
             </div>
             <p class="step-description">{{ $t('landing.examples.flow.step1Description') }}</p>
             <div class="step-visual">
-              <div class="example-image-wrapper xlarge with-label">
+              <div class="example-image-wrapper with-label">
                 <div class="original-label">{{ $t('landing.examples.originalLabel') }}</div>
                 <img
                   :src="multiExample.original"
@@ -670,7 +663,7 @@ const benefits = [
           </div>
 
           <!-- Step 2: AI Generates (Carousel) -->
-          <div class="flow-step-card wide">
+          <div class="flow-step-card">
             <div class="step-header">
               <span class="step-badge">2</span>
               <h3 class="step-title">{{ $t('landing.examples.flow.step2Title') }}</h3>
@@ -734,14 +727,44 @@ const benefits = [
             </div>
             <p class="step-description">{{ $t('landing.examples.flow.step3Description') }}</p>
             <div class="step-visual">
-              <div class="posted-platforms vertical">
-                <div class="platform-icon large">
-                  <MaterialIcon icon="check_circle" size="sm" color="var(--success-text)" />
-                  <span>Facebook</span>
+              <div class="flow-platforms-grid">
+                <!-- Facebook -->
+                <div class="flow-platform-item">
+                  <div class="flow-platform-logo facebook">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                    </svg>
+                  </div>
+                  <span class="flow-platform-name">Facebook</span>
                 </div>
-                <div class="platform-icon large">
-                  <MaterialIcon icon="check_circle" size="sm" color="var(--success-text)" />
-                  <span>Instagram</span>
+                <!-- Instagram -->
+                <div class="flow-platform-item">
+                  <div class="flow-platform-logo instagram">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/>
+                    </svg>
+                  </div>
+                  <span class="flow-platform-name">Instagram</span>
+                </div>
+                <!-- TikTok -->
+                <div class="flow-platform-item coming-soon">
+                  <div class="flow-platform-logo tiktok">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/>
+                    </svg>
+                  </div>
+                  <span class="flow-platform-name">TikTok</span>
+                  <span class="flow-coming-soon-badge">{{ $t('landing.howItWorks.comingSoon') }}</span>
+                </div>
+                <!-- X (Twitter) -->
+                <div class="flow-platform-item coming-soon">
+                  <div class="flow-platform-logo x-twitter">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                    </svg>
+                  </div>
+                  <span class="flow-platform-name">X</span>
+                  <span class="flow-coming-soon-badge">{{ $t('landing.howItWorks.comingSoon') }}</span>
                 </div>
               </div>
             </div>
@@ -803,7 +826,7 @@ const benefits = [
     </section>
 
     <!-- Pricing Section (Dynamic from API) -->
-    <section class="pricing-section">
+    <section id="pricing" class="pricing-section">
       <div class="section-container">
         <h2 class="section-title">{{ $t('landing.pricing.title') }}</h2>
         <p class="section-subtitle">{{ $t('landing.pricing.subtitle') }}</p>
@@ -949,23 +972,178 @@ const benefits = [
 .landing-page {
   min-height: 100vh;
   background: var(--bg-primary);
+  scroll-behavior: smooth;
 }
 
-/* Language Selector Header */
-.landing-header {
+/* Scroll offset for fixed header */
+.landing-page :target {
+  scroll-margin-top: 80px;
+}
+
+/* Sticky Header Navigation */
+.site-header {
   position: fixed;
-  top: var(--space-lg);
-  right: var(--space-lg);
-  z-index: 100;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  padding: var(--space-md) var(--space-xl);
+  transition: var(--transition-base);
+  background: transparent;
+}
+
+.site-header.scrolled {
+  background: rgba(20, 20, 20, 0.95);
+  backdrop-filter: blur(var(--blur-lg));
+  border-bottom: 1px solid var(--glass-border);
+  box-shadow: var(--shadow-md);
+}
+
+.header-container {
+  max-width: var(--max-width-2xl);
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-xl);
+}
+
+.header-logo {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.logo-image {
+  height: 40px;
+  width: auto;
+}
+
+.logo-text {
+  font-family: var(--font-heading);
+  font-size: var(--text-xl);
+  font-weight: var(--font-semibold);
+  color: var(--text-primary);
+}
+
+/* Desktop Navigation */
+.desktop-nav {
+  display: flex;
+  align-items: center;
+  gap: var(--space-lg);
+}
+
+.nav-link {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  font-weight: var(--font-medium);
+  cursor: pointer;
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-md);
+  transition: var(--transition-base);
+}
+
+.nav-link:hover {
+  color: var(--text-primary);
+  background: var(--glass-bg);
+}
+
+/* Header Actions */
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+}
+
+.login-link {
+  background: none;
+  border: 1px solid var(--glass-border);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  cursor: pointer;
+  padding: var(--space-sm) var(--space-lg);
+  border-radius: var(--radius-full);
+  transition: var(--transition-base);
+}
+
+.login-link:hover {
+  border-color: var(--gold-primary);
+  color: var(--gold-primary);
+}
+
+/* Mobile Header Pill - Hidden on desktop */
+.mobile-header-pill {
+  display: none;
+}
+
+/* Hamburger line shared styles */
+.hamburger-line {
+  display: block;
+  width: 20px;
+  height: 2px;
+  background: var(--text-primary);
+  border-radius: var(--radius-full);
+  transition: var(--transition-base);
+}
+
+/* Mobile Navigation */
+.mobile-nav {
+  display: none;
+  flex-direction: column;
+  gap: var(--space-sm);
+  padding: var(--space-lg);
+  background: rgba(20, 20, 20, 0.98);
+  border-top: 1px solid var(--glass-border);
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  transition: all 0.3s ease;
+}
+
+.mobile-nav.open {
+  max-height: 400px;
+  opacity: 1;
+  padding-bottom: var(--space-xl);
+}
+
+.mobile-nav-link {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-family: var(--font-body);
+  font-size: var(--text-lg);
+  font-weight: var(--font-medium);
+  cursor: pointer;
+  padding: var(--space-md);
+  text-align: left;
+  border-radius: var(--radius-md);
+  transition: var(--transition-base);
+}
+
+.mobile-nav-link:hover {
+  color: var(--text-primary);
+  background: var(--glass-bg);
+}
+
+.mobile-nav-divider {
+  height: 1px;
+  background: var(--glass-border);
+  margin: var(--space-sm) 0;
 }
 
 /* Hero Section */
 .hero-section {
-  min-height: 85vh;
+  min-height: 100vh;
   display: flex;
   align-items: center;
   padding: var(--space-2xl);
-  padding-top: var(--space-4xl);
+  padding-top: calc(80px + var(--space-3xl)); /* Account for fixed header */
   position: relative;
   overflow: hidden;
   background-image: url('/background.jpeg');
@@ -1000,215 +1178,162 @@ const benefits = [
   z-index: 1;
 }
 
-.hero-logo {
-  height: 80px;
-  width: auto;
+/* Hero Tagline Pill */
+.hero-tagline-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-sm);
+  background: var(--gold-subtle);
+  border: 1px solid var(--gold-dark);
+  padding: var(--space-xs) var(--space-md);
+  border-radius: var(--radius-full);
+  font-size: var(--text-sm);
+  color: var(--gold-primary);
   margin-bottom: var(--space-xl);
-  filter: drop-shadow(0 4px 12px rgba(212, 175, 55, 0.3));
 }
 
 .hero-headline {
   font-family: var(--font-heading);
-  font-size: var(--text-5xl);
+  font-size: clamp(2.5rem, 5vw, 4rem);
   font-weight: var(--font-bold);
+  margin-bottom: var(--space-lg);
+  line-height: 1.15;
+}
+
+.headline-regular {
+  color: var(--text-primary);
+  display: block;
+}
+
+.headline-gold {
   background: var(--gradient-gold);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  margin-bottom: var(--space-lg);
-  line-height: 1.1;
+  font-style: italic;
+  display: block;
 }
 
 .hero-subheadline {
   font-size: var(--text-xl);
   color: var(--text-secondary);
-  margin-bottom: var(--space-2xl);
-  line-height: var(--leading-relaxed);
-}
-
-.hero-cta {
-  font-size: var(--text-lg);
-  padding: var(--space-lg) var(--space-3xl);
-}
-
-/* Hero Login Box */
-.hero-login {
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
-}
-
-.login-box {
-  width: 100%;
-  max-width: 380px;
-  padding: var(--space-xl);
-}
-
-.login-header {
-  text-align: center;
   margin-bottom: var(--space-xl);
+  line-height: var(--leading-relaxed);
+  max-width: 540px;
 }
 
-.login-title {
-  font-family: var(--font-heading);
-  font-size: var(--text-2xl);
-  font-weight: var(--font-bold);
-  color: var(--text-primary);
-  margin-bottom: var(--space-sm);
+/* Hero Feature Points */
+.hero-features {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-lg) var(--space-xl);
+  margin-bottom: var(--space-2xl);
 }
 
-.login-subtitle {
+.hero-feature {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
   font-size: var(--text-base);
   color: var(--text-secondary);
 }
 
-.login-alert {
-  margin-bottom: var(--space-lg);
-}
-
-/* Login Content */
-.login-content {
+/* Hero CTA Group */
+.hero-cta-group {
   display: flex;
-  flex-direction: column;
+  flex-wrap: wrap;
   gap: var(--space-md);
+  margin-bottom: var(--space-3xl);
 }
 
-.email-form {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-md);
-}
-
-/* Login Divider */
-.login-divider {
-  display: flex;
+.hero-cta-primary,
+.hero-cta-secondary {
+  display: inline-flex;
   align-items: center;
-  gap: var(--space-md);
-  margin: var(--space-md) 0;
-}
-
-.login-divider::before,
-.login-divider::after {
-  content: '';
-  flex: 1;
-  height: 1px;
-  background: var(--glass-border);
-}
-
-.login-divider span {
-  color: var(--text-muted);
-  font-size: var(--text-sm);
-  white-space: nowrap;
-}
-
-/* Social Buttons */
-.social-buttons {
-  display: flex;
-  flex-direction: column;
   gap: var(--space-sm);
+  font-size: var(--text-lg);
+  padding: var(--space-lg) var(--space-2xl);
 }
 
-.social-button-wrapper {
-  position: relative;
-  transition: transform var(--transition-base);
+.hero-cta-secondary {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(var(--blur-md));
 }
 
-.social-button-wrapper:hover {
-  transform: translateY(-1px);
+.hero-cta-secondary:hover {
+  background: var(--bg-tertiary);
+  border-color: var(--gold-primary);
 }
 
-.last-used-badge {
-  position: absolute;
-  top: -8px;
-  right: -4px;
-  background: var(--bg-secondary);
-  color: var(--gold-primary);
-  font-size: var(--text-xs);
-  font-weight: var(--font-medium);
-  padding: 2px 8px;
-  border-radius: var(--radius-full);
-  border: 1px solid var(--gold-primary);
-  pointer-events: none;
-}
-
-.social-sign-in-button {
+/* As Seen On Section */
+.hero-seen-on {
   display: flex;
-  align-items: center;
-  justify-content: center;
+  flex-direction: column;
   gap: var(--space-md);
-  width: 100%;
-  padding: var(--space-md) var(--space-lg);
-  border: none;
-  border-radius: var(--radius-md);
-  font-family: var(--font-body);
+}
+
+.seen-on-label {
   font-size: var(--text-sm);
-  font-weight: var(--font-medium);
-  cursor: pointer;
-  transition: var(--transition-base);
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
 }
 
-.social-sign-in-button:active:not(:disabled) {
-  transform: translateY(1px);
+.seen-on-logos {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-xl);
 }
 
-.social-sign-in-button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.apple-button {
-  background: #000000;
-  color: #ffffff;
-}
-
-.apple-button:hover:not(:disabled) {
-  background: #1a1a1a;
-}
-
-.google-button {
-  background: #ffffff;
-  color: #1f1f1f;
-  border: 1px solid var(--border-color);
-}
-
-.google-button:hover:not(:disabled) {
-  background: #f5f5f5;
-}
-
-.facebook-button {
-  background: #1877f2;
-  color: #ffffff;
-}
-
-.facebook-button:hover:not(:disabled) {
-  background: #166fe5;
-}
-
-/* Legal Links */
-.legal-links {
+.seen-on-logo {
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: var(--space-sm);
-  margin-top: var(--space-xl);
-  padding-top: var(--space-lg);
-  border-top: 1px solid var(--border-color);
-}
-
-.legal-links a {
+  gap: var(--space-xs);
   color: var(--text-muted);
-  font-size: var(--text-xs);
   text-decoration: none;
-  transition: color 0.15s ease;
+  font-size: var(--text-sm);
+  transition: var(--transition-base);
+  opacity: 0.7;
 }
 
-.legal-links a:hover {
-  color: var(--gold-primary);
+.seen-on-logo:hover {
+  color: var(--text-primary);
+  opacity: 1;
 }
 
-.legal-links .separator {
-  color: var(--text-muted);
-  font-size: var(--text-xs);
+.seen-on-logo .logo-icon {
+  width: 20px;
+  height: 20px;
+}
+
+.seen-on-logo .hn-logo {
+  color: #ff6600;
+}
+
+.seen-on-logo .ph-logo {
+  color: #da552f;
+}
+
+.seen-on-logo .li-logo {
+  color: #0077b5;
+}
+
+/* Hero Slider */
+.hero-slider {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.hero-slider .before-after-gallery {
+  width: 100%;
+  max-width: 500px;
+}
+
+.hero-slider .comparison-slider {
+  max-width: 100%;
 }
 
 /* Image Placeholders */
@@ -1263,63 +1388,6 @@ const benefits = [
   margin-bottom: var(--space-3xl);
 }
 
-/* How It Works Section */
-.how-it-works-section {
-  background: var(--bg-secondary);
-}
-
-.steps-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: var(--space-2xl);
-}
-
-.step-card {
-  text-align: center;
-  position: relative;
-}
-
-.step-number {
-  width: 48px;
-  height: 48px;
-  background: var(--gradient-gold);
-  color: var(--text-on-gold);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: var(--font-heading);
-  font-size: var(--text-xl);
-  font-weight: var(--font-bold);
-  margin: 0 auto var(--space-xl);
-}
-
-.step-image-wrapper {
-  border-radius: var(--radius-lg);
-  overflow: hidden;
-  margin-bottom: var(--space-lg);
-  aspect-ratio: 1;
-  background: var(--bg-tertiary);
-}
-
-.step-image {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.step-title {
-  font-family: var(--font-heading);
-  font-size: var(--text-xl);
-  color: var(--text-primary);
-  margin-bottom: var(--space-sm);
-}
-
-.step-description {
-  font-size: var(--text-base);
-  color: var(--text-secondary);
-}
-
 /* Examples Showcase Section */
 .examples-section {
   background: linear-gradient(180deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
@@ -1328,12 +1396,12 @@ const benefits = [
 /* Main Example Flow - Horizontal Steps */
 .main-example-flow {
   display: grid;
-  grid-template-columns: minmax(200px, 1fr) auto minmax(280px, 1.2fr) auto minmax(200px, 1fr);
-  align-items: start;
+  grid-template-columns: 1fr auto 1fr auto 1fr;
+  align-items: stretch;
   justify-content: center;
   gap: var(--space-lg);
   margin-bottom: var(--space-5xl);
-  max-width: 1100px;
+  max-width: 1200px;
   margin-left: auto;
   margin-right: auto;
 }
@@ -1345,6 +1413,9 @@ const benefits = [
   padding: var(--space-xl);
   text-align: center;
   backdrop-filter: blur(var(--blur-md));
+  display: flex;
+  flex-direction: column;
+  min-height: 480px;
 }
 
 .step-header {
@@ -1387,6 +1458,9 @@ const benefits = [
 .step-visual {
   display: flex;
   justify-content: center;
+  align-items: stretch;
+  flex-grow: 1;
+  width: 100%;
 }
 
 .flow-arrow {
@@ -1441,18 +1515,93 @@ const benefits = [
   font-size: var(--text-base);
 }
 
+/* Flow Platforms Grid (Step 3 in Examples) */
+.flow-platforms-grid {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  width: 100%;
+}
+
+.flow-platform-item {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-sm) var(--space-md);
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-lg);
+  position: relative;
+}
+
+.flow-platform-item.coming-soon {
+  opacity: 0.6;
+}
+
+.flow-platform-logo {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  transition: var(--transition-base);
+  flex-shrink: 0;
+}
+
+.flow-platform-logo svg {
+  width: 20px;
+  height: 20px;
+}
+
+.flow-platform-logo.facebook {
+  background: linear-gradient(135deg, #1877f2 0%, #0d5ecf 100%);
+}
+
+.flow-platform-logo.instagram {
+  background: linear-gradient(135deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
+}
+
+.flow-platform-logo.tiktok {
+  background: linear-gradient(135deg, #010101 0%, #1a1a1a 100%);
+  border: 1px solid var(--glass-border);
+}
+
+.flow-platform-logo.x-twitter {
+  background: linear-gradient(135deg, #000000 0%, #14171a 100%);
+  border: 1px solid var(--glass-border);
+}
+
+.flow-platform-item:not(.coming-soon) .flow-platform-logo:hover {
+  transform: scale(1.1);
+  box-shadow: var(--shadow-lg);
+}
+
+.flow-platform-name {
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  color: var(--text-primary);
+}
+
+.flow-coming-soon-badge {
+  margin-left: auto;
+  background: var(--gold-subtle);
+  color: var(--gold-primary);
+  font-size: 10px;
+  font-weight: var(--font-semibold);
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  white-space: nowrap;
+  border: 1px solid var(--gold-dark);
+}
+
 /* Image Wrappers */
 .example-image-wrapper {
-  width: 200px;
-  height: 200px;
+  width: 100%;
   border-radius: var(--radius-lg);
   overflow: hidden;
   border: 2px solid var(--border-color);
-}
-
-.example-image-wrapper.xlarge {
-  width: 220px;
-  height: 220px;
 }
 
 .example-image-wrapper.with-label {
@@ -1536,7 +1685,7 @@ const benefits = [
 .carousel-image-wrapper {
   position: relative;
   width: 100%;
-  max-width: 320px;
+  max-width: 100%;
   aspect-ratio: 1;
   border-radius: var(--radius-lg);
   overflow: hidden;
@@ -1639,31 +1788,8 @@ const benefits = [
 
 /* Before/After Interactive Slider */
 .before-after-gallery {
-  margin-top: var(--space-4xl);
-  padding-top: var(--space-4xl);
-  border-top: 1px solid var(--border-color);
-}
-
-.before-after-gallery.top-gallery {
   margin-top: 0;
   padding-top: 0;
-  border-top: none;
-  margin-bottom: var(--space-4xl);
-}
-
-.gallery-title {
-  font-family: var(--font-heading);
-  font-size: var(--text-2xl);
-  color: var(--text-primary);
-  text-align: center;
-  margin-bottom: var(--space-sm);
-}
-
-.gallery-subtitle {
-  font-size: var(--text-base);
-  color: var(--text-muted);
-  text-align: center;
-  margin-bottom: var(--space-3xl);
 }
 
 /* Comparison Slider */
@@ -1678,6 +1804,8 @@ const benefits = [
   cursor: ew-resize;
   user-select: none;
   -webkit-user-select: none;
+  touch-action: none; /* Prevent browser handling of touch gestures */
+  -webkit-touch-callout: none;
   box-shadow: var(--shadow-xl);
   border: 2px solid var(--glass-border);
 }
@@ -1748,8 +1876,8 @@ const benefits = [
 }
 
 .handle-button {
-  width: 44px;
-  height: 44px;
+  width: 48px;
+  height: 48px;
   background: var(--gradient-gold);
   border-radius: 50%;
   display: flex;
@@ -1761,6 +1889,7 @@ const benefits = [
   flex-shrink: 0;
   pointer-events: auto;
   cursor: ew-resize;
+  touch-action: none;
 }
 
 .slider-handle.is-dragging .handle-button {
@@ -1939,6 +2068,10 @@ const benefits = [
   display: flex;
   flex-direction: column;
   gap: var(--space-md);
+}
+
+.pricing-card :deep(.base-button) {
+  margin-top: auto;
 }
 
 .pricing-card.featured {
@@ -2129,6 +2262,11 @@ const benefits = [
   padding: var(--space-5xl) var(--space-2xl);
 }
 
+.final-cta-section .section-container {
+  max-width: var(--max-width-2xl);
+  margin: 0 auto;
+}
+
 .final-cta-title {
   font-family: var(--font-heading);
   font-size: var(--text-4xl);
@@ -2201,17 +2339,174 @@ const benefits = [
 
 /* Responsive */
 @media (max-width: 1024px) {
+  /* Header responsive - Hide desktop, show mobile pill */
+  .desktop-header {
+    display: none;
+  }
+
+  .mobile-header-pill {
+    display: block;
+    padding: var(--space-md) var(--space-lg);
+  }
+
+  .pill-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: rgba(20, 20, 20, 0.9);
+    backdrop-filter: blur(var(--blur-lg));
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-full);
+    padding: var(--space-sm) var(--space-sm) var(--space-sm) var(--space-lg);
+    box-shadow: var(--shadow-lg);
+    max-width: 420px;
+    margin: 0 auto;
+  }
+
+  .pill-content .header-logo .logo-image {
+    height: 28px;
+  }
+
+  .pill-content .header-logo .logo-text {
+    font-size: var(--text-base);
+  }
+
+  .pill-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+  }
+
+  .pill-login-btn {
+    background: none;
+    border: 1px solid var(--glass-border);
+    color: var(--text-primary);
+    font-family: var(--font-body);
+    font-size: var(--text-sm);
+    font-weight: var(--font-medium);
+    cursor: pointer;
+    padding: var(--space-sm) var(--space-lg);
+    border-radius: var(--radius-full);
+    transition: var(--transition-base);
+    white-space: nowrap;
+  }
+
+  .pill-login-btn:hover {
+    border-color: var(--gold-primary);
+    color: var(--gold-primary);
+  }
+
+  .pill-menu-button {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 4px;
+    width: 44px;
+    height: 44px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: var(--space-sm);
+  }
+
+  .pill-menu-button .hamburger-line {
+    width: 18px;
+    height: 2px;
+    background: var(--text-primary);
+  }
+
+  .pill-menu-button.active .hamburger-line:nth-child(1) {
+    transform: rotate(45deg) translate(4px, 4px);
+  }
+
+  .pill-menu-button.active .hamburger-line:nth-child(2) {
+    opacity: 0;
+  }
+
+  .pill-menu-button.active .hamburger-line:nth-child(3) {
+    transform: rotate(-45deg) translate(4px, -4px);
+  }
+
+  /* Style LanguageSelector inside pill */
+  .pill-actions :deep(.language-button) {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    padding: var(--space-xs) var(--space-sm);
+    min-width: auto;
+  }
+
+  .pill-actions :deep(.language-button:hover) {
+    background: rgba(212, 175, 55, 0.1);
+  }
+
+  .pill-actions :deep(.chevron) {
+    color: var(--gold-primary);
+  }
+
+  .mobile-nav {
+    display: flex;
+    margin-top: var(--space-sm);
+    margin-left: var(--space-lg);
+    margin-right: var(--space-lg);
+    border-radius: var(--radius-xl);
+    background: rgba(30, 30, 30, 0.98);
+  }
+
+  .mobile-nav.open {
+    padding: var(--space-lg);
+  }
+
+  .site-header {
+    background: transparent;
+    backdrop-filter: none;
+  }
+
+  .site-header.scrolled {
+    background: transparent;
+    backdrop-filter: none;
+    border-bottom: none;
+    box-shadow: none;
+  }
+
   .hero-content {
     grid-template-columns: 1fr;
     text-align: center;
     gap: var(--space-3xl);
   }
 
-  .hero-login {
+  .hero-tagline-pill {
+    justify-content: center;
+  }
+
+  .hero-subheadline {
+    max-width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .hero-features {
+    justify-content: center;
+  }
+
+  .hero-cta-group {
+    justify-content: center;
+  }
+
+  .hero-seen-on {
+    align-items: center;
+  }
+
+  .seen-on-logos {
+    justify-content: center;
+  }
+
+  .hero-slider {
     order: -1;
   }
 
-  .login-box {
+  .hero-slider .before-after-gallery {
     max-width: 400px;
   }
 
@@ -2239,6 +2534,7 @@ const benefits = [
   .flow-step-card {
     width: 100%;
     max-width: 500px;
+    min-height: auto;
   }
 
   /* Slider responsive */
@@ -2274,11 +2570,6 @@ const benefits = [
     font-size: var(--text-3xl);
   }
 
-  .steps-grid {
-    grid-template-columns: 1fr;
-    gap: var(--space-3xl);
-  }
-
   .benefits-grid {
     grid-template-columns: 1fr;
   }
@@ -2297,10 +2588,6 @@ const benefits = [
 }
 
 @media (max-width: 480px) {
-  .hero-logo {
-    height: 60px;
-  }
-
   .hero-headline {
     font-size: var(--text-3xl);
   }
@@ -2324,21 +2611,10 @@ const benefits = [
 }
 
 .hero-content,
-.step-card,
 .benefit-card,
 .pricing-card {
   animation: fadeInUp 0.6s var(--ease-smooth);
   animation-fill-mode: both;
-}
-
-.step-card:nth-child(1) {
-  animation-delay: 0.1s;
-}
-.step-card:nth-child(2) {
-  animation-delay: 0.2s;
-}
-.step-card:nth-child(3) {
-  animation-delay: 0.3s;
 }
 
 .benefit-card:nth-child(1) {
@@ -2356,7 +2632,6 @@ const benefits = [
 
 @media (prefers-reduced-motion: reduce) {
   .hero-content,
-  .step-card,
   .benefit-card,
   .pricing-card {
     animation: none;
