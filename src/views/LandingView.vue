@@ -225,10 +225,11 @@ const hasInteracted = ref(false) // Track if user has interacted
 const sliderContainerRef = ref<HTMLElement | null>(null)
 let animationFrame: number | null = null
 
-// Touch handling state for distinguishing horizontal drag from vertical scroll
-let touchStartX = 0
-let touchStartY = 0
-let isHorizontalDrag: boolean | null = null // null = undetermined, true = horizontal, false = vertical
+// Touch handling - track if we're in a touch drag
+let isTouchDragging = false
+let pendingPosition: number | null = null
+let dragAnimationFrame: number | null = null
+let cachedRect: DOMRect | null = null
 
 // Before/After thumbnail carousel state
 let comparisonCarouselInterval: ReturnType<typeof setInterval> | null = null
@@ -267,27 +268,8 @@ function stopComparisonCarousel() {
   }
 }
 
-function lockBodyScroll() {
-  document.body.style.overflow = 'hidden'
-  document.body.style.touchAction = 'none'
-}
-
-function unlockBodyScroll() {
-  document.body.style.overflow = ''
-  document.body.style.touchAction = ''
-}
-
-function startDragging(e: MouseEvent | TouchEvent) {
-  // For touch events, record start position to detect direction
-  if ('touches' in e) {
-    touchStartX = e.touches[0].clientX
-    touchStartY = e.touches[0].clientY
-    isHorizontalDrag = null // Reset direction detection
-    // Don't start dragging yet - wait to determine direction in handleDrag
-    return
-  }
-
-  // Mouse events start dragging immediately
+// Mouse events for desktop - can click anywhere on slider
+function onMouseDown(e: MouseEvent) {
   e.preventDefault()
   isDragging.value = true
   hasInteracted.value = true
@@ -295,57 +277,87 @@ function startDragging(e: MouseEvent | TouchEvent) {
   updateSliderPosition(e)
 }
 
-function stopDragging() {
-  // Unlock body scroll if we locked it during horizontal drag
-  if (isHorizontalDrag === true) {
-    unlockBodyScroll()
-  }
-  isDragging.value = false
-  isHorizontalDrag = null // Reset for next touch
-}
-
-function handleDrag(e: MouseEvent | TouchEvent) {
-  // Handle touch events with direction detection
-  if ('touches' in e) {
-    const touch = e.touches[0]
-    const deltaX = Math.abs(touch.clientX - touchStartX)
-    const deltaY = Math.abs(touch.clientY - touchStartY)
-
-    // Determine direction on first significant movement (threshold of 10px)
-    if (isHorizontalDrag === null && (deltaX > 10 || deltaY > 10)) {
-      isHorizontalDrag = deltaX > deltaY
-
-      if (isHorizontalDrag) {
-        // Start dragging for horizontal movement - lock body scroll completely
-        lockBodyScroll()
-        isDragging.value = true
-        hasInteracted.value = true
-        stopHintAnimation()
-      }
-    }
-
-    // If vertical scroll, let it pass through
-    if (isHorizontalDrag === false) {
-      return
-    }
-
-    // If horizontal drag confirmed, prevent scroll and update slider
-    if (isHorizontalDrag === true && isDragging.value) {
-      e.preventDefault()
-      updateSliderPosition(e)
-    }
-    return
-  }
-
-  // Mouse events (desktop)
+function onMouseMove(e: MouseEvent) {
   if (!isDragging.value) return
   e.preventDefault()
   updateSliderPosition(e)
 }
 
+function onMouseUp() {
+  isDragging.value = false
+}
+
+// Touch events for mobile - only on handle button
+function onHandleTouchStart(e: TouchEvent) {
+  e.preventDefault() // Prevent any default behavior on the handle
+  e.stopPropagation() // Don't let it bubble to container
+  isTouchDragging = true
+  isDragging.value = true
+  hasInteracted.value = true
+  stopHintAnimation()
+
+  // Cache the bounding rect for the duration of the drag (avoid layout thrashing)
+  if (sliderContainerRef.value) {
+    cachedRect = sliderContainerRef.value.getBoundingClientRect()
+  }
+
+  updateSliderPositionFromTouch(e.touches[0].clientX)
+
+  // Add global listeners to track touch movement
+  window.addEventListener('touchmove', onGlobalTouchMove, { passive: false })
+  window.addEventListener('touchend', onGlobalTouchEnd)
+  window.addEventListener('touchcancel', onGlobalTouchEnd)
+}
+
+function onGlobalTouchMove(e: TouchEvent) {
+  if (!isTouchDragging) return
+  e.preventDefault() // Prevent scroll while dragging
+
+  // Store pending position and schedule update via rAF for smooth 60fps
+  const clientX = e.touches[0].clientX
+  pendingPosition = clientX
+
+  if (!dragAnimationFrame) {
+    dragAnimationFrame = requestAnimationFrame(flushPendingPosition)
+  }
+}
+
+function flushPendingPosition() {
+  dragAnimationFrame = null
+  if (pendingPosition !== null) {
+    updateSliderPositionFromTouch(pendingPosition)
+    pendingPosition = null
+  }
+}
+
+function onGlobalTouchEnd() {
+  isTouchDragging = false
+  isDragging.value = false
+  cachedRect = null
+  pendingPosition = null
+
+  if (dragAnimationFrame) {
+    cancelAnimationFrame(dragAnimationFrame)
+    dragAnimationFrame = null
+  }
+
+  // Remove global listeners
+  window.removeEventListener('touchmove', onGlobalTouchMove)
+  window.removeEventListener('touchend', onGlobalTouchEnd)
+  window.removeEventListener('touchcancel', onGlobalTouchEnd)
+}
+
+// Optimized position update using cached rect
+function updateSliderPositionFromTouch(clientX: number) {
+  if (!cachedRect) return
+  const x = clientX - cachedRect.left
+  const percentage = Math.max(0, Math.min(100, (x / cachedRect.width) * 100))
+  sliderPosition.value = percentage
+}
+
+// Mouse position update (desktop) - can use fresh rect each time
 function updateSliderPosition(e: MouseEvent | TouchEvent) {
   if (!sliderContainerRef.value) return
-
   const rect = sliderContainerRef.value.getBoundingClientRect()
   const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX
   const x = clientX - rect.left
@@ -653,14 +665,10 @@ const benefits = [
             <div
               ref="sliderContainerRef"
               class="comparison-slider"
-              @mousedown="startDragging"
-              @mousemove="handleDrag"
-              @mouseup="stopDragging"
-              @mouseleave="stopDragging"
-              @touchstart="startDragging"
-              @touchmove="handleDrag"
-              @touchend="stopDragging"
-              @touchcancel="stopDragging"
+              @mousedown="onMouseDown"
+              @mousemove="onMouseMove"
+              @mouseup="onMouseUp"
+              @mouseleave="onMouseUp"
             >
               <!-- After Image (Background - full) -->
               <div class="slider-image-container">
@@ -698,7 +706,7 @@ const benefits = [
                 :style="{ left: `${sliderPosition}%` }"
               >
                 <div class="handle-line"></div>
-                <div class="handle-button">
+                <div class="handle-button" @touchstart="onHandleTouchStart">
                   <MaterialIcon icon="drag_handle" size="sm" color="var(--text-on-gold)" />
                 </div>
                 <div class="handle-line"></div>
@@ -1907,7 +1915,8 @@ const benefits = [
   cursor: ew-resize;
   user-select: none;
   -webkit-user-select: none;
-  touch-action: pan-y; /* Allow vertical scrolling, handle horizontal in JS */
+  /* Allow normal touch behavior (scrolling) - only handle captures touch */
+  touch-action: auto;
   -webkit-touch-callout: none;
   box-shadow: var(--shadow-xl);
   border: 2px solid var(--glass-border);
@@ -1992,7 +2001,7 @@ const benefits = [
   flex-shrink: 0;
   pointer-events: auto;
   cursor: ew-resize;
-  touch-action: pan-y; /* Allow vertical scrolling, handle horizontal in JS */
+  touch-action: none; /* Capture all touch on handle - JS handles drag */
 }
 
 .slider-handle.is-dragging .handle-button {
