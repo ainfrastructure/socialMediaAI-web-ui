@@ -267,6 +267,16 @@ function stopComparisonCarousel() {
   }
 }
 
+function lockBodyScroll() {
+  document.body.style.overflow = 'hidden'
+  document.body.style.touchAction = 'none'
+}
+
+function unlockBodyScroll() {
+  document.body.style.overflow = ''
+  document.body.style.touchAction = ''
+}
+
 function startDragging(e: MouseEvent | TouchEvent) {
   // For touch events, record start position to detect direction
   if ('touches' in e) {
@@ -286,6 +296,10 @@ function startDragging(e: MouseEvent | TouchEvent) {
 }
 
 function stopDragging() {
+  // Unlock body scroll if we locked it during horizontal drag
+  if (isHorizontalDrag === true) {
+    unlockBodyScroll()
+  }
   isDragging.value = false
   isHorizontalDrag = null // Reset for next touch
 }
@@ -302,7 +316,8 @@ function handleDrag(e: MouseEvent | TouchEvent) {
       isHorizontalDrag = deltaX > deltaY
 
       if (isHorizontalDrag) {
-        // Start dragging for horizontal movement
+        // Start dragging for horizontal movement - lock body scroll completely
+        lockBodyScroll()
         isDragging.value = true
         hasInteracted.value = true
         stopHintAnimation()
