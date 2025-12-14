@@ -626,7 +626,7 @@ const benefits = [
               {{ $t('landing.hero.cta') }}
               <MaterialIcon icon="auto_awesome" size="sm" color="var(--text-on-gold)" />
             </BaseButton>
-            <BaseButton variant="secondary" size="large" class="hero-cta-secondary" @click="scrollToSection('how-it-works')">
+            <BaseButton variant="secondary" size="large" class="hero-cta-secondary" @click="scrollToSection('examples')">
               {{ $t('landing.hero.ctaSecondary') }}
               <MaterialIcon icon="play_arrow" size="sm" />
             </BaseButton>
