@@ -227,6 +227,9 @@ let animationFrame: number | null = null
 
 // Touch handling - track if we're in a touch drag
 let isTouchDragging = false
+let pendingPosition: number | null = null
+let dragAnimationFrame: number | null = null
+let cachedRect: DOMRect | null = null
 
 // Before/After thumbnail carousel state
 let comparisonCarouselInterval: ReturnType<typeof setInterval> | null = null
@@ -292,7 +295,13 @@ function onHandleTouchStart(e: TouchEvent) {
   isDragging.value = true
   hasInteracted.value = true
   stopHintAnimation()
-  updateSliderPosition(e)
+
+  // Cache the bounding rect for the duration of the drag (avoid layout thrashing)
+  if (sliderContainerRef.value) {
+    cachedRect = sliderContainerRef.value.getBoundingClientRect()
+  }
+
+  updateSliderPositionFromTouch(e.touches[0].clientX)
 
   // Add global listeners to track touch movement
   window.addEventListener('touchmove', onGlobalTouchMove, { passive: false })
@@ -303,21 +312,52 @@ function onHandleTouchStart(e: TouchEvent) {
 function onGlobalTouchMove(e: TouchEvent) {
   if (!isTouchDragging) return
   e.preventDefault() // Prevent scroll while dragging
-  updateSliderPosition(e)
+
+  // Store pending position and schedule update via rAF for smooth 60fps
+  const clientX = e.touches[0].clientX
+  pendingPosition = clientX
+
+  if (!dragAnimationFrame) {
+    dragAnimationFrame = requestAnimationFrame(flushPendingPosition)
+  }
+}
+
+function flushPendingPosition() {
+  dragAnimationFrame = null
+  if (pendingPosition !== null) {
+    updateSliderPositionFromTouch(pendingPosition)
+    pendingPosition = null
+  }
 }
 
 function onGlobalTouchEnd() {
   isTouchDragging = false
   isDragging.value = false
+  cachedRect = null
+  pendingPosition = null
+
+  if (dragAnimationFrame) {
+    cancelAnimationFrame(dragAnimationFrame)
+    dragAnimationFrame = null
+  }
+
   // Remove global listeners
   window.removeEventListener('touchmove', onGlobalTouchMove)
   window.removeEventListener('touchend', onGlobalTouchEnd)
   window.removeEventListener('touchcancel', onGlobalTouchEnd)
 }
 
+// Optimized position update using cached rect
+function updateSliderPositionFromTouch(clientX: number) {
+  if (!cachedRect) return
+  const x = clientX - cachedRect.left
+  const percentage = Math.max(0, Math.min(100, (x / cachedRect.width) * 100))
+  sliderPosition.value = percentage
+}
+
+// Mouse position update (desktop) - can use fresh rect each time
 function updateSliderPosition(e: MouseEvent | TouchEvent) {
   if (!sliderContainerRef.value) return
-
   const rect = sliderContainerRef.value.getBoundingClientRect()
   const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX
   const x = clientX - rect.left
