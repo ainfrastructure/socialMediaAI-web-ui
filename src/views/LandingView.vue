@@ -2573,7 +2573,7 @@ const benefits = [
 
   .hero-slider {
     order: -1;
-    padding-top: var(--space-xl);
+    padding-top: 80px;
   }
 
   .hero-slider .before-after-gallery {
