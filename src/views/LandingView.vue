@@ -225,13 +225,41 @@ const hasInteracted = ref(false) // Track if user has interacted
 const sliderContainerRef = ref<HTMLElement | null>(null)
 let animationFrame: number | null = null
 
+// Before/After thumbnail carousel state
+let comparisonCarouselInterval: ReturnType<typeof setInterval> | null = null
+const comparisonCarouselDuration = 5000 // 5 seconds per image
+
 const selectedComparison = computed(() => comparisonExamples[selectedComparisonIndex.value])
 
 function selectComparison(index: number) {
   selectedComparisonIndex.value = index
   sliderPosition.value = 50 // Reset slider position
   hasInteracted.value = false // Reset to allow animation on new selection
+  // Stop any existing animation before starting a new one
+  stopHintAnimation()
   startHintAnimation()
+  // Reset carousel timer when manually selecting
+  stopComparisonCarousel()
+  startComparisonCarousel()
+}
+
+function startComparisonCarousel() {
+  if (comparisonCarouselInterval) return
+  comparisonCarouselInterval = setInterval(() => {
+    selectedComparisonIndex.value = (selectedComparisonIndex.value + 1) % comparisonExamples.length
+    sliderPosition.value = 50
+    hasInteracted.value = false
+    // Stop any existing animation before starting a new one
+    stopHintAnimation()
+    startHintAnimation()
+  }, comparisonCarouselDuration)
+}
+
+function stopComparisonCarousel() {
+  if (comparisonCarouselInterval) {
+    clearInterval(comparisonCarouselInterval)
+    comparisonCarouselInterval = null
+  }
 }
 
 function startDragging(e: MouseEvent | TouchEvent) {
@@ -332,6 +360,8 @@ onMounted(async () => {
   }, 1000)
   // Start carousel auto-rotation
   startCarouselRotation()
+  // Start before/after comparison carousel
+  startComparisonCarousel()
   // Add scroll listener for header
   window.addEventListener('scroll', handleScroll)
   handleScroll() // Check initial scroll position
@@ -341,6 +371,7 @@ onMounted(async () => {
 onUnmounted(() => {
   window.removeEventListener('scroll', handleScroll)
   stopCarouselRotation()
+  stopComparisonCarousel()
   stopHintAnimation()
 })
 
@@ -623,6 +654,14 @@ const benefits = [
                   :alt="$t(`landing.examples.templates.${example.templateKey}`)"
                   class="thumbnail-image"
                 />
+                <!-- Progress indicator -->
+                <div class="thumbnail-progress-bar">
+                  <div
+                    v-if="selectedComparisonIndex === index"
+                    :key="`comparison-progress-${index}-${selectedComparisonIndex}`"
+                    class="thumbnail-progress-fill"
+                  />
+                </div>
               </button>
             </div>
           </div>
@@ -1908,6 +1947,7 @@ const benefits = [
 }
 
 .thumbnail-button {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -1918,6 +1958,7 @@ const benefits = [
   border-radius: var(--radius-lg);
   cursor: pointer;
   transition: var(--transition-base);
+  overflow: hidden;
 }
 
 .thumbnail-button:hover {
@@ -1935,6 +1976,34 @@ const benefits = [
   height: 80px;
   object-fit: cover;
   border-radius: var(--radius-md);
+}
+
+/* Thumbnail Progress Bar */
+.thumbnail-progress-bar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 0 0 var(--radius-md) var(--radius-md);
+  overflow: hidden;
+}
+
+.thumbnail-progress-fill {
+  height: 100%;
+  width: 0;
+  background: var(--gold-primary);
+  animation: thumbnailProgressFill 5s linear forwards;
+}
+
+@keyframes thumbnailProgressFill {
+  from {
+    width: 0;
+  }
+  to {
+    width: 100%;
+  }
 }
 
 /* Auto-Posting Section */
@@ -2524,11 +2593,13 @@ const benefits = [
     display: flex;
     flex-direction: column;
     align-items: center;
+    gap: var(--space-md);
   }
 
   .flow-arrow {
     transform: rotate(90deg);
-    padding: var(--space-md) 0;
+    padding: 0;
+    margin-top: 0;
   }
 
   .flow-step-card {
@@ -2633,7 +2704,9 @@ const benefits = [
 @media (prefers-reduced-motion: reduce) {
   .hero-content,
   .benefit-card,
-  .pricing-card {
+  .pricing-card,
+  .thumbnail-progress-fill,
+  .badge-progress-fill {
     animation: none;
   }
 }
