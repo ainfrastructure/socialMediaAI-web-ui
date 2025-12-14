@@ -181,8 +181,11 @@ const router = createRouter({
 router.beforeEach(async (to, from, next) => {
   const authStore = useAuthStore()
 
-  // Wait for auth state to be initialized
-  await authStore.waitForInitialization()
+  // Only wait for auth initialization on protected routes or guest-only routes
+  // Public routes render immediately without waiting
+  if (to.meta.requiresAuth || to.meta.requiresGuest) {
+    await authStore.waitForInitialization()
+  }
 
   // Check if route requires authentication
   if (to.meta.requiresAuth && !authStore.isAuthenticated) {

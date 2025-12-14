@@ -20,6 +20,7 @@ export const useAuthStore = defineStore('auth', () => {
   const error = ref<string | null>(null)
   const initialized = ref(false) // Track if auth state has been initialized
   let refreshTimer: number | null = null
+  let initializationCallbacks: (() => void)[] = [] // Callbacks waiting for initialization
 
   // Computed
   const isAuthenticated = computed(() => !!accessToken.value && !!user.value)
@@ -327,7 +328,7 @@ export const useAuthStore = defineStore('auth', () => {
       if (storedToken) {
         accessToken.value = storedToken
       } else {
-        initialized.value = true
+        markInitialized()
         return
       }
     }
@@ -345,7 +346,7 @@ export const useAuthStore = defineStore('auth', () => {
       // Check if account was deleted - clear everything and let user login fresh
       if ((response as any).code === 'ACCOUNT_DELETED') {
         clearSession()
-        initialized.value = true
+        markInitialized()
         return
       }
 
@@ -362,7 +363,7 @@ export const useAuthStore = defineStore('auth', () => {
           // Check for account deleted on retry too
           if ((retryResponse as any).code === 'ACCOUNT_DELETED') {
             clearSession()
-            initialized.value = true
+            markInitialized()
             return
           }
 
@@ -414,7 +415,7 @@ export const useAuthStore = defineStore('auth', () => {
       }
     } finally {
       loading.value = false
-      initialized.value = true
+      markInitialized()
     }
   }
 
@@ -448,23 +449,27 @@ export const useAuthStore = defineStore('auth', () => {
     return Date.now() >= tokenExpiresAt.value - 60 * 1000
   }
 
+  // Mark initialization as complete and notify all waiting callbacks
+  function markInitialized() {
+    if (initialized.value) return
+    initialized.value = true
+    // Notify all waiting callbacks
+    initializationCallbacks.forEach((callback) => callback())
+    initializationCallbacks = []
+  }
+
   // Wait for initialization to complete
   async function waitForInitialization(): Promise<void> {
     if (initialized.value) return
 
     return new Promise((resolve) => {
-      const checkInterval = setInterval(() => {
-        if (initialized.value) {
-          clearInterval(checkInterval)
-          resolve()
-        }
-      }, 50)
+      initializationCallbacks.push(resolve)
 
-      // Timeout after 5 seconds
+      // Timeout after 5 seconds as fallback
       setTimeout(() => {
-        clearInterval(checkInterval)
-        initialized.value = true
-        resolve()
+        if (!initialized.value) {
+          markInitialized()
+        }
       }, 5000)
     })
   }
@@ -482,7 +487,7 @@ export const useAuthStore = defineStore('auth', () => {
             }
           })
         } else {
-          initialized.value = true
+          markInitialized()
         }
       })
     } else {
@@ -497,7 +502,7 @@ export const useAuthStore = defineStore('auth', () => {
     }
   } else {
     // No tokens, mark as initialized
-    initialized.value = true
+    markInitialized()
   }
 
   return {
