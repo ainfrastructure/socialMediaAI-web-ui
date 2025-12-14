@@ -225,6 +225,11 @@ const hasInteracted = ref(false) // Track if user has interacted
 const sliderContainerRef = ref<HTMLElement | null>(null)
 let animationFrame: number | null = null
 
+// Touch handling state for distinguishing horizontal drag from vertical scroll
+let touchStartX = 0
+let touchStartY = 0
+let isHorizontalDrag: boolean | null = null // null = undetermined, true = horizontal, false = vertical
+
 // Before/After thumbnail carousel state
 let comparisonCarouselInterval: ReturnType<typeof setInterval> | null = null
 const comparisonCarouselDuration = 5000 // 5 seconds per image
@@ -262,21 +267,79 @@ function stopComparisonCarousel() {
   }
 }
 
+function lockBodyScroll() {
+  document.body.style.overflow = 'hidden'
+  document.body.style.touchAction = 'none'
+}
+
+function unlockBodyScroll() {
+  document.body.style.overflow = ''
+  document.body.style.touchAction = ''
+}
+
 function startDragging(e: MouseEvent | TouchEvent) {
-  e.preventDefault() // Prevent scrolling on touch devices
+  // For touch events, record start position to detect direction
+  if ('touches' in e) {
+    touchStartX = e.touches[0].clientX
+    touchStartY = e.touches[0].clientY
+    isHorizontalDrag = null // Reset direction detection
+    // Don't start dragging yet - wait to determine direction in handleDrag
+    return
+  }
+
+  // Mouse events start dragging immediately
+  e.preventDefault()
   isDragging.value = true
-  hasInteracted.value = true // User has interacted, stop animation
+  hasInteracted.value = true
   stopHintAnimation()
   updateSliderPosition(e)
 }
 
 function stopDragging() {
+  // Unlock body scroll if we locked it during horizontal drag
+  if (isHorizontalDrag === true) {
+    unlockBodyScroll()
+  }
   isDragging.value = false
+  isHorizontalDrag = null // Reset for next touch
 }
 
 function handleDrag(e: MouseEvent | TouchEvent) {
+  // Handle touch events with direction detection
+  if ('touches' in e) {
+    const touch = e.touches[0]
+    const deltaX = Math.abs(touch.clientX - touchStartX)
+    const deltaY = Math.abs(touch.clientY - touchStartY)
+
+    // Determine direction on first significant movement (threshold of 10px)
+    if (isHorizontalDrag === null && (deltaX > 10 || deltaY > 10)) {
+      isHorizontalDrag = deltaX > deltaY
+
+      if (isHorizontalDrag) {
+        // Start dragging for horizontal movement - lock body scroll completely
+        lockBodyScroll()
+        isDragging.value = true
+        hasInteracted.value = true
+        stopHintAnimation()
+      }
+    }
+
+    // If vertical scroll, let it pass through
+    if (isHorizontalDrag === false) {
+      return
+    }
+
+    // If horizontal drag confirmed, prevent scroll and update slider
+    if (isHorizontalDrag === true && isDragging.value) {
+      e.preventDefault()
+      updateSliderPosition(e)
+    }
+    return
+  }
+
+  // Mouse events (desktop)
   if (!isDragging.value) return
-  e.preventDefault() // Prevent scrolling while dragging
+  e.preventDefault()
   updateSliderPosition(e)
 }
 
@@ -597,6 +660,7 @@ const benefits = [
               @touchstart="startDragging"
               @touchmove="handleDrag"
               @touchend="stopDragging"
+              @touchcancel="stopDragging"
             >
               <!-- After Image (Background - full) -->
               <div class="slider-image-container">
@@ -1843,7 +1907,7 @@ const benefits = [
   cursor: ew-resize;
   user-select: none;
   -webkit-user-select: none;
-  touch-action: none; /* Prevent browser handling of touch gestures */
+  touch-action: pan-y; /* Allow vertical scrolling, handle horizontal in JS */
   -webkit-touch-callout: none;
   box-shadow: var(--shadow-xl);
   border: 2px solid var(--glass-border);
@@ -1928,7 +1992,7 @@ const benefits = [
   flex-shrink: 0;
   pointer-events: auto;
   cursor: ew-resize;
-  touch-action: none;
+  touch-action: pan-y; /* Allow vertical scrolling, handle horizontal in JS */
 }
 
 .slider-handle.is-dragging .handle-button {
