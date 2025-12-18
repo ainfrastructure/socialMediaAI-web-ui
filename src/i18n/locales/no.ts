@@ -251,6 +251,7 @@ export default {
       title: 'Sett det og glem det',
       headline: 'Innleggene dine publiseres automatisk. Virkelig.',
       description: 'Slutt å huske på å poste. Slutt å logge inn i apper. SocialChef håndterer alt - fra opprettelse til publisering. Du vil se ut som om du har en dedikert sosiale medier-ansvarlig.',
+      imagePlaceholder: 'Delt skjerm - stresset eier til venstre, avslappet eier til høyre med innlegg som publiseres automatisk',
       feature1: 'Innlegg går live mens du lager mat',
       feature2: 'Fungerer med Instagram og Facebook',
       feature3: 'Planlegg uker i forveien',
@@ -260,7 +261,7 @@ export default {
     benefits: {
       title: 'Hvorfor restauranteiere elsker SocialChef',
       time: {
-        title: 'Spar utallige timer',
+        title: 'Spar 10+ timer per uke',
         description: 'Slutt å slite med innholdsproduksjon. Bruk tiden på det som betyr noe - maten og kundene dine.',
       },
       professional: {
