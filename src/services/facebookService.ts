@@ -52,15 +52,17 @@ class FacebookService {
   async post(
     pageId: string,
     message: string,
-    imageUrl?: string
+    imageUrl?: string,
+    videoUrl?: string,
+    contentType?: 'image' | 'video'
   ): Promise<ApiResponse<{ postId: string; postUrl: string }>> {
-    console.log('[FacebookService] Posting to Facebook:', { pageId, messageLength: message.length, hasImage: !!imageUrl, apiUrl: `${API_URL}/api/facebook/pages/${pageId}/post` })
+    console.log('[FacebookService] Posting to Facebook:', { pageId, messageLength: message.length, hasImage: !!imageUrl, hasVideo: !!videoUrl, contentType, apiUrl: `${API_URL}/api/facebook/pages/${pageId}/post` })
 
     try {
       const response = await fetch(`${API_URL}/api/facebook/pages/${pageId}/post`, {
         method: 'POST',
         headers: getAuthHeaders(),
-        body: JSON.stringify({ message, imageUrl }),
+        body: JSON.stringify({ message, imageUrl, videoUrl, contentType }),
       })
 
       console.log('[FacebookService] Response status:', response.status, response.statusText)

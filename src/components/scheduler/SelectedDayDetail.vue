@@ -58,8 +58,15 @@
           >
             <!-- Post Column -->
             <div class="td-post">
+              <video
+                v-if="post.media_url && post.content_type === 'video'"
+                :src="getMediaUrl(post.media_url)"
+                class="post-thumb"
+                muted
+                playsinline
+              />
               <img
-                v-if="post.media_url"
+                v-else-if="post.media_url"
                 :src="getMediaUrl(post.media_url)"
                 class="post-thumb"
                 @error="handleImageError"
@@ -140,8 +147,15 @@
               <div class="edit-image-section">
                 <label class="edit-label">Preview</label>
                 <div class="edit-image-wrapper">
+                  <video
+                    v-if="post.media_url && post.content_type === 'video'"
+                    :src="getMediaUrl(post.media_url)"
+                    class="edit-preview-img"
+                    muted
+                    playsinline
+                  />
                   <img
-                    v-if="post.media_url"
+                    v-else-if="post.media_url"
                     :src="getMediaUrl(post.media_url)"
                     class="edit-preview-img"
                     @error="handleImageError"
@@ -300,8 +314,15 @@
               <!-- Preview -->
               <div class="detail-section">
                 <h4 class="detail-label">Preview</h4>
+                <video
+                  v-if="post.media_url && post.content_type === 'video'"
+                  :src="getMediaUrl(post.media_url)"
+                  class="detail-preview-img"
+                  controls
+                  playsinline
+                />
                 <img
-                  v-if="post.media_url"
+                  v-else-if="post.media_url"
                   :src="getMediaUrl(post.media_url)"
                   class="detail-preview-img"
                 />

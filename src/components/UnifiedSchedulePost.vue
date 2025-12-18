@@ -16,6 +16,7 @@ interface Props {
   disabled?: boolean
   showPreview?: boolean
   imageUrl?: string
+  videoUrl?: string
   postText?: string
   hashtags?: string[]
   initialPlatforms?: string[]
@@ -257,12 +258,31 @@ onMounted(() => {
 <template>
   <div class="unified-schedule-post">
     <!-- Preview Section (optional) -->
-    <div v-if="showPreview && imageUrl" class="preview-section">
-      <div class="preview-image-wrapper">
-        <img :src="imageUrl" alt="Post preview" class="preview-image" />
+    <div v-if="showPreview && (imageUrl || videoUrl)" class="preview-section">
+      <div class="preview-media-wrapper">
+        <video
+          v-if="videoUrl"
+          :src="videoUrl"
+          controls
+          autoplay
+          muted
+          loop
+          class="preview-video"
+        />
+        <img
+          v-else-if="imageUrl"
+          :src="imageUrl"
+          alt="Post preview"
+          class="preview-image"
+        />
       </div>
-      <div v-if="postText" class="preview-text">
-        {{ postText.length > 100 ? postText.substring(0, 100) + '...' : postText }}
+      <div v-if="postText || (hashtags && hashtags.length > 0)" class="preview-content">
+        <div v-if="postText" class="preview-text">
+          {{ postText }}
+        </div>
+        <div v-if="hashtags && hashtags.length > 0" class="preview-hashtags">
+          {{ hashtags.map(tag => tag.startsWith('#') ? tag : '#' + tag).join(' ') }}
+        </div>
       </div>
     </div>
 
@@ -419,30 +439,69 @@ onMounted(() => {
 /* Preview Section */
 .preview-section {
   display: flex;
-  gap: var(--space-md);
+  gap: var(--space-lg);
   padding: var(--space-lg);
   background: var(--bg-tertiary);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-lg);
+  margin-bottom: var(--space-lg);
 }
 
-.preview-image-wrapper {
+.preview-media-wrapper {
   flex-shrink: 0;
-  width: 80px;
-  height: 80px;
-  border-radius: var(--radius-sm);
+  width: 200px;
+  border-radius: var(--radius-md);
   overflow: hidden;
+  background: var(--bg-secondary);
 }
 
 .preview-image {
   width: 100%;
-  height: 100%;
+  height: auto;
+  aspect-ratio: 9 / 16;
   object-fit: cover;
 }
 
+.preview-video {
+  width: 100%;
+  height: auto;
+  max-height: 300px;
+  object-fit: contain;
+  background: black;
+}
+
+.preview-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  min-width: 0;
+}
+
 .preview-text {
-  color: var(--text-secondary);
+  color: var(--text-primary);
+  font-size: var(--text-sm);
+  line-height: var(--leading-relaxed);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.preview-hashtags {
+  color: var(--gold-primary);
   font-size: var(--text-sm);
   line-height: var(--leading-normal);
+  word-break: break-word;
+}
+
+@media (max-width: 640px) {
+  .preview-section {
+    flex-direction: column;
+  }
+
+  .preview-media-wrapper {
+    width: 100%;
+    max-width: 300px;
+    margin: 0 auto;
+  }
 }
 
 /* Publish Type Toggle */

@@ -5,6 +5,7 @@ import BaseModal from './BaseModal.vue'
 import MaterialIcon from './MaterialIcon.vue'
 import BaseButton from './BaseButton.vue'
 import BaseAlert from './BaseAlert.vue'
+import PlatformLogo from './PlatformLogo.vue'
 
 interface FailedPlatform {
   platform: string
@@ -64,7 +65,7 @@ function handleClose() {
       <h3 class="success-title">{{ t('easyMode.step4.successTitle', 'Congratulations!') }}</h3>
       <p class="success-message">{{ t('easyMode.step4.successMessage', 'Your post has been published successfully!') }}</p>
 
-      <!-- Show all successful platform links -->
+      <!-- Show all successful platform links with branded buttons -->
       <div class="platform-links-container">
         <a
           v-for="result in successfulPlatforms"
@@ -72,9 +73,18 @@ function handleClose() {
           :href="result.url"
           target="_blank"
           rel="noopener noreferrer"
-          class="view-post-link"
+          class="platform-button"
+          :class="`platform-button--${result.platform}`"
         >
-          {{ t('easyMode.step4.viewOnPlatform', { platform: capitalizeFirst(result.platform) }, `View on ${capitalizeFirst(result.platform)}`) }} →
+          <PlatformLogo
+            :platform="result.platform as 'facebook' | 'instagram' | 'tiktok' | 'twitter' | 'linkedin' | 'youtube'"
+            :size="32"
+            :show-background="false"
+          />
+          <span class="platform-button-text">
+            {{ t('easyMode.step4.viewOnPlatform', { platform: capitalizeFirst(result.platform) }, `View on ${capitalizeFirst(result.platform)}`) }}
+          </span>
+          <MaterialIcon icon="arrow_forward" size="sm" />
         </a>
       </div>
 
@@ -146,24 +156,80 @@ function handleClose() {
   width: 100%;
 }
 
-.view-post-link {
+.platform-button {
   display: inline-flex;
   align-items: center;
-  gap: var(--space-sm);
+  gap: var(--space-md);
   padding: var(--space-md) var(--space-xl);
-  background: var(--gold-subtle);
-  border: 1px solid var(--gold-primary);
-  border-radius: var(--radius-md);
-  color: var(--gold-light);
-  font-weight: var(--font-semibold);
+  border-radius: var(--radius-lg);
+  color: white;
+  font-weight: 600;
+  font-size: var(--text-base);
   text-decoration: none;
-  transition: var(--transition-base);
+  transition: all var(--transition-base);
+  border: none;
+  min-width: 220px;
+  box-shadow: var(--shadow-md);
 }
 
-.view-post-link:hover {
-  background: rgba(212, 175, 55, 0.2);
-  transform: translateY(-2px);
-  box-shadow: var(--glow-gold-sm);
+.platform-button:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-lg);
+}
+
+.platform-button:active {
+  transform: translateY(-1px);
+}
+
+/* Facebook Button */
+.platform-button--facebook {
+  background: #1877F2;
+}
+
+.platform-button--facebook:hover {
+  background: #0d5dbf;
+}
+
+/* Instagram Button */
+.platform-button--instagram {
+  background: linear-gradient(135deg, #f58529, #dd2a7b, #8134af, #515bd4);
+}
+
+.platform-button--instagram:hover {
+  background: linear-gradient(135deg, #ff9142, #e83e8c, #9146b6, #5f6ee8);
+}
+
+/* TikTok Button (if needed) */
+.platform-button--tiktok {
+  background: linear-gradient(135deg, #000000, #25f4ee);
+}
+
+.platform-button--tiktok:hover {
+  background: linear-gradient(135deg, #1a1a1a, #3ffffa);
+}
+
+/* Twitter Button (if needed) */
+.platform-button--twitter {
+  background: #000000;
+  border: 1px solid #333;
+}
+
+.platform-button--twitter:hover {
+  background: #1a1a1a;
+}
+
+/* LinkedIn Button (if needed) */
+.platform-button--linkedin {
+  background: #0a66c2;
+}
+
+.platform-button--linkedin:hover {
+  background: #084f94;
+}
+
+.platform-button-text {
+  flex: 1;
+  text-align: center;
 }
 
 .partial-failure-alert {
@@ -206,11 +272,29 @@ function handleClose() {
 
   .platform-links-container {
     flex-direction: column;
+    width: 100%;
   }
 
-  .view-post-link {
+  .platform-button {
     width: 100%;
-    justify-content: center;
+    min-width: unset;
+    justify-content: space-between;
+  }
+
+  .platform-button-text {
+    flex: 1;
+    text-align: left;
+  }
+}
+
+/* Accessibility: Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  .platform-button {
+    transition: none;
+  }
+
+  .platform-button:hover {
+    transform: none;
   }
 }
 </style>

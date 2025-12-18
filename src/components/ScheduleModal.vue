@@ -55,6 +55,24 @@
       {{ error }}
     </BaseAlert>
   </BaseModal>
+
+  <!-- Publishing Progress Modal -->
+  <PublishingProgressModal
+    :visible="showPublishingModal"
+    :platforms="publishingProgress"
+    :is-complete="publishingComplete"
+    @create-another="handlePublishingModalCreateAnother"
+    @close="handlePublishingModalClose"
+  />
+
+  <!-- Success Modal -->
+  <SuccessModal
+    :visible="showSuccessModal"
+    :published-urls="publishedUrls"
+    :failed-platforms="failedPlatforms"
+    @create-another="handleSuccessModalCreateAnother"
+    @close="handleSuccessModalClose"
+  />
 </template>
 
 <script setup lang="ts">
@@ -64,12 +82,20 @@ import { useI18n } from 'vue-i18n'
 import BaseModal from './BaseModal.vue'
 import BaseAlert from './BaseAlert.vue'
 import UnifiedSchedulePost from './UnifiedSchedulePost.vue'
+import SuccessModal from './SuccessModal.vue'
+import PublishingProgressModal from './PublishingProgressModal.vue'
 import { api } from '../services/api'
 import { useSocialAccounts } from '../composables/useSocialAccounts'
+import { useFacebookStore } from '@/stores/facebook'
+import { useInstagramStore } from '@/stores/instagram'
+import { useNotificationStore } from '@/stores/notifications'
 
 useI18n()
 
 const router = useRouter()
+const facebookStore = useFacebookStore()
+const instagramStore = useInstagramStore()
+const notificationStore = useNotificationStore()
 
 // Social accounts composable
 const { isConnected } = useSocialAccounts()
@@ -92,6 +118,21 @@ const formData = ref({
 
 const scheduling = ref(false)
 const error = ref('')
+
+// Publishing progress modal state
+const showPublishingModal = ref(false)
+const publishingProgress = ref<Array<{
+  platform: string
+  status: 'pending' | 'publishing' | 'success' | 'error'
+  url?: string
+  error?: string
+}>>([])
+const publishingComplete = ref(false)
+
+// Success modal state
+const showSuccessModal = ref(false)
+const publishedUrls = ref<Record<string, string>>({})
+const failedPlatforms = ref<Array<{ platform: string; error: string }>>([])
 
 // Compute initial platforms from favoritePost
 const initialPlatforms = computed(() => {
@@ -136,19 +177,161 @@ const handleUnifiedPublish = async (data: {
     scheduling.value = true
     error.value = ''
 
-    let response
-
     if (data.publishType === 'now') {
-      // Publish immediately
-      const now = new Date()
-      const publishData = {
-        favorite_post_id: props.favoritePost.id,
-        published_date: now.toISOString().split('T')[0],
-        published_time: `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`,
-        timezone: data.timezone,
-        platforms: data.platforms,
+      // Initialize publishing progress
+      publishingProgress.value = data.platforms.map(platform => ({
+        platform,
+        status: 'pending' as const,
+        url: undefined,
+        error: undefined
+      }))
+      publishingComplete.value = false
+
+      // Show publishing modal immediately
+      showPublishingModal.value = true
+
+      // Publish immediately to all platforms
+      const results: Array<{ platform: string; success: boolean; url?: string; error?: string }> = []
+      const postUrls: Record<string, string> = {}
+
+      // Build the message with post text and hashtags
+      const hashtags = props.favoritePost.hashtags || []
+      const postText = props.favoritePost.post_text || ''
+      const message = hashtags.length > 0
+        ? `${postText}\n\n${hashtags.map((h: string) => h.startsWith('#') ? h : `#${h}`).join(' ')}`
+        : postText
+
+      // Publish to each platform
+      for (const platform of data.platforms) {
+        // Update status to "publishing"
+        const progressItem = publishingProgress.value.find(p => p.platform === platform)
+        if (progressItem) {
+          progressItem.status = 'publishing'
+        }
+        if (platform === 'facebook') {
+          const selectedPage = facebookStore.connectedPages[0]
+          if (!selectedPage) {
+            results.push({ platform: 'facebook', success: false, error: 'No Facebook page connected' })
+            continue
+          }
+
+          try {
+            const isVideo = props.favoritePost.content_type === 'video'
+            const response = await api.postToFacebook(
+              selectedPage.pageId,
+              message,
+              isVideo ? undefined : props.favoritePost.media_url,
+              isVideo ? props.favoritePost.media_url : undefined,
+              props.favoritePost.content_type
+            )
+
+            const postUrl = (response as any).postUrl || response.data?.postUrl
+            if (response.success && postUrl) {
+              results.push({ platform: 'facebook', success: true, url: postUrl })
+              postUrls.facebook = postUrl
+              notificationStore.addPublishSuccess('facebook', postUrl)
+              // Update progress
+              if (progressItem) {
+                progressItem.status = 'success'
+                progressItem.url = postUrl
+              }
+            } else {
+              const errorMsg = response.error || 'Failed to publish'
+              results.push({ platform: 'facebook', success: false, error: errorMsg })
+              // Update progress
+              if (progressItem) {
+                progressItem.status = 'error'
+                progressItem.error = errorMsg
+              }
+            }
+          } catch (err: any) {
+            const errorMsg = err.message || 'Failed to publish'
+            results.push({ platform: 'facebook', success: false, error: errorMsg })
+            // Update progress
+            if (progressItem) {
+              progressItem.status = 'error'
+              progressItem.error = errorMsg
+            }
+          }
+        } else if (platform === 'instagram') {
+          const instagramAccount = instagramStore.connectedAccounts[0]
+          if (!instagramAccount) {
+            results.push({ platform: 'instagram', success: false, error: 'No Instagram account connected' })
+            continue
+          }
+
+          try {
+            const isVideo = props.favoritePost.content_type === 'video'
+            const response = await api.postToInstagram(
+              instagramAccount.instagramAccountId,
+              message,
+              isVideo ? undefined : props.favoritePost.media_url,
+              isVideo ? props.favoritePost.media_url : undefined,
+              props.favoritePost.content_type
+            )
+
+            const postUrl = (response as any).postUrl || response.data?.postUrl
+            if (response.success && postUrl) {
+              results.push({ platform: 'instagram', success: true, url: postUrl })
+              postUrls.instagram = postUrl
+              notificationStore.addPublishSuccess('instagram', postUrl)
+              // Update progress
+              if (progressItem) {
+                progressItem.status = 'success'
+                progressItem.url = postUrl
+              }
+            } else {
+              const errorMsg = response.error || 'Failed to publish'
+              results.push({ platform: 'instagram', success: false, error: errorMsg })
+              // Update progress
+              if (progressItem) {
+                progressItem.status = 'error'
+                progressItem.error = errorMsg
+              }
+            }
+          } catch (err: any) {
+            const errorMsg = err.message || 'Failed to publish'
+            results.push({ platform: 'instagram', success: false, error: errorMsg })
+            // Update progress
+            if (progressItem) {
+              progressItem.status = 'error'
+              progressItem.error = errorMsg
+            }
+          }
+        } else {
+          results.push({ platform, success: false, error: `${platform} publishing not yet supported` })
+        }
       }
-      response = await api.createPublishedPost(publishData)
+
+      // Mark publishing as complete
+      publishingComplete.value = true
+
+      // Check results
+      const successfulPlatforms = results.filter(r => r.success)
+      const failed = results.filter(r => !r.success)
+
+      if (successfulPlatforms.length > 0) {
+        // Save to calendar with published status
+        const now = new Date()
+        try {
+          await api.createPublishedPost({
+            favorite_post_id: props.favoritePost.id,
+            published_date: now.toISOString().split('T')[0],
+            published_time: `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`,
+            platforms: successfulPlatforms.map(r => r.platform),
+            timezone: data.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone,
+            platform_post_urls: postUrls
+          })
+        } catch (calendarErr) {
+          console.warn('Failed to save to calendar:', calendarErr)
+        }
+
+        // Close the main schedule modal (publishing progress modal stays open)
+        closeModal()
+      } else {
+        // All platforms failed
+        error.value = failed.map(f => f.error).join('. ')
+      }
     } else {
       // Schedule for later
       const scheduleData = {
@@ -159,19 +342,20 @@ const handleUnifiedPublish = async (data: {
         notes: formData.value.notes || undefined,
         platforms: data.platforms,
       }
-      response = await api.schedulePost(scheduleData)
-    }
+      const response = await api.schedulePost(scheduleData)
 
-    if (response.success) {
-      emit('scheduled', { success: true, publishType: data.publishType })
-      closeModal()
-      router.push('/scheduler')
-    } else {
-      error.value = response.error || (data.publishType === 'now' ? 'Failed to publish post' : 'Failed to schedule post')
+      if (response.success) {
+        emit('scheduled', { success: true, publishType: data.publishType })
+        closeModal()
+        router.push('/scheduler')
+      } else {
+        error.value = response.error || 'Failed to schedule post'
+      }
     }
 
   } catch (err: any) {
     error.value = err.message || 'Failed to process post'
+    publishingComplete.value = true
   } finally {
     scheduling.value = false
   }
@@ -180,6 +364,30 @@ const handleUnifiedPublish = async (data: {
 const truncateText = (text: string, maxLength: number): string => {
   if (text.length <= maxLength) return text
   return text.substring(0, maxLength) + '...'
+}
+
+// Publishing progress modal handlers
+function handlePublishingModalCreateAnother() {
+  showPublishingModal.value = false
+  publishingProgress.value = []
+  publishingComplete.value = false
+  router.push('/posts/create')
+}
+
+function handlePublishingModalClose() {
+  showPublishingModal.value = false
+  publishingProgress.value = []
+  publishingComplete.value = false
+}
+
+// Success modal handlers
+function handleSuccessModalCreateAnother() {
+  showSuccessModal.value = false
+  router.push('/posts/create')
+}
+
+function handleSuccessModalClose() {
+  showSuccessModal.value = false
 }
 </script>
 

@@ -55,6 +55,7 @@ export default {
     continue: 'Continue',
     retry: 'Retry',
     noImage: 'No image',
+    videoNotSupported: 'Your browser does not support the video tag.',
     created: 'Created',
     saving: 'Saving...',
     sending: 'Sending...',
@@ -117,7 +118,7 @@ export default {
     loginSubtitle: 'Sign in to your account',
     brandSubtitle: 'AI-Powered Content for Restaurants',
     email: 'Email',
-    emailPlaceholder: 'your{\'@\'}email.com',
+    emailPlaceholder: "your{'@'}email.com",
     password: 'Password',
     passwordPlaceholder: 'Enter your password',
     forgotPassword: 'Forgot password?',
@@ -141,7 +142,8 @@ export default {
     orContinueWithEmail: 'or continue with email',
     orContinueWith: 'or',
     signInWithEmail: 'Sign in with email',
-    emailLoginDescription: 'Enter your email and we\'ll send you a link to sign in. No password needed.',
+    emailLoginDescription:
+      "Enter your email and we'll send you a link to sign in. No password needed.",
     sendLoginLink: 'Send Login Link',
     checkEmailForLink: 'Check your email for a login link',
     checkYourEmail: 'Check your email',
@@ -160,7 +162,8 @@ export default {
   // Waitlist Landing Page
   waitlist: {
     headline: "Your restaurant's automated social media manager",
-    subheadline: 'Create stunning food content, schedule posts, and grow your restaurant\'s presence—all with AI.',
+    subheadline:
+      "Create stunning food content, schedule posts, and grow your restaurant's presence—all with AI.",
     emailPlaceholder: 'Enter your email',
     joinButton: 'Join the Waitlist',
     joining: 'Joining...',
@@ -250,6 +253,7 @@ export default {
       title: 'Set It & Forget It',
       headline: 'Your posts publish automatically. Really.',
       description: "No more remembering to post. No more logging into apps. SocialChef handles everything - from creation to publishing. You'll look like you have a dedicated social media manager.",
+      imagePlaceholder: 'Split screen - stressed owner on left, relaxed owner on right with posts auto-publishing',
       feature1: 'Posts go live while you cook',
       feature2: 'Works with Instagram & Facebook',
       feature3: 'Schedule weeks in advance',
@@ -259,20 +263,23 @@ export default {
     benefits: {
       title: 'Why Restaurant Owners Love SocialChef',
       time: {
-        title: 'Save Countless Hours',
+        title: 'Save 10+ Hours Per Week',
         description: 'Stop wrestling with content creation. Spend that time on what matters - your food and customers.',
       },
       professional: {
         title: 'Always Look Professional',
-        description: 'Every post looks like it was made by a pro designer. Because it was. An AI one.',
+        description:
+          'Every post looks like it was made by a pro designer. Because it was. An AI one.',
       },
       growth: {
         title: 'Grow Your Following',
-        description: 'Consistent posting means more engagement. More engagement means more customers.',
+        description:
+          'Consistent posting means more engagement. More engagement means more customers.',
       },
       easy: {
         title: 'No Tech Skills Needed',
-        description: 'If you can take a photo of food, you can use SocialChef. That\'s the whole skill requirement.',
+        description:
+          "If you can take a photo of food, you can use SocialChef. That's the whole skill requirement.",
       },
     },
 
@@ -282,7 +289,8 @@ export default {
       stat1: 'Restaurants',
       stat2: 'Posts Generated',
       stat3: 'Rating',
-      testimonial1Quote: 'I used to spend hours on Instagram. Now I just pick my dish and it\'s done.',
+      testimonial1Quote:
+        "I used to spend hours on Instagram. Now I just pick my dish and it's done.",
       testimonial2Quote: 'My customers think I hired a marketing team. Nope, just SocialChef.',
       testimonial3Quote: 'Finally, something that actually saves time. Not another app to learn.',
     },
@@ -343,13 +351,16 @@ export default {
     howItWorks: 'How It Works',
     howItWorksSubtitle: 'Three simple steps to amazing content',
     step1Title: 'Search & Save',
-    step1Description: 'Find restaurants using Google Places and save them to your library. Access menus, photos, and brand details instantly.',
+    step1Description:
+      'Find restaurants using Google Places and save them to your library. Access menus, photos, and brand details instantly.',
     step1Button: 'Search Now',
     step2Title: 'Cook Up Content',
-    step2Description: 'Generate AI-powered images, videos, and captions. Build a content library for your restaurants.',
+    step2Description:
+      'Generate AI-powered images, videos, and captions. Build a content library for your restaurants.',
     step2Button: 'Start Cooking',
     step3Title: 'Schedule Posts',
-    step3Description: 'Plan your content calendar and publish directly to Facebook. Schedule posts in advance and maintain consistent engagement.',
+    step3Description:
+      'Plan your content calendar and publish directly to Facebook. Schedule posts in advance and maintain consistent engagement.',
     step3Button: 'View Calendar',
     yourAccount: 'Your Account',
     email: 'Email:',
@@ -365,7 +376,8 @@ export default {
 
     // Welcome Modal
     welcomeModalTitle: 'Welcome to SocialChef!',
-    welcomeModalMessage: "Looks like you haven't added a restaurant yet. Let's get started by adding your first restaurant and creating some amazing content!",
+    welcomeModalMessage:
+      "Looks like you haven't added a restaurant yet. Let's get started by adding your first restaurant and creating some amazing content!",
     welcomeModalButton: "Let's Go",
 
     // Stats
@@ -397,7 +409,7 @@ export default {
     // Platform descriptions
     facebookDescription: 'Connect to post directly to your Facebook pages and reach your audience',
     instagramDescription: 'Share stunning visuals and stories with your Instagram followers',
-    tiktokDescription: 'Create engaging short-form videos for TikTok\'s creative community',
+    tiktokDescription: "Create engaging short-form videos for TikTok's creative community",
     twitterDescription: 'Share quick updates and engage in real-time conversations',
     linkedinDescription: 'Build your professional network and share business updates',
 
@@ -498,7 +510,8 @@ export default {
   // Restaurant Search View
   restaurantSearch: {
     title: 'Discover Restaurants',
-    subtitle: 'Search and analyze restaurants using Google Places. Build your database with comprehensive insights.',
+    subtitle:
+      'Search and analyze restaurants using Google Places. Build your database with comprehensive insights.',
     searchPlaceholder: 'Search restaurants by name or location...',
     searchButton: 'Search',
     noResults: 'No restaurants found',
@@ -570,7 +583,8 @@ export default {
     nearbyCompetitors: 'Nearby Competitors',
     competitorsCount: '{count} within {radius} km',
     findingCompetitors: 'Finding nearby competitors...',
-    competitorsFound: 'Found {count} similar restaurant near {name} | Found {count} similar restaurants near {name}',
+    competitorsFound:
+      'Found {count} similar restaurant near {name} | Found {count} similar restaurants near {name}',
     noCompetitorsFound: 'No competitors found within {radius} km',
 
     // Menu
@@ -652,7 +666,7 @@ export default {
         'Secure OAuth authentication',
       ],
 
-      readyTitle: 'You\'re All Set!',
+      readyTitle: "You're All Set!",
       readyDescription: 'Ready to create amazing content?',
       readyDetails: [
         'Start by searching for your restaurant',
@@ -681,37 +695,61 @@ export default {
 
       // Questions
       q1Question: 'What is the first step to start creating content on SocialChef?',
-      q1Options: ['Connect social media accounts', 'Search and save a restaurant', 'Generate AI content', 'Schedule posts'],
-      q1Explanation: 'You need to search and save a restaurant first to access its menu items and brand details for content creation.',
+      q1Options: [
+        'Connect social media accounts',
+        'Search and save a restaurant',
+        'Generate AI content',
+        'Schedule posts',
+      ],
+      q1Explanation:
+        'You need to search and save a restaurant first to access its menu items and brand details for content creation.',
 
       q2Question: 'Which AI capabilities does SocialChef offer?',
-      q2Options: ['Image generation only', 'Caption writing only', 'Images, videos, and captions', 'Menu design only'],
-      q2Explanation: 'SocialChef provides comprehensive AI-powered content generation including images, videos, and compelling captions with hashtags.',
+      q2Options: [
+        'Image generation only',
+        'Caption writing only',
+        'Images, videos, and captions',
+        'Menu design only',
+      ],
+      q2Explanation:
+        'SocialChef provides comprehensive AI-powered content generation including images, videos, and compelling captions with hashtags.',
 
       q3Question: 'Where does SocialChef get restaurant information from?',
-      q3Options: ['Manual entry only', 'Google Places and delivery platforms', 'Social media only', 'Custom databases'],
-      q3Explanation: 'SocialChef integrates with Google Places for basic info and scans Wolt/Foodora for menu items, providing comprehensive restaurant data.',
+      q3Options: [
+        'Manual entry only',
+        'Google Places and delivery platforms',
+        'Social media only',
+        'Custom databases',
+      ],
+      q3Explanation:
+        'SocialChef integrates with Google Places for basic info and scans Wolt/Foodora for menu items, providing comprehensive restaurant data.',
 
       q4Question: 'What can you do with generated content on SocialChef?',
-      q4Options: ['Download only', 'Schedule only', 'Save, schedule, and publish to Facebook', 'Email only'],
-      q4Explanation: 'All generated content is automatically saved. You can schedule posts in advance and publish directly to Facebook—all from one platform.',
+      q4Options: [
+        'Download only',
+        'Schedule only',
+        'Save, schedule, and publish to Facebook',
+        'Email only',
+      ],
+      q4Explanation:
+        'All generated content is automatically saved. You can schedule posts in advance and publish directly to Facebook—all from one platform.',
     },
 
     // Simple onboarding flow
     simple: {
       welcome: 'Welcome to SocialChef!',
-      letsGetStarted: 'Let\'s get you set up to create amazing content',
+      letsGetStarted: "Let's get you set up to create amazing content",
       selectRestaurant: 'First, select a restaurant to get started',
       noRestaurantsYet: 'No restaurants yet',
       searchRestaurants: 'Search Restaurants',
-      generateFirstPost: 'Great! Now let\'s generate your first post',
+      generateFirstPost: "Great! Now let's generate your first post",
       selectMenuItem: 'Select a menu item and platform below',
       generatingPost: 'Generating your first post...',
       postGenerated: 'Your post is ready!',
       connectFacebook: 'Connect Facebook to publish',
       connectFacebookDescription: 'Connect your Facebook account to start publishing posts',
       skipForNow: 'Skip for now',
-      allSet: 'You\'re all set!',
+      allSet: "You're all set!",
       startCreating: 'Start creating amazing content',
       goToDashboard: 'Go to Dashboard',
       // Stepper labels
@@ -737,10 +775,12 @@ export default {
       selectPlatforms: 'Select platforms:',
       selectPlatformSingle: 'Select platform:',
       postPreview: 'Post Preview',
-      connectionWarning: 'You haven\'t connected any social accounts yet. Go back to connect Facebook/Instagram first, or skip to continue without publishing.',
+      connectionWarning:
+        "You haven't connected any social accounts yet. Go back to connect Facebook/Instagram first, or skip to continue without publishing.",
       // Completion modal
       congratulations: 'Congratulations!',
-      completionMessage: 'You\'re all set up! You can now create amazing social media posts for your restaurant.',
+      completionMessage:
+        "You're all set up! You can now create amazing social media posts for your restaurant.",
       restaurantAdded: 'Restaurant added',
       firstPostCreated: 'First post created',
       accountsConnected: 'Accounts connected',
@@ -771,7 +811,7 @@ export default {
     selectRestaurantButton: 'Select Restaurant',
     back: '← Back',
     selectPlatform: 'Select Platform',
-    selectPlatformSubtitle: 'Choose where you\'ll post this content',
+    selectPlatformSubtitle: "Choose where you'll post this content",
     menuItemsTitle: 'Menu Items ({count})',
     menuItemsSubtitle: 'Select one or more items to create combo prompts',
     campaignContext: 'Campaign Context (Optional)',
@@ -862,7 +902,7 @@ export default {
     resolution720p: '720p',
     resolution1080p: '1080p',
     generatingVideoProgress: 'Generating Video... {progress}%',
-    generateVideoButton: 'Generate Video (5 credits)',
+    generateVideoButton: 'Generate Video',
     generatedVideoTitle: 'Generated Video:',
     downloadVideo: 'Download Video',
 
@@ -902,37 +942,42 @@ export default {
       behindTheScenes: {
         name: 'Behind the Scenes',
         description: 'Authentic kitchen moment',
-        preview: 'Documentary-style, genuine atmosphere',
+        preview: 'Documentary-style cooking process (works for images & videos)',
       },
       cleanStrict: {
         name: 'Clean Strict',
         description: 'Professional studio quality',
-        preview: 'Clean surface, color corrected',
+        preview: 'Clean surface, cinematic lighting (works for images & videos)',
       },
       zoomIn: {
         name: 'Zoom In',
         description: 'Extreme macro close-up',
-        preview: 'Texture details, vignette effect',
+        preview: 'Texture details, ASMR-quality (works for images & videos)',
       },
       oneBite: {
         name: 'One Bite',
         description: 'Ready-to-eat presentation',
-        preview: 'Utensil holding a tempting piece',
+        preview: 'Satisfying bite reveal (works for images & videos)',
       },
       studioShot: {
         name: 'Studio Shot',
         description: 'Professional advertisement look',
-        preview: 'Hero shot, minimal background',
+        preview: '360-degree orbit, premium quality (works for images & videos)',
       },
       infographic: {
         name: 'Infographic',
         description: 'Deconstructed ingredients view',
-        preview: 'Labeled layers and flavors',
+        preview: 'Ingredient assembly or labeled layout (works for images & videos)',
+      },
+      placeOnTable: {
+        name: 'Place on Table',
+        description: 'Dish being served',
+        preview: 'Hands placing dish on table, creates anticipation (VIDEO ONLY)',
       },
       custom: {
         name: 'Custom',
         description: 'Write your own prompt',
-        preview: 'Full creative control',
+        preview: 'Full creative control (works for images & videos)',
       },
     },
 
@@ -955,7 +1000,8 @@ export default {
     step1: {
       title: 'Pick Your Dish or Upload Image',
       subtitle: 'Choose a menu item or upload your own image',
-      description: 'An image is required to create your post. Select a dish from your menu or upload your own photo.',
+      description:
+        'An image is required to create your post. Select a dish from your menu or upload your own photo.',
       empty: 'No menu items available. Upload an image to continue.',
       imageRequired: 'Please select a menu item or upload an image to continue',
       nextButton: 'Customize Post',
@@ -968,6 +1014,15 @@ export default {
       mediaTypeLabel: 'Media Type',
       imageOption: 'Image',
       videoOption: 'Video',
+      imageCredits: '1 credit',
+      videoCredits: '5 credits',
+      videoOptionsLabel: 'Video Settings',
+      durationLabel: 'Duration',
+      seconds: 's',
+      aspectRatioLabel: 'Aspect Ratio',
+      portrait: 'Portrait',
+      landscape: 'Landscape',
+      includeAudio: 'Include AI-generated audio',
       promoLabel: 'Special Offer (Optional)',
       promoPlaceholder: 'e.g., 20% OFF, COMBO DEAL, NEW ITEM...',
       logoLabel: 'Restaurant Logo',
@@ -981,6 +1036,7 @@ export default {
       generatingTitle: 'Creating your post',
       generatingSubtitle: 'Designing your image and writing captions',
       generateButton: 'Generate Image',
+      generateVideoButton: 'Generate Video',
     },
     upload: {
       button: 'Upload Your Own Image',
@@ -1340,7 +1396,8 @@ export default {
     title: 'Connect Social Accounts',
     subtitle: 'Link your social media accounts to post content',
     pageTitle: 'Connect Social Media Accounts',
-    pageSubtitle: 'Connect your social media accounts to start posting content directly from our platform',
+    pageSubtitle:
+      'Connect your social media accounts to start posting content directly from our platform',
     back: 'Back',
     instagram: 'Instagram',
     facebook: 'Facebook',
@@ -1498,6 +1555,7 @@ export default {
     create: {
       captionGenerationFailed: 'Caption Generation Failed',
       imageGenerationFailed: 'Image Generation Failed',
+      videoGenerationFailed: 'Video Generation Failed',
       generationFailed: 'Generation Failed',
       unexpectedError: 'An unexpected error occurred. Please try again.',
     },
@@ -1526,7 +1584,8 @@ export default {
     welcomeTitle: 'Welcome!',
     welcomeSubtitle: "Let's get started by adding your first restaurant.",
     addFirstRestaurant: 'Add Your First Restaurant',
-    addFirstRestaurantDescription: "Search for your restaurant and we'll automatically import your menu and branding.",
+    addFirstRestaurantDescription:
+      "Search for your restaurant and we'll automatically import your menu and branding.",
     noRestaurantPrompt: 'Add a restaurant to start creating posts.',
     createPost: 'Create Post',
   },
@@ -1541,13 +1600,17 @@ export default {
     switchToEasy: 'Switch to Easy Mode',
     switchRestaurant: 'Switch',
     imageError: 'Failed to generate image. Please try again.',
+    videoError: 'Failed to generate video. Please try again.',
+    videoTimeout: 'Video generation timed out. Please try again.',
     noPrompts: 'No prompts were generated',
     generateError: 'Failed to generate content',
     publishError: 'Failed to publish to Facebook',
     connectError: 'Failed to connect Facebook',
     noFacebookPage: 'No Facebook page connected',
-    facebookReconnectRequired: 'Your Facebook connection has expired. Please reconnect to continue.',
-    facebookReconnectMessage: 'Your Facebook connection has expired. Please reconnect to publish or schedule posts.',
+    facebookReconnectRequired:
+      'Your Facebook connection has expired. Please reconnect to continue.',
+    facebookReconnectMessage:
+      'Your Facebook connection has expired. Please reconnect to publish or schedule posts.',
     reconnectFacebook: 'Reconnect Facebook',
     platformNotSupported: 'Publishing to this platform is not yet supported',
     noPlatformSelected: 'Please select at least one platform',
@@ -1605,7 +1668,8 @@ export default {
     cancelSubscription: 'Cancel Subscription',
     upgradeToPremium: 'Upgrade to Premium',
     billingInformation: 'Billing Information',
-    billingDescription: 'Billing is managed through Stripe. Click below to manage your payment methods, view invoices, and update billing information.',
+    billingDescription:
+      'Billing is managed through Stripe. Click below to manage your payment methods, view invoices, and update billing information.',
     manageBilling: 'Manage Billing',
     loading: 'Loading...',
     accountSecurity: 'Account Security',
@@ -1615,11 +1679,13 @@ export default {
     deleteAccountDanger: 'Delete Account',
     deleteAccountDescription: 'Permanently delete your account and all data',
     cancelSubscriptionTitle: 'Cancel Subscription',
-    cancelSubscriptionMessage: 'Are you sure you want to cancel your subscription? You\'ll still have access until the end of your current billing period.',
+    cancelSubscriptionMessage:
+      "Are you sure you want to cancel your subscription? You'll still have access until the end of your current billing period.",
     keepSubscription: 'Keep Subscription',
     deleteAccountTitle: 'Delete Account',
-    deleteAccountMessage: 'This action cannot be undone. All your data, restaurants, and generated content will be permanently deleted.',
-    typeDeleteConfirm: 'Type \'DELETE\' to confirm',
+    deleteAccountMessage:
+      'This action cannot be undone. All your data, restaurants, and generated content will be permanently deleted.',
+    typeDeleteConfirm: "Type 'DELETE' to confirm",
     typeDeletePlaceholder: 'DELETE',
     deleteMyAccount: 'Delete My Account',
     failedToOpenPortal: 'Failed to open billing portal',
@@ -1750,7 +1816,8 @@ export default {
     platformWarning: 'Please select a platform to publish to',
     platformLimited: 'Only Facebook is currently supported. Other platforms coming soon.',
     selectAtLeastOne: 'Please select at least one platform',
-    onlyFacebookSupported: 'Note: Only Facebook posting is currently active. Other platforms coming soon.',
+    onlyFacebookSupported:
+      'Note: Only Facebook posting is currently active. Other platforms coming soon.',
     connected: 'Connected',
     notConnected: 'Not connected',
     comingSoon: 'Coming soon',
@@ -1818,6 +1885,18 @@ export default {
     loadingTitle: 'Cooking Up Your Post...',
   },
 
+  // Publishing Progress Modal
+  publishing: {
+    title: 'Publishing Your Post...',
+    message: 'Please wait while we publish your post to the selected platforms.',
+    successTitle: 'Congratulations!',
+    successMessage: 'Your post has been published successfully!',
+    errorTitle: 'Publishing Failed',
+    errorMessage: 'Failed to publish to any platform.',
+    viewPost: 'View Post',
+    createAnother: 'Create Another Post',
+  },
+
   // Sidebar Navigation
   sidebar: {
     menu: 'Menu',
@@ -1883,27 +1962,37 @@ export default {
     sections: {
       introduction: {
         title: '1. Introduction',
-        content: 'Welcome to SocialChef ("we," "our," or "us"). We are committed to protecting your privacy and ensuring the security of your personal information. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our AI-powered social media management platform for restaurants.',
+        content:
+          'Welcome to SocialChef ("we," "our," or "us"). We are committed to protecting your privacy and ensuring the security of your personal information. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our AI-powered social media management platform for restaurants.',
       },
       informationWeCollect: {
         title: '2. Information We Collect',
         intro: 'We collect the following types of information:',
         items: {
-          accountInfo: 'Account Information: Name, email address, password, and profile details when you create an account.',
-          socialMedia: 'Social Media Data: When you connect your social media accounts (Facebook, Instagram, etc.), we access the data necessary to post content on your behalf, including page information and posting permissions.',
-          content: 'Content Data: Images, captions, hashtags, and other content you create or upload through our platform.',
-          usage: 'Usage Information: How you interact with our platform, including features used, posts created, and scheduling preferences.',
-          device: 'Device Information: Browser type, IP address, device identifiers, and operating system for security and analytics purposes.',
+          accountInfo:
+            'Account Information: Name, email address, password, and profile details when you create an account.',
+          socialMedia:
+            'Social Media Data: When you connect your social media accounts (Facebook, Instagram, etc.), we access the data necessary to post content on your behalf, including page information and posting permissions.',
+          content:
+            'Content Data: Images, captions, hashtags, and other content you create or upload through our platform.',
+          usage:
+            'Usage Information: How you interact with our platform, including features used, posts created, and scheduling preferences.',
+          device:
+            'Device Information: Browser type, IP address, device identifiers, and operating system for security and analytics purposes.',
         },
       },
       howWeUse: {
         title: '3. How We Use Your Information',
         intro: 'We use your information to:',
         items: {
-          provideService: 'Provide and operate our AI-powered content generation and social media management services.',
-          improveService: 'Improve and personalize your experience, including training our AI models to better serve restaurant content needs.',
-          communicate: 'Send you service-related communications, updates, and marketing materials (with your consent).',
-          security: 'Ensure the security of our platform and protect against fraud or unauthorized access.',
+          provideService:
+            'Provide and operate our AI-powered content generation and social media management services.',
+          improveService:
+            'Improve and personalize your experience, including training our AI models to better serve restaurant content needs.',
+          communicate:
+            'Send you service-related communications, updates, and marketing materials (with your consent).',
+          security:
+            'Ensure the security of our platform and protect against fraud or unauthorized access.',
           legal: 'Comply with legal obligations and enforce our terms of service.',
         },
       },
@@ -1911,20 +2000,25 @@ export default {
         title: '4. Data Sharing and Disclosure',
         intro: 'We may share your information with:',
         items: {
-          socialPlatforms: 'Social Media Platforms: To publish content on your connected accounts (Facebook, Instagram, etc.).',
-          serviceProviders: 'Service Providers: Third-party vendors who help us operate our platform (hosting, analytics, payment processing).',
+          socialPlatforms:
+            'Social Media Platforms: To publish content on your connected accounts (Facebook, Instagram, etc.).',
+          serviceProviders:
+            'Service Providers: Third-party vendors who help us operate our platform (hosting, analytics, payment processing).',
           legal: 'Legal Requirements: When required by law, court order, or government request.',
-          businessTransfer: 'Business Transfers: In connection with a merger, acquisition, or sale of assets.',
+          businessTransfer:
+            'Business Transfers: In connection with a merger, acquisition, or sale of assets.',
         },
         noSelling: 'We do not sell your personal information to third parties.',
       },
       dataSecurity: {
         title: '5. Data Security',
-        content: 'We implement industry-standard security measures to protect your information, including encryption, secure servers, and regular security audits. However, no method of transmission over the Internet is 100% secure, and we cannot guarantee absolute security.',
+        content:
+          'We implement industry-standard security measures to protect your information, including encryption, secure servers, and regular security audits. However, no method of transmission over the Internet is 100% secure, and we cannot guarantee absolute security.',
       },
       dataRetention: {
         title: '6. Data Retention',
-        content: 'We retain your personal information for as long as your account is active or as needed to provide you services. You may request deletion of your data at any time by contacting us or through your account settings.',
+        content:
+          'We retain your personal information for as long as your account is active or as needed to provide you services. You may request deletion of your data at any time by contacting us or through your account settings.',
       },
       yourRights: {
         title: '7. Your Rights',
@@ -1934,29 +2028,35 @@ export default {
           correction: 'Correction: Request correction of inaccurate or incomplete information.',
           deletion: 'Deletion: Request deletion of your personal information.',
           portability: 'Portability: Request a copy of your data in a portable format.',
-          withdraw: 'Withdraw Consent: Withdraw consent for processing where consent is the legal basis.',
+          withdraw:
+            'Withdraw Consent: Withdraw consent for processing where consent is the legal basis.',
         },
         contact: 'To exercise these rights, please contact us at the email address below.',
       },
       cookies: {
         title: '8. Cookies and Tracking',
-        content: 'We use cookies and similar technologies to improve your experience, analyze usage, and personalize content. You can control cookie preferences through your browser settings. Some features may not function properly if cookies are disabled.',
+        content:
+          'We use cookies and similar technologies to improve your experience, analyze usage, and personalize content. You can control cookie preferences through your browser settings. Some features may not function properly if cookies are disabled.',
       },
       thirdParty: {
         title: '9. Third-Party Links',
-        content: 'Our platform may contain links to third-party websites or services. We are not responsible for the privacy practices of these external sites. We encourage you to review their privacy policies before providing any personal information.',
+        content:
+          'Our platform may contain links to third-party websites or services. We are not responsible for the privacy practices of these external sites. We encourage you to review their privacy policies before providing any personal information.',
       },
       children: {
-        title: '10. Children\'s Privacy',
-        content: 'Our services are not intended for individuals under 18 years of age. We do not knowingly collect personal information from children. If you believe we have collected information from a child, please contact us immediately.',
+        title: "10. Children's Privacy",
+        content:
+          'Our services are not intended for individuals under 18 years of age. We do not knowingly collect personal information from children. If you believe we have collected information from a child, please contact us immediately.',
       },
       changes: {
         title: '11. Changes to This Policy',
-        content: 'We may update this Privacy Policy from time to time. We will notify you of significant changes by posting the new policy on our platform and updating the "Last Updated" date. Your continued use of our services after changes constitutes acceptance of the updated policy.',
+        content:
+          'We may update this Privacy Policy from time to time. We will notify you of significant changes by posting the new policy on our platform and updating the "Last Updated" date. Your continued use of our services after changes constitutes acceptance of the updated policy.',
       },
       contact: {
         title: '12. Contact Us',
-        content: 'If you have questions about this Privacy Policy or our data practices, please contact us at:',
+        content:
+          'If you have questions about this Privacy Policy or our data practices, please contact us at:',
       },
     },
   },
@@ -1968,15 +2068,18 @@ export default {
     sections: {
       acceptance: {
         title: '1. Acceptance of Terms',
-        content: 'By accessing or using SocialChef ("Service"), you agree to be bound by these Terms of Service ("Terms"). If you do not agree to these Terms, please do not use our Service. These Terms apply to all users, including visitors, registered users, and subscribers.',
+        content:
+          'By accessing or using SocialChef ("Service"), you agree to be bound by these Terms of Service ("Terms"). If you do not agree to these Terms, please do not use our Service. These Terms apply to all users, including visitors, registered users, and subscribers.',
       },
       description: {
         title: '2. Description of Service',
-        content: 'SocialChef is an AI-powered social media management platform designed specifically for restaurants. Our Service enables you to generate marketing content, create images and captions, schedule posts, and publish content to connected social media platforms. Features may vary based on your subscription plan.',
+        content:
+          'SocialChef is an AI-powered social media management platform designed specifically for restaurants. Our Service enables you to generate marketing content, create images and captions, schedule posts, and publish content to connected social media platforms. Features may vary based on your subscription plan.',
       },
       eligibility: {
         title: '3. Eligibility',
-        content: 'You must be at least 18 years old and capable of forming a binding contract to use our Service. By using SocialChef, you represent and warrant that you meet these eligibility requirements.',
+        content:
+          'You must be at least 18 years old and capable of forming a binding contract to use our Service. By using SocialChef, you represent and warrant that you meet these eligibility requirements.',
       },
       account: {
         title: '4. Account Registration and Security',
@@ -1998,52 +2101,67 @@ export default {
           spam: 'Send spam, unsolicited messages, or engage in deceptive practices.',
           interfere: 'Interfere with or disrupt the Service or its infrastructure.',
           impersonate: 'Impersonate any person or entity or misrepresent your affiliation.',
-          reverse: 'Attempt to reverse engineer, decompile, or extract source code from our Service.',
+          reverse:
+            'Attempt to reverse engineer, decompile, or extract source code from our Service.',
         },
       },
       content: {
         title: '6. User Content',
-        ownership: 'You retain ownership of any content you create or upload to SocialChef. However, by using our Service, you grant us a limited license to use, store, and process your content solely for the purpose of providing the Service.',
-        license: 'For AI-generated content created through our platform, you receive a license to use such content for your business purposes, subject to any restrictions in your subscription plan.',
-        responsibility: 'You are solely responsible for ensuring that your content complies with applicable laws and does not infringe on third-party rights.',
+        ownership:
+          'You retain ownership of any content you create or upload to SocialChef. However, by using our Service, you grant us a limited license to use, store, and process your content solely for the purpose of providing the Service.',
+        license:
+          'For AI-generated content created through our platform, you receive a license to use such content for your business purposes, subject to any restrictions in your subscription plan.',
+        responsibility:
+          'You are solely responsible for ensuring that your content complies with applicable laws and does not infringe on third-party rights.',
       },
       socialMedia: {
         title: '7. Social Media Integration',
-        content: 'When you connect third-party social media accounts, you authorize us to access and interact with those accounts on your behalf. You are responsible for complying with the terms of service of each connected platform. We are not liable for any actions taken by or restrictions imposed by third-party platforms.',
+        content:
+          'When you connect third-party social media accounts, you authorize us to access and interact with those accounts on your behalf. You are responsible for complying with the terms of service of each connected platform. We are not liable for any actions taken by or restrictions imposed by third-party platforms.',
       },
       subscription: {
         title: '8. Subscription and Payment',
-        billing: 'Paid subscriptions are billed according to the plan you select. All fees are non-refundable unless otherwise stated or required by law.',
-        cancellation: 'You may cancel your subscription at any time through your account settings. Cancellation takes effect at the end of the current billing period.',
-        changes: 'We reserve the right to change our pricing with reasonable notice. Continued use after price changes constitutes acceptance of new pricing.',
+        billing:
+          'Paid subscriptions are billed according to the plan you select. All fees are non-refundable unless otherwise stated or required by law.',
+        cancellation:
+          'You may cancel your subscription at any time through your account settings. Cancellation takes effect at the end of the current billing period.',
+        changes:
+          'We reserve the right to change our pricing with reasonable notice. Continued use after price changes constitutes acceptance of new pricing.',
       },
       intellectual: {
         title: '9. Intellectual Property',
-        content: 'SocialChef and its original content, features, and functionality are owned by us and protected by international copyright, trademark, and other intellectual property laws. Our AI technology, algorithms, and platform design remain our exclusive property.',
+        content:
+          'SocialChef and its original content, features, and functionality are owned by us and protected by international copyright, trademark, and other intellectual property laws. Our AI technology, algorithms, and platform design remain our exclusive property.',
       },
       disclaimer: {
         title: '10. Disclaimer of Warranties',
-        content: 'THE SERVICE IS PROVIDED "AS IS" AND "AS AVAILABLE" WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED. WE DO NOT WARRANT THAT THE SERVICE WILL BE UNINTERRUPTED, ERROR-FREE, OR SECURE. AI-GENERATED CONTENT MAY CONTAIN ERRORS OR INACCURACIES, AND YOU ARE RESPONSIBLE FOR REVIEWING ALL CONTENT BEFORE PUBLICATION.',
+        content:
+          'THE SERVICE IS PROVIDED "AS IS" AND "AS AVAILABLE" WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED. WE DO NOT WARRANT THAT THE SERVICE WILL BE UNINTERRUPTED, ERROR-FREE, OR SECURE. AI-GENERATED CONTENT MAY CONTAIN ERRORS OR INACCURACIES, AND YOU ARE RESPONSIBLE FOR REVIEWING ALL CONTENT BEFORE PUBLICATION.',
       },
       limitation: {
         title: '11. Limitation of Liability',
-        content: 'TO THE MAXIMUM EXTENT PERMITTED BY LAW, SOCIALCHEF SHALL NOT BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES, INCLUDING LOSS OF PROFITS, DATA, OR BUSINESS OPPORTUNITIES, ARISING FROM YOUR USE OF THE SERVICE.',
+        content:
+          'TO THE MAXIMUM EXTENT PERMITTED BY LAW, SOCIALCHEF SHALL NOT BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES, INCLUDING LOSS OF PROFITS, DATA, OR BUSINESS OPPORTUNITIES, ARISING FROM YOUR USE OF THE SERVICE.',
       },
       indemnification: {
         title: '12. Indemnification',
-        content: 'You agree to indemnify and hold harmless SocialChef, its officers, directors, employees, and agents from any claims, damages, losses, or expenses arising from your use of the Service, violation of these Terms, or infringement of any third-party rights.',
+        content:
+          'You agree to indemnify and hold harmless SocialChef, its officers, directors, employees, and agents from any claims, damages, losses, or expenses arising from your use of the Service, violation of these Terms, or infringement of any third-party rights.',
       },
       termination: {
         title: '13. Termination',
-        content: 'We may suspend or terminate your access to the Service at any time for violation of these Terms or for any other reason at our discretion. Upon termination, your right to use the Service ceases immediately, though certain provisions of these Terms will survive.',
+        content:
+          'We may suspend or terminate your access to the Service at any time for violation of these Terms or for any other reason at our discretion. Upon termination, your right to use the Service ceases immediately, though certain provisions of these Terms will survive.',
       },
       changes: {
         title: '14. Changes to Terms',
-        content: 'We reserve the right to modify these Terms at any time. We will notify users of material changes by posting the updated Terms on our platform. Your continued use of the Service after changes constitutes acceptance of the modified Terms.',
+        content:
+          'We reserve the right to modify these Terms at any time. We will notify users of material changes by posting the updated Terms on our platform. Your continued use of the Service after changes constitutes acceptance of the modified Terms.',
       },
       governing: {
         title: '15. Governing Law',
-        content: 'These Terms shall be governed by and construed in accordance with the laws of Norway, without regard to its conflict of law provisions. Any disputes arising from these Terms shall be resolved in the courts of Norway.',
+        content:
+          'These Terms shall be governed by and construed in accordance with the laws of Norway, without regard to its conflict of law provisions. Any disputes arising from these Terms shall be resolved in the courts of Norway.',
       },
       contact: {
         title: '16. Contact Information',
@@ -2055,7 +2173,7 @@ export default {
   // Inline Feedback
   feedback: {
     inlineTitle: 'Help us improve',
-    inlineSubtitle: 'This won\'t be included in your post',
+    inlineSubtitle: "This won't be included in your post",
     whatDidYouLike: 'What did you like or dislike about this post?',
     feedbackPlaceholder: 'Share what worked well or what could be better...',
   },
@@ -2094,7 +2212,8 @@ export default {
     step2Title: 'Confirm you understand',
     confirmDataLoss: 'I understand that all my data will be permanently deleted',
     confirmNoRecovery: 'I understand that my account cannot be recovered after deletion',
-    confirmImmediateEffect: 'I understand that deletion takes effect immediately and I will be logged out',
+    confirmImmediateEffect:
+      'I understand that deletion takes effect immediately and I will be logged out',
 
     // Step 3 - Type DELETE
     step3Title: 'Final confirmation',
@@ -2104,7 +2223,7 @@ export default {
 
     // Reason
     reasonTitle: 'Help us improve (optional)',
-    reasonDescription: 'Please let us know why you\'re leaving:',
+    reasonDescription: "Please let us know why you're leaving:",
     reasonPlaceholder: 'What could we have done better?',
 
     // Buttons
@@ -2116,12 +2235,13 @@ export default {
 
     // Final modal
     finalModalTitle: 'Last chance!',
-    finalModalDescription: 'Are you absolutely sure you want to delete your account? This action is irreversible.',
+    finalModalDescription:
+      'Are you absolutely sure you want to delete your account? This action is irreversible.',
 
     // Success/Goodbye
     goodbyeTitle: 'Goodbye!',
-    goodbyeMessage: 'Your account has been successfully deleted. We\'re sorry to see you go.',
-    goodbyeSubtext: 'If you ever want to come back, you\'re always welcome to create a new account.',
+    goodbyeMessage: "Your account has been successfully deleted. We're sorry to see you go.",
+    goodbyeSubtext: "If you ever want to come back, you're always welcome to create a new account.",
     returnToHome: 'Return to Home',
 
     // Errors
@@ -2200,7 +2320,8 @@ export default {
 
     // Empty State
     emptyStateTitle: 'Time to cook up some posts!',
-    emptyStateDescription: 'Once you start creating and scheduling content, your analytics will appear here. Let\'s get started!',
+    emptyStateDescription:
+      "Once you start creating and scheduling content, your analytics will appear here. Let's get started!",
     createFirstPost: 'Create Your First Post',
   },
 }

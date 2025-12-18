@@ -26,7 +26,20 @@
       "Bash(do name=$f%.vue if ! grep -r $name /Users/sharghi/Documents/ainfrastructure/socialMediaAI-web-ui/socialMediaAI-web-ui/src --include=*.vue --include=*.ts -q)",
       "Bash(then echo 'POSSIBLY UNUSED: $f' fi done)",
       "Bash(oxlint --version:*)",
-      "Bash(npm run lint:*)"
+      "Bash(npm run lint:*)",
+      "WebSearch",
+      "Bash(npx tsx:*)",
+      "Bash(npm start)",
+      "Bash(curl:*)",
+      "Bash(npm run server:build:*)",
+      "Bash(ffprobe:*)",
+      "Bash(tee:*)",
+      "Bash(python3:*)",
+      "Bash(node test-token-verify.js:*)",
+      "Bash(node test-page-video-upload.js:*)",
+      "Bash(\"https://graph.facebook.com/v24.0/819358677927828/videos\" )",
+      "Bash(git add:*)",
+      "Bash(git rebase:*)"
     ],
     "deny": [],
     "ask": []

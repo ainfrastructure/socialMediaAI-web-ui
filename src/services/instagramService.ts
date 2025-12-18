@@ -52,12 +52,14 @@ class InstagramService {
   async post(
     accountId: string,
     caption: string,
-    imageUrl: string
+    imageUrl?: string,
+    videoUrl?: string,
+    contentType?: 'image' | 'video'
   ): Promise<ApiResponse<{ postId: string; postUrl: string }>> {
     const response = await fetch(`${API_URL}/api/instagram/accounts/${accountId}/post`, {
       method: 'POST',
       headers: getAuthHeaders(),
-      body: JSON.stringify({ caption, imageUrl }),
+      body: JSON.stringify({ caption, imageUrl, videoUrl, contentType }),
     })
     return response.json()
   }

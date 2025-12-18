@@ -16,10 +16,12 @@ import ModeToggle from '@/components/ModeToggle.vue'
 import ScheduleModal from '@/components/ScheduleModal.vue'
 import AddRestaurantModal from '@/components/AddRestaurantModal.vue'
 import RestaurantSelectorModal from '@/components/RestaurantSelectorModal.vue'
+import PublishingProgressModal from '@/components/PublishingProgressModal.vue'
 import GoldenRestaurantIcon from '@/components/icons/GoldenRestaurantIcon.vue'
 import { restaurantService, type SavedRestaurant } from '@/services/restaurantService'
 import { api } from '@/services/api'
 import { okamService } from '@/services/okamService'
+import { API_URL } from '@/services/apiBase'
 
 const router = useRouter()
 const route = useRoute()
@@ -51,8 +53,12 @@ const menuItems = computed(() => {
 // Generation state (Easy Mode)
 const easyModeGenerating = ref(false)
 const generatingImage = ref(false)
+const generatingVideo = ref(false)
 const generatingPostContent = ref(false)
 const generatedImageUrl = ref('')
+const generatedVideoUrl = ref('')
+const videoOperationId = ref<string | null>(null)
+const currentMediaType = ref<'image' | 'video'>('image')
 const generatedPostContent = ref<{
   postText: string
   hashtags: string[]
@@ -77,11 +83,19 @@ const advancedModeCreationRef = ref<any>(null)
 // Modal state
 const showScheduleModal = ref(false)
 const showAddRestaurantModal = ref(false)
+const showPublishingModal = ref(false)
 const pendingAction = ref<'publish' | 'schedule' | null>(null)
 const noRestaurants = ref(false)
 
 // Publishing state
 const publishing = ref(false)
+const publishingProgress = ref<Array<{
+  platform: string
+  status: 'pending' | 'publishing' | 'success' | 'error'
+  url?: string
+  error?: string
+}>>([])
+const publishingComplete = ref(false)
 const publishResults = ref<{
   success: boolean
   platforms: Array<{ platform: string; success: boolean; url?: string; error?: string }>
@@ -103,11 +117,88 @@ const stickerStyle = ref<'bold' | 'outlined' | 'ribbon' | 'badge' | 'starburst'>
 const stickerPosition = ref<'top-left' | 'top-right' | 'bottom-left' | 'bottom-right' | 'top-center' | 'center'>('top-right')
 const strictnessMode = ref<'strict' | 'flexible' | 'creative'>('strict')
 const holidayTheme = ref<string>('none')
-const visualStyle = ref<'behindTheScenes' | 'cleanStrict' | 'zoomIn' | 'oneBite' | 'studioShot' | 'infographic' | 'custom'>('behindTheScenes')
+const visualStyle = ref<'behindTheScenes' | 'cleanStrict' | 'zoomIn' | 'oneBite' | 'studioShot' | 'infographic' | 'placeOnTable' | 'custom'>('behindTheScenes')
 const customVisualPrompt = ref<string>('')
 const promptContext = ref('')
 const selectedMenuItems = ref<any[]>([])
 const selectedPlatforms = ref<string[]>(['facebook'])
+
+// Visual style prompt modifiers for video generation
+// These enhance the base prompt with style-specific instructions
+// Using STRICT IMAGE REPLICATION approach from image generation
+const videoStylePromptModifiers: Record<string, string> = {
+  behindTheScenes: `CRITICAL: You MUST recreate the EXACT dish from the reference image. This is NOT optional.
+
+MANDATORY REQUIREMENTS:
+1. COPY EVERY SINGLE INGREDIENT visible in the reference - if you see lettuce, include lettuce. If you see sauce, include sauce. If you see pickles, include pickles. NOTHING can be removed or changed.
+2. COPY the EXACT arrangement and stacking order of all components
+3. COPY the EXACT proportions and quantities of each ingredient
+4. The video must show the SAME dish, not a different dish
+
+Cinematic behind-the-scenes video of this exact dish being prepared. Show cooking with steam, sizzling, motion. Kitchen background blurred. The final plated dish must be IDENTICAL to the reference image.`,
+
+  cleanStrict: `CRITICAL: You MUST recreate the EXACT dish from the reference image. This is NOT optional.
+
+MANDATORY REQUIREMENTS:
+1. COPY EVERY SINGLE INGREDIENT visible in the reference - if you see lettuce, include lettuce. If you see sauce, include sauce. If you see pickles, include pickles. NOTHING can be removed or changed.
+2. COPY the EXACT arrangement and stacking order of all components
+3. COPY the EXACT proportions and quantities of each ingredient
+4. The video must show the SAME dish, not a different dish
+
+Professional studio video showing the exact dish from the reference. Add subtle camera movement - slow push-in or orbit. Clean background, professional lighting. The dish must be IDENTICAL to the reference image.`,
+
+  zoomIn: `CRITICAL: You MUST recreate the EXACT dish from the reference image. This is NOT optional.
+
+MANDATORY REQUIREMENTS:
+1. COPY EVERY SINGLE INGREDIENT visible in the reference - if you see lettuce, include lettuce. If you see sauce, include sauce. If you see pickles, include pickles. NOTHING can be removed or changed.
+2. COPY the EXACT arrangement and stacking order of all components
+3. COPY the EXACT proportions and quantities of each ingredient
+4. The video must show the SAME dish, not a different dish
+
+Slow camera zoom revealing texture details of the exact dish from the reference - steam rising, sauce glistening. The dish must be IDENTICAL to the reference image.`,
+
+  oneBite: `CRITICAL: You MUST recreate the EXACT dish from the reference image. This is NOT optional.
+
+MANDATORY REQUIREMENTS:
+1. COPY EVERY SINGLE INGREDIENT visible in the reference - if you see lettuce, include lettuce. If you see sauce, include sauce. If you see pickles, include pickles. NOTHING can be removed or changed.
+2. COPY the EXACT arrangement and stacking order of all components
+3. COPY the EXACT proportions and quantities of each ingredient
+4. The video must show the SAME dish, not a different dish
+
+Video showing a utensil entering frame and lifting a bite from the exact dish shown in the reference. The dish must be IDENTICAL to the reference image before and during the bite.`,
+
+  studioShot: `CRITICAL: You MUST recreate the EXACT dish from the reference image. This is NOT optional.
+
+MANDATORY REQUIREMENTS:
+1. COPY EVERY SINGLE INGREDIENT visible in the reference - if you see lettuce, include lettuce. If you see sauce, include sauce. If you see pickles, include pickles. NOTHING can be removed or changed.
+2. COPY the EXACT arrangement and stacking order of all components
+3. COPY the EXACT proportions and quantities of each ingredient
+4. The video must show the SAME dish, not a different dish
+
+360-degree slow orbit around the exact dish from the reference. Professional lighting. The dish must be IDENTICAL to the reference image from all angles.`,
+
+  infographic: `CRITICAL: You MUST recreate the EXACT dish from the reference image. This is NOT optional.
+
+MANDATORY REQUIREMENTS:
+1. COPY EVERY SINGLE INGREDIENT visible in the reference - if you see lettuce, include lettuce. If you see sauce, include sauce. If you see pickles, include pickles. NOTHING can be removed or changed.
+2. COPY the EXACT arrangement and stacking order of all components
+3. COPY the EXACT proportions and quantities of each ingredient
+4. The video must show the SAME dish, not a different dish
+
+Dynamic video showing this exact dish being assembled - ingredients come together into the final presentation. The assembled dish must be IDENTICAL to the reference image.`,
+
+  placeOnTable: `CRITICAL: You MUST recreate the EXACT dish from the reference image. This is NOT optional.
+
+MANDATORY REQUIREMENTS:
+1. COPY EVERY SINGLE INGREDIENT visible in the reference - if you see lettuce, include lettuce. If you see sauce, include sauce. If you see pickles, include pickles. NOTHING can be removed or changed.
+2. COPY the EXACT arrangement and stacking order of all components
+3. COPY the EXACT proportions and quantities of each ingredient
+4. The video must show the SAME dish, not a different dish
+
+Video showing hands placing the exact dish from the reference onto a table. The dish must be IDENTICAL to the reference image.`,
+
+  custom: '' // User provides their own prompt
+}
 
 // Load restaurant and connected accounts on mount
 onMounted(async () => {
@@ -219,7 +310,8 @@ async function handleEasyModePublish(data: {
   hashtags?: string[]
 }) {
   try {
-    if (!generatedImageUrl.value || !generatedPostContent.value) {
+    const hasMedia = generatedImageUrl.value || generatedVideoUrl.value
+    if (!hasMedia || !generatedPostContent.value) {
       generationError.value = 'No content to publish. Please generate content first.'
       return
     }
@@ -252,10 +344,12 @@ async function handleEasyModePublish(data: {
     } else {
       // No existing saved post, save a new one
       console.log('Saving post as favorite...')
+      const isVideo = currentMediaType.value === 'video'
+      const mediaUrl = isVideo ? generatedVideoUrl.value : generatedImageUrl.value
       const saveResponse = await api.saveFavorite({
         restaurant_id: restaurant.value?.id,
-        content_type: 'image',
-        media_url: generatedImageUrl.value,
+        content_type: isVideo ? 'video' : 'image',
+        media_url: mediaUrl,
         post_text: finalPostText,
         hashtags: finalHashtags,
         platform: platforms[0], // Primary platform (for backward compatibility)
@@ -335,9 +429,27 @@ async function continueEasyModePublish() {
       publishing.value = true
       facebookReconnectRequired.value = false
 
+      // Initialize progress tracking
+      publishingProgress.value = platforms.map(platform => ({
+        platform,
+        status: 'pending' as const,
+        url: undefined,
+        error: undefined
+      }))
+      publishingComplete.value = false
+
+      // Show publishing modal immediately
+      showPublishingModal.value = true
+
       const results: Array<{ platform: string; success: boolean; url?: string; error?: string }> = []
 
       for (const platform of platforms) {
+        // Update status to "publishing"
+        const progressItem = publishingProgress.value.find(p => p.platform === platform)
+        if (progressItem) {
+          progressItem.status = 'publishing'
+        }
+
         if (platform === 'facebook') {
           // Get the first connected Facebook page
           console.log('Connected Facebook pages:', facebookStore.connectedPages)
@@ -358,10 +470,13 @@ async function continueEasyModePublish() {
             : postText
 
           console.log('Calling API to post to Facebook...')
+          const isVideo = currentMediaType.value === 'video'
           const response = await api.postToFacebook(
             selectedPage.pageId,
             message,
-            generatedImageUrl.value
+            isVideo ? undefined : generatedImageUrl.value,
+            isVideo ? generatedVideoUrl.value : undefined,
+            currentMediaType.value
           )
           console.log('Facebook API response:', response)
 
@@ -372,11 +487,27 @@ async function continueEasyModePublish() {
             console.log('Published to Facebook successfully:', postUrl)
             // Add notification for successful Facebook publish
             notificationStore.addPublishSuccess('facebook', postUrl)
+            // Update progress
+            if (progressItem) {
+              progressItem.status = 'success'
+              progressItem.url = postUrl
+            }
           } else if ((response as any).code === 'FACEBOOK_RECONNECT_REQUIRED') {
             facebookReconnectRequired.value = true
             results.push({ platform: 'facebook', success: false, error: 'Facebook connection expired' })
+            // Update progress
+            if (progressItem) {
+              progressItem.status = 'error'
+              progressItem.error = 'Facebook connection expired'
+            }
           } else {
-            results.push({ platform: 'facebook', success: false, error: response.error || 'Unknown error' })
+            const errorMsg = response.error || 'Unknown error'
+            results.push({ platform: 'facebook', success: false, error: errorMsg })
+            // Update progress
+            if (progressItem) {
+              progressItem.status = 'error'
+              progressItem.error = errorMsg
+            }
           }
         } else if (platform === 'instagram') {
           // Instagram publishing via Facebook Graph API
@@ -398,10 +529,13 @@ async function continueEasyModePublish() {
             : postText
 
           try {
+            const isVideo = currentMediaType.value === 'video'
             const response = await api.postToInstagram(
               instagramAccount.instagramAccountId,
               caption,
-              generatedImageUrl.value
+              isVideo ? undefined : generatedImageUrl.value,
+              isVideo ? generatedVideoUrl.value : undefined,
+              currentMediaType.value
             )
             console.log('Instagram API response:', response)
 
@@ -412,12 +546,29 @@ async function continueEasyModePublish() {
               console.log('Published to Instagram successfully:', postUrl)
               // Add notification for successful Instagram publish
               notificationStore.addPublishSuccess('instagram', postUrl)
+              // Update progress
+              if (progressItem) {
+                progressItem.status = 'success'
+                progressItem.url = postUrl
+              }
             } else {
-              results.push({ platform: 'instagram', success: false, error: response.error || 'Failed to publish to Instagram' })
+              const errorMsg = response.error || 'Failed to publish to Instagram'
+              results.push({ platform: 'instagram', success: false, error: errorMsg })
+              // Update progress
+              if (progressItem) {
+                progressItem.status = 'error'
+                progressItem.error = errorMsg
+              }
             }
           } catch (instagramErr: any) {
             console.error('Instagram publishing error:', instagramErr)
-            results.push({ platform: 'instagram', success: false, error: instagramErr.message || 'Failed to publish to Instagram' })
+            const errorMsg = instagramErr.message || 'Failed to publish to Instagram'
+            results.push({ platform: 'instagram', success: false, error: errorMsg })
+            // Update progress
+            if (progressItem) {
+              progressItem.status = 'error'
+              progressItem.error = errorMsg
+            }
           }
         } else {
           // For other platforms, show not implemented message
@@ -427,6 +578,7 @@ async function continueEasyModePublish() {
 
       // Check results and set publishResults
       publishing.value = false
+      publishingComplete.value = true
       const successfulPlatforms = results.filter(r => r.success)
       const failedPlatforms = results.filter(r => !r.success)
 
@@ -471,6 +623,7 @@ async function continueEasyModePublish() {
     console.error('Error publishing/scheduling:', err)
     generationError.value = err.message || 'Failed to publish post'
     publishing.value = false
+    publishingComplete.value = true
   }
 }
 
@@ -612,11 +765,18 @@ async function handleEasyModeGenerate(data: {
   includeLogo: boolean
   uploadedImage: File | null
   uploadedLogo: File | null
+  mediaType: 'image' | 'video'
+  videoOptions?: {
+    duration: 5 | 6 | 8
+    aspectRatio: '16:9' | '9:16'
+    generateAudio: boolean
+  }
 }) {
   try {
     easyModeGenerating.value = true
     generationError.value = null
     lastEasyModeData.value = data
+    currentMediaType.value = data.mediaType
 
     // Set up the generation with values from Easy Mode
     if (data.menuItem) {
@@ -632,6 +792,7 @@ async function handleEasyModeGenerate(data: {
       oneBite: { stickerStyle: 'ribbon' as const, stickerPosition: 'bottom-left' as const },
       studioShot: { stickerStyle: 'badge' as const, stickerPosition: 'top-right' as const },
       infographic: { stickerStyle: 'outlined' as const, stickerPosition: 'top-left' as const },
+      placeOnTable: { stickerStyle: 'bold' as const, stickerPosition: 'top-left' as const },
       custom: { stickerStyle: 'bold' as const, stickerPosition: 'top-right' as const }
     }
 
@@ -646,7 +807,7 @@ async function handleEasyModeGenerate(data: {
       ? data.customHolidayText
       : data.holidayTheme
     // Set visual style for image generation
-    visualStyle.value = data.styleTemplate as 'behindTheScenes' | 'cleanStrict' | 'zoomIn' | 'oneBite' | 'studioShot' | 'infographic' | 'custom'
+    visualStyle.value = data.styleTemplate as 'behindTheScenes' | 'cleanStrict' | 'zoomIn' | 'oneBite' | 'studioShot' | 'infographic' | 'placeOnTable' | 'custom'
     // Store custom prompt if using custom style
     customVisualPrompt.value = data.customPrompt || ''
     logoPosition.value = 'bottom-right'
@@ -665,6 +826,8 @@ async function handleEasyModeGenerate(data: {
 
       // Clear previous content
       generatedImageUrl.value = ''
+      generatedVideoUrl.value = ''
+      videoOperationId.value = null
       generatedPostContent.value = null
       publishResults.value = null
       lastSavedPost.value = null
@@ -673,11 +836,17 @@ async function handleEasyModeGenerate(data: {
       // Keep generating state true while generating
       easyModeGenerating.value = true
 
-      // Generate the image (pass both uploaded logo and uploaded image for reference)
+      // Generate content based on media type
       try {
-        console.log('[EasyMode] Starting image generation...')
-        await generateImage(data.uploadedLogo, data.uploadedImage)
-        console.log('[EasyMode] Image generated successfully:', generatedImageUrl.value)
+        if (data.mediaType === 'video') {
+          console.log('[EasyMode] Starting video generation...')
+          await generateVideo(data.uploadedImage, data.videoOptions)
+          console.log('[EasyMode] Video generated successfully:', generatedVideoUrl.value)
+        } else {
+          console.log('[EasyMode] Starting image generation...')
+          await generateImage(data.uploadedLogo, data.uploadedImage)
+          console.log('[EasyMode] Image generated successfully:', generatedImageUrl.value)
+        }
 
         // Upload the image to the restaurant's uploaded_images collection
         if (data.uploadedImage && restaurant.value?.place_id) {
@@ -694,13 +863,17 @@ async function handleEasyModeGenerate(data: {
 
         generationError.value = null
         easyModeGenerating.value = false // Generation complete
-      } catch (imageError: any) {
-        const errorMessage = imageError.message || t('contentCreate.imageError', 'Failed to generate image. Please try again.')
+      } catch (genError: any) {
+        const errorMessage = genError.message || (data.mediaType === 'video'
+          ? t('contentCreate.videoError', 'Failed to generate video. Please try again.')
+          : t('contentCreate.imageError', 'Failed to generate image. Please try again.'))
         generationError.value = errorMessage
-        console.error('[EasyMode] Image generation error:', imageError)
+        console.error('[EasyMode] Generation error:', genError)
         notificationStore.addNotification({
           type: 'error',
-          title: t('posts.create.imageGenerationFailed'),
+          title: data.mediaType === 'video'
+            ? t('posts.create.videoGenerationFailed', 'Video generation failed')
+            : t('posts.create.imageGenerationFailed'),
           message: errorMessage,
         })
         easyModeGenerating.value = false // Generation failed
@@ -733,12 +906,16 @@ async function handleEasyModeGenerate(data: {
 function handleEasyModeReset() {
   // Reset all generation state
   generatedImageUrl.value = ''
+  generatedVideoUrl.value = ''
+  videoOperationId.value = null
+  currentMediaType.value = 'image'
   generatedPostContent.value = null
   generationError.value = null
   lastSavedPost.value = null
   publishResults.value = null
   publishing.value = false
   easyModeGenerating.value = false
+  generatingVideo.value = false
   selectedMenuItems.value = []
   promptContext.value = ''
   editablePrompt.value = ''
@@ -920,6 +1097,296 @@ async function fileToBase64Url(file: File): Promise<string> {
   })
 }
 
+/**
+ * Fetch and convert a reference image from multiple sources with priority:
+ * 1. Uploaded image (File)
+ * 2. Generated image URL (from previous generation)
+ * 3. Menu item image URL (from selected menu item)
+ *
+ * Returns undefined if no reference image is available.
+ * Handles CORS proxying and base64 conversion.
+ * Non-blocking: returns undefined on errors instead of throwing.
+ */
+async function fetchReferenceImage(
+  uploadedImage: File | null,
+  generatedImageUrl: string | null,
+  menuItemImageUrl: string | null
+): Promise<{ base64Data: string; mimeType: string; source: 'uploaded' | 'generated' | 'menu' } | undefined> {
+  console.log('[Reference] === Starting reference image fetch ===')
+
+  // Priority 1: Uploaded image
+  if (uploadedImage) {
+    try {
+      console.log('[Reference] Priority 1: Found uploaded image, processing...')
+      console.log('[Reference] - File name:', uploadedImage.name)
+      console.log('[Reference] - File size:', uploadedImage.size, 'bytes')
+      console.log('[Reference] - File type:', uploadedImage.type)
+      const base64Data = await new Promise<string>((resolve) => {
+        const reader = new FileReader()
+        reader.onloadend = () => {
+          const base64String = reader.result as string
+          resolve(base64String.split(',')[1])
+        }
+        reader.readAsDataURL(uploadedImage)
+      })
+      console.log('[Reference] ✅ Successfully converted uploaded image to base64')
+      return {
+        base64Data,
+        mimeType: uploadedImage.type,
+        source: 'uploaded'
+      }
+    } catch (error) {
+      console.error('[Reference] ❌ Failed to process uploaded image:', error)
+      // Fall through to next priority
+    }
+  } else {
+    console.log('[Reference] Priority 1: No uploaded image')
+  }
+
+  // Priority 2: Previously generated image
+  if (generatedImageUrl) {
+    try {
+      console.log('[Reference] Priority 2: Found generated image URL, fetching...')
+      console.log('[Reference] - URL:', generatedImageUrl)
+      const imageResponse = await fetch(generatedImageUrl)
+      console.log('[Reference] - Fetch response status:', imageResponse.status, imageResponse.statusText)
+      if (imageResponse.ok) {
+        const imageBlob = await imageResponse.blob()
+        console.log('[Reference] - Blob size:', imageBlob.size, 'bytes')
+        console.log('[Reference] - Blob type:', imageBlob.type)
+        const base64Data = await new Promise<string>((resolve) => {
+          const reader = new FileReader()
+          reader.onloadend = () => {
+            const base64String = reader.result as string
+            resolve(base64String.split(',')[1])
+          }
+          reader.readAsDataURL(imageBlob)
+        })
+        let mimeType = imageBlob.type
+        if (!mimeType || mimeType === 'application/octet-stream') {
+          console.log('[Reference] - Defaulting MIME type to image/png')
+          mimeType = 'image/png'
+        }
+        console.log('[Reference] ✅ Successfully converted generated image to base64')
+        return {
+          base64Data,
+          mimeType,
+          source: 'generated'
+        }
+      } else {
+        console.error('[Reference] ❌ Fetch failed with status:', imageResponse.status)
+      }
+    } catch (error) {
+      console.error('[Reference] ❌ Failed to fetch generated image:', error)
+      // Fall through to next priority
+    }
+  } else {
+    console.log('[Reference] Priority 2: No generated image URL')
+  }
+
+  // Priority 3: Menu item image
+  if (menuItemImageUrl) {
+    try {
+      console.log('[Reference] Priority 3: Found menu item image URL, fetching...')
+      console.log('[Reference] - Original URL:', menuItemImageUrl)
+      // Proxy Okam CDN URLs to avoid CORS issues
+      const imageUrl = okamService.proxyImageUrl(menuItemImageUrl) || menuItemImageUrl
+      console.log('[Reference] - Proxied URL:', imageUrl)
+      const imageResponse = await fetch(imageUrl)
+      console.log('[Reference] - Fetch response status:', imageResponse.status, imageResponse.statusText)
+      if (imageResponse.ok) {
+        const imageBlob = await imageResponse.blob()
+        console.log('[Reference] - Blob size:', imageBlob.size, 'bytes')
+        console.log('[Reference] - Blob type:', imageBlob.type)
+        const base64Data = await new Promise<string>((resolve) => {
+          const reader = new FileReader()
+          reader.onloadend = () => {
+            const base64String = reader.result as string
+            resolve(base64String.split(',')[1])
+          }
+          reader.readAsDataURL(imageBlob)
+        })
+        // Handle 'application/octet-stream' by defaulting to image/png
+        let mimeType = imageBlob.type
+        if (!mimeType || mimeType === 'application/octet-stream') {
+          console.log('[Reference] - Defaulting MIME type to image/png')
+          mimeType = 'image/png'
+        }
+        console.log('[Reference] ✅ Successfully converted menu item image to base64')
+        console.log('[Reference] - Final MIME type:', mimeType)
+        console.log('[Reference] - Base64 length:', base64Data.length, 'characters')
+        return {
+          base64Data,
+          mimeType,
+          source: 'menu'
+        }
+      } else {
+        console.error('[Reference] ❌ Fetch failed with status:', imageResponse.status)
+      }
+    } catch (error) {
+      console.error('[Reference] ❌ Failed to fetch menu item image:', error)
+      console.error('[Reference] - Error details:', error)
+      // Fall through to no reference
+    }
+  } else {
+    console.log('[Reference] Priority 3: No menu item image URL')
+  }
+
+  // No reference image available
+  console.log('[Reference] ❌ No reference image available from any source')
+  console.log('[Reference] === Reference image fetch complete (no image found) ===')
+  return undefined
+}
+
+// Video generation function
+async function generateVideo(
+  uploadedImage: File | null = null,
+  videoOptions?: {
+    duration: 5 | 6 | 8
+    aspectRatio: '16:9' | '9:16'
+    generateAudio: boolean
+  }
+) {
+  if (!editablePrompt.value || !restaurant.value) return
+
+  try {
+    generatingVideo.value = true
+    generatedVideoUrl.value = ''
+
+    // Start post content generation in parallel
+    let postContentPromise: Promise<void> | null = null
+    postContentPromise = generatePostContent().catch(error => {
+      console.error('Failed to generate post content:', error)
+    })
+
+    console.log('========== VIDEO GENERATION START ==========')
+    console.log('[Video] Base prompt:', editablePrompt.value)
+    console.log('[Video] Selected menu items:', selectedMenuItems.value)
+    console.log('[Video] Visual style:', visualStyle.value)
+
+    // Apply visual style modifier to the prompt for video generation
+    let enhancedPrompt = editablePrompt.value
+    const styleModifier = visualStyle.value === 'custom'
+      ? customVisualPrompt.value
+      : videoStylePromptModifiers[visualStyle.value]
+
+    if (styleModifier) {
+      enhancedPrompt = `${editablePrompt.value}\n\n${styleModifier}`
+      console.log('[Video] Style modifier applied:', visualStyle.value)
+      console.log('[Video] FULL ENHANCED PROMPT:')
+      console.log('---START PROMPT---')
+      console.log(enhancedPrompt)
+      console.log('---END PROMPT---')
+    }
+
+    // Prepare video generation options
+    const options = {
+      duration: videoOptions?.duration || 6,
+      aspectRatio: videoOptions?.aspectRatio || '9:16',
+      generateAudio: videoOptions?.generateAudio ?? true,
+      enhancePrompt: true,
+      model: 'veo-3.1-fast-generate-preview' as const,
+    }
+    console.log('[Video] Options:', options)
+
+    let response: any
+
+    // Fetch reference image using helper - checks uploaded, generated, and menu item images
+    console.log('[Video] Attempting to fetch reference image...')
+    console.log('[Video] - Uploaded image:', uploadedImage ? 'YES' : 'NO')
+    console.log('[Video] - Generated image URL:', generatedImageUrl.value || 'NONE')
+    console.log('[Video] - Menu item image URL:', selectedMenuItems.value[0]?.imageUrl || 'NONE')
+
+    const referenceImageData = await fetchReferenceImage(
+      uploadedImage,
+      generatedImageUrl.value, // Check previously generated image
+      selectedMenuItems.value[0]?.imageUrl // Check menu item image
+    )
+
+    if (referenceImageData) {
+      console.log('[Video] ✅ REFERENCE IMAGE FOUND!')
+      console.log('[Video] Source:', referenceImageData.source)
+      console.log('[Video] MIME type:', referenceImageData.mimeType)
+      console.log('[Video] Base64 data length:', referenceImageData.base64Data.length, 'characters')
+      console.log('[Video] Base64 preview (first 100 chars):', referenceImageData.base64Data.substring(0, 100))
+    } else {
+      console.log('[Video] ❌ NO REFERENCE IMAGE - generating from text only')
+    }
+
+    // Use reference image if available
+    console.log('[Video] Calling API...')
+    if (referenceImageData) {
+      console.log('[Video] Using api.generateVideoFromImage()')
+      response = await api.generateVideoFromImage(
+        enhancedPrompt,
+        referenceImageData.base64Data,
+        referenceImageData.mimeType,
+        options
+      )
+    } else {
+      console.log('[Video] Using api.generateVideo() (text-only)')
+      response = await api.generateVideo(enhancedPrompt, options)
+    }
+
+    console.log('[Video] API Response:', response)
+    console.log('[Video] Response success:', response.success)
+    console.log('[Video] Operation ID:', response.operationId)
+    console.log('========== VIDEO GENERATION API CALL COMPLETE ==========')
+
+    if (!response.success) {
+      throw new Error(response.error || t('contentCreate.videoError', 'Failed to generate video'))
+    }
+
+    // Store the operation ID for polling
+    videoOperationId.value = response.operationId
+
+    // Poll for video completion (pass modelId for correct polling endpoint)
+    const videoUrl = await pollVideoUntilComplete(response.operationId, response.modelId)
+    generatedVideoUrl.value = videoUrl
+
+    // Wait for post content generation to complete
+    if (postContentPromise) {
+      await postContentPromise
+    }
+
+    // Auto-save post after generation
+    await autoSavePost()
+  } finally {
+    generatingVideo.value = false
+  }
+}
+
+// Poll video operation until complete
+async function pollVideoUntilComplete(operationId: string, modelId?: string, maxAttempts = 60): Promise<string> {
+  const pollInterval = 5000 // 5 seconds
+  let attempts = 0
+
+  while (attempts < maxAttempts) {
+    const response = await api.pollVideoOperation(operationId, modelId)
+
+    if (!response.success) {
+      throw new Error(response.error || 'Failed to check video status')
+    }
+
+    const operation = (response as any).operation || response.data?.operation
+
+    if (operation?.done) {
+      if (operation.error) {
+        throw new Error(operation.error)
+      }
+      // Return the video URL directly (backend returns full Supabase URLs)
+      const videoUrl = operation.videoUrl || operation.filePath || ''
+      return videoUrl
+    }
+
+    // Wait before next poll
+    await new Promise(resolve => setTimeout(resolve, pollInterval))
+    attempts++
+  }
+
+  throw new Error(t('contentCreate.videoTimeout', 'Video generation timed out. Please try again.'))
+}
+
 async function generatePostContent() {
   if (!restaurant.value) return
 
@@ -936,7 +1403,7 @@ async function generatePostContent() {
       selectedPlatforms.value[0] || 'facebook',
       restaurant.value.name,
       menuItemsWithDescriptions,
-      'image',
+      currentMediaType.value,
       promptContext.value,
       restaurant.value.brand_dna,
       locale.value as 'en' | 'no'
@@ -975,13 +1442,14 @@ function getBrandColor(): string {
 }
 
 async function autoSavePost() {
-  if (!generatedImageUrl.value || !restaurant.value) return
+  const mediaUrl = currentMediaType.value === 'video' ? generatedVideoUrl.value : generatedImageUrl.value
+  if (!mediaUrl || !restaurant.value) return
 
   try {
     const favoriteData = {
       restaurant_id: restaurant.value.id,
-      content_type: 'image' as const,
-      media_url: generatedImageUrl.value,
+      content_type: currentMediaType.value as 'image' | 'video',
+      media_url: mediaUrl,
       post_text: generatedPostContent.value?.postText || '',
       hashtags: generatedPostContent.value?.hashtags || [],
       prompt: editablePrompt.value,
@@ -1009,6 +1477,24 @@ async function _handleRetryGeneration() {
   if (lastEasyModeData.value) {
     await handleEasyModeGenerate(lastEasyModeData.value)
   }
+}
+
+// Publishing progress modal handlers
+function handlePublishingModalCreateAnother() {
+  showPublishingModal.value = false
+  publishingProgress.value = []
+  publishingComplete.value = false
+  handleEasyModeReset()
+  // Also reset advanced mode data
+  advancedModeData.value = null
+}
+
+function handlePublishingModalClose() {
+  showPublishingModal.value = false
+  publishingProgress.value = []
+  publishingComplete.value = false
+  // Navigate back to posts
+  router.push('/posts')
 }
 
 // Advanced Mode Handler (completely separate from easy mode)
@@ -1067,8 +1553,17 @@ async function handleAdvancedModeComplete(data: {
     // If platforms and publish options provided, handle publishing directly
     if (platforms.length > 0 && data.onResult) {
       if (data.publishNow) {
-        // Publish now to all selected platforms
-        publishing.value = true
+        // Initialize publishing progress
+        publishingProgress.value = platforms.map(platform => ({
+          platform,
+          status: 'pending' as const,
+          url: undefined,
+          error: undefined
+        }))
+        publishingComplete.value = false
+
+        // Show publishing modal immediately
+        showPublishingModal.value = true
 
         const results: Array<{ platform: string; success: boolean; url?: string; error?: string }> = []
         const postUrls: Record<string, string> = {}
@@ -1079,12 +1574,26 @@ async function handleAdvancedModeComplete(data: {
           ? `${data.postText}\n\n${hashtags.map(h => `#${h}`).join(' ')}`
           : data.postText
 
+        // Determine content type (video or image)
+        const isVideo = data.imageUrl?.includes('.mp4') || currentMediaType.value === 'video'
+        const contentType = isVideo ? 'video' : 'image'
+
         // Publish to each platform
         for (const platform of platforms) {
+          // Update status to "publishing"
+          const progressItem = publishingProgress.value.find(p => p.platform === platform)
+          if (progressItem) {
+            progressItem.status = 'publishing'
+          }
+
           if (platform === 'facebook') {
             const selectedPage = facebookStore.connectedPages[0]
             if (!selectedPage) {
               results.push({ platform: 'facebook', success: false, error: 'No Facebook page connected' })
+              if (progressItem) {
+                progressItem.status = 'error'
+                progressItem.error = 'No Facebook page connected'
+              }
               continue
             }
 
@@ -1092,27 +1601,53 @@ async function handleAdvancedModeComplete(data: {
               const response = await api.postToFacebook(
                 selectedPage.pageId,
                 message,
-                data.imageUrl
+                isVideo ? undefined : data.imageUrl,
+                isVideo ? data.imageUrl : undefined,
+                contentType
               )
 
               const postUrl = (response as any).postUrl || response.data?.postUrl
               if (response.success && postUrl) {
                 results.push({ platform: 'facebook', success: true, url: postUrl })
                 postUrls.facebook = postUrl
-                // Add notification for successful Facebook publish
                 notificationStore.addPublishSuccess('facebook', postUrl)
+                // Update progress
+                if (progressItem) {
+                  progressItem.status = 'success'
+                  progressItem.url = postUrl
+                }
               } else if ((response as any).code === 'FACEBOOK_RECONNECT_REQUIRED') {
-                results.push({ platform: 'facebook', success: false, error: 'Facebook connection expired' })
+                const errorMsg = 'Facebook connection expired'
+                results.push({ platform: 'facebook', success: false, error: errorMsg })
+                if (progressItem) {
+                  progressItem.status = 'error'
+                  progressItem.error = errorMsg
+                }
               } else {
-                results.push({ platform: 'facebook', success: false, error: response.error || 'Failed to publish' })
+                const errorMsg = response.error || 'Failed to publish'
+                results.push({ platform: 'facebook', success: false, error: errorMsg })
+                if (progressItem) {
+                  progressItem.status = 'error'
+                  progressItem.error = errorMsg
+                }
               }
             } catch (err: any) {
-              results.push({ platform: 'facebook', success: false, error: err.message || 'Failed to publish' })
+              const errorMsg = err.message || 'Failed to publish'
+              results.push({ platform: 'facebook', success: false, error: errorMsg })
+              if (progressItem) {
+                progressItem.status = 'error'
+                progressItem.error = errorMsg
+              }
             }
           } else if (platform === 'instagram') {
             const instagramAccount = instagramStore.connectedAccounts[0]
             if (!instagramAccount) {
-              results.push({ platform: 'instagram', success: false, error: 'No Instagram account connected' })
+              const errorMsg = 'No Instagram account connected'
+              results.push({ platform: 'instagram', success: false, error: errorMsg })
+              if (progressItem) {
+                progressItem.status = 'error'
+                progressItem.error = errorMsg
+              }
               continue
             }
 
@@ -1120,27 +1655,48 @@ async function handleAdvancedModeComplete(data: {
               const response = await api.postToInstagram(
                 instagramAccount.instagramAccountId,
                 message,
-                data.imageUrl
+                data.imageUrl,
+                undefined,
+                contentType
               )
 
               const postUrl = (response as any).postUrl || response.data?.postUrl
               if (response.success && postUrl) {
                 results.push({ platform: 'instagram', success: true, url: postUrl })
                 postUrls.instagram = postUrl
-                // Add notification for successful Instagram publish
                 notificationStore.addPublishSuccess('instagram', postUrl)
+                // Update progress
+                if (progressItem) {
+                  progressItem.status = 'success'
+                  progressItem.url = postUrl
+                }
               } else {
-                results.push({ platform: 'instagram', success: false, error: response.error || 'Failed to publish' })
+                const errorMsg = response.error || 'Failed to publish'
+                results.push({ platform: 'instagram', success: false, error: errorMsg })
+                if (progressItem) {
+                  progressItem.status = 'error'
+                  progressItem.error = errorMsg
+                }
               }
             } catch (err: any) {
-              results.push({ platform: 'instagram', success: false, error: err.message || 'Failed to publish' })
+              const errorMsg = err.message || 'Failed to publish'
+              results.push({ platform: 'instagram', success: false, error: errorMsg })
+              if (progressItem) {
+                progressItem.status = 'error'
+                progressItem.error = errorMsg
+              }
             }
           } else {
-            results.push({ platform, success: false, error: `${platform} publishing not yet supported` })
+            const errorMsg = `${platform} publishing not yet supported`
+            results.push({ platform, success: false, error: errorMsg })
+            if (progressItem) {
+              progressItem.status = 'error'
+              progressItem.error = errorMsg
+            }
           }
         }
 
-        publishing.value = false
+        publishingComplete.value = true
 
         // Set publish results
         const successfulPlatforms = results.filter(r => r.success)
@@ -1272,10 +1828,13 @@ async function publishToFacebook() {
       ? `${postText}\n\n${hashtags.join(' ')}`
       : postText
 
+    const isVideo = currentMediaType.value === 'video'
     const response = await api.postToFacebook(
       selectedPage.pageId,
       message,
-      generatedImageUrl.value
+      isVideo ? undefined : generatedImageUrl.value,
+      isVideo ? generatedVideoUrl.value : undefined,
+      currentMediaType.value
     )
 
     const postUrl = (response as any).postUrl || response.data?.postUrl
@@ -1329,6 +1888,22 @@ function _handleContentUpdated(updatedContent: { postText: string; hashtags: str
       console.error('Failed to update post:', err)
     })
   }
+}
+
+// Publishing progress modal handlers
+function handlePublishingCreateAnother() {
+  showPublishingModal.value = false
+  // Reset to step 1
+  if (easyModeCreationRef.value) {
+    easyModeCreationRef.value.currentStep = 1
+  }
+  if (advancedModeCreationRef.value) {
+    advancedModeCreationRef.value.currentStep = 1
+  }
+}
+
+function handlePublishingClose() {
+  showPublishingModal.value = false
 }
 </script>
 
@@ -1406,6 +1981,7 @@ function _handleContentUpdated(updatedContent: { postText: string; hashtags: str
           :menu-items="menuItems"
           :generating="easyModeGenerating"
           :generated-image-url="generatedImageUrl"
+          :generated-video-url="generatedVideoUrl"
           :post-text="generatedPostContent?.postText"
           :hashtags="generatedPostContent?.hashtags"
           :publishing="publishing"
@@ -1438,6 +2014,15 @@ function _handleContentUpdated(updatedContent: { postText: string; hashtags: str
       :favorite-post="postToSchedule"
       :preselected-date="preselectedDate"
       @scheduled="handleScheduled"
+    />
+
+    <!-- Publishing Progress Modal -->
+    <PublishingProgressModal
+      :visible="showPublishingModal"
+      :platforms="publishingProgress"
+      :is-complete="publishingComplete"
+      @create-another="handlePublishingModalCreateAnother"
+      @close="handlePublishingModalClose"
     />
 
     <!-- Add Restaurant Modal (for no-restaurant state) -->

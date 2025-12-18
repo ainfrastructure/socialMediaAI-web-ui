@@ -59,6 +59,7 @@ const props = defineProps<{
   menuItems: MenuItem[]
   generating?: boolean
   generatedImageUrl?: string
+  generatedVideoUrl?: string
   postText?: string
   hashtags?: string[]
   publishing?: boolean
@@ -81,6 +82,12 @@ const emit = defineEmits<{
     includeLogo: boolean
     uploadedImage: File | null
     uploadedLogo: File | null
+    mediaType: 'image' | 'video'
+    videoOptions?: {
+      duration: 5 | 6 | 8
+      aspectRatio: '16:9' | '9:16'
+      generateAudio: boolean
+    }
   }): void
   (e: 'publish', data: {
     platforms: string[]
@@ -112,6 +119,9 @@ const selectedStyleTemplate = ref<string>('behindTheScenes')
 const customPrompt = ref<string>('')  // For custom style prompt
 const strictnessMode = ref<'strict' | 'flexible' | 'creative'>('strict')
 const mediaType = ref<'image' | 'video'>('image')
+const videoDuration = ref<5 | 6 | 8>(6)
+const videoAspectRatio = ref<'16:9' | '9:16'>('9:16')
+const includeAudio = ref(true)
 const holidayTheme = ref<string>('none')
 const customHolidayText = ref<string>('')
 const includeLogo = ref(true)
@@ -121,6 +131,10 @@ const uploadedImagePreview = ref<string | null>(null)
 // Logo upload state
 const uploadedLogo = ref<File | null>(null)
 const uploadedLogoPreview = ref<string | null>(null)
+
+// Video element refs for controlling playback
+const previewVideoRef = ref<HTMLVideoElement | null>(null)
+const publishVideoRef = ref<HTMLVideoElement | null>(null)
 
 // Editable content state (local to preview, initialized from props)
 const editedPostText = ref('')
@@ -186,6 +200,13 @@ const styleTemplates = computed<StyleTemplate[]>(() => [
     preview: t('playground.styleTemplates.infographic.preview')
   },
   {
+    id: 'placeOnTable',
+    name: t('playground.styleTemplates.placeOnTable.name'),
+    description: t('playground.styleTemplates.placeOnTable.description'),
+    icon: 'dining',
+    preview: t('playground.styleTemplates.placeOnTable.preview')
+  },
+  {
     id: 'custom',
     name: t('playground.styleTemplates.custom.name'),
     description: t('playground.styleTemplates.custom.description'),
@@ -205,6 +226,7 @@ function _getStyleIcon(styleId: string): string {
     oneBite: `<svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">${goldGradient}<path d="M11 9H9V2H7v7H5V2H3v7c0 2.12 1.66 3.84 3.75 3.97V22h2.5v-9.03C11.34 12.84 13 11.12 13 9V2h-2v7zm5-3v8h2.5v8H21V2c-2.76 0-5 2.24-5 4z" fill="url(#goldGrad-${styleId})"/></svg>`,
     studioShot: `<svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">${goldGradient}<path d="M9 21c0 .55.45 1 1 1h4c.55 0 1-.45 1-1v-1H9v1zm3-19C8.14 2 5 5.14 5 9c0 2.38 1.19 4.47 3 5.74V17c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.86-3.14-7-7-7zm2.85 11.1l-.85.6V16h-4v-2.3l-.85-.6C7.8 12.16 7 10.63 7 9c0-2.76 2.24-5 5-5s5 2.24 5 5c0 1.63-.8 3.16-2.15 4.1z" fill="url(#goldGrad-${styleId})"/></svg>`,
     infographic: `<svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">${goldGradient}<path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z" fill="url(#goldGrad-${styleId})"/></svg>`,
+    placeOnTable: `<svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">${goldGradient}<path d="M20 3H4c-1.1 0-2 .9-2 2v2c0 1.1.9 2 2 2h1v9c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2V9h1c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-9 12H9v-5h2v5zm4 0h-2v-5h2v5zM4 7V5h16v2H4z" fill="url(#goldGrad-${styleId})"/></svg>`,
     custom: `<svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">${goldGradient}<path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" fill="url(#goldGrad-${styleId})"/></svg>`
   }
 
@@ -250,8 +272,9 @@ const highestCompletedStep = computed(() => {
   if (!selectedMenuItem.value && !uploadedImagePreview.value) return 0
 
   // Step 2 is accessible once step 1 is complete (style always has default)
-  // Step 3 complete: image generated (generatedImageUrl exists)
-  if (!props.generatedImageUrl) return 1
+  // Step 3 complete: image OR video generated
+  const hasMedia = props.generatedImageUrl || props.generatedVideoUrl
+  if (!hasMedia) return 1
 
   // Step 4 accessible after generation
   return 3
@@ -387,7 +410,13 @@ function handleGenerate() {
     customHolidayText: customHolidayText.value,
     includeLogo: includeLogo.value,
     uploadedImage: uploadedImage.value,
-    uploadedLogo: uploadedLogo.value
+    uploadedLogo: uploadedLogo.value,
+    mediaType: mediaType.value,
+    videoOptions: mediaType.value === 'video' ? {
+      duration: videoDuration.value,
+      aspectRatio: videoAspectRatio.value,
+      generateAudio: includeAudio.value
+    } : undefined
   })
 }
 
@@ -402,9 +431,10 @@ watch(() => props.generating, (isGenerating) => {
 })
 
 // Watch for generation complete to auto-advance to Step 3
-watch(() => [props.generating, props.generatedImageUrl, props.postText], ([generating, imageUrl, postText]) => {
-  // When generating finishes AND we have both image and text, advance to Step 3
-  if (!generating && imageUrl && postText && currentStep.value === 2) {
+watch(() => [props.generating, props.generatedImageUrl, props.generatedVideoUrl, props.postText], ([generating, imageUrl, videoUrl, postText]) => {
+  // When generating finishes AND we have media (image or video) and text, advance to Step 3
+  const hasMedia = imageUrl || videoUrl
+  if (!generating && hasMedia && postText && currentStep.value === 2) {
     currentStep.value = 3
   }
 })
@@ -516,8 +546,17 @@ watch(() => currentStep.value, (newStep, oldStep) => {
   // Only initialize when coming from step 2 (forward), not from step 4 (backward)
   if (newStep === 3 && oldStep === 2) {
     editedPostText.value = props.postText || ''
-    editedHashtags.value = [...(props.hashtags || [])]
+    // Strip any leading # from hashtags when setting from props
+    editedHashtags.value = (props.hashtags || []).map(tag => tag.replace(/^#/, ''))
     newHashtag.value = ''
+  }
+
+  // Pause any playing videos when changing steps
+  if (previewVideoRef.value) {
+    previewVideoRef.value.pause()
+  }
+  if (publishVideoRef.value) {
+    publishVideoRef.value.pause()
   }
 })
 
@@ -525,7 +564,8 @@ watch(() => currentStep.value, (newStep, oldStep) => {
 watch(() => [props.postText, props.hashtags], () => {
   if (currentStep.value === 3 && !editedPostText.value && props.postText) {
     editedPostText.value = props.postText
-    editedHashtags.value = [...(props.hashtags || [])]
+    // Strip any leading # from hashtags when setting from props
+    editedHashtags.value = (props.hashtags || []).map(tag => tag.replace(/^#/, ''))
   }
 })
 
@@ -721,6 +761,29 @@ onUnmounted(() => {
           </div>
         </div>
 
+        <!-- Media Type Selection -->
+      <div class="customization-section">
+        <SectionLabel icon="perm_media">{{ t('easyMode.step2.mediaTypeLabel', 'Media Type') }}</SectionLabel>
+        <div class="media-type-options">
+          <button
+            :class="['media-type-button', { 'selected': mediaType === 'image' }]"
+            @click="mediaType = 'image'"
+          >
+            <GoldenImageIcon :size="32" class="media-type-icon" />
+            <span class="media-type-label">{{ t('easyMode.step2.imageOption', 'Image') }}</span>
+            <span class="credits-badge">{{ t('easyMode.step2.imageCredits', '1 credit') }}</span>
+          </button>
+          <button
+            :class="['media-type-button', { 'selected': mediaType === 'video' }]"
+            @click="mediaType = 'video'"
+          >
+            <GoldenVideoIcon :size="32" class="media-type-icon" />
+            <span class="media-type-label">{{ t('easyMode.step2.videoOption', 'Video') }}</span>
+            <span class="credits-badge credits-badge-video">{{ t('easyMode.step2.videoCredits', '5 credits') }}</span>
+          </button>
+        </div>
+      </div>
+
         <!-- Style Selection -->
       <div class="customization-section">
         <SectionLabel icon="palette">{{ t('easyMode.step2.styleLabel', 'Visual Style') }}</SectionLabel>
@@ -739,25 +802,60 @@ onUnmounted(() => {
         </div>
       </div>
 
-      <!-- Media Type Selection -->
-      <div class="customization-section">
-        <SectionLabel icon="perm_media">{{ t('easyMode.step2.mediaTypeLabel', 'Media Type') }}</SectionLabel>
-        <div class="media-type-options">
-          <button
-            :class="['media-type-button', { 'selected': mediaType === 'image' }]"
-            @click="mediaType = 'image'"
-          >
-            <GoldenImageIcon :size="32" class="media-type-icon" />
-            <span class="media-type-label">{{ t('easyMode.step2.imageOption', 'Image') }}</span>
-          </button>
-          <button
-            :class="['media-type-button', 'disabled']"
-            disabled
-          >
-            <GoldenVideoIcon :size="32" class="media-type-icon" />
-            <span class="media-type-label">{{ t('easyMode.step2.videoOption', 'Video') }}</span>
-            <span class="coming-soon-badge">{{ t('common.comingSoon', 'Coming Soon') }}</span>
-          </button>
+      <!-- Video Options (shown when video is selected) -->
+      <div v-if="mediaType === 'video'" class="customization-section video-options-section">
+        <SectionLabel icon="movie">{{ t('easyMode.step2.videoOptionsLabel', 'Video Settings') }}</SectionLabel>
+
+        <!-- Duration Selection -->
+        <div class="video-option-group">
+          <label class="video-option-label">{{ t('easyMode.step2.durationLabel', 'Duration') }}</label>
+          <div class="duration-options">
+            <button
+              v-for="duration in [5, 6, 8]"
+              :key="duration"
+              :class="['duration-button', { 'selected': videoDuration === duration }]"
+              @click="videoDuration = duration as 5 | 6 | 8"
+            >
+              {{ duration }}{{ t('easyMode.step2.seconds', 's') }}
+            </button>
+          </div>
+        </div>
+
+        <!-- Aspect Ratio Selection -->
+        <div class="video-option-group">
+          <label class="video-option-label">{{ t('easyMode.step2.aspectRatioLabel', 'Aspect Ratio') }}</label>
+          <div class="aspect-ratio-options">
+            <button
+              :class="['aspect-ratio-button', { 'selected': videoAspectRatio === '9:16' }]"
+              @click="videoAspectRatio = '9:16'"
+            >
+              <MaterialIcon icon="stay_current_portrait" size="md" />
+              <span>9:16</span>
+              <span class="aspect-hint">{{ t('easyMode.step2.portrait', 'Portrait') }}</span>
+            </button>
+            <button
+              :class="['aspect-ratio-button', { 'selected': videoAspectRatio === '16:9' }]"
+              @click="videoAspectRatio = '16:9'"
+            >
+              <MaterialIcon icon="stay_current_landscape" size="md" />
+              <span>16:9</span>
+              <span class="aspect-hint">{{ t('easyMode.step2.landscape', 'Landscape') }}</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Audio Toggle -->
+        <div class="video-option-group">
+          <label class="checkbox-label-easy">
+            <input
+              type="checkbox"
+              v-model="includeAudio"
+              class="checkbox-input-easy"
+            />
+            <span class="checkbox-text">
+              <span>{{ t('easyMode.step2.includeAudio', 'Include AI-generated audio') }}</span>
+            </span>
+          </label>
         </div>
       </div>
 
@@ -933,7 +1031,10 @@ onUnmounted(() => {
             @click="handleGenerate"
             class="next-button"
           >
-            {{ t('easyMode.step2.generateButton', 'Generate Image') }}
+            {{ mediaType === 'video'
+              ? t('easyMode.step2.generateVideoButton', 'Generate Video')
+              : t('easyMode.step2.generateButton', 'Generate Image')
+            }}
           </BaseButton>
         </div>
       </template>
@@ -954,10 +1055,26 @@ onUnmounted(() => {
         <div class="preview-content">
           <!-- Generated Image -->
           <div class="preview-image-container">
-            <!-- Loading State for Image -->
-            <div v-if="props.generating && !props.generatedImageUrl" class="image-loading">
-              <GeneratingProgress :active="props.generating" :estimated-duration="20" />
+            <!-- Loading State for Media -->
+            <div v-if="props.generating && !props.generatedImageUrl && !props.generatedVideoUrl" class="image-loading">
+              <GeneratingProgress
+                :active="props.generating"
+                :estimated-duration="mediaType === 'video' ? 120 : 20"
+              />
             </div>
+            <!-- Generated Video (when ready) -->
+            <video
+              ref="previewVideoRef"
+              v-else-if="props.generatedVideoUrl"
+              :src="props.generatedVideoUrl"
+              controls
+              autoplay
+              muted
+              loop
+              class="preview-video-display"
+            >
+              {{ t('common.videoNotSupported', 'Your browser does not support the video tag.') }}
+            </video>
             <!-- Generated Image (when ready) -->
             <img v-else-if="props.generatedImageUrl" :src="props.generatedImageUrl" alt="Generated post image" class="preview-image-display" />
           </div>
@@ -1059,7 +1176,7 @@ onUnmounted(() => {
           size="large"
           @click="nextStep"
           class="next-button"
-          :disabled="!props.generatedImageUrl"
+          :disabled="!props.generatedImageUrl && !props.generatedVideoUrl"
         >
           {{ t('common.next', 'Next') }}
         </BaseButton>
@@ -1132,8 +1249,9 @@ onUnmounted(() => {
         <UnifiedSchedulePost
           v-else
           :disabled="props.publishing"
-          :show-preview="false"
+          :show-preview="true"
           :image-url="props.generatedImageUrl"
+          :video-url="props.generatedVideoUrl"
           :post-text="editedPostText"
           :hashtags="editedHashtags"
           :initial-schedule-date="props.initialScheduleDate"
@@ -1348,6 +1466,13 @@ onUnmounted(() => {
   width: 100%;
   height: auto;
   display: block;
+}
+
+.preview-video-display {
+  width: 100%;
+  max-height: 600px;
+  display: block;
+  background: var(--bg-tertiary);
 }
 
 /* Step 2 Generating Overlay */
@@ -1986,6 +2111,112 @@ onUnmounted(() => {
   border-radius: var(--radius-full);
   text-transform: uppercase;
   letter-spacing: 0.5px;
+}
+
+.credits-badge {
+  font-size: 10px;
+  font-weight: var(--font-medium);
+  color: var(--text-muted);
+  margin-top: var(--space-xs);
+}
+
+.credits-badge-video {
+  color: var(--gold-primary);
+}
+
+/* Video Options Section */
+.video-options-section {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: var(--space-xl);
+  margin-top: var(--space-md);
+}
+
+.video-option-group {
+  margin-bottom: var(--space-lg);
+}
+
+.video-option-group:last-child {
+  margin-bottom: 0;
+}
+
+.video-option-label {
+  display: block;
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  color: var(--text-secondary);
+  margin-bottom: var(--space-sm);
+}
+
+/* Duration Options */
+.duration-options {
+  display: flex;
+  gap: var(--space-sm);
+}
+
+.duration-button {
+  flex: 1;
+  padding: var(--space-sm) var(--space-md);
+  background: var(--bg-secondary);
+  border: 2px solid var(--border-color);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.duration-button:hover {
+  border-color: var(--gold-primary);
+  background: var(--gold-subtle);
+}
+
+.duration-button.selected {
+  border-color: var(--gold-primary);
+  background: var(--gold-subtle);
+  color: var(--gold-primary);
+}
+
+/* Aspect Ratio Options */
+.aspect-ratio-options {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-sm);
+}
+
+.aspect-ratio-button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: var(--space-md);
+  background: var(--bg-secondary);
+  border: 2px solid var(--border-color);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.aspect-ratio-button:hover {
+  border-color: var(--gold-primary);
+  background: var(--gold-subtle);
+}
+
+.aspect-ratio-button.selected {
+  border-color: var(--gold-primary);
+  background: var(--gold-subtle);
+}
+
+.aspect-ratio-button .aspect-hint {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+}
+
+.aspect-ratio-button.selected .aspect-hint {
+  color: var(--gold-primary);
 }
 
 /* Holiday Theme Options */

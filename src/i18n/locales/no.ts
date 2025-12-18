@@ -55,6 +55,7 @@ export default {
     continue: 'Fortsett',
     retry: 'Prøv igjen',
     noImage: 'Ingen bilde',
+    videoNotSupported: 'Nettleseren din støtter ikke video-taggen.',
     created: 'Opprettet',
     saving: 'Lagrer...',
     sending: 'Sender...',
@@ -902,37 +903,42 @@ export default {
       behindTheScenes: {
         name: 'Bak kulissene',
         description: 'Autentisk kjøkkenøyeblikk',
-        preview: 'Dokumentarstil, ekte atmosfære',
+        preview: 'Dokumentarstil matlagingsprosess (fungerer for bilder & videoer)',
       },
       cleanStrict: {
         name: 'Ren og stram',
         description: 'Profesjonell studiokvalitet',
-        preview: 'Ren overflate, fargekorrigert',
+        preview: 'Ren overflate, kinematisk belysning (fungerer for bilder & videoer)',
       },
       zoomIn: {
         name: 'Zoom inn',
         description: 'Ekstrem makronærbilde',
-        preview: 'Teksturdetaljer, vignetteringseffekt',
+        preview: 'Teksturdetaljer, ASMR-kvalitet (fungerer for bilder & videoer)',
       },
       oneBite: {
         name: 'En bit',
         description: 'Klar-til-å-spise presentasjon',
-        preview: 'Bestikk holder en fristende bit',
+        preview: 'Tilfredsstillende bit-avslørning (fungerer for bilder & videoer)',
       },
       studioShot: {
         name: 'Studiobilde',
         description: 'Profesjonelt reklameutseende',
-        preview: 'Hovedbilde, minimal bakgrunn',
+        preview: '360-graders omdreining, premium kvalitet (fungerer for bilder & videoer)',
       },
       infographic: {
         name: 'Infografikk',
         description: 'Dekonstruert ingrediensoversikt',
-        preview: 'Merkede lag og smaker',
+        preview: 'Ingrediensmontering eller merket layout (fungerer for bilder & videoer)',
+      },
+      placeOnTable: {
+        name: 'Plassert på bordet',
+        description: 'Retten blir servert',
+        preview: 'Hender som plasserer rett på bordet, skaper forventning (KUN VIDEO)',
       },
       custom: {
         name: 'Egendefinert',
         description: 'Skriv din egen prompt',
-        preview: 'Full kreativ kontroll',
+        preview: 'Full kreativ kontroll (fungerer for bilder & videoer)',
       },
     },
 
@@ -968,6 +974,15 @@ export default {
       mediaTypeLabel: 'Medietype',
       imageOption: 'Bilde',
       videoOption: 'Video',
+      imageCredits: '1 kreditt',
+      videoCredits: '5 kreditter',
+      videoOptionsLabel: 'Videoinnstillinger',
+      durationLabel: 'Varighet',
+      seconds: 's',
+      aspectRatioLabel: 'Størrelsesforhold',
+      portrait: 'Portrett',
+      landscape: 'Landskap',
+      includeAudio: 'Inkluder AI-generert lyd',
       promoLabel: 'Spesialtilbud (valgfritt)',
       promoPlaceholder: 'f.eks. 20% RABATT, KOMBOTILBUD, NY RETT...',
       logoLabel: 'Restaurant logo',
@@ -981,6 +996,7 @@ export default {
       generatingTitle: 'Lager innlegget ditt',
       generatingSubtitle: 'Designer bildet og skriver bildetekst',
       generateButton: 'Generer bilde',
+      generateVideoButton: 'Generer video (5 kreditter)',
     },
     upload: {
       button: 'Last opp ditt eget bilde',
@@ -1498,6 +1514,7 @@ export default {
     create: {
       captionGenerationFailed: 'Kunne ikke generere bildetekst',
       imageGenerationFailed: 'Kunne ikke generere bilde',
+      videoGenerationFailed: 'Kunne ikke generere video',
       generationFailed: 'Generering mislyktes',
       unexpectedError: 'En uventet feil oppstod. Prøv igjen.',
     },
@@ -1541,6 +1558,8 @@ export default {
     switchToEasy: 'Bytt til enkel modus',
     switchRestaurant: 'Bytt',
     imageError: 'Kunne ikke generere bilde. Prøv igjen.',
+    videoError: 'Kunne ikke generere video. Prøv igjen.',
+    videoTimeout: 'Videogenerering tok for lang tid. Prøv igjen.',
     noPrompts: 'Ingen ledetekster ble generert',
     generateError: 'Kunne ikke generere innhold',
     publishError: 'Kunne ikke publisere til Facebook',
@@ -1816,6 +1835,18 @@ export default {
     failedTitle: 'Generering mislyktes',
     successTitle: 'Innlegget ditt er klart!',
     loadingTitle: 'Lager innlegget ditt...',
+  },
+
+  // Publishing Progress Modal
+  publishing: {
+    title: 'Publiserer innlegget ditt...',
+    message: 'Vennligst vent mens vi publiserer innlegget ditt til de valgte plattformene.',
+    successTitle: 'Gratulerer!',
+    successMessage: 'Innlegget ditt har blitt publisert!',
+    errorTitle: 'Publisering mislyktes',
+    errorMessage: 'Kunne ikke publisere til noen plattform.',
+    viewPost: 'Se innlegg',
+    createAnother: 'Lag et nytt innlegg',
   },
 
   // Sidebar Navigation

@@ -19,7 +19,7 @@ class ContentService {
     placeId?: string,
     strictnessMode?: 'strict' | 'flexible' | 'creative',
     holidayTheme?: string,
-    visualStyle?: 'behindTheScenes' | 'cleanStrict' | 'zoomIn' | 'oneBite' | 'studioShot' | 'infographic' | 'custom',
+    visualStyle?: 'behindTheScenes' | 'cleanStrict' | 'zoomIn' | 'oneBite' | 'studioShot' | 'infographic' | 'placeOnTable' | 'custom',
     customPrompt?: string
   ): Promise<ApiResponse<{ imageUrl: string; usage: any; watermarked?: boolean; promotionalStickerAdded?: boolean }>> {
     const response = await fetch(`${API_URL}/api/gemini/generate-image`, {
@@ -35,7 +35,7 @@ class ContentService {
     prompt: string,
     options?: {
       model?: 'veo-3.1-generate-preview' | 'veo-3.1-fast-generate-preview'
-      duration?: 4 | 6 | 8
+      duration?: 5 | 6 | 8
       aspectRatio?: '16:9' | '9:16'
       resolution?: '720p' | '1080p'
       negativePrompt?: string
@@ -58,7 +58,7 @@ class ContentService {
     imageMimeType: string,
     options?: {
       model?: 'veo-3.1-generate-preview' | 'veo-3.1-fast-generate-preview'
-      duration?: 4 | 6 | 8
+      duration?: 5 | 6 | 8
       aspectRatio?: '16:9' | '9:16'
       resolution?: '720p' | '1080p'
       negativePrompt?: string

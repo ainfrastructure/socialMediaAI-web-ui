@@ -31,3 +31,4 @@ coverage
 
 .env
 AuthKey_*.p8
+.claude/
