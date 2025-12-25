@@ -234,25 +234,41 @@ let cachedRect: DOMRect | null = null
 // Before/After thumbnail carousel state
 let comparisonCarouselInterval: ReturnType<typeof setInterval> | null = null
 const comparisonCarouselDuration = 5000 // 5 seconds per image
+const comparisonPauseDuration = 8000 // Resume after 8 seconds of inactivity
+let comparisonResumeTimeout: ReturnType<typeof setTimeout> | null = null
+const isComparisonPaused = ref(false)
+const comparisonProgressKey = ref(0) // Key to restart animation
 
 const selectedComparison = computed(() => comparisonExamples[selectedComparisonIndex.value])
 
 function selectComparison(index: number) {
+  // If clicking the same thumbnail, toggle play/pause
+  if (selectedComparisonIndex.value === index) {
+    if (isComparisonPaused.value) {
+      resumeComparisonCarousel()
+    } else {
+      pauseComparisonCarousel()
+    }
+    return
+  }
+
   selectedComparisonIndex.value = index
+  comparisonProgressKey.value++ // Restart animation
   sliderPosition.value = 50 // Reset slider position
   hasInteracted.value = false // Reset to allow animation on new selection
   // Stop any existing animation before starting a new one
   stopHintAnimation()
   startHintAnimation()
-  // Reset carousel timer when manually selecting
-  stopComparisonCarousel()
-  startComparisonCarousel()
+  // Pause carousel when user interacts, resume after inactivity
+  pauseComparisonCarousel()
 }
 
 function startComparisonCarousel() {
   if (comparisonCarouselInterval) return
+  isComparisonPaused.value = false
   comparisonCarouselInterval = setInterval(() => {
     selectedComparisonIndex.value = (selectedComparisonIndex.value + 1) % comparisonExamples.length
+    comparisonProgressKey.value++ // Restart animation
     sliderPosition.value = 50
     hasInteracted.value = false
     // Stop any existing animation before starting a new one
@@ -268,12 +284,37 @@ function stopComparisonCarousel() {
   }
 }
 
+function clearComparisonResumeTimeout() {
+  if (comparisonResumeTimeout) {
+    clearTimeout(comparisonResumeTimeout)
+    comparisonResumeTimeout = null
+  }
+}
+
+function pauseComparisonCarousel() {
+  stopComparisonCarousel()
+  clearComparisonResumeTimeout()
+  isComparisonPaused.value = true
+  // Schedule resume after inactivity
+  comparisonResumeTimeout = setTimeout(() => {
+    startComparisonCarousel()
+  }, comparisonPauseDuration)
+}
+
+function resumeComparisonCarousel() {
+  clearComparisonResumeTimeout()
+  comparisonProgressKey.value++ // Restart animation from beginning
+  isComparisonPaused.value = false
+  startComparisonCarousel()
+}
+
 // Mouse events for desktop - can click anywhere on slider
 function onMouseDown(e: MouseEvent) {
   e.preventDefault()
   isDragging.value = true
   hasInteracted.value = true
   stopHintAnimation()
+  pauseComparisonCarousel()
   updateSliderPosition(e)
 }
 
@@ -295,6 +336,7 @@ function onHandleTouchStart(e: TouchEvent) {
   isDragging.value = true
   hasInteracted.value = true
   stopHintAnimation()
+  pauseComparisonCarousel()
 
   // Cache the bounding rect for the duration of the drag (avoid layout thrashing)
   if (sliderContainerRef.value) {
@@ -400,20 +442,36 @@ function stopHintAnimation() {
 // AI versions carousel state
 const currentTemplateIndex = ref(0)
 let carouselInterval: ReturnType<typeof setInterval> | null = null
+const carouselPauseDuration = 8000 // Resume after 8 seconds of inactivity
+let carouselResumeTimeout: ReturnType<typeof setTimeout> | null = null
+const isCarouselPaused = ref(false)
+const carouselProgressKey = ref(0) // Key to restart animation
 
 const currentTemplate = computed(() => multiExample.generated[currentTemplateIndex.value])
 
 function selectTemplate(index: number) {
+  // If clicking the same badge, toggle play/pause
+  if (currentTemplateIndex.value === index) {
+    if (isCarouselPaused.value) {
+      resumeCarouselRotation()
+    } else {
+      pauseCarouselRotation()
+    }
+    return
+  }
+
   currentTemplateIndex.value = index
-  // Reset auto-rotation timer when manually selecting
-  stopCarouselRotation()
-  startCarouselRotation()
+  carouselProgressKey.value++ // Restart animation
+  // Pause auto-rotation when user interacts, resume after inactivity
+  pauseCarouselRotation()
 }
 
 function startCarouselRotation() {
   if (carouselInterval) return
+  isCarouselPaused.value = false
   carouselInterval = setInterval(() => {
     currentTemplateIndex.value = (currentTemplateIndex.value + 1) % multiExample.generated.length
+    carouselProgressKey.value++ // Restart animation
   }, 3500)
 }
 
@@ -422,6 +480,30 @@ function stopCarouselRotation() {
     clearInterval(carouselInterval)
     carouselInterval = null
   }
+}
+
+function clearCarouselResumeTimeout() {
+  if (carouselResumeTimeout) {
+    clearTimeout(carouselResumeTimeout)
+    carouselResumeTimeout = null
+  }
+}
+
+function pauseCarouselRotation() {
+  stopCarouselRotation()
+  clearCarouselResumeTimeout()
+  isCarouselPaused.value = true
+  // Schedule resume after inactivity
+  carouselResumeTimeout = setTimeout(() => {
+    startCarouselRotation()
+  }, carouselPauseDuration)
+}
+
+function resumeCarouselRotation() {
+  clearCarouselResumeTimeout()
+  carouselProgressKey.value++ // Restart animation from beginning
+  isCarouselPaused.value = false
+  startCarouselRotation()
 }
 
 // Start animations on mount
@@ -447,6 +529,8 @@ onUnmounted(() => {
   window.removeEventListener('scroll', handleScroll)
   stopCarouselRotation()
   stopComparisonCarousel()
+  clearComparisonResumeTimeout()
+  clearCarouselResumeTimeout()
   stopHintAnimation()
 })
 
@@ -730,8 +814,8 @@ const benefits = [
                 <div class="thumbnail-progress-bar">
                   <div
                     v-if="selectedComparisonIndex === index"
-                    :key="`comparison-progress-${index}-${selectedComparisonIndex}`"
-                    class="thumbnail-progress-fill"
+                    :key="`comparison-progress-${index}-${comparisonProgressKey}`"
+                    :class="['thumbnail-progress-fill', { paused: isComparisonPaused }]"
                   />
                 </div>
               </button>
@@ -811,8 +895,8 @@ const benefits = [
                     <div class="badge-progress-bar">
                       <div
                         v-if="currentTemplateIndex === idx"
-                        :key="`progress-${idx}-${currentTemplateIndex}`"
-                        class="badge-progress-fill animating"
+                        :key="`progress-${idx}-${carouselProgressKey}`"
+                        :class="['badge-progress-fill', 'animating', { paused: isCarouselPaused }]"
                       />
                     </div>
                   </button>
@@ -1874,6 +1958,10 @@ const benefits = [
   animation: progressFill 3.5s linear forwards;
 }
 
+.badge-progress-fill.paused {
+  animation-play-state: paused;
+}
+
 @keyframes progressFill {
   from {
     width: 0;
@@ -2068,6 +2156,10 @@ const benefits = [
   width: 0;
   background: var(--gold-primary);
   animation: thumbnailProgressFill 5s linear forwards;
+}
+
+.thumbnail-progress-fill.paused {
+  animation-play-state: paused;
 }
 
 @keyframes thumbnailProgressFill {
