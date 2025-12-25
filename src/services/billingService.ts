@@ -12,8 +12,12 @@ export interface SubscriptionPlan {
 }
 
 class BillingService {
-  async getPlans(): Promise<ApiResponse<{ plans: SubscriptionPlan[] }>> {
-    const response = await fetch(`${API_URL}/api/subscriptions/plans`)
+  async getPlans(currency?: string): Promise<ApiResponse<{ plans: SubscriptionPlan[] }>> {
+    const headers: Record<string, string> = {}
+    if (currency) {
+      headers['x-force-currency'] = currency.toLowerCase()
+    }
+    const response = await fetch(`${API_URL}/api/subscriptions/plans`, { headers })
     return response.json()
   }
 

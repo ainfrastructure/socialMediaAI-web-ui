@@ -30,6 +30,7 @@ export default defineConfig({
   },
   server: {
     host: true,
+    open: true,
     allowedHosts: [
       'localhost',
       'baofrontend.socialchef.ai',

@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '../stores/auth'
+import { useLocaleStore } from '../stores/locale'
 import { api } from '../services/api'
 import DashboardLayout from '../components/DashboardLayout.vue'
 import BaseCard from '../components/BaseCard.vue'
@@ -38,6 +39,7 @@ interface PlansResponse {
 
 const router = useRouter()
 const authStore = useAuthStore()
+const localeStore = useLocaleStore()
 const { t } = useI18n()
 
 const plans = ref<Plan[]>([])
@@ -70,7 +72,9 @@ async function loadPlans() {
   loading.value = true
 
   try {
-    const response = await api.getPlans() as PlansResponse
+    // Pass currency if in devAccess mode
+    const devCurrency = localeStore.isDevAccess ? localeStore.currentCurrency : undefined
+    const response = await api.getPlans(devCurrency) as PlansResponse
 
     if (response.success) {
       plans.value = response.plans || []
@@ -83,6 +87,16 @@ async function loadPlans() {
     loading.value = false
   }
 }
+
+// Reload plans when currency changes in devAccess mode
+watch(
+  () => localeStore.currentCurrency,
+  () => {
+    if (localeStore.isDevAccess) {
+      loadPlans()
+    }
+  }
+)
 
 async function subscribe(tier: string) {
   if (!authStore.isAuthenticated) {

@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '../stores/auth'
+import { useLocaleStore } from '../stores/locale'
 import { api } from '../services/api'
 import BaseModal from './BaseModal.vue'
 import BaseCard from './BaseCard.vue'
@@ -49,6 +50,7 @@ const emit = defineEmits<{
 
 useRouter()
 useAuthStore()
+const localeStore = useLocaleStore()
 const { t } = useI18n()
 
 const plans = ref<Plan[]>([])
@@ -71,7 +73,9 @@ async function loadPlans() {
   loading.value = true
 
   try {
-    const response = await api.getPlans() as PlansResponse
+    // Pass currency if in devAccess mode
+    const currency = localeStore.isDevAccess ? localeStore.currentCurrency : undefined
+    const response = await api.getPlans(currency) as PlansResponse
 
     if (response.success) {
       plans.value = response.plans || []
@@ -83,6 +87,16 @@ async function loadPlans() {
     loading.value = false
   }
 }
+
+// Reload plans when currency changes in devAccess mode
+watch(
+  () => localeStore.currentCurrency,
+  () => {
+    if (localeStore.isDevAccess) {
+      loadPlans()
+    }
+  }
+)
 
 async function subscribe(tier: string) {
   try {

@@ -3,23 +3,43 @@
     <!-- Language Button -->
     <button @click="toggleDropdown" class="language-button" :aria-label="$t('languages.selectLanguage')">
       <span class="flag">{{ localeStore.getLocaleFlag(currentLocale) }}</span>
+      <span v-if="localeStore.isDevAccess" class="currency-badge">{{ localeStore.currentCurrency }}</span>
       <span class="chevron" :class="{ open: isOpen }">▼</span>
     </button>
 
     <!-- Dropdown Menu -->
     <Transition name="dropdown">
       <div v-if="isOpen" class="dropdown-menu">
+        <!-- Language Section -->
+        <div class="dropdown-section-label">{{ $t('languages.selectLanguage') }}</div>
         <button
-          v-for="locale in availableLocales"
-          :key="locale"
-          @click="selectLocale(locale)"
+          v-for="lang in availableLocales"
+          :key="lang"
+          @click="selectLocale(lang)"
           class="dropdown-item"
-          :class="{ active: currentLocale === locale }"
+          :class="{ active: currentLocale === lang }"
         >
-          <span class="flag-large">{{ localeStore.getLocaleFlag(locale) }}</span>
-          <span class="language-name">{{ localeStore.getLocaleName(locale) }}</span>
-          <span v-if="currentLocale === locale" class="checkmark">✓</span>
+          <span class="flag-large">{{ localeStore.getLocaleFlag(lang) }}</span>
+          <span class="language-name">{{ localeStore.getLocaleName(lang) }}</span>
+          <span v-if="currentLocale === lang" class="checkmark">✓</span>
         </button>
+
+        <!-- Currency Section (dev access only) -->
+        <template v-if="localeStore.isDevAccess">
+          <div class="dropdown-divider"></div>
+          <div class="dropdown-section-label">{{ $t('languages.selectCurrency') }}</div>
+          <button
+            v-for="curr in localeStore.availableCurrencies"
+            :key="curr"
+            @click="selectCurrency(curr)"
+            class="dropdown-item"
+            :class="{ active: localeStore.currentCurrency === curr }"
+          >
+            <span class="currency-symbol">{{ localeStore.getCurrencySymbol(curr) }}</span>
+            <span class="language-name">{{ localeStore.getCurrencyName(curr) }}</span>
+            <span v-if="localeStore.currentCurrency === curr" class="checkmark">✓</span>
+          </button>
+        </template>
       </div>
     </Transition>
   </div>
@@ -28,7 +48,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useLocaleStore, type Locale } from '../stores/locale'
+import { useLocaleStore, type Locale, type Currency } from '../stores/locale'
 
 const { locale } = useI18n()
 const localeStore = useLocaleStore()
@@ -49,6 +69,11 @@ function closeDropdown() {
 function selectLocale(newLocale: Locale) {
   localeStore.setLocale(newLocale)
   locale.value = newLocale
+  closeDropdown()
+}
+
+function selectCurrency(currency: Currency) {
+  localeStore.setCurrency(currency)
   closeDropdown()
 }
 
@@ -178,6 +203,43 @@ onUnmounted(() => {
   font-size: var(--text-sm);
   color: var(--gold-primary);
   font-weight: var(--font-bold);
+}
+
+/* Currency badge in button */
+.currency-badge {
+  font-size: var(--text-xs);
+  padding: 2px 6px;
+  background: rgba(212, 175, 55, 0.2);
+  border-radius: var(--radius-sm);
+  color: var(--gold-primary);
+  font-weight: var(--font-medium);
+}
+
+/* Section divider */
+.dropdown-divider {
+  height: 1px;
+  background: rgba(212, 175, 55, 0.2);
+  margin: var(--space-sm) 0;
+}
+
+/* Section label */
+.dropdown-section-label {
+  padding: var(--space-sm) var(--space-lg);
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: var(--font-medium);
+}
+
+/* Currency symbol */
+.currency-symbol {
+  font-size: var(--text-lg);
+  font-weight: var(--font-semibold);
+  color: var(--gold-primary);
+  width: 24px;
+  text-align: center;
+  flex-shrink: 0;
 }
 
 /* Transition */

@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '../stores/auth'
+import { useLocaleStore } from '../stores/locale'
 import { useLogin } from '../composables/useLogin'
 import { api } from '../services/api'
 import BaseCard from '../components/BaseCard.vue'
@@ -14,6 +15,7 @@ import LanguageSelector from '../components/LanguageSelector.vue'
 
 const router = useRouter()
 const authStore = useAuthStore()
+const localeStore = useLocaleStore()
 const { t } = useI18n()
 
 // Mobile menu state
@@ -94,7 +96,9 @@ const hasSubscription = computed(() => {
 async function loadPlans() {
   plansLoading.value = true
   try {
-    const response = (await api.getPlans()) as PlansResponse
+    // Pass currency if in devAccess mode
+    const currency = localeStore.isDevAccess ? localeStore.currentCurrency : undefined
+    const response = (await api.getPlans(currency)) as PlansResponse
     if (response.success) {
       plans.value = response.plans || []
       creditCosts.value = response.credit_costs || { image: 1, video: 5 }
@@ -105,6 +109,16 @@ async function loadPlans() {
     plansLoading.value = false
   }
 }
+
+// Reload plans when currency changes in devAccess mode
+watch(
+  () => localeStore.currentCurrency,
+  () => {
+    if (localeStore.isDevAccess) {
+      loadPlans()
+    }
+  }
+)
 
 function getTierIcon(tier: string): string {
   return tierIcons[tier] || 'star'

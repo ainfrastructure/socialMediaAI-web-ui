@@ -1797,7 +1797,8 @@ export default {
   languages: {
     en: 'English',
     no: 'Norwegian',
-    selectLanguage: 'Select Language',
+    selectLanguage: 'Language',
+    selectCurrency: 'Currency (Dev)',
   },
 
   // Schedule Modal
