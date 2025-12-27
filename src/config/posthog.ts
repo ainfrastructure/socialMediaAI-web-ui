@@ -1,5 +1,6 @@
 import posthog from 'posthog-js'
 import type { Router } from 'vue-router'
+import { warnLog, infoLog } from '@/utils/debug'
 
 export function initPostHog(router: Router) {
   const apiKey = import.meta.env.VITE_POSTHOG_API_KEY
@@ -8,7 +9,7 @@ export function initPostHog(router: Router) {
 
   // Only initialize PostHog if API key is provided
   if (!apiKey) {
-    console.warn('PostHog API key not configured - analytics disabled')
+    warnLog('PostHog API key not configured - analytics disabled')
     return
   }
 
@@ -59,7 +60,7 @@ export function initPostHog(router: Router) {
     })
   })
 
-  console.log('✅ PostHog analytics initialized')
+  infoLog('✅ PostHog analytics initialized')
 }
 
 // Helper to track custom events

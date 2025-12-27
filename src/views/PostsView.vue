@@ -117,7 +117,14 @@
                   :alt="$t('posts.postAlt')"
                   class="post-media"
                 />
-                <video v-else :src="post.media_url" class="post-media"></video>
+                <video
+                  v-else
+                  :src="post.media_url"
+                  class="post-media"
+                  preload="metadata"
+                  muted
+                  playsinline
+                ></video>
 
                 <!-- Content Type Icon -->
                 <span :class="['type-icon', post.content_type]">
@@ -247,7 +254,14 @@
               :alt="$t('posts.postAlt')"
               class="detail-media"
             />
-            <video v-else :src="selectedPost.media_url" class="detail-media" controls></video>
+            <video
+              v-else
+              :src="selectedPost.media_url"
+              class="detail-media"
+              controls
+              preload="metadata"
+              playsinline
+            ></video>
 
             <!-- Full Post Text -->
             <div class="detail-section">
@@ -309,6 +323,8 @@
 </template>
 
 <script setup lang="ts">
+import { debugLog, errorLog, warnLog } from '@/utils/debug'
+
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
@@ -432,7 +448,7 @@ async function fetchPosts() {
       totalPages.value = response.data?.pagination?.totalPages || 0
     }
   } catch (error) {
-    console.error('Error fetching posts:', error)
+    errorLog('Error fetching posts:', error)
   } finally {
     loadingPosts.value = false
   }
@@ -473,7 +489,7 @@ async function handleRestaurantAdded() {
     }
     showAddRestaurantModal.value = false
   } catch (error) {
-    console.error('Failed to fetch restaurants:', error)
+    errorLog('Failed to fetch restaurants:', error)
   }
 }
 
@@ -498,7 +514,7 @@ async function handleDeleteRestaurant(restaurant: SavedRestaurant) {
       fetchPosts()
     }
   } catch (error) {
-    console.error('Failed to delete restaurant:', error)
+    errorLog('Failed to delete restaurant:', error)
   }
 }
 
@@ -578,7 +594,7 @@ async function saveChanges() {
       originalPost.value = { ...selectedPost.value }
     }
   } catch (error) {
-    console.error('Error saving changes:', error)
+    errorLog('Error saving changes:', error)
   }
 }
 
@@ -619,7 +635,7 @@ async function handleDeleteConfirm() {
       await fetchPosts()
     }
   } catch (error) {
-    console.error('Error deleting post:', error)
+    errorLog('Error deleting post:', error)
   } finally {
     deletingPost.value = false
   }

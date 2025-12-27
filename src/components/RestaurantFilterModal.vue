@@ -109,6 +109,7 @@
 import { ref, computed } from 'vue'
 import BaseModal from './BaseModal.vue'
 import BaseButton from './BaseButton.vue'
+import { warnLog } from '@/utils/debug'
 
 interface Restaurant {
   id: string
@@ -201,7 +202,7 @@ const getPlatformEmoji = (platform: string) => {
 const handleImageError = (event: Event, restaurant: Restaurant) => {
   const img = event.target as HTMLImageElement
   img.style.display = 'none'
-  console.warn(`Failed to load logo for restaurant: ${restaurant.name}`)
+  warnLog(`Failed to load logo for restaurant: ${restaurant.name}`)
 }
 </script>
 

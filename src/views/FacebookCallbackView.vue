@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { debugLog, errorLog, warnLog } from '@/utils/debug'
+
 import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useFacebookStore } from '../stores/facebook'
@@ -14,7 +16,7 @@ onMounted(async () => {
   // Get stored return URL (if any)
   const returnUrl = localStorage.getItem('oauth_return_url')
   const defaultRedirect = '/connect-accounts'
-  console.log('[FacebookCallback] Return URL from localStorage:', returnUrl)
+  debugLog('[FacebookCallback] Return URL from localStorage:', returnUrl)
 
   try {
     // Get code and state from URL parameters

@@ -16,7 +16,9 @@
         v-else-if="post.content_type === 'video' && post.media_url"
         :src="getMediaUrl(post.media_url)"
         class="post-thumb-img"
+        preload="metadata"
         muted
+        playsinline
       ></video>
       <div v-else class="post-thumb-placeholder">
         <span class="thumb-icon">📸</span>

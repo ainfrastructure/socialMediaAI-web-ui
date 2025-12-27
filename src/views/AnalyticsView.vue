@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { debugLog, errorLog, warnLog } from '@/utils/debug'
+
 import { ref, computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { Line, Doughnut, Bar } from 'vue-chartjs'
@@ -83,7 +85,7 @@ async function fetchAnalyticsData() {
 
     await restaurantsStore.fetchRestaurants()
   } catch (error) {
-    console.error('Failed to fetch analytics:', error)
+    errorLog('Failed to fetch analytics:', error)
   } finally {
     loading.value = false
   }

@@ -437,6 +437,8 @@
 </template>
 
 <script setup lang="ts">
+import { debugLog, errorLog, warnLog } from '@/utils/debug'
+
 import { ref, computed, onMounted, watch, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
@@ -1197,7 +1199,7 @@ const handleSaveEdit = async (updates: any) => {
       throw new Error(response.error || 'Failed to update post')
     }
   } catch (error: any) {
-    console.error('Error updating post:', error)
+    errorLog('Error updating post:', error)
     alert(error.message || 'Failed to update post')
   } finally {
     loading.value = false

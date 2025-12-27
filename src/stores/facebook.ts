@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { api } from '../services/api'
+import { debugLog } from '@/utils/debug'
 
 export interface FacebookPage {
   id: string
@@ -48,7 +49,7 @@ export const useFacebookStore = defineStore('facebook', () => {
 
       // Step 2b: Store return URL if provided
       if (returnUrl) {
-        console.log('[FacebookStore] Storing return URL:', returnUrl)
+        debugLog('[FacebookStore] Storing return URL:', returnUrl)
         localStorage.setItem('oauth_return_url', returnUrl)
       } else {
         localStorage.removeItem('oauth_return_url')

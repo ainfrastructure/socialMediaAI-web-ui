@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { debugLog, errorLog, warnLog } from '@/utils/debug'
+
 import { ref, computed, onMounted, nextTick } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
@@ -22,6 +24,10 @@ import { restaurantService, type SavedRestaurant } from '@/services/restaurantSe
 import { api } from '@/services/api'
 import { okamService } from '@/services/okamService'
 import { API_URL } from '@/services/apiBase'
+import { getVideoSinglePrompt } from '@/config/promptModifiers'
+import { getVideoThemeModifier } from '@/utils/videoThemes'
+import { getVideoStyleInstruction, getVideoFidelityNote } from '@/config/videoStyleModifiers'
+import { extractDishDescription } from '@/utils/promptHelpers'
 
 const router = useRouter()
 const route = useRoute()
@@ -126,79 +132,6 @@ const selectedPlatforms = ref<string[]>(['facebook'])
 // Visual style prompt modifiers for video generation
 // These enhance the base prompt with style-specific instructions
 // Using STRICT IMAGE REPLICATION approach from image generation
-const videoStylePromptModifiers: Record<string, string> = {
-  behindTheScenes: `CRITICAL: You MUST recreate the EXACT dish from the reference image. This is NOT optional.
-
-MANDATORY REQUIREMENTS:
-1. COPY EVERY SINGLE INGREDIENT visible in the reference - if you see lettuce, include lettuce. If you see sauce, include sauce. If you see pickles, include pickles. NOTHING can be removed or changed.
-2. COPY the EXACT arrangement and stacking order of all components
-3. COPY the EXACT proportions and quantities of each ingredient
-4. The video must show the SAME dish, not a different dish
-
-Cinematic behind-the-scenes video of this exact dish being prepared. Show cooking with steam, sizzling, motion. Kitchen background blurred. The final plated dish must be IDENTICAL to the reference image.`,
-
-  cleanStrict: `CRITICAL: You MUST recreate the EXACT dish from the reference image. This is NOT optional.
-
-MANDATORY REQUIREMENTS:
-1. COPY EVERY SINGLE INGREDIENT visible in the reference - if you see lettuce, include lettuce. If you see sauce, include sauce. If you see pickles, include pickles. NOTHING can be removed or changed.
-2. COPY the EXACT arrangement and stacking order of all components
-3. COPY the EXACT proportions and quantities of each ingredient
-4. The video must show the SAME dish, not a different dish
-
-Professional studio video showing the exact dish from the reference. Add subtle camera movement - slow push-in or orbit. Clean background, professional lighting. The dish must be IDENTICAL to the reference image.`,
-
-  zoomIn: `CRITICAL: You MUST recreate the EXACT dish from the reference image. This is NOT optional.
-
-MANDATORY REQUIREMENTS:
-1. COPY EVERY SINGLE INGREDIENT visible in the reference - if you see lettuce, include lettuce. If you see sauce, include sauce. If you see pickles, include pickles. NOTHING can be removed or changed.
-2. COPY the EXACT arrangement and stacking order of all components
-3. COPY the EXACT proportions and quantities of each ingredient
-4. The video must show the SAME dish, not a different dish
-
-Slow camera zoom revealing texture details of the exact dish from the reference - steam rising, sauce glistening. The dish must be IDENTICAL to the reference image.`,
-
-  oneBite: `CRITICAL: You MUST recreate the EXACT dish from the reference image. This is NOT optional.
-
-MANDATORY REQUIREMENTS:
-1. COPY EVERY SINGLE INGREDIENT visible in the reference - if you see lettuce, include lettuce. If you see sauce, include sauce. If you see pickles, include pickles. NOTHING can be removed or changed.
-2. COPY the EXACT arrangement and stacking order of all components
-3. COPY the EXACT proportions and quantities of each ingredient
-4. The video must show the SAME dish, not a different dish
-
-Video showing a utensil entering frame and lifting a bite from the exact dish shown in the reference. The dish must be IDENTICAL to the reference image before and during the bite.`,
-
-  studioShot: `CRITICAL: You MUST recreate the EXACT dish from the reference image. This is NOT optional.
-
-MANDATORY REQUIREMENTS:
-1. COPY EVERY SINGLE INGREDIENT visible in the reference - if you see lettuce, include lettuce. If you see sauce, include sauce. If you see pickles, include pickles. NOTHING can be removed or changed.
-2. COPY the EXACT arrangement and stacking order of all components
-3. COPY the EXACT proportions and quantities of each ingredient
-4. The video must show the SAME dish, not a different dish
-
-360-degree slow orbit around the exact dish from the reference. Professional lighting. The dish must be IDENTICAL to the reference image from all angles.`,
-
-  infographic: `CRITICAL: You MUST recreate the EXACT dish from the reference image. This is NOT optional.
-
-MANDATORY REQUIREMENTS:
-1. COPY EVERY SINGLE INGREDIENT visible in the reference - if you see lettuce, include lettuce. If you see sauce, include sauce. If you see pickles, include pickles. NOTHING can be removed or changed.
-2. COPY the EXACT arrangement and stacking order of all components
-3. COPY the EXACT proportions and quantities of each ingredient
-4. The video must show the SAME dish, not a different dish
-
-Dynamic video showing this exact dish being assembled - ingredients come together into the final presentation. The assembled dish must be IDENTICAL to the reference image.`,
-
-  placeOnTable: `CRITICAL: You MUST recreate the EXACT dish from the reference image. This is NOT optional.
-
-MANDATORY REQUIREMENTS:
-1. COPY EVERY SINGLE INGREDIENT visible in the reference - if you see lettuce, include lettuce. If you see sauce, include sauce. If you see pickles, include pickles. NOTHING can be removed or changed.
-2. COPY the EXACT arrangement and stacking order of all components
-3. COPY the EXACT proportions and quantities of each ingredient
-4. The video must show the SAME dish, not a different dish
-
-Video showing hands placing the exact dish from the reference onto a table. The dish must be IDENTICAL to the reference image.`,
-
-  custom: '' // User provides their own prompt
-}
 
 // Load restaurant and connected accounts on mount
 onMounted(async () => {
@@ -279,7 +212,7 @@ async function handleRestaurantDelete(restaurantToDelete: SavedRestaurant) {
     // Reload the list
     await loadRestaurant()
   } catch (err) {
-    console.error('Failed to delete restaurant:', err)
+    errorLog('Failed to delete restaurant:', err)
   }
 }
 
@@ -332,7 +265,7 @@ async function handleEasyModePublish(data: {
     if (lastSavedPost.value?.id) {
       // Reuse the already saved post from autoSavePost()
       favoritePostId = lastSavedPost.value.id
-      console.log('Using existing saved post ID:', favoritePostId)
+      debugLog('Using existing saved post ID:', favoritePostId)
 
       // Update the saved post with edited content and selected platforms
       await api.updateFavorite(favoritePostId, {
@@ -343,7 +276,7 @@ async function handleEasyModePublish(data: {
       })
     } else {
       // No existing saved post, save a new one
-      console.log('Saving post as favorite...')
+      debugLog('Saving post as favorite...')
       const isVideo = currentMediaType.value === 'video'
       const mediaUrl = isVideo ? generatedVideoUrl.value : generatedImageUrl.value
       const saveResponse = await api.saveFavorite({
@@ -366,12 +299,12 @@ async function handleEasyModePublish(data: {
 
       favoritePostId = saveResponse.data.favorite.id
       lastSavedPost.value = saveResponse.data.favorite
-      console.log('Post saved with ID:', favoritePostId)
+      debugLog('Post saved with ID:', favoritePostId)
     }
 
     if (data.publishType === 'schedule') {
       // Schedule the post
-      console.log('Scheduling post for:', data.scheduleDate, data.scheduleTime, 'to platforms:', platforms)
+      debugLog('Scheduling post for:', data.scheduleDate, data.scheduleTime, 'to platforms:', platforms)
 
       const scheduleResponse = await api.schedulePost({
         favorite_post_id: favoritePostId,
@@ -385,7 +318,7 @@ async function handleEasyModePublish(data: {
         throw new Error('Failed to schedule post')
       }
 
-      console.log('Post scheduled successfully!')
+      debugLog('Post scheduled successfully!')
 
       // Navigate to calendar view
       router.push({
@@ -396,7 +329,7 @@ async function handleEasyModePublish(data: {
       })
     } else {
       // Publish now to selected platforms (feedback already shown in step 3->4 transition)
-      console.log('[DEBUG] Easy Mode: Publishing now to platforms:', platforms)
+      debugLog('[DEBUG] Easy Mode: Publishing now to platforms:', platforms)
 
       // Just call continueEasyModePublish directly, feedback was already shown
       pendingPublishData.value = {
@@ -406,7 +339,7 @@ async function handleEasyModePublish(data: {
       await continueEasyModePublish()
     }
   } catch (err: any) {
-    console.error('Failed to handle easy mode publish:', err)
+    errorLog('Failed to handle easy mode publish:', err)
     generationError.value = err.message || 'Failed to publish post'
     publishing.value = false
   }
@@ -415,7 +348,7 @@ async function handleEasyModePublish(data: {
 // Continue publishing after feedback (for Easy Mode)
 async function continueEasyModePublish() {
   if (!pendingPublishData.value) {
-    console.error('No pending publish data')
+    errorLog('No pending publish data')
     return
   }
 
@@ -423,7 +356,7 @@ async function continueEasyModePublish() {
 
   try {
     // Publish now to selected platforms
-    console.log('Publishing now to platforms:', platforms)
+    debugLog('Publishing now to platforms:', platforms)
 
       // Set publishing state BEFORE starting any API calls
       publishing.value = true
@@ -452,15 +385,15 @@ async function continueEasyModePublish() {
 
         if (platform === 'facebook') {
           // Get the first connected Facebook page
-          console.log('Connected Facebook pages:', facebookStore.connectedPages)
+          debugLog('Connected Facebook pages:', facebookStore.connectedPages)
           const selectedPage = facebookStore.connectedPages[0]
           if (!selectedPage) {
-            console.error('No Facebook page connected')
+            errorLog('No Facebook page connected')
             results.push({ platform: 'facebook', success: false, error: 'No Facebook page connected' })
             continue
           }
 
-          console.log('Publishing to page:', selectedPage.pageId, selectedPage.pageName)
+          debugLog('Publishing to page:', selectedPage.pageId, selectedPage.pageName)
 
           // Build the message with post text and hashtags
           const hashtags = generatedPostContent.value?.hashtags || []
@@ -469,7 +402,7 @@ async function continueEasyModePublish() {
             ? `${postText}\n\n${hashtags.join(' ')}`
             : postText
 
-          console.log('Calling API to post to Facebook...')
+          debugLog('Calling API to post to Facebook...')
           const isVideo = currentMediaType.value === 'video'
           const response = await api.postToFacebook(
             selectedPage.pageId,
@@ -478,13 +411,13 @@ async function continueEasyModePublish() {
             isVideo ? generatedVideoUrl.value : undefined,
             currentMediaType.value
           )
-          console.log('Facebook API response:', response)
+          debugLog('Facebook API response:', response)
 
           // API returns postUrl directly on response, not inside data
           const postUrl = (response as any).postUrl || response.data?.postUrl
           if (response.success && postUrl) {
             results.push({ platform: 'facebook', success: true, url: postUrl })
-            console.log('Published to Facebook successfully:', postUrl)
+            debugLog('Published to Facebook successfully:', postUrl)
             // Add notification for successful Facebook publish
             notificationStore.addPublishSuccess('facebook', postUrl)
             // Update progress
@@ -511,15 +444,15 @@ async function continueEasyModePublish() {
           }
         } else if (platform === 'instagram') {
           // Instagram publishing via Facebook Graph API
-          console.log('Connected Instagram accounts:', instagramStore.connectedAccounts)
+          debugLog('Connected Instagram accounts:', instagramStore.connectedAccounts)
           const instagramAccount = instagramStore.connectedAccounts[0]
           if (!instagramAccount) {
-            console.error('No Instagram account connected')
+            errorLog('No Instagram account connected')
             results.push({ platform: 'instagram', success: false, error: 'No Instagram account connected' })
             continue
           }
 
-          console.log('Publishing to Instagram account:', instagramAccount.username)
+          debugLog('Publishing to Instagram account:', instagramAccount.username)
 
           // Build the message with post text and hashtags
           const hashtags = generatedPostContent.value?.hashtags || []
@@ -537,13 +470,13 @@ async function continueEasyModePublish() {
               isVideo ? generatedVideoUrl.value : undefined,
               currentMediaType.value
             )
-            console.log('Instagram API response:', response)
+            debugLog('Instagram API response:', response)
 
             // API returns postUrl directly on response or inside data
             const postUrl = (response as any).postUrl || response.data?.postUrl
             if (response.success && postUrl) {
               results.push({ platform: 'instagram', success: true, url: postUrl })
-              console.log('Published to Instagram successfully:', postUrl)
+              debugLog('Published to Instagram successfully:', postUrl)
               // Add notification for successful Instagram publish
               notificationStore.addPublishSuccess('instagram', postUrl)
               // Update progress
@@ -561,7 +494,7 @@ async function continueEasyModePublish() {
               }
             }
           } catch (instagramErr: any) {
-            console.error('Instagram publishing error:', instagramErr)
+            errorLog('Instagram publishing error:', instagramErr)
             const errorMsg = instagramErr.message || 'Failed to publish to Instagram'
             results.push({ platform: 'instagram', success: false, error: errorMsg })
             // Update progress
@@ -604,9 +537,9 @@ async function continueEasyModePublish() {
                 successfulPlatforms.filter(r => r.url).map(r => [r.platform, r.url!])
               )
             })
-            console.log('Post saved to calendar as published')
+            debugLog('Post saved to calendar as published')
           } catch (calendarErr) {
-            console.warn('Failed to save to calendar:', calendarErr)
+            warnLog('Failed to save to calendar:', calendarErr)
             // Don't fail the whole operation if calendar save fails
           }
         }
@@ -620,7 +553,7 @@ async function continueEasyModePublish() {
       // Clear pending data
       pendingPublishData.value = null
   } catch (err: any) {
-    console.error('Error publishing/scheduling:', err)
+    errorLog('Error publishing/scheduling:', err)
     generationError.value = err.message || 'Failed to publish post'
     publishing.value = false
     publishingComplete.value = true
@@ -630,14 +563,14 @@ async function continueEasyModePublish() {
 // Continue publishing after feedback (for Advanced Mode)
 async function _continueAdvancedModePublish() {
   if (!pendingPublishData.value || pendingPublishData.value.type !== 'advanced') {
-    console.error('No pending advanced mode publish data')
+    errorLog('No pending advanced mode publish data')
     return
   }
 
   const { platforms, data, onResult } = pendingPublishData.value
 
   try {
-    console.log('[DEBUG] Continuing Advanced Mode publish to platforms:', platforms)
+    debugLog('[DEBUG] Continuing Advanced Mode publish to platforms:', platforms)
 
     // Publish now to all selected platforms
     publishing.value = true
@@ -730,7 +663,7 @@ async function _continueAdvancedModePublish() {
           platform_post_urls: postUrls
         })
       } catch (calendarErr) {
-        console.warn('Failed to save to calendar:', calendarErr)
+        warnLog('Failed to save to calendar:', calendarErr)
       }
     }
 
@@ -745,7 +678,7 @@ async function _continueAdvancedModePublish() {
     // Clear pending data
     pendingPublishData.value = null
   } catch (err: any) {
-    console.error('[DEBUG] Error in Advanced Mode publish:', err)
+    errorLog('[DEBUG] Error in Advanced Mode publish:', err)
     publishing.value = false
     if (onResult) {
       onResult({ success: false, error: err.message || 'Failed to publish' })
@@ -813,14 +746,14 @@ async function handleEasyModeGenerate(data: {
     logoPosition.value = 'bottom-right'
 
     // Generate prompts
-    console.log('[EasyMode] Generating prompts...')
+    debugLog('[EasyMode] Generating prompts...')
     await generatePromptsFromSelection()
-    console.log('[EasyMode] Generated prompts:', imagePrompts.value)
+    debugLog('[EasyMode] Generated prompts:', imagePrompts.value)
 
     // Auto-select first image prompt
     if (imagePrompts.value.length > 0) {
       editablePrompt.value = imagePrompts.value[0]
-      console.log('[EasyMode] Using prompt:', editablePrompt.value)
+      debugLog('[EasyMode] Using prompt:', editablePrompt.value)
 
       await nextTick()
 
@@ -839,13 +772,19 @@ async function handleEasyModeGenerate(data: {
       // Generate content based on media type
       try {
         if (data.mediaType === 'video') {
-          console.log('[EasyMode] Starting video generation...')
-          await generateVideo(data.uploadedImage, data.videoOptions)
-          console.log('[EasyMode] Video generated successfully:', generatedVideoUrl.value)
+          debugLog('[EasyMode] Starting video generation...')
+          await generateVideo(
+            data.uploadedImage,
+            data.uploadedLogo,
+            data.videoOptions,
+            holidayTheme.value,
+            promptContext.value
+          )
+          debugLog('[EasyMode] Video generated successfully:', generatedVideoUrl.value)
         } else {
-          console.log('[EasyMode] Starting image generation...')
+          debugLog('[EasyMode] Starting image generation...')
           await generateImage(data.uploadedLogo, data.uploadedImage)
-          console.log('[EasyMode] Image generated successfully:', generatedImageUrl.value)
+          debugLog('[EasyMode] Image generated successfully:', generatedImageUrl.value)
         }
 
         // Upload the image to the restaurant's uploaded_images collection
@@ -856,7 +795,7 @@ async function handleEasyModeGenerate(data: {
               [data.uploadedImage]
             )
           } catch (uploadError) {
-            console.error('Failed to save uploaded image to restaurant:', uploadError)
+            errorLog('Failed to save uploaded image to restaurant:', uploadError)
             // Don't fail the entire operation if this fails
           }
         }
@@ -868,7 +807,7 @@ async function handleEasyModeGenerate(data: {
           ? t('contentCreate.videoError', 'Failed to generate video. Please try again.')
           : t('contentCreate.imageError', 'Failed to generate image. Please try again.'))
         generationError.value = errorMessage
-        console.error('[EasyMode] Generation error:', genError)
+        errorLog('[EasyMode] Generation error:', genError)
         notificationStore.addNotification({
           type: 'error',
           title: data.mediaType === 'video'
@@ -880,7 +819,7 @@ async function handleEasyModeGenerate(data: {
       }
     } else {
       // No prompts generated - show error
-      console.warn('[EasyMode] No prompts were generated')
+      warnLog('[EasyMode] No prompts were generated')
       easyModeGenerating.value = false
       const errorMessage = t('contentCreate.noPrompts', 'No prompts were generated. Please try again.')
       generationError.value = errorMessage
@@ -924,12 +863,12 @@ function handleEasyModeReset() {
 
 async function generatePromptsFromSelection() {
   if (!restaurant.value) {
-    console.warn('[Prompts] No restaurant value')
+    warnLog('[Prompts] No restaurant value')
     return
   }
 
   try {
-    console.log('[Prompts] Calling API with:', {
+    debugLog('[Prompts] Calling API with:', {
       restaurant: restaurant.value.name,
       menuItems: selectedMenuItems.value,
       context: promptContext.value
@@ -945,19 +884,19 @@ async function generatePromptsFromSelection() {
       promptContext.value
     )
 
-    console.log('[Prompts] API response:', response)
+    debugLog('[Prompts] API response:', response)
 
     if (response.success) {
       // API returns imagePrompts directly on response, not inside data
       const prompts = (response as any).imagePrompts || response.data?.imagePrompts || []
       imagePrompts.value = prompts
-      console.log('[Prompts] Set imagePrompts to:', imagePrompts.value)
+      debugLog('[Prompts] Set imagePrompts to:', imagePrompts.value)
     } else {
-      console.warn('[Prompts] Response not successful:', response)
+      warnLog('[Prompts] Response not successful:', response)
       imagePrompts.value = []
     }
   } catch (err) {
-    console.error('[Prompts] Failed to generate prompts:', err)
+    errorLog('[Prompts] Failed to generate prompts:', err)
     imagePrompts.value = []
   }
 }
@@ -972,7 +911,7 @@ async function generateImage(uploadedLogo: File | null = null, uploadedImage: Fi
     // Start post content generation in parallel
     let postContentPromise: Promise<void> | null = null
     postContentPromise = generatePostContent().catch(error => {
-      console.error('Failed to generate post content:', error)
+      errorLog('Failed to generate post content:', error)
     })
 
     // Prepare watermark if restaurant has logo and user wants it
@@ -986,7 +925,7 @@ async function generateImage(uploadedLogo: File | null = null, uploadedImage: Fi
           logoPath: logoUrl,
           position: logoPosition.value,
           opacity: 80,
-          scale: 15,
+          scale: 25,
           padding: 20,
         }
       : undefined
@@ -1010,7 +949,7 @@ async function generateImage(uploadedLogo: File | null = null, uploadedImage: Fi
           mimeType: uploadedImage.type,
         }
       } catch {
-        console.error('Failed to process uploaded image')
+        errorLog('Failed to process uploaded image')
       }
     }
     // If no uploaded image, try to use menu item image
@@ -1112,15 +1051,15 @@ async function fetchReferenceImage(
   generatedImageUrl: string | null,
   menuItemImageUrl: string | null
 ): Promise<{ base64Data: string; mimeType: string; source: 'uploaded' | 'generated' | 'menu' } | undefined> {
-  console.log('[Reference] === Starting reference image fetch ===')
+  debugLog('[Reference] === Starting reference image fetch ===')
 
   // Priority 1: Uploaded image
   if (uploadedImage) {
     try {
-      console.log('[Reference] Priority 1: Found uploaded image, processing...')
-      console.log('[Reference] - File name:', uploadedImage.name)
-      console.log('[Reference] - File size:', uploadedImage.size, 'bytes')
-      console.log('[Reference] - File type:', uploadedImage.type)
+      debugLog('[Reference] Priority 1: Found uploaded image, processing...')
+      debugLog('[Reference] - File name:', uploadedImage.name)
+      debugLog('[Reference] - File size:', uploadedImage.size, 'bytes')
+      debugLog('[Reference] - File type:', uploadedImage.type)
       const base64Data = await new Promise<string>((resolve) => {
         const reader = new FileReader()
         reader.onloadend = () => {
@@ -1129,31 +1068,31 @@ async function fetchReferenceImage(
         }
         reader.readAsDataURL(uploadedImage)
       })
-      console.log('[Reference] ✅ Successfully converted uploaded image to base64')
+      debugLog('[Reference] ✅ Successfully converted uploaded image to base64')
       return {
         base64Data,
         mimeType: uploadedImage.type,
         source: 'uploaded'
       }
     } catch (error) {
-      console.error('[Reference] ❌ Failed to process uploaded image:', error)
+      errorLog('[Reference] ❌ Failed to process uploaded image:', error)
       // Fall through to next priority
     }
   } else {
-    console.log('[Reference] Priority 1: No uploaded image')
+    debugLog('[Reference] Priority 1: No uploaded image')
   }
 
   // Priority 2: Previously generated image
   if (generatedImageUrl) {
     try {
-      console.log('[Reference] Priority 2: Found generated image URL, fetching...')
-      console.log('[Reference] - URL:', generatedImageUrl)
+      debugLog('[Reference] Priority 2: Found generated image URL, fetching...')
+      debugLog('[Reference] - URL:', generatedImageUrl)
       const imageResponse = await fetch(generatedImageUrl)
-      console.log('[Reference] - Fetch response status:', imageResponse.status, imageResponse.statusText)
+      debugLog('[Reference] - Fetch response status:', imageResponse.status, imageResponse.statusText)
       if (imageResponse.ok) {
         const imageBlob = await imageResponse.blob()
-        console.log('[Reference] - Blob size:', imageBlob.size, 'bytes')
-        console.log('[Reference] - Blob type:', imageBlob.type)
+        debugLog('[Reference] - Blob size:', imageBlob.size, 'bytes')
+        debugLog('[Reference] - Blob type:', imageBlob.type)
         const base64Data = await new Promise<string>((resolve) => {
           const reader = new FileReader()
           reader.onloadend = () => {
@@ -1164,40 +1103,40 @@ async function fetchReferenceImage(
         })
         let mimeType = imageBlob.type
         if (!mimeType || mimeType === 'application/octet-stream') {
-          console.log('[Reference] - Defaulting MIME type to image/png')
+          debugLog('[Reference] - Defaulting MIME type to image/png')
           mimeType = 'image/png'
         }
-        console.log('[Reference] ✅ Successfully converted generated image to base64')
+        debugLog('[Reference] ✅ Successfully converted generated image to base64')
         return {
           base64Data,
           mimeType,
           source: 'generated'
         }
       } else {
-        console.error('[Reference] ❌ Fetch failed with status:', imageResponse.status)
+        errorLog('[Reference] ❌ Fetch failed with status:', imageResponse.status)
       }
     } catch (error) {
-      console.error('[Reference] ❌ Failed to fetch generated image:', error)
+      errorLog('[Reference] ❌ Failed to fetch generated image:', error)
       // Fall through to next priority
     }
   } else {
-    console.log('[Reference] Priority 2: No generated image URL')
+    debugLog('[Reference] Priority 2: No generated image URL')
   }
 
   // Priority 3: Menu item image
   if (menuItemImageUrl) {
     try {
-      console.log('[Reference] Priority 3: Found menu item image URL, fetching...')
-      console.log('[Reference] - Original URL:', menuItemImageUrl)
+      debugLog('[Reference] Priority 3: Found menu item image URL, fetching...')
+      debugLog('[Reference] - Original URL:', menuItemImageUrl)
       // Proxy Okam CDN URLs to avoid CORS issues
       const imageUrl = okamService.proxyImageUrl(menuItemImageUrl) || menuItemImageUrl
-      console.log('[Reference] - Proxied URL:', imageUrl)
+      debugLog('[Reference] - Proxied URL:', imageUrl)
       const imageResponse = await fetch(imageUrl)
-      console.log('[Reference] - Fetch response status:', imageResponse.status, imageResponse.statusText)
+      debugLog('[Reference] - Fetch response status:', imageResponse.status, imageResponse.statusText)
       if (imageResponse.ok) {
         const imageBlob = await imageResponse.blob()
-        console.log('[Reference] - Blob size:', imageBlob.size, 'bytes')
-        console.log('[Reference] - Blob type:', imageBlob.type)
+        debugLog('[Reference] - Blob size:', imageBlob.size, 'bytes')
+        debugLog('[Reference] - Blob type:', imageBlob.type)
         const base64Data = await new Promise<string>((resolve) => {
           const reader = new FileReader()
           reader.onloadend = () => {
@@ -1209,43 +1148,46 @@ async function fetchReferenceImage(
         // Handle 'application/octet-stream' by defaulting to image/png
         let mimeType = imageBlob.type
         if (!mimeType || mimeType === 'application/octet-stream') {
-          console.log('[Reference] - Defaulting MIME type to image/png')
+          debugLog('[Reference] - Defaulting MIME type to image/png')
           mimeType = 'image/png'
         }
-        console.log('[Reference] ✅ Successfully converted menu item image to base64')
-        console.log('[Reference] - Final MIME type:', mimeType)
-        console.log('[Reference] - Base64 length:', base64Data.length, 'characters')
+        debugLog('[Reference] ✅ Successfully converted menu item image to base64')
+        debugLog('[Reference] - Final MIME type:', mimeType)
+        debugLog('[Reference] - Base64 length:', base64Data.length, 'characters')
         return {
           base64Data,
           mimeType,
           source: 'menu'
         }
       } else {
-        console.error('[Reference] ❌ Fetch failed with status:', imageResponse.status)
+        errorLog('[Reference] ❌ Fetch failed with status:', imageResponse.status)
       }
     } catch (error) {
-      console.error('[Reference] ❌ Failed to fetch menu item image:', error)
-      console.error('[Reference] - Error details:', error)
+      errorLog('[Reference] ❌ Failed to fetch menu item image:', error)
+      errorLog('[Reference] - Error details:', error)
       // Fall through to no reference
     }
   } else {
-    console.log('[Reference] Priority 3: No menu item image URL')
+    debugLog('[Reference] Priority 3: No menu item image URL')
   }
 
   // No reference image available
-  console.log('[Reference] ❌ No reference image available from any source')
-  console.log('[Reference] === Reference image fetch complete (no image found) ===')
+  debugLog('[Reference] ❌ No reference image available from any source')
+  debugLog('[Reference] === Reference image fetch complete (no image found) ===')
   return undefined
 }
 
 // Video generation function
 async function generateVideo(
   uploadedImage: File | null = null,
+  uploadedLogo: File | null = null,
   videoOptions?: {
     duration: 5 | 6 | 8
     aspectRatio: '16:9' | '9:16'
     generateAudio: boolean
-  }
+  },
+  themeModifier?: string,
+  promotionalText?: string
 ) {
   if (!editablePrompt.value || !restaurant.value) return
 
@@ -1256,46 +1198,87 @@ async function generateVideo(
     // Start post content generation in parallel
     let postContentPromise: Promise<void> | null = null
     postContentPromise = generatePostContent().catch(error => {
-      console.error('Failed to generate post content:', error)
+      errorLog('Failed to generate post content:', error)
     })
 
-    console.log('========== VIDEO GENERATION START ==========')
-    console.log('[Video] Base prompt:', editablePrompt.value)
-    console.log('[Video] Selected menu items:', selectedMenuItems.value)
-    console.log('[Video] Visual style:', visualStyle.value)
+    debugLog('========== VIDEO GENERATION START ==========')
+    debugLog('[Video] Base prompt:', editablePrompt.value)
+    debugLog('[Video] Selected menu items:', selectedMenuItems.value)
+    debugLog('[Video] Visual style:', visualStyle.value)
 
-    // Apply visual style modifier to the prompt for video generation
-    let enhancedPrompt = editablePrompt.value
-    const styleModifier = visualStyle.value === 'custom'
-      ? customVisualPrompt.value
-      : videoStylePromptModifiers[visualStyle.value]
+    // BUILD VIDEO-SPECIFIC PROMPT (improved structure for better variety)
+    // Extract dish description (remove photography terminology)
+    const dishDescription = extractDishDescription(editablePrompt.value)
+    debugLog('[Video] Extracted dish description:', dishDescription)
 
-    if (styleModifier) {
-      enhancedPrompt = `${editablePrompt.value}\n\n${styleModifier}`
-      console.log('[Video] Style modifier applied:', visualStyle.value)
-      console.log('[Video] FULL ENHANCED PROMPT:')
-      console.log('---START PROMPT---')
-      console.log(enhancedPrompt)
-      console.log('---END PROMPT---')
+    // Build video prompt in optimal order for AI interpretation
+    const promptParts: string[] = []
+
+    // PART 1: Style & Cinematography (FIRST - sets creative direction)
+    if (visualStyle.value === 'custom') {
+      promptParts.push(customVisualPrompt.value)
+      debugLog('[Video] Using custom visual prompt')
+    } else {
+      const styleInstruction = getVideoStyleInstruction(visualStyle.value)
+      if (styleInstruction) {
+        promptParts.push(styleInstruction)
+        debugLog('[Video] Style instruction applied:', visualStyle.value)
+        debugLog('[Video] Style preview:', styleInstruction.substring(0, 150) + '...')
+      }
     }
+
+    // PART 2: Subject Description (SECOND - what to film)
+    promptParts.push(`Featured dish: ${dishDescription}`)
+
+    // PART 3: Theme & Atmosphere (THIRD - mood evolution)
+    if (themeModifier && themeModifier !== 'none') {
+      const themeContext = getVideoThemeModifier(themeModifier)
+      if (themeContext) {
+        promptParts.push(themeContext)
+        debugLog('[Video] Theme modifier applied:', themeModifier)
+        debugLog('[Video] Theme preview:', themeContext.substring(0, 150) + '...')
+      }
+    }
+
+    // PART 4: Promotional Text (FOURTH - text overlay integration)
+    if (promotionalText && promotionalText.trim()) {
+      const promoInstruction = `Include visible text overlay in a natural, premium style: "${promotionalText.toUpperCase()}" - make it prominent, elegant, and well-integrated into the video aesthetic with professional typography and subtle effects.`
+      promptParts.push(promoInstruction)
+      debugLog('[Video] Promotional text added to prompt:', promotionalText)
+    }
+
+    // PART 5: Fidelity Note (LAST - brief constraint)
+    const fidelityNote = visualStyle.value !== 'custom'
+      ? getVideoFidelityNote(visualStyle.value)
+      : 'Final dish matches reference image composition and ingredients.'
+    promptParts.push(`DISH FIDELITY: ${fidelityNote}`)
+
+    // Build final enhanced prompt
+    const enhancedPrompt = promptParts.join('\n\n')
+
+    debugLog('[Video] ===== COMPLETE ENHANCED PROMPT =====')
+    debugLog(enhancedPrompt)
+    debugLog('[Video] ========================================')
+    debugLog(`[Video] Prompt stats: ${enhancedPrompt.length} chars, ~${Math.ceil(enhancedPrompt.length / 4)} tokens`)
 
     // Prepare video generation options
     const options = {
       duration: videoOptions?.duration || 6,
       aspectRatio: videoOptions?.aspectRatio || '9:16',
+      resolution: '1080p' as '720p' | '1080p',
       generateAudio: videoOptions?.generateAudio ?? true,
       enhancePrompt: true,
       model: 'veo-3.1-fast-generate-preview' as const,
     }
-    console.log('[Video] Options:', options)
+    debugLog('[Video] Options:', options)
 
     let response: any
 
     // Fetch reference image using helper - checks uploaded, generated, and menu item images
-    console.log('[Video] Attempting to fetch reference image...')
-    console.log('[Video] - Uploaded image:', uploadedImage ? 'YES' : 'NO')
-    console.log('[Video] - Generated image URL:', generatedImageUrl.value || 'NONE')
-    console.log('[Video] - Menu item image URL:', selectedMenuItems.value[0]?.imageUrl || 'NONE')
+    debugLog('[Video] Attempting to fetch reference image...')
+    debugLog('[Video] - Uploaded image:', uploadedImage ? 'YES' : 'NO')
+    debugLog('[Video] - Generated image URL:', generatedImageUrl.value || 'NONE')
+    debugLog('[Video] - Menu item image URL:', selectedMenuItems.value[0]?.imageUrl || 'NONE')
 
     const referenceImageData = await fetchReferenceImage(
       uploadedImage,
@@ -1304,19 +1287,19 @@ async function generateVideo(
     )
 
     if (referenceImageData) {
-      console.log('[Video] ✅ REFERENCE IMAGE FOUND!')
-      console.log('[Video] Source:', referenceImageData.source)
-      console.log('[Video] MIME type:', referenceImageData.mimeType)
-      console.log('[Video] Base64 data length:', referenceImageData.base64Data.length, 'characters')
-      console.log('[Video] Base64 preview (first 100 chars):', referenceImageData.base64Data.substring(0, 100))
+      debugLog('[Video] ✅ REFERENCE IMAGE FOUND!')
+      debugLog('[Video] Source:', referenceImageData.source)
+      debugLog('[Video] MIME type:', referenceImageData.mimeType)
+      debugLog('[Video] Base64 data length:', referenceImageData.base64Data.length, 'characters')
+      debugLog('[Video] Base64 preview (first 100 chars):', referenceImageData.base64Data.substring(0, 100))
     } else {
-      console.log('[Video] ❌ NO REFERENCE IMAGE - generating from text only')
+      debugLog('[Video] ❌ NO REFERENCE IMAGE - generating from text only')
     }
 
     // Use reference image if available
-    console.log('[Video] Calling API...')
+    debugLog('[Video] Calling API...')
     if (referenceImageData) {
-      console.log('[Video] Using api.generateVideoFromImage()')
+      debugLog('[Video] Using api.generateVideoFromImage()')
       response = await api.generateVideoFromImage(
         enhancedPrompt,
         referenceImageData.base64Data,
@@ -1324,14 +1307,14 @@ async function generateVideo(
         options
       )
     } else {
-      console.log('[Video] Using api.generateVideo() (text-only)')
+      debugLog('[Video] Using api.generateVideo() (text-only)')
       response = await api.generateVideo(enhancedPrompt, options)
     }
 
-    console.log('[Video] API Response:', response)
-    console.log('[Video] Response success:', response.success)
-    console.log('[Video] Operation ID:', response.operationId)
-    console.log('========== VIDEO GENERATION API CALL COMPLETE ==========')
+    debugLog('[Video] API Response:', response)
+    debugLog('[Video] Response success:', response.success)
+    debugLog('[Video] Operation ID:', response.operationId)
+    debugLog('========== VIDEO GENERATION API CALL COMPLETE ==========')
 
     if (!response.success) {
       throw new Error(response.error || t('contentCreate.videoError', 'Failed to generate video'))
@@ -1342,7 +1325,87 @@ async function generateVideo(
 
     // Poll for video completion (pass modelId for correct polling endpoint)
     const videoUrl = await pollVideoUntilComplete(response.operationId, response.modelId)
-    generatedVideoUrl.value = videoUrl
+
+    // Apply logo watermark if requested
+    // NOTE: Requires FFmpeg to be installed on the backend
+    if (uploadedLogo || (includeLogo.value && restaurant.value?.brand_dna?.logo_url)) {
+      console.log('[Video] Logo watermarking requested...')
+
+      const logoUrl = uploadedLogo
+        ? await fileToBase64Url(uploadedLogo)
+        : restaurant.value.brand_dna?.logo_url
+
+      if (logoUrl) {
+        try {
+          console.log('[Video] Calling watermark API...')
+          const watermarkResponse = await api.addVideoWatermark(
+            videoUrl,
+            logoUrl,
+            {
+              position: logoPosition.value,
+              opacity: 80,
+              scale: 40,
+              padding: 20,
+            }
+          )
+
+          console.log('[Video] Watermark API response:', watermarkResponse)
+
+          if (watermarkResponse.success && watermarkResponse.videoUrl) {
+            generatedVideoUrl.value = watermarkResponse.videoUrl
+            console.log('[Video] ✅ Watermark applied successfully!')
+          } else {
+            generatedVideoUrl.value = videoUrl
+            console.warn('[Video] ⚠️ Watermark failed (FFmpeg might not be installed):', watermarkResponse.error)
+            console.warn('[Video] Using non-watermarked video')
+          }
+        } catch (err: any) {
+          errorLog('[Video] Watermark error:', err)
+          console.warn('[Video] ⚠️ Watermarking failed - continuing with non-watermarked video')
+          console.warn('[Video] To enable watermarking, install FFmpeg on the backend server')
+          generatedVideoUrl.value = videoUrl
+        }
+      } else {
+        generatedVideoUrl.value = videoUrl
+      }
+    } else {
+      generatedVideoUrl.value = videoUrl
+    }
+
+    // Add Social Chef branding watermark (top-left, always present)
+    console.log('[Video] Adding Social Chef branding watermark...')
+    try {
+      // Use the current video URL (which may already have restaurant logo)
+      const currentVideoUrl = generatedVideoUrl.value || videoUrl
+      const socialChefLogoUrl = `${window.location.origin}/powered-by-socialchef.svg`
+
+      const brandingResponse = await api.addVideoWatermark(
+        currentVideoUrl,
+        socialChefLogoUrl,
+        {
+          position: 'top-left',
+          opacity: 80,
+          scale: 25,
+          padding: 20,
+        }
+      )
+
+      console.log('[Video] Social Chef branding watermark response:', brandingResponse)
+
+      if (brandingResponse.success && brandingResponse.videoUrl) {
+        generatedVideoUrl.value = brandingResponse.videoUrl
+        console.log('[Video] ✅ Social Chef branding applied successfully!')
+      } else {
+        console.warn('[Video] ⚠️ Social Chef branding watermark failed:', brandingResponse.error)
+        console.warn('[Video] Using video without Social Chef branding')
+      }
+    } catch (err: any) {
+      errorLog('[Video] Social Chef branding watermark error:', err)
+      console.warn('[Video] ⚠️ Social Chef branding watermarking failed - continuing without it')
+    }
+
+    // Promotional text is now included in the AI prompt above (no overlay needed)
+    // This creates a more professional, integrated look than post-processing overlays
 
     // Wait for post content generation to complete
     if (postContentPromise) {
@@ -1418,7 +1481,7 @@ async function generatePostContent() {
       }
     } else {
       const errorMessage = response.error || response.message || t('posts.create.captionGenerationFailed')
-      console.error('Failed to generate post content:', errorMessage)
+      errorLog('Failed to generate post content:', errorMessage)
       notificationStore.addNotification({
         type: 'error',
         title: t('posts.create.captionGenerationFailed'),
@@ -1426,7 +1489,7 @@ async function generatePostContent() {
       })
     }
   } catch (err: any) {
-    console.error('Failed to generate post content:', err)
+    errorLog('Failed to generate post content:', err)
     notificationStore.addNotification({
       type: 'error',
       title: t('posts.create.captionGenerationFailed'),
@@ -1468,7 +1531,7 @@ async function autoSavePost() {
       lastSavedPost.value = response.data.favorite
     }
   } catch (err) {
-    console.error('Failed to auto-save post:', err)
+    errorLog('Failed to auto-save post:', err)
   }
 }
 
@@ -1718,7 +1781,7 @@ async function handleAdvancedModeComplete(data: {
               platform_post_urls: postUrls
             })
           } catch (calendarErr) {
-            console.warn('Failed to save to calendar:', calendarErr)
+            warnLog('Failed to save to calendar:', calendarErr)
           }
         }
 
@@ -1748,7 +1811,7 @@ async function handleAdvancedModeComplete(data: {
       }
     }
   } catch (err: any) {
-    console.error('Failed to handle advanced mode:', err)
+    errorLog('Failed to handle advanced mode:', err)
     generationError.value = err.message || 'Failed to process advanced mode'
   }
 }
@@ -1779,13 +1842,13 @@ async function autoSaveAdvancedPost() {
       lastSavedPost.value = response.data.favorite
     }
   } catch (err) {
-    console.error('Failed to auto-save advanced post:', err)
+    errorLog('Failed to auto-save advanced post:', err)
   }
 }
 
 // Handle inline feedback from child components (fire-and-forget)
 async function handleInlineFeedback(feedbackText: string) {
-  console.log('[DEBUG] Received inline feedback:', feedbackText)
+  debugLog('[DEBUG] Received inline feedback:', feedbackText)
 
   // Submit feedback to backend (non-blocking)
   try {
@@ -1800,9 +1863,9 @@ async function handleInlineFeedback(feedbackText: string) {
         feedbackText: feedbackText,
       })
     })
-    console.log('[DEBUG] Inline feedback submitted successfully')
+    debugLog('[DEBUG] Inline feedback submitted successfully')
   } catch (error) {
-    console.error('Failed to submit inline feedback:', error)
+    errorLog('Failed to submit inline feedback:', error)
     // Don't block the flow if feedback fails
   }
 }
@@ -1853,7 +1916,7 @@ async function publishToFacebook() {
       generationError.value = response.error || t('contentCreate.publishError', 'Failed to publish to Facebook')
     }
   } catch (err: any) {
-    console.error('Failed to publish to Facebook:', err)
+    errorLog('Failed to publish to Facebook:', err)
     generationError.value = err.message || t('contentCreate.publishError', 'Failed to publish to Facebook')
   } finally {
     publishing.value = false
@@ -1885,7 +1948,7 @@ function _handleContentUpdated(updatedContent: { postText: string; hashtags: str
       post_text: updatedContent.postText,
       hashtags: updatedContent.hashtags,
     }).catch(err => {
-      console.error('Failed to update post:', err)
+      errorLog('Failed to update post:', err)
     })
   }
 }

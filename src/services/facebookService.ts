@@ -1,5 +1,6 @@
 import type { ApiResponse } from './apiBase'
 import { API_URL, getAuthHeader, getAuthHeaders } from './apiBase'
+import { debugLog, debugError } from '@/utils/debug'
 
 class FacebookService {
   async initAuth(): Promise<ApiResponse<{ authUrl: string; state: string }>> {
@@ -56,7 +57,7 @@ class FacebookService {
     videoUrl?: string,
     contentType?: 'image' | 'video'
   ): Promise<ApiResponse<{ postId: string; postUrl: string }>> {
-    console.log('[FacebookService] Posting to Facebook:', { pageId, messageLength: message.length, hasImage: !!imageUrl, hasVideo: !!videoUrl, contentType, apiUrl: `${API_URL}/api/facebook/pages/${pageId}/post` })
+    debugLog('[FacebookService] Posting to Facebook:', { pageId, messageLength: message.length, hasImage: !!imageUrl, hasVideo: !!videoUrl, contentType, apiUrl: `${API_URL}/api/facebook/pages/${pageId}/post` })
 
     try {
       const response = await fetch(`${API_URL}/api/facebook/pages/${pageId}/post`, {
@@ -65,11 +66,11 @@ class FacebookService {
         body: JSON.stringify({ message, imageUrl, videoUrl, contentType }),
       })
 
-      console.log('[FacebookService] Response status:', response.status, response.statusText)
+      debugLog('[FacebookService] Response status:', response.status, response.statusText)
 
       if (!response.ok) {
         const text = await response.text()
-        console.error('[FacebookService] Response not OK:', text)
+        debugError('[FacebookService] Response not OK:', text)
         try {
           return JSON.parse(text)
         } catch {
@@ -81,10 +82,10 @@ class FacebookService {
       }
 
       const data = await response.json()
-      console.log('[FacebookService] Response data:', data)
+      debugLog('[FacebookService] Response data:', data)
       return data
     } catch (error) {
-      console.error('[FacebookService] Network or parse error:', error)
+      debugError('[FacebookService] Network or parse error:', error)
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Network request failed'

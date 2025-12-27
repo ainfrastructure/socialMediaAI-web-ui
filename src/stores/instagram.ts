@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { api } from '../services/api'
+import { debugLog } from '@/utils/debug'
 
 export interface InstagramAccount {
   id: string
@@ -44,7 +45,7 @@ export const useInstagramStore = defineStore('instagram', () => {
 
       // Step 2b: Store return URL if provided
       if (returnUrl) {
-        console.log('[InstagramStore] Storing return URL:', returnUrl)
+        debugLog('[InstagramStore] Storing return URL:', returnUrl)
         localStorage.setItem('oauth_return_url', returnUrl)
       } else {
         localStorage.removeItem('oauth_return_url')

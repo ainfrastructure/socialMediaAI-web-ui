@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { debugLog, errorLog, warnLog } from '@/utils/debug'
+
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
@@ -104,7 +106,7 @@ async function loadPlans() {
       creditCosts.value = response.credit_costs || { image: 1, video: 5 }
     }
   } catch (error) {
-    console.error('Failed to load plans:', error)
+    errorLog('Failed to load plans:', error)
   } finally {
     plansLoading.value = false
   }

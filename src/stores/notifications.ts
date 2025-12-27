@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
+import { debugWarn } from '@/utils/debug'
 
 export interface Notification {
   id: string
@@ -116,7 +117,7 @@ export const useNotificationStore = defineStore('notifications', () => {
     try {
       localStorage.setItem('notifications', JSON.stringify(notifications.value))
     } catch (e) {
-      console.warn('Failed to save notifications to localStorage:', e)
+      debugWarn('Failed to save notifications to localStorage:', e)
     }
   }
 
@@ -131,7 +132,7 @@ export const useNotificationStore = defineStore('notifications', () => {
         }))
       }
     } catch (e) {
-      console.warn('Failed to load notifications from localStorage:', e)
+      debugWarn('Failed to load notifications from localStorage:', e)
     }
   }
 

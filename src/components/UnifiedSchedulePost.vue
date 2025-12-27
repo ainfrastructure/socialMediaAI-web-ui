@@ -11,6 +11,7 @@ import { useSocialAccounts } from '@/composables/useSocialAccounts'
 import { useScheduleTime } from '@/composables/useScheduleTime'
 import { useFacebookStore } from '@/stores/facebook'
 import { useInstagramStore } from '@/stores/instagram'
+import { errorLog } from '@/utils/debug'
 
 interface Props {
   disabled?: boolean
@@ -172,7 +173,7 @@ async function handlePlatformClick(platform: typeof availablePlatforms.value[0])
       }
       // The stores are reactive, so UI will update automatically after connection
     } catch (error) {
-      console.error('Failed to connect:', error)
+      errorLog('Failed to connect:', error)
     }
   }
 }

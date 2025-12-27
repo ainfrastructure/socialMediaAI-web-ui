@@ -15,6 +15,8 @@
       v-else-if="type === 'video'"
       :src="mediaUrl"
       controls
+      preload="metadata"
+      playsinline
       class="generated-video"
     ></video>
 

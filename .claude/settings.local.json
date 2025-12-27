@@ -39,7 +39,8 @@
       "Bash(node test-page-video-upload.js:*)",
       "Bash(\"https://graph.facebook.com/v24.0/819358677927828/videos\" )",
       "Bash(git add:*)",
-      "Bash(git rebase:*)"
+      "Bash(git rebase:*)",
+      "Bash(node test-video-processing.js:*)"
     ],
     "deny": [],
     "ask": []

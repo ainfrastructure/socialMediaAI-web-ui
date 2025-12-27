@@ -1,3 +1,5 @@
+import { debugError } from '@/utils/debug'
+
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000'
 
 export interface OkamProduct {
@@ -71,13 +73,13 @@ class OkamService {
       }
 
       if (!response.ok || !data.success) {
-        console.error('[OKAM] Error fetching menu:', data.error || data.message)
+        debugError('[OKAM] Error fetching menu:', data.error || data.message)
         return null
       }
 
       return data.data || null
     } catch (error) {
-      console.error('[OKAM] Error fetching menu:', error)
+      debugError('[OKAM] Error fetching menu:', error)
       return null
     }
   }
@@ -107,7 +109,7 @@ class OkamService {
 
       return data.success && data.hasOkamStore
     } catch (error) {
-      console.error('[OKAM] Error checking store:', error)
+      debugError('[OKAM] Error checking store:', error)
       return false
     }
   }

@@ -1,6 +1,7 @@
 import * as Sentry from '@sentry/vue'
 import type { App } from 'vue'
 import type { Router } from 'vue-router'
+import { warnLog } from '@/utils/debug'
 
 export function initSentry(app: App, router: Router) {
   const dsn = import.meta.env.VITE_SENTRY_DSN
@@ -8,7 +9,7 @@ export function initSentry(app: App, router: Router) {
 
   // Only initialize Sentry if DSN is provided
   if (!dsn) {
-    console.warn('Sentry DSN not configured - error tracking disabled')
+    warnLog('Sentry DSN not configured - error tracking disabled')
     return
   }
 

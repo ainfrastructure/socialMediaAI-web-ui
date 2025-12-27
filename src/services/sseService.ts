@@ -1,5 +1,6 @@
 import { useNotificationStore } from '@/stores/notifications'
 import { API_URL } from './apiBase'
+import { debugLog, debugError, warnLog, errorLog } from '@/utils/debug'
 
 class SSEService {
   private eventSource: EventSource | null = null
@@ -14,7 +15,7 @@ class SSEService {
   connect(token: string): void {
     // Don't reconnect if already connected with same token
     if (this.eventSource && this.currentToken === token) {
-      console.log('[SSE] Already connected')
+      debugLog('[SSE] Already connected')
       return
     }
 
@@ -26,28 +27,28 @@ class SSEService {
     this.currentToken = token
     const url = `${API_URL}/api/notifications/stream?token=${encodeURIComponent(token)}`
 
-    console.log('[SSE] Connecting to notification stream...')
+    debugLog('[SSE] Connecting to notification stream...')
     this.eventSource = new EventSource(url)
 
     this.eventSource.onopen = () => {
-      console.log('[SSE] Connected successfully')
+      debugLog('[SSE] Connected successfully')
       this.reconnectAttempts = 0
     }
 
     // Handle connection confirmation
     this.eventSource.addEventListener('connected', (event) => {
-      console.log('[SSE] Server confirmed connection:', event.data)
+      debugLog('[SSE] Server confirmed connection:', event.data)
     })
 
     // Handle publish success notifications
     this.eventSource.addEventListener('publish-success', (event) => {
       try {
         const data = JSON.parse(event.data)
-        console.log('[SSE] Publish success:', data)
+        debugLog('[SSE] Publish success:', data)
         const store = useNotificationStore()
         store.addPublishSuccess(data.platform, data.postUrl)
       } catch (error) {
-        console.error('[SSE] Error parsing publish-success event:', error)
+        debugError('[SSE] Error parsing publish-success event:', error)
       }
     })
 
@@ -55,11 +56,11 @@ class SSEService {
     this.eventSource.addEventListener('publish-error', (event) => {
       try {
         const data = JSON.parse(event.data)
-        console.log('[SSE] Publish error:', data)
+        debugLog('[SSE] Publish error:', data)
         const store = useNotificationStore()
         store.addPublishError(data.platform, data.error)
       } catch (error) {
-        console.error('[SSE] Error parsing publish-error event:', error)
+        debugError('[SSE] Error parsing publish-error event:', error)
       }
     })
 
@@ -70,7 +71,7 @@ class SSEService {
 
     // Handle connection errors
     this.eventSource.onerror = (error) => {
-      console.error('[SSE] Connection error:', error)
+      errorLog('[SSE] Connection error:', error)
 
       // EventSource automatically tries to reconnect on error
       // But we can implement our own backoff if needed
@@ -85,19 +86,19 @@ class SSEService {
    */
   private handleReconnect(): void {
     if (!this.currentToken) {
-      console.log('[SSE] No token available for reconnection')
+      warnLog('[SSE] No token available for reconnection')
       return
     }
 
     if (this.reconnectAttempts >= this.maxReconnectAttempts) {
-      console.error('[SSE] Max reconnect attempts reached')
+      errorLog('[SSE] Max reconnect attempts reached')
       return
     }
 
     this.reconnectAttempts++
     const delay = this.reconnectDelay * Math.pow(2, this.reconnectAttempts - 1)
 
-    console.log(`[SSE] Reconnecting in ${delay}ms (attempt ${this.reconnectAttempts}/${this.maxReconnectAttempts})`)
+    debugLog(`[SSE] Reconnecting in ${delay}ms (attempt ${this.reconnectAttempts}/${this.maxReconnectAttempts})`)
 
     setTimeout(() => {
       if (this.currentToken) {
@@ -111,7 +112,7 @@ class SSEService {
    */
   disconnect(): void {
     if (this.eventSource) {
-      console.log('[SSE] Disconnecting...')
+      debugLog('[SSE] Disconnecting...')
       this.eventSource.close()
       this.eventSource = null
       this.currentToken = null

@@ -183,11 +183,24 @@ class ContentService {
     videoPath: string,
     logoPath: string,
     options?: { position?: string; opacity?: number; scale?: number; padding?: number }
-  ): Promise<ApiResponse<{ videoUrl: string }>> {
+  ): Promise<{ success: boolean; videoUrl?: string; error?: string }> {
     const response = await fetch(`${API_URL}/api/images/add-video-watermark`, {
       method: 'POST',
       headers: getAuthHeaders(),
       body: JSON.stringify({ videoPath, logoPath, ...options }),
+    })
+    return response.json()
+  }
+
+  async addVideoPromotionalSticker(
+    videoPath: string,
+    text: string,
+    options?: { position?: string; style?: string; color?: string; textColor?: string; size?: string; rotation?: number }
+  ): Promise<{ success: boolean; videoUrl?: string; error?: string }> {
+    const response = await fetch(`${API_URL}/api/images/add-video-promotional-sticker`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ videoPath, text, ...options }),
     })
     return response.json()
   }

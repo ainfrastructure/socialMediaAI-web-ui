@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { debugLog, errorLog, warnLog } from '@/utils/debug'
+
 import { ref, onMounted, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
@@ -108,13 +110,13 @@ async function subscribe(tier: string) {
     const successUrl = `${window.location.origin}/posts?success=true`
     const cancelUrl = `${window.location.origin}/plans?canceled=true`
 
-    console.log('[Checkout] Creating checkout session for tier:', tier)
+    debugLog('[Checkout] Creating checkout session for tier:', tier)
     const response = await api.createCheckout(tier, successUrl, cancelUrl)
-    console.log('[Checkout] Response:', response)
+    debugLog('[Checkout] Response:', response)
 
     if (!response.success) {
       const errorMsg = (response as any).message || response.error || t('plans.failedToCheckout')
-      console.error('[Checkout] Error details:', errorMsg)
+      errorLog('[Checkout] Error details:', errorMsg)
       showMessage(errorMsg, 'error')
       return
     }
@@ -122,15 +124,15 @@ async function subscribe(tier: string) {
     const checkoutUrl = (response as any).checkout_url || response.data?.checkout_url
 
     if (!checkoutUrl) {
-      console.error('[Checkout] No checkout URL in response:', response)
+      errorLog('[Checkout] No checkout URL in response:', response)
       showMessage(t('plans.failedToCheckout'), 'error')
       return
     }
 
-    console.log('[Checkout] Redirecting to:', checkoutUrl)
+    debugLog('[Checkout] Redirecting to:', checkoutUrl)
     window.location.href = checkoutUrl
   } catch (error: any) {
-    console.error('[Checkout] Error:', error)
+    errorLog('[Checkout] Error:', error)
     showMessage(error.message || t('plans.networkError'), 'error')
   }
 }
@@ -145,21 +147,21 @@ async function openBillingPortal() {
 
   try {
     const returnUrl = `${window.location.origin}/plans`
-    console.log('[Portal] Creating customer portal session')
+    debugLog('[Portal] Creating customer portal session')
     const response = await api.createCustomerPortal(returnUrl)
-    console.log('[Portal] Response:', response)
+    debugLog('[Portal] Response:', response)
 
     const portalUrl = (response as any).portal_url || response.data?.url
 
     if (response.success && portalUrl) {
-      console.log('[Portal] Redirecting to:', portalUrl)
+      debugLog('[Portal] Redirecting to:', portalUrl)
       window.location.href = portalUrl
     } else {
-      console.error('[Portal] No portal URL in response:', response)
+      errorLog('[Portal] No portal URL in response:', response)
       showMessage(t('plans.failedToOpenPortal'), 'error')
     }
   } catch (error: any) {
-    console.error('[Portal] Error:', error)
+    errorLog('[Portal] Error:', error)
     showMessage(error.message || t('plans.networkError'), 'error')
   } finally {
     portalLoading.value = false

@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import { useFacebookStore } from '../stores/facebook'
 import BaseButton from './BaseButton.vue'
+import { errorLog } from '@/utils/debug'
 
 interface Platform {
   value: string
@@ -43,7 +44,7 @@ async function handleConnect() {
       // Emit to parent that connection was successful
       emit('connect')
     } catch (error) {
-      console.error('Failed to connect:', error)
+      errorLog('Failed to connect:', error)
     }
   }
 }

@@ -26,6 +26,7 @@ import { useInstagramStore } from '@/stores/instagram'
 import { usePreferencesStore } from '@/stores/preferences'
 import { useSocialAccounts } from '@/composables/useSocialAccounts'
 import type { SavedRestaurant } from '@/services/restaurantService'
+import { debugLog } from '@/utils/debug'
 
 interface MenuItem {
   name: string
@@ -507,7 +508,7 @@ function nextStep() {
 
   // Step 3 -> 4: Emit feedback if provided, then continue to publish options
   if (currentStep.value === 3) {
-    console.log('[EasyMode] Step 3 -> 4, emitting feedback:', feedbackText.value)
+    debugLog('[EasyMode] Step 3 -> 4, emitting feedback:', feedbackText.value)
     if (feedbackText.value.trim()) {
       emit('feedback', feedbackText.value.trim())
     }
@@ -1071,6 +1072,8 @@ onUnmounted(() => {
               autoplay
               muted
               loop
+              preload="metadata"
+              playsinline
               class="preview-video-display"
             >
               {{ t('common.videoNotSupported', 'Your browser does not support the video tag.') }}

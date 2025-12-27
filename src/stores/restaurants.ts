@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { restaurantService, type SavedRestaurant } from '../services/restaurantService'
+import { errorLog } from '@/utils/debug'
 
 export const useRestaurantsStore = defineStore('restaurants', () => {
   // State
@@ -46,7 +47,7 @@ export const useRestaurantsStore = defineStore('restaurants', () => {
       lastFetchTime.value = Date.now()
     } catch (err: any) {
       error.value = err.message || 'Failed to fetch restaurants'
-      console.error('Failed to fetch restaurants:', err)
+      errorLog('Failed to fetch restaurants:', err)
     } finally {
       loading.value = false
     }
@@ -98,7 +99,7 @@ export const useRestaurantsStore = defineStore('restaurants', () => {
       return success
     } catch (err: any) {
       error.value = err.message || 'Failed to delete restaurant'
-      console.error('Failed to delete restaurant:', err)
+      errorLog('Failed to delete restaurant:', err)
       return false
     } finally {
       loading.value = false
@@ -127,7 +128,7 @@ export const useRestaurantsStore = defineStore('restaurants', () => {
       return false
     } catch (err: any) {
       error.value = err.message || 'Failed to update restaurant'
-      console.error('Failed to update restaurant:', err)
+      errorLog('Failed to update restaurant:', err)
       return false
     } finally {
       loading.value = false

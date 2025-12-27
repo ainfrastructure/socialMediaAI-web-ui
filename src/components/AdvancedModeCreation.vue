@@ -35,6 +35,9 @@ import { okamService } from '@/services/okamService'
 import { useFacebookStore } from '@/stores/facebook'
 import { useInstagramStore } from '@/stores/instagram'
 import { useNotificationStore } from '@/stores/notifications'
+import { debugLog, errorLog } from '@/utils/debug'
+import { getVideoSinglePrompt, getVideoComboPrompt, getVideoWeeklyPrompt } from '@/config/promptModifiers'
+import { getThemeContext } from '@/utils/videoThemes'
 
 interface MenuItem {
   name: string
@@ -82,187 +85,7 @@ interface WeeklyCustomizationOptions {
   customThemeText: string
 }
 
-// Video style prompt modifiers for single posts (matching Easy Mode)
-const videoStylePromptModifiers: Record<string, string> = {
-  behindTheScenes: `CRITICAL: You MUST recreate the EXACT dish from the reference image. This is NOT optional.
-
-MANDATORY REQUIREMENTS:
-1. COPY EVERY SINGLE INGREDIENT visible in the reference - if you see lettuce, include lettuce. If you see sauce, include sauce. If you see pickles, include pickles. NOTHING can be removed or changed.
-2. COPY the EXACT arrangement and stacking order of all components
-3. COPY the EXACT proportions and quantities of each ingredient
-4. The video must show the SAME dish, not a different dish
-
-Cinematic behind-the-scenes video of this exact dish being prepared. Show cooking with steam, sizzling, motion. Kitchen background blurred. The final plated dish must be IDENTICAL to the reference image.`,
-
-  cleanStrict: `CRITICAL: You MUST recreate the EXACT dish from the reference image. This is NOT optional.
-
-MANDATORY REQUIREMENTS:
-1. COPY EVERY SINGLE INGREDIENT visible in the reference - if you see lettuce, include lettuce. If you see sauce, include sauce. If you see pickles, include pickles. NOTHING can be removed or changed.
-2. COPY the EXACT arrangement and stacking order of all components
-3. COPY the EXACT proportions and quantities of each ingredient
-4. The video must show the SAME dish, not a different dish
-
-Professional studio video showing the exact dish from the reference. Add subtle camera movement - slow push-in or orbit. Clean background, professional lighting. The dish must be IDENTICAL to the reference image.`,
-
-  zoomIn: `CRITICAL: You MUST recreate the EXACT dish from the reference image. This is NOT optional.
-
-MANDATORY REQUIREMENTS:
-1. COPY EVERY SINGLE INGREDIENT visible in the reference - if you see lettuce, include lettuce. If you see sauce, include sauce. If you see pickles, include pickles. NOTHING can be removed or changed.
-2. COPY the EXACT arrangement and stacking order of all components
-3. COPY the EXACT proportions and quantities of each ingredient
-4. The video must show the SAME dish, not a different dish
-
-Slow camera zoom revealing texture details of the exact dish from the reference - steam rising, sauce glistening. The dish must be IDENTICAL to the reference image.`,
-
-  oneBite: `CRITICAL: You MUST recreate the EXACT dish from the reference image. This is NOT optional.
-
-MANDATORY REQUIREMENTS:
-1. COPY EVERY SINGLE INGREDIENT visible in the reference - if you see lettuce, include lettuce. If you see sauce, include sauce. If you see pickles, include pickles. NOTHING can be removed or changed.
-2. COPY the EXACT arrangement and stacking order of all components
-3. COPY the EXACT proportions and quantities of each ingredient
-4. The video must show the SAME dish, not a different dish
-
-Video showing a utensil entering frame and lifting a bite from the exact dish shown in the reference. The dish must be IDENTICAL to the reference image before and during the bite.`,
-
-  studioShot: `CRITICAL: You MUST recreate the EXACT dish from the reference image. This is NOT optional.
-
-MANDATORY REQUIREMENTS:
-1. COPY EVERY SINGLE INGREDIENT visible in the reference - if you see lettuce, include lettuce. If you see sauce, include sauce. If you see pickles, include pickles. NOTHING can be removed or changed.
-2. COPY the EXACT arrangement and stacking order of all components
-3. COPY the EXACT proportions and quantities of each ingredient
-4. The video must show the SAME dish, not a different dish
-
-360-degree slow orbit around the exact dish from the reference. Professional lighting. The dish must be IDENTICAL to the reference image from all angles.`,
-
-  infographic: `CRITICAL: You MUST recreate the EXACT dish from the reference image. This is NOT optional.
-
-MANDATORY REQUIREMENTS:
-1. COPY EVERY SINGLE INGREDIENT visible in the reference - if you see lettuce, include lettuce. If you see sauce, include sauce. If you see pickles, include pickles. NOTHING can be removed or changed.
-2. COPY the EXACT arrangement and stacking order of all components
-3. COPY the EXACT proportions and quantities of each ingredient
-4. The video must show the SAME dish, not a different dish
-
-Dynamic video showing this exact dish being assembled - ingredients come together into the final presentation. The assembled dish must be IDENTICAL to the reference image.`,
-
-  custom: '' // User provides their own prompt
-}
-
-// Combo-specific video prompt modifiers (2 items)
-const comboVideoPromptModifiers: Record<string, string> = {
-  behindTheScenes: `CRITICAL: This is a COMBO post featuring EXACTLY 2 dishes. Both must be visible and equally prominent.
-
-MANDATORY REQUIREMENTS:
-1. Show BOTH dishes clearly - neither should be hidden or obscured
-2. Each dish must match its reference image EXACTLY (all ingredients, plating, portions)
-3. Arrange the 2 dishes side-by-side or in a complementary composition
-4. Maintain equal visual weight for both items
-5. The video must showcase this as a bundle/combo offer
-
-Cinematic behind-the-scenes video showing BOTH dishes being prepared together. Steam, motion, kitchen background. Both dishes must be IDENTICAL to their reference images.`,
-
-  cleanStrict: `CRITICAL: This is a COMBO post featuring EXACTLY 2 dishes. Both must be visible and equally prominent.
-
-MANDATORY REQUIREMENTS:
-1. Show BOTH dishes clearly - neither should be hidden or obscured
-2. Each dish must match its reference image EXACTLY (all ingredients, plating, portions)
-3. Arrange the 2 dishes side-by-side or in a complementary composition
-4. Maintain equal visual weight for both items
-5. The video must showcase this as a bundle/combo offer
-
-Professional studio video showing BOTH dishes together. Subtle camera movement captures both items. Clean background, professional lighting. Both dishes must be IDENTICAL to their reference images.`,
-
-  zoomIn: `CRITICAL: This is a COMBO post featuring EXACTLY 2 dishes. Both must be visible and equally prominent.
-
-MANDATORY REQUIREMENTS:
-1. Show BOTH dishes clearly - neither should be hidden or obscured
-2. Each dish must match its reference image EXACTLY (all ingredients, plating, portions)
-3. Arrange the 2 dishes side-by-side or in a complementary composition
-4. Maintain equal visual weight for both items
-5. The video must showcase this as a bundle/combo offer
-
-Camera slowly reveals BOTH dishes together, showcasing textures and details of each. Both dishes must be IDENTICAL to their reference images.`,
-
-  oneBite: `CRITICAL: This is a COMBO post featuring EXACTLY 2 dishes. Both must be visible and equally prominent.
-
-MANDATORY REQUIREMENTS:
-1. Show BOTH dishes clearly - neither should be hidden or obscured
-2. Each dish must match its reference image EXACTLY (all ingredients, plating, portions)
-3. Arrange the 2 dishes side-by-side or in a complementary composition
-4. Maintain equal visual weight for both items
-5. The video must showcase this as a bundle/combo offer
-
-Video showing utensils taking bites from BOTH dishes, showcasing the combo. Both dishes visible throughout. Both dishes must be IDENTICAL to their reference images.`,
-
-  studioShot: `CRITICAL: This is a COMBO post featuring EXACTLY 2 dishes. Both must be visible and equally prominent.
-
-MANDATORY REQUIREMENTS:
-1. Show BOTH dishes clearly - neither should be hidden or obscured
-2. Each dish must match its reference image EXACTLY (all ingredients, plating, portions)
-3. Arrange the 2 dishes side-by-side or in a complementary composition
-4. Maintain equal visual weight for both items
-5. The video must showcase this as a bundle/combo offer
-
-360-degree orbit showing BOTH dishes together from all angles. Professional lighting. Both dishes must be IDENTICAL to their reference images.`,
-
-  infographic: `CRITICAL: This is a COMBO post featuring EXACTLY 2 dishes. Both must be visible and equally prominent.
-
-MANDATORY REQUIREMENTS:
-1. Show BOTH dishes clearly - neither should be hidden or obscured
-2. Each dish must match its reference image EXACTLY (all ingredients, plating, portions)
-3. Arrange the 2 dishes side-by-side or in a complementary composition
-4. Maintain equal visual weight for both items
-5. The video must showcase this as a bundle/combo offer
-
-Dynamic video showing BOTH dishes being assembled side-by-side. Ingredients come together for both items. Both dishes must be IDENTICAL to their reference images.`,
-
-  custom: '' // User provides their own prompt
-}
-
-// Weekly menu video prompt modifiers (5 or 7 dishes)
-// Note: These use layout names instead of style names
-const weeklyMenuVideoPromptModifiers: Record<string, string> = {
-  featuredGrid: `CRITICAL: This is a WEEKLY MENU post featuring multiple dishes for different days.
-
-MANDATORY REQUIREMENTS:
-1. Show multiple dishes in an appealing arrangement
-2. Create a sense of variety and abundance across the week
-3. Emphasize the weekly menu concept visually
-4. Professional restaurant presentation
-
-Video showcasing a week's worth of delicious dishes. Show one featured dish prominently with others visible around it in a grid. Professional kitchen setting with steam and motion. Conveys weekly variety and quality.`,
-
-  calendarGrid: `CRITICAL: This is a WEEKLY MENU post featuring multiple dishes for different days.
-
-MANDATORY REQUIREMENTS:
-1. Show multiple dishes in an appealing arrangement
-2. Create a sense of variety and abundance across the week
-3. Emphasize the weekly menu concept visually
-4. Professional restaurant presentation
-
-Video panning across multiple dishes arranged in a calendar-style grid. Each dish represents a different day. Professional setting showcasing weekly variety.`,
-
-  verticalStack: `CRITICAL: This is a WEEKLY MENU post featuring multiple dishes for different days.
-
-MANDATORY REQUIREMENTS:
-1. Show multiple dishes in an appealing arrangement
-2. Create a sense of variety and abundance across the week
-3. Emphasize the weekly menu concept visually
-4. Professional restaurant presentation
-
-Video revealing dishes stacked vertically or shown in sequence, one after another. Each dish represents a different day of the week. Professional presentation emphasizing variety.`,
-
-  gridWithHeader: `CRITICAL: This is a WEEKLY MENU post featuring multiple dishes for different days.
-
-MANDATORY REQUIREMENTS:
-1. Show multiple dishes in an appealing arrangement
-2. Create a sense of variety and abundance across the week
-3. Emphasize the weekly menu concept visually
-4. Professional restaurant presentation
-
-Video showcasing dishes in a structured grid layout. Camera pans across the weekly offerings. Professional setting with excellent lighting highlighting each dish.`,
-
-  custom: '' // User provides their own prompt
-}
+// Using centralized prompt configuration from src/config/promptModifiers.ts
 
 const props = defineProps<{
   restaurant: SavedRestaurant
@@ -600,7 +423,7 @@ function scrollToComponentTop() {
 function nextStep() {
   // Step 4 → Step 5: Emit feedback if provided, then continue to generate step
   if (currentStep.value === 4) {
-    console.log('[AdvancedMode] Step 4 -> 5, emitting feedback:', feedbackText.value)
+    debugLog('[AdvancedMode] Step 4 -> 5, emitting feedback:', feedbackText.value)
     if (feedbackText.value.trim()) {
       emit('feedback', feedbackText.value.trim())
     }
@@ -780,7 +603,7 @@ async function generateStyleVariations() {
       throw new Error(response.error || 'Failed to generate style variations')
     }
   } catch (error: any) {
-    console.error('Error generating style variations:', error)
+    errorLog('Error generating style variations:', error)
     variationsError.value = error.message || t('advancedMode.messages.generationError')
   } finally {
     generatingVariations.value = false
@@ -894,7 +717,7 @@ async function generateImage() {
           mimeType: uploadedImage.value.type,
         }
       } catch {
-        console.error('Failed to process uploaded image')
+        errorLog('Failed to process uploaded image')
       }
     }
     // If no uploaded image, try to use menu item image (for single and combo posts)
@@ -922,7 +745,7 @@ async function generateImage() {
           mimeType,
         }
       } catch {
-        console.error('Failed to fetch menu item image')
+        errorLog('Failed to fetch menu item image')
       }
     }
     // For weekly posts, use first day's dish image as reference
@@ -932,12 +755,12 @@ async function generateImage() {
         const firstDayItem = weeklyMenuItems.value[firstDay]?.item
 
         if (firstDayItem?.imageUrl) {
-          console.log('[AdvVideo] Using weekly menu first day image as reference')
-          console.log('[AdvVideo] First day:', firstDay)
-          console.log('[AdvVideo] First day dish:', firstDayItem.name)
+          debugLog('[AdvVideo] Using weekly menu first day image as reference')
+          debugLog('[AdvVideo] First day:', firstDay)
+          debugLog('[AdvVideo] First day dish:', firstDayItem.name)
           // Proxy Okam CDN URLs to avoid CORS issues
           const imageUrl = okamService.proxyImageUrl(firstDayItem.imageUrl) || firstDayItem.imageUrl
-          console.log('[AdvVideo] Fetching image from:', imageUrl)
+          debugLog('[AdvVideo] Fetching image from:', imageUrl)
           const imageResponse = await fetch(imageUrl)
           const blob = await imageResponse.blob()
           const base64Data = await new Promise<string>((resolve) => {
@@ -957,22 +780,22 @@ async function generateImage() {
             base64Data,
             mimeType,
           }
-          console.log('[AdvVideo] ✅ Successfully fetched weekly menu reference image')
+          debugLog('[AdvVideo] ✅ Successfully fetched weekly menu reference image')
         } else {
-          console.log('[AdvVideo] No image URL for first day of weekly menu')
+          debugLog('[AdvVideo] No image URL for first day of weekly menu')
         }
       } catch (error) {
-        console.error('[AdvVideo] ❌ Failed to fetch weekly menu reference image:', error)
+        errorLog('[AdvVideo] ❌ Failed to fetch weekly menu reference image:', error)
       }
     }
 
     // Check if we're generating video or image
     if (mediaType.value === 'video') {
-      console.log('========== ADVANCED MODE VIDEO GENERATION START ==========')
-      console.log('[AdvVideo] Post type:', postType.value)
-      console.log('[AdvVideo] Selected variation style:', selectedVariation.value.style)
-      console.log('[AdvVideo] Base prompt:', selectedVariation.value.prompt)
-      console.log('[AdvVideo] Media type:', mediaType.value)
+      debugLog('========== ADVANCED MODE VIDEO GENERATION START ==========')
+      debugLog('[AdvVideo] Post type:', postType.value)
+      debugLog('[AdvVideo] Selected variation style:', selectedVariation.value.style)
+      debugLog('[AdvVideo] Base prompt:', selectedVariation.value.prompt)
+      debugLog('[AdvVideo] Media type:', mediaType.value)
 
       // Determine which modifier set to use based on post type
       let enhancedPrompt = selectedVariation.value.prompt
@@ -980,54 +803,74 @@ async function generateImage() {
 
       if (postType.value === 'combo') {
         // Use combo-specific modifiers (2 items)
-        console.log('[AdvVideo] Using COMBO video prompt modifiers')
-        styleModifier = comboVideoPromptModifiers[selectedVariation.value.style] || ''
+        debugLog('[AdvVideo] Using COMBO video prompt modifiers')
+        styleModifier = getVideoComboPrompt(selectedVariation.value.style) || ''
       } else if (postType.value === 'weekly') {
         // Use weekly menu modifiers based on layout
-        console.log('[AdvVideo] Using WEEKLY MENU video prompt modifiers')
+        debugLog('[AdvVideo] Using WEEKLY MENU video prompt modifiers')
         const layout = weeklyCustomization.value.layout || 'featuredGrid'
-        console.log('[AdvVideo] Weekly layout:', layout)
-        styleModifier = weeklyMenuVideoPromptModifiers[layout] || ''
+        debugLog('[AdvVideo] Weekly layout:', layout)
+        styleModifier = getVideoWeeklyPrompt(layout) || ''
       } else {
         // Single posts - use standard modifiers
-        console.log('[AdvVideo] Using STANDARD video prompt modifiers')
-        styleModifier = videoStylePromptModifiers[selectedVariation.value.style] || ''
+        debugLog('[AdvVideo] Using STANDARD video prompt modifiers')
+        styleModifier = getVideoSinglePrompt(selectedVariation.value.style) || ''
       }
 
       if (styleModifier) {
         enhancedPrompt = `${selectedVariation.value.prompt}\n\n${styleModifier}`
-        console.log('[AdvVideo] Style modifier applied')
+        debugLog('[AdvVideo] Style modifier applied')
       } else {
-        console.log('[AdvVideo] No style modifier available for:', selectedVariation.value.style)
+        debugLog('[AdvVideo] No style modifier available for:', selectedVariation.value.style)
       }
 
-      console.log('[AdvVideo] FULL ENHANCED PROMPT:')
-      console.log('---START PROMPT---')
-      console.log(enhancedPrompt)
-      console.log('---END PROMPT---')
+      // Apply theme modifier if provided
+      if (customization.value.holidayTheme && customization.value.holidayTheme !== 'none') {
+        const themeToUse = customization.value.holidayTheme === 'custom'
+          ? customization.value.customHolidayText
+          : customization.value.holidayTheme
+        const themeContext = getThemeContext(themeToUse)
+        if (themeContext) {
+          enhancedPrompt = `${enhancedPrompt}\n\n${themeContext}`
+          debugLog('[AdvVideo] Theme modifier applied:', themeToUse)
+        }
+      }
+
+      // Apply promotional text to the AI prompt for natural integration
+      if (customization.value.textOverlay?.text && customization.value.textOverlay.text.trim()) {
+        const promoInstruction = `Include visible text overlay in a natural, premium style: "${customization.value.textOverlay.text.toUpperCase()}" - make it prominent, elegant, and well-integrated into the video aesthetic with professional typography and subtle effects.`
+        enhancedPrompt = `${enhancedPrompt}\n\n${promoInstruction}`
+        debugLog('[AdvVideo] Promotional text added to prompt:', customization.value.textOverlay.text)
+      }
+
+      debugLog('[AdvVideo] FULL ENHANCED PROMPT:')
+      debugLog('---START PROMPT---')
+      debugLog(enhancedPrompt)
+      debugLog('---END PROMPT---')
 
       // Log reference image status
       if (referenceImage) {
-        console.log('[AdvVideo] ✅ REFERENCE IMAGE FOUND')
-        console.log('[AdvVideo] Reference MIME type:', referenceImage.mimeType)
-        console.log('[AdvVideo] Reference base64 length:', referenceImage.base64Data.length, 'characters')
+        debugLog('[AdvVideo] ✅ REFERENCE IMAGE FOUND')
+        debugLog('[AdvVideo] Reference MIME type:', referenceImage.mimeType)
+        debugLog('[AdvVideo] Reference base64 length:', referenceImage.base64Data.length, 'characters')
       } else {
-        console.log('[AdvVideo] ❌ NO REFERENCE IMAGE - generating from text only')
+        debugLog('[AdvVideo] ❌ NO REFERENCE IMAGE - generating from text only')
       }
 
       // Generate video
       const videoOptions = {
         duration: videoDuration.value,
         aspectRatio: videoAspectRatio.value,
+        resolution: '1080p' as '720p' | '1080p',
         generateAudio: includeAudio.value
       }
-      console.log('[AdvVideo] Options:', videoOptions)
+      debugLog('[AdvVideo] Options:', videoOptions)
 
       let response: any
-      console.log('[AdvVideo] Calling API...')
+      debugLog('[AdvVideo] Calling API...')
       if (referenceImage) {
         // Generate video from image
-        console.log('[AdvVideo] Using api.generateVideoFromImage()')
+        debugLog('[AdvVideo] Using api.generateVideoFromImage()')
         response = await api.generateVideoFromImage(
           enhancedPrompt,
           referenceImage.base64Data,
@@ -1036,25 +879,68 @@ async function generateImage() {
         )
       } else {
         // Generate video from text prompt only
-        console.log('[AdvVideo] Using api.generateVideo() (text-only)')
+        debugLog('[AdvVideo] Using api.generateVideo() (text-only)')
         response = await api.generateVideo(enhancedPrompt, videoOptions)
       }
 
-      console.log('[AdvVideo] API Response:', response)
-      console.log('[AdvVideo] Response success:', response.success)
-      console.log('[AdvVideo] Operation ID:', response.operationId)
+      debugLog('[AdvVideo] API Response:', response)
+      debugLog('[AdvVideo] Response success:', response.success)
+      debugLog('[AdvVideo] Operation ID:', response.operationId)
 
       if (!response.success) {
-        console.error('[AdvVideo] ❌ Video generation failed:', response.error)
+        errorLog('[AdvVideo] ❌ Video generation failed:', response.error)
         throw new Error(response.error || t('advancedMode.messages.videoError', 'Failed to generate video'))
       }
 
       // Poll for video completion
-      console.log('[AdvVideo] Polling for video completion...')
+      debugLog('[AdvVideo] Polling for video completion...')
       const videoUrl = await pollVideoUntilComplete(response.operationId, response.modelId)
-      generatedVideoUrl.value = videoUrl
-      console.log('[AdvVideo] ✅ Video generated successfully:', videoUrl)
-      console.log('========== ADVANCED MODE VIDEO GENERATION COMPLETE ==========')
+
+      // Apply logo watermark if requested
+      // NOTE: Requires FFmpeg to be installed on the backend
+      if (customization.value.logoPosition && customization.value.logoPosition !== 'none' && props.restaurant.brand_dna?.logo_url) {
+        console.log('[AdvVideo] Logo watermarking requested...')
+        try {
+          console.log('[AdvVideo] Calling watermark API...')
+          const watermarkResponse = await api.addVideoWatermark(
+            videoUrl,
+            props.restaurant.brand_dna.logo_url,
+            {
+              position: customization.value.logoPosition,
+              opacity: 80,
+              scale: 25,
+              padding: 20,
+            }
+          )
+
+          console.log('[AdvVideo] Watermark API response:', watermarkResponse)
+
+          if (watermarkResponse.success && watermarkResponse.videoUrl) {
+            generatedVideoUrl.value = watermarkResponse.videoUrl
+            console.log('[AdvVideo] ✅ Watermark applied successfully!')
+          } else {
+            generatedVideoUrl.value = videoUrl
+            console.warn('[AdvVideo] ⚠️ Watermark failed (FFmpeg might not be installed):', watermarkResponse.error)
+            console.warn('[AdvVideo] Using non-watermarked video')
+          }
+        } catch (err: any) {
+          errorLog('[AdvVideo] Watermark error:', err)
+          console.warn('[AdvVideo] ⚠️ Watermarking failed - continuing with non-watermarked video')
+          console.warn('[AdvVideo] To enable watermarking, install FFmpeg on the backend server')
+          generatedVideoUrl.value = videoUrl
+        }
+      } else {
+        generatedVideoUrl.value = videoUrl
+        if (!props.restaurant.brand_dna?.logo_url) {
+          debugLog('[AdvVideo] ℹ️ No logo available for watermarking')
+        }
+      }
+
+      // Promotional text is now included in the AI prompt above (no overlay needed)
+      // This creates a more professional, integrated look than post-processing overlays
+
+      debugLog('[AdvVideo] ✅ Video generated successfully:', generatedVideoUrl.value)
+      debugLog('========== ADVANCED MODE VIDEO GENERATION COMPLETE ==========')
 
       // Upload the reference image to the restaurant's uploaded_images collection
       if (uploadedImage.value && props.restaurant.place_id) {
@@ -1064,7 +950,7 @@ async function generateImage() {
             [uploadedImage.value]
           )
         } catch (uploadError) {
-          console.error('Failed to save uploaded image to restaurant:', uploadError)
+          errorLog('Failed to save uploaded image to restaurant:', uploadError)
         }
       }
 
@@ -1093,7 +979,7 @@ async function generateImage() {
               [uploadedImage.value]
             )
           } catch (uploadError) {
-            console.error('Failed to save uploaded image to restaurant:', uploadError)
+            errorLog('Failed to save uploaded image to restaurant:', uploadError)
             // Don't fail the entire operation if this fails
           }
         }
@@ -1107,7 +993,7 @@ async function generateImage() {
       }
     }
   } catch (error: any) {
-    console.error('Error generating media:', error)
+    errorLog('Error generating media:', error)
     const errorMessage = error.message || t('advancedMode.messages.generationError')
     imageError.value = errorMessage
     notificationStore.addNotification({
@@ -1160,7 +1046,7 @@ async function generatePostContent() {
       hashtags.value = (response.data.hashtags || []).map((tag: string) => tag.replace(/^#/, ''))
     } else if (!response.success) {
       const errorMessage = response.error || response.message || t('advancedMode.messages.captionGenerationFailed')
-      console.error('Error generating post content:', errorMessage)
+      errorLog('Error generating post content:', errorMessage)
       notificationStore.addNotification({
         type: 'error',
         title: t('advancedMode.messages.captionGenerationFailed'),
@@ -1168,7 +1054,7 @@ async function generatePostContent() {
       })
     }
   } catch (error: any) {
-    console.error('Error generating post content:', error)
+    errorLog('Error generating post content:', error)
     notificationStore.addNotification({
       type: 'error',
       title: t('advancedMode.messages.captionGenerationFailed'),
@@ -1799,6 +1685,9 @@ defineExpose({
               controls
               autoplay
               loop
+              muted
+              preload="metadata"
+              playsinline
               class="preview-video-display"
             >
               {{ t('common.videoNotSupported', 'Your browser does not support the video tag.') }}
@@ -1952,6 +1841,8 @@ defineExpose({
               autoplay
               loop
               muted
+              preload="metadata"
+              playsinline
               class="preview-image-large preview-video-large"
             >
               {{ t('common.videoNotSupported', 'Your browser does not support the video tag.') }}

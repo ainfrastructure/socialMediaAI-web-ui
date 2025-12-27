@@ -54,6 +54,7 @@ class ApiService {
   generateStyleVariations = contentService.generateStyleVariations.bind(contentService)
   generateAdvancedImage = contentService.generateAdvancedImage.bind(contentService)
   addVideoWatermark = contentService.addVideoWatermark.bind(contentService)
+  addVideoPromotionalSticker = contentService.addVideoPromotionalSticker.bind(contentService)
   generatePostContent = contentService.generatePostContent.bind(contentService)
 
   // Facebook methods

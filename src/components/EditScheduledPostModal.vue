@@ -11,6 +11,7 @@ import MaterialIcon from './MaterialIcon.vue'
 import PlatformLogo from './PlatformLogo.vue'
 import { useSocialAccounts } from '../composables/useSocialAccounts'
 import { useScheduleTime } from '../composables/useScheduleTime'
+import { errorLog } from '@/utils/debug'
 
 interface Props {
   modelValue: boolean
@@ -165,7 +166,7 @@ const fetchFavorites = async () => {
       availableFavorites.value = data.data?.favorites || []
     }
   } catch (err) {
-    console.error('Failed to fetch favorites:', err)
+    errorLog('Failed to fetch favorites:', err)
   }
 }
 

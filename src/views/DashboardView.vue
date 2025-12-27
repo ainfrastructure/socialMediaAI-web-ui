@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { debugLog, errorLog, warnLog } from '@/utils/debug'
+
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
@@ -95,7 +97,7 @@ async function handleConnectFacebook() {
   try {
     await facebookStore.connectFacebook()
   } catch (error) {
-    console.error('Failed to connect Facebook:', error)
+    errorLog('Failed to connect Facebook:', error)
   }
 }
 
@@ -103,7 +105,7 @@ async function handleConnectInstagram() {
   try {
     await instagramStore.connectInstagram()
   } catch (error) {
-    console.error('Failed to connect Instagram:', error)
+    errorLog('Failed to connect Instagram:', error)
   }
 }
 
@@ -456,7 +458,7 @@ async function loadRecentPosts() {
 
     recentPosts.value = sortedPosts
   } catch (error) {
-    console.error('Failed to load recent posts:', error)
+    errorLog('Failed to load recent posts:', error)
     recentPosts.value = []
   } finally {
     loadingPosts.value = false
@@ -500,7 +502,7 @@ onMounted(async () => {
       showWelcomeModal.value = true
     }
   } catch (error) {
-    console.error('Failed to load dashboard data:', error)
+    errorLog('Failed to load dashboard data:', error)
   } finally {
     loading.value = false
   }

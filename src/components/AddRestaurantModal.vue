@@ -87,6 +87,7 @@ import RestaurantAutocomplete from './RestaurantAutocomplete.vue'
 import { placesService } from '../services/placesService'
 import { okamService } from '../services/okamService'
 import { restaurantService } from '../services/restaurantService'
+import { debugLog, errorLog } from '@/utils/debug'
 
 interface Props {
   modelValue: boolean
@@ -189,7 +190,7 @@ async function fetchRestaurantDetails(restaurant: any) {
         }
       }
     } catch (error) {
-      console.log('Menu data not available:', error)
+      debugLog('Menu data not available:', error)
     }
 
     // Store the fetched data (don't save to database yet)
@@ -216,7 +217,7 @@ async function fetchRestaurantDetails(restaurant: any) {
       google_data: details
     }
   } catch (error: any) {
-    console.error('Failed to fetch restaurant details:', error)
+    errorLog('Failed to fetch restaurant details:', error)
     restaurantError.value = error.message || 'Failed to fetch restaurant details. Please try again.'
     detailsFetched.value = false
   } finally {
@@ -287,7 +288,7 @@ async function handleSave() {
       }
     }
   } catch (error: any) {
-    console.error('Failed to save restaurant:', error)
+    errorLog('Failed to save restaurant:', error)
     restaurantError.value = error.message || 'Failed to save restaurant. Please try again.'
   } finally {
     savingRestaurant.value = false

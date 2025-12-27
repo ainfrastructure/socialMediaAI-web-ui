@@ -89,6 +89,7 @@ import { useSocialAccounts } from '../composables/useSocialAccounts'
 import { useFacebookStore } from '@/stores/facebook'
 import { useInstagramStore } from '@/stores/instagram'
 import { useNotificationStore } from '@/stores/notifications'
+import { warnLog } from '@/utils/debug'
 
 useI18n()
 
@@ -323,7 +324,7 @@ const handleUnifiedPublish = async (data: {
             platform_post_urls: postUrls
           })
         } catch (calendarErr) {
-          console.warn('Failed to save to calendar:', calendarErr)
+          warnLog('Failed to save to calendar:', calendarErr)
         }
 
         // Close the main schedule modal (publishing progress modal stays open)

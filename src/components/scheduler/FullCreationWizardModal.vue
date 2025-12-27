@@ -17,6 +17,7 @@ import { useNotificationStore } from '@/stores/notifications'
 import { restaurantService, type SavedRestaurant } from '@/services/restaurantService'
 import { api } from '@/services/api'
 import { okamService } from '@/services/okamService'
+import { debugLog, errorLog, warnLog } from '@/utils/debug'
 
 interface MenuItem {
   name: string
@@ -265,7 +266,7 @@ async function generatePromptsFromSelection() {
       imagePrompts.value = []
     }
   } catch (err) {
-    console.error('Failed to generate prompts:', err)
+    errorLog('Failed to generate prompts:', err)
     imagePrompts.value = []
   }
 }
@@ -297,7 +298,7 @@ async function generatePostContent() {
       hashtags.value = (content as any).hashtags || []
     } else {
       const errorMessage = response.error || response.message || t('scheduler.captionGenerationFailed')
-      console.error('Failed to generate post content:', errorMessage)
+      errorLog('Failed to generate post content:', errorMessage)
       notificationStore.addNotification({
         type: 'error',
         title: t('scheduler.captionGenerationFailed'),
@@ -305,7 +306,7 @@ async function generatePostContent() {
       })
     }
   } catch (err: any) {
-    console.error('Failed to generate post content:', err)
+    errorLog('Failed to generate post content:', err)
     notificationStore.addNotification({
       type: 'error',
       title: t('scheduler.captionGenerationFailed'),
@@ -320,7 +321,7 @@ async function generateImage(uploadedLogo: File | null = null, uploadedImage: Fi
 
   // Start post content generation in parallel
   const postContentPromise = generatePostContent().catch(error => {
-    console.error('Failed to generate post content:', error)
+    errorLog('Failed to generate post content:', error)
   })
 
   // Prepare watermark if restaurant has logo and user wants it
@@ -357,7 +358,7 @@ async function generateImage(uploadedLogo: File | null = null, uploadedImage: Fi
         mimeType: uploadedImage.type,
       }
     } catch {
-      console.error('Failed to process uploaded image')
+      errorLog('Failed to process uploaded image')
     }
   }
   // If no uploaded image, try to use menu item image
@@ -486,7 +487,7 @@ async function handleEasyModeGenerate(data: {
             [data.uploadedImage]
           )
         } catch (uploadError) {
-          console.error('Failed to save uploaded image to restaurant:', uploadError)
+          errorLog('Failed to save uploaded image to restaurant:', uploadError)
           // Don't fail the entire operation if this fails
         }
       }
@@ -587,7 +588,7 @@ async function handleEasyModePublish(data: {
       await publishToSocialMedia(favoritePostId, platforms, finalPostText, finalHashtags)
     }
   } catch (err: any) {
-    console.error('Failed to handle publish:', err)
+    errorLog('Failed to handle publish:', err)
     generationError.value = err.message || 'Failed to publish post'
     publishing.value = false
   }
@@ -688,7 +689,7 @@ async function publishToSocialMedia(
         )
       })
     } catch (calendarErr) {
-      console.warn('Failed to save to calendar:', calendarErr)
+      warnLog('Failed to save to calendar:', calendarErr)
     }
 
     showSuccessAndClose()
@@ -737,7 +738,7 @@ function handleEasyModeReset() {
 
 // Handle inline feedback from child components (fire-and-forget)
 async function handleInlineFeedback(feedbackText: string) {
-  console.log('[FullCreationWizard] Received inline feedback:', feedbackText)
+  debugLog('[FullCreationWizard] Received inline feedback:', feedbackText)
 
   // Submit feedback to backend (non-blocking)
   try {
@@ -752,9 +753,9 @@ async function handleInlineFeedback(feedbackText: string) {
         feedbackText: feedbackText,
       })
     })
-    console.log('[FullCreationWizard] Inline feedback submitted successfully')
+    debugLog('[FullCreationWizard] Inline feedback submitted successfully')
   } catch (error) {
-    console.error('Failed to submit inline feedback:', error)
+    errorLog('Failed to submit inline feedback:', error)
     // Don't block the flow if feedback fails
   }
 }
