@@ -62,7 +62,7 @@ const handleClick = (event: MouseEvent) => {
 }
 
 .base-button:focus-visible {
-  box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.3);
+  box-shadow: 0 0 0 3px rgba(15, 61, 46, 0.25);
 }
 
 /* Variants */
@@ -172,7 +172,7 @@ const handleClick = (event: MouseEvent) => {
   width: 0;
   height: 0;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(246, 241, 231, 0.3);
   transform: translate(-50%, -50%);
   transition: width 0.6s, height 0.6s;
 }

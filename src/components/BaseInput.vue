@@ -141,7 +141,7 @@ const handleFocus = () => {
 .form-input:focus {
   border-color: var(--gold-primary);
   background: var(--bg-secondary);
-  box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.15);
+  box-shadow: 0 0 0 3px rgba(15, 61, 46, 0.12);
 }
 
 .form-input:disabled {

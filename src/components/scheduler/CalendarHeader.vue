@@ -74,8 +74,8 @@ const capitalizeFirst = (str: string): string => {
   align-items: center;
   gap: var(--space-xs);
   padding: var(--space-md) var(--space-lg);
-  background: rgba(0, 0, 0, 0.3);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(15, 61, 46, 0.1);
   border-radius: var(--radius-md);
   cursor: pointer;
   transition: all var(--transition-base);
@@ -83,8 +83,8 @@ const capitalizeFirst = (str: string): string => {
 }
 
 .nav-arrow:hover {
-  background: rgba(212, 175, 55, 0.15);
-  border-color: rgba(212, 175, 55, 0.3);
+  background: rgba(15, 61, 46, 0.08);
+  border-color: rgba(15, 61, 46, 0.15);
   transform: scale(1.05);
 }
 
@@ -123,7 +123,7 @@ const capitalizeFirst = (str: string): string => {
 .view-mode-toggle {
   position: relative;
   display: flex;
-  background: rgba(0, 0, 0, 0.3);
+  background: rgba(255, 255, 255, 0.8);
   border-radius: var(--radius-full);
   padding: 4px;
   gap: 0;

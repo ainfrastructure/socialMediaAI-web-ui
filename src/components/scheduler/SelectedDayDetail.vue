@@ -940,7 +940,7 @@ defineExpose({
   display: flex;
   gap: var(--space-sm);
   padding: var(--space-md) var(--space-lg);
-  background: rgba(13, 13, 13, 0.8);
+  background: rgba(255, 255, 255, 0.8);
   border-bottom: 1px solid var(--border-color);
 }
 
@@ -960,7 +960,7 @@ defineExpose({
 }
 
 .tab-btn:hover {
-  background: rgba(212, 175, 55, 0.1);
+  background: rgba(15, 61, 46, 0.05);
   color: var(--gold-primary);
 }
 
@@ -971,11 +971,11 @@ defineExpose({
 }
 
 .tab-btn:not(.active) {
-  border-color: rgba(212, 175, 55, 0.3);
+  border-color: rgba(15, 61, 46, 0.15);
 }
 
 .tab-count {
-  background: rgba(0, 0, 0, 0.2);
+  background: rgba(15, 61, 46, 0.1);
   padding: 2px 8px;
   border-radius: var(--radius-full);
   font-size: var(--text-xs);
@@ -983,7 +983,7 @@ defineExpose({
 }
 
 .tab-btn:not(.active) .tab-count {
-  background: rgba(212, 175, 55, 0.2);
+  background: rgba(15, 61, 46, 0.1);
   color: var(--gold-primary);
 }
 
@@ -1047,7 +1047,7 @@ defineExpose({
   grid-template-columns: 4fr 2fr 2fr 2fr 40px;
   gap: var(--space-md);
   padding: var(--space-md) var(--space-lg);
-  background: rgba(13, 13, 13, 0.6);
+  background: rgba(255, 255, 255, 0.6);
   border-bottom: 1px solid var(--border-color);
 }
 
@@ -1091,11 +1091,11 @@ defineExpose({
 }
 
 .table-row:hover {
-  background: rgba(20, 20, 20, 0.8);
+  background: rgba(255, 255, 255, 0.8);
 }
 
 .table-row.is-expanded {
-  background: rgba(20, 20, 20, 0.9);
+  background: rgba(255, 255, 255, 0.9);
 }
 
 /* Date Column */
@@ -1107,7 +1107,7 @@ defineExpose({
 .date-badge {
   padding: 4px 10px;
   border-radius: var(--radius-md);
-  background: rgba(212, 175, 55, 0.15);
+  background: rgba(15, 61, 46, 0.08);
   color: var(--gold-primary);
   font-size: var(--text-xs);
   font-weight: var(--font-semibold);
@@ -1265,24 +1265,24 @@ defineExpose({
   width: 32px;
   height: 32px;
   border-radius: var(--radius-md);
-  background: rgba(212, 175, 55, 0.15);
+  background: rgba(15, 61, 46, 0.08);
   color: var(--gold-primary);
   font-size: var(--text-lg);
   transition: transform 0.2s ease, background 0.2s ease;
 }
 
 .expand-icon:hover {
-  background: rgba(212, 175, 55, 0.25);
+  background: rgba(15, 61, 46, 0.12);
 }
 
 .expand-icon.is-expanded {
   transform: rotate(180deg);
-  background: rgba(212, 175, 55, 0.3);
+  background: rgba(15, 61, 46, 0.15);
 }
 
 /* Expanded Details */
 .expanded-details {
-  background: rgba(13, 13, 13, 0.9);
+  background: rgba(255, 255, 255, 0.9);
   border-top: 1px solid var(--border-color);
   padding: var(--space-xl);
 }
@@ -1490,7 +1490,7 @@ defineExpose({
 }
 
 .edit-btn {
-  background: rgba(212, 175, 55, 0.2);
+  background: rgba(15, 61, 46, 0.1);
   color: var(--gold-primary);
 }
 
@@ -1499,7 +1499,7 @@ defineExpose({
 }
 
 .edit-btn:hover {
-  background: rgba(212, 175, 55, 0.3);
+  background: rgba(15, 61, 46, 0.15);
 }
 
 .back-btn {
@@ -1541,14 +1541,14 @@ defineExpose({
   justify-content: center;
   gap: var(--space-lg);
   padding: var(--space-md) var(--space-lg);
-  background: rgba(13, 13, 13, 0.6);
+  background: rgba(255, 255, 255, 0.6);
   border-top: 1px solid var(--border-color);
 }
 
 .pagination-btn {
   padding: var(--space-sm) var(--space-lg);
-  background: rgba(212, 175, 55, 0.15);
-  border: 1px solid rgba(212, 175, 55, 0.3);
+  background: rgba(15, 61, 46, 0.08);
+  border: 1px solid rgba(15, 61, 46, 0.15);
   border-radius: var(--radius-md);
   color: var(--gold-primary);
   font-size: var(--text-sm);
@@ -1558,7 +1558,7 @@ defineExpose({
 }
 
 .pagination-btn:hover:not(:disabled) {
-  background: rgba(212, 175, 55, 0.25);
+  background: rgba(15, 61, 46, 0.12);
   border-color: var(--gold-primary);
 }
 
@@ -1614,7 +1614,7 @@ defineExpose({
   .mobile-date-badge {
     padding: 2px 8px;
     border-radius: var(--radius-sm);
-    background: rgba(212, 175, 55, 0.15);
+    background: rgba(15, 61, 46, 0.08);
     color: var(--gold-primary);
     font-size: var(--text-xs);
     font-weight: var(--font-semibold);
@@ -1924,7 +1924,7 @@ defineExpose({
 .platform-toggle.active {
   opacity: 1;
   border-color: var(--gold-primary);
-  box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.2);
+  box-shadow: 0 0 0 2px rgba(15, 61, 46, 0.1);
 }
 
 .platform-toggle.active.platform-facebook {
@@ -1958,8 +1958,8 @@ defineExpose({
 .hashtag-chip.editable {
   cursor: pointer;
   padding: 4px 10px;
-  background: rgba(212, 175, 55, 0.15);
-  border: 1px solid rgba(212, 175, 55, 0.3);
+  background: rgba(15, 61, 46, 0.08);
+  border: 1px solid rgba(15, 61, 46, 0.15);
   color: var(--gold-primary);
   border-radius: var(--radius-md);
   font-size: var(--text-xs);

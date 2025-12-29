@@ -184,17 +184,17 @@ onUnmounted(() => {
   height: 80px;
   margin-bottom: var(--space-lg);
   animation: pulse-glow 2s ease-in-out infinite;
-  filter: drop-shadow(0 4px 20px rgba(212, 175, 55, 0.4));
+  filter: drop-shadow(0 4px 20px rgba(176, 138, 90, 0.4));
 }
 
 @keyframes pulse-glow {
   0%, 100% {
     transform: scale(1);
-    filter: drop-shadow(0 4px 20px rgba(212, 175, 55, 0.4));
+    filter: drop-shadow(0 4px 20px rgba(176, 138, 90, 0.4));
   }
   50% {
     transform: scale(1.05);
-    filter: drop-shadow(0 4px 30px rgba(212, 175, 55, 0.6));
+    filter: drop-shadow(0 4px 30px rgba(176, 138, 90, 0.5));
   }
 }
 
@@ -248,8 +248,8 @@ onUnmounted(() => {
 
 .step-item.active .step-circle {
   border-color: var(--gold-primary);
-  background: rgba(212, 175, 55, 0.15);
-  box-shadow: 0 0 0 4px rgba(212, 175, 55, 0.1);
+  background: rgba(15, 61, 46, 0.12);
+  box-shadow: 0 0 0 4px rgba(15, 61, 46, 0.08);
 }
 
 .step-item.completed .step-circle {
@@ -266,8 +266,9 @@ onUnmounted(() => {
   color: var(--gold-primary);
 }
 
-.step-check {
-  color: var(--bg-primary);
+.step-check,
+.step-item.completed .step-check {
+  color: #ffffff !important;
 }
 
 /* Connector line */

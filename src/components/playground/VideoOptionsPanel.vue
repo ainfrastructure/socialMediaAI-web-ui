@@ -48,9 +48,9 @@ defineEmits<{
   gap: var(--space-lg);
   margin-bottom: var(--space-xl);
   padding: var(--space-lg);
-  background: rgba(0, 0, 0, 0.2);
+  background: rgba(255, 255, 255, 0.8);
   border-radius: var(--radius-md);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(15, 61, 46, 0.1);
 }
 
 .option-group {
@@ -67,8 +67,8 @@ defineEmits<{
 
 .option-select {
   padding: var(--space-sm) var(--space-md);
-  background: rgba(0, 0, 0, 0.3);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(15, 61, 46, 0.15);
   border-radius: var(--radius-md);
   color: var(--text-primary);
   font-size: var(--text-sm);
@@ -77,7 +77,7 @@ defineEmits<{
 }
 
 .option-select:hover {
-  border-color: rgba(212, 175, 55, 0.5);
+  border-color: rgba(15, 61, 46, 0.25);
 }
 
 .option-select:focus {

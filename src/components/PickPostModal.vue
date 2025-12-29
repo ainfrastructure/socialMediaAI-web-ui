@@ -691,8 +691,8 @@ const handlePageChange = (page: number) => {
   justify-content: center;
   font-weight: var(--font-bold);
   font-size: var(--text-base);
-  background: rgba(0, 0, 0, 0.4);
-  border: 2px solid rgba(212, 175, 55, 0.3);
+  background: rgba(15, 61, 46, 0.2);
+  border: 2px solid rgba(15, 61, 46, 0.3);
   color: var(--text-muted);
   transition: all 0.3s ease;
 }
@@ -800,8 +800,8 @@ const handlePageChange = (page: number) => {
 
 /* Time Picker Wrapper */
 .time-picker-wrapper {
-  background: rgba(0, 0, 0, 0.3);
-  border: 1px solid rgba(212, 175, 55, 0.2);
+  background: rgba(15, 61, 46, 0.15);
+  border: 1px solid rgba(15, 61, 46, 0.2);
   border-radius: var(--radius-lg);
   padding: var(--space-lg);
   display: flex;
@@ -932,8 +932,8 @@ const handlePageChange = (page: number) => {
 }
 
 .date-section {
-  background: rgba(0, 0, 0, 0.3);
-  border: 1px solid rgba(212, 175, 55, 0.2);
+  background: rgba(15, 61, 46, 0.15);
+  border: 1px solid rgba(15, 61, 46, 0.2);
   border-radius: var(--radius-lg);
   padding: var(--space-lg);
   align-self: start;
@@ -1072,8 +1072,8 @@ const handlePageChange = (page: number) => {
 .form-select {
   width: 100%;
   padding: var(--space-md);
-  background: rgba(0, 0, 0, 0.4);
-  border: 1px solid rgba(212, 175, 55, 0.3);
+  background: rgba(15, 61, 46, 0.2);
+  border: 1px solid rgba(15, 61, 46, 0.3);
   border-radius: var(--radius-md);
   color: var(--text-primary);
   font-family: var(--font-body);
@@ -1085,7 +1085,7 @@ const handlePageChange = (page: number) => {
 .form-select:focus {
   outline: none;
   border-color: var(--gold-primary);
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(15, 61, 46, 0.25);
 }
 
 .form-select option {
@@ -1155,8 +1155,8 @@ const handlePageChange = (page: number) => {
 }
 
 .post-item {
-  background: rgba(0, 0, 0, 0.3);
-  border: 1px solid rgba(212, 175, 55, 0.2);
+  background: rgba(15, 61, 46, 0.15);
+  border: 1px solid rgba(15, 61, 46, 0.2);
   border-radius: var(--radius-lg);
   overflow: hidden;
   cursor: pointer;
@@ -1195,7 +1195,7 @@ const handlePageChange = (page: number) => {
   top: 0.5rem;
   left: 0.5rem;
   padding: 0.375rem;
-  background: rgba(0, 0, 0, 0.8);
+  background: rgba(15, 61, 46, 0.4);
   backdrop-filter: blur(10px);
   border-radius: 6px;
   color: var(--text-primary);
@@ -1317,9 +1317,9 @@ const handlePageChange = (page: number) => {
 .selected-post-preview {
   margin-bottom: var(--space-2xl);
   padding: var(--space-lg);
-  background: rgba(0, 0, 0, 0.3);
+  background: rgba(15, 61, 46, 0.15);
   border-radius: var(--radius-lg);
-  border: 1px solid rgba(212, 175, 55, 0.2);
+  border: 1px solid rgba(15, 61, 46, 0.2);
 }
 
 .preview-title {
@@ -1367,9 +1367,9 @@ const handlePageChange = (page: number) => {
 .edit-section {
   margin-top: var(--space-lg);
   padding: var(--space-lg);
-  background: rgba(0, 0, 0, 0.3);
+  background: rgba(15, 61, 46, 0.15);
   border-radius: var(--radius-lg);
-  border: 1px solid rgba(212, 175, 55, 0.2);
+  border: 1px solid rgba(15, 61, 46, 0.2);
   animation: fadeIn 0.3s ease;
 }
 
@@ -1393,8 +1393,8 @@ const handlePageChange = (page: number) => {
 .edit-input {
   width: 100%;
   padding: var(--space-md);
-  background: rgba(0, 0, 0, 0.4);
-  border: 1px solid rgba(212, 175, 55, 0.3);
+  background: rgba(15, 61, 46, 0.2);
+  border: 1px solid rgba(15, 61, 46, 0.3);
   border-radius: var(--radius-md);
   color: var(--text-primary);
   font-family: var(--font-body);
@@ -1407,13 +1407,13 @@ const handlePageChange = (page: number) => {
 .edit-input:focus {
   outline: none;
   border-color: var(--gold-primary);
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(15, 61, 46, 0.25);
 }
 
 /* Hashtag Editor */
 .hashtag-editor {
-  background: rgba(0, 0, 0, 0.4);
-  border: 1px solid rgba(212, 175, 55, 0.3);
+  background: rgba(15, 61, 46, 0.2);
+  border: 1px solid rgba(15, 61, 46, 0.3);
   border-radius: var(--radius-md);
   padding: var(--space-md);
   transition: all 0.2s ease;
@@ -1421,7 +1421,7 @@ const handlePageChange = (page: number) => {
 
 .hashtag-editor:focus-within {
   border-color: var(--gold-primary);
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(15, 61, 46, 0.25);
 }
 
 .hashtag-tags {

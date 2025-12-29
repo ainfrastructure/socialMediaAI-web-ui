@@ -254,7 +254,7 @@ onUnmounted(() => {
   justify-content: space-between;
   padding: var(--space-md) var(--space-lg);
   border-bottom: 1px solid var(--border-color);
-  background: rgba(13, 13, 13, 0.8);
+  background: rgba(255, 255, 255, 0.85);
 }
 
 .dropdown-title {
@@ -278,7 +278,7 @@ onUnmounted(() => {
 }
 
 .mark-all-btn:hover {
-  background: rgba(212, 175, 55, 0.1);
+  background: rgba(15, 61, 46, 0.1);
 }
 
 /* Notifications List */
@@ -304,15 +304,15 @@ onUnmounted(() => {
 }
 
 .notification-item:hover {
-  background: rgba(212, 175, 55, 0.05);
+  background: rgba(15, 61, 46, 0.05);
 }
 
 .notification-item.unread {
-  background: rgba(212, 175, 55, 0.08);
+  background: rgba(15, 61, 46, 0.08);
 }
 
 .notification-item.unread:hover {
-  background: rgba(212, 175, 55, 0.12);
+  background: rgba(15, 61, 46, 0.12);
 }
 
 /* Icon */
@@ -392,8 +392,8 @@ onUnmounted(() => {
   justify-content: center;
   width: 32px;
   height: 32px;
-  background: rgba(212, 175, 55, 0.1);
-  border: 1px solid rgba(212, 175, 55, 0.3);
+  background: rgba(15, 61, 46, 0.1);
+  border: 1px solid rgba(15, 61, 46, 0.3);
   border-radius: var(--radius-md);
   color: var(--gold-primary);
   cursor: pointer;
@@ -402,10 +402,10 @@ onUnmounted(() => {
 }
 
 .notification-link:hover {
-  background: rgba(212, 175, 55, 0.2);
+  background: rgba(15, 61, 46, 0.2);
   border-color: var(--gold-primary);
   transform: scale(1.1);
-  box-shadow: 0 0 8px rgba(212, 175, 55, 0.4);
+  box-shadow: 0 0 8px rgba(15, 61, 46, 0.4);
 }
 
 .notification-link:active {
@@ -431,7 +431,7 @@ onUnmounted(() => {
 .dropdown-footer {
   padding: var(--space-sm) var(--space-lg);
   border-top: 1px solid var(--border-color);
-  background: rgba(13, 13, 13, 0.8);
+  background: rgba(255, 255, 255, 0.85);
 }
 
 .clear-all-btn {

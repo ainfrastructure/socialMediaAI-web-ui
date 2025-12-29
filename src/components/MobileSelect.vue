@@ -143,7 +143,7 @@ onUnmounted(() => {
 
 .select-trigger.open {
   border-color: var(--gold-primary);
-  box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.2);
+  box-shadow: 0 0 0 2px rgba(15, 61, 46, 0.2);
 }
 
 .selected-value {
@@ -168,10 +168,10 @@ onUnmounted(() => {
   top: calc(100% + 4px);
   left: 0;
   right: 0;
-  background-color: #141414;
-  border: 1px solid rgba(212, 175, 55, 0.5);
+  background-color: var(--bg-secondary);
+  border: 1px solid rgba(15, 61, 46, 0.5);
   border-radius: var(--radius-md);
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.8);
+  box-shadow: 0 12px 40px rgba(15, 61, 46, 0.4);
   z-index: 99999;
   max-height: 220px;
   overflow-y: auto;
@@ -186,9 +186,9 @@ onUnmounted(() => {
   justify-content: space-between;
   width: 100%;
   padding: var(--space-md) var(--space-lg);
-  background-color: #141414;
+  background-color: var(--bg-secondary);
   border: none;
-  color: #f5f5f5;
+  color: var(--text-primary);
   font-size: var(--text-base);
   text-align: left;
   cursor: pointer;
@@ -196,16 +196,16 @@ onUnmounted(() => {
 }
 
 .dropdown-option:hover {
-  background-color: #252525;
+  background-color: var(--bg-tertiary);
 }
 
 .dropdown-option.selected {
-  background-color: #2a2518;
-  color: #d4af37;
+  background-color: var(--gold-subtle);
+  color: var(--gold-primary);
 }
 
 .dropdown-option:not(:last-child) {
-  border-bottom: 1px solid #2a2a2a;
+  border-bottom: 1px solid var(--border-color);
 }
 
 .check-icon {
@@ -235,11 +235,11 @@ onUnmounted(() => {
 }
 
 .dropdown-menu::-webkit-scrollbar-thumb {
-  background: rgba(212, 175, 55, 0.3);
+  background: rgba(15, 61, 46, 0.3);
   border-radius: 3px;
 }
 
 .dropdown-menu::-webkit-scrollbar-thumb:hover {
-  background: rgba(212, 175, 55, 0.5);
+  background: rgba(15, 61, 46, 0.5);
 }
 </style>

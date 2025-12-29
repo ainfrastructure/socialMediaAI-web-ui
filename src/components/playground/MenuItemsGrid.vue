@@ -130,8 +130,8 @@ const isItemSelected = (item: MenuItem): boolean => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(15, 61, 46, 0.05);
+  border: 1px solid rgba(15, 61, 46, 0.1);
   border-radius: var(--radius-sm);
   color: var(--text-primary);
   cursor: pointer;
@@ -139,7 +139,7 @@ const isItemSelected = (item: MenuItem): boolean => {
 }
 
 .pagination-btn-compact:hover:not(:disabled) {
-  background: rgba(212, 175, 55, 0.2);
+  background: rgba(15, 61, 46, 0.1);
   border-color: var(--gold-primary);
 }
 
@@ -161,7 +161,7 @@ const isItemSelected = (item: MenuItem): boolean => {
 
 .menu-item-card {
   position: relative;
-  background: rgba(0, 0, 0, 0.3);
+  background: rgba(255, 255, 255, 0.8);
   border: 2px solid transparent;
   border-radius: var(--radius-md);
   overflow: hidden;
@@ -170,13 +170,13 @@ const isItemSelected = (item: MenuItem): boolean => {
 }
 
 .menu-item-card:hover {
-  border-color: rgba(212, 175, 55, 0.5);
+  border-color: rgba(15, 61, 46, 0.25);
   transform: translateY(-2px);
 }
 
 .menu-item-card.selected {
   border-color: var(--gold-primary);
-  background: rgba(212, 175, 55, 0.1);
+  background: rgba(15, 61, 46, 0.05);
 }
 
 .menu-item-image {
@@ -224,7 +224,7 @@ const isItemSelected = (item: MenuItem): boolean => {
   justify-content: space-between;
   margin-top: var(--space-lg);
   padding-top: var(--space-lg);
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  border-top: 1px solid rgba(15, 61, 46, 0.1);
 }
 
 .selection-count {

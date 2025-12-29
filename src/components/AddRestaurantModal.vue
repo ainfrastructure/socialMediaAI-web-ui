@@ -326,7 +326,7 @@ async function handleSave() {
 .spinner {
   width: 40px;
   height: 40px;
-  border: 3px solid rgba(212, 175, 55, 0.2);
+  border: 3px solid rgba(15, 61, 46, 0.2);
   border-top-color: var(--gold-primary);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
@@ -359,8 +359,8 @@ async function handleSave() {
   align-items: center;
   gap: var(--space-lg);
   padding: var(--space-lg);
-  background: rgba(212, 175, 55, 0.05);
-  border: 1px solid rgba(212, 175, 55, 0.3);
+  background: rgba(15, 61, 46, 0.05);
+  border: 1px solid rgba(15, 61, 46, 0.2);
   border-radius: var(--radius-lg);
 }
 
@@ -432,7 +432,7 @@ async function handleSave() {
   width: 32px;
   height: 32px;
   background: var(--gold-primary);
-  color: var(--text-on-gold);
+  color: #ffffff;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -454,7 +454,7 @@ async function handleSave() {
   width: 60px;
   height: 60px;
   background: var(--gold-primary);
-  color: var(--text-on-gold);
+  color: #ffffff;
   border-radius: 50%;
   display: flex;
   align-items: center;

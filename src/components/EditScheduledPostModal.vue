@@ -477,7 +477,7 @@ const saveChanges = async () => {
 
 /* Media Section (Left) */
 .modal-media {
-  background: rgba(0, 0, 0, 0.4);
+  background: rgba(15, 61, 46, 0.2);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -571,7 +571,7 @@ const saveChanges = async () => {
 .form-textarea:focus {
   outline: none;
   border-color: var(--gold-primary);
-  background: rgba(0, 0, 0, 0.4);
+  background: rgba(15, 61, 46, 0.2);
 }
 
 .form-textarea {
@@ -611,7 +611,7 @@ const saveChanges = async () => {
   gap: var(--space-xs);
   font-size: var(--text-sm);
   color: var(--gold-primary);
-  background: rgba(212, 175, 55, 0.1);
+  background: rgba(15, 61, 46, 0.1);
   padding: var(--space-xs) var(--space-sm);
   border-radius: var(--radius-sm);
 }
@@ -656,8 +656,8 @@ const saveChanges = async () => {
 
 /* Inline Date Picker Container */
 .date-picker-inline {
-  background: rgba(0, 0, 0, 0.3);
-  border: 1px solid rgba(212, 175, 55, 0.2);
+  background: rgba(15, 61, 46, 0.15);
+  border: 1px solid rgba(15, 61, 46, 0.2);
   border-radius: var(--radius-lg);
   padding: var(--space-sm);
   overflow-x: auto;
@@ -727,8 +727,8 @@ const saveChanges = async () => {
 
 /* Time Picker Wrapper */
 .time-picker-wrapper {
-  background: rgba(0, 0, 0, 0.3);
-  border: 1px solid rgba(212, 175, 55, 0.2);
+  background: rgba(15, 61, 46, 0.15);
+  border: 1px solid rgba(15, 61, 46, 0.2);
   border-radius: var(--radius-lg);
   padding: var(--space-lg);
   display: flex;
@@ -739,12 +739,12 @@ const saveChanges = async () => {
 :deep(.dp__theme_dark) {
   --dp-background-color: transparent;
   --dp-text-color: var(--text-primary);
-  --dp-hover-color: rgba(212, 175, 55, 0.15);
+  --dp-hover-color: rgba(15, 61, 46, 0.15);
   --dp-hover-text-color: var(--text-primary);
   --dp-primary-color: var(--gold-primary);
   --dp-primary-text-color: var(--text-on-gold);
-  --dp-secondary-color: rgba(212, 175, 55, 0.1);
-  --dp-border-color: rgba(212, 175, 55, 0.3);
+  --dp-secondary-color: rgba(15, 61, 46, 0.1);
+  --dp-border-color: rgba(15, 61, 46, 0.3);
   --dp-menu-border-color: transparent;
   --dp-border-color-hover: var(--gold-primary);
   --dp-disabled-color: var(--text-muted);
@@ -752,7 +752,7 @@ const saveChanges = async () => {
   --dp-success-color: var(--gold-primary);
   --dp-icon-color: var(--gold-primary);
   --dp-danger-color: #ef4444;
-  --dp-highlight-color: rgba(212, 175, 55, 0.1);
+  --dp-highlight-color: rgba(15, 61, 46, 0.1);
 }
 
 /* Inline picker - remove default styling */
@@ -791,7 +791,7 @@ const saveChanges = async () => {
 
 :deep(.dp__month_year_select:hover) {
   color: var(--gold-primary);
-  background: rgba(212, 175, 55, 0.1);
+  background: rgba(15, 61, 46, 0.1);
   border-radius: var(--radius-sm);
 }
 
@@ -803,7 +803,7 @@ const saveChanges = async () => {
 }
 
 :deep(.dp__inner_nav:hover) {
-  background: rgba(212, 175, 55, 0.15);
+  background: rgba(15, 61, 46, 0.15);
   color: var(--gold-primary);
   border-radius: var(--radius-sm);
 }
@@ -942,7 +942,7 @@ const saveChanges = async () => {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.9);
+  background: rgba(15, 61, 46, 0.45);
   backdrop-filter: blur(var(--blur-lg));
   display: flex;
   align-items: center;
@@ -961,7 +961,7 @@ const saveChanges = async () => {
   max-width: 800px;
   width: 100%;
   max-height: 80vh;
-  background: rgba(26, 26, 26, 0.95);
+  background: rgba(255, 255, 255, 0.95);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-lg);
   padding: var(--space-2xl);

@@ -271,7 +271,7 @@ onUnmounted(() => {
   width: 28px;
   height: 28px;
   border-radius: var(--radius-full);
-  background: rgba(0, 0, 0, 0.7);
+  background: rgba(15, 61, 46, 0.35);
   border: none;
   color: white;
   font-size: var(--text-xl);
@@ -300,7 +300,7 @@ onUnmounted(() => {
   left: 0;
   right: 0;
   padding: var(--space-sm);
-  background: linear-gradient(to top, rgba(0, 0, 0, 0.9), transparent);
+  background: linear-gradient(to top, rgba(15, 61, 46, 0.45), transparent);
   opacity: 0;
   transition: var(--transition-base);
 }

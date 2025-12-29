@@ -620,7 +620,7 @@ const goToMenuPage = (page: number) => {
   gap: 1rem;
   margin-bottom: 2rem;
   padding-bottom: 1rem;
-  border-bottom: 2px solid rgba(212, 175, 55, 0.2);
+  border-bottom: 2px solid rgba(15, 61, 46, 0.1);
 }
 
 .details-title {
@@ -643,8 +643,8 @@ const goToMenuPage = (page: number) => {
 
 .details-section {
   padding: 1.5rem;
-  background: rgba(0, 0, 0, 0.2);
-  border: 1px solid rgba(212, 175, 55, 0.1);
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(15, 61, 46, 0.05);
   border-radius: 12px;
 }
 
@@ -673,8 +673,8 @@ const goToMenuPage = (page: number) => {
 
 .edit-section-btn {
   padding: 0.5rem 1rem;
-  background: rgba(212, 175, 55, 0.1);
-  border: 1px solid rgba(212, 175, 55, 0.3);
+  background: rgba(15, 61, 46, 0.05);
+  border: 1px solid rgba(15, 61, 46, 0.15);
   border-radius: 6px;
   color: var(--gold-primary);
   font-size: 0.875rem;
@@ -684,7 +684,7 @@ const goToMenuPage = (page: number) => {
 }
 
 .edit-section-btn:hover {
-  background: rgba(212, 175, 55, 0.2);
+  background: rgba(15, 61, 46, 0.1);
   border-color: var(--gold-primary);
   transform: translateY(-1px);
 }
@@ -697,8 +697,8 @@ const goToMenuPage = (page: number) => {
 
 .edit-field-btn {
   padding: 0.375rem 0.75rem;
-  background: rgba(212, 175, 55, 0.1);
-  border: 1px solid rgba(212, 175, 55, 0.3);
+  background: rgba(15, 61, 46, 0.05);
+  border: 1px solid rgba(15, 61, 46, 0.15);
   border-radius: 6px;
   color: var(--gold-primary);
   font-size: 0.875rem;
@@ -708,7 +708,7 @@ const goToMenuPage = (page: number) => {
 }
 
 .edit-field-btn:hover {
-  background: rgba(212, 175, 55, 0.2);
+  background: rgba(15, 61, 46, 0.1);
   border-color: var(--gold-primary);
 }
 
@@ -776,8 +776,8 @@ const goToMenuPage = (page: number) => {
 .edit-input {
   width: 100%;
   padding: 0.75rem 1rem;
-  background: rgba(0, 0, 0, 0.4);
-  border: 1px solid rgba(212, 175, 55, 0.3);
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(15, 61, 46, 0.15);
   border-radius: 8px;
   color: var(--text-primary);
   font-family: var(--font-body);
@@ -788,8 +788,8 @@ const goToMenuPage = (page: number) => {
 .edit-input:focus {
   outline: none;
   border-color: var(--gold-primary);
-  background: rgba(0, 0, 0, 0.5);
-  box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.1);
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 0 0 3px rgba(15, 61, 46, 0.05);
 }
 
 .edit-input::placeholder {
@@ -836,8 +836,8 @@ const goToMenuPage = (page: number) => {
   width: 100%;
   max-width: 300px;
   padding: 1.5rem;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(212, 175, 55, 0.2);
+  background: rgba(15, 61, 46, 0.025);
+  border: 1px solid rgba(15, 61, 46, 0.1);
   border-radius: 12px;
   display: flex;
   align-items: center;
@@ -868,8 +868,8 @@ const goToMenuPage = (page: number) => {
   align-items: center;
   gap: 0.75rem;
   padding: 0.75rem 1rem;
-  background: rgba(0, 0, 0, 0.3);
-  border: 1px solid rgba(212, 175, 55, 0.15);
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(15, 61, 46, 0.08);
   border-radius: 8px;
   min-width: 150px;
 }
@@ -878,7 +878,7 @@ const goToMenuPage = (page: number) => {
   width: 32px;
   height: 32px;
   border-radius: 6px;
-  border: 2px solid rgba(255, 255, 255, 0.2);
+  border: 2px solid rgba(15, 61, 46, 0.1);
   flex-shrink: 0;
 }
 
@@ -905,8 +905,8 @@ const goToMenuPage = (page: number) => {
 .font-badge-small {
   display: inline-block;
   padding: 0.5rem 1rem;
-  background: rgba(212, 175, 55, 0.1);
-  border: 1px solid rgba(212, 175, 55, 0.3);
+  background: rgba(15, 61, 46, 0.05);
+  border: 1px solid rgba(15, 61, 46, 0.15);
   border-radius: 6px;
   font-size: 0.875rem;
   text-transform: capitalize;
@@ -939,7 +939,7 @@ const goToMenuPage = (page: number) => {
 
 .hours-item {
   padding: 0.5rem 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid rgba(15, 61, 46, 0.025);
   color: var(--text-secondary);
   font-size: 0.9rem;
 }
@@ -1010,8 +1010,8 @@ const goToMenuPage = (page: number) => {
   align-items: center;
   gap: 0.5rem;
   padding: 0.5rem 1rem;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(15, 61, 46, 0.025);
+  border: 1px solid rgba(15, 61, 46, 0.05);
   border-radius: 20px;
   color: var(--text-primary);
   text-decoration: none;
@@ -1020,8 +1020,8 @@ const goToMenuPage = (page: number) => {
 }
 
 .social-link:hover {
-  background: rgba(212, 175, 55, 0.1);
-  border-color: rgba(212, 175, 55, 0.3);
+  background: rgba(15, 61, 46, 0.05);
+  border-color: rgba(15, 61, 46, 0.15);
   color: var(--gold-primary);
 }
 
@@ -1034,8 +1034,8 @@ const goToMenuPage = (page: number) => {
 }
 
 .menu-item {
-  background: rgba(0, 0, 0, 0.3);
-  border: 1px solid rgba(212, 175, 55, 0.1);
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(15, 61, 46, 0.05);
   border-radius: 10px;
   overflow: hidden;
 }
@@ -1078,8 +1078,8 @@ const goToMenuPage = (page: number) => {
   font-size: 0.625rem;
   font-weight: 600;
   padding: 0.25rem 0.5rem;
-  background: rgba(212, 175, 55, 0.15);
-  border: 1px solid rgba(212, 175, 55, 0.3);
+  background: rgba(15, 61, 46, 0.08);
+  border: 1px solid rgba(15, 61, 46, 0.15);
   border-radius: 4px;
   color: var(--gold-primary);
   text-transform: uppercase;
@@ -1094,13 +1094,13 @@ const goToMenuPage = (page: number) => {
   gap: 1rem;
   margin-top: 1.5rem;
   padding-top: 1rem;
-  border-top: 1px solid rgba(212, 175, 55, 0.1);
+  border-top: 1px solid rgba(15, 61, 46, 0.05);
 }
 
 .pagination-btn {
   padding: 0.5rem 1rem;
-  background: rgba(212, 175, 55, 0.1);
-  border: 1px solid rgba(212, 175, 55, 0.3);
+  background: rgba(15, 61, 46, 0.05);
+  border: 1px solid rgba(15, 61, 46, 0.15);
   border-radius: 6px;
   color: var(--gold-primary);
   font-size: 0.875rem;
@@ -1114,7 +1114,7 @@ const goToMenuPage = (page: number) => {
 }
 
 .pagination-btn:not(:disabled):hover {
-  background: rgba(212, 175, 55, 0.2);
+  background: rgba(15, 61, 46, 0.1);
 }
 
 .pagination-numbers {
@@ -1129,7 +1129,7 @@ const goToMenuPage = (page: number) => {
   align-items: center;
   justify-content: center;
   background: transparent;
-  border: 1px solid rgba(212, 175, 55, 0.3);
+  border: 1px solid rgba(15, 61, 46, 0.15);
   border-radius: 6px;
   color: var(--text-secondary);
   font-size: 0.875rem;
@@ -1138,7 +1138,7 @@ const goToMenuPage = (page: number) => {
 }
 
 .pagination-number:hover {
-  background: rgba(212, 175, 55, 0.1);
+  background: rgba(15, 61, 46, 0.05);
   color: var(--gold-primary);
 }
 

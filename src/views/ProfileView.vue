@@ -398,7 +398,7 @@ async function confirmCancelSubscription() {
   align-items: center;
   margin-bottom: var(--space-xl);
   padding-bottom: var(--space-lg);
-  border-bottom: 1px solid rgba(212, 175, 55, 0.1);
+  border-bottom: 1px solid rgba(15, 61, 46, 0.1);
 }
 
 .section-title {
@@ -410,7 +410,7 @@ async function confirmCancelSubscription() {
 .edit-btn {
   padding: var(--space-sm) var(--space-lg);
   background: transparent;
-  border: 1px solid rgba(212, 175, 55, 0.3);
+  border: 1px solid rgba(15, 61, 46, 0.3);
   border-radius: var(--radius-md);
   color: var(--gold-primary);
   font-family: var(--font-body);
@@ -421,14 +421,14 @@ async function confirmCancelSubscription() {
 }
 
 .edit-btn:hover {
-  background: rgba(212, 175, 55, 0.1);
-  border-color: rgba(212, 175, 55, 0.5);
+  background: rgba(15, 61, 46, 0.1);
+  border-color: rgba(15, 61, 46, 0.5);
 }
 
 .upgrade-link {
   padding: var(--space-sm) var(--space-lg);
   background: transparent;
-  border: 1px solid rgba(212, 175, 55, 0.3);
+  border: 1px solid rgba(15, 61, 46, 0.3);
   border-radius: var(--radius-md);
   color: var(--gold-primary);
   font-family: var(--font-body);
@@ -440,8 +440,8 @@ async function confirmCancelSubscription() {
 }
 
 .upgrade-link:hover {
-  background: rgba(212, 175, 55, 0.1);
-  border-color: rgba(212, 175, 55, 0.5);
+  background: rgba(15, 61, 46, 0.1);
+  border-color: rgba(15, 61, 46, 0.5);
 }
 
 /* Info Display */
@@ -531,9 +531,9 @@ async function confirmCancelSubscription() {
 }
 
 .plan-yearly {
-  background: rgba(212, 175, 55, 0.2);
+  background: rgba(15, 61, 46, 0.2);
   color: var(--gold-primary);
-  border: 1px solid rgba(212, 175, 55, 0.3);
+  border: 1px solid rgba(15, 61, 46, 0.3);
 }
 
 .plan-lifetime {
@@ -550,9 +550,9 @@ async function confirmCancelSubscription() {
 }
 
 .plan-pro {
-  background: rgba(212, 175, 55, 0.2);
+  background: rgba(15, 61, 46, 0.2);
   color: var(--gold-primary);
-  border: 1px solid rgba(212, 175, 55, 0.3);
+  border: 1px solid rgba(15, 61, 46, 0.3);
 }
 
 .plan-enterprise {
@@ -595,10 +595,10 @@ async function confirmCancelSubscription() {
   display: flex;
   flex-direction: column;
   gap: var(--space-md);
-  background: rgba(0, 0, 0, 0.3);
+  background: rgba(255, 255, 255, 0.3);
   padding: var(--space-xl);
   border-radius: var(--radius-md);
-  border: 1px solid rgba(212, 175, 55, 0.1);
+  border: 1px solid rgba(15, 61, 46, 0.1);
 }
 
 .plan-actions {
@@ -664,7 +664,7 @@ async function confirmCancelSubscription() {
 
 .security-divider {
   height: 1px;
-  background: rgba(212, 175, 55, 0.1);
+  background: rgba(15, 61, 46, 0.1);
 }
 
 .danger-text {
@@ -678,7 +678,7 @@ async function confirmCancelSubscription() {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.8);
+  background: rgba(15, 61, 46, 0.4);
   backdrop-filter: blur(8px);
   display: flex;
   align-items: center;
@@ -688,13 +688,13 @@ async function confirmCancelSubscription() {
 }
 
 .modal-content {
-  background: rgba(26, 26, 26, 0.95);
-  border: 1px solid rgba(212, 175, 55, 0.2);
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(15, 61, 46, 0.2);
   border-radius: var(--radius-lg);
   padding: var(--space-3xl);
   max-width: 500px;
   width: 100%;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7);
+  box-shadow: 0 20px 60px rgba(15, 61, 46, 0.35);
 }
 
 .modal-title {

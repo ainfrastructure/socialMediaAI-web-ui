@@ -76,7 +76,7 @@ const formattedDate = computed(() => {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.8);
+  background: rgba(15, 61, 46, 0.4);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -108,7 +108,7 @@ const formattedDate = computed(() => {
   justify-content: space-between;
   align-items: center;
   padding-bottom: var(--space-lg);
-  border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+  border-bottom: 1px solid rgba(15, 61, 46, 0.1);
   margin-bottom: var(--space-xl);
 }
 
@@ -155,8 +155,8 @@ const formattedDate = computed(() => {
   align-items: center;
   gap: var(--space-md);
   padding: var(--space-2xl) var(--space-lg);
-  background: rgba(0, 0, 0, 0.3);
-  border: 2px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.8);
+  border: 2px solid rgba(15, 61, 46, 0.1);
   border-radius: var(--radius-lg);
   cursor: pointer;
   transition: all var(--transition-base);
@@ -165,8 +165,8 @@ const formattedDate = computed(() => {
 }
 
 .creation-option-card:hover {
-  border-color: rgba(212, 175, 55, 0.5);
-  background: rgba(212, 175, 55, 0.1);
+  border-color: rgba(15, 61, 46, 0.25);
+  background: rgba(15, 61, 46, 0.03);
   transform: translateY(-4px);
 }
 

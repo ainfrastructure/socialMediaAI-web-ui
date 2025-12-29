@@ -466,7 +466,7 @@ function handleSchedule() {
 
 /* Media Section */
 .modal-media {
-  background: rgba(0, 0, 0, 0.4);
+  background: rgba(15, 61, 46, 0.2);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -644,7 +644,7 @@ function handleSchedule() {
 .hashtag {
   font-size: var(--text-sm);
   color: var(--gold-primary);
-  background: rgba(212, 175, 55, 0.1);
+  background: rgba(15, 61, 46, 0.1);
   padding: var(--space-xs) var(--space-sm);
   border-radius: var(--radius-sm);
 }

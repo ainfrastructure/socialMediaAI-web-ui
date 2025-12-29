@@ -233,12 +233,12 @@ const getRestaurantName = (id: string) => {
 .filter-bar {
   margin-bottom: var(--space-xl);
   padding: var(--space-xl);
-  background: linear-gradient(135deg, rgba(20, 20, 20, 0.95), rgba(30, 30, 30, 0.95)) !important;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(250, 247, 240, 0.95)) !important;
   backdrop-filter: blur(24px);
-  border: 1px solid rgba(212, 175, 55, 0.2);
+  border: 1px solid rgba(15, 61, 46, 0.2);
   box-shadow:
-    0 8px 32px rgba(0, 0, 0, 0.4),
-    0 0 40px rgba(212, 175, 55, 0.08),
+    0 8px 32px rgba(15, 61, 46, 0.2),
+    0 0 40px rgba(15, 61, 46, 0.08),
     inset 0 1px 0 rgba(255, 255, 255, 0.05);
   position: relative;
   overflow: visible;
@@ -261,12 +261,12 @@ const getRestaurantName = (id: string) => {
   gap: var(--space-md);
   margin-bottom: var(--space-lg);
   padding-bottom: var(--space-md);
-  border-bottom: 1px solid rgba(212, 175, 55, 0.15);
+  border-bottom: 1px solid rgba(15, 61, 46, 0.15);
 }
 
 .filter-icon {
   font-size: 1.5rem;
-  filter: drop-shadow(0 2px 4px rgba(212, 175, 55, 0.3));
+  filter: drop-shadow(0 2px 4px rgba(15, 61, 46, 0.3));
 }
 
 .filter-title {
@@ -302,8 +302,8 @@ const getRestaurantName = (id: string) => {
   align-items: center;
   gap: var(--space-md);
   padding: var(--space-md);
-  background: rgba(10, 10, 10, 0.9);
-  border: 1px solid rgba(212, 175, 55, 0.25);
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(15, 61, 46, 0.25);
   border-radius: var(--radius-md);
   color: var(--text-primary);
   font-size: 0.9375rem;
@@ -315,8 +315,8 @@ const getRestaurantName = (id: string) => {
 
 .filter-btn:hover {
   border-color: var(--gold-primary);
-  background: rgba(10, 10, 10, 1);
-  box-shadow: 0 0 12px rgba(212, 175, 55, 0.15);
+  background: rgba(255, 255, 255, 1);
+  box-shadow: 0 0 12px rgba(15, 61, 46, 0.15);
   transform: translateY(-1px);
 }
 
@@ -359,8 +359,8 @@ const getRestaurantName = (id: string) => {
 
 .filter-select {
   width: 100%;
-  background: rgba(10, 10, 10, 0.9);
-  border: 1px solid rgba(212, 175, 55, 0.25);
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(15, 61, 46, 0.25);
   border-radius: var(--radius-md);
   padding: var(--space-md) var(--space-xl) var(--space-md) 3.5rem;
   color: var(--text-primary);
@@ -375,16 +375,16 @@ const getRestaurantName = (id: string) => {
 
 .filter-select:hover {
   border-color: var(--gold-primary);
-  background: rgba(10, 10, 10, 1);
-  box-shadow: 0 0 12px rgba(212, 175, 55, 0.15);
+  background: rgba(255, 255, 255, 1);
+  box-shadow: 0 0 12px rgba(15, 61, 46, 0.15);
   transform: translateY(-1px);
 }
 
 .filter-select:focus {
   outline: none;
   border-color: var(--gold-primary);
-  background: rgba(10, 10, 10, 1);
-  box-shadow: 0 0 20px rgba(212, 175, 55, 0.25);
+  background: rgba(255, 255, 255, 1);
+  box-shadow: 0 0 20px rgba(15, 61, 46, 0.25);
   transform: translateY(-1px);
 }
 
@@ -415,7 +415,7 @@ const getRestaurantName = (id: string) => {
   align-items: center;
   gap: var(--space-md);
   padding-top: var(--space-lg);
-  border-top: 1px solid rgba(212, 175, 55, 0.1);
+  border-top: 1px solid rgba(15, 61, 46, 0.1);
   margin-top: var(--space-md);
 }
 
@@ -439,8 +439,8 @@ const getRestaurantName = (id: string) => {
   align-items: center;
   gap: var(--space-xs);
   padding: var(--space-xs) var(--space-md);
-  background: linear-gradient(135deg, rgba(212, 175, 55, 0.15), rgba(212, 175, 55, 0.25));
-  border: 1px solid rgba(212, 175, 55, 0.4);
+  background: linear-gradient(135deg, rgba(15, 61, 46, 0.15), rgba(15, 61, 46, 0.25));
+  border: 1px solid rgba(15, 61, 46, 0.4);
   border-radius: var(--radius-full);
   color: var(--gold-light);
   font-size: 0.8125rem;
@@ -450,10 +450,10 @@ const getRestaurantName = (id: string) => {
 }
 
 .filter-tag:hover {
-  background: linear-gradient(135deg, rgba(212, 175, 55, 0.25), rgba(212, 175, 55, 0.35));
+  background: linear-gradient(135deg, rgba(15, 61, 46, 0.25), rgba(15, 61, 46, 0.35));
   border-color: var(--gold-primary);
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(212, 175, 55, 0.2);
+  box-shadow: 0 4px 12px rgba(15, 61, 46, 0.2);
 }
 
 .tag-close {

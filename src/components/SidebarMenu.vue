@@ -223,7 +223,7 @@ function closeMobileMenu() {
   width: 100vw;
   height: 100vh;
   height: 100dvh;
-  background: rgba(0, 0, 0, 0.7);
+  background: rgba(0, 0, 0, 0.4);
   z-index: calc(var(--z-fixed) - 1);
   animation: fadeIn 0.3s ease;
 }
@@ -312,7 +312,7 @@ function closeMobileMenu() {
   font-size: 10px;
   font-weight: var(--font-bold);
   color: var(--gold-primary);
-  background: rgba(212, 175, 55, 0.15);
+  background: rgba(15, 61, 46, 0.15);
   padding: 2px 8px;
   border-radius: var(--radius-sm);
   width: fit-content;
@@ -369,7 +369,7 @@ function closeMobileMenu() {
 }
 
 .nav-item.active {
-  background: rgba(212, 175, 55, 0.1);
+  background: rgba(15, 61, 46, 0.1);
   color: var(--gold-primary);
 }
 

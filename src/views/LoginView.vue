@@ -232,12 +232,12 @@ async function handleEmailLogin() {
   width: auto;
   margin: 0 auto var(--space-xl);
   display: block;
-  filter: drop-shadow(0 4px 12px rgba(212, 175, 55, 0.3));
+  filter: drop-shadow(0 4px 12px rgba(176, 138, 90, 0.3));
   transition: var(--transition-base);
 }
 
 .brand-logo:hover {
-  filter: drop-shadow(0 6px 16px rgba(212, 175, 55, 0.4));
+  filter: drop-shadow(0 6px 16px rgba(176, 138, 90, 0.4));
   transform: scale(1.05);
 }
 
@@ -327,7 +327,7 @@ form {
 }
 
 .apple-button:hover:not(:disabled) {
-  background: #1a1a1a;
+  background: #333333;
 }
 
 /* Google Button */

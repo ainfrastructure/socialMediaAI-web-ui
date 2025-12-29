@@ -376,7 +376,7 @@ function close() {
 }
 
 .plan-card.lifetime {
-  background: linear-gradient(135deg, rgba(212, 175, 55, 0.1) 0%, rgba(26, 26, 26, 0.9) 100%);
+  background: linear-gradient(135deg, rgba(15, 61, 46, 0.1) 0%, rgba(255, 255, 255, 0.9) 100%);
 }
 
 .plan-badge {

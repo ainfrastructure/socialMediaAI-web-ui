@@ -694,7 +694,7 @@ function formatDate(dateString: string): string {
 .spinner {
   width: 40px;
   height: 40px;
-  border: 3px solid rgba(212, 175, 55, 0.2);
+  border: 3px solid rgba(15, 61, 46, 0.2);
   border-top-color: var(--gold-primary);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
@@ -743,7 +743,7 @@ function formatDate(dateString: string): string {
 .welcome-icon .logo-svg {
   width: 120px;
   height: auto;
-  filter: drop-shadow(0 0 20px rgba(212, 175, 55, 0.3));
+  filter: drop-shadow(0 0 20px rgba(15, 61, 46, 0.3));
 }
 
 @keyframes pulse {
@@ -783,7 +783,7 @@ function formatDate(dateString: string): string {
 .add-restaurant-card:hover {
   transform: translateY(-4px);
   border-color: var(--gold-primary);
-  box-shadow: 0 0 30px rgba(212, 175, 55, 0.2);
+  box-shadow: 0 0 30px rgba(15, 61, 46, 0.2);
 }
 
 .add-restaurant-card .card-icon {
@@ -796,7 +796,7 @@ function formatDate(dateString: string): string {
 
 .add-restaurant-card .restaurant-material-icon {
   color: var(--gold-primary);
-  filter: drop-shadow(0 0 12px rgba(212, 175, 55, 0.3));
+  filter: drop-shadow(0 0 12px rgba(15, 61, 46, 0.3));
   font-size: 48px;
 }
 
@@ -818,7 +818,7 @@ function formatDate(dateString: string): string {
 .restaurant-header {
   margin-bottom: var(--space-3xl);
   padding-bottom: var(--space-2xl);
-  border-bottom: 1px solid rgba(212, 175, 55, 0.15);
+  border-bottom: 1px solid rgba(15, 61, 46, 0.15);
 }
 
 .header-content {
@@ -850,7 +850,7 @@ function formatDate(dateString: string): string {
   pointer-events: none;
   transition: opacity 0.2s ease;
   padding: var(--space-sm) var(--space-md);
-  background: rgba(212, 175, 55, 0.2);
+  background: rgba(15, 61, 46, 0.2);
   border: 1px solid var(--gold-primary);
   border-radius: var(--radius-md);
   font-size: var(--text-sm);
@@ -891,7 +891,7 @@ function formatDate(dateString: string): string {
 }
 
 .restaurant-logo.placeholder {
-  background: rgba(212, 175, 55, 0.1);
+  background: rgba(15, 61, 46, 0.1);
   border-radius: var(--radius-lg);
   min-height: 120px;
 }
@@ -938,7 +938,7 @@ function formatDate(dateString: string): string {
 
 .create-card:hover .create-plus-icon {
   transform: scale(1.1);
-  box-shadow: 0 0 40px rgba(212, 175, 55, 0.4);
+  box-shadow: 0 0 40px rgba(15, 61, 46, 0.4);
 }
 
 .create-plus-icon {
@@ -950,7 +950,7 @@ function formatDate(dateString: string): string {
   align-items: center;
   justify-content: center;
   transition: all 0.3s ease;
-  box-shadow: 0 0 20px rgba(212, 175, 55, 0.3);
+  box-shadow: 0 0 20px rgba(15, 61, 46, 0.3);
 }
 
 .plus-symbol {
@@ -1005,8 +1005,8 @@ function formatDate(dateString: string): string {
 
 .inline-select {
   appearance: none;
-  background: rgba(26, 26, 26, 0.6);
-  border: 1px solid rgba(212, 175, 55, 0.2);
+  background: rgba(255, 255, 255, 0.6);
+  border: 1px solid rgba(15, 61, 46, 0.2);
   border-radius: var(--radius-md);
   padding: var(--space-sm) var(--space-2xl) var(--space-sm) var(--space-md);
   color: var(--text-primary);
@@ -1014,20 +1014,20 @@ function formatDate(dateString: string): string {
   font-size: var(--text-sm);
   cursor: pointer;
   transition: all 0.2s ease;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23D4AF37' d='M6 8L2 4h8z'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%230f3d2e' d='M6 8L2 4h8z'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 10px center;
   min-width: 120px;
 }
 
 .inline-select:hover {
-  border-color: rgba(212, 175, 55, 0.4);
+  border-color: rgba(15, 61, 46, 0.4);
 }
 
 .inline-select:focus {
   outline: none;
   border-color: var(--gold-primary);
-  box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.15);
+  box-shadow: 0 0 0 2px rgba(15, 61, 46, 0.15);
 }
 
 .inline-select option {
@@ -1085,7 +1085,7 @@ function formatDate(dateString: string): string {
 
 .post-card:hover {
   transform: translateY(-4px);
-  border-color: rgba(212, 175, 55, 0.4);
+  border-color: rgba(15, 61, 46, 0.4);
 }
 
 .media-container {
@@ -1112,7 +1112,7 @@ function formatDate(dateString: string): string {
   top: var(--space-sm);
   left: var(--space-sm);
   font-size: 1.25rem;
-  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
+  filter: drop-shadow(0 2px 4px rgba(15, 61, 46, 0.25));
 }
 
 .post-details {
@@ -1137,7 +1137,7 @@ function formatDate(dateString: string): string {
 
 .hashtag {
   padding: 0.2rem 0.5rem;
-  background: rgba(212, 175, 55, 0.15);
+  background: rgba(15, 61, 46, 0.15);
   color: var(--gold-light);
   border-radius: 4px;
   font-size: var(--text-xs);
@@ -1145,7 +1145,7 @@ function formatDate(dateString: string): string {
 
 .more-tags {
   padding: 0.2rem 0.5rem;
-  background: rgba(212, 175, 55, 0.1);
+  background: rgba(15, 61, 46, 0.1);
   color: var(--text-muted);
   border-radius: 4px;
   font-size: var(--text-xs);
@@ -1157,7 +1157,7 @@ function formatDate(dateString: string): string {
   align-items: center;
   margin-top: var(--space-sm);
   padding-top: var(--space-sm);
-  border-top: 1px solid rgba(212, 175, 55, 0.1);
+  border-top: 1px solid rgba(15, 61, 46, 0.1);
 }
 
 .created-date {
@@ -1216,7 +1216,7 @@ function formatDate(dateString: string): string {
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.85);
+  background: rgba(15, 61, 46, 0.4);
   backdrop-filter: blur(var(--blur-md));
   display: flex;
   align-items: center;
@@ -1237,7 +1237,7 @@ function formatDate(dateString: string): string {
   justify-content: space-between;
   align-items: center;
   padding-bottom: var(--space-lg);
-  border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+  border-bottom: 1px solid rgba(15, 61, 46, 0.2);
   margin-bottom: var(--space-lg);
 }
 
@@ -1265,7 +1265,7 @@ function formatDate(dateString: string): string {
 }
 
 .close-btn:hover {
-  background: rgba(212, 175, 55, 0.1);
+  background: rgba(15, 61, 46, 0.1);
   color: var(--gold-primary);
 }
 
@@ -1284,7 +1284,7 @@ function formatDate(dateString: string): string {
 
 .detail-section {
   padding-bottom: var(--space-lg);
-  border-bottom: 1px solid rgba(212, 175, 55, 0.1);
+  border-bottom: 1px solid rgba(15, 61, 46, 0.1);
 }
 
 .detail-section h4 {
@@ -1312,8 +1312,8 @@ function formatDate(dateString: string): string {
 .edit-input,
 .edit-select {
   width: 100%;
-  background: rgba(10, 10, 10, 0.8);
-  border: 1px solid rgba(212, 175, 55, 0.2);
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(15, 61, 46, 0.2);
   border-radius: var(--radius-md);
   padding: var(--space-sm) var(--space-md);
   color: var(--text-primary);
@@ -1339,8 +1339,8 @@ function formatDate(dateString: string): string {
 
 /* Hashtag editor */
 .hashtag-editor {
-  background: rgba(0, 0, 0, 0.4);
-  border: 1px solid rgba(212, 175, 55, 0.2);
+  background: rgba(255, 255, 255, 0.4);
+  border: 1px solid rgba(15, 61, 46, 0.2);
   border-radius: var(--radius-md);
   padding: var(--space-md);
 }
@@ -1357,8 +1357,8 @@ function formatDate(dateString: string): string {
   align-items: center;
   gap: var(--space-xs);
   padding: var(--space-xs) var(--space-sm);
-  background: rgba(212, 175, 55, 0.15);
-  border: 1px solid rgba(212, 175, 55, 0.3);
+  background: rgba(15, 61, 46, 0.15);
+  border: 1px solid rgba(15, 61, 46, 0.3);
   border-radius: var(--radius-full);
   color: var(--gold-primary);
   font-size: var(--text-sm);
@@ -1402,7 +1402,7 @@ function formatDate(dateString: string): string {
   gap: var(--space-md);
   margin-top: var(--space-lg);
   padding-top: var(--space-lg);
-  border-top: 1px solid rgba(212, 175, 55, 0.2);
+  border-top: 1px solid rgba(15, 61, 46, 0.2);
   flex-wrap: wrap;
 }
 

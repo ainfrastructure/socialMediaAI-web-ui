@@ -132,7 +132,7 @@ const close = () => {
 
 .header-icon {
   font-size: 1.75rem;
-  filter: drop-shadow(0 2px 4px rgba(212, 175, 55, 0.3));
+  filter: drop-shadow(0 2px 4px rgba(15, 61, 46, 0.3));
 }
 
 .modal-title {
@@ -146,8 +146,8 @@ const close = () => {
 /* Selected Count */
 .selected-count {
   padding: var(--space-sm) var(--space-xl);
-  background: rgba(212, 175, 55, 0.1);
-  border-bottom: 1px solid rgba(212, 175, 55, 0.1);
+  background: rgba(15, 61, 46, 0.1);
+  border-bottom: 1px solid rgba(15, 61, 46, 0.1);
   color: var(--gold-light);
   font-size: var(--text-sm);
   font-weight: 600;
@@ -168,25 +168,25 @@ const close = () => {
 }
 
 .content-types-grid::-webkit-scrollbar-track {
-  background: rgba(10, 10, 10, 0.5);
+  background: rgba(15, 61, 46, 0.1);
   border-radius: 4px;
 }
 
 .content-types-grid::-webkit-scrollbar-thumb {
-  background: rgba(212, 175, 55, 0.3);
+  background: rgba(15, 61, 46, 0.3);
   border-radius: 4px;
 }
 
 .content-types-grid::-webkit-scrollbar-thumb:hover {
-  background: rgba(212, 175, 55, 0.5);
+  background: rgba(15, 61, 46, 0.5);
 }
 
 /* Content Type Card */
 .content-type-card {
   position: relative;
   padding: var(--space-lg);
-  background: rgba(20, 20, 20, 0.6);
-  border: 2px solid rgba(212, 175, 55, 0.15);
+  background: rgba(255, 255, 255, 0.6);
+  border: 2px solid rgba(15, 61, 46, 0.15);
   border-radius: var(--radius-lg);
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -198,16 +198,16 @@ const close = () => {
 }
 
 .content-type-card:hover {
-  border-color: rgba(212, 175, 55, 0.4);
-  background: rgba(20, 20, 20, 0.8);
+  border-color: rgba(15, 61, 46, 0.4);
+  background: rgba(255, 255, 255, 0.8);
   transform: translateY(-4px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4), 0 0 20px rgba(212, 175, 55, 0.15);
+  box-shadow: 0 8px 24px rgba(15, 61, 46, 0.2), 0 0 20px rgba(15, 61, 46, 0.15);
 }
 
 .content-type-card.selected {
   border-color: var(--gold-primary);
-  background: linear-gradient(135deg, rgba(212, 175, 55, 0.1), rgba(212, 175, 55, 0.05));
-  box-shadow: 0 0 24px rgba(212, 175, 55, 0.2);
+  background: linear-gradient(135deg, rgba(15, 61, 46, 0.1), rgba(15, 61, 46, 0.05));
+  box-shadow: 0 0 24px rgba(15, 61, 46, 0.2);
 }
 
 /* Checkbox */
@@ -226,7 +226,7 @@ const close = () => {
 .checkbox-custom {
   width: 22px;
   height: 22px;
-  border: 2px solid rgba(212, 175, 55, 0.4);
+  border: 2px solid rgba(15, 61, 46, 0.4);
   border-radius: var(--radius-sm);
   display: block;
   position: relative;
@@ -254,8 +254,8 @@ const close = () => {
   width: 80px;
   height: 80px;
   border-radius: var(--radius-md);
-  background: rgba(10, 10, 10, 0.5);
-  border: 1px solid rgba(212, 175, 55, 0.2);
+  background: rgba(255, 255, 255, 0.5);
+  border: 1px solid rgba(15, 61, 46, 0.2);
   display: flex;
   align-items: center;
   justify-content: center;

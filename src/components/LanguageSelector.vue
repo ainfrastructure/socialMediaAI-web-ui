@@ -278,7 +278,7 @@ onUnmounted(() => {
   gap: var(--space-sm);
   padding: var(--space-sm) var(--space-md);
   background: transparent;
-  border: 1px solid rgba(212, 175, 55, 0.3);
+  border: 1px solid rgba(15, 61, 46, 0.15);
   border-radius: var(--radius-md);
   cursor: pointer;
   transition: var(--transition-base);
@@ -289,8 +289,8 @@ onUnmounted(() => {
 }
 
 .language-button:hover {
-  background: rgba(212, 175, 55, 0.1);
-  border-color: rgba(212, 175, 55, 0.5);
+  background: rgba(15, 61, 46, 0.05);
+  border-color: rgba(15, 61, 46, 0.25);
 }
 
 .flag {
@@ -312,7 +312,7 @@ onUnmounted(() => {
 .currency-badge {
   font-size: var(--text-xs);
   padding: 2px 6px;
-  background: rgba(212, 175, 55, 0.2);
+  background: rgba(15, 61, 46, 0.1);
   border-radius: var(--radius-sm);
   color: var(--gold-primary);
   font-weight: var(--font-medium);
@@ -324,14 +324,13 @@ onUnmounted(() => {
   top: calc(100% + 8px);
   right: 0;
   width: 340px;
-  background: rgba(20, 20, 20, 0.98);
+  background: rgba(255, 255, 255, 0.98);
   backdrop-filter: blur(24px);
-  border: 1px solid rgba(212, 175, 55, 0.2);
+  border: 1px solid rgba(15, 61, 46, 0.1);
   border-radius: var(--radius-xl);
   box-shadow:
-    0 12px 48px rgba(0, 0, 0, 0.6),
-    0 0 0 1px rgba(212, 175, 55, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    0 12px 48px rgba(15, 61, 46, 0.15),
+    0 0 0 1px rgba(15, 61, 46, 0.05);
   overflow: hidden;
   z-index: 1000;
 }
@@ -342,7 +341,7 @@ onUnmounted(() => {
   align-items: center;
   justify-content: space-between;
   padding: var(--space-md) var(--space-lg);
-  border-bottom: 1px solid rgba(212, 175, 55, 0.15);
+  border-bottom: 1px solid rgba(15, 61, 46, 0.08);
 }
 
 .header-title {
@@ -360,7 +359,7 @@ onUnmounted(() => {
   width: 28px;
   height: 28px;
   background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(15, 61, 46, 0.05);
   border-radius: var(--radius-md);
   color: var(--text-muted);
   font-size: var(--text-lg);
@@ -369,9 +368,9 @@ onUnmounted(() => {
 }
 
 .close-button:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(15, 61, 46, 0.05);
   color: var(--text-primary);
-  border-color: rgba(255, 255, 255, 0.2);
+  border-color: rgba(15, 61, 46, 0.1);
 }
 
 /* Language Grid */
@@ -389,8 +388,8 @@ onUnmounted(() => {
   align-items: center;
   gap: var(--space-xs);
   padding: var(--space-md) var(--space-sm);
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(15, 61, 46, 0.015);
+  border: 1px solid rgba(15, 61, 46, 0.04);
   border-radius: var(--radius-lg);
   cursor: pointer;
   transition: var(--transition-base);
@@ -398,15 +397,15 @@ onUnmounted(() => {
 }
 
 .language-card:hover {
-  background: rgba(212, 175, 55, 0.1);
-  border-color: rgba(212, 175, 55, 0.3);
+  background: rgba(15, 61, 46, 0.05);
+  border-color: rgba(15, 61, 46, 0.15);
   transform: translateY(-2px);
 }
 
 .language-card.active {
-  background: rgba(212, 175, 55, 0.15);
+  background: rgba(15, 61, 46, 0.08);
   border-color: var(--gold-primary);
-  box-shadow: 0 0 12px rgba(212, 175, 55, 0.2);
+  box-shadow: 0 0 12px rgba(15, 61, 46, 0.1);
 }
 
 .card-flag {
@@ -436,7 +435,7 @@ onUnmounted(() => {
   right: 4px;
   font-size: 10px;
   color: var(--gold-primary);
-  background: rgba(212, 175, 55, 0.2);
+  background: rgba(15, 61, 46, 0.1);
   width: 16px;
   height: 16px;
   border-radius: 50%;
@@ -448,7 +447,7 @@ onUnmounted(() => {
 /* Section divider */
 .dropdown-divider {
   height: 1px;
-  background: rgba(212, 175, 55, 0.15);
+  background: rgba(15, 61, 46, 0.08);
   margin: 0;
 }
 
@@ -477,20 +476,20 @@ onUnmounted(() => {
   align-items: center;
   gap: 2px;
   padding: var(--space-sm);
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(15, 61, 46, 0.015);
+  border: 1px solid rgba(15, 61, 46, 0.04);
   border-radius: var(--radius-md);
   cursor: pointer;
   transition: var(--transition-base);
 }
 
 .currency-card:hover {
-  background: rgba(212, 175, 55, 0.1);
-  border-color: rgba(212, 175, 55, 0.3);
+  background: rgba(15, 61, 46, 0.05);
+  border-color: rgba(15, 61, 46, 0.15);
 }
 
 .currency-card.active {
-  background: rgba(212, 175, 55, 0.15);
+  background: rgba(15, 61, 46, 0.08);
   border-color: var(--gold-primary);
 }
 
@@ -566,7 +565,7 @@ onUnmounted(() => {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(15, 61, 46, 0.25);
   z-index: 9999;
   display: flex;
   align-items: flex-end;
@@ -576,14 +575,13 @@ onUnmounted(() => {
 .mobile-dropdown-menu {
   width: 100%;
   max-height: 70vh;
-  background: rgba(20, 20, 20, 0.98);
+  background: rgba(255, 255, 255, 0.98);
   backdrop-filter: blur(24px);
-  border: 1px solid rgba(212, 175, 55, 0.2);
+  border: 1px solid rgba(15, 61, 46, 0.1);
   border-radius: var(--radius-xl) var(--radius-xl) 0 0;
   box-shadow:
-    0 -12px 48px rgba(0, 0, 0, 0.6),
-    0 0 0 1px rgba(212, 175, 55, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    0 -12px 48px rgba(15, 61, 46, 0.15),
+    0 0 0 1px rgba(15, 61, 46, 0.05);
   overflow-y: auto;
   padding-bottom: env(safe-area-inset-bottom, 0);
 }
@@ -593,7 +591,7 @@ onUnmounted(() => {
   align-items: center;
   justify-content: space-between;
   padding: var(--space-md) var(--space-lg);
-  border-bottom: 1px solid rgba(212, 175, 55, 0.15);
+  border-bottom: 1px solid rgba(15, 61, 46, 0.08);
 }
 
 .mobile-dropdown-menu .header-title {
@@ -611,7 +609,7 @@ onUnmounted(() => {
   width: 28px;
   height: 28px;
   background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(15, 61, 46, 0.05);
   border-radius: var(--radius-md);
   color: var(--text-muted);
   font-size: var(--text-lg);
@@ -620,9 +618,9 @@ onUnmounted(() => {
 }
 
 .mobile-dropdown-menu .close-button:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(15, 61, 46, 0.05);
   color: var(--text-primary);
-  border-color: rgba(255, 255, 255, 0.2);
+  border-color: rgba(15, 61, 46, 0.1);
 }
 
 .mobile-dropdown-menu .language-grid {
@@ -638,8 +636,8 @@ onUnmounted(() => {
   align-items: center;
   gap: var(--space-xs);
   padding: var(--space-md) var(--space-sm);
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(15, 61, 46, 0.015);
+  border: 1px solid rgba(15, 61, 46, 0.04);
   border-radius: var(--radius-lg);
   cursor: pointer;
   transition: var(--transition-base);
@@ -647,14 +645,14 @@ onUnmounted(() => {
 }
 
 .mobile-dropdown-menu .language-card:hover {
-  background: rgba(212, 175, 55, 0.1);
-  border-color: rgba(212, 175, 55, 0.3);
+  background: rgba(15, 61, 46, 0.05);
+  border-color: rgba(15, 61, 46, 0.15);
 }
 
 .mobile-dropdown-menu .language-card.active {
-  background: rgba(212, 175, 55, 0.15);
+  background: rgba(15, 61, 46, 0.08);
   border-color: var(--gold-primary);
-  box-shadow: 0 0 12px rgba(212, 175, 55, 0.2);
+  box-shadow: 0 0 12px rgba(15, 61, 46, 0.1);
 }
 
 .mobile-dropdown-menu .card-flag {
@@ -684,7 +682,7 @@ onUnmounted(() => {
   right: 4px;
   font-size: 10px;
   color: var(--gold-primary);
-  background: rgba(212, 175, 55, 0.2);
+  background: rgba(15, 61, 46, 0.1);
   width: 16px;
   height: 16px;
   border-radius: 50%;
@@ -695,7 +693,7 @@ onUnmounted(() => {
 
 .mobile-dropdown-menu .dropdown-divider {
   height: 1px;
-  background: rgba(212, 175, 55, 0.15);
+  background: rgba(15, 61, 46, 0.08);
   margin: 0;
 }
 
@@ -721,20 +719,20 @@ onUnmounted(() => {
   align-items: center;
   gap: 2px;
   padding: var(--space-sm);
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(15, 61, 46, 0.015);
+  border: 1px solid rgba(15, 61, 46, 0.04);
   border-radius: var(--radius-md);
   cursor: pointer;
   transition: var(--transition-base);
 }
 
 .mobile-dropdown-menu .currency-card:hover {
-  background: rgba(212, 175, 55, 0.1);
-  border-color: rgba(212, 175, 55, 0.3);
+  background: rgba(15, 61, 46, 0.05);
+  border-color: rgba(15, 61, 46, 0.15);
 }
 
 .mobile-dropdown-menu .currency-card.active {
-  background: rgba(212, 175, 55, 0.15);
+  background: rgba(15, 61, 46, 0.08);
   border-color: var(--gold-primary);
 }
 

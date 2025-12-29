@@ -199,7 +199,7 @@ async function handleEmailLogin() {
   width: auto;
   margin: 0 auto var(--space-lg);
   display: block;
-  filter: drop-shadow(0 4px 12px rgba(212, 175, 55, 0.3));
+  filter: drop-shadow(0 4px 12px rgba(176, 138, 90, 0.3));
 }
 
 .login-title {

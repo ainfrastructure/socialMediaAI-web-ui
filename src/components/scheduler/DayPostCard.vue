@@ -198,16 +198,16 @@ const capitalizeFirst = (str: string): string => {
   display: flex;
   gap: var(--space-lg);
   padding: var(--space-lg);
-  background: rgba(0, 0, 0, 0.3);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(15, 61, 46, 0.1);
   border-radius: var(--radius-lg);
   cursor: pointer;
   transition: all var(--transition-base);
 }
 
 .day-post-card:hover {
-  background: rgba(212, 175, 55, 0.1);
-  border-color: rgba(212, 175, 55, 0.3);
+  background: rgba(15, 61, 46, 0.05);
+  border-color: rgba(15, 61, 46, 0.15);
   transform: translateY(-2px);
 }
 
@@ -229,7 +229,7 @@ const capitalizeFirst = (str: string): string => {
   flex-shrink: 0;
   border-radius: var(--radius-md);
   overflow: hidden;
-  background: rgba(0, 0, 0, 0.3);
+  background: rgba(255, 255, 255, 0.8);
 }
 
 .post-thumb-img {
@@ -244,7 +244,7 @@ const capitalizeFirst = (str: string): string => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(212, 175, 55, 0.1);
+  background: rgba(15, 61, 46, 0.05);
 }
 
 .thumb-icon {
@@ -287,7 +287,7 @@ const capitalizeFirst = (str: string): string => {
   font-weight: var(--font-semibold);
   padding: var(--space-xs) var(--space-sm);
   border-radius: var(--radius-sm);
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(15, 61, 46, 0.1);
   text-transform: capitalize;
 }
 
@@ -316,7 +316,7 @@ const capitalizeFirst = (str: string): string => {
 }
 
 .post-card-status.status-scheduled {
-  background: rgba(212, 175, 55, 0.2);
+  background: rgba(15, 61, 46, 0.1);
   color: var(--gold-primary);
 }
 
@@ -379,13 +379,13 @@ const capitalizeFirst = (str: string): string => {
   color: var(--gold-primary);
   text-decoration: none;
   padding: var(--space-xs) var(--space-sm);
-  background: rgba(212, 175, 55, 0.1);
+  background: rgba(15, 61, 46, 0.05);
   border-radius: var(--radius-sm);
   transition: all var(--transition-base);
 }
 
 .view-post-link:hover {
-  background: rgba(212, 175, 55, 0.2);
+  background: rgba(15, 61, 46, 0.1);
 }
 
 @media (max-width: 768px) {

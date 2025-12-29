@@ -1,52 +1,52 @@
 /* ========================================
-   PREMIUM DARK THEME - DESIGN SYSTEM
-   Quiet luxury with muted gold accents
+   PREMIUM LIGHT THEME - DESIGN SYSTEM
+   Warm cream background with deep green accents
    ======================================== */
 
 :root {
   /* ===== COLOR PALETTE ===== */
 
-  /* Background Colors - Deep Charcoal Hierarchy */
-  --bg-primary: #0a0a0a;           /* Deepest black for main background */
-  --bg-secondary: #141414;         /* Cards and elevated surfaces */
-  --bg-tertiary: #1a1a1a;          /* Nested elements */
-  --bg-elevated: #222222;          /* Hover states, active elements */
+  /* Background Colors - Warm Cream Hierarchy */
+  --bg-primary: #f6f1e7;           /* Warm cream for main background */
+  --bg-secondary: #faf7f0;         /* Cards and elevated surfaces */
+  --bg-tertiary: #f0ebe1;          /* Nested elements */
+  --bg-elevated: #e8e1d5;          /* Hover states, active elements */
 
   /* Glass Effect Colors */
-  --glass-bg: rgba(26, 26, 26, 0.6);           /* Semi-transparent dark */
-  --glass-border: rgba(212, 175, 55, 0.15);    /* Subtle gold border */
-  --glass-highlight: rgba(255, 255, 255, 0.05); /* Inner highlight */
+  --glass-bg: rgba(255, 255, 255, 0.7);        /* Semi-transparent light */
+  --glass-border: rgba(15, 61, 46, 0.12);      /* Subtle green border */
+  --glass-highlight: rgba(15, 61, 46, 0.03);   /* Inner highlight */
 
-  /* Gold Accent Palette - Muted & Elegant */
-  --gold-primary: #D4AF37;         /* Main gold accent */
-  --gold-light: #E5C775;           /* Lighter gold for highlights */
-  --gold-dark: #B8943D;            /* Darker gold for shadows */
-  --gold-muted: #C9A961;           /* Softer gold for secondary uses */
-  --gold-subtle: rgba(212, 175, 55, 0.1);  /* Very subtle gold wash */
+  /* Green Accent Palette - Deep & Elegant */
+  --gold-primary: #0f3d2e;         /* Main green accent */
+  --gold-light: #1a5a45;           /* Lighter green for highlights */
+  --gold-dark: #0a2818;            /* Darker green for shadows */
+  --gold-muted: #15493a;           /* Softer green for secondary uses */
+  --gold-subtle: rgba(15, 61, 46, 0.08);  /* Very subtle green wash */
 
   /* Text Colors */
-  --text-primary: #F5F5F5;         /* Main text - off-white */
-  --text-secondary: #B8B8B8;       /* Secondary text - light gray */
-  --text-muted: #808080;           /* Muted text - mid gray */
-  --text-disabled: #4A4A4A;        /* Disabled state */
-  --text-on-gold: #0a0a0a;         /* Text on gold backgrounds */
+  --text-primary: #2d2d2d;         /* Main text - dark gray */
+  --text-secondary: #5a5a5a;       /* Secondary text - medium gray */
+  --text-muted: #888888;           /* Muted text - light gray */
+  --text-disabled: #bbbbbb;        /* Disabled state */
+  --text-on-gold: #f6f1e7;         /* Text on green backgrounds */
 
-  /* Semantic Colors - Dark Theme Variants */
-  --success-bg: rgba(52, 168, 83, 0.15);
-  --success-border: rgba(52, 168, 83, 0.3);
-  --success-text: #5FCF80;
+  /* Semantic Colors - Light Theme Variants */
+  --success-bg: rgba(52, 168, 83, 0.12);
+  --success-border: rgba(52, 168, 83, 0.25);
+  --success-text: #1e7a3d;
 
-  --error-bg: rgba(220, 53, 69, 0.15);
-  --error-border: rgba(220, 53, 69, 0.3);
-  --error-text: #FF6B7A;
+  --error-bg: rgba(220, 53, 69, 0.12);
+  --error-border: rgba(220, 53, 69, 0.25);
+  --error-text: #c41e30;
 
-  --info-bg: rgba(107, 155, 209, 0.15);
-  --info-border: rgba(107, 155, 209, 0.3);
-  --info-text: #7CB3E8;
+  --info-bg: rgba(59, 130, 246, 0.12);
+  --info-border: rgba(59, 130, 246, 0.25);
+  --info-text: #1d5eb8;
 
-  --warning-bg: rgba(212, 175, 55, 0.15);
-  --warning-border: rgba(212, 175, 55, 0.3);
-  --warning-text: #E5C775;
+  --warning-bg: rgba(212, 175, 55, 0.12);
+  --warning-border: rgba(212, 175, 55, 0.25);
+  --warning-text: #9a7c1f;
 
   /* ===== TYPOGRAPHY ===== */
 
@@ -90,8 +90,8 @@
 
   /* ===== BORDERS ===== */
   --border-width: 1px;
-  --border-color: rgba(255, 255, 255, 0.1);
-  --border-hover: rgba(212, 175, 55, 0.3);
+  --border-color: rgba(15, 61, 46, 0.12);
+  --border-hover: rgba(15, 61, 46, 0.25);
   --border-focus: var(--gold-primary);
 
   /* Border Radius */
@@ -105,17 +105,17 @@
   /* ===== SHADOWS ===== */
 
   /* Soft Elegant Shadows */
-  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
-  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
-  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.5);
-  --shadow-xl: 0 12px 48px rgba(0, 0, 0, 0.6);
+  --shadow-sm: 0 2px 8px rgba(15, 61, 46, 0.08);
+  --shadow-md: 0 4px 16px rgba(15, 61, 46, 0.1);
+  --shadow-lg: 0 8px 32px rgba(15, 61, 46, 0.12);
+  --shadow-xl: 0 12px 48px rgba(15, 61, 46, 0.15);
 
-  /* Gold Glow Effects (subtle) */
-  --glow-gold-sm: 0 0 12px rgba(212, 175, 55, 0.15);
-  --glow-gold-md: 0 0 20px rgba(212, 175, 55, 0.2);
+  /* Brass Glow Effects (subtle) */
+  --glow-gold-sm: 0 0 12px rgba(176, 138, 90, 0.2);
+  --glow-gold-md: 0 0 20px rgba(176, 138, 90, 0.3);
 
   /* Inner Shadows for Depth */
-  --shadow-inner: inset 0 2px 4px rgba(0, 0, 0, 0.3);
+  --shadow-inner: inset 0 2px 4px rgba(15, 61, 46, 0.05);
 
   /* ===== EFFECTS ===== */
 
@@ -126,14 +126,14 @@
   --blur-xl: 24px;
 
   /* Gradients */
-  --gradient-subtle: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
-  --gradient-elevated: linear-gradient(135deg, #141414 0%, #222222 100%);
-  --gradient-gold: linear-gradient(135deg, #D4AF37 0%, #C9A961 100%);
-  --gradient-gold-hover: linear-gradient(135deg, #E5C775 0%, #D4AF37 100%);
+  --gradient-subtle: linear-gradient(135deg, #f6f1e7 0%, #f0ebe1 100%);
+  --gradient-elevated: linear-gradient(135deg, #faf7f0 0%, #e8e1d5 100%);
+  --gradient-gold: linear-gradient(135deg, #0f3d2e 0%, #15493a 100%);
+  --gradient-gold-hover: linear-gradient(135deg, #1a5a45 0%, #0f3d2e 100%);
 
   /* Overlay for depth */
-  --overlay-light: rgba(255, 255, 255, 0.03);
-  --overlay-dark: rgba(0, 0, 0, 0.2);
+  --overlay-light: rgba(15, 61, 46, 0.02);
+  --overlay-dark: rgba(15, 61, 46, 0.08);
 
   /* ===== TRANSITIONS ===== */
 
@@ -293,7 +293,7 @@
   }
 
   ::-webkit-scrollbar-thumb {
-    background: rgba(212, 175, 55, 0.3);
+    background: rgba(15, 61, 46, 0.25);
     border-radius: 2px;
   }
 }
@@ -310,10 +310,10 @@
 }
 
 .glass-intense {
-  background: rgba(26, 26, 26, 0.8);
+  background: rgba(250, 247, 240, 0.95);
   backdrop-filter: blur(var(--blur-lg));
   -webkit-backdrop-filter: blur(var(--blur-lg));
-  border: var(--border-width) solid var(--glass-border);
+  border: var(--border-width) solid var(--border-color);
 }
 
 /* Text Utilities */
@@ -342,7 +342,7 @@
 /* Focus Ring for Accessibility */
 .focus-ring:focus {
   outline: none;
-  box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.3);
+  box-shadow: 0 0 0 3px rgba(15, 61, 46, 0.25);
 }
 
 /* ===== ICON UTILITIES ===== */

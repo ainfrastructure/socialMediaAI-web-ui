@@ -1204,7 +1204,7 @@ const benefits = [
 }
 
 .site-header.scrolled {
-  background: rgba(20, 20, 20, 0.95);
+  background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(var(--blur-lg));
   border-bottom: 1px solid var(--glass-border);
   box-shadow: var(--shadow-md);
@@ -1309,7 +1309,7 @@ const benefits = [
   flex-direction: column;
   gap: var(--space-sm);
   padding: var(--space-lg);
-  background: rgba(20, 20, 20, 0.98);
+  background: rgba(255, 255, 255, 0.98);
   border-top: 1px solid var(--glass-border);
   max-height: 0;
   overflow: hidden;
@@ -1371,9 +1371,9 @@ const benefits = [
   bottom: 0;
   background: linear-gradient(
     135deg,
-    rgba(10, 10, 10, 0.85) 0%,
-    rgba(10, 10, 10, 0.75) 50%,
-    rgba(10, 10, 10, 0.85) 100%
+    rgba(246, 241, 231, 0.92) 0%,
+    rgba(246, 241, 231, 0.85) 50%,
+    rgba(246, 241, 231, 0.92) 100%
   );
   pointer-events: none;
 }
@@ -2050,7 +2050,7 @@ const benefits = [
   position: absolute;
   bottom: var(--space-lg);
   padding: var(--space-xs) var(--space-md);
-  background: rgba(0, 0, 0, 0.7);
+  background: rgba(15, 61, 46, 0.35);
   color: var(--text-primary);
   font-size: var(--text-sm);
   font-weight: var(--font-semibold);
@@ -2088,7 +2088,7 @@ const benefits = [
   flex: 1;
   width: 3px;
   background: var(--gold-primary);
-  box-shadow: 0 0 10px rgba(212, 175, 55, 0.5);
+  box-shadow: 0 0 10px rgba(15, 61, 46, 0.5);
 }
 
 .handle-button {
@@ -2101,7 +2101,7 @@ const benefits = [
   justify-content: center;
   box-shadow:
     var(--shadow-lg),
-    0 0 20px rgba(212, 175, 55, 0.4);
+    0 0 20px rgba(15, 61, 46, 0.4);
   flex-shrink: 0;
   pointer-events: auto;
   cursor: ew-resize;
@@ -2112,7 +2112,7 @@ const benefits = [
   transform: scale(1.1);
   box-shadow:
     var(--shadow-xl),
-    0 0 30px rgba(212, 175, 55, 0.6);
+    0 0 30px rgba(15, 61, 46, 0.6);
 }
 
 /* Thumbnail Selector */
@@ -2162,7 +2162,7 @@ const benefits = [
   left: 0;
   right: 0;
   height: 3px;
-  background: rgba(0, 0, 0, 0.3);
+  background: rgba(15, 61, 46, 0.15);
   border-radius: 0 0 var(--radius-md) var(--radius-md);
   overflow: hidden;
 }
@@ -2189,7 +2189,7 @@ const benefits = [
 
 /* Auto-Posting Section */
 .auto-posting-section {
-  background: linear-gradient(135deg, rgba(212, 175, 55, 0.05) 0%, transparent 50%);
+  background: linear-gradient(135deg, rgba(15, 61, 46, 0.05) 0%, transparent 50%);
 }
 
 .auto-posting-content {
@@ -2349,7 +2349,7 @@ const benefits = [
 }
 
 .pricing-badge.lifetime-badge {
-  background: linear-gradient(135deg, #3b3b3b 0%, #1a1a1a 100%);
+  background: linear-gradient(135deg, #e8e1d5 0%, #f0ebe1 100%);
   color: var(--gold-primary);
   border: 1px solid var(--gold-dark);
 }
@@ -2507,7 +2507,7 @@ const benefits = [
 
 /* Final CTA Section */
 .final-cta-section {
-  background: linear-gradient(135deg, rgba(212, 175, 55, 0.1) 0%, rgba(212, 175, 55, 0.02) 100%);
+  background: linear-gradient(135deg, rgba(15, 61, 46, 0.1) 0%, rgba(15, 61, 46, 0.02) 100%);
   text-align: center;
   padding: var(--space-5xl) var(--space-2xl);
 }
@@ -2603,7 +2603,7 @@ const benefits = [
     display: flex;
     align-items: center;
     justify-content: space-between;
-    background: rgba(20, 20, 20, 0.9);
+    background: rgba(255, 255, 255, 0.9);
     backdrop-filter: blur(var(--blur-lg));
     border: 1px solid var(--glass-border);
     border-radius: var(--radius-full);
@@ -2688,7 +2688,7 @@ const benefits = [
   }
 
   .pill-actions :deep(.language-button:hover) {
-    background: rgba(212, 175, 55, 0.1);
+    background: rgba(15, 61, 46, 0.1);
   }
 
   .pill-actions :deep(.chevron) {

@@ -179,7 +179,7 @@ onMounted(() => {
 
 .toast-close:hover {
   color: var(--text-primary);
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(15, 61, 46, 0.1);
 }
 
 /* Success Toast */

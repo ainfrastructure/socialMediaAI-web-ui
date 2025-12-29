@@ -125,8 +125,8 @@ function handleToggle() {
   align-items: center;
   gap: var(--space-sm);
   padding: var(--space-lg);
-  background: rgba(0, 0, 0, 0.3);
-  border: 2px solid rgba(212, 175, 55, 0.2);
+  background: rgba(255, 255, 255, 0.8);
+  border: 2px solid rgba(15, 61, 46, 0.1);
   border-radius: var(--radius-md);
   cursor: pointer;
   transition: all var(--transition-base);
@@ -134,12 +134,12 @@ function handleToggle() {
 }
 
 .platform-card:hover {
-  background: rgba(0, 0, 0, 0.4);
-  border-color: rgba(212, 175, 55, 0.4);
+  background: rgba(255, 255, 255, 0.9);
+  border-color: rgba(15, 61, 46, 0.2);
 }
 
 .platform-card.selected {
-  background: rgba(212, 175, 55, 0.15);
+  background: rgba(15, 61, 46, 0.08);
   border-color: var(--gold-primary);
 }
 
@@ -154,8 +154,8 @@ function handleToggle() {
 }
 
 .platform-card.not-connected:hover {
-  background: rgba(0, 0, 0, 0.3);
-  border-color: rgba(212, 175, 55, 0.3);
+  background: rgba(255, 255, 255, 0.8);
+  border-color: rgba(15, 61, 46, 0.15);
 }
 
 .platform-checkbox {

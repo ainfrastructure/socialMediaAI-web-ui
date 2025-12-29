@@ -48,12 +48,12 @@ function goHome() {
 }
 
 .goodbye-card {
-  background: rgba(26, 26, 26, 0.8);
-  border: 1px solid rgba(212, 175, 55, 0.2);
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(15, 61, 46, 0.2);
   border-radius: var(--radius-xl);
   padding: var(--space-4xl);
   text-align: center;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 20px 60px rgba(15, 61, 46, 0.25);
   animation: fadeInUp 0.6s var(--ease-smooth);
 }
 

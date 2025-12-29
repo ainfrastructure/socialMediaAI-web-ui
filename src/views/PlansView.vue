@@ -537,9 +537,9 @@ if (urlParams.get('success') === 'true') {
 }
 
 .plan-card.lifetime {
-  background: linear-gradient(135deg, rgba(212, 175, 55, 0.15) 0%, rgba(26, 26, 26, 0.9) 100%);
+  background: linear-gradient(135deg, rgba(15, 61, 46, 0.15) 0%, rgba(255, 255, 255, 0.9) 100%);
   border: 2px solid var(--gold-primary);
-  box-shadow: 0 0 30px rgba(212, 175, 55, 0.2), var(--shadow-lg);
+  box-shadow: 0 0 30px rgba(15, 61, 46, 0.2), var(--shadow-lg);
 }
 
 .plan-card.lifetime::before {

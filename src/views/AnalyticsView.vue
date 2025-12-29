@@ -238,11 +238,11 @@ const activityChartData = computed(() => {
       label: t('analytics.postsActivity'),
       data,
       borderColor: goldColor,
-      backgroundColor: 'rgba(212, 175, 55, 0.1)',
+      backgroundColor: 'rgba(15, 61, 46, 0.1)',
       fill: true,
       tension: 0.4,
       pointBackgroundColor: goldColor,
-      pointBorderColor: '#1a1a1a',
+      pointBorderColor: '#f6f1e7',
       pointBorderWidth: 2,
       pointRadius: selectedTimeRange.value === '90d' ? 2 : 4,
       pointHoverRadius: 6
@@ -258,9 +258,9 @@ const activityChartOptions = {
       display: false
     },
     tooltip: {
-      backgroundColor: 'rgba(26, 26, 26, 0.95)',
+      backgroundColor: 'rgba(255, 255, 255, 0.95)',
       titleColor: goldColor,
-      bodyColor: '#fff',
+      bodyColor: '#0f3d2e',
       borderColor: goldColor,
       borderWidth: 1,
       padding: 12,
@@ -270,20 +270,20 @@ const activityChartOptions = {
   scales: {
     x: {
       grid: {
-        color: 'rgba(255, 255, 255, 0.05)'
+        color: 'rgba(15, 61, 46, 0.05)'
       },
       ticks: {
-        color: 'rgba(255, 255, 255, 0.5)',
+        color: 'rgba(15, 61, 46, 0.5)',
         maxRotation: 0
       }
     },
     y: {
       beginAtZero: true,
       grid: {
-        color: 'rgba(255, 255, 255, 0.05)'
+        color: 'rgba(15, 61, 46, 0.05)'
       },
       ticks: {
-        color: 'rgba(255, 255, 255, 0.5)',
+        color: 'rgba(15, 61, 46, 0.5)',
         stepSize: 1
       }
     }
@@ -306,7 +306,7 @@ const platformChartData = computed(() => {
     datasets: [{
       data: platforms.map(p => platformBreakdown.value[p]),
       backgroundColor: platforms.map(p => colors[p] || goldColor),
-      borderColor: '#1a1a1a',
+      borderColor: '#f6f1e7',
       borderWidth: 3,
       hoverBorderWidth: 4
     }]
@@ -321,16 +321,16 @@ const platformChartOptions = {
     legend: {
       position: 'bottom' as const,
       labels: {
-        color: 'rgba(255, 255, 255, 0.8)',
+        color: 'rgba(15, 61, 46, 0.8)',
         padding: 20,
         usePointStyle: true,
         pointStyle: 'circle'
       }
     },
     tooltip: {
-      backgroundColor: 'rgba(26, 26, 26, 0.95)',
+      backgroundColor: 'rgba(255, 255, 255, 0.95)',
       titleColor: goldColor,
-      bodyColor: '#fff',
+      bodyColor: '#0f3d2e',
       borderColor: goldColor,
       borderWidth: 1,
       padding: 12,
@@ -349,7 +349,7 @@ const statusChartData = computed(() => ({
       timeRangeFilteredPosts.value.filter(p => p.status === 'cancelled').length
     ],
     backgroundColor: ['#4ade80', goldColor, '#ef4444'],
-    borderColor: '#1a1a1a',
+    borderColor: '#f6f1e7',
     borderWidth: 2,
     borderRadius: 6
   }]
@@ -363,9 +363,9 @@ const statusChartOptions = {
       display: false
     },
     tooltip: {
-      backgroundColor: 'rgba(26, 26, 26, 0.95)',
+      backgroundColor: 'rgba(255, 255, 255, 0.95)',
       titleColor: goldColor,
-      bodyColor: '#fff',
+      bodyColor: '#0f3d2e',
       borderColor: goldColor,
       borderWidth: 1,
       padding: 12,
@@ -378,16 +378,16 @@ const statusChartOptions = {
         display: false
       },
       ticks: {
-        color: 'rgba(255, 255, 255, 0.7)'
+        color: 'rgba(15, 61, 46, 0.7)'
       }
     },
     y: {
       beginAtZero: true,
       grid: {
-        color: 'rgba(255, 255, 255, 0.05)'
+        color: 'rgba(15, 61, 46, 0.05)'
       },
       ticks: {
-        color: 'rgba(255, 255, 255, 0.5)',
+        color: 'rgba(15, 61, 46, 0.5)',
         stepSize: 1
       }
     }
@@ -1061,7 +1061,7 @@ onMounted(() => {
   width: 120px;
   height: 120px;
   border-radius: var(--radius-full);
-  background: linear-gradient(135deg, rgba(212, 175, 55, 0.15), rgba(212, 175, 55, 0.05));
+  background: linear-gradient(135deg, rgba(15, 61, 46, 0.15), rgba(15, 61, 46, 0.05));
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1143,7 +1143,7 @@ onMounted(() => {
 }
 
 .metric-icon.gold {
-  background: linear-gradient(135deg, rgba(212, 175, 55, 0.2), rgba(212, 175, 55, 0.1));
+  background: linear-gradient(135deg, rgba(15, 61, 46, 0.2), rgba(15, 61, 46, 0.1));
   color: var(--gold-primary);
 }
 

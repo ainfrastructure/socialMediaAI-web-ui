@@ -160,7 +160,7 @@ function cancelDelete() {
   align-items: center;
   gap: var(--space-lg);
   padding: var(--space-lg);
-  background: rgba(26, 26, 26, 0.6);
+  background: rgba(255, 255, 255, 0.6);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
   cursor: pointer;
@@ -168,8 +168,8 @@ function cancelDelete() {
 }
 
 .restaurant-item:hover {
-  background: rgba(26, 26, 26, 0.8);
-  border-color: rgba(212, 175, 55, 0.3);
+  background: rgba(255, 255, 255, 0.8);
+  border-color: rgba(15, 61, 46, 0.3);
   transform: translateX(4px);
 }
 
@@ -197,7 +197,7 @@ function cancelDelete() {
 }
 
 .item-logo.placeholder {
-  background: rgba(212, 175, 55, 0.1);
+  background: rgba(15, 61, 46, 0.1);
 }
 
 .placeholder-icon {
@@ -247,7 +247,7 @@ function cancelDelete() {
   align-items: center;
   justify-content: center;
   background: var(--gold-primary);
-  color: var(--text-on-gold);
+  color: #ffffff;
   border-radius: var(--radius-full);
   font-weight: var(--font-bold);
   flex-shrink: 0;
@@ -296,12 +296,12 @@ function cancelDelete() {
 }
 
 .restaurants-list::-webkit-scrollbar-thumb {
-  background: rgba(212, 175, 55, 0.3);
+  background: rgba(15, 61, 46, 0.3);
   border-radius: var(--radius-full);
 }
 
 .restaurants-list::-webkit-scrollbar-thumb:hover {
-  background: rgba(212, 175, 55, 0.5);
+  background: rgba(15, 61, 46, 0.5);
 }
 
 /* Responsive */

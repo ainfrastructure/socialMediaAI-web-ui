@@ -104,8 +104,7 @@ const userInitial = computed(() => {
   align-items: center;
   justify-content: space-between;
   padding: var(--space-lg) var(--space-2xl);
-  background: rgba(10, 10, 10, 0.85);
-  backdrop-filter: blur(12px);
+  background: var(--bg-secondary);
   border-bottom: 1px solid var(--border-color);
 }
 

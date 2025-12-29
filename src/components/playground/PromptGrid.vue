@@ -115,7 +115,7 @@ const truncateText = (text: string, maxLength: number): string => {
 .spinner {
   width: 40px;
   height: 40px;
-  border: 3px solid rgba(212, 175, 55, 0.2);
+  border: 3px solid rgba(15, 61, 46, 0.1);
   border-top-color: var(--gold-primary);
   border-radius: 50%;
   animation: spin 1s linear infinite;
@@ -139,8 +139,8 @@ const truncateText = (text: string, maxLength: number): string => {
 
 .prompt-card {
   position: relative;
-  background: rgba(0, 0, 0, 0.3);
-  border: 2px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.8);
+  border: 2px solid rgba(15, 61, 46, 0.1);
   border-radius: var(--radius-md);
   padding: var(--space-lg);
   cursor: pointer;
@@ -148,13 +148,13 @@ const truncateText = (text: string, maxLength: number): string => {
 }
 
 .prompt-card:hover {
-  border-color: rgba(212, 175, 55, 0.5);
+  border-color: rgba(15, 61, 46, 0.25);
   transform: translateY(-2px);
 }
 
 .prompt-card.selected {
   border-color: var(--gold-primary);
-  background: rgba(212, 175, 55, 0.1);
+  background: rgba(15, 61, 46, 0.05);
 }
 
 .prompt-number {
@@ -163,7 +163,7 @@ const truncateText = (text: string, maxLength: number): string => {
   left: var(--space-sm);
   width: 24px;
   height: 24px;
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(15, 61, 46, 0.05);
   border-radius: var(--radius-full);
   display: flex;
   align-items: center;
@@ -197,9 +197,9 @@ const truncateText = (text: string, maxLength: number): string => {
 .prompt-placeholder {
   text-align: center;
   padding: var(--space-3xl);
-  background: rgba(0, 0, 0, 0.2);
+  background: rgba(255, 255, 255, 0.8);
   border-radius: var(--radius-md);
-  border: 1px dashed rgba(255, 255, 255, 0.1);
+  border: 1px dashed rgba(15, 61, 46, 0.1);
 }
 
 .prompt-placeholder p {
@@ -221,8 +221,8 @@ const truncateText = (text: string, maxLength: number): string => {
 
 .prompt-textarea {
   width: 100%;
-  background: rgba(0, 0, 0, 0.3);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(15, 61, 46, 0.1);
   border-radius: var(--radius-md);
   padding: var(--space-md);
   color: var(--text-primary);

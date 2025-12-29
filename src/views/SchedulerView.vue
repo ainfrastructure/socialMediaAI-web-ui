@@ -1558,7 +1558,7 @@ onMounted(async () => {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(10, 10, 10, 0.7);
+  background: rgba(246, 241, 231, 0.85);
   backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
@@ -1580,7 +1580,7 @@ onMounted(async () => {
 .spinner {
   width: 40px;
   height: 40px;
-  border: 3px solid rgba(212, 175, 55, 0.2);
+  border: 3px solid rgba(15, 61, 46, 0.2);
   border-top-color: var(--gold-primary);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
@@ -1646,8 +1646,8 @@ onMounted(async () => {
 
 .day-view-header {
   padding: var(--space-2xl);
-  background: rgba(0, 0, 0, 0.3);
-  border-bottom: 2px solid rgba(212, 175, 55, 0.2);
+  background: rgba(255, 255, 255, 0.3);
+  border-bottom: 2px solid rgba(15, 61, 46, 0.2);
   margin-bottom: var(--space-xl);
 }
 
@@ -1692,8 +1692,8 @@ onMounted(async () => {
 }
 
 .create-btn {
-  background: rgba(212, 175, 55, 0.1);
-  border-color: rgba(212, 175, 55, 0.4);
+  background: rgba(15, 61, 46, 0.1);
+  border-color: rgba(15, 61, 46, 0.4);
   color: var(--gold-primary);
 }
 
@@ -1702,7 +1702,7 @@ onMounted(async () => {
   border-color: transparent;
   color: var(--text-on-gold);
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3);
+  box-shadow: 0 4px 12px rgba(15, 61, 46, 0.3);
 }
 
 .favorite-btn {
@@ -1782,11 +1782,11 @@ onMounted(async () => {
 }
 
 .table-row:hover {
-  background: rgba(20, 20, 20, 0.8);
+  background: rgba(255, 255, 255, 0.8);
 }
 
 .table-row.is-expanded {
-  background: rgba(20, 20, 20, 0.9);
+  background: rgba(255, 255, 255, 0.9);
 }
 
 /* Post Column */
@@ -1881,26 +1881,26 @@ onMounted(async () => {
 }
 
 .status-badge.status-published {
-  background: rgba(34, 197, 94, 0.15);
-  color: #22c55e;
+  background: rgba(15, 61, 46, 0.12);
+  color: #0f3d2e;
 }
 
 .status-badge.status-published .status-dot {
-  background: #22c55e;
+  background: #0f3d2e;
 }
 
 .status-badge.status-scheduled {
-  background: rgba(251, 191, 36, 0.15);
-  color: #fbbf24;
+  background: rgba(245, 158, 11, 0.15);
+  color: #d97706;
 }
 
 .status-badge.status-scheduled .status-dot {
-  background: #fbbf24;
+  background: #f59e0b;
 }
 
 .status-badge.status-failed {
   background: rgba(239, 68, 68, 0.15);
-  color: #ef4444;
+  color: #dc2626;
 }
 
 .status-badge.status-failed .status-dot {
@@ -2131,13 +2131,13 @@ onMounted(async () => {
   justify-content: center;
   gap: var(--space-lg);
   padding: var(--space-xl);
-  border-top: 1px solid rgba(212, 175, 55, 0.2);
+  border-top: 1px solid rgba(15, 61, 46, 0.2);
 }
 
 .pagination-btn {
   padding: var(--space-sm) var(--space-lg);
-  background: rgba(212, 175, 55, 0.15);
-  border: 1px solid rgba(212, 175, 55, 0.3);
+  background: rgba(15, 61, 46, 0.15);
+  border: 1px solid rgba(15, 61, 46, 0.3);
   border-radius: var(--radius-md);
   color: var(--gold-primary);
   font-family: var(--font-body);
@@ -2148,7 +2148,7 @@ onMounted(async () => {
 }
 
 .pagination-btn:hover:not(:disabled) {
-  background: rgba(212, 175, 55, 0.25);
+  background: rgba(15, 61, 46, 0.25);
   border-color: var(--gold-primary);
   transform: translateY(-1px);
 }
@@ -2250,29 +2250,53 @@ onMounted(async () => {
   box-shadow: var(--shadow-sm);
 }
 
+/* Other month days - default styling, specifics handled by past/future */
 .calendar-day.other-month {
-  opacity: 0.4;
-  background: var(--bg-primary);
+  opacity: 1;
+  background: var(--bg-secondary);
 }
 
-/* Past dates - clearly disabled */
-.calendar-day.past-date {
-  opacity: 0.35;
+/* Future dates from other months - fully selectable like current month */
+.calendar-day.other-month.future-date {
+  opacity: 1;
+  background: var(--bg-secondary);
+  cursor: pointer;
+}
+
+.calendar-day.other-month.future-date:hover {
+  background: var(--bg-elevated);
+  border-color: var(--gold-primary);
+}
+
+.calendar-day.other-month.future-date .day-number {
+  color: var(--text-secondary);
+}
+
+/* Past dates from other months - same disabled gray style */
+.calendar-day.other-month.past-date {
+  opacity: 1;
+  background: #e8e5de;
   cursor: not-allowed;
-  background: var(--bg-primary);
-  border-color: var(--border-color);
+}
+
+/* Past dates - clearly disabled with muted gray look */
+.calendar-day.past-date {
+  opacity: 1;
+  cursor: not-allowed;
+  background: #e8e5de;
+  border-color: rgba(0, 0, 0, 0.06);
 }
 
 .calendar-day.past-date:hover {
   transform: none;
-  border-color: var(--border-color);
-  background: var(--bg-primary);
+  border-color: rgba(0, 0, 0, 0.06);
+  background: #e8e5de;
 }
 
 .calendar-day.past-date .day-number {
-  color: var(--text-disabled);
+  color: #a0a0a0;
   text-decoration: line-through;
-  text-decoration-color: var(--text-disabled);
+  text-decoration-color: #a0a0a0;
 }
 
 /* Future dates - clearly selectable */
@@ -2321,7 +2345,7 @@ onMounted(async () => {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.75);
+  background: rgba(15, 61, 46, 0.35);
   backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
@@ -2375,13 +2399,13 @@ onMounted(async () => {
 }
 
 .hover-action-btn.view-btn {
-  background: rgba(255, 255, 255, 0.15);
+  background: rgba(15, 61, 46, 0.15);
   color: var(--text-primary);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(15, 61, 46, 0.2);
 }
 
 .hover-action-btn.view-btn:hover {
-  background: rgba(255, 255, 255, 0.25);
+  background: rgba(15, 61, 46, 0.25);
   transform: scale(1.05);
 }
 
@@ -2433,7 +2457,7 @@ onMounted(async () => {
 
 .post-indicator {
   padding: 0.25rem 0.5rem;
-  background: rgba(212, 175, 55, 0.2);
+  background: rgba(15, 61, 46, 0.2);
   border-radius: 4px;
   font-size: 0.75rem;
   color: var(--text-primary);
@@ -2466,17 +2490,17 @@ onMounted(async () => {
 
 /* Status-based coloring for post indicators (overrides platform colors) */
 .post-indicator.status-scheduled {
-  background: rgba(59, 130, 246, 0.2);
-  border-left: 3px solid #3b82f6;
+  background: rgba(245, 158, 11, 0.15);
+  border-left: 3px solid #f59e0b;
 }
 
 .post-indicator.status-published {
-  background: rgba(34, 197, 94, 0.2);
-  border-left: 3px solid #22c55e;
+  background: rgba(15, 61, 46, 0.12);
+  border-left: 3px solid #0f3d2e;
 }
 
 .post-indicator.status-failed {
-  background: rgba(239, 68, 68, 0.2);
+  background: rgba(239, 68, 68, 0.15);
   border-left: 3px solid #ef4444;
 }
 
@@ -2496,8 +2520,8 @@ onMounted(async () => {
   display: grid;
   grid-template-columns: 300px 1fr;
   gap: 1.5rem;
-  background: rgba(0, 0, 0, 0.3);
-  border: 1px solid rgba(212, 175, 55, 0.2);
+  background: rgba(255, 255, 255, 0.3);
+  border: 1px solid rgba(15, 61, 46, 0.2);
   border-radius: var(--radius-lg);
   padding: 1.5rem;
   transition: all 0.2s ease;
@@ -2505,17 +2529,17 @@ onMounted(async () => {
 }
 
 .scheduled-post-card:hover {
-  border-color: rgba(212, 175, 55, 0.5);
-  background: rgba(0, 0, 0, 0.4);
+  border-color: rgba(15, 61, 46, 0.5);
+  background: rgba(255, 255, 255, 0.4);
 }
 
 /* Status-based border colors for scheduled post cards */
 .scheduled-post-card.status-scheduled {
-  border-left-color: #3b82f6;
+  border-left-color: #f59e0b;
 }
 
 .scheduled-post-card.status-published {
-  border-left-color: #22c55e;
+  border-left-color: #0f3d2e;
 }
 
 .scheduled-post-card.status-failed {
@@ -2545,8 +2569,8 @@ onMounted(async () => {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background: rgba(0, 0, 0, 0.4);
-  border: 2px dashed rgba(212, 175, 55, 0.3);
+  background: rgba(255, 255, 255, 0.4);
+  border: 2px dashed rgba(15, 61, 46, 0.3);
   border-radius: var(--radius-md);
   gap: var(--space-md);
 }
@@ -2572,7 +2596,7 @@ onMounted(async () => {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.7);
+  background: rgba(15, 61, 46, 0.35);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2624,7 +2648,7 @@ onMounted(async () => {
 
 .time-remaining {
   padding: 0.5rem 0.75rem;
-  background: rgba(212, 175, 55, 0.1);
+  background: rgba(15, 61, 46, 0.1);
   border-left: 3px solid var(--gold-primary);
   border-radius: 4px;
   font-size: 0.875rem;
@@ -2669,8 +2693,8 @@ onMounted(async () => {
 
 .content-type-badge {
   padding: 0.25rem 0.75rem;
-  background: rgba(0, 0, 0, 0.4);
-  border: 1px solid rgba(212, 175, 55, 0.3);
+  background: rgba(255, 255, 255, 0.4);
+  border: 1px solid rgba(15, 61, 46, 0.3);
   border-radius: 6px;
   font-size: 0.75rem;
   color: var(--text-secondary);
@@ -2686,20 +2710,20 @@ onMounted(async () => {
 }
 
 .status-badge.status-scheduled {
-  background: rgba(59, 130, 246, 0.2);
-  color: #3b82f6;
-  border: 1px solid rgba(59, 130, 246, 0.3);
+  background: rgba(245, 158, 11, 0.15);
+  color: #d97706;
+  border: 1px solid rgba(245, 158, 11, 0.3);
 }
 
 .status-badge.status-published {
-  background: rgba(34, 197, 94, 0.2);
-  color: #22c55e;
-  border: 1px solid rgba(34, 197, 94, 0.3);
+  background: rgba(15, 61, 46, 0.12);
+  color: #0f3d2e;
+  border: 1px solid rgba(15, 61, 46, 0.25);
 }
 
 .status-badge.status-failed {
-  background: rgba(239, 68, 68, 0.2);
-  color: #ef4444;
+  background: rgba(239, 68, 68, 0.15);
+  color: #dc2626;
   border: 1px solid rgba(239, 68, 68, 0.3);
 }
 
@@ -2712,12 +2736,12 @@ onMounted(async () => {
 /* Published Post Styles */
 .published-badge-compact {
   padding: var(--space-xs) var(--space-md);
-  background: rgba(34, 197, 94, 0.15);
-  border: 1px solid rgba(34, 197, 94, 0.4);
+  background: rgba(15, 61, 46, 0.12);
+  border: 1px solid rgba(15, 61, 46, 0.3);
   border-radius: var(--radius-md);
   font-size: var(--text-sm);
   font-weight: var(--font-semibold);
-  color: #22c55e;
+  color: #0f3d2e;
   white-space: nowrap;
 }
 
@@ -2730,15 +2754,15 @@ onMounted(async () => {
 .post-published {
   margin-top: var(--space-md);
   padding: var(--space-md);
-  background: rgba(34, 197, 94, 0.1);
-  border: 1px solid rgba(34, 197, 94, 0.3);
+  background: rgba(15, 61, 46, 0.08);
+  border: 1px solid rgba(15, 61, 46, 0.2);
   border-radius: var(--radius-md);
 }
 
 .published-badge {
   font-size: var(--text-sm);
   font-weight: var(--font-semibold);
-  color: #22c55e;
+  color: #0f3d2e;
   margin-bottom: var(--space-sm);
 }
 
@@ -2755,8 +2779,8 @@ onMounted(async () => {
 }
 
 .published-section {
-  background: rgba(34, 197, 94, 0.1);
-  border: 1px solid rgba(34, 197, 94, 0.3);
+  background: rgba(15, 61, 46, 0.08);
+  border: 1px solid rgba(15, 61, 46, 0.2);
   border-radius: var(--radius-md);
   padding: var(--space-lg);
 }
@@ -3207,7 +3231,7 @@ onMounted(async () => {
   left: 260px; /* Account for sidebar width */
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.95);
+  background: rgba(15, 61, 46, 0.45);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -3227,7 +3251,7 @@ onMounted(async () => {
 
 .modal-content {
   background: var(--bg-secondary);
-  border: 1px solid rgba(212, 175, 55, 0.3);
+  border: 1px solid rgba(15, 61, 46, 0.3);
   border-radius: var(--radius-xl);
   max-width: min(1000px, calc(100vw - 260px - var(--space-3xl) * 2)); /* Account for sidebar */
   width: 100%;
@@ -3252,8 +3276,8 @@ onMounted(async () => {
   position: absolute;
   top: var(--space-lg);
   right: var(--space-lg);
-  background: rgba(0, 0, 0, 0.6);
-  border: 1px solid rgba(212, 175, 55, 0.3);
+  background: rgba(255, 255, 255, 0.6);
+  border: 1px solid rgba(15, 61, 46, 0.3);
   color: var(--text-primary);
   font-size: 2rem;
   width: 48px;
@@ -3287,7 +3311,7 @@ onMounted(async () => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(0, 0, 0, 0.4);
+  background: rgba(255, 255, 255, 0.4);
   border-radius: var(--radius-lg);
   overflow: hidden;
 }
@@ -3310,8 +3334,8 @@ onMounted(async () => {
   align-items: center;
   justify-content: center;
   gap: var(--space-lg);
-  background: rgba(0, 0, 0, 0.4);
-  border: 2px dashed rgba(212, 175, 55, 0.3);
+  background: rgba(255, 255, 255, 0.4);
+  border: 2px dashed rgba(15, 61, 46, 0.3);
   border-radius: var(--radius-lg);
 }
 
@@ -3338,7 +3362,7 @@ onMounted(async () => {
   color: var(--gold-primary);
   margin: 0;
   padding-bottom: var(--space-lg);
-  border-bottom: 2px solid rgba(212, 175, 55, 0.2);
+  border-bottom: 2px solid rgba(15, 61, 46, 0.2);
 }
 
 .info-section {
@@ -3374,15 +3398,15 @@ onMounted(async () => {
   font-size: var(--text-sm);
   font-weight: 500;
   color: var(--text-secondary);
-  background: rgba(0, 0, 0, 0.4);
+  background: rgba(255, 255, 255, 0.4);
   padding: 0.25rem 0.75rem;
   border-radius: var(--radius-md);
-  border: 1px solid rgba(212, 175, 55, 0.2);
+  border: 1px solid rgba(15, 61, 46, 0.2);
 }
 
 .time-remaining-large {
   padding: var(--space-md) var(--space-lg);
-  background: rgba(212, 175, 55, 0.15);
+  background: rgba(15, 61, 46, 0.15);
   border-left: 4px solid var(--gold-primary);
   border-radius: var(--radius-md);
   font-size: var(--text-base);
@@ -3420,8 +3444,8 @@ onMounted(async () => {
 
 .content-type-badge-large {
   padding: var(--space-sm) var(--space-lg);
-  background: rgba(0, 0, 0, 0.4);
-  border: 1px solid rgba(212, 175, 55, 0.3);
+  background: rgba(255, 255, 255, 0.4);
+  border: 1px solid rgba(15, 61, 46, 0.3);
   border-radius: var(--radius-md);
   font-size: var(--text-sm);
   color: var(--text-primary);
@@ -3438,20 +3462,20 @@ onMounted(async () => {
 }
 
 .status-badge-large.status-scheduled {
-  background: rgba(59, 130, 246, 0.2);
-  color: #3b82f6;
-  border: 1px solid rgba(59, 130, 246, 0.4);
+  background: rgba(245, 158, 11, 0.15);
+  color: #d97706;
+  border: 1px solid rgba(245, 158, 11, 0.4);
 }
 
 .status-badge-large.status-published {
-  background: rgba(34, 197, 94, 0.2);
-  color: #22c55e;
-  border: 1px solid rgba(34, 197, 94, 0.4);
+  background: rgba(15, 61, 46, 0.12);
+  color: #0f3d2e;
+  border: 1px solid rgba(15, 61, 46, 0.3);
 }
 
 .status-badge-large.status-failed {
-  background: rgba(239, 68, 68, 0.2);
-  color: #ef4444;
+  background: rgba(239, 68, 68, 0.15);
+  color: #dc2626;
   border: 1px solid rgba(239, 68, 68, 0.4);
 }
 
@@ -3459,7 +3483,7 @@ onMounted(async () => {
   white-space: pre-wrap;
   line-height: 1.8;
   padding: var(--space-lg);
-  background: rgba(0, 0, 0, 0.3);
+  background: rgba(255, 255, 255, 0.3);
   border-radius: var(--radius-md);
   border-left: 3px solid var(--gold-primary);
 }
@@ -3468,7 +3492,7 @@ onMounted(async () => {
   display: flex;
   gap: var(--space-md);
   padding-top: var(--space-lg);
-  border-top: 1px solid rgba(212, 175, 55, 0.2);
+  border-top: 1px solid rgba(15, 61, 46, 0.2);
   margin-top: auto;
 }
 
@@ -3636,7 +3660,7 @@ onMounted(async () => {
 
 .error-text {
   color: var(--text-secondary);
-  background: rgba(0, 0, 0, 0.3);
+  background: rgba(255, 255, 255, 0.3);
   padding: var(--space-md);
   border-radius: var(--radius-sm);
   font-family: var(--font-body);

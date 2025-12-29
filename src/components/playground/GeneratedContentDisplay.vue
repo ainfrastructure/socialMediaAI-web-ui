@@ -41,9 +41,9 @@ defineProps<{
 .generated-content {
   margin-top: var(--space-xl);
   padding: var(--space-xl);
-  background: rgba(0, 0, 0, 0.2);
+  background: rgba(255, 255, 255, 0.8);
   border-radius: var(--radius-lg);
-  border: 1px solid rgba(212, 175, 55, 0.2);
+  border: 1px solid rgba(15, 61, 46, 0.1);
 }
 
 .generated-content h4 {
@@ -85,7 +85,7 @@ defineProps<{
   align-items: center;
   gap: var(--space-sm);
   padding: var(--space-md) var(--space-xl);
-  background: rgba(212, 175, 55, 0.1);
+  background: rgba(15, 61, 46, 0.05);
   border: 1px solid var(--gold-primary);
   border-radius: var(--radius-md);
   color: var(--gold-primary);
@@ -96,9 +96,9 @@ defineProps<{
 }
 
 .download-btn:hover {
-  background: rgba(212, 175, 55, 0.2);
+  background: rgba(15, 61, 46, 0.1);
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3);
+  box-shadow: 0 4px 12px rgba(15, 61, 46, 0.15);
 }
 
 @media (max-width: 768px) {

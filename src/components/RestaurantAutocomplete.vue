@@ -269,19 +269,17 @@ const isRestaurantSaved = (suggestion: RestaurantSuggestion): boolean => {
   overflow-y: auto;
   z-index: 99999;
 
-  background: rgba(26, 26, 26, 0.98);
-  border: 1px solid rgba(212, 175, 55, 0.3);
+  background: rgba(250, 247, 240, 0.98);
+  border: 1px solid var(--border-color);
   border-radius: var(--radius-lg);
   backdrop-filter: blur(20px);
-  box-shadow:
-    0 8px 32px rgba(0, 0, 0, 0.4),
-    0 0 20px rgba(212, 175, 55, 0.1);
+  box-shadow: var(--shadow-xl);
 }
 
 .dropdown-item {
   padding: 1rem;
   cursor: pointer;
-  border-bottom: 1px solid rgba(212, 175, 55, 0.1);
+  border-bottom: 1px solid var(--border-color);
   transition: all 0.2s ease;
   display: flex;
   align-items: center;
@@ -295,7 +293,7 @@ const isRestaurantSaved = (suggestion: RestaurantSuggestion): boolean => {
 
 .dropdown-item:hover,
 .dropdown-item.active {
-  background: rgba(212, 175, 55, 0.1);
+  background: var(--bg-elevated);
 }
 
 .dropdown-item.saved {
@@ -329,8 +327,8 @@ const isRestaurantSaved = (suggestion: RestaurantSuggestion): boolean => {
 .spinner {
   width: 20px;
   height: 20px;
-  border: 2px solid rgba(212, 175, 55, 0.2);
-  border-top-color: var(--accent-gold);
+  border: 2px solid rgba(15, 61, 46, 0.2);
+  border-top-color: var(--gold-primary);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
@@ -389,17 +387,17 @@ const isRestaurantSaved = (suggestion: RestaurantSuggestion): boolean => {
 }
 
 .autocomplete-dropdown::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.2);
+  background: var(--bg-tertiary);
   border-radius: 4px;
 }
 
 .autocomplete-dropdown::-webkit-scrollbar-thumb {
-  background: rgba(212, 175, 55, 0.3);
+  background: rgba(15, 61, 46, 0.25);
   border-radius: 4px;
 }
 
 .autocomplete-dropdown::-webkit-scrollbar-thumb:hover {
-  background: rgba(212, 175, 55, 0.5);
+  background: rgba(15, 61, 46, 0.4);
 }
 
 /* Responsive */

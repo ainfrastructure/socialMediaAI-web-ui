@@ -176,7 +176,7 @@ function goToLogin() {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(10, 10, 10, 0.75);
+  background: rgba(246, 241, 231, 0.75);
   z-index: 1;
 }
 
@@ -217,14 +217,14 @@ function goToLogin() {
   height: 160px;
   width: auto;
   margin-bottom: var(--space-3xl);
-  filter: drop-shadow(0 6px 30px rgba(212, 175, 55, 0.5));
+  filter: drop-shadow(0 6px 30px rgba(176, 138, 90, 0.4));
   transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.4s ease;
   cursor: pointer;
   animation: logoFloat 4s ease-in-out infinite;
 }
 
 .logo:hover {
-  filter: drop-shadow(0 10px 40px rgba(212, 175, 55, 0.7));
+  filter: drop-shadow(0 10px 40px rgba(176, 138, 90, 0.5));
   transform: scale(1.08) translateY(-4px);
   animation: none;
 }
@@ -236,7 +236,7 @@ function goToLogin() {
   color: var(--text-primary);
   margin-bottom: var(--space-lg);
   line-height: 1.2;
-  text-shadow: 0 2px 20px rgba(0, 0, 0, 0.5);
+  text-shadow: 0 2px 20px rgba(15, 61, 46, 0.25);
 }
 
 .subheadline {

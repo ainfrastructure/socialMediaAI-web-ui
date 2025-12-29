@@ -177,7 +177,7 @@ onUnmounted(() => {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.8);
+  background: rgba(0, 0, 0, 0.5);
   backdrop-filter: blur(8px);
   display: flex;
   align-items: center;
@@ -257,8 +257,8 @@ onUnmounted(() => {
   position: absolute;
   top: var(--space-md);
   right: var(--space-md);
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(15, 61, 46, 0.05);
+  border: 1px solid rgba(15, 61, 46, 0.1);
   color: var(--text-muted);
   cursor: pointer;
   padding: var(--space-sm);
@@ -274,8 +274,8 @@ onUnmounted(() => {
 
 .base-modal-close:hover {
   color: var(--text-primary);
-  background: rgba(255, 255, 255, 0.1);
-  border-color: rgba(255, 255, 255, 0.2);
+  background: rgba(15, 61, 46, 0.1);
+  border-color: rgba(15, 61, 46, 0.2);
 }
 
 /* Header */

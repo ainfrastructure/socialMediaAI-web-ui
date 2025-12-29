@@ -941,7 +941,7 @@ async function handleInlineFeedback(feedbackText: string) {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.85);
+  background: rgba(15, 61, 46, 0.42);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -973,7 +973,7 @@ async function handleInlineFeedback(feedbackText: string) {
   justify-content: space-between;
   align-items: center;
   padding-bottom: var(--space-lg);
-  border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+  border-bottom: 1px solid rgba(15, 61, 46, 0.1);
   margin-bottom: var(--space-xl);
 }
 
@@ -1070,8 +1070,8 @@ async function handleInlineFeedback(feedbackText: string) {
   align-items: center;
   gap: var(--space-md);
   padding: var(--space-2xl) var(--space-lg);
-  background: rgba(0, 0, 0, 0.3);
-  border: 2px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.8);
+  border: 2px solid rgba(15, 61, 46, 0.1);
   border-radius: var(--radius-lg);
   cursor: pointer;
   transition: all var(--transition-base);
@@ -1080,8 +1080,8 @@ async function handleInlineFeedback(feedbackText: string) {
 }
 
 .creation-option-card:hover {
-  border-color: rgba(212, 175, 55, 0.5);
-  background: rgba(212, 175, 55, 0.1);
+  border-color: rgba(15, 61, 46, 0.25);
+  background: rgba(15, 61, 46, 0.03);
   transform: translateY(-4px);
 }
 
@@ -1131,7 +1131,7 @@ async function handleInlineFeedback(feedbackText: string) {
   align-items: center;
   gap: var(--space-lg);
   padding: var(--space-lg);
-  background: rgba(26, 26, 26, 0.6);
+  background: rgba(255, 255, 255, 0.6);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
   cursor: pointer;
@@ -1139,8 +1139,8 @@ async function handleInlineFeedback(feedbackText: string) {
 }
 
 .restaurant-item:hover {
-  background: rgba(26, 26, 26, 0.8);
-  border-color: rgba(212, 175, 55, 0.3);
+  background: rgba(255, 255, 255, 0.8);
+  border-color: rgba(15, 61, 46, 0.15);
   transform: translateX(4px);
 }
 
@@ -1163,7 +1163,7 @@ async function handleInlineFeedback(feedbackText: string) {
 }
 
 .item-logo.placeholder {
-  background: rgba(212, 175, 55, 0.1);
+  background: rgba(15, 61, 46, 0.05);
 }
 
 .placeholder-icon {

@@ -568,20 +568,27 @@ function handleCancelDisconnect() {
 }
 
 .platform-actions :deep(.base-button.button-primary) {
-  background: rgba(212, 175, 55, 0.12) !important;
-  border: 1px solid rgba(212, 175, 55, 0.4) !important;
-  color: white !important;
+  background: var(--gradient-gold) !important;
+  border: none !important;
+  color: var(--text-on-gold) !important;
 }
 
 .platform-actions :deep(.base-button.button-primary:hover) {
-  background: rgba(212, 175, 55, 0.5) !important;
-  border-color: rgba(212, 175, 55, 0.6) !important;
-  color: white !important;
+  background: var(--gradient-gold-hover) !important;
+  border: none !important;
+  color: var(--text-on-gold) !important;
   transform: translateY(-1px) !important;
 }
 
+.platform-actions :deep(.base-button.button-danger) {
+  background: var(--error-bg) !important;
+  border: 1px solid var(--error-border) !important;
+  color: var(--error-text) !important;
+}
+
 .platform-actions :deep(.base-button.button-danger:hover) {
-  background: rgba(220, 53, 69, 0.5) !important;
+  background: rgba(220, 53, 69, 0.25) !important;
+  border-color: var(--error-text) !important;
 }
 
 .platform-row.disabled {

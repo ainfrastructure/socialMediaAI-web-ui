@@ -216,7 +216,7 @@ const handleImageError = (event: Event, restaurant: Restaurant) => {
 
 .header-icon {
   font-size: 1.75rem;
-  filter: drop-shadow(0 2px 4px rgba(212, 175, 55, 0.3));
+  filter: drop-shadow(0 2px 4px rgba(15, 61, 46, 0.3));
 }
 
 .modal-title {
@@ -248,8 +248,8 @@ const handleImageError = (event: Event, restaurant: Restaurant) => {
 .search-input {
   width: 100%;
   padding: var(--space-md) var(--space-md) var(--space-md) 3rem;
-  background: rgba(10, 10, 10, 0.8);
-  border: 1px solid rgba(212, 175, 55, 0.25);
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(15, 61, 46, 0.25);
   border-radius: var(--radius-md);
   color: var(--text-primary);
   font-size: var(--text-base);
@@ -260,7 +260,7 @@ const handleImageError = (event: Event, restaurant: Restaurant) => {
 .search-input:focus {
   outline: none;
   border-color: var(--gold-primary);
-  box-shadow: 0 0 20px rgba(212, 175, 55, 0.2);
+  box-shadow: 0 0 20px rgba(15, 61, 46, 0.2);
 }
 
 .search-input::placeholder {
@@ -270,7 +270,7 @@ const handleImageError = (event: Event, restaurant: Restaurant) => {
 /* Selected Count */
 .selected-count {
   padding: var(--space-sm) var(--space-xl);
-  background: rgba(212, 175, 55, 0.1);
+  background: rgba(15, 61, 46, 0.1);
   border-radius: var(--radius-md);
   color: var(--gold-light);
   font-size: var(--text-sm);
@@ -294,25 +294,25 @@ const handleImageError = (event: Event, restaurant: Restaurant) => {
 }
 
 .restaurants-grid::-webkit-scrollbar-track {
-  background: rgba(10, 10, 10, 0.5);
+  background: rgba(15, 61, 46, 0.1);
   border-radius: 4px;
 }
 
 .restaurants-grid::-webkit-scrollbar-thumb {
-  background: rgba(212, 175, 55, 0.3);
+  background: rgba(15, 61, 46, 0.3);
   border-radius: 4px;
 }
 
 .restaurants-grid::-webkit-scrollbar-thumb:hover {
-  background: rgba(212, 175, 55, 0.5);
+  background: rgba(15, 61, 46, 0.5);
 }
 
 /* Restaurant Card */
 .restaurant-card {
   position: relative;
   padding: var(--space-lg);
-  background: rgba(20, 20, 20, 0.6);
-  border: 2px solid rgba(212, 175, 55, 0.15);
+  background: rgba(255, 255, 255, 0.6);
+  border: 2px solid rgba(15, 61, 46, 0.15);
   border-radius: var(--radius-lg);
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -322,16 +322,16 @@ const handleImageError = (event: Event, restaurant: Restaurant) => {
 }
 
 .restaurant-card:hover {
-  border-color: rgba(212, 175, 55, 0.4);
-  background: rgba(20, 20, 20, 0.8);
+  border-color: rgba(15, 61, 46, 0.4);
+  background: rgba(255, 255, 255, 0.8);
   transform: translateY(-4px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4), 0 0 20px rgba(212, 175, 55, 0.15);
+  box-shadow: 0 8px 24px rgba(15, 61, 46, 0.2), 0 0 20px rgba(15, 61, 46, 0.15);
 }
 
 .restaurant-card.selected {
   border-color: var(--gold-primary);
-  background: linear-gradient(135deg, rgba(212, 175, 55, 0.1), rgba(212, 175, 55, 0.05));
-  box-shadow: 0 0 24px rgba(212, 175, 55, 0.2);
+  background: linear-gradient(135deg, rgba(15, 61, 46, 0.1), rgba(15, 61, 46, 0.05));
+  box-shadow: 0 0 24px rgba(15, 61, 46, 0.2);
 }
 
 /* Checkbox */
@@ -350,7 +350,7 @@ const handleImageError = (event: Event, restaurant: Restaurant) => {
 .checkbox-custom {
   width: 22px;
   height: 22px;
-  border: 2px solid rgba(212, 175, 55, 0.4);
+  border: 2px solid rgba(15, 61, 46, 0.4);
   border-radius: var(--radius-sm);
   display: block;
   position: relative;
@@ -379,8 +379,8 @@ const handleImageError = (event: Event, restaurant: Restaurant) => {
   height: 80px;
   border-radius: var(--radius-md);
   overflow: hidden;
-  background: rgba(10, 10, 10, 0.5);
-  border: 1px solid rgba(212, 175, 55, 0.2);
+  background: rgba(255, 255, 255, 0.5);
+  border: 1px solid rgba(15, 61, 46, 0.2);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -397,7 +397,7 @@ const handleImageError = (event: Event, restaurant: Restaurant) => {
   font-size: var(--text-2xl);
   font-weight: bold;
   color: var(--gold-primary);
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+  text-shadow: 0 2px 4px rgba(15, 61, 46, 0.25);
 }
 
 /* Restaurant Info */
@@ -434,8 +434,8 @@ const handleImageError = (event: Event, restaurant: Restaurant) => {
   align-items: center;
   justify-content: center;
   font-size: 1rem;
-  background: rgba(10, 10, 10, 0.6);
-  border: 1px solid rgba(212, 175, 55, 0.2);
+  background: rgba(255, 255, 255, 0.6);
+  border: 1px solid rgba(15, 61, 46, 0.2);
   transition: all 0.2s ease;
 }
 

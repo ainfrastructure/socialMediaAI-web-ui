@@ -42,10 +42,10 @@ const variantClass = computed(() => `card-${props.variant}`)
 }
 
 .card-glass-intense {
-  background: rgba(26, 26, 26, 0.85);
+  background: rgba(250, 247, 240, 0.95);
   backdrop-filter: blur(var(--blur-lg));
   -webkit-backdrop-filter: blur(var(--blur-lg));
-  border: var(--border-width) solid var(--glass-border);
+  border: var(--border-width) solid var(--border-color);
   box-shadow: var(--shadow-xl);
 }
 
@@ -71,7 +71,7 @@ const variantClass = computed(() => `card-${props.variant}`)
 }
 
 .card-glass.hoverable:hover {
-  background: rgba(26, 26, 26, 0.75);
+  background: rgba(255, 255, 255, 0.8);
 }
 
 .card-solid.hoverable:hover {

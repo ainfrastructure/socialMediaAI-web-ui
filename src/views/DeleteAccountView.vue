@@ -350,8 +350,8 @@ async function performDeletion() {
   align-items: flex-start;
   gap: var(--space-md);
   padding: var(--space-lg);
-  background: rgba(0, 0, 0, 0.3);
-  border: 1px solid rgba(212, 175, 55, 0.1);
+  background: rgba(255, 255, 255, 0.3);
+  border: 1px solid rgba(15, 61, 46, 0.1);
   border-radius: var(--radius-md);
   margin-bottom: var(--space-md);
   cursor: pointer;
@@ -359,8 +359,8 @@ async function performDeletion() {
 }
 
 .confirmation-item:hover {
-  border-color: rgba(212, 175, 55, 0.3);
-  background: rgba(0, 0, 0, 0.4);
+  border-color: rgba(15, 61, 46, 0.3);
+  background: rgba(255, 255, 255, 0.4);
 }
 
 .confirmation-item input[type="checkbox"] {
@@ -381,8 +381,8 @@ async function performDeletion() {
 .reason-section {
   margin-bottom: var(--space-2xl);
   padding: var(--space-xl);
-  background: rgba(0, 0, 0, 0.3);
-  border: 1px solid rgba(212, 175, 55, 0.1);
+  background: rgba(255, 255, 255, 0.3);
+  border: 1px solid rgba(15, 61, 46, 0.1);
   border-radius: var(--radius-md);
 }
 
@@ -402,8 +402,8 @@ async function performDeletion() {
 .reason-textarea {
   width: 100%;
   padding: var(--space-md);
-  background: rgba(0, 0, 0, 0.3);
-  border: 1px solid rgba(212, 175, 55, 0.2);
+  background: rgba(255, 255, 255, 0.3);
+  border: 1px solid rgba(15, 61, 46, 0.2);
   border-radius: var(--radius-md);
   color: var(--text-primary);
   font-family: var(--font-body);
@@ -414,7 +414,7 @@ async function performDeletion() {
 
 .reason-textarea:focus {
   outline: none;
-  border-color: rgba(212, 175, 55, 0.5);
+  border-color: rgba(15, 61, 46, 0.5);
 }
 
 .reason-textarea::placeholder {

@@ -1508,7 +1508,7 @@ onUnmounted(() => {
   height: 120px;
   margin-bottom: var(--space-xl);
   animation: bounce 2s ease-in-out infinite;
-  filter: drop-shadow(0 4px 20px rgba(212, 175, 55, 0.4));
+  filter: drop-shadow(0 4px 20px rgba(15, 61, 46, 0.4));
   cursor: default;
   user-select: none;
   pointer-events: none;
@@ -1598,8 +1598,8 @@ onUnmounted(() => {
 .preview-hashtag {
   display: inline-block;
   padding: var(--space-xs) var(--space-md);
-  background: rgba(212, 175, 55, 0.1);
-  border: 1px solid rgba(212, 175, 55, 0.3);
+  background: rgba(15, 61, 46, 0.1);
+  border: 1px solid rgba(15, 61, 46, 0.3);
   border-radius: var(--radius-full);
   color: var(--gold-light);
   font-size: var(--text-sm);
@@ -1625,7 +1625,7 @@ onUnmounted(() => {
 .editable-input:focus {
   outline: none;
   border-color: var(--gold-primary);
-  box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.15);
+  box-shadow: 0 0 0 3px rgba(15, 61, 46, 0.15);
 }
 
 .editable-textarea::placeholder,
@@ -1657,8 +1657,8 @@ onUnmounted(() => {
   align-items: center;
   gap: var(--space-xs);
   padding: var(--space-xs) var(--space-md);
-  background: rgba(212, 175, 55, 0.1);
-  border: 1px solid rgba(212, 175, 55, 0.3);
+  background: rgba(15, 61, 46, 0.1);
+  border: 1px solid rgba(15, 61, 46, 0.3);
   border-radius: var(--radius-full);
   color: var(--gold-light);
   font-size: var(--text-sm);
@@ -1679,7 +1679,7 @@ onUnmounted(() => {
 }
 
 .remove-hashtag:hover {
-  background: rgba(212, 175, 55, 0.2);
+  background: rgba(15, 61, 46, 0.2);
   color: var(--gold-primary);
 }
 
@@ -2561,7 +2561,7 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(0, 0, 0, 0.7);
+  background: rgba(15, 61, 46, 0.35);
   border: none;
   border-radius: var(--radius-full);
   color: var(--text-primary);
@@ -2723,7 +2723,7 @@ onUnmounted(() => {
 .loading-logo {
   width: 100px;
   height: auto;
-  filter: drop-shadow(0 0 20px rgba(212, 175, 55, 0.5));
+  filter: drop-shadow(0 0 20px rgba(15, 61, 46, 0.5));
   animation: bounce 1s ease-in-out infinite;
   margin-bottom: var(--space-lg);
 }
@@ -2757,8 +2757,8 @@ onUnmounted(() => {
 .progress-step.active {
   opacity: 1;
   border-color: var(--gold-primary);
-  background: rgba(212, 175, 55, 0.1);
-  box-shadow: 0 0 20px rgba(212, 175, 55, 0.3);
+  background: rgba(15, 61, 46, 0.1);
+  box-shadow: 0 0 20px rgba(15, 61, 46, 0.3);
 }
 
 .progress-step.completed {
@@ -2781,7 +2781,7 @@ onUnmounted(() => {
 
 .progress-step.active .step-icon {
   border-color: var(--gold-primary);
-  background: rgba(212, 175, 55, 0.2);
+  background: rgba(15, 61, 46, 0.2);
 }
 
 .progress-step.completed .step-icon {
@@ -2792,7 +2792,7 @@ onUnmounted(() => {
 .step-spinner {
   width: 24px;
   height: 24px;
-  border: 3px solid rgba(212, 175, 55, 0.3);
+  border: 3px solid rgba(15, 61, 46, 0.3);
   border-top-color: var(--gold-primary);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
@@ -2845,7 +2845,7 @@ onUnmounted(() => {
   background: var(--bg-tertiary);
   border-radius: var(--radius-full);
   overflow: hidden;
-  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
+  box-shadow: inset 0 2px 4px rgba(15, 61, 46, 0.1);
 }
 
 .loading-bar-fill {
@@ -2853,7 +2853,7 @@ onUnmounted(() => {
   background: var(--gradient-gold);
   border-radius: var(--radius-full);
   transition: width 0.3s ease-out;
-  box-shadow: 0 0 10px rgba(212, 175, 55, 0.5);
+  box-shadow: 0 0 10px rgba(15, 61, 46, 0.5);
 }
 
 .progress-text {
@@ -3081,7 +3081,7 @@ onUnmounted(() => {
   align-items: center;
   gap: var(--space-md);
   padding: var(--space-xl);
-  background: rgba(26, 26, 26, 0.6);
+  background: rgba(255, 255, 255, 0.6);
   border: 2px solid var(--border-color);
   border-radius: var(--radius-lg);
   cursor: pointer;
@@ -3089,14 +3089,14 @@ onUnmounted(() => {
 }
 
 .platform-card:hover:not(.disabled) {
-  border-color: rgba(212, 175, 55, 0.4);
-  background: rgba(26, 26, 26, 0.8);
+  border-color: rgba(15, 61, 46, 0.4);
+  background: rgba(255, 255, 255, 0.8);
   transform: translateY(-2px);
 }
 
 .platform-card.selected {
   border-color: var(--gold-primary);
-  background: rgba(212, 175, 55, 0.1);
+  background: rgba(15, 61, 46, 0.1);
 }
 
 .platform-card.disabled {
@@ -3107,7 +3107,7 @@ onUnmounted(() => {
 .platform-card.disabled:hover {
   transform: none;
   border-color: var(--border-color);
-  background: rgba(26, 26, 26, 0.6);
+  background: rgba(255, 255, 255, 0.6);
 }
 
 .platform-icon {
@@ -3156,7 +3156,7 @@ onUnmounted(() => {
   align-items: center;
   gap: var(--space-sm);
   padding: var(--space-xl);
-  background: rgba(26, 26, 26, 0.6);
+  background: rgba(255, 255, 255, 0.6);
   border: 2px solid var(--border-color);
   border-radius: var(--radius-lg);
   cursor: pointer;
@@ -3165,13 +3165,13 @@ onUnmounted(() => {
 }
 
 .publish-type-btn:hover {
-  border-color: rgba(212, 175, 55, 0.4);
-  background: rgba(26, 26, 26, 0.8);
+  border-color: rgba(15, 61, 46, 0.4);
+  background: rgba(255, 255, 255, 0.8);
 }
 
 .publish-type-btn.active {
   border-color: var(--gold-primary);
-  background: rgba(212, 175, 55, 0.1);
+  background: rgba(15, 61, 46, 0.1);
   color: var(--text-primary);
 }
 
@@ -3244,7 +3244,7 @@ onUnmounted(() => {
 }
 
 .view-post-link:hover {
-  background: rgba(212, 175, 55, 0.2);
+  background: rgba(15, 61, 46, 0.2);
   transform: translateY(-2px);
   box-shadow: var(--glow-gold-sm);
 }
@@ -3306,7 +3306,7 @@ onUnmounted(() => {
   height: 80px;
   margin-bottom: var(--space-xl);
   animation: bounce 2s ease-in-out infinite;
-  filter: drop-shadow(0 4px 20px rgba(212, 175, 55, 0.4));
+  filter: drop-shadow(0 4px 20px rgba(15, 61, 46, 0.4));
 }
 
 .publishing-title {
@@ -3330,13 +3330,13 @@ onUnmounted(() => {
 
 /* VueDatePicker Custom Styling */
 .date-picker-container :deep(.dp__theme_dark) {
-  --dp-background-color: rgba(26, 26, 26, 0.9);
+  --dp-background-color: rgba(255, 255, 255, 0.9);
   --dp-text-color: var(--text-primary);
-  --dp-hover-color: rgba(212, 175, 55, 0.1);
+  --dp-hover-color: rgba(15, 61, 46, 0.1);
   --dp-hover-text-color: var(--gold-light);
   --dp-hover-icon-color: var(--gold-light);
   --dp-primary-color: var(--gold-primary);
-  --dp-primary-disabled-color: rgba(212, 175, 55, 0.3);
+  --dp-primary-disabled-color: rgba(15, 61, 46, 0.3);
   --dp-primary-text-color: var(--text-on-gold);
   --dp-secondary-color: var(--text-muted);
   --dp-border-color: var(--border-color);
@@ -3346,14 +3346,14 @@ onUnmounted(() => {
   --dp-scroll-bar-background: var(--bg-elevated);
   --dp-scroll-bar-color: var(--gold-primary);
   --dp-success-color: var(--gold-primary);
-  --dp-success-color-disabled: rgba(212, 175, 55, 0.3);
+  --dp-success-color-disabled: rgba(15, 61, 46, 0.3);
   --dp-icon-color: var(--text-muted);
   --dp-danger-color: var(--error-text);
   --dp-marker-color: var(--gold-primary);
   --dp-tooltip-color: var(--bg-elevated);
   --dp-disabled-color-text: var(--text-muted);
-  --dp-highlight-color: rgba(212, 175, 55, 0.2);
-  --dp-range-between-dates-background-color: rgba(212, 175, 55, 0.1);
+  --dp-highlight-color: rgba(15, 61, 46, 0.2);
+  --dp-range-between-dates-background-color: rgba(15, 61, 46, 0.1);
   --dp-range-between-dates-text-color: var(--text-primary);
   --dp-range-between-border-color: var(--gold-primary);
 }
@@ -3363,7 +3363,7 @@ onUnmounted(() => {
 }
 
 .date-picker-container :deep(.dp__input) {
-  background: rgba(26, 26, 26, 0.6);
+  background: rgba(255, 255, 255, 0.6);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
   color: var(--text-primary);
@@ -3383,13 +3383,13 @@ onUnmounted(() => {
 }
 
 .date-picker-container :deep(.dp__input:hover) {
-  border-color: rgba(212, 175, 55, 0.4);
+  border-color: rgba(15, 61, 46, 0.4);
 }
 
 .date-picker-container :deep(.dp__input:focus) {
   outline: none;
   border-color: var(--gold-primary);
-  box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.15);
+  box-shadow: 0 0 0 3px rgba(15, 61, 46, 0.15);
 }
 
 .date-picker-container :deep(.dp__input::placeholder) {
@@ -3397,7 +3397,7 @@ onUnmounted(() => {
 }
 
 .date-picker-container :deep(.dp__menu) {
-  background: rgba(26, 26, 26, 0.95);
+  background: rgba(255, 255, 255, 0.95);
   border: 2px solid var(--gold-primary);
   border-radius: var(--radius-lg);
   box-shadow: var(--glow-gold-md);
@@ -3421,7 +3421,7 @@ onUnmounted(() => {
 }
 
 .date-picker-container :deep(.dp__time_input) {
-  background: rgba(26, 26, 26, 0.6);
+  background: rgba(255, 255, 255, 0.6);
   border: 1px solid var(--border-color);
   color: var(--text-primary);
 }
@@ -3441,7 +3441,7 @@ onUnmounted(() => {
 }
 
 .date-picker-container :deep(.dp__button:hover) {
-  background: rgba(212, 175, 55, 0.1);
+  background: rgba(15, 61, 46, 0.1);
 }
 
 .date-picker-container :deep(.dp__action_row) {

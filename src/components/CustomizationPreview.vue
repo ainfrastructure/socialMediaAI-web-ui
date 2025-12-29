@@ -422,7 +422,7 @@ const gridDays = computed(() => weekDays.value.slice(1))
   left: 50%;
   transform: translateX(-50%);
   padding: var(--space-xs) var(--space-md);
-  background: rgba(0, 0, 0, 0.6);
+  background: rgba(15, 61, 46, 0.3);
   border-radius: var(--radius-sm);
   text-align: center;
   max-width: 80%;

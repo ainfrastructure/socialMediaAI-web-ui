@@ -56,9 +56,9 @@ defineProps<{
 .banner-preview-container {
   margin-top: var(--space-xl);
   padding: var(--space-lg);
-  background: rgba(0, 0, 0, 0.2);
+  background: rgba(255, 255, 255, 0.8);
   border-radius: var(--radius-lg);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(15, 61, 46, 0.1);
 }
 
 .preview-label {
@@ -84,9 +84,9 @@ defineProps<{
   height: 100%;
   background: linear-gradient(
     135deg,
-    rgba(212, 175, 55, 0.1) 0%,
-    rgba(212, 175, 55, 0.05) 50%,
-    rgba(212, 175, 55, 0.1) 100%
+    rgba(15, 61, 46, 0.05) 0%,
+    rgba(15, 61, 46, 0.025) 50%,
+    rgba(15, 61, 46, 0.05) 100%
   );
   display: flex;
   flex-direction: column;

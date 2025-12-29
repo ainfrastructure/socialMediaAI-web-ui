@@ -405,10 +405,10 @@ function handleSuccessModalClose() {
 }
 
 .preview-content {
-  background: rgba(0, 0, 0, 0.3);
+  background: rgba(15, 61, 46, 0.15);
   border-radius: var(--radius-lg);
   padding: var(--space-lg);
-  border: 1px solid rgba(212, 175, 55, 0.2);
+  border: 1px solid rgba(15, 61, 46, 0.2);
 }
 
 .preview-media {
@@ -429,7 +429,7 @@ function handleSuccessModalClose() {
 .notes-section {
   margin-bottom: var(--space-lg);
   padding-bottom: var(--space-lg);
-  border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+  border-bottom: 1px solid rgba(15, 61, 46, 0.2);
 }
 
 .form-group {
@@ -484,8 +484,8 @@ function handleSuccessModalClose() {
 .time-select {
   flex: 1;
   padding: var(--space-md);
-  background: rgba(0, 0, 0, 0.4);
-  border: 1px solid rgba(212, 175, 55, 0.3);
+  background: rgba(15, 61, 46, 0.2);
+  border: 1px solid rgba(15, 61, 46, 0.3);
   border-radius: var(--radius-md);
   color: var(--text-primary);
   font-family: var(--font-body);
@@ -499,7 +499,7 @@ function handleSuccessModalClose() {
 .time-select:focus {
   outline: none;
   border-color: var(--gold-primary);
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(15, 61, 46, 0.25);
 }
 
 .time-select option {
@@ -517,7 +517,7 @@ function handleSuccessModalClose() {
 .period-select {
   flex: 0.8;
   padding: var(--space-md);
-  background: rgba(212, 175, 55, 0.15);
+  background: rgba(15, 61, 46, 0.15);
   border: 1px solid var(--gold-primary);
   border-radius: var(--radius-md);
   color: var(--gold-primary);
@@ -531,7 +531,7 @@ function handleSuccessModalClose() {
 
 .period-select:focus {
   outline: none;
-  background: rgba(212, 175, 55, 0.25);
+  background: rgba(15, 61, 46, 0.25);
 }
 
 .period-select option {
@@ -578,7 +578,7 @@ function handleSuccessModalClose() {
   font-size: var(--text-xs);
   color: var(--gold-primary);
   font-weight: var(--font-medium);
-  background: rgba(212, 175, 55, 0.15);
+  background: rgba(15, 61, 46, 0.15);
   padding: 2px 8px;
   border-radius: var(--radius-sm);
   margin-left: var(--space-sm);
@@ -599,8 +599,8 @@ function handleSuccessModalClose() {
 .form-textarea {
   width: 100%;
   padding: var(--space-md);
-  background: rgba(0, 0, 0, 0.4);
-  border: 1px solid rgba(212, 175, 55, 0.3);
+  background: rgba(15, 61, 46, 0.2);
+  border: 1px solid rgba(15, 61, 46, 0.3);
   border-radius: var(--radius-md);
   color: var(--text-primary);
   font-family: var(--font-body);
@@ -613,7 +613,7 @@ function handleSuccessModalClose() {
 .form-textarea:focus {
   outline: none;
   border-color: var(--gold-primary);
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(15, 61, 46, 0.25);
 }
 
 .form-select option {
@@ -652,30 +652,30 @@ function handleSuccessModalClose() {
   align-items: center;
   gap: var(--space-md);
   padding: var(--space-lg);
-  background: rgba(0, 0, 0, 0.3);
-  border: 2px solid rgba(212, 175, 55, 0.2);
+  background: rgba(15, 61, 46, 0.15);
+  border: 2px solid rgba(15, 61, 46, 0.2);
   border-radius: var(--radius-lg);
   cursor: pointer;
   transition: all var(--transition-base);
 }
 
 .platform-card:hover:not(.disabled) {
-  border-color: rgba(212, 175, 55, 0.4);
-  background: rgba(0, 0, 0, 0.4);
+  border-color: rgba(15, 61, 46, 0.4);
+  background: rgba(15, 61, 46, 0.2);
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 4px 12px rgba(15, 61, 46, 0.15);
 }
 
 .platform-card.selected {
   border-color: var(--gold-primary);
-  background: rgba(212, 175, 55, 0.15);
-  box-shadow: 0 0 20px rgba(212, 175, 55, 0.2);
+  background: rgba(15, 61, 46, 0.15);
+  box-shadow: 0 0 20px rgba(15, 61, 46, 0.2);
 }
 
 .platform-card.disabled {
   opacity: 0.5;
   cursor: not-allowed;
-  background: rgba(0, 0, 0, 0.2);
+  background: rgba(15, 61, 46, 0.1);
 }
 
 .platform-card.coming-soon {
@@ -691,7 +691,7 @@ function handleSuccessModalClose() {
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 2px 8px rgba(15, 61, 46, 0.15);
 }
 
 /* Platform Content */
@@ -763,7 +763,7 @@ function handleSuccessModalClose() {
 .selection-indicator svg {
   width: 100%;
   height: 100%;
-  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+  filter: drop-shadow(0 2px 4px rgba(15, 61, 46, 0.15));
 }
 
 /* Responsive */

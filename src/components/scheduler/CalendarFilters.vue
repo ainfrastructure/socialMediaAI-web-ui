@@ -266,8 +266,8 @@ const getRestaurantName = (restaurantId: string): string => {
   justify-content: space-between;
   align-items: center;
   padding: var(--space-md) var(--space-lg);
-  background: rgba(0, 0, 0, 0.2);
-  border: 1px solid rgba(212, 175, 55, 0.2);
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(15, 61, 46, 0.1);
   border-radius: var(--radius-md);
   cursor: pointer;
   transition: all var(--transition-base);
@@ -275,8 +275,8 @@ const getRestaurantName = (restaurantId: string): string => {
 }
 
 .filter-toggle:hover {
-  background: rgba(212, 175, 55, 0.1);
-  border-color: rgba(212, 175, 55, 0.3);
+  background: rgba(15, 61, 46, 0.05);
+  border-color: rgba(15, 61, 46, 0.15);
 }
 
 .filter-toggle-left {
@@ -321,8 +321,8 @@ const getRestaurantName = (restaurantId: string): string => {
 
 .filter-content {
   padding: var(--space-lg);
-  background: rgba(0, 0, 0, 0.1);
-  border: 1px solid rgba(212, 175, 55, 0.1);
+  background: rgba(255, 255, 255, 0.5);
+  border: 1px solid rgba(15, 61, 46, 0.05);
   border-top: none;
   border-radius: 0 0 var(--radius-md) var(--radius-md);
 }
@@ -343,8 +343,8 @@ const getRestaurantName = (restaurantId: string): string => {
   align-items: center;
   gap: var(--space-xs);
   padding: var(--space-sm) var(--space-md);
-  background: rgba(0, 0, 0, 0.3);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(15, 61, 46, 0.1);
   border-radius: var(--radius-md);
   color: var(--text-primary);
   cursor: pointer;
@@ -353,8 +353,8 @@ const getRestaurantName = (restaurantId: string): string => {
 }
 
 .inline-filter-btn:hover {
-  background: rgba(212, 175, 55, 0.15);
-  border-color: rgba(212, 175, 55, 0.3);
+  background: rgba(15, 61, 46, 0.08);
+  border-color: rgba(15, 61, 46, 0.15);
 }
 
 .inline-filter-icon {
@@ -393,7 +393,7 @@ const getRestaurantName = (restaurantId: string): string => {
   margin-top: var(--space-xs);
   padding: var(--space-sm);
   background: var(--bg-secondary);
-  border: 1px solid rgba(212, 175, 55, 0.3);
+  border: 1px solid rgba(15, 61, 46, 0.15);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-lg);
   z-index: 100;
@@ -410,7 +410,7 @@ const getRestaurantName = (restaurantId: string): string => {
 }
 
 .filter-checkbox:hover {
-  background: rgba(212, 175, 55, 0.1);
+  background: rgba(15, 61, 46, 0.05);
 }
 
 .filter-checkbox.select-all {
@@ -429,7 +429,7 @@ const getRestaurantName = (restaurantId: string): string => {
 
 .filter-divider {
   height: 1px;
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(15, 61, 46, 0.1);
   margin: var(--space-sm) 0;
 }
 
@@ -455,7 +455,7 @@ const getRestaurantName = (restaurantId: string): string => {
   gap: var(--space-sm);
   margin-top: var(--space-md);
   padding-top: var(--space-md);
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  border-top: 1px solid rgba(15, 61, 46, 0.1);
 }
 
 .active-filter-tag {
@@ -463,8 +463,8 @@ const getRestaurantName = (restaurantId: string): string => {
   align-items: center;
   gap: var(--space-xs);
   padding: var(--space-xs) var(--space-sm);
-  background: rgba(212, 175, 55, 0.2);
-  border: 1px solid rgba(212, 175, 55, 0.3);
+  background: rgba(15, 61, 46, 0.1);
+  border: 1px solid rgba(15, 61, 46, 0.15);
   border-radius: var(--radius-full);
   font-size: var(--text-xs);
   color: var(--gold-primary);

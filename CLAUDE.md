@@ -115,27 +115,49 @@ Check `src/components/Base*.vue` before creating new components:
 
 ## Design System
 
-**"Quiet Luxury"** aesthetic:
-- Deep charcoal backgrounds + muted gold accents
+**"Quiet Luxury"** aesthetic with **Light Mode**:
+- Warm cream background (`#f6f1e7`) with deep green accents (`#0f3d2e`)
+- Brushed brass/gold icons (`#b08a5a` → `#9a7848` gradient)
 - Typography: Playfair Display (headings) + Inter (body)
-- Glassmorphism with backdrop blur
-- Subtle animations
+- Glassmorphism with backdrop blur on light backgrounds
+- Subtle animations and soft shadows
 
-**Avoid:** Neon colors, flashy effects, cluttered layouts
+**Color Palette:**
+- **Primary Background:** `#f6f1e7` (warm cream)
+- **Secondary Background:** `#faf7f0` (lighter cream)
+- **Accent Color:** `#0f3d2e` (deep forest green) - used for buttons, links, active states
+- **Icons:** Brushed brass gradient (`#b08a5a` → `#9a7848`)
+- **Text on Green:** White (`#ffffff`) for proper contrast
+
+**Status Colors:**
+- **Published:** Green (`#0f3d2e`) - main accent color
+- **Scheduled:** Orange (`#f59e0b`)
+- **Failed:** Red (`#ef4444`)
+
+**Avoid:** Dark backgrounds, neon colors, flashy effects, cluttered layouts
 
 ### CSS Variables (src/assets/theme.css)
 ```css
-/* Backgrounds */
---bg-primary, --bg-secondary, --bg-tertiary, --bg-elevated
+/* Backgrounds (Light Mode) */
+--bg-primary: #f6f1e7;      /* Main cream background */
+--bg-secondary: #faf7f0;    /* Lighter cream */
+--bg-tertiary: #f0ebe1;     /* Slightly darker cream */
+--bg-elevated: #e8e1d5;     /* Elevated elements */
 
-/* Text */
---text-primary, --text-secondary, --text-muted, --text-on-gold
+/* Text (Dark on Light) */
+--text-primary: #2d2d2d;    /* Main text */
+--text-secondary: #5a5a5a;  /* Secondary text */
+--text-muted: #888888;      /* Muted text */
+--text-on-gold: #f6f1e7;    /* Text on green buttons (cream) */
 
-/* Gold Accents */
---gold-primary, --gold-light, --gold-dark, --gold-subtle, --gradient-gold
+/* Green Accents (replaces gold for interactive elements) */
+--gold-primary: #0f3d2e;    /* Deep forest green */
+--gold-light: #1a5a45;      /* Lighter green */
+--gold-dark: #0a2818;       /* Darker green */
 
-/* Glass Effects */
---glass-bg, --glass-border, --blur-md, --blur-lg
+/* Glass Effects (Light Mode) */
+--glass-bg: rgba(255, 255, 255, 0.7);
+--glass-border: rgba(15, 61, 46, 0.12);
 
 /* Semantic Colors */
 --success-bg/border/text, --error-bg/border/text, --info-bg/border/text, --warning-bg/border/text
@@ -143,10 +165,15 @@ Check `src/components/Base*.vue` before creating new components:
 /* Spacing: --space-{xs|sm|md|lg|xl|2xl|3xl|4xl|5xl} */
 /* Typography: --font-heading, --font-body, --text-{xs|sm|base|lg|xl|2xl|3xl|4xl|5xl} */
 /* Radius: --radius-{sm|md|lg|xl|full} */
-/* Shadows: --shadow-{sm|md|lg|xl}, --glow-gold-{sm|md} */
+/* Shadows: Use green-tinted shadows - rgba(15, 61, 46, 0.08-0.15) */
 /* Transitions: --transition-{fast|base|slow} */
 /* Platform Brands: --gradient-{facebook|instagram|tiktok|twitter|linkedin} */
 ```
+
+### Icon Colors
+- **Golden/Brass Icons:** Use gradient `#b08a5a` → `#9a7848` (see `src/components/icons/Golden*.vue`)
+- **Check icons on green background:** Always use white (`#ffffff`) for contrast
+- **Logo:** Brushed brass with brass glow effect
 
 ---
 
@@ -202,8 +229,10 @@ const { t } = useI18n()
 4. TypeScript interfaces for props/emits
 5. Teleport modals to body for z-index safety
 6. Keyboard navigation for accessibility
-7. Dark theme only (no light mode)
+7. Light theme only - use cream backgrounds and green accents
 8. Clean up as you work - delete unused code
+9. Check icons on green: always use white (`#ffffff`) for contrast
+10. Loading overlays: use light cream (`rgba(246, 241, 231, 0.85)`) not dark
 
 ### Accessibility: Reduced Motion
 ```css
@@ -215,12 +244,18 @@ const { t } = useI18n()
 }
 ```
 
-### Gold Gradient Text
+### Accent Gradient Text (Green)
 ```css
-.gold-text {
-  background: var(--gradient-gold);
+.accent-text {
+  background: var(--gradient-gold);  /* Now green gradient */
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
+```
+
+### Brass Icon Gradient (for decorative icons)
+```css
+/* Used in Golden*.vue icon components */
+linearGradient: #b08a5a → #9a7848
 ```
