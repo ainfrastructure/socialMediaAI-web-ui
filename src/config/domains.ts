@@ -223,25 +223,25 @@ export type SelectableDomain = {
 }
 
 export const SELECTABLE_DOMAINS: SelectableDomain[] = [
-  // English
-  { domain: 'socialchef.ai', locale: 'en', name: 'English', flag: '🇺🇸' },
-  { domain: 'socialchef.uk', locale: 'en', name: 'English (UK)', flag: '🇬🇧' },
+  // International / English
+  { domain: 'socialchef.ai', locale: 'en', name: 'International', flag: '🇺🇸' },
+  { domain: 'socialchef.uk', locale: 'en', name: 'United Kingdom', flag: '🇬🇧' },
   // Nordic
-  { domain: 'socialchef.no', locale: 'no', name: 'Norsk', flag: '🇳🇴' },
-  { domain: 'socialchef.se', locale: 'sv', name: 'Svenska', flag: '🇸🇪' },
-  { domain: 'socialchef.dk', locale: 'da', name: 'Dansk', flag: '🇩🇰' },
+  { domain: 'socialchef.no', locale: 'no', name: 'Norge', flag: '🇳🇴' },
+  { domain: 'socialchef.se', locale: 'sv', name: 'Sverige', flag: '🇸🇪' },
+  { domain: 'socialchef.dk', locale: 'da', name: 'Danmark', flag: '🇩🇰' },
   { domain: 'socialchef.fi', locale: 'fi', name: 'Suomi', flag: '🇫🇮' },
   // German-speaking
-  { domain: 'de.socialchef.ai', locale: 'de', name: 'Deutsch', flag: '🇩🇪' },
-  { domain: 'socialchef.at', locale: 'de', name: 'Deutsch (AT)', flag: '🇦🇹' },
-  { domain: 'socialchef.ch', locale: 'ch', name: 'Deutsch (CH)', flag: '🇨🇭' },
+  { domain: 'de.socialchef.ai', locale: 'de', name: 'Deutschland', flag: '🇩🇪' },
+  { domain: 'socialchef.at', locale: 'de', name: 'Österreich', flag: '🇦🇹' },
+  { domain: 'socialchef.ch', locale: 'ch', name: 'Schweiz', flag: '🇨🇭' },
   // Western Europe
-  { domain: 'socialchef.fr', locale: 'fr', name: 'Français', flag: '🇫🇷' },
-  { domain: 'socialchef.be', locale: 'nl', name: 'Nederlands', flag: '🇧🇪' },
+  { domain: 'socialchef.fr', locale: 'fr', name: 'France', flag: '🇫🇷' },
+  { domain: 'socialchef.be', locale: 'nl', name: 'België', flag: '🇧🇪' },
   // Southern/Eastern Europe
-  { domain: 'socialchef.pt', locale: 'pt', name: 'Português', flag: '🇵🇹' },
-  { domain: 'socialchef.pl', locale: 'pl', name: 'Polski', flag: '🇵🇱' },
-  { domain: 'socialchef.cz', locale: 'cs', name: 'Čeština', flag: '🇨🇿' },
+  { domain: 'socialchef.pt', locale: 'pt', name: 'Portugal', flag: '🇵🇹' },
+  { domain: 'socialchef.pl', locale: 'pl', name: 'Polska', flag: '🇵🇱' },
+  { domain: 'socialchef.cz', locale: 'cs', name: 'Česko', flag: '🇨🇿' },
 ]
 
 /**

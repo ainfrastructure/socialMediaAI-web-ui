@@ -959,7 +959,7 @@ export default {
 
   // Languages
   languages: {
-    selectLanguage: 'Jazyk',
+    selectCountry: 'Země',
     selectCurrency: 'Měna (Dev)',
   },
 

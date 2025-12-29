@@ -956,7 +956,7 @@ export default {
   
   // Languages
   languages: {
-    selectLanguage: 'Language',
+    selectCountry: 'Country',
     selectCurrency: 'Currency (Dev)',
   },
 

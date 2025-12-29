@@ -1,7 +1,7 @@
 <template>
   <div class="language-selector" ref="selectorContainer">
     <!-- Language Button -->
-    <button @click="toggleDropdown" class="language-button" :aria-label="$t('languages.selectLanguage')">
+    <button @click="toggleDropdown" class="language-button" :aria-label="$t('languages.selectCountry')">
       <span class="flag">{{ currentDomainFlag }}</span>
       <span v-if="localeStore.isDevAccess" class="currency-badge">{{ localeStore.currentCurrency }}</span>
       <span class="chevron" :class="{ open: isOpen }">▼</span>
@@ -12,7 +12,7 @@
       <div v-if="isOpen && !isMobile" class="dropdown-menu">
         <!-- Header -->
         <div class="dropdown-header">
-          <span class="header-title">{{ $t('languages.selectLanguage') }}</span>
+          <span class="header-title">{{ $t('languages.selectCountry') }}</span>
           <button @click="closeDropdown" class="close-button" aria-label="Close">
             <span>×</span>
           </button>
@@ -61,7 +61,7 @@
           <div class="mobile-dropdown-menu">
             <!-- Header -->
             <div class="dropdown-header">
-              <span class="header-title">{{ $t('languages.selectLanguage') }}</span>
+              <span class="header-title">{{ $t('languages.selectCountry') }}</span>
               <button @click="closeDropdown" class="close-button" aria-label="Close">
                 <span>×</span>
               </button>
