@@ -1,86 +1,43 @@
 export default {
   // Navigation
   nav: {
-    cookUp: 'Lag innhold',
-    posts: 'Innlegg',
-    content: 'Innhold',
-    calendar: 'Kalender',
     login: 'Logg inn',
     getStarted: 'Kom i gang',
-    examples: 'Eksempler',
     pricing: 'Priser',
-    howItWorks: 'Slik fungerer det',
+    howItWorks: 'Slik fungerer det'
   },
 
   // Burger Menu
-  menu: {
-    profile: 'Profil',
-    plansAndBilling: 'Planer & fakturering',
-    connectAccounts: 'Koble kontoer',
-    logout: 'Logg ut',
-    plan: '{tier} plan',
-  },
-
+  
   // Common
   common: {
-    welcome: 'Velkommen',
     loading: 'Laster...',
     error: 'Feil',
-    success: 'Suksess',
     cancel: 'Avbryt',
     save: 'Lagre',
     delete: 'Slett',
     remove: 'Fjern',
     edit: 'Rediger',
-    confirm: 'Bekreft',
     back: 'Tilbake',
     next: 'Neste',
     previous: 'Forrige',
-    search: 'Søk',
-    filter: 'Filter',
-    sort: 'Sorter',
     close: 'Lukk',
-    submit: 'Send',
     selectAll: 'Velg alle',
-    deselectAll: 'Fjern alle',
-    or: 'ELLER',
-    date: 'Dato',
-    time: 'Tid',
-    am: 'AM',
-    pm: 'PM',
     processing: 'Behandler...',
-    pleaseWait: 'Vennligst vent...',
-    redirecting: 'Omdirigerer...',
     characters: 'tegn',
-    continue: 'Fortsett',
     retry: 'Prøv igjen',
     noImage: 'Ingen bilde',
     videoNotSupported: 'Nettleseren din støtter ikke video-taggen.',
     created: 'Opprettet',
     saving: 'Lagrer...',
-    sending: 'Sender...',
     saveChanges: 'Lagre endringer',
-    somethingWentWrong: 'Noe gikk galt',
-    errorHint: 'Feilen har blitt rapportert til vårt team. Vennligst prøv å oppdatere siden.',
-    refresh: 'Oppdater side',
-    goBack: 'Gå tilbake',
     pagination: {
       previous: '← Forrige',
       next: 'Neste →',
-      pageInfo: 'Side {current} av {total} ({count} totalt)',
+      pageInfo: 'Side {current} av {total} ({count} totalt)'
     },
     // Loading progress messages
-    loadingProgress: {
-      creatingImage: 'Lager det perfekte bildet ditt...',
-      writingCaption: 'Skriver en engasjerende bildetekst...',
-      addingHashtags: 'Legger til relevante hashtags...',
-      almostDone: 'Nesten ferdig...',
-      publishingPost: 'Publiserer innlegget ditt...',
-      connectingPlatform: 'Kobler til {platform}...',
-      uploadingImage: 'Laster opp bildet ditt...',
-      finishingUp: 'Gjør ferdig...',
-    },
-  },
+      },
 
   // Platforms
   platforms: {
@@ -93,69 +50,28 @@ export default {
     instagramWithIcon: 'Instagram',
     tiktokWithIcon: 'TikTok',
     twitterWithIcon: 'Twitter/X',
-    linkedinWithIcon: 'LinkedIn',
+    linkedinWithIcon: 'LinkedIn'
   },
 
   // Timezones
-  timezones: {
-    utc: 'UTC (Koordinert universaltid)',
-    eastern: 'Eastern Time (ET)',
-    central: 'Central Time (CT)',
-    mountain: 'Mountain Time (MT)',
-    pacific: 'Pacific Time (PT)',
-    london: 'London (GMT/BST)',
-    paris: 'Paris (CET/CEST)',
-    oslo: 'Oslo (CET/CEST)',
-    tokyo: 'Tokyo (JST)',
-    dubai: 'Dubai (GST)',
-    sydney: 'Sydney (AEDT/AEST)',
-  },
-
+  
   // Auth / Login View
   auth: {
-    login: 'Logg inn',
-    loginTitle: 'Velkommen',
-    loginSubtitle: 'Logg inn på kontoen din',
     brandSubtitle: 'AI-drevet innhold for restauranter',
     email: 'E-post',
     emailPlaceholder: 'din{\'@\'}epost.no',
-    password: 'Passord',
-    passwordPlaceholder: 'Skriv inn passordet ditt',
-    forgotPassword: 'Glemt passord?',
-    dontHaveAccount: 'Har du ikke en konto?',
-    signUp: 'Registrer deg',
     signIn: 'Logg inn',
-    loggingIn: 'Logger inn...',
-    resetPassword: 'Tilbakestill passord',
-    resetPasswordTitle: 'Tilbakestill passordet ditt',
-    resetPasswordSubtitle: 'Skriv inn e-posten din for å motta en tilbakestillingslenke',
-    sendResetLink: 'Send tilbakestillingslenke',
-    sendingResetLink: 'Sender...',
     backToLogin: 'Tilbake til innlogging',
-    checkEmail: 'Sjekk e-posten din for en tilbakestillingslenke',
-    invalidCredentials: 'Ugyldige påloggingsdetaljer',
-    loginWithMagicLink: 'Logg inn med Magic Link',
-    sendMagicLink: 'Send Magic Link',
     continueWithApple: 'Fortsett med Apple',
     continueWithGoogle: 'Fortsett med Google',
     continueWithFacebook: 'Fortsett med Facebook',
-    orContinueWithEmail: 'eller fortsett med e-post',
-    orContinueWith: 'eller',
     signInWithEmail: 'Logg inn med e-post',
-    emailLoginDescription: 'Skriv inn e-posten din, så sender vi deg en lenke for å logge inn. Ingen passord nødvendig.',
-    sendLoginLink: 'Send innloggingslenke',
     checkEmailForLink: 'Sjekk e-posten din for en innloggingslenke',
-    checkYourEmail: 'Sjekk e-posten din',
-    magicLinkSentTo: 'Vi har sendt en innloggingslenke til',
-    clickLinkToSignIn: 'Klikk på lenken i e-posten for å logge inn.',
-    openEmailProvider: 'Åpne {provider}',
-    openEmailApp: 'Åpne e-postappen',
-    useDifferentEmail: 'Bruk en annen e-post',
     emailConfirmed: 'Suksess! Laster profilen din...',
     pleaseLogin: 'Vennligst logg inn for å fortsette',
     privacyPolicy: 'Personvernerklæring',
     termsOfService: 'Tjenestevilkår',
-    lastUsed: 'Sist brukt',
+    lastUsed: 'Sist brukt'
   },
 
   // Waitlist Landing Page
@@ -172,8 +88,7 @@ export default {
     error: 'Noe gikk galt. Prøv igjen.',
     loginLink: 'Har du allerede en konto?',
     loginLinkText: 'Logg inn',
-    socialProof: 'Bli med {count}+ restauranter på ventelisten',
-    comingSoon: 'Kommer snart',
+    socialProof: 'Bli med {count}+ restauranter på ventelisten'
   },
 
   // Landing Page
@@ -184,7 +99,6 @@ export default {
       headlinePart1: 'Den kraftigste og',
       headlinePart2: 'enkleste AI-innholds',
       headlinePart3: 'generator for restauranter',
-      headline: 'Din restaurants AI sosiale medie-manager',
       subheadline: 'Få flotte innlegg på sosiale medier som publiserer seg selv. Ingen fotograf, ingen designer, ingen tekniske ferdigheter nødvendig.',
       cta: 'Kom i gang nå',
       ctaSecondary: 'Se hvordan det fungerer',
@@ -194,16 +108,13 @@ export default {
         videos: 'Lag videoer',
         posts: 'Skriv innlegg',
         publish: 'Auto-publiser',
-        analytics: 'Spor analyse',
-      },
-      imagePlaceholder: 'Telefon-mockup som viser Instagram-feed med profesjonelle matbilder',
+        analytics: 'Spor analyse'
+      }
     },
 
     // Login Box (inline in hero)
     loginBox: {
-      title: 'Kom i gang',
-      subtitle: 'Lag ditt første innlegg på minutter',
-      goToDashboard: 'Gå til dashboard',
+      goToDashboard: 'Gå til dashboard'
     },
 
     // How It Works Showcase Section
@@ -213,20 +124,17 @@ export default {
       originalPhoto: 'Ditt bilde',
       originalLabel: 'Original',
       aiGenerated: 'SocialChef-forbedret',
-      approveAndPost: 'Gjennomgå og godkjenn',
       flow: {
         step1Title: 'Last opp bildet ditt',
         step1Description: 'Ta et bilde av retten din med telefonen. Ingen profesjonelt kamera nødvendig.',
         step2Title: 'SocialChef lager flere versjoner',
         step2Description: 'SocialChef genererer vakre varianter i forskjellige stiler, hver med engasjerende tekst.',
         step3Title: 'Godkjenn og publiser',
-        step3Description: 'Velg din favorittversjon og den publiseres automatisk til Facebook og Instagram.',
+        step3Description: 'Velg din favorittversjon og den publiseres automatisk til Facebook og Instagram.'
       },
       gallery: {
-        title: 'Før og etter',
-        subtitle: 'Dra for å sammenligne',
         before: 'Før',
-        after: 'Etter',
+        after: 'Etter'
       },
       templates: {
         behindTheScenes: 'Bak kulissene',
@@ -236,13 +144,13 @@ export default {
         cleanStrict: 'Ren streng',
         infographic: 'Infografikk',
         custom: 'Egendefinert',
-        andMore: 'Og mange flere...',
-      },
+        andMore: 'Og mange flere...'
+      }
     },
 
     // How It Works
     howItWorks: {
-      comingSoon: 'Snart',
+      comingSoon: 'Snart'
     },
 
     // Auto-Posting Feature (KEY DIFFERENTIATOR)
@@ -251,10 +159,9 @@ export default {
       title: 'Sett det og glem det',
       headline: 'Innleggene dine publiseres automatisk. Virkelig.',
       description: 'Slutt å huske på å poste. Slutt å logge inn i apper. SocialChef håndterer alt - fra opprettelse til publisering. Du vil se ut som om du har en dedikert sosiale medier-ansvarlig.',
-      imagePlaceholder: 'Delt skjerm - stresset eier til venstre, avslappet eier til høyre med innlegg som publiseres automatisk',
       feature1: 'Innlegg går live mens du lager mat',
       feature2: 'Fungerer med Instagram og Facebook',
-      feature3: 'Planlegg uker i forveien',
+      feature3: 'Planlegg uker i forveien'
     },
 
     // Benefits
@@ -262,108 +169,59 @@ export default {
       title: 'Hvorfor restauranteiere elsker SocialChef',
       time: {
         title: 'Spar 10+ timer per uke',
-        description: 'Slutt å slite med innholdsproduksjon. Bruk tiden på det som betyr noe - maten og kundene dine.',
+        description: 'Slutt å slite med innholdsproduksjon. Bruk tiden på det som betyr noe - maten og kundene dine.'
       },
       professional: {
         title: 'Se alltid profesjonell ut',
-        description: 'Hvert innlegg ser ut som det ble laget av en proff designer. Fordi det ble det. En AI-designer.',
+        description: 'Hvert innlegg ser ut som det ble laget av en proff designer. Fordi det ble det. En AI-designer.'
       },
       growth: {
         title: 'Øk følgerskaren',
-        description: 'Konsekvent posting betyr mer engasjement. Mer engasjement betyr flere kunder.',
+        description: 'Konsekvent posting betyr mer engasjement. Mer engasjement betyr flere kunder.'
       },
       easy: {
         title: 'Ingen tekniske ferdigheter nødvendig',
-        description: 'Hvis du kan ta et bilde av mat, kan du bruke SocialChef. Det er hele ferdighetskravet.',
-      },
+        description: 'Hvis du kan ta et bilde av mat, kan du bruke SocialChef. Det er hele ferdighetskravet.'
+      }
     },
 
     // Social Proof
-    socialProof: {
-      title: '',
-      stat1: 'Restauranter',
-      stat2: 'Innlegg generert',
-      stat3: 'Vurdering',
-      testimonial1Quote: 'Jeg pleide å bruke timer på Instagram. Nå velger jeg bare retten min og det er gjort.',
-      testimonial2Quote: 'Kundene mine tror jeg har ansatt et markedsføringsteam. Nei, bare SocialChef.',
-      testimonial3Quote: 'Endelig noe som faktisk sparer tid. Ikke enda en app å lære.',
-    },
-
+    
     // Pricing Preview
     pricing: {
       title: 'Enkel, ærlig prising',
-      subtitle: 'Start i dag. Avslutt når som helst.',
-      monthly: 'Månedlig',
-      yearly: 'Årlig',
-      lifetime: 'Livstid',
-      perMonth: 'måned',
-      perYear: 'år',
-      oneTime: 'engangs',
-      images: 'bilder',
-      mostPopular: 'Mest populær',
-      viewAll: 'Se full prisliste',
+      subtitle: 'Start i dag. Avslutt når som helst.'
     },
 
     // Final CTA
     finalCta: {
       title: 'Klar til å si opp sosiale medier-bekymringene?',
-      subtitle: 'Bli med hundrevis av restauranteiere som sluttet å stresse over sosiale medier.',
+      subtitle: 'Bli med hundrevis av restauranteiere som sluttet å stresse over sosiale medier.'
     },
 
     // Login Modal
     loginModal: {
       title: 'La oss komme i gang',
-      subtitle: 'Logg inn for å generere ditt første innlegg',
+      subtitle: 'Logg inn for å generere ditt første innlegg'
     },
 
     // Paywall Modal
     paywall: {
       title: 'Velg din plan',
       subtitle: 'Lås opp automatisk posting og spar timer hver uke',
-      autoPostingReminder: 'Alle planer inkluderer automatisk posting til Instagram og Facebook',
+      autoPostingReminder: 'Alle planer inkluderer automatisk posting til Instagram og Facebook'
     },
 
     // Footer
     footer: {
       madeWith: 'Laget med kjærlighet for restauranteiere',
-      copyright: '© 2025 SocialChef. Alle rettigheter reservert.',
-    },
+      copyright: '© 2025 SocialChef. Alle rettigheter reservert.'
+    }
   },
 
   // Dashboard View
   dashboard: {
-    title: 'Dashbord',
-    welcome: 'Velkommen, {name}!',
     welcomeBack: 'Velkommen, {name}! ',
-    readyToCreate: 'Klar til å lage fantastisk innhold for restaurantene dine?',
-    overview: 'Oversikt',
-    recentActivity: 'Nylig aktivitet',
-    stats: 'Statistikk',
-    quickActions: 'Hurtighandlinger',
-    heroTitle: 'Velkommen til SocialChef',
-    heroSubtitle: 'Lag fantastisk innhold for sosiale medier i tre enkle steg',
-    howItWorks: 'Slik fungerer det',
-    howItWorksSubtitle: 'Tre enkle steg til fantastisk innhold',
-    step1Title: 'Søk & lagre',
-    step1Description: 'Finn restauranter ved hjelp av Google Places og lagre dem i biblioteket ditt. Få tilgang til menyer, bilder og merkevaredetaljer umiddelbart.',
-    step1Button: 'Søk nå',
-    step2Title: 'Lag innhold',
-    step2Description: 'Generer AI-drevne bilder, videoer og bildetekster. Bygg et innholdsbibliotek for restaurantene dine.',
-    step2Button: 'Start å lage',
-    step3Title: 'Planlegg innlegg',
-    step3Description: 'Planlegg innholdskalenderen din og publiser direkte til Facebook. Planlegg innlegg på forhånd og oppretthold konsistent engasjement.',
-    step3Button: 'Vis kalender',
-    yourAccount: 'Din konto',
-    email: 'E-post:',
-    plan: 'Plan:',
-    status: 'Status:',
-    creditsUsed: 'Brukte poeng:',
-    thisMonth: 'denne måneden',
-    creditsRemaining: '{count} poeng gjenstår',
-    viewPlans: 'Vis planer',
-    manageSubscription: 'Administrer abonnement',
-
-    launchOnboarding: 'Start',
 
     // Welcome Modal
     welcomeModalTitle: 'Velkommen til SocialChef!',
@@ -377,51 +235,19 @@ export default {
     restaurants: 'Restauranter',
 
     // Quick actions
-    quickActionsSubtitle: 'Gå rett til det du trenger',
-    addRestaurant: 'Legg til restaurant',
-    addRestaurantDescription: 'Søk og legg til restauranten din for å komme i gang',
-    getStarted: 'Kom i gang →',
-    cookUpContent: 'Lag innhold',
-    cookUpContentDescription: 'Generer fantastiske innlegg fra menyelementene dine',
-    createNow: 'Lag nå →',
-    schedulePosts: 'Planlegg innlegg',
-    schedulePostsDescription: 'Planlegg innholdskalenderen din på forhånd',
-    openCalendar: 'Åpne kalender →',
-    viewPosts: 'Vis innlegg',
-    viewPostsDescription: 'Få tilgang til ditt lagrede innleggsbibliotek',
-    browseLibrary: 'Bla gjennom bibliotek →',
 
     // Social platforms
-    socialPlatforms: 'Sosiale medieplattformer',
-    platformsConnected: '{count} plattform tilkoblet | {count} plattformer tilkoblet',
-    connectPlatformsPrompt: 'Koble til dine sosiale mediekontoer for å starte publisering',
 
     // Platform descriptions
-    facebookDescription: 'Koble til for å publisere direkte til Facebook-sidene dine og nå publikummet ditt',
-    instagramDescription: 'Del fantastiske bilder og historier med Instagram-følgerne dine',
-    tiktokDescription: 'Lag engasjerende kortvideoer for TikToks kreative fellesskap',
-    twitterDescription: 'Del raske oppdateringer og delta i sanntidssamtaler',
-    linkedinDescription: 'Bygg ditt profesjonelle nettverk og del forretningsoppdateringer',
 
     // Connection status
-    connected: 'Tilkoblet',
-    notConnected: 'Ikke tilkoblet',
-    manage: 'Administrer',
     connect: 'Koble til',
 
     // Account overview
-    accountOverview: 'Kontooversikt',
-    subscription: 'Abonnement',
-    currentPlan: 'Nåværende plan',
-    usageThisMonth: 'Bruk denne måneden',
-    creditsUsedLabel: 'Poeng brukt',
-    remainingCreditsLabel: '{count} poeng gjenstår | {count} poeng gjenstår',
   },
 
   // Plans View
   plans: {
-    title: 'Planer & fakturering',
-    subtitle: 'Velg den perfekte planen for dine behov',
     brandTitle: 'SocialChef',
     chooseYourPlan: 'Velg din plan',
     unlockPower: 'Lås opp full kraft av AI-generert innhold',
@@ -429,38 +255,12 @@ export default {
     mostPopular: 'Mest populær',
     bestValue: 'Best verdi',
     currentPlan: 'Nåværende plan',
-    subscribeNow: 'Abonner nå',
-    freeForever: 'Gratis for alltid',
-    upgradePlan: 'Oppgrader plan',
-    upgradeTo: 'Oppgrader til',
-    downgradePlan: 'Nedgrader plan',
-    cancelSubscription: 'Avbryt abonnement',
     manageSubscription: 'Administrer abonnement',
-    monthly: 'Månedlig',
-    yearly: 'Årlig',
-    lifetime: 'Livstid',
-    free: 'Gratis',
-    starter: 'Starter',
-    pro: 'Pro',
-    enterprise: 'Enterprise',
     perMonth: '/måned',
     perYear: '/år',
-    perMonthBilledYearly: '/mnd, betalt årlig',
-    monthsFree: '{count} mnd gratis',
     oneTime: 'engangsbetaling',
-    customPricing: 'Tilpasset pris',
-    tokensPerMonth: 'tokens/måned',
-    selectPlan: 'Velg plan',
-    currentPlanLabel: 'Nåværende',
-    features: 'Funksjoner',
-    billing: 'Fakturering',
-    paymentMethod: 'Betalingsmetode',
-    nextBillingDate: 'Neste faktureringsdato',
-    changePlan: 'Endre plan',
-    contactSales: 'Kontakt salg',
     failedToLoad: 'Kunne ikke laste planer',
     failedToOpenPortal: 'Kunne ikke åpne faktureringsportalen',
-    alreadyOnFreePlan: 'Du er allerede på gratisplanen',
     failedToCheckout: 'Kunne ikke opprette betaling',
     networkError: 'Nettverksfeil',
     subscriptionSuccess: 'Abonnement vellykket! Kontoen din vil bli oppdatert snart.',
@@ -470,12 +270,8 @@ export default {
     cancelAnytime: 'Kanseller når som helst',
     prioritySupport: 'Prioritert støtte',
     // New pricing tier keys
-    credits: 'poeng',
-    creditsPerMonth: 'poeng/måned',
     creditsUpfront: 'poeng på forhånd',
     creditsTotal: 'poeng totalt',
-    creditPerImage: '1 poeng = 1 bilde',
-    creditsPerVideo: '5 poeng = 1 video',
     images: 'bilder',
     videos: 'videoer',
     orEquivalent: 'eller',
@@ -485,8 +281,6 @@ export default {
     upgrade: 'Oppgrader',
     buy: 'Kjøp',
     promoCodeHint: 'Har du en rabattkode? Skriv den inn ved betaling.',
-    save: 'Spar {amount}',
-    savePercent: 'Spar {percent}%',
     imageGeneration: 'AI-bildegenerering',
     videoGeneration: 'AI-videogenerering',
     facebookPublishing: 'Facebook-publisering',
@@ -494,21 +288,13 @@ export default {
     included: 'Inkludert',
     postScheduling: 'Innleggsplanlegging',
     unlimitedRestaurants: 'Ubegrensede restauranter',
-    noExpiration: 'Poeng utløper aldri',
+    noExpiration: 'Poeng utløper aldri'
   },
 
   // Restaurant Search View
   restaurantSearch: {
-    title: 'Oppdag restauranter',
-    subtitle: 'Søk og analyser restauranter ved hjelp av Google Places. Bygg din database med omfattende innsikt.',
     searchPlaceholder: 'Søk restauranter etter navn eller sted...',
-    searchButton: 'Søk',
     noResults: 'Ingen restauranter funnet',
-    results: 'Resultater',
-    filters: 'Filtre',
-    cuisine: 'Kjøkken',
-    priceRange: 'Prisklasse',
-    distance: 'Avstand',
 
     // Autocomplete
     searchLabel: 'Søk restauranter',
@@ -517,100 +303,36 @@ export default {
     alreadyAdded: 'Allerede lagt til',
 
     // Quick Overview
-    quickOverviewTitle: 'Rask oversikt',
-    rating: 'Vurdering',
-    reviews: 'anmeldelser',
-    status: 'Status',
-    openNow: 'Åpent nå',
-    closed: 'Stengt',
-    menuItems: 'Menyelementer',
-    competitors: 'Konkurrenter',
-    socialMedia: 'Sosiale medier',
-    profiles: 'profiler',
 
     // Opening Hours
-    openingHours: 'Åpningstider',
-    loadingHours: 'Laster åpningstider...',
-    hoursNotAvailable: 'Åpningstider ikke tilgjengelig',
 
     // Contact & Info
-    contactInfo: 'Kontakt & info',
-    visitWebsite: 'Besøk nettsted',
 
     // Photos
-    googlePhotos: 'Google bilder',
-    selectAll: 'Velg alle',
-    deselectAll: 'Fjern alle',
 
     // Image Upload
-    uploadOwnImages: 'Last opp dine egne bilder',
 
     // Social Media
-    socialMediaTitle: 'Sosiale medier',
-    findingSocialMedia: 'Finner sosiale medieprofiler...',
-    noSocialMediaFound: 'Ingen sosiale medieprofiler funnet',
 
     // Brand Identity
-    brandIdentity: 'Merkevareidentitet',
-    analyzed: 'Analysert',
-    analyzingBrand: 'Analyserer merkevarens farger og fonter fra nettstedet...',
-    brandName: 'Merkevarenavn',
-    brandColors: 'Merkevarefarger',
-    typography: 'Typografi',
-    logo: 'Logo',
-    primary: 'Primær',
-    secondary: 'Sekundær',
-    accent: 'Aksent {number}',
-    brandIdentityNote: 'Merkevareidentitet automatisk hentet fra nettstedet',
-    selectRestaurantWithWebsite: 'Velg en restaurant med et nettsted for å analysere merkevareidentiteten',
 
     // Customer Reviews
-    customerReviews: 'Kundeanmeldelser',
-    reviewsCount: '{count} anmeldelser',
 
     // Competitors
-    nearbyCompetitors: 'Konkurrenter i nærheten',
-    competitorsCount: '{count} innen {radius} km',
-    findingCompetitors: 'Finner konkurrenter i nærheten...',
-    competitorsFound: 'Fant {count} lignende restaurant nær {name} | Fant {count} lignende restauranter nær {name}',
-    noCompetitorsFound: 'Ingen konkurrenter funnet innen {radius} km',
 
     // Menu
-    menu: 'Meny',
-    searchingMenu: 'Søker etter meny på Wolt og Foodora...',
-    menuItemsFound: 'Fant {count} elementer fra',
-    noMenuFound: 'Ingen meny funnet for denne restauranten',
-    selectRestaurantToViewMenu: 'Velg en restaurant for å se menyen',
-    menuNotAvailable: 'Restauranten er kanskje ikke tilgjengelig på Wolt eller Foodora.',
 
     // Actions
-    backToSearch: 'Tilbake til søk',
-    saveAndContinue: 'Fortsett →',
-    saving: 'Lagrer...',
 
     // Messages
-    restaurantSaved: 'Restaurant lagret i databasen!',
-    saveRestaurant: 'Lagre restaurant',
-    restaurantAlreadySaved: 'Denne restauranten er allerede lagret',
-    failedToSave: 'Kunne ikke lagre restaurant',
-    imagesUploaded: 'Lastet opp {count} egendefinerte bilde(r) i tillegg.',
-    failedToUpload: 'Kunne ikke laste opp bilder',
 
     // Progress Modal
-    savingRestaurant: 'Lagrer restaurant',
-    savingData: 'Lagrer restaurantdata...',
-    processingImages: 'Behandler bilder...',
-    analyzingMenu: 'Analyserer menyelementer...',
-    finalizingSetup: 'Fullfører oppsett...',
-    redirecting: 'Omdirigerer til innholdsopprettelse...',
   },
 
   // Onboarding
   onboarding: {
     // Tour steps
     tour: {
-      welcomeTitle: 'Velkommen til SocialChef! ',
-      welcomeDescription: 'Din AI-drevne assistent for sosiale medier for restauranter',
       welcomeDetails: [
         'Lag fantastiske innlegg for sosiale medier på sekunder',
         'AI-drevet innholdsgenerering tilpasset merkevaren din',
@@ -618,8 +340,6 @@ export default {
         'Planlegg innlegg og administrer flere plattformer',
       ],
 
-      searchTitle: 'Finn din restaurant ',
-      searchDescription: 'Oppdag og lagre restaurantprofiler',
       searchDetails: [
         'Søk etter restauranter ved hjelp av Google Places',
         'Importer automatisk menyer, bilder og merkevaredetaljer',
@@ -627,8 +347,6 @@ export default {
         'Få tilgang til omfattende forretningsinformasjon',
       ],
 
-      createTitle: 'Lag innhold ',
-      createDescription: 'AI-drevet innholdsopprettelse',
       createDetails: [
         'Generer bilder og videoer med AI',
         'Lag overbevisende bildetekster og hashtags',
@@ -636,8 +354,6 @@ export default {
         'Alt generert innhold lagres automatisk',
       ],
 
-      scheduleTitle: 'Planlegg og publiser ',
-      scheduleDescription: 'Planlegg innholdskalenderen din',
       scheduleDetails: [
         'Planlegg innlegg på forhånd',
         'Publiser direkte til Facebook',
@@ -645,8 +361,6 @@ export default {
         'Spor innholdets ytelse',
       ],
 
-      connectTitle: 'Koble til kontoene dine ',
-      connectDescription: 'Koble til dine sosiale medieplattformer',
       connectDetails: [
         'Koble til Facebook, Instagram, TikTok og mer',
         'Publiser direkte fra plattformen vår',
@@ -654,8 +368,6 @@ export default {
         'Sikker OAuth-autentisering',
       ],
 
-      readyTitle: 'Du er klar! ',
-      readyDescription: 'Klar til å lage fantastisk innhold?',
       readyDetails: [
         'Start med å søke etter restauranten din',
         'Generer ditt første innlegg på minutter',
@@ -664,291 +376,105 @@ export default {
       ],
 
       // Navigation
-      next: 'Neste',
-      previous: 'Forrige',
-      skip: 'Hopp over tur',
-      finish: 'Kom i gang',
     },
 
     // Quiz
     quiz: {
-      title: 'Rask quiz ',
-      subtitle: 'Test kunnskapen din!',
-      checkAnswer: 'Sjekk svar',
-      nextQuestion: 'Neste spørsmål',
-      finishQuiz: 'Fullfør quiz',
-      correctAnswer: 'Riktig! ',
-      wrongAnswer: 'Ikke helt!',
-      score: 'Din poengsum: {score}/{total}',
 
       // Questions
-      q1Question: 'Hva er det første steget for å begynne å lage innhold på SocialChef?',
       q1Options: ['Koble til sosiale mediekontoer', 'Søk og lagre en restaurant', 'Generer AI-innhold', 'Planlegg innlegg'],
-      q1Explanation: 'Du må søke og lagre en restaurant først for å få tilgang til menyelementer og merkevaredetaljer for innholdsopprettelse.',
 
-      q2Question: 'Hvilke AI-funksjoner tilbyr SocialChef?',
       q2Options: ['Kun bildegenerering', 'Kun bildetekstskriving', 'Bilder, videoer og bildetekster', 'Kun menydesign'],
-      q2Explanation: 'SocialChef tilbyr omfattende AI-drevet innholdsgenerering inkludert bilder, videoer og overbevisende bildetekster med hashtags.',
 
-      q3Question: 'Hvor får SocialChef restaurantinformasjon fra?',
       q3Options: ['Kun manuell registrering', 'Google Places og leveringsplattformer', 'Kun sosiale medier', 'Egendefinerte databaser'],
-      q3Explanation: 'SocialChef integreres med Google Places for grunnleggende informasjon og skanner Wolt/Foodora for menyelementer, og gir omfattende restaurantdata.',
 
-      q4Question: 'Hva kan du gjøre med generert innhold på SocialChef?',
-      q4Options: ['Kun laste ned', 'Kun planlegge', 'Lagre, planlegge og publisere til Facebook', 'Kun e-post'],
-      q4Explanation: 'Alt generert innhold lagres automatisk. Du kan planlegge innlegg på forhånd og publisere direkte til Facebook—alt fra én plattform.',
+      q4Options: ['Kun laste ned', 'Kun planlegge', 'Lagre, planlegge og publisere til Facebook', 'Kun e-post']
     },
 
     // Simple onboarding flow
     simple: {
-      welcome: 'Velkommen til SocialChef!',
-      letsGetStarted: 'La oss sette deg opp for å lage fantastisk innhold',
-      selectRestaurant: 'Først, velg en restaurant for å komme i gang',
-      noRestaurantsYet: 'Ingen restauranter ennå',
-      searchRestaurants: 'Søk restauranter',
-      generateFirstPost: 'Flott! Nå skal vi generere ditt første innlegg',
-      selectMenuItem: 'Velg et menyelement og plattform nedenfor',
-      generatingPost: 'Genererer ditt første innlegg...',
-      postGenerated: 'Innlegget ditt er klart!',
-      connectFacebook: 'Koble til Facebook for å publisere',
-      connectFacebookDescription: 'Koble til Facebook-kontoen din for å begynne å publisere innlegg',
-      skipForNow: 'Hopp over for nå',
-      allSet: 'Du er klar!',
-      startCreating: 'Begynn å lage fantastisk innhold',
-      goToDashboard: 'Gå til dashbord',
       // Stepper labels
-      stepRestaurant: 'Restaurant',
-      stepCreate: 'Lag',
-      stepReview: 'Gjennomgang',
-      stepConnect: 'Koble til',
-      stepPublish: 'Publiser',
       // Platform descriptions
-      facebookDescription: 'Publiser til Facebook-sidene dine',
-      instagramDescription: 'Publiser til din Instagram-bedriftskonto',
-      instagramRequiresFacebook: 'Instagram krever Facebook-tilkobling',
-      connectedStatus: 'Tilkoblet',
-      connectedViaFacebook: 'Tilkoblet via Facebook',
-      connectInstagram: 'Koble til Instagram',
       // Publish step
-      publishTitle: 'Publiser innlegget ditt',
-      publishSubtitle: 'Velg hvordan du vil dele innholdet ditt',
-      publishNow: 'Publiser nå',
-      publishNowDescription: 'Publiser umiddelbart til dine tilkoblede sosiale kontoer',
-      scheduleForLater: 'Planlegg for senere',
-      scheduleDescription: 'Velg en dato og tid for når innlegget skal publiseres',
-      selectPlatforms: 'Velg plattformer:',
-      selectPlatformSingle: 'Velg plattform:',
-      postPreview: 'Forhåndsvisning av innlegg',
-      connectionWarning: 'Du har ikke koblet til noen sosiale kontoer ennå. Gå tilbake for å koble til Facebook/Instagram først, eller hopp over for å fortsette uten publisering.',
       // Completion modal
-      congratulations: 'Gratulerer!',
-      completionMessage: 'Du er klar! Du kan nå lage fantastiske innlegg for sosiale medier for restauranten din.',
-      restaurantAdded: 'Restaurant lagt til',
-      firstPostCreated: 'Første innlegg opprettet',
-      accountsConnected: 'Kontoer tilkoblet',
-      startCreatingPosts: 'Begynn å lage innlegg!',
       // Navigation buttons
-      backButton: '← Tilbake',
-      continueToCreate: 'Fortsett til opprettelse →',
-      connectAccountsButton: 'Koble til kontoer →',
-      nextButton: 'Neste →',
-      skipAndContinue: 'Hopp over & fortsett →',
-      publishing: 'Publiserer...',
-      publishNowButton: 'Publiser nå ',
-      schedulePostButton: 'Planlegg innlegg ',
-    },
+    }
   },
 
   // Playground View
   playground: {
-    title: 'Lag innhold',
-    subtitle: 'Lag fantastisk innhold for sosiale medier',
-    loadingRestaurants: 'Henter restaurantene dine...',
     chooseRestaurant: 'Velg en restaurant',
-    chooseRestaurantSubtitle: 'Velg hvilken restaurant du vil lage innhold for',
     addNewRestaurant: '+ Legg til ny restaurant',
-    editRestaurant: 'Rediger restaurant',
     menuItems: 'menyelementer',
     saved: 'Lagret',
-    selectRestaurantButton: 'Velg restaurant',
-    back: '← Tilbake',
-    selectPlatform: 'Velg plattform',
-    selectPlatformSubtitle: 'Velg hvor du vil publisere dette innholdet',
-    menuItemsTitle: 'Menyelementer ({count})',
-    menuItemsSubtitle: 'Velg ett eller flere elementer for å lage kombinerbare ledetekster',
-    campaignContext: 'Kampanjekontekst (Valgfritt)',
-    campaignContextPlaceholder: 'f.eks., 20% RABATT, KOMBOTILBUD, BEGRENSET TID...',
-    campaignContextHint: 'Legg til kampanjetekst for klistremerke',
-    stickerSettings: 'Kampanjeklistremerke innstillinger',
-    stickerStyle: 'Klistremerkestil',
-    stickerStyleHint: 'Visuell stil på kampanjeklistremerket',
-    stickerStyleBold: 'Fet rektangel',
-    stickerStyleOutlined: 'Omriss boks',
-    stickerStyleRibbon: 'Bånd banner',
-    stickerStyleBadge: 'Sirkulært merke',
-    stickerStyleStarburst: 'Stjernespreng',
-    stickerPosition: 'Klistremerkeposisjon',
-    stickerPositionHint: 'Hvor klistremerket skal plasseres på bildet',
-    positionTopLeft: 'Topp venstre',
-    positionTopCenter: 'Topp senter',
-    positionTopRight: 'Topp høyre',
-    positionCenter: 'Senter',
-    positionBottomLeft: 'Bunn venstre',
-    positionBottomRight: 'Bunn høyre',
-    logoSettings: 'Logo vannmerke innstillinger',
-    includeLogo: 'Inkluder logo vannmerke',
-    includeLogoHint: 'Legg til restaurantlogoen din på bildet',
-    logoPosition: 'Logoposisjon',
-    logoPositionHint: 'Hvor logoen skal plasseres',
     livePreview: 'Forhåndsvisning',
     yourGeneratedImage: 'Ditt genererte bilde',
     previewDescription: 'Forhåndsvis hvordan klistremerket og logoen vil se ut',
     itemsSelected: '{count} element valgt | {count} elementer valgt',
-    generatePrompts: 'Generer ledetekster',
-    generating: 'Genererer...',
-    clear: 'Tøm',
     selectRestaurant: 'Velg restaurant',
-    selectMenu: 'Velg menyelementer',
-    generateContent: 'Generer innhold',
-    uploadImage: 'Last opp bilde',
-    instagram: 'Instagram',
-    facebook: 'Facebook',
-    twitter: 'Twitter',
-    tiktok: 'TikTok',
-    caption: 'Bildetekst',
-    hashtags: 'Hashtags',
-    preview: 'Forhåndsvisning',
-    post: 'Publiser',
-    schedule: 'Planlegg',
-    saveToDrafts: 'Lagre som utkast',
 
     // Tabs
-    tabImage: 'Bilde',
-    tabVideo: 'Video',
 
     // AI Prompts
     generatingIdeas: 'Genererer kreative ideer med AI...',
     aiGeneratedIdeas: 'AI-genererte ideer',
     getNewIdeas: 'Få nye ideer',
-    clickGetNewIdeasImage: 'Klikk "Få nye ideer" for å generere AI-drevne bildeforslag!',
-    clickGetNewIdeasVideo: 'Klikk "Få nye ideer" for å generere AI-drevne videoforslag!',
     selectedBadge: 'Valgt',
-    selectedPromptLabel: 'Valgt ledetekst (redigerbar):',
-    selectPromptPlaceholder: 'Velg en ledetekst ovenfor...',
 
     // Image Generation
-    generatingImage: 'Genererer bilde...',
-    generateImageButton: 'Generer bilde (1 poeng)',
-    generatedImageTitle: 'Generert bilde:',
-    generatedMarketingImageAlt: 'Generert markedsføringsbilde',
-    downloadImage: 'Last ned bilde',
-    schedulePost: ' Planlegg innlegg',
-    publishToFacebook: 'Publiser til Facebook',
-    publishing: 'Publiserer...',
 
     // Post Content
     postContentTitle: 'Innleggsinnhold',
-    copyButton: 'Kopier',
-    copyPostTextTitle: 'Kopier innleggstekst',
-    copyHashtagsTitle: 'Kopier hashtags',
 
     // Video Generation
-    durationLabel: 'Varighet',
-    seconds4: '4 sekunder',
-    seconds6: '6 sekunder',
-    seconds8: '8 sekunder',
-    aspectRatioLabel: 'Sideforhold',
-    aspectRatio16x9: '16:9 (Landskap)',
-    aspectRatio9x16: '9:16 (Portrett)',
-    resolutionLabel: 'Oppløsning',
-    resolution720p: '720p',
-    resolution1080p: '1080p',
-    generatingVideoProgress: 'Genererer video... {progress}%',
-    generateVideoButton: 'Generer video (5 poeng)',
-    generatedVideoTitle: 'Generert video:',
-    downloadVideo: 'Last ned video',
 
     // Restaurant Details Modal
-    information: 'Informasjon',
-    addressLabel: 'Adresse',
-    phoneLabel: 'Telefon',
-    websiteLabel: 'Nettsted',
-    websitePlaceholder: 'https://example.com',
-    notSet: 'Ikke angitt',
-    editWebsiteTitle: 'Rediger nettsted',
-    ratingLabel: 'Vurdering',
-    reviewsCount: '({count} anmeldelser)',
-    brandIdentity: 'Merkevareidentitet',
-    brandNameLabel: 'Merkevarenavn',
-    logoLabel: 'Logo',
-    logoAlt: 'Logo',
-    brandColorsLabel: 'Merkevarefarger',
-    primaryColor: 'Primær',
-    secondaryColor: 'Sekundær',
-    accentColor: 'Aksent {number}',
-    typographyLabel: 'Typografi',
-    openingHoursLabel: 'Åpningstider',
-    editOpeningHoursTitle: 'Rediger åpningstider',
-    editButton: 'Rediger',
-    savingButton: 'Lagrer...',
-    saveButton: 'Lagre',
-    cancelButton: 'Avbryt',
-    openNowBadge: 'Åpent nå',
-    closedBadge: 'Stengt',
-    hoursPlaceholder: 'Mandag: 09:00 – 17:00',
-    removeDayTitle: 'Fjern dag',
-    addDayButton: 'Legg til dag',
 
     // Style Templates (Easy Mode)
     styleTemplates: {
       behindTheScenes: {
         name: 'Bak kulissene',
         description: 'Autentisk kjøkkenøyeblikk',
-        preview: 'Dokumentarstil matlagingsprosess (fungerer for bilder & videoer)',
+        preview: 'Dokumentarstil matlagingsprosess (fungerer for bilder & videoer)'
       },
       cleanStrict: {
         name: 'Ren og stram',
         description: 'Profesjonell studiokvalitet',
-        preview: 'Ren overflate, kinematisk belysning (fungerer for bilder & videoer)',
+        preview: 'Ren overflate, kinematisk belysning (fungerer for bilder & videoer)'
       },
       zoomIn: {
         name: 'Zoom inn',
         description: 'Ekstrem makronærbilde',
-        preview: 'Teksturdetaljer, ASMR-kvalitet (fungerer for bilder & videoer)',
+        preview: 'Teksturdetaljer, ASMR-kvalitet (fungerer for bilder & videoer)'
       },
       oneBite: {
         name: 'En bit',
         description: 'Klar-til-å-spise presentasjon',
-        preview: 'Tilfredsstillende bit-avslørning (fungerer for bilder & videoer)',
+        preview: 'Tilfredsstillende bit-avslørning (fungerer for bilder & videoer)'
       },
       studioShot: {
         name: 'Studiobilde',
         description: 'Profesjonelt reklameutseende',
-        preview: '360-graders omdreining, premium kvalitet (fungerer for bilder & videoer)',
+        preview: '360-graders omdreining, premium kvalitet (fungerer for bilder & videoer)'
       },
       infographic: {
         name: 'Infografikk',
         description: 'Dekonstruert ingrediensoversikt',
-        preview: 'Ingrediensmontering eller merket layout (fungerer for bilder & videoer)',
+        preview: 'Ingrediensmontering eller merket layout (fungerer for bilder & videoer)'
       },
       placeOnTable: {
         name: 'Plassert på bordet',
         description: 'Retten blir servert',
-        preview: 'Hender som plasserer rett på bordet, skaper forventning (KUN VIDEO)',
+        preview: 'Hender som plasserer rett på bordet, skaper forventning (KUN VIDEO)'
       },
       custom: {
         name: 'Egendefinert',
         description: 'Skriv din egen prompt',
-        preview: 'Full kreativ kontroll (fungerer for bilder & videoer)',
-      },
+        preview: 'Full kreativ kontroll (fungerer for bilder & videoer)'
+      }
     },
 
     // Additional messages
-    loadingText: 'Henter restaurantene dine...',
-    chooseRestaurantToStart: 'Velg en restaurant for å komme i gang',
-    selectPlatformToContinue: 'Velg en plattform for å fortsette',
-    noMenuItems: 'Ingen menyelementer tilgjengelig',
-    menuItemsCount: '{count} menyelement | {count} menyelementer',
   },
 
   // Easy Mode Creation
@@ -957,7 +483,7 @@ export default {
       menu: 'Meny',
       customize: 'Tilpass',
       preview: 'Forhåndsvisning',
-      publish: 'Publiser',
+      publish: 'Publiser'
     },
     step1: {
       title: 'Velg rett eller last opp bilde',
@@ -965,7 +491,7 @@ export default {
       description: 'Et bilde er påkrevd for å lage innlegget ditt. Velg en rett fra menyen eller last opp ditt eget foto.',
       empty: 'Ingen menyelementer tilgjengelig. Last opp et bilde for å fortsette.',
       imageRequired: 'Vennligst velg et menyelement eller last opp et bilde for å fortsette',
-      nextButton: 'Tilpass innlegg',
+      nextButton: 'Tilpass innlegg'
     },
     step2: {
       title: 'Tilpass innlegget ditt',
@@ -993,92 +519,64 @@ export default {
       changeLogo: 'Bytt logo',
       removeLogo: 'Fjern opplastet logo',
       includeLogo: 'Inkluder logo på bildet',
-      generating: 'Lager innlegget ditt...',
-      generatingTitle: 'Lager innlegget ditt',
-      generatingSubtitle: 'Designer bildet og skriver bildetekst',
       generateButton: 'Generer bilde',
-      generateVideoButton: 'Generer video (5 kreditter)',
+      generateVideoButton: 'Generer video (5 kreditter)'
     },
     upload: {
       button: 'Last opp ditt eget bilde',
-      hint: 'JPG, PNG eller WebP',
+      hint: 'JPG, PNG eller WebP'
     },
     step3: {
       title: 'Forhåndsvis innlegget ditt',
       subtitle: 'Gjennomgå og rediger det genererte innholdet',
-      info: 'Det genererte bildet og innholdet vil vises her',
-      nextButton: 'Publiser innlegg',
       editPostText: 'Rediger innleggsteksten',
-      addHashtag: 'Legg til hashtag',
-      addHashtagPlaceholder: 'Skriv hashtag og trykk Enter',
+      addHashtagPlaceholder: 'Skriv hashtag og trykk Enter'
     },
     step4: {
       title: 'Velg plattform og planlegg',
       subtitle: 'Velg hvor og når du vil publisere',
-      platformLabel: 'Velg plattform',
-      notConnected: 'Ikke tilkoblet',
-      publishTypeLabel: 'Når skal det publiseres',
-      publishNow: 'Publiser nå',
-      publishNowDescription: 'Publiser umiddelbart til valgt plattform',
-      scheduleLater: 'Planlegg for senere',
-      scheduleLaterDescription: 'Velg en spesifikk dato og tid',
-      scheduleLabel: 'Velg dato og tid',
-      selectDateTime: 'Velg dato og tid',
-      dateLabel: 'Dato',
-      timeLabel: 'Tid',
-      publishing: 'Publiserer innlegget ditt...',
-      publishButton: 'Publiser nå',
-      scheduleButton: 'Planlegg',
       successTitle: 'Gratulerer!',
       successMessage: 'Innlegget ditt er publisert!',
-      viewPost: 'Se innlegget på Facebook',
       viewOnPlatform: 'Se på {platform}',
       partialFailureWarning: 'Noen plattformer kunne ikke publisere:',
-      createAnother: 'Opprett et nytt innlegg',
-    },
+      createAnother: 'Opprett et nytt innlegg'
+    }
   },
 
   // Advanced Mode Creation
   advancedMode: {
-    title: 'Avansert opprettelse',
-    subtitle: 'Full tilpasning og kreativ kontroll',
     steps: {
       menuSelection: 'Menyelementer',
       customize: 'Tilpass',
       styleSelection: 'Stil',
       preview: 'Forhåndsvisning',
-      generate: 'Generer',
-      publish: 'Publiser',
+      publish: 'Publiser'
     },
     step1: {
       title: 'Velg menyelementer',
-      subtitle: 'Velg elementer for innlegget ditt',
       subtitleSingle: 'Velg 1 menyelement å fremheve',
       subtitleCombo: 'Velg 2 elementer for kombotilbudet ditt',
       subtitleWeekly: 'Tilordne en rett til hver dag i uken',
       itemsSelected: '{count} av {max} elementer valgt',
-      selectAtLeast: 'Velg minst 1 menyelement',
-      maxItems: 'Maksimum {count} element(er) tillatt',
-      maxItemsReached: 'Maksimum {count} element(er) valgt',
       noItems: 'Ingen menyelementer tilgjengelig',
       uploadTitle: 'Last opp ditt eget bilde',
       uploadButton: 'Last opp bilde',
       uploadHint: 'JPG, PNG eller WebP',
-      orDivider: 'ELLER velg fra menyen',
+      orDivider: 'ELLER velg fra menyen'
     },
     postType: {
       title: 'Hva slags innlegg vil du lage?',
       single: {
         title: 'Enkelt element',
-        description: 'Fremhev én rett med et fokusert bilde',
+        description: 'Fremhev én rett med et fokusert bilde'
       },
       combo: {
         title: 'Komboinnlegg',
-        description: 'Vis frem 2 elementer som et spesialtilbud eller pakke',
+        description: 'Vis frem 2 elementer som et spesialtilbud eller pakke'
       },
       weekly: {
         title: 'Ukemeny',
-        description: 'Lag en meny med retter for hver dag',
+        description: 'Lag en meny med retter for hver dag'
       },
       weekLengthLabel: 'Hvor mange dager?',
       fiveDays: '5 dager (man-fre)',
@@ -1097,26 +595,15 @@ export default {
         thursday: 'Torsdag',
         friday: 'Fredag',
         saturday: 'Lørdag',
-        sunday: 'Søndag',
-      },
+        sunday: 'Søndag'
+      }
     },
     step2: {
       title: 'Tilpass designet ditt',
       subtitle: 'Skreddersy utseendet til innlegget ditt',
       logoPositionLabel: 'Restaurant logoposisjon',
       logoPositionHint: 'Hvor restaurantlogoen skal plasseres',
-      textOverlayLabel: 'Tekstoverlegg',
-      textOverlayPlaceholder: 'Legg til egendefinert tekst...',
-      fontLabel: 'Skrifttype',
-      textSizeLabel: 'Tekststørrelse',
-      textColorLabel: 'Tekstfarge',
-      colorSchemeLabel: 'Fargepalett',
-      colorSchemeHint: 'Velg en fargepalett for bildet ditt',
-      backgroundStyleLabel: 'Bakgrunnsstil',
-      backgroundStyleHint: 'Stil på bakgrunnen',
-      layoutTemplateLabel: 'Layoutmal',
-      layoutTemplateHint: 'Velg hvordan elementene skal arrangeres',
-      previewLabel: 'Forhåndsvisning',
+      previewLabel: 'Forhåndsvisning'
     },
     logoPositions: {
       topLeft: 'Topp venstre',
@@ -1124,42 +611,18 @@ export default {
       bottomLeft: 'Bunn venstre',
       bottomRight: 'Bunn høyre',
       center: 'Senter',
-      none: 'Ingen logo',
+      none: 'Ingen logo'
     },
     fonts: {
       playfair: 'Playfair Display (Elegant)',
       inter: 'Inter (Moderne)',
       montserrat: 'Montserrat (Fet)',
       lora: 'Lora (Klassisk)',
-      roboto: 'Roboto (Ren)',
+      roboto: 'Roboto (Ren)'
     },
-    colorSchemes: {
-      warm: 'Varm (Røde, oransje, gule)',
-      cool: 'Kjølig (Blå, grønne, lilla)',
-      earthy: 'Jordfarger (Brune, grønne, beige)',
-      vibrant: 'Livlig (Lyse, høy kontrast)',
-      monochrome: 'Monokrom (Svart-hvitt)',
-      brandColors: 'Merkevarefarger (Restaurantens tema)',
-    },
-    backgroundStyles: {
-      solid: 'Ensfarget',
-      gradient: 'Gradient',
-      photo: 'Fotobakgrunn',
-      texture: 'Teksturert bakgrunn',
-    },
-    layoutTemplates: {
-      centerFocus: 'Senterfokus (Enkelt element fremhevet)',
-      splitScreen: 'Delt skjerm (To elementer side om side)',
-      collage: 'Kollasj (Flere elementer arrangert)',
-      grid: 'Rutenett (Organisert layout)',
-      hero: 'Hero (Stort fokuspunkt)',
-    },
-    step3: {
+                step3: {
       title: 'Velg din stil',
       subtitle: 'Velg fra AI-genererte stilvarianter',
-      generating: 'Genererer kreative stilvarianter...',
-      generatingVariations: 'Lager stilvarianter...',
-      generatingPrompts: 'Lager unike ledetekster for deg...',
       generatingTitle: 'Utformer dine stiler',
       generatingSubtitle: 'Vår AI lager unike designalternativer for deg',
       selectStyle: 'Velg en stil for å fortsette',
@@ -1167,26 +630,10 @@ export default {
       editPrompt: 'Rediger ledetekst',
       promptLabel: 'AI-ledetekst (redigerbar)',
       promptPlaceholder: 'Beskriv hvordan du vil at bildet ditt skal se ut...',
-      regenerate: 'Regenerer stiler',
+      regenerate: 'Regenerer stiler'
     },
     styleVariations: {
-      elegant: {
-        title: 'Elegant og raffinert',
-        description: 'Sofistikert design med ren estetikk',
-      },
-      vibrant: {
-        title: 'Livlig og fet',
-        description: 'Iøynefallende med energiske farger',
-      },
-      rustic: {
-        title: 'Rustikk og autentisk',
-        description: 'Varm, naturlig og innbydende følelse',
-      },
-      modern: {
-        title: 'Moderne og elegant',
-        description: 'Moderne design med skarpe linjer',
-      },
-    },
+                            },
     strictness: {
       label: 'Bildestil',
       hint: 'Hvor nært bør resultatet matche originalen?',
@@ -1195,12 +642,12 @@ export default {
       flexible: 'Fleksibel',
       flexibleDesc: 'Hevet presentasjon med kreative detaljer',
       creative: 'Kreativ',
-      creativeDesc: 'Kunstnerisk nytenkning med tilbehør og garnityr',
+      creativeDesc: 'Kunstnerisk nytenkning med tilbehør og garnityr'
     },
     holidayTheme: {
       label: 'Tema / Inspirasjon',
       hint: 'Legg til en sesongbasert eller tematisk stil til bildet',
-      customPlaceholder: 'Skriv inn ditt egendefinerte tema...',
+      customPlaceholder: 'Skriv inn ditt egendefinerte tema...'
     },
     comboOptions: {
       textPlacement: 'Tekstplassering',
@@ -1214,105 +661,49 @@ export default {
       sideBySide: 'Side om side',
       stacked: 'Stablet',
       overlapping: 'Overlappende',
-      diagonal: 'Diagonal',
+      diagonal: 'Diagonal'
     },
     preview: {
       title: 'Forhåndsvisning',
-      placeholder: 'Forhåndsvisning av innlegget vises her',
+      placeholder: 'Forhåndsvisning av innlegget vises her'
     },
     step4: {
       title: 'Forhåndsvis innlegget ditt',
       subtitle: 'Gjennomgå og rediger det genererte innholdet',
-      generating: 'Lager ditt mesterverk',
-      generatingSubtitle: 'Genererer bilde og skriver innhold',
       editPostText: 'Rediger innleggsteksten din',
       addHashtagPlaceholder: 'Skriv hashtag og trykk Enter',
-      nextButton: 'Fortsett til publisering',
+      nextButton: 'Fortsett til publisering'
     },
     step5: {
       title: 'Publiser',
       subtitle: 'Forhåndsvis innlegget ditt og publiser til sosiale medier',
-      generating: 'Genererer bildet ditt...',
-      generatingWithAI: 'Bruker AI til å lage ditt perfekte innlegg...',
-      generatingImageTitle: 'Lager bildet ditt',
-      generatingImageSubtitle: 'Bringer visjonen din til liv med AI',
-      generatingContentTitle: 'Skriver bildeteksten din',
-      generatingContentSubtitle: 'Finner de perfekte ordene for innlegget ditt',
-      logoVariantLabel: 'Social Chef logostil',
-      logoVariantHint: 'Bytt for å sammenligne ulike logovarianter',
-      fullLogo: 'Full logo',
-      blackOutline: 'Sort kontur',
-      goldOutline: 'Gull kontur',
-      generateButton: 'Generer bilde (1 poeng)',
-      regenerate: 'Regenerer',
       imagePreview: 'Bildeforhåndsvisning',
       postTextLabel: 'Innleggstekst',
       postTextPlaceholder: 'Skriv bildeteksten din...',
       hashtagsLabel: 'Emneknagger',
-      addHashtag: 'Legg til emneknagg...',
+      addHashtag: 'Legg til emneknagg...'
     },
-    step6: {
-      title: 'Publiser innlegget ditt',
-      subtitle: 'Velg plattformer og planlegg',
-      imagePreview: 'Bildeforhåndsvisning',
-      postContent: 'Innleggsinnhold',
-      postTextLabel: 'Innleggstekst',
-      postTextPlaceholder: 'Skriv bildeteksten din...',
-      hashtagsLabel: 'Hashtags',
-      addHashtag: 'Legg til hashtag...',
-      noHashtags: 'Ingen hashtags ennå. Legg til noen nedenfor.',
-      hashtagHint: 'Trykk Enter for å legge til',
-      editContent: 'Rediger innhold',
-      looksGood: 'Ser bra ut!',
-      publishing: 'Publiserer innlegget ditt...',
-    },
-    publish: {
-      platformLabel: 'Velg plattform',
-      whenLabel: 'Når vil du publisere?',
-      now: 'Publiser nå',
-      nowDesc: 'Legg ut umiddelbart på valgt plattform',
-      schedule: 'Planlegg for senere',
-      scheduleDesc: 'Velg en bestemt dato og tid',
-      date: 'Dato',
-      time: 'Tid',
-      publishNow: 'Publiser nå',
-      schedulePost: 'Planlegg innlegg',
-      publishing: 'Publiserer...',
+        publish: {
       publishingTitle: 'Deler innlegget ditt',
       publishingSubtitle: 'Laster opp til dine sosiale kontoer',
-      success: 'Innlegget ditt ble publisert!',
-      successTitle: 'Publisert!',
-      successMessage: 'Innlegget ditt er nå live på {platform}',
-      successMessageMultiple: 'Innlegget ditt er nå live på {count} plattformer',
-      viewPost: 'Se innlegg',
-      viewOnPlatform: 'Se på {platform}',
-      createAnother: 'Lag et nytt',
-      error: 'Kunne ikke publisere. Prøv igjen.',
+      error: 'Kunne ikke publisere. Prøv igjen.'
     },
     navigation: {
       back: '← Tilbake',
       next: 'Neste →',
-      generate: 'Generer →',
-      skip: 'Hopp over',
-      finish: 'Fullfør',
+      generate: 'Generer →'
     },
     messages: {
-      itemsRequired: 'Velg minst ett menyelement',
       styleRequired: 'Velg en stilvariant',
-      generating: 'Genererer innholdet ditt...',
-      generationSuccess: 'Innlegget ditt er klart!',
       generationError: 'Kunne ikke generere. Prøv igjen.',
       captionGenerationFailed: 'Kunne ikke generere bildetekst',
       imageGenerationFailed: 'Kunne ikke generere bilde',
-      unexpectedError: 'En uventet feil oppstod. Prøv igjen.',
-      savingDraft: 'Lagrer utkast...',
-      draftSaved: 'Utkast lagret!',
-    },
+      unexpectedError: 'En uventet feil oppstod. Prøv igjen.'
+    }
   },
 
   // Ukemeny tilpasningsalternativer
   weeklyCustomization: {
-    title: 'Ukemeny-alternativer',
     layout: {
       title: 'Menylayout',
       featuredGrid: 'Fremhevet + Rutenett',
@@ -1322,9 +713,7 @@ export default {
       verticalStack: 'Vertikal liste',
       verticalStackDesc: '5 retter stablet ovenfra og ned',
       gridWithHeader: '2x3 Rutenett',
-      gridWithHeaderDesc: '2x3 rutenett med tittel',
-      filmstrip: 'Horisontal stripe',
-      filmstripDesc: 'Horisontal filmstripe-stil',
+      gridWithHeaderDesc: '2x3 rutenett med tittel'
     },
     dates: {
       title: 'Datovisning',
@@ -1334,7 +723,7 @@ export default {
       formatDayOnly: 'Kun dagnavn',
       showWeekNumber: 'Vis ukenummer',
       showMonthName: 'Vis månedsnavn',
-      dateRange: 'Egendefinert datoperiode',
+      dateRange: 'Egendefinert datoperiode'
     },
     themes: {
       title: 'Menytema',
@@ -1348,109 +737,49 @@ export default {
       thanksgiving: 'Thanksgiving',
       newYear: 'Nyttår',
       custom: 'Egendefinert tekst',
-      customPlaceholder: 'Skriv inn din egendefinerte tematekst...',
-    },
+      customPlaceholder: 'Skriv inn din egendefinerte tematekst...'
+    }
   },
 
   // Connect Accounts View
   connectAccounts: {
-    title: 'Koble sosiale kontoer',
-    subtitle: 'Koble til dine sosiale mediekontoer for å publisere innhold',
     pageTitle: 'Koble sosiale mediekontoer',
     pageSubtitle: 'Koble til dine sosiale mediekontoer for å publisere innhold direkte fra plattformen vår',
-    back: 'Tilbake',
-    instagram: 'Instagram',
-    facebook: 'Facebook',
     facebookPages: 'Facebook-sider',
-    facebookDescription: 'Koble til Facebook-kontoen din for å administrere og publisere på Facebook-sidene dine',
-    twitter: 'Twitter',
-    tiktok: 'TikTok',
-    linkedin: 'LinkedIn',
-    youtube: 'YouTube',
-    connected: 'Tilkoblet',
-    notConnected: 'Ikke tilkoblet',
     connect: 'Koble til',
     disconnect: 'Koble fra',
-    reconnect: 'Koble til igjen',
-    connectToFacebook: 'Koble til Facebook',
     connecting: 'Kobler til...',
-    accountConnected: 'Kontoen ble koblet til!',
-    accountDisconnected: 'Kontoen ble frakoblet',
-    connectionError: 'Kunne ikke koble til kontoen',
-    accountsConnected: '{count} Konto tilkoblet | {count} Kontoer tilkoblet',
-    connectedPages: 'Tilkoblede sider',
-    connectedTime: 'Tilkoblet {time}',
-    justNow: 'akkurat nå',
-    minutesAgo: '{count} minutter siden',
-    hoursAgo: '{count} timer siden',
-    daysAgo: '{count} dager siden',
     comingSoon: 'Kommer snart',
     errorOccurred: 'En feil oppstod. Vennligst prøv igjen.',
-    continueToPlayground: 'Fortsett til Playground →',
     successfullyConnected: 'Koblet til {count} Facebook-side(r)!',
     successfullyDisconnected: 'Frakoblet "{name}"',
     confirmDisconnect: 'Er du sikker på at du vil frakoble "{name}"?',
-    disconnectTitle: 'Frakoble konto',
+    disconnectTitle: 'Frakoble konto'
   },
 
   // Scheduler View
   scheduler: {
     title: 'Innholdsplanlegger',
     subtitle: 'Planlegg og administrer innleggene dine for sosiale medier',
-    today: 'I dag',
-    week: 'Uke',
-    month: 'Måned',
-    day: 'Dag',
-    previous: 'Forrige',
-    next: 'Neste',
-    schedulePost: 'Planlegg innlegg',
     scheduledPosts: 'Planlagte innlegg',
-    noScheduledPosts: 'Ingen planlagte innlegg',
     postScheduled: 'Innlegg planlagt!',
-    selectDate: 'Velg dato',
-    selectTime: 'Velg tid',
-    timezone: 'Tidssone',
-    loading: 'Laster tidsplan...',
     createPost: 'Lag innlegg',
-    addPost: 'Legg til innlegg',
-    createNewPost: 'Lag nytt innlegg for denne datoen',
-    scheduleSavedPost: 'Planlegg et lagret innlegg for denne datoen',
-    holidays: 'Høytider',
     moreHolidays: 'flere',
-    noPostsScheduled: 'Ingen innlegg planlagt for denne dagen',
-    goToCookUp: 'Gå til Lag innhold for å lage og planlegge nye innlegg!',
-    goToCookUpButton: 'Gå til Lag innhold',
     postDetails: 'Innleggsdetaljer',
-    scheduledFor: 'Planlagt for',
     publishedAt: 'Publisert',
     viewOn: 'Se på',
-    platformAndStatus: 'Plattform & status',
     restaurant: 'Restaurant',
     caption: 'Bildetekst',
     edit: 'Rediger',
-    cancel: 'Avbryt',
     cancelPost: 'Avbryt innlegg',
-    confirmCancel: 'Er du sikker på at du vil avbryte dette planlagte innlegget?',
     noTime: 'Ingen tid',
-    noTimeSet: 'Ingen tid angitt',
-    noTimeSpecified: 'Ingen tid spesifisert',
-    postedAgo: 'Publisert {time} siden',
-    postsIn: 'Publiseres om {time}',
-    days: 'dag | dager',
-    viewDetails: 'Vis detaljer',
-    failedToLoad: 'Kunne ikke laste',
     noMedia: 'Ingen media',
-    noMediaAvailable: 'Ingen media tilgjengelig',
-    image: 'Bilde',
-    video: 'Video',
     post: 'innlegg',
-    posts: 'innlegg',
-    timeLeft: 'igjen',
     publishTime: 'Publiseringstid',
     captionGenerationFailed: 'Kunne ikke generere bildetekst',
     imageGenerationFailed: 'Kunne ikke generere bilde',
     generationFailed: 'Generering mislyktes',
-    unexpectedError: 'En uventet feil oppstod. Prøv igjen.',
+    unexpectedError: 'En uventet feil oppstod. Prøv igjen.'
   },
 
   // Edit Scheduled Post Modal
@@ -1465,37 +794,16 @@ export default {
     detected: 'Oppdaget',
     notes: 'Notater (valgfritt)',
     notesPlaceholder: 'Legg til notater om dette innlegget...',
-    characters: 'tegn',
+    characters: 'tegn'
   },
 
   // Posts View (previously Favorites)
   posts: {
-    title: 'Innlegg',
-    subtitle: 'Ditt lagrede markedsføringsinnhold',
-    all: 'Alle',
-    drafts: 'Utkast',
-    scheduled: 'Planlagt',
-    published: 'Publisert',
-    loading: 'Laster innlegg...',
-    noPosts: 'Ingen innlegg ennå',
-    noPostsDescription: 'Gå til Lag innhold for å lage ditt første innlegg!',
-    goToCookUp: 'Gå til Lag innhold',
     editPost: 'Rediger innlegg',
-    deletePost: 'Slett innlegg',
-    postDeleted: 'Innlegg slettet',
-    confirmDelete: 'Er du sikker på at du vil slette dette innlegget?',
-    schedule: 'Planlegg',
-    delete: 'Slett',
-    postDetails: 'Innleggsdetaljer',
     postText: 'Innleggstekst',
     hashtags: 'Hashtags',
-    originalPrompt: 'Opprinnelig ledetekst',
-    copy: 'Kopier',
-    copyAll: 'Kopier alle',
-    copiedToClipboard: 'Kopiert til utklippstavle!',
     image: 'bilde',
     video: 'video',
-    restaurant: 'Restaurant',
     // Additional post actions
     deleteModalTitle: 'Slett innlegg',
     deleteModalMessage: 'Er du sikker på at du vil slette dette innlegget? Denne handlingen kan ikke angres.',
@@ -1503,60 +811,39 @@ export default {
     platformSection: 'Plattform',
     saveChangesButton: 'Lagre endringer',
     cancelChangesButton: 'Avbryt',
-    editButton: 'Rediger',
-    scheduleButton: 'Planlegg',
     publishButton: 'Publiser',
-    deleteButton: 'Slett',
     postAlt: 'Innlegg',
-    publishToInstagram: 'Publiser til Instagram',
-    publishing: 'Publiserer...',
-    publishSuccess: 'Publisert til Instagram!',
-    publishError: 'Kunne ikke publisere til Instagram',
     create: {
       captionGenerationFailed: 'Kunne ikke generere bildetekst',
       imageGenerationFailed: 'Kunne ikke generere bilde',
       videoGenerationFailed: 'Kunne ikke generere video',
       generationFailed: 'Generering mislyktes',
-      unexpectedError: 'En uventet feil oppstod. Prøv igjen.',
-    },
+      unexpectedError: 'En uventet feil oppstod. Prøv igjen.'
+    }
   },
 
   // Content Hub View
   contentHub: {
-    title: 'Innhold',
     loading: 'Laster innholdet ditt...',
-    createNew: 'Lag nytt innhold',
-    createDescription: 'Generer bilder og innlegg for restauranten din',
-    startCreating: 'Start å lage',
     yourPosts: 'Dine innlegg',
-    changeRestaurant: 'Endre restaurant',
     noPosts: 'Ingen innlegg ennå',
     noPostsDescription: 'Lag ditt første innlegg for å komme i gang!',
-    loadError: 'Kunne ikke laste innhold',
-    noRestaurant: 'Ingen restaurant valgt',
     filterAll: 'Alle',
-    filterPlatform: 'Plattform',
-    filterContentType: 'Innholdstype',
     sortNewest: 'Nyeste først',
     sortOldest: 'Eldste først',
-    menuItems: '{count} menyelementer',
     // Welcome state for new users
     welcomeTitle: 'Velkommen!',
     welcomeSubtitle: 'La oss starte med å legge til din første restaurant.',
     addFirstRestaurant: 'Legg til din første restaurant',
     addFirstRestaurantDescription: 'Søk etter restauranten din, så importerer vi automatisk menyen og merkevaren.',
     noRestaurantPrompt: 'Legg til en restaurant for å begynne å lage innlegg.',
-    createPost: 'Lag innlegg',
+    createPost: 'Lag innlegg'
   },
 
   // Content Create View
   contentCreate: {
-    title: 'Lag innhold',
     loading: 'Laster...',
     loadError: 'Kunne ikke laste restaurant',
-    advancedMode: 'Avansert modus',
-    advancedDescription: 'Avansert modus med full tilpasning kommer snart.',
-    switchToEasy: 'Bytt til enkel modus',
     switchRestaurant: 'Bytt',
     imageError: 'Kunne ikke generere bilde. Prøv igjen.',
     videoError: 'Kunne ikke generere video. Prøv igjen.',
@@ -1564,13 +851,9 @@ export default {
     noPrompts: 'Ingen ledetekster ble generert',
     generateError: 'Kunne ikke generere innhold',
     publishError: 'Kunne ikke publisere til Facebook',
-    connectError: 'Kunne ikke koble til Facebook',
     noFacebookPage: 'Ingen Facebook-side tilkoblet',
     facebookReconnectRequired: 'Facebook-tilkoblingen din har utløpt. Koble til på nytt for å fortsette.',
-    facebookReconnectMessage: 'Facebook-tilkoblingen din har utløpt. Koble til på nytt for å publisere eller planlegge innlegg.',
-    reconnectFacebook: 'Koble til Facebook på nytt',
-    platformNotSupported: 'Publisering til denne plattformen støttes ikke ennå',
-    noPlatformSelected: 'Vennligst velg minst én plattform',
+    noPlatformSelected: 'Vennligst velg minst én plattform'
   },
 
   // Restaurant Selector Modal
@@ -1581,36 +864,21 @@ export default {
     delete: 'Fjern restaurant',
     deleteTitle: 'Fjern restaurant',
     confirmDelete: 'Er du sikker på at du vil fjerne "{name}" fra dine lagrede restauranter?',
-    restaurantAdded: 'Restaurant lagt til!',
+    restaurantAdded: 'Restaurant lagt til!'
   },
 
   // Profile View
   profile: {
     title: 'Profilinnstillinger',
-    subtitle: 'Administrer kontoinnstillingene dine',
     subtitleExtended: 'Administrer kontoinformasjonen og abonnementet ditt',
     personalInfo: 'Personlig informasjon',
-    name: 'Navn',
     email: 'E-post',
     emailAddress: 'E-postadresse',
-    phone: 'Telefon',
-    bio: 'Biografi',
-    avatar: 'Profilbilde',
     userId: 'Bruker-ID',
-    changeAvatar: 'Endre profilbilde',
-    changePassword: 'Endre passord',
-    currentPassword: 'Nåværende passord',
-    newPassword: 'Nytt passord',
-    confirmPassword: 'Bekreft passord',
-    updateProfile: 'Oppdater profil',
-    updating: 'Oppdaterer...',
     saving: 'Lagrer...',
     saveChanges: 'Lagre endringer',
     profileUpdated: 'Profil oppdatert!',
-    passwordUpdated: 'Passord oppdatert!',
     deleteAccount: 'Slett konto',
-    deleteAccountWarning: 'Denne handlingen kan ikke angres',
-    confirmDeleteAccount: 'Er du sikker på at du vil slette kontoen din?',
     edit: 'Rediger',
     cancel: 'Avbryt',
     subscriptionAndPlan: 'Abonnement og plan',
@@ -1623,134 +891,40 @@ export default {
     cancelNotice: 'Abonnementet ditt vil bli kansellert ved slutten av den nåværende faktureringsperioden.',
     upgradePlan: 'Oppgrader plan',
     cancelSubscription: 'Kanseller abonnement',
-    upgradeToPremium: 'Oppgrader til premium',
     billingInformation: 'Faktureringsinformasjon',
     billingDescription: 'Fakturering administreres gjennom Stripe. Klikk nedenfor for å administrere betalingsmetodene dine, se fakturaer og oppdatere faktureringsinformasjon.',
     manageBilling: 'Administrer fakturering',
     loading: 'Laster...',
     accountSecurity: 'Kontosikkerhet',
-    password: 'Passord',
-    resetPasswordDescription: 'Tilbakestill passordet ditt via e-post',
-    resetPassword: 'Tilbakestill passord',
     deleteAccountDanger: 'Slett konto',
     deleteAccountDescription: 'Slett kontoen din og alle data permanent',
     cancelSubscriptionTitle: 'Kanseller abonnement',
     cancelSubscriptionMessage: 'Er du sikker på at du vil kansellere abonnementet ditt? Du vil fortsatt ha tilgang til slutten av den nåværende faktureringsperioden.',
     keepSubscription: 'Behold abonnement',
-    deleteAccountTitle: 'Slett konto',
-    deleteAccountMessage: 'Denne handlingen kan ikke angres. All din data, restauranter og generert innhold vil bli slettet permanent.',
-    typeDeleteConfirm: 'Skriv \'DELETE\' for å bekrefte',
-    typeDeletePlaceholder: 'DELETE',
-    deleteMyAccount: 'Slett min konto',
     failedToOpenPortal: 'Kunne ikke åpne faktureringsportalen',
     failedToCancelSubscription: 'Kunne ikke kansellere abonnement',
-    failedToDeleteAccount: 'Kunne ikke slette konto',
-    failedToUpdateProfile: 'Kunne ikke oppdatere profil',
+    failedToUpdateProfile: 'Kunne ikke oppdatere profil'
   },
 
   // Saved Restaurants View
-  savedRestaurants: {
-    title: 'Lagrede restauranter',
-    subtitle: 'Dine favorittrestauranter',
-    noRestaurants: 'Ingen lagrede restauranter',
-    removeRestaurant: 'Fjern restaurant',
-    restaurantRemoved: 'Restaurant fjernet',
-    viewMenu: 'Vis meny',
-  },
-
+  
   // Test Post View
-  testPost: {
-    title: 'Test innlegg',
-    subtitle: 'Forhåndsvis og test innlegget ditt',
-    platform: 'Plattform',
-    content: 'Innhold',
-    image: 'Bilde',
-    sendTest: 'Send test',
-    sending: 'Sender...',
-    testSent: 'Test sendt!',
-  },
-
+  
   // Errors
   errors: {
     generic: 'Noe gikk galt',
     networkError: 'Nettverksfeil. Vennligst sjekk tilkoblingen din.',
-    unauthorized: 'Du har ikke tillatelse til å utføre denne handlingen',
-    notFound: 'Ressurs ikke funnet',
-    serverError: 'Serverfeil. Vennligst prøv igjen senere.',
-    validationError: 'Vennligst sjekk inndata',
-    sessionExpired: 'Økten din har utløpt. Vennligst logg inn igjen.',
+    validationError: 'Vennligst sjekk inndata'
   },
 
   // Alerts & Toasts
   alerts: {
-    success: {
-      saved: 'Lagret!',
-      deleted: 'Slettet!',
-      updated: 'Oppdatert!',
-      created: 'Opprettet!',
-      uploaded: 'Lastet opp!',
-      connected: 'Tilkoblet!',
-      disconnected: 'Frakoblet!',
-      scheduled: 'Planlagt!',
-      published: 'Publisert!',
-      copied: 'Kopiert til utklippstavle!',
-    },
-    error: {
-      saveFailed: 'Kunne ikke lagre',
-      deleteFailed: 'Kunne ikke slette',
-      updateFailed: 'Kunne ikke oppdatere',
-      createFailed: 'Kunne ikke opprette',
-      uploadFailed: 'Kunne ikke laste opp',
-      connectFailed: 'Kunne ikke koble til',
-      disconnectFailed: 'Kunne ikke frakoble',
-      scheduleFailed: 'Kunne ikke planlegge',
-      publishFailed: 'Kunne ikke publisere',
-      loadFailed: 'Kunne ikke laste',
-      invalidInput: 'Ugyldig inndata',
-      requiredField: 'Dette feltet er påkrevd',
-    },
-    warning: {
-      unsavedChanges: 'Du har ulagrede endringer',
-      confirmDelete: 'Er du sikker på at du vil slette dette?',
-      confirmCancel: 'Er du sikker på at du vil avbryte?',
-      confirmDisconnect: 'Er du sikker på at du vil frakoble?',
-      lowCredits: 'Få poeng gjenstår',
-      noInternet: 'Ingen internettforbindelse',
-    },
-    info: {
-      processing: 'Behandler...',
-      loading: 'Laster...',
-      uploading: 'Laster opp...',
-      generating: 'Genererer...',
-      saving: 'Lagrer...',
-      connecting: 'Kobler til...',
-    },
-  },
+                  },
 
   // Form Validation
-  validation: {
-    required: 'Dette feltet er påkrevd',
-    email: 'Vennligst skriv inn en gyldig e-postadresse',
-    url: 'Vennligst skriv inn en gyldig URL',
-    minLength: 'Minimum {min} tegn påkrevd',
-    maxLength: 'Maksimum {max} tegn tillatt',
-    minValue: 'Minimumsverdi er {min}',
-    maxValue: 'Maksimumsverdi er {max}',
-    invalidFormat: 'Ugyldig format',
-    passwordMismatch: 'Passordene stemmer ikke overens',
-    passwordTooWeak: 'Passordet er for svakt',
-    invalidPhone: 'Vennligst skriv inn et gyldig telefonnummer',
-    fileTooBig: 'Filstørrelsen overskrider maksimum tillatt',
-    fileTypeInvalid: 'Ugyldig filtype',
-    dateInvalid: 'Vennligst skriv inn en gyldig dato',
-    futureDate: 'Datoen må være i fremtiden',
-    pastDate: 'Datoen må være i fortiden',
-  },
-
+  
   // Languages
   languages: {
-    en: 'Engelsk',
-    no: 'Norsk',
     selectLanguage: 'Språk',
     selectCurrency: 'Valuta (Dev)',
   },
@@ -1760,26 +934,10 @@ export default {
     title: 'Publiser innlegg',
     preview: 'Forhåndsvisning',
     dateLabel: 'Dato',
-    dateHint: ' Dato forhåndsutfylt fra kalendervalg',
     timeLabel: 'Tid (Valgfritt)',
-    selectedTime: 'Valgt: {time}',
     timezoneLabel: 'Tidssone',
-    autoDetected: '(Automatisk oppdaget)',
-    currentTime: 'Nåværende tid: {time}',
-    platformLabel: 'Plattform',
-    selectPlatform: 'Velg en plattform...',
-    platformWarning: 'Vennligst velg en plattform å publisere til',
-    platformLimited: 'Kun Facebook støttes for øyeblikket. Andre plattformer kommer snart.',
-    selectAtLeastOne: 'Vennligst velg minst én plattform',
-    onlyFacebookSupported: 'Merk: Kun Facebook-publisering er for øyeblikket aktiv. Andre plattformer kommer snart.',
-    connected: 'Tilkoblet',
-    notConnected: 'Ikke tilkoblet',
-    comingSoon: 'Kommer snart',
-    schedulingToMultiple: 'Planlegger til {count} plattformer...',
-    partialSuccess: 'Planlagt til {count} plattform(er). Noen mislyktes.',
     notesLabel: 'Notater (Valgfritt)',
-    notesPlaceholder: 'Legg til notater om dette planlagte innlegget...',
-    scheduling: 'Planlegger...',
+    notesPlaceholder: 'Legg til notater om dette planlagte innlegget...'
   },
 
   // Unified Schedule Post
@@ -1790,16 +948,13 @@ export default {
     selectPlatforms: 'Velg plattformer',
     selectDate: 'Velg dato',
     selectTime: 'Velg tid',
-    timezone: 'Tidssone',
-    connected: 'Tilkoblet',
-    notConnected: 'Ikke tilkoblet',
     tapToConnect: 'Trykk for å koble til',
     comingSoon: 'Kommer snart',
     publish: 'Publiser',
     schedule: 'Planlegg innlegg',
     noPlatformSelected: 'Vennligst velg minst én plattform',
     noDateSelected: 'Vennligst velg en dato',
-    mustBeInFuture: 'Planlagt tid må være etter nå',
+    mustBeInFuture: 'Planlagt tid må være etter nå'
   },
 
   // Mode Toggle
@@ -1810,35 +965,15 @@ export default {
     advancedTitle: 'Avansert modus - Full tilpasning',
     confirmTitle: 'Bytte modus?',
     confirmMessage: 'Du har ulagret arbeid. Å bytte modus vil forkaste din nåværende fremdrift.',
-    switchAnyway: 'Bytt likevel',
+    switchAnyway: 'Bytt likevel'
   },
 
   // Confirm Modal
-  confirmModal: {
-    defaultTitle: 'Bekreft handling',
-    defaultConfirm: 'Bekreft',
-    defaultCancel: 'Avbryt',
-    defaultLoading: 'Behandler...',
-  },
-
+  
   // Pick Post Modal
-  pickPostModal: {
-    pickTitle: 'Velg et lagret innlegg',
-    scheduleTitle: 'Planlegg innlegget ditt',
-    loadingPosts: 'Laster innlegg...',
-    noPostsYet: 'Ingen innlegg ennå! Lag innhold i Playground først.',
-    goToPlayground: 'Gå til Playground',
-    previous: '← Forrige',
-    pageInfo: 'Side {current} av {total} ({count} innlegg)',
-  },
-
+  
   // Generation Result Modal
-  generationModal: {
-    failedTitle: 'Generering mislyktes',
-    successTitle: 'Innlegget ditt er klart!',
-    loadingTitle: 'Lager innlegget ditt...',
-  },
-
+  
   // Publishing Progress Modal
   publishing: {
     title: 'Publiserer innlegget ditt...',
@@ -1847,8 +982,7 @@ export default {
     successMessage: 'Innlegget ditt har blitt publisert!',
     errorTitle: 'Publisering mislyktes',
     errorMessage: 'Kunne ikke publisere til noen plattform.',
-    viewPost: 'Se innlegg',
-    createAnother: 'Lag et nytt innlegg',
+    createAnother: 'Lag et nytt innlegg'
   },
 
   // Sidebar Navigation
@@ -1863,20 +997,12 @@ export default {
     upgrade: 'Oppgrader',
     profile: 'Profil',
     logout: 'Logg ut',
-    notifications: 'Varsler',
+    notifications: 'Varsler'
   },
 
   // New Dashboard Elements
   dashboardNew: {
-    active: 'Aktiv',
-    createPost: 'Lag innlegg',
-    createPostDesc: 'Design nytt innhold',
-    schedule: 'Planlegg',
-    scheduleDesc: 'Planlegg kalender',
-    analytics: 'Analyse',
-    analyticsDesc: 'Se innsikt',
     settings: 'Innstillinger',
-    settingsDesc: 'Administrer konto',
     recentPosts: 'Nylige innlegg',
     viewAll: 'Se alle',
     viewCalendar: 'Se kalender',
@@ -1886,8 +1012,6 @@ export default {
     createFirstPost: 'Lag ditt første innlegg',
     post: 'Innlegg',
     status: 'Status',
-    engagement: 'Engasjement',
-    reach: 'Rekkevidde',
     platforms: 'Plattformer',
     activeCount: 'Aktive',
     allRestaurants: 'Alle restauranter',
@@ -1897,16 +1021,10 @@ export default {
     failed: 'Mislykket',
     cancelled: 'Avbrutt',
     draft: 'Utkast',
-    upcoming: 'kommende',
     creditsLeft: 'kreditter igjen',
-    drafts: 'utkast',
-    today: 'i dag',
-    thisWeek: 'denne uken',
-    week: 'uke',
-    month: 'måned',
     tierLifetimeDesc: 'Ubegrenset tilgang for alltid',
     tierYearlyDesc: 'Best verdi, fakturert årlig',
-    tierMonthlyDesc: 'Fleksibel månedlig fakturering',
+    tierMonthlyDesc: 'Fleksibel månedlig fakturering'
   },
 
   // Privacy Policy
@@ -1916,7 +1034,7 @@ export default {
     sections: {
       introduction: {
         title: '1. Introduksjon',
-        content: 'Velkommen til SocialChef ("vi", "vår" eller "oss"). Vi er forpliktet til å beskytte personvernet ditt og sikre sikkerheten til din personlige informasjon. Denne personvernerklæringen forklarer hvordan vi samler inn, bruker, deler og beskytter informasjonen din når du bruker vår AI-drevne plattform for sosiale medier for restauranter.',
+        content: 'Velkommen til SocialChef ("vi", "vår" eller "oss"). Vi er forpliktet til å beskytte personvernet ditt og sikre sikkerheten til din personlige informasjon. Denne personvernerklæringen forklarer hvordan vi samler inn, bruker, deler og beskytter informasjonen din når du bruker vår AI-drevne plattform for sosiale medier for restauranter.'
       },
       informationWeCollect: {
         title: '2. Informasjon vi samler inn',
@@ -1926,8 +1044,8 @@ export default {
           socialMedia: 'Sosiale medier-data: Når du kobler til dine sosiale mediekontoer (Facebook, Instagram, osv.), får vi tilgang til dataene som er nødvendige for å publisere innhold på dine vegne, inkludert sideinformasjon og publiseringstillatelser.',
           content: 'Innholdsdata: Bilder, bildetekster, hashtags og annet innhold du oppretter eller laster opp gjennom plattformen vår.',
           usage: 'Bruksinformasjon: Hvordan du samhandler med plattformen vår, inkludert funksjoner som brukes, innlegg som opprettes og planleggingspreferanser.',
-          device: 'Enhetsinformasjon: Nettlesertype, IP-adresse, enhetsidentifikatorer og operativsystem for sikkerhets- og analyseformål.',
-        },
+          device: 'Enhetsinformasjon: Nettlesertype, IP-adresse, enhetsidentifikatorer og operativsystem for sikkerhets- og analyseformål.'
+        }
       },
       howWeUse: {
         title: '3. Hvordan vi bruker informasjonen din',
@@ -1937,8 +1055,8 @@ export default {
           improveService: 'Forbedre og tilpasse opplevelsen din, inkludert opplæring av våre AI-modeller for å bedre betjene restaurantinnholdsbehov.',
           communicate: 'Sende deg tjenesterelatert kommunikasjon, oppdateringer og markedsføringsmateriell (med ditt samtykke).',
           security: 'Sikre sikkerheten til plattformen vår og beskytte mot svindel eller uautorisert tilgang.',
-          legal: 'Overholde juridiske forpliktelser og håndheve våre tjenestevilkår.',
-        },
+          legal: 'Overholde juridiske forpliktelser og håndheve våre tjenestevilkår.'
+        }
       },
       dataSharing: {
         title: '4. Datadeling og utlevering',
@@ -1947,17 +1065,17 @@ export default {
           socialPlatforms: 'Sosiale medieplattformer: For å publisere innhold på dine tilkoblede kontoer (Facebook, Instagram, osv.).',
           serviceProviders: 'Tjenesteleverandører: Tredjepartsleverandører som hjelper oss med å drive plattformen vår (hosting, analyse, betalingsbehandling).',
           legal: 'Juridiske krav: Når det kreves av lov, rettsordre eller myndighetspålegg.',
-          businessTransfer: 'Virksomhetsoverdragelser: I forbindelse med fusjon, oppkjøp eller salg av eiendeler.',
+          businessTransfer: 'Virksomhetsoverdragelser: I forbindelse med fusjon, oppkjøp eller salg av eiendeler.'
         },
-        noSelling: 'Vi selger ikke din personlige informasjon til tredjeparter.',
+        noSelling: 'Vi selger ikke din personlige informasjon til tredjeparter.'
       },
       dataSecurity: {
         title: '5. Datasikkerhet',
-        content: 'Vi implementerer bransjestandardens sikkerhetstiltak for å beskytte informasjonen din, inkludert kryptering, sikre servere og regelmessige sikkerhetsrevisjoner. Ingen overføringsmetode over Internett er imidlertid 100% sikker, og vi kan ikke garantere absolutt sikkerhet.',
+        content: 'Vi implementerer bransjestandardens sikkerhetstiltak for å beskytte informasjonen din, inkludert kryptering, sikre servere og regelmessige sikkerhetsrevisjoner. Ingen overføringsmetode over Internett er imidlertid 100% sikker, og vi kan ikke garantere absolutt sikkerhet.'
       },
       dataRetention: {
         title: '6. Dataoppbevaring',
-        content: 'Vi beholder din personlige informasjon så lenge kontoen din er aktiv eller etter behov for å gi deg tjenester. Du kan når som helst be om sletting av dataene dine ved å kontakte oss eller gjennom kontoinnstillingene dine.',
+        content: 'Vi beholder din personlige informasjon så lenge kontoen din er aktiv eller etter behov for å gi deg tjenester. Du kan når som helst be om sletting av dataene dine ved å kontakte oss eller gjennom kontoinnstillingene dine.'
       },
       yourRights: {
         title: '7. Dine rettigheter',
@@ -1967,31 +1085,31 @@ export default {
           correction: 'Retting: Be om retting av unøyaktig eller ufullstendig informasjon.',
           deletion: 'Sletting: Be om sletting av din personlige informasjon.',
           portability: 'Dataportabilitet: Be om en kopi av dataene dine i et portabelt format.',
-          withdraw: 'Trekke tilbake samtykke: Trekke tilbake samtykke til behandling der samtykke er det rettslige grunnlaget.',
+          withdraw: 'Trekke tilbake samtykke: Trekke tilbake samtykke til behandling der samtykke er det rettslige grunnlaget.'
         },
-        contact: 'For å utøve disse rettighetene, vennligst kontakt oss på e-postadressen nedenfor.',
+        contact: 'For å utøve disse rettighetene, vennligst kontakt oss på e-postadressen nedenfor.'
       },
       cookies: {
         title: '8. Informasjonskapsler og sporing',
-        content: 'Vi bruker informasjonskapsler og lignende teknologier for å forbedre opplevelsen din, analysere bruk og tilpasse innhold. Du kan kontrollere informasjonskapselpreferanser gjennom nettleserinnstillingene dine. Noen funksjoner fungerer kanskje ikke riktig hvis informasjonskapsler er deaktivert.',
+        content: 'Vi bruker informasjonskapsler og lignende teknologier for å forbedre opplevelsen din, analysere bruk og tilpasse innhold. Du kan kontrollere informasjonskapselpreferanser gjennom nettleserinnstillingene dine. Noen funksjoner fungerer kanskje ikke riktig hvis informasjonskapsler er deaktivert.'
       },
       thirdParty: {
         title: '9. Tredjepartslenker',
-        content: 'Plattformen vår kan inneholde lenker til tredjepartsnettsteder eller -tjenester. Vi er ikke ansvarlige for personvernpraksisen til disse eksterne nettstedene. Vi oppfordrer deg til å gjennomgå deres personvernerklæringer før du oppgir personlig informasjon.',
+        content: 'Plattformen vår kan inneholde lenker til tredjepartsnettsteder eller -tjenester. Vi er ikke ansvarlige for personvernpraksisen til disse eksterne nettstedene. Vi oppfordrer deg til å gjennomgå deres personvernerklæringer før du oppgir personlig informasjon.'
       },
       children: {
         title: '10. Barns personvern',
-        content: 'Våre tjenester er ikke beregnet på personer under 18 år. Vi samler ikke bevisst inn personlig informasjon fra barn. Hvis du tror vi har samlet inn informasjon fra et barn, vennligst kontakt oss umiddelbart.',
+        content: 'Våre tjenester er ikke beregnet på personer under 18 år. Vi samler ikke bevisst inn personlig informasjon fra barn. Hvis du tror vi har samlet inn informasjon fra et barn, vennligst kontakt oss umiddelbart.'
       },
       changes: {
         title: '11. Endringer i denne erklæringen',
-        content: 'Vi kan oppdatere denne personvernerklæringen fra tid til annen. Vi vil varsle deg om betydelige endringer ved å legge ut den nye erklæringen på plattformen vår og oppdatere "Sist oppdatert"-datoen. Din fortsatte bruk av våre tjenester etter endringer utgjør aksept av den oppdaterte erklæringen.',
+        content: 'Vi kan oppdatere denne personvernerklæringen fra tid til annen. Vi vil varsle deg om betydelige endringer ved å legge ut den nye erklæringen på plattformen vår og oppdatere "Sist oppdatert"-datoen. Din fortsatte bruk av våre tjenester etter endringer utgjør aksept av den oppdaterte erklæringen.'
       },
       contact: {
         title: '12. Kontakt oss',
-        content: 'Hvis du har spørsmål om denne personvernerklæringen eller vår datapraksis, vennligst kontakt oss på:',
-      },
-    },
+        content: 'Hvis du har spørsmål om denne personvernerklæringen eller vår datapraksis, vennligst kontakt oss på:'
+      }
+    }
   },
 
   // Terms of Service
@@ -2001,15 +1119,15 @@ export default {
     sections: {
       acceptance: {
         title: '1. Aksept av vilkår',
-        content: 'Ved å få tilgang til eller bruke SocialChef ("Tjenesten"), samtykker du til å være bundet av disse tjenestevilkårene ("Vilkår"). Hvis du ikke godtar disse vilkårene, vennligst ikke bruk vår tjeneste. Disse vilkårene gjelder for alle brukere, inkludert besøkende, registrerte brukere og abonnenter.',
+        content: 'Ved å få tilgang til eller bruke SocialChef ("Tjenesten"), samtykker du til å være bundet av disse tjenestevilkårene ("Vilkår"). Hvis du ikke godtar disse vilkårene, vennligst ikke bruk vår tjeneste. Disse vilkårene gjelder for alle brukere, inkludert besøkende, registrerte brukere og abonnenter.'
       },
       description: {
         title: '2. Beskrivelse av tjenesten',
-        content: 'SocialChef er en AI-drevet plattform for sosiale medier, spesielt designet for restauranter. Vår tjeneste lar deg generere markedsføringsinnhold, lage bilder og bildetekster, planlegge innlegg og publisere innhold til tilkoblede sosiale medieplattformer. Funksjoner kan variere basert på abonnementsplanen din.',
+        content: 'SocialChef er en AI-drevet plattform for sosiale medier, spesielt designet for restauranter. Vår tjeneste lar deg generere markedsføringsinnhold, lage bilder og bildetekster, planlegge innlegg og publisere innhold til tilkoblede sosiale medieplattformer. Funksjoner kan variere basert på abonnementsplanen din.'
       },
       eligibility: {
         title: '3. Kvalifisering',
-        content: 'Du må være minst 18 år og i stand til å inngå en bindende avtale for å bruke vår tjeneste. Ved å bruke SocialChef bekrefter du at du oppfyller disse kvalifiseringskravene.',
+        content: 'Du må være minst 18 år og i stand til å inngå en bindende avtale for å bruke vår tjeneste. Ved å bruke SocialChef bekrefter du at du oppfyller disse kvalifiseringskravene.'
       },
       account: {
         title: '4. Kontoregistrering og sikkerhet',
@@ -2018,8 +1136,8 @@ export default {
           accurate: 'Oppgi nøyaktig, aktuell og fullstendig informasjon under registrering.',
           security: 'Opprettholde sikkerheten til passordet og kontolegitimasjonen din.',
           notify: 'Varsle oss umiddelbart om uautorisert tilgang eller sikkerhetsbrudd.',
-          responsible: 'Akseptere ansvar for alle aktiviteter som skjer under kontoen din.',
-        },
+          responsible: 'Akseptere ansvar for alle aktiviteter som skjer under kontoen din.'
+        }
       },
       acceptableUse: {
         title: '5. Retningslinjer for akseptabel bruk',
@@ -2031,58 +1149,58 @@ export default {
           spam: 'Sende spam, uønskede meldinger eller delta i villedende praksis.',
           interfere: 'Forstyrre eller avbryte tjenesten eller dens infrastruktur.',
           impersonate: 'Utgi seg for en person eller enhet eller feilaktig fremstille din tilknytning.',
-          reverse: 'Forsøke å reversere, dekompilere eller trekke ut kildekode fra vår tjeneste.',
-        },
+          reverse: 'Forsøke å reversere, dekompilere eller trekke ut kildekode fra vår tjeneste.'
+        }
       },
       content: {
         title: '6. Brukerinnhold',
         ownership: 'Du beholder eierskapet til alt innhold du oppretter eller laster opp til SocialChef. Ved å bruke vår tjeneste gir du oss imidlertid en begrenset lisens til å bruke, lagre og behandle innholdet ditt utelukkende for å levere tjenesten.',
         license: 'For AI-generert innhold opprettet gjennom plattformen vår, mottar du en lisens til å bruke slikt innhold for forretningsformål, underlagt eventuelle begrensninger i abonnementsplanen din.',
-        responsibility: 'Du er eneansvarlig for å sikre at innholdet ditt overholder gjeldende lover og ikke krenker tredjeparts rettigheter.',
+        responsibility: 'Du er eneansvarlig for å sikre at innholdet ditt overholder gjeldende lover og ikke krenker tredjeparts rettigheter.'
       },
       socialMedia: {
         title: '7. Sosiale medier-integrasjon',
-        content: 'Når du kobler til tredjepartskontoer for sosiale medier, autoriserer du oss til å få tilgang til og samhandle med disse kontoene på dine vegne. Du er ansvarlig for å overholde tjenestevilkårene til hver tilkoblet plattform. Vi er ikke ansvarlige for handlinger utført av eller begrensninger pålagt av tredjepartsplattformer.',
+        content: 'Når du kobler til tredjepartskontoer for sosiale medier, autoriserer du oss til å få tilgang til og samhandle med disse kontoene på dine vegne. Du er ansvarlig for å overholde tjenestevilkårene til hver tilkoblet plattform. Vi er ikke ansvarlige for handlinger utført av eller begrensninger pålagt av tredjepartsplattformer.'
       },
       subscription: {
         title: '8. Abonnement og betaling',
         billing: 'Betalte abonnementer faktureres i henhold til planen du velger. Alle avgifter er ikke-refunderbare med mindre annet er oppgitt eller påkrevd ved lov.',
         cancellation: 'Du kan når som helst kansellere abonnementet ditt gjennom kontoinnstillingene dine. Kanselleringen trer i kraft ved slutten av gjeldende faktureringsperiode.',
-        changes: 'Vi forbeholder oss retten til å endre prisene med rimelig varsel. Fortsatt bruk etter prisendringer utgjør aksept av nye priser.',
+        changes: 'Vi forbeholder oss retten til å endre prisene med rimelig varsel. Fortsatt bruk etter prisendringer utgjør aksept av nye priser.'
       },
       intellectual: {
         title: '9. Immaterielle rettigheter',
-        content: 'SocialChef og dets originale innhold, funksjoner og funksjonalitet eies av oss og er beskyttet av internasjonale opphavsretts-, varemerke- og andre immaterielle rettigheter. Vår AI-teknologi, algoritmer og plattformdesign forblir vår eksklusive eiendom.',
+        content: 'SocialChef og dets originale innhold, funksjoner og funksjonalitet eies av oss og er beskyttet av internasjonale opphavsretts-, varemerke- og andre immaterielle rettigheter. Vår AI-teknologi, algoritmer og plattformdesign forblir vår eksklusive eiendom.'
       },
       disclaimer: {
         title: '10. Ansvarsfraskrivelse',
-        content: 'TJENESTEN LEVERES "SOM DEN ER" OG "SOM TILGJENGELIG" UTEN GARANTIER AV NOE SLAG, ENTEN UTTRYKTE ELLER UNDERFORSTÅTTE. VI GARANTERER IKKE AT TJENESTEN VIL VÆRE UAVBRUTT, FEILFRI ELLER SIKKER. AI-GENERERT INNHOLD KAN INNEHOLDE FEIL ELLER UNØYAKTIGHETER, OG DU ER ANSVARLIG FOR Å GJENNOMGÅ ALT INNHOLD FØR PUBLISERING.',
+        content: 'TJENESTEN LEVERES "SOM DEN ER" OG "SOM TILGJENGELIG" UTEN GARANTIER AV NOE SLAG, ENTEN UTTRYKTE ELLER UNDERFORSTÅTTE. VI GARANTERER IKKE AT TJENESTEN VIL VÆRE UAVBRUTT, FEILFRI ELLER SIKKER. AI-GENERERT INNHOLD KAN INNEHOLDE FEIL ELLER UNØYAKTIGHETER, OG DU ER ANSVARLIG FOR Å GJENNOMGÅ ALT INNHOLD FØR PUBLISERING.'
       },
       limitation: {
         title: '11. Ansvarsbegrensning',
-        content: 'I DEN MAKSIMALE UTSTREKNING TILLATT AV LOV, SKAL SOCIALCHEF IKKE VÆRE ANSVARLIG FOR NOEN INDIREKTE, TILFELDIGE, SPESIELLE, FØLGESKADER ELLER STRAFFEERSTATNING, INKLUDERT TAP AV FORTJENESTE, DATA ELLER FORRETNINGSMULIGHETER, SOM OPPSTÅR FRA DIN BRUK AV TJENESTEN.',
+        content: 'I DEN MAKSIMALE UTSTREKNING TILLATT AV LOV, SKAL SOCIALCHEF IKKE VÆRE ANSVARLIG FOR NOEN INDIREKTE, TILFELDIGE, SPESIELLE, FØLGESKADER ELLER STRAFFEERSTATNING, INKLUDERT TAP AV FORTJENESTE, DATA ELLER FORRETNINGSMULIGHETER, SOM OPPSTÅR FRA DIN BRUK AV TJENESTEN.'
       },
       indemnification: {
         title: '12. Skadesløsholdelse',
-        content: 'Du samtykker til å holde SocialChef, dets ledere, direktører, ansatte og agenter skadesløse fra eventuelle krav, skader, tap eller utgifter som oppstår fra din bruk av tjenesten, brudd på disse vilkårene eller krenkelse av tredjeparts rettigheter.',
+        content: 'Du samtykker til å holde SocialChef, dets ledere, direktører, ansatte og agenter skadesløse fra eventuelle krav, skader, tap eller utgifter som oppstår fra din bruk av tjenesten, brudd på disse vilkårene eller krenkelse av tredjeparts rettigheter.'
       },
       termination: {
         title: '13. Oppsigelse',
-        content: 'Vi kan suspendere eller avslutte tilgangen din til tjenesten når som helst for brudd på disse vilkårene eller av annen grunn etter vårt skjønn. Ved oppsigelse opphører retten din til å bruke tjenesten umiddelbart, selv om visse bestemmelser i disse vilkårene vil overleve.',
+        content: 'Vi kan suspendere eller avslutte tilgangen din til tjenesten når som helst for brudd på disse vilkårene eller av annen grunn etter vårt skjønn. Ved oppsigelse opphører retten din til å bruke tjenesten umiddelbart, selv om visse bestemmelser i disse vilkårene vil overleve.'
       },
       changes: {
         title: '14. Endringer i vilkårene',
-        content: 'Vi forbeholder oss retten til å endre disse vilkårene når som helst. Vi vil varsle brukere om vesentlige endringer ved å legge ut de oppdaterte vilkårene på plattformen vår. Din fortsatte bruk av tjenesten etter endringer utgjør aksept av de endrede vilkårene.',
+        content: 'Vi forbeholder oss retten til å endre disse vilkårene når som helst. Vi vil varsle brukere om vesentlige endringer ved å legge ut de oppdaterte vilkårene på plattformen vår. Din fortsatte bruk av tjenesten etter endringer utgjør aksept av de endrede vilkårene.'
       },
       governing: {
         title: '15. Gjeldende lov',
-        content: 'Disse vilkårene skal styres av og tolkes i samsvar med lovene i Norge, uten hensyn til lovvalgsprinsipper. Eventuelle tvister som oppstår fra disse vilkårene skal løses i norske domstoler.',
+        content: 'Disse vilkårene skal styres av og tolkes i samsvar med lovene i Norge, uten hensyn til lovvalgsprinsipper. Eventuelle tvister som oppstår fra disse vilkårene skal løses i norske domstoler.'
       },
       contact: {
         title: '16. Kontaktinformasjon',
-        content: 'For spørsmål om disse tjenestevilkårene, vennligst kontakt oss på:',
-      },
-    },
+        content: 'For spørsmål om disse tjenestevilkårene, vennligst kontakt oss på:'
+      }
+    }
   },
 
   // Inline Feedback
@@ -2090,7 +1208,7 @@ export default {
     inlineTitle: 'Hjelp oss bli bedre',
     inlineSubtitle: 'Dette er ikke en del av innlegget',
     whatDidYouLike: 'Hva likte du eller likte du ikke med dette innlegget?',
-    feedbackPlaceholder: 'Del hva som fungerte bra eller hva som kunne vært bedre...',
+    feedbackPlaceholder: 'Del hva som fungerte bra eller hva som kunne vært bedre...'
   },
 
   // Generating Progress
@@ -2102,8 +1220,8 @@ export default {
       designing: 'Designer',
       generating: 'Genererer',
       refining: 'Forbedrer',
-      finalizing: 'Fullfører',
-    },
+      finalizing: 'Fullfører'
+    }
   },
 
   // Delete Account Page
@@ -2120,7 +1238,7 @@ export default {
       favorites: 'Alle lagrede favoritter og planlagte innlegg',
       connections: 'Alle tilkoblede sosiale medier-kontoer',
       subscription: 'Ditt abonnement (vil bli kansellert umiddelbart)',
-      history: 'All brukshistorikk og analyse',
+      history: 'All brukshistorikk og analyse'
     },
 
     // Step 2 - Confirmations
@@ -2130,10 +1248,6 @@ export default {
     confirmImmediateEffect: 'Jeg forstår at sletting trer i kraft umiddelbart og jeg vil bli logget ut',
 
     // Step 3 - Type DELETE
-    step3Title: 'Siste bekreftelse',
-    step3Description: 'Skriv DELETE nedenfor for å bekrefte at du vil slette kontoen din:',
-    typeDelete: 'Skriv DELETE for å bekrefte',
-    deletePlaceholder: 'DELETE',
 
     // Reason
     reasonTitle: 'Hjelp oss bli bedre (valgfritt)',
@@ -2148,8 +1262,6 @@ export default {
     deleting: 'Sletter...',
 
     // Final modal
-    finalModalTitle: 'Siste sjanse!',
-    finalModalDescription: 'Er du helt sikker på at du vil slette kontoen din? Denne handlingen kan ikke angres.',
 
     // Success/Goodbye
     goodbyeTitle: 'Ha det!',
@@ -2158,8 +1270,7 @@ export default {
     returnToHome: 'Tilbake til forsiden',
 
     // Errors
-    errorGeneric: 'En feil oppstod under sletting av kontoen din. Vennligst prøv igjen.',
-    errorValidation: 'Vennligst fullfør alle nødvendige bekreftelser',
+    errorGeneric: 'En feil oppstod under sletting av kontoen din. Vennligst prøv igjen.'
   },
 
   // Analytics Page
@@ -2234,6 +1345,6 @@ export default {
     // Empty State
     emptyStateTitle: 'På tide å lage noen innlegg!',
     emptyStateDescription: 'Når du begynner å lage og planlegge innhold, vil analysene dine vises her. La oss komme i gang!',
-    createFirstPost: 'Lag ditt første innlegg',
-  },
+    createFirstPost: 'Lag ditt første innlegg'
+  }
 }

@@ -73,7 +73,7 @@ export function extractDishDescription(imagePrompt: string): string {
   cleaned = cleaned.replace(/\s+/g, ' ') // Multiple spaces
   cleaned = cleaned.replace(/,\s+\./g, '.') // Comma before period
   cleaned = cleaned.replace(/\s+,/g, ',') // Space before comma
-  cleaned = cleaned.replace(/^[,\s\.]+|[,\s]+$/g, '') // Leading/trailing punctuation
+  cleaned = cleaned.replace(/^[,\s.]+|[,\s]+$/g, '') // Leading/trailing punctuation
 
   // Ensure proper sentence structure
   cleaned = cleaned.trim()

@@ -17,6 +17,7 @@
     "lint": "run-s lint:*",
     "format": "prettier --write src/",
     "knip": "knip",
+    "i18n:unused": "node scripts/find-unused-i18n-keys.js",
     "prepare": "husky"
   },
   "dependencies": {

@@ -1,6 +1,33 @@
 <script setup lang="ts">
+import { onMounted, nextTick } from 'vue'
 import { RouterView } from 'vue-router'
 import GradientBackground from './components/GradientBackground.vue'
+import { useDomain } from '@/composables/useDomain'
+import { useLocaleStore } from '@/stores/locale'
+import { setI18nLocale } from '@/i18n'
+
+const { initialize, domainConfig, redirectToOwnedTldIfNeeded } = useDomain()
+const localeStore = useLocaleStore()
+
+onMounted(async () => {
+  // Check if we need to redirect language subdomain to owned TLD
+  // e.g., no.socialchef.ai → socialchef.no
+  if (redirectToOwnedTldIfNeeded()) {
+    return // Redirect initiated, don't continue initialization
+  }
+
+  // Initialize domain detection
+  initialize()
+
+  // Wait for Vue reactivity to update
+  await nextTick()
+
+  // Initialize locale store from domain config
+  localeStore.initFromDomain(domainConfig.value)
+
+  // Sync i18n locale and HTML lang attribute
+  setI18nLocale(localeStore.currentLocale)
+})
 </script>
 
 <template>

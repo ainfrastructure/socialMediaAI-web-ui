@@ -1,86 +1,43 @@
 export default {
   // Navigation
   nav: {
-    cookUp: 'Cook Up',
-    posts: 'Posts',
-    content: 'Content',
-    calendar: 'Calendar',
     login: 'Login',
     getStarted: 'Get Started',
-    examples: 'Examples',
     pricing: 'Pricing',
-    howItWorks: 'How it works',
+    howItWorks: 'How it works'
   },
 
   // Burger Menu
-  menu: {
-    profile: 'Profile',
-    plansAndBilling: 'Plans & Billing',
-    connectAccounts: 'Connect Accounts',
-    logout: 'Logout',
-    plan: '{tier} Plan',
-  },
-
+  
   // Common
   common: {
-    welcome: 'Welcome',
     loading: 'Loading...',
     error: 'Error',
-    success: 'Success',
     cancel: 'Cancel',
     save: 'Save',
     delete: 'Delete',
     remove: 'Remove',
     edit: 'Edit',
-    confirm: 'Confirm',
     back: 'Back',
     next: 'Next',
     previous: 'Previous',
-    search: 'Search',
-    filter: 'Filter',
-    sort: 'Sort',
     close: 'Close',
-    submit: 'Submit',
     selectAll: 'Select All',
-    deselectAll: 'Deselect All',
-    or: 'OR',
-    date: 'Date',
-    time: 'Time',
-    am: 'AM',
-    pm: 'PM',
     processing: 'Processing...',
-    pleaseWait: 'Please wait...',
-    redirecting: 'Redirecting...',
     characters: 'characters',
-    continue: 'Continue',
     retry: 'Retry',
     noImage: 'No image',
     videoNotSupported: 'Your browser does not support the video tag.',
     created: 'Created',
     saving: 'Saving...',
-    sending: 'Sending...',
     saveChanges: 'Save Changes',
-    somethingWentWrong: 'Something went wrong',
-    errorHint: 'The error has been reported to our team. Please try refreshing the page.',
-    refresh: 'Refresh Page',
-    goBack: 'Go Back',
     pagination: {
       previous: '← Previous',
       next: 'Next →',
-      pageInfo: 'Page {current} of {total} ({count} total)',
+      pageInfo: 'Page {current} of {total} ({count} total)'
     },
     // Loading progress messages
-    loadingProgress: {
-      creatingImage: 'Creating your perfect image...',
-      writingCaption: 'Writing an engaging caption...',
-      addingHashtags: 'Adding relevant hashtags...',
-      almostDone: 'Almost done...',
-      publishingPost: 'Publishing your post...',
-      connectingPlatform: 'Connecting to {platform}...',
-      uploadingImage: 'Uploading your image...',
-      finishingUp: 'Finishing up...',
-    },
-  },
+      },
 
   // Platforms
   platforms: {
@@ -93,70 +50,28 @@ export default {
     instagramWithIcon: 'Instagram',
     tiktokWithIcon: 'TikTok',
     twitterWithIcon: 'Twitter/X',
-    linkedinWithIcon: 'LinkedIn',
+    linkedinWithIcon: 'LinkedIn'
   },
 
   // Timezones
-  timezones: {
-    utc: 'UTC (Coordinated Universal Time)',
-    eastern: 'Eastern Time (ET)',
-    central: 'Central Time (CT)',
-    mountain: 'Mountain Time (MT)',
-    pacific: 'Pacific Time (PT)',
-    london: 'London (GMT/BST)',
-    paris: 'Paris (CET/CEST)',
-    oslo: 'Oslo (CET/CEST)',
-    tokyo: 'Tokyo (JST)',
-    dubai: 'Dubai (GST)',
-    sydney: 'Sydney (AEDT/AEST)',
-  },
-
+  
   // Auth / Login View
   auth: {
-    login: 'Login',
-    loginTitle: 'Welcome',
-    loginSubtitle: 'Sign in to your account',
     brandSubtitle: 'AI-Powered Content for Restaurants',
     email: 'Email',
     emailPlaceholder: "your{'@'}email.com",
-    password: 'Password',
-    passwordPlaceholder: 'Enter your password',
-    forgotPassword: 'Forgot password?',
-    dontHaveAccount: "Don't have an account?",
-    signUp: 'Sign up',
     signIn: 'Sign In',
-    loggingIn: 'Logging in...',
-    resetPassword: 'Reset Password',
-    resetPasswordTitle: 'Reset Your Password',
-    resetPasswordSubtitle: 'Enter your email to receive a reset link',
-    sendResetLink: 'Send Reset Link',
-    sendingResetLink: 'Sending...',
     backToLogin: 'Back to Login',
-    checkEmail: 'Check your email for a password reset link',
-    invalidCredentials: 'Invalid credentials',
-    loginWithMagicLink: 'Login with Magic Link',
-    sendMagicLink: 'Send Magic Link',
     continueWithApple: 'Continue with Apple',
     continueWithGoogle: 'Continue with Google',
     continueWithFacebook: 'Continue with Facebook',
-    orContinueWithEmail: 'or continue with email',
-    orContinueWith: 'or',
     signInWithEmail: 'Sign in with email',
-    emailLoginDescription:
-      "Enter your email and we'll send you a link to sign in. No password needed.",
-    sendLoginLink: 'Send Login Link',
     checkEmailForLink: 'Check your email for a login link',
-    checkYourEmail: 'Check your email',
-    magicLinkSentTo: 'We sent a login link to',
-    clickLinkToSignIn: 'Click the link in the email to sign in.',
-    openEmailProvider: 'Open {provider}',
-    openEmailApp: 'Open Email App',
-    useDifferentEmail: 'Use a different email',
     emailConfirmed: 'Success! Loading your profile...',
     pleaseLogin: 'Please sign in to continue',
     privacyPolicy: 'Privacy Policy',
     termsOfService: 'Terms of Service',
-    lastUsed: 'Last used',
+    lastUsed: 'Last used'
   },
 
   // Waitlist Landing Page
@@ -174,8 +89,7 @@ export default {
     error: 'Something went wrong. Please try again.',
     loginLink: 'Already have an account?',
     loginLinkText: 'Sign in',
-    socialProof: 'Join {count}+ restaurants on the waitlist',
-    comingSoon: 'Coming soon',
+    socialProof: 'Join {count}+ restaurants on the waitlist'
   },
 
   // Landing Page
@@ -186,7 +100,6 @@ export default {
       headlinePart1: 'The most powerful &',
       headlinePart2: 'effortless AI content',
       headlinePart3: 'generator for restaurants',
-      headline: "Your restaurant's AI social-media manager",
       subheadline: 'Get stunning social media posts that publish themselves. No photographer, no designer, no tech skills needed.',
       cta: 'Get started now',
       ctaSecondary: 'See how it works',
@@ -196,16 +109,13 @@ export default {
         videos: 'Create videos',
         posts: 'Write posts',
         publish: 'Auto-publish',
-        analytics: 'Track analytics',
-      },
-      imagePlaceholder: 'Phone mockup showing Instagram feed with professional food photos',
+        analytics: 'Track analytics'
+      }
     },
 
     // Login Box (inline in hero)
     loginBox: {
-      title: 'Get Started',
-      subtitle: 'Create your first post in minutes',
-      goToDashboard: 'Go to Dashboard',
+      goToDashboard: 'Go to Dashboard'
     },
 
     // How It Works Showcase Section
@@ -215,20 +125,17 @@ export default {
       originalPhoto: 'Your Photo',
       originalLabel: 'Original',
       aiGenerated: 'SocialChef Enhanced',
-      approveAndPost: 'Review & Approve',
       flow: {
         step1Title: 'Upload Your Photo',
         step1Description: 'Take a photo of your dish with your phone. No professional camera needed.',
         step2Title: 'SocialChef Creates Multiple Versions',
         step2Description: 'SocialChef generates beautiful variations in different styles, each with engaging captions.',
         step3Title: 'Approve & Publish',
-        step3Description: 'Choose your favorite version and it gets published automatically to Facebook and Instagram.',
+        step3Description: 'Choose your favorite version and it gets published automatically to Facebook and Instagram.'
       },
       gallery: {
-        title: 'Before & After',
-        subtitle: 'Drag to compare',
         before: 'Before',
-        after: 'After',
+        after: 'After'
       },
       templates: {
         behindTheScenes: 'Behind the Scenes',
@@ -238,13 +145,13 @@ export default {
         cleanStrict: 'Clean Strict',
         infographic: 'Infographic',
         custom: 'Custom',
-        andMore: 'And many more...',
-      },
+        andMore: 'And many more...'
+      }
     },
 
     // How It Works
     howItWorks: {
-      comingSoon: 'Soon',
+      comingSoon: 'Soon'
     },
 
     // Auto-Posting Feature (KEY DIFFERENTIATOR)
@@ -253,10 +160,9 @@ export default {
       title: 'Set It & Forget It',
       headline: 'Your posts publish automatically. Really.',
       description: "No more remembering to post. No more logging into apps. SocialChef handles everything - from creation to publishing. You'll look like you have a dedicated social media manager.",
-      imagePlaceholder: 'Split screen - stressed owner on left, relaxed owner on right with posts auto-publishing',
       feature1: 'Posts go live while you cook',
       feature2: 'Works with Instagram & Facebook',
-      feature3: 'Schedule weeks in advance',
+      feature3: 'Schedule weeks in advance'
     },
 
     // Benefits
@@ -264,115 +170,62 @@ export default {
       title: 'Why Restaurant Owners Love SocialChef',
       time: {
         title: 'Save 10+ Hours Per Week',
-        description: 'Stop wrestling with content creation. Spend that time on what matters - your food and customers.',
+        description: 'Stop wrestling with content creation. Spend that time on what matters - your food and customers.'
       },
       professional: {
         title: 'Always Look Professional',
         description:
-          'Every post looks like it was made by a pro designer. Because it was. An AI one.',
+          'Every post looks like it was made by a pro designer. Because it was. An AI one.'
       },
       growth: {
         title: 'Grow Your Following',
         description:
-          'Consistent posting means more engagement. More engagement means more customers.',
+          'Consistent posting means more engagement. More engagement means more customers.'
       },
       easy: {
         title: 'No Tech Skills Needed',
         description:
-          "If you can take a photo of food, you can use SocialChef. That's the whole skill requirement.",
-      },
+          "If you can take a photo of food, you can use SocialChef. That's the whole skill requirement."
+      }
     },
 
     // Social Proof
-    socialProof: {
-      title: '',
-      stat1: 'Restaurants',
-      stat2: 'Posts Generated',
-      stat3: 'Rating',
-      testimonial1Quote:
-        "I used to spend hours on Instagram. Now I just pick my dish and it's done.",
-      testimonial2Quote: 'My customers think I hired a marketing team. Nope, just SocialChef.',
-      testimonial3Quote: 'Finally, something that actually saves time. Not another app to learn.',
-    },
-
+    
     // Pricing Preview
     pricing: {
       title: 'Simple, Honest Pricing',
-      subtitle: 'Start today. Cancel anytime.',
-      monthly: 'Monthly',
-      yearly: 'Yearly',
-      lifetime: 'Lifetime',
-      perMonth: 'month',
-      perYear: 'year',
-      oneTime: 'one time',
-      images: 'images',
-      mostPopular: 'Most Popular',
-      viewAll: 'See Full Pricing',
+      subtitle: 'Start today. Cancel anytime.'
     },
 
     // Final CTA
     finalCta: {
       title: 'Ready to Fire Your Social Media Worries?',
-      subtitle: 'Join hundreds of restaurant owners who stopped stressing about social media.',
+      subtitle: 'Join hundreds of restaurant owners who stopped stressing about social media.'
     },
 
     // Login Modal
     loginModal: {
       title: "Let's Get Started",
-      subtitle: 'Sign in to generate your first post',
+      subtitle: 'Sign in to generate your first post'
     },
 
     // Paywall Modal
     paywall: {
       title: 'Choose Your Plan',
       subtitle: 'Unlock automatic posting and save hours every week',
-      autoPostingReminder: 'All plans include automatic posting to Instagram & Facebook',
+      autoPostingReminder: 'All plans include automatic posting to Instagram & Facebook'
     },
 
     // Footer
     footer: {
       madeWith: 'Made with love for restaurant owners',
-      copyright: '© 2025 SocialChef. All rights reserved.',
-    },
+      copyright: '© 2025 SocialChef. All rights reserved.'
+    }
   },
 
   // Dashboard View
   dashboard: {
-    title: 'Dashboard',
-    welcome: 'Welcome, {name}!',
     welcomeBack: 'Welcome, {name}!',
-    readyToCreate: 'Ready to create amazing content for your restaurants?',
-    overview: 'Overview',
-    recentActivity: 'Recent Activity',
-    stats: 'Statistics',
-    quickActions: 'Quick Actions',
-    heroTitle: 'Welcome to SocialChef',
-    heroSubtitle: 'Cook up stunning social media content in three simple steps',
-    howItWorks: 'How It Works',
-    howItWorksSubtitle: 'Three simple steps to amazing content',
-    step1Title: 'Search & Save',
-    step1Description:
-      'Find restaurants using Google Places and save them to your library. Access menus, photos, and brand details instantly.',
-    step1Button: 'Search Now',
-    step2Title: 'Cook Up Content',
-    step2Description:
-      'Generate AI-powered images, videos, and captions. Build a content library for your restaurants.',
-    step2Button: 'Start Cooking',
-    step3Title: 'Schedule Posts',
-    step3Description:
-      'Plan your content calendar and publish directly to Facebook. Schedule posts in advance and maintain consistent engagement.',
-    step3Button: 'View Calendar',
-    yourAccount: 'Your Account',
-    email: 'Email:',
-    plan: 'Plan:',
-    status: 'Status:',
-    creditsUsed: 'Credits Used:',
-    thisMonth: 'this month',
-    creditsRemaining: '{count} credits remaining',
-    viewPlans: 'View Plans',
-    manageSubscription: 'Manage Subscription',
-
-    launchOnboarding: 'Start',
 
     // Welcome Modal
     welcomeModalTitle: 'Welcome to SocialChef!',
@@ -387,51 +240,19 @@ export default {
     restaurants: 'Restaurants',
 
     // Quick actions
-    quickActionsSubtitle: 'Jump right into what you need',
-    addRestaurant: 'Add Restaurant',
-    addRestaurantDescription: 'Search and add your restaurant to get started',
-    getStarted: 'Get Started →',
-    cookUpContent: 'Cook Up Content',
-    cookUpContentDescription: 'Generate stunning posts from your menu items',
-    createNow: 'Create Now →',
-    schedulePosts: 'Schedule Posts',
-    schedulePostsDescription: 'Plan your content calendar in advance',
-    openCalendar: 'Open Calendar →',
-    viewPosts: 'View Posts',
-    viewPostsDescription: 'Access your saved post library',
-    browseLibrary: 'Browse Library →',
 
     // Social platforms
-    socialPlatforms: 'Social Media Platforms',
-    platformsConnected: '{count} platform connected | {count} platforms connected',
-    connectPlatformsPrompt: 'Connect your social media accounts to start publishing',
 
     // Platform descriptions
-    facebookDescription: 'Connect to post directly to your Facebook pages and reach your audience',
-    instagramDescription: 'Share stunning visuals and stories with your Instagram followers',
-    tiktokDescription: "Create engaging short-form videos for TikTok's creative community",
-    twitterDescription: 'Share quick updates and engage in real-time conversations',
-    linkedinDescription: 'Build your professional network and share business updates',
 
     // Connection status
-    connected: 'Connected',
-    notConnected: 'Not Connected',
-    manage: 'Manage',
     connect: 'Connect',
 
     // Account overview
-    accountOverview: 'Account Overview',
-    subscription: 'Subscription',
-    currentPlan: 'Current Plan',
-    usageThisMonth: 'Usage This Month',
-    creditsUsedLabel: 'Credits Used',
-    remainingCreditsLabel: '{count} credit remaining | {count} credits remaining',
   },
 
   // Plans View
   plans: {
-    title: 'Plans & Billing',
-    subtitle: 'Choose the perfect plan for your needs',
     brandTitle: 'SocialChef',
     chooseYourPlan: 'Choose Your Plan',
     unlockPower: 'Unlock the full power of AI-generated content',
@@ -439,38 +260,12 @@ export default {
     mostPopular: 'Most Popular',
     bestValue: 'Best Value',
     currentPlan: 'Current Plan',
-    subscribeNow: 'Subscribe Now',
-    freeForever: 'Free Forever',
-    upgradePlan: 'Upgrade Plan',
-    upgradeTo: 'Upgrade to',
-    downgradePlan: 'Downgrade Plan',
-    cancelSubscription: 'Cancel Subscription',
     manageSubscription: 'Manage Subscription',
-    monthly: 'Monthly',
-    yearly: 'Yearly',
-    lifetime: 'Lifetime',
-    free: 'Free',
-    starter: 'Starter',
-    pro: 'Pro',
-    enterprise: 'Enterprise',
     perMonth: '/month',
     perYear: '/year',
-    perMonthBilledYearly: '/mo, billed yearly',
-    monthsFree: '{count} months free',
     oneTime: 'one-time',
-    customPricing: 'Custom pricing',
-    tokensPerMonth: 'tokens/month',
-    selectPlan: 'Select Plan',
-    currentPlanLabel: 'Current',
-    features: 'Features',
-    billing: 'Billing',
-    paymentMethod: 'Payment Method',
-    nextBillingDate: 'Next Billing Date',
-    changePlan: 'Change Plan',
-    contactSales: 'Contact Sales',
     failedToLoad: 'Failed to load plans',
     failedToOpenPortal: 'Failed to open billing portal',
-    alreadyOnFreePlan: 'You are already on the free plan',
     failedToCheckout: 'Failed to create checkout',
     networkError: 'Network error',
     subscriptionSuccess: 'Subscription successful! Your account will be updated shortly.',
@@ -480,12 +275,8 @@ export default {
     cancelAnytime: 'Cancel anytime',
     prioritySupport: 'Priority support',
     // New pricing tier keys
-    credits: 'credits',
-    creditsPerMonth: 'credits/month',
     creditsUpfront: 'credits upfront',
     creditsTotal: 'credits total',
-    creditPerImage: '1 credit = 1 image',
-    creditsPerVideo: '5 credits = 1 video',
     images: 'images',
     videos: 'videos',
     orEquivalent: 'or',
@@ -495,8 +286,6 @@ export default {
     upgrade: 'Upgrade',
     buy: 'Buy',
     promoCodeHint: 'Have a promo code? Enter it at checkout.',
-    save: 'Save {amount}',
-    savePercent: 'Save {percent}%',
     imageGeneration: 'AI image generation',
     videoGeneration: 'AI video generation',
     facebookPublishing: 'Facebook posting',
@@ -504,22 +293,13 @@ export default {
     included: 'Included',
     postScheduling: 'Post scheduling',
     unlimitedRestaurants: 'Unlimited restaurants',
-    noExpiration: 'Credits never expire',
+    noExpiration: 'Credits never expire'
   },
 
   // Restaurant Search View
   restaurantSearch: {
-    title: 'Discover Restaurants',
-    subtitle:
-      'Search and analyze restaurants using Google Places. Build your database with comprehensive insights.',
     searchPlaceholder: 'Search restaurants by name or location...',
-    searchButton: 'Search',
     noResults: 'No restaurants found',
-    results: 'Results',
-    filters: 'Filters',
-    cuisine: 'Cuisine',
-    priceRange: 'Price Range',
-    distance: 'Distance',
 
     // Autocomplete
     searchLabel: 'Search Restaurants',
@@ -528,101 +308,36 @@ export default {
     alreadyAdded: 'Already Added',
 
     // Quick Overview
-    quickOverviewTitle: 'Quick Overview',
-    rating: 'Rating',
-    reviews: 'reviews',
-    status: 'Status',
-    openNow: 'Open Now',
-    closed: 'Closed',
-    menuItems: 'Menu Items',
-    competitors: 'Competitors',
-    socialMedia: 'Social Media',
-    profiles: 'profiles',
 
     // Opening Hours
-    openingHours: 'Opening Hours',
-    loadingHours: 'Loading hours...',
-    hoursNotAvailable: 'Hours not available',
 
     // Contact & Info
-    contactInfo: 'Contact & Info',
-    visitWebsite: 'Visit Website',
 
     // Photos
-    googlePhotos: 'Google Photos',
-    selectAll: 'Select All',
-    deselectAll: 'Deselect All',
 
     // Image Upload
-    uploadOwnImages: 'Upload Your Own Images',
 
     // Social Media
-    socialMediaTitle: 'Social Media',
-    findingSocialMedia: 'Finding social media profiles...',
-    noSocialMediaFound: 'No social media profiles found',
 
     // Brand Identity
-    brandIdentity: 'Brand Identity',
-    analyzed: 'Analyzed',
-    analyzingBrand: 'Analyzing brand colors and fonts from website...',
-    brandName: 'Brand Name',
-    brandColors: 'Brand Colors',
-    typography: 'Typography',
-    logo: 'Logo',
-    primary: 'Primary',
-    secondary: 'Secondary',
-    accent: 'Accent {number}',
-    brandIdentityNote: 'Brand identity automatically extracted from website',
-    selectRestaurantWithWebsite: 'Select a restaurant with a website to analyze brand identity',
 
     // Customer Reviews
-    customerReviews: 'Customer Reviews',
-    reviewsCount: '{count} reviews',
 
     // Competitors
-    nearbyCompetitors: 'Nearby Competitors',
-    competitorsCount: '{count} within {radius} km',
-    findingCompetitors: 'Finding nearby competitors...',
-    competitorsFound:
-      'Found {count} similar restaurant near {name} | Found {count} similar restaurants near {name}',
-    noCompetitorsFound: 'No competitors found within {radius} km',
 
     // Menu
-    menu: 'Menu',
-    searchingMenu: 'Searching for menu on Wolt and Foodora...',
-    menuItemsFound: 'Found {count} items from',
-    noMenuFound: 'No menu found for this restaurant',
-    selectRestaurantToViewMenu: 'Select a restaurant to view its menu',
-    menuNotAvailable: 'The restaurant may not be available on Wolt or Foodora.',
 
     // Actions
-    backToSearch: 'Back to search',
-    saveAndContinue: 'Continue →',
-    saving: 'Saving...',
 
     // Messages
-    restaurantSaved: 'Restaurant saved to database successfully!',
-    saveRestaurant: 'Save Restaurant',
-    restaurantAlreadySaved: 'This restaurant has already been saved',
-    failedToSave: 'Failed to save restaurant',
-    imagesUploaded: 'Additionally uploaded {count} custom image(s).',
-    failedToUpload: 'Failed to upload images',
 
     // Progress Modal
-    savingRestaurant: 'Saving Restaurant',
-    savingData: 'Saving restaurant data...',
-    processingImages: 'Processing images...',
-    analyzingMenu: 'Analyzing menu items...',
-    finalizingSetup: 'Finalizing setup...',
-    redirecting: 'Redirecting to content creation...',
   },
 
   // Onboarding
   onboarding: {
     // Tour steps
     tour: {
-      welcomeTitle: 'Welcome to SocialChef!',
-      welcomeDescription: 'Your AI-powered social media assistant for restaurants',
       welcomeDetails: [
         'Create stunning social media posts in seconds',
         'AI-powered content generation tailored to your brand',
@@ -630,8 +345,6 @@ export default {
         'Schedule posts and manage multiple platforms',
       ],
 
-      searchTitle: 'Find Your Restaurant',
-      searchDescription: 'Discover and save restaurant profiles',
       searchDetails: [
         'Search restaurants using Google Places',
         'Automatically import menus, photos, and brand details',
@@ -639,8 +352,6 @@ export default {
         'Access comprehensive business information',
       ],
 
-      createTitle: 'Cook Up Content',
-      createDescription: 'AI-powered post creation',
       createDetails: [
         'Generate images and videos with AI',
         'Create compelling captions and hashtags',
@@ -648,8 +359,6 @@ export default {
         'All generated content is automatically saved',
       ],
 
-      scheduleTitle: 'Schedule & Publish',
-      scheduleDescription: 'Plan your content calendar',
       scheduleDetails: [
         'Schedule posts in advance',
         'Publish directly to Facebook',
@@ -657,8 +366,6 @@ export default {
         'Track your content performance',
       ],
 
-      connectTitle: 'Connect Your Accounts',
-      connectDescription: 'Link your social media platforms',
       connectDetails: [
         'Connect Facebook, Instagram, TikTok, and more',
         'Post directly from our platform',
@@ -666,8 +373,6 @@ export default {
         'Secure OAuth authentication',
       ],
 
-      readyTitle: "You're All Set!",
-      readyDescription: 'Ready to create amazing content?',
       readyDetails: [
         'Start by searching for your restaurant',
         'Generate your first post in minutes',
@@ -676,317 +381,125 @@ export default {
       ],
 
       // Navigation
-      next: 'Next',
-      previous: 'Previous',
-      skip: 'Skip Tour',
-      finish: 'Get Started',
     },
 
     // Quiz
     quiz: {
-      title: 'Quick Quiz',
-      subtitle: 'Test your knowledge!',
-      checkAnswer: 'Check Answer',
-      nextQuestion: 'Next Question',
-      finishQuiz: 'Finish Quiz',
-      correctAnswer: 'Correct!',
-      wrongAnswer: 'Not quite!',
-      score: 'Your Score: {score}/{total}',
 
       // Questions
-      q1Question: 'What is the first step to start creating content on SocialChef?',
       q1Options: [
         'Connect social media accounts',
         'Search and save a restaurant',
         'Generate AI content',
         'Schedule posts',
       ],
-      q1Explanation:
-        'You need to search and save a restaurant first to access its menu items and brand details for content creation.',
 
-      q2Question: 'Which AI capabilities does SocialChef offer?',
       q2Options: [
         'Image generation only',
         'Caption writing only',
         'Images, videos, and captions',
         'Menu design only',
       ],
-      q2Explanation:
-        'SocialChef provides comprehensive AI-powered content generation including images, videos, and compelling captions with hashtags.',
 
-      q3Question: 'Where does SocialChef get restaurant information from?',
       q3Options: [
         'Manual entry only',
         'Google Places and delivery platforms',
         'Social media only',
         'Custom databases',
       ],
-      q3Explanation:
-        'SocialChef integrates with Google Places for basic info and scans Wolt/Foodora for menu items, providing comprehensive restaurant data.',
 
-      q4Question: 'What can you do with generated content on SocialChef?',
       q4Options: [
         'Download only',
         'Schedule only',
         'Save, schedule, and publish to Facebook',
         'Email only',
-      ],
-      q4Explanation:
-        'All generated content is automatically saved. You can schedule posts in advance and publish directly to Facebook—all from one platform.',
+      ]
     },
 
     // Simple onboarding flow
     simple: {
-      welcome: 'Welcome to SocialChef!',
-      letsGetStarted: "Let's get you set up to create amazing content",
-      selectRestaurant: 'First, select a restaurant to get started',
-      noRestaurantsYet: 'No restaurants yet',
-      searchRestaurants: 'Search Restaurants',
-      generateFirstPost: "Great! Now let's generate your first post",
-      selectMenuItem: 'Select a menu item and platform below',
-      generatingPost: 'Generating your first post...',
-      postGenerated: 'Your post is ready!',
-      connectFacebook: 'Connect Facebook to publish',
-      connectFacebookDescription: 'Connect your Facebook account to start publishing posts',
-      skipForNow: 'Skip for now',
-      allSet: "You're all set!",
-      startCreating: 'Start creating amazing content',
-      goToDashboard: 'Go to Dashboard',
       // Stepper labels
-      stepRestaurant: 'Restaurant',
-      stepCreate: 'Create',
-      stepReview: 'Review',
-      stepConnect: 'Connect',
-      stepPublish: 'Publish',
       // Platform descriptions
-      facebookDescription: 'Post to your Facebook pages',
-      instagramDescription: 'Post to your Instagram business account',
-      instagramRequiresFacebook: 'Instagram requires Facebook connection',
-      connectedStatus: 'Connected',
-      connectedViaFacebook: 'Connected via Facebook',
-      connectInstagram: 'Connect Instagram',
       // Publish step
-      publishTitle: 'Publish Your Post',
-      publishSubtitle: 'Choose how you want to share your content',
-      publishNow: 'Publish Now',
-      publishNowDescription: 'Post immediately to your connected social accounts',
-      scheduleForLater: 'Schedule for Later',
-      scheduleDescription: 'Pick a date and time for your post to go live',
-      selectPlatforms: 'Select platforms:',
-      selectPlatformSingle: 'Select platform:',
-      postPreview: 'Post Preview',
-      connectionWarning:
-        "You haven't connected any social accounts yet. Go back to connect Facebook/Instagram first, or skip to continue without publishing.",
       // Completion modal
-      congratulations: 'Congratulations!',
-      completionMessage:
-        "You're all set up! You can now create amazing social media posts for your restaurant.",
-      restaurantAdded: 'Restaurant added',
-      firstPostCreated: 'First post created',
-      accountsConnected: 'Accounts connected',
-      startCreatingPosts: 'Start Creating Posts!',
       // Navigation buttons
-      backButton: '← Back',
-      continueToCreate: 'Continue to Create →',
-      connectAccountsButton: 'Connect Accounts →',
-      nextButton: 'Next →',
-      skipAndContinue: 'Skip & Continue →',
-      publishing: 'Publishing...',
-      publishNowButton: 'Publish Now',
-      schedulePostButton: 'Schedule Post',
-    },
+    }
   },
 
   // Playground View
   playground: {
-    title: 'Cook Up',
-    subtitle: 'Create amazing social media content',
-    loadingRestaurants: 'Cooking up your restaurants...',
     chooseRestaurant: 'Choose a Restaurant',
-    chooseRestaurantSubtitle: 'Select which restaurant to create content for',
     addNewRestaurant: '+ Add New Restaurant',
-    editRestaurant: 'Edit Restaurant',
     menuItems: 'menu items',
     saved: 'Saved',
-    selectRestaurantButton: 'Select Restaurant',
-    back: '← Back',
-    selectPlatform: 'Select Platform',
-    selectPlatformSubtitle: "Choose where you'll post this content",
-    menuItemsTitle: 'Menu Items ({count})',
-    menuItemsSubtitle: 'Select one or more items to create combo prompts',
-    campaignContext: 'Campaign Context (Optional)',
-    campaignContextPlaceholder: 'e.g., 20% OFF, COMBO DEAL, LIMITED TIME...',
-    campaignContextHint: 'Add promotional text for sticker overlay',
-    stickerSettings: 'Promotional Sticker Settings',
-    stickerStyle: 'Sticker Style',
-    stickerStyleHint: 'Visual style of the promotional sticker',
-    stickerStyleBold: 'Bold Rectangle',
-    stickerStyleOutlined: 'Outlined Box',
-    stickerStyleRibbon: 'Ribbon Banner',
-    stickerStyleBadge: 'Circular Badge',
-    stickerStyleStarburst: 'Starburst Star',
-    stickerPosition: 'Sticker Position',
-    stickerPositionHint: 'Where to place the sticker on image',
-    positionTopLeft: 'Top Left',
-    positionTopCenter: 'Top Center',
-    positionTopRight: 'Top Right',
-    positionCenter: 'Center',
-    positionBottomLeft: 'Bottom Left',
-    positionBottomRight: 'Bottom Right',
-    logoSettings: 'Logo Watermark Settings',
-    includeLogo: 'Include Logo Watermark',
-    includeLogoHint: 'Add your restaurant logo to the image',
-    logoPosition: 'Logo Position',
-    logoPositionHint: 'Where to place the logo watermark',
     livePreview: 'Live Preview',
     yourGeneratedImage: 'Your Generated Image',
     previewDescription: 'Preview how your sticker and logo will appear',
     itemsSelected: '{count} item selected | {count} items selected',
-    generatePrompts: 'Generate Prompts',
-    generating: 'Generating...',
-    clear: 'Clear',
     selectRestaurant: 'Select Restaurant',
-    selectMenu: 'Select Menu Items',
-    generateContent: 'Generate Content',
-    uploadImage: 'Upload Image',
-    instagram: 'Instagram',
-    facebook: 'Facebook',
-    twitter: 'Twitter',
-    tiktok: 'TikTok',
-    caption: 'Caption',
-    hashtags: 'Hashtags',
-    preview: 'Preview',
-    post: 'Post',
-    schedule: 'Schedule',
-    saveToDrafts: 'Save to Drafts',
 
     // Tabs
-    tabImage: 'Image',
-    tabVideo: 'Video',
 
     // AI Prompts
     generatingIdeas: 'Generating creative ideas with AI...',
     aiGeneratedIdeas: 'AI-Generated Ideas',
     getNewIdeas: 'Get New Ideas',
-    clickGetNewIdeasImage: 'Click "Get New Ideas" to generate AI-powered image prompts!',
-    clickGetNewIdeasVideo: 'Click "Get New Ideas" to generate AI-powered video prompts!',
     selectedBadge: 'Selected',
-    selectedPromptLabel: 'Selected Prompt (editable):',
-    selectPromptPlaceholder: 'Select a prompt above...',
 
     // Image Generation
-    generatingImage: 'Generating Image...',
-    generateImageButton: 'Generate Image (1 credit)',
-    generatedImageTitle: 'Generated Image:',
-    generatedMarketingImageAlt: 'Generated marketing image',
-    downloadImage: 'Download Image',
-    schedulePost: 'Schedule Post',
-    publishToFacebook: 'Publish to Facebook',
-    publishing: 'Publishing...',
 
     // Post Content
     postContentTitle: 'Post Content',
-    copyButton: 'Copy',
-    copyPostTextTitle: 'Copy post text',
-    copyHashtagsTitle: 'Copy hashtags',
 
     // Video Generation
-    durationLabel: 'Duration',
-    seconds4: '4 seconds',
-    seconds6: '6 seconds',
-    seconds8: '8 seconds',
-    aspectRatioLabel: 'Aspect Ratio',
-    aspectRatio16x9: '16:9 (Landscape)',
-    aspectRatio9x16: '9:16 (Portrait)',
-    resolutionLabel: 'Resolution',
-    resolution720p: '720p',
-    resolution1080p: '1080p',
-    generatingVideoProgress: 'Generating Video... {progress}%',
-    generateVideoButton: 'Generate Video',
-    generatedVideoTitle: 'Generated Video:',
-    downloadVideo: 'Download Video',
 
     // Restaurant Details Modal
-    information: 'Information',
-    addressLabel: 'Address',
-    phoneLabel: 'Phone',
-    websiteLabel: 'Website',
-    websitePlaceholder: 'https://example.com',
-    notSet: 'Not set',
-    editWebsiteTitle: 'Edit website',
-    ratingLabel: 'Rating',
-    reviewsCount: '({count} reviews)',
-    brandIdentity: 'Brand Identity',
-    brandNameLabel: 'Brand Name',
-    logoLabel: 'Logo',
-    logoAlt: 'Logo',
-    brandColorsLabel: 'Brand Colors',
-    primaryColor: 'Primary',
-    secondaryColor: 'Secondary',
-    accentColor: 'Accent {number}',
-    typographyLabel: 'Typography',
-    openingHoursLabel: 'Opening Hours',
-    editOpeningHoursTitle: 'Edit opening hours',
-    editButton: 'Edit',
-    savingButton: 'Saving...',
-    saveButton: 'Save',
-    cancelButton: 'Cancel',
-    openNowBadge: 'Open Now',
-    closedBadge: 'Closed',
-    hoursPlaceholder: 'Monday: 9:00 AM – 5:00 PM',
-    removeDayTitle: 'Remove day',
-    addDayButton: 'Add Day',
 
     // Style Templates (Easy Mode)
     styleTemplates: {
       behindTheScenes: {
         name: 'Behind the Scenes',
         description: 'Authentic kitchen moment',
-        preview: 'Documentary-style cooking process (works for images & videos)',
+        preview: 'Documentary-style cooking process (works for images & videos)'
       },
       cleanStrict: {
         name: 'Clean Strict',
         description: 'Professional studio quality',
-        preview: 'Clean surface, cinematic lighting (works for images & videos)',
+        preview: 'Clean surface, cinematic lighting (works for images & videos)'
       },
       zoomIn: {
         name: 'Zoom In',
         description: 'Extreme macro close-up',
-        preview: 'Texture details, ASMR-quality (works for images & videos)',
+        preview: 'Texture details, ASMR-quality (works for images & videos)'
       },
       oneBite: {
         name: 'One Bite',
         description: 'Ready-to-eat presentation',
-        preview: 'Satisfying bite reveal (works for images & videos)',
+        preview: 'Satisfying bite reveal (works for images & videos)'
       },
       studioShot: {
         name: 'Studio Shot',
         description: 'Professional advertisement look',
-        preview: '360-degree orbit, premium quality (works for images & videos)',
+        preview: '360-degree orbit, premium quality (works for images & videos)'
       },
       infographic: {
         name: 'Infographic',
         description: 'Deconstructed ingredients view',
-        preview: 'Ingredient assembly or labeled layout (works for images & videos)',
+        preview: 'Ingredient assembly or labeled layout (works for images & videos)'
       },
       placeOnTable: {
         name: 'Place on Table',
         description: 'Dish being served',
-        preview: 'Hands placing dish on table, creates anticipation (VIDEO ONLY)',
+        preview: 'Hands placing dish on table, creates anticipation (VIDEO ONLY)'
       },
       custom: {
         name: 'Custom',
         description: 'Write your own prompt',
-        preview: 'Full creative control (works for images & videos)',
-      },
+        preview: 'Full creative control (works for images & videos)'
+      }
     },
 
     // Additional messages
-    loadingText: 'Cooking up your restaurants...',
-    chooseRestaurantToStart: 'Choose a restaurant to get started',
-    selectPlatformToContinue: 'Select a platform to continue',
-    noMenuItems: 'No menu items available',
-    menuItemsCount: '{count} menu item | {count} menu items',
   },
 
   // Easy Mode Creation
@@ -995,7 +508,7 @@ export default {
       menu: 'Menu',
       customize: 'Customize',
       preview: 'Preview',
-      publish: 'Publish',
+      publish: 'Publish'
     },
     step1: {
       title: 'Pick Your Dish or Upload Image',
@@ -1004,7 +517,7 @@ export default {
         'An image is required to create your post. Select a dish from your menu or upload your own photo.',
       empty: 'No menu items available. Upload an image to continue.',
       imageRequired: 'Please select a menu item or upload an image to continue',
-      nextButton: 'Customize Post',
+      nextButton: 'Customize Post'
     },
     step2: {
       title: 'Customize Your Post',
@@ -1032,92 +545,64 @@ export default {
       changeLogo: 'Change logo',
       removeLogo: 'Remove uploaded logo',
       includeLogo: 'Include logo on image',
-      generating: 'Cooking up your post...',
-      generatingTitle: 'Creating your post',
-      generatingSubtitle: 'Designing your image and writing captions',
       generateButton: 'Generate Image',
-      generateVideoButton: 'Generate Video',
+      generateVideoButton: 'Generate Video'
     },
     upload: {
       button: 'Upload Your Own Image',
-      hint: 'JPG, PNG, or WebP',
+      hint: 'JPG, PNG, or WebP'
     },
     step3: {
       title: 'Preview Your Post',
       subtitle: 'Review and edit your generated content',
-      info: 'Your generated image and content will appear here',
-      nextButton: 'Publish Post',
       editPostText: 'Edit your post text',
-      addHashtag: 'Add hashtag',
-      addHashtagPlaceholder: 'Type hashtag and press Enter',
+      addHashtagPlaceholder: 'Type hashtag and press Enter'
     },
     step4: {
       title: 'Choose Platform & Schedule',
       subtitle: 'Select where and when to publish',
-      platformLabel: 'Select Platform',
-      notConnected: 'Not connected',
-      publishTypeLabel: 'When to publish',
-      publishNow: 'Publish Now',
-      publishNowDescription: 'Post immediately to your selected platform',
-      scheduleLater: 'Schedule for Later',
-      scheduleLaterDescription: 'Choose a specific date and time',
-      scheduleLabel: 'Choose Date & Time',
-      selectDateTime: 'Select date and time',
-      dateLabel: 'Date',
-      timeLabel: 'Time',
-      publishing: 'Publishing your post...',
-      publishButton: 'Publish Now',
-      scheduleButton: 'Schedule',
       successTitle: 'Congratulations!',
       successMessage: 'Your post has been published successfully!',
-      viewPost: 'View your post on Facebook',
       viewOnPlatform: 'View on {platform}',
       partialFailureWarning: 'Some platforms failed to publish:',
-      createAnother: 'Create Another Post',
-    },
+      createAnother: 'Create Another Post'
+    }
   },
 
   // Advanced Mode Creation
   advancedMode: {
-    title: 'Advanced Creation',
-    subtitle: 'Full customization and creative control',
     steps: {
       menuSelection: 'Menu Items',
       customize: 'Customize',
       styleSelection: 'Style',
       preview: 'Preview',
-      generate: 'Generate',
-      publish: 'Publish',
+      publish: 'Publish'
     },
     step1: {
       title: 'Select Menu Items',
-      subtitle: 'Choose items for your post',
       subtitleSingle: 'Select 1 menu item to highlight',
       subtitleCombo: 'Select 2 items for your combo offer',
       subtitleWeekly: 'Assign a dish to each day of the week',
       itemsSelected: '{count} of {max} items selected',
-      selectAtLeast: 'Please select at least 1 menu item',
-      maxItems: 'Maximum {count} item(s) allowed',
-      maxItemsReached: 'Maximum {count} item(s) selected',
       noItems: 'No menu items available',
       uploadTitle: 'Upload Your Own Image',
       uploadButton: 'Upload Image',
       uploadHint: 'JPG, PNG, or WebP',
-      orDivider: 'OR select from menu',
+      orDivider: 'OR select from menu'
     },
     postType: {
       title: 'What type of post do you want to create?',
       single: {
         title: 'Single Item',
-        description: 'Highlight one dish with a focused image',
+        description: 'Highlight one dish with a focused image'
       },
       combo: {
         title: 'Combo Post',
-        description: 'Showcase 2 items as a special offer or bundle',
+        description: 'Showcase 2 items as a special offer or bundle'
       },
       weekly: {
         title: 'Weekly Menu',
-        description: 'Create a menu featuring dishes for each day',
+        description: 'Create a menu featuring dishes for each day'
       },
       weekLengthLabel: 'How many days?',
       fiveDays: '5 days (Mon-Fri)',
@@ -1136,26 +621,15 @@ export default {
         thursday: 'Thursday',
         friday: 'Friday',
         saturday: 'Saturday',
-        sunday: 'Sunday',
-      },
+        sunday: 'Sunday'
+      }
     },
     step2: {
       title: 'Customize Your Design',
       subtitle: 'Tailor the look and feel of your post',
       logoPositionLabel: 'Restaurant Logo Position',
       logoPositionHint: 'Where to place your restaurant logo',
-      textOverlayLabel: 'Text Overlay',
-      textOverlayPlaceholder: 'Add custom text...',
-      fontLabel: 'Font',
-      textSizeLabel: 'Text Size',
-      textColorLabel: 'Text Color',
-      colorSchemeLabel: 'Color Scheme',
-      colorSchemeHint: 'Choose a color palette for your image',
-      backgroundStyleLabel: 'Background Style',
-      backgroundStyleHint: 'Style of the background',
-      layoutTemplateLabel: 'Layout Template',
-      layoutTemplateHint: 'Choose how elements are arranged',
-      previewLabel: 'Preview',
+      previewLabel: 'Preview'
     },
     logoPositions: {
       topLeft: 'Top Left',
@@ -1163,42 +637,18 @@ export default {
       bottomLeft: 'Bottom Left',
       bottomRight: 'Bottom Right',
       center: 'Center',
-      none: 'No Logo',
+      none: 'No Logo'
     },
     fonts: {
       playfair: 'Playfair Display (Elegant)',
       inter: 'Inter (Modern)',
       montserrat: 'Montserrat (Bold)',
       lora: 'Lora (Classic)',
-      roboto: 'Roboto (Clean)',
+      roboto: 'Roboto (Clean)'
     },
-    colorSchemes: {
-      warm: 'Warm (Reds, Oranges, Yellows)',
-      cool: 'Cool (Blues, Greens, Purples)',
-      earthy: 'Earthy (Browns, Greens, Tans)',
-      vibrant: 'Vibrant (Bright, High Contrast)',
-      monochrome: 'Monochrome (Black & White)',
-      brandColors: 'Brand Colors (Your Restaurant Theme)',
-    },
-    backgroundStyles: {
-      solid: 'Solid Color',
-      gradient: 'Gradient',
-      photo: 'Photo Background',
-      texture: 'Textured Background',
-    },
-    layoutTemplates: {
-      centerFocus: 'Center Focus (Single Item Highlight)',
-      splitScreen: 'Split Screen (Two Items Side by Side)',
-      collage: 'Collage (Multiple Items Arranged)',
-      grid: 'Grid (Organized Layout)',
-      hero: 'Hero (Large Focal Point)',
-    },
-    step3: {
+                step3: {
       title: 'Choose Your Style',
       subtitle: 'Select from AI-generated style variations',
-      generating: 'Generating creative style variations...',
-      generatingVariations: 'Creating style variations...',
-      generatingPrompts: 'Creating unique prompts for you...',
       generatingTitle: 'Crafting your styles',
       generatingSubtitle: 'Our AI is creating unique design options for you',
       selectStyle: 'Select a style to continue',
@@ -1206,26 +656,10 @@ export default {
       editPrompt: 'Edit Prompt',
       promptLabel: 'AI Prompt (Editable)',
       promptPlaceholder: 'Describe how you want your image to look...',
-      regenerate: 'Regenerate Styles',
+      regenerate: 'Regenerate Styles'
     },
     styleVariations: {
-      elegant: {
-        title: 'Elegant & Refined',
-        description: 'Sophisticated design with clean aesthetics',
-      },
-      vibrant: {
-        title: 'Vibrant & Bold',
-        description: 'Eye-catching with energetic colors',
-      },
-      rustic: {
-        title: 'Rustic & Authentic',
-        description: 'Warm, natural, and inviting feel',
-      },
-      modern: {
-        title: 'Modern & Sleek',
-        description: 'Contemporary design with sharp lines',
-      },
-    },
+                            },
     strictness: {
       label: 'Image Style',
       hint: 'How closely should the result match the original?',
@@ -1234,12 +668,12 @@ export default {
       flexible: 'Flexible',
       flexibleDesc: 'Elevated presentation with creative touches',
       creative: 'Creative',
-      creativeDesc: 'Artistic reimagining with extras and garnishes',
+      creativeDesc: 'Artistic reimagining with extras and garnishes'
     },
     holidayTheme: {
       label: 'Theme / Inspiration',
       hint: 'Add a seasonal or themed style to your image',
-      customPlaceholder: 'Enter your custom theme...',
+      customPlaceholder: 'Enter your custom theme...'
     },
     comboOptions: {
       textPlacement: 'Text Placement',
@@ -1253,105 +687,49 @@ export default {
       sideBySide: 'Side by Side',
       stacked: 'Stacked',
       overlapping: 'Overlapping',
-      diagonal: 'Diagonal',
+      diagonal: 'Diagonal'
     },
     preview: {
       title: 'Preview',
-      placeholder: 'Your post preview will appear here',
+      placeholder: 'Your post preview will appear here'
     },
     step4: {
       title: 'Preview Your Post',
       subtitle: 'Review and edit your generated content',
-      generating: 'Creating your masterpiece',
-      generatingSubtitle: 'Generating image and writing content',
       editPostText: 'Edit your post text',
       addHashtagPlaceholder: 'Type hashtag and press Enter',
-      nextButton: 'Continue to Publish',
+      nextButton: 'Continue to Publish'
     },
     step5: {
       title: 'Generate Your Image',
       subtitle: 'Create your custom post image',
-      generating: 'Generating your image...',
-      generatingWithAI: 'Using AI to create your perfect post...',
-      generatingImageTitle: 'Creating your image',
-      generatingImageSubtitle: 'Bringing your vision to life with AI',
-      generatingContentTitle: 'Writing your caption',
-      generatingContentSubtitle: 'Crafting the perfect words for your post',
-      logoVariantLabel: 'Social Chef Logo Style',
-      logoVariantHint: 'Toggle to compare different logo variations',
-      fullLogo: 'Full Logo',
-      blackOutline: 'Black Outline',
-      goldOutline: 'Gold Outline',
-      generateButton: 'Generate Image (1 credit)',
-      regenerate: 'Regenerate',
       imagePreview: 'Image Preview',
       postTextLabel: 'Post Text',
       postTextPlaceholder: 'Write your post caption...',
       hashtagsLabel: 'Hashtags',
-      addHashtag: 'Add hashtag...',
+      addHashtag: 'Add hashtag...'
     },
-    step6: {
-      title: 'Publish Your Post',
-      subtitle: 'Choose platforms and schedule',
-      imagePreview: 'Image Preview',
-      postContent: 'Post Content',
-      postTextLabel: 'Post Text',
-      postTextPlaceholder: 'Write your post caption...',
-      hashtagsLabel: 'Hashtags',
-      addHashtag: 'Add hashtag...',
-      noHashtags: 'No hashtags yet. Add some below.',
-      hashtagHint: 'Press Enter to add',
-      editContent: 'Edit Content',
-      looksGood: 'Looks Good!',
-      publishing: 'Publishing your post...',
-    },
-    publish: {
-      platformLabel: 'Select Platform',
-      whenLabel: 'When to publish?',
-      now: 'Publish Now',
-      nowDesc: 'Post immediately to your selected platform',
-      schedule: 'Schedule for Later',
-      scheduleDesc: 'Choose a specific date and time',
-      date: 'Date',
-      time: 'Time',
-      publishNow: 'Publish Now',
-      schedulePost: 'Schedule Post',
-      publishing: 'Publishing...',
+        publish: {
       publishingTitle: 'Sharing your post',
       publishingSubtitle: 'Uploading to your social accounts',
-      success: 'Your post was published successfully!',
-      successTitle: 'Successfully Published!',
-      successMessage: 'Your post is now live on {platform}',
-      successMessageMultiple: 'Your post is now live on {count} platforms',
-      viewPost: 'View Post',
-      viewOnPlatform: 'View on {platform}',
-      createAnother: 'Create Another',
-      error: 'Failed to publish. Please try again.',
+      error: 'Failed to publish. Please try again.'
     },
     navigation: {
       back: '← Back',
       next: 'Next →',
-      generate: 'Generate →',
-      skip: 'Skip',
-      finish: 'Finish',
+      generate: 'Generate →'
     },
     messages: {
-      itemsRequired: 'Please select at least one menu item',
       styleRequired: 'Please select a style variation',
-      generating: 'Generating your content...',
-      generationSuccess: 'Your post is ready!',
       generationError: 'Failed to generate. Please try again.',
       captionGenerationFailed: 'Caption Generation Failed',
       imageGenerationFailed: 'Image Generation Failed',
-      unexpectedError: 'An unexpected error occurred. Please try again.',
-      savingDraft: 'Saving draft...',
-      draftSaved: 'Draft saved successfully!',
-    },
+      unexpectedError: 'An unexpected error occurred. Please try again.'
+    }
   },
 
   // Weekly Menu Customization Options
   weeklyCustomization: {
-    title: 'Weekly Menu Options',
     layout: {
       title: 'Menu Layout',
       featuredGrid: 'Featured + Grid',
@@ -1361,9 +739,7 @@ export default {
       verticalStack: 'Vertical List',
       verticalStackDesc: '5 items stacked top to bottom',
       gridWithHeader: '2x3 Grid',
-      gridWithHeaderDesc: '2x3 grid with title header',
-      filmstrip: 'Horizontal Strip',
-      filmstripDesc: 'Horizontal filmstrip style',
+      gridWithHeaderDesc: '2x3 grid with title header'
     },
     dates: {
       title: 'Date Display',
@@ -1373,7 +749,7 @@ export default {
       formatDayOnly: 'Day Names Only',
       showWeekNumber: 'Show week number',
       showMonthName: 'Show month header',
-      dateRange: 'Custom date range',
+      dateRange: 'Custom date range'
     },
     themes: {
       title: 'Menu Theme',
@@ -1387,110 +763,50 @@ export default {
       thanksgiving: 'Thanksgiving',
       newYear: 'New Year',
       custom: 'Custom Text',
-      customPlaceholder: 'Enter your custom theme text...',
-    },
+      customPlaceholder: 'Enter your custom theme text...'
+    }
   },
 
   // Connect Accounts View
   connectAccounts: {
-    title: 'Connect Social Accounts',
-    subtitle: 'Link your social media accounts to post content',
     pageTitle: 'Connect Social Media Accounts',
     pageSubtitle:
       'Connect your social media accounts to start posting content directly from our platform',
-    back: 'Back',
-    instagram: 'Instagram',
-    facebook: 'Facebook',
     facebookPages: 'Facebook Pages',
-    facebookDescription: 'Connect your Facebook account to manage and post to your Facebook pages',
-    twitter: 'Twitter',
-    tiktok: 'TikTok',
-    linkedin: 'LinkedIn',
-    youtube: 'YouTube',
-    connected: 'Connected',
-    notConnected: 'Not Connected',
     connect: 'Connect',
     disconnect: 'Disconnect',
-    reconnect: 'Reconnect',
-    connectToFacebook: 'Connect to Facebook',
     connecting: 'Connecting...',
-    accountConnected: 'Account connected successfully!',
-    accountDisconnected: 'Account disconnected',
-    connectionError: 'Failed to connect account',
-    accountsConnected: '{count} Account Connected | {count} Accounts Connected',
-    connectedPages: 'Connected Pages',
-    connectedTime: 'Connected {time}',
-    justNow: 'just now',
-    minutesAgo: '{count} minutes ago',
-    hoursAgo: '{count} hours ago',
-    daysAgo: '{count} days ago',
     comingSoon: 'Coming Soon',
     errorOccurred: 'An error occurred. Please try again.',
-    continueToPlayground: 'Continue to Playground →',
     successfullyConnected: 'Successfully connected {count} Facebook page(s)!',
     successfullyDisconnected: 'Successfully disconnected "{name}"',
     confirmDisconnect: 'Are you sure you want to disconnect "{name}"?',
-    disconnectTitle: 'Disconnect Account',
+    disconnectTitle: 'Disconnect Account'
   },
 
   // Scheduler View
   scheduler: {
     title: 'Content Scheduler',
     subtitle: 'Plan and schedule your social media posts',
-    today: 'Today',
-    week: 'Week',
-    month: 'Month',
-    day: 'Day',
-    previous: 'Previous',
-    next: 'Next',
-    schedulePost: 'Schedule Post',
     scheduledPosts: 'Scheduled Posts',
-    noScheduledPosts: 'No scheduled posts',
     postScheduled: 'Post scheduled successfully!',
-    selectDate: 'Select Date',
-    selectTime: 'Select Time',
-    timezone: 'Timezone',
-    loading: 'Loading schedule...',
     createPost: 'Create Post',
-    addPost: 'Add Post',
-    createNewPost: 'Create new post for this date',
-    scheduleSavedPost: 'Schedule a saved post for this date',
-    holidays: 'Holidays',
     moreHolidays: 'more',
-    noPostsScheduled: 'No posts scheduled for this day',
-    goToCookUp: 'Go to Cook Up to create and schedule new posts!',
-    goToCookUpButton: 'Go to Cook Up',
     postDetails: 'Post Details',
-    scheduledFor: 'Scheduled For',
     publishedAt: 'Published At',
     viewOn: 'View on',
-    platformAndStatus: 'Platform & Status',
     restaurant: 'Restaurant',
     caption: 'Caption',
     edit: 'Edit',
-    cancel: 'Cancel',
     cancelPost: 'Cancel Post',
-    confirmCancel: 'Are you sure you want to cancel this scheduled post?',
     noTime: 'No time',
-    noTimeSet: 'No time set',
-    noTimeSpecified: 'No time specified',
-    postedAgo: 'Posted {time} ago',
-    postsIn: 'Posts in {time}',
-    days: 'day | days',
-    viewDetails: 'View Details',
-    failedToLoad: 'Failed to load',
     noMedia: 'No media',
-    noMediaAvailable: 'No media available',
-    image: 'Image',
-    video: 'Video',
     post: 'post',
-    posts: 'posts',
-    timeLeft: 'left',
     publishTime: 'Publish Time',
     captionGenerationFailed: 'Caption Generation Failed',
     imageGenerationFailed: 'Image Generation Failed',
     generationFailed: 'Generation Failed',
-    unexpectedError: 'An unexpected error occurred. Please try again.',
+    unexpectedError: 'An unexpected error occurred. Please try again.'
   },
 
   // Edit Scheduled Post Modal
@@ -1505,37 +821,16 @@ export default {
     detected: 'Detected',
     notes: 'Notes (Optional)',
     notesPlaceholder: 'Add any notes about this post...',
-    characters: 'characters',
+    characters: 'characters'
   },
 
   // Posts View (previously Favorites)
   posts: {
-    title: 'Posts',
-    subtitle: 'Your saved marketing content',
-    all: 'All',
-    drafts: 'Drafts',
-    scheduled: 'Scheduled',
-    published: 'Published',
-    loading: 'Loading posts...',
-    noPosts: 'No posts yet',
-    noPostsDescription: 'Go to Cook Up to create your first post!',
-    goToCookUp: 'Go to Cook Up',
     editPost: 'Edit Post',
-    deletePost: 'Delete Post',
-    postDeleted: 'Post deleted',
-    confirmDelete: 'Are you sure you want to delete this post?',
-    schedule: 'Schedule',
-    delete: 'Delete',
-    postDetails: 'Post Details',
     postText: 'Post Text',
     hashtags: 'Hashtags',
-    originalPrompt: 'Original Prompt',
-    copy: 'Copy',
-    copyAll: 'Copy All',
-    copiedToClipboard: 'Copied to clipboard!',
     image: 'image',
     video: 'video',
-    restaurant: 'Restaurant',
     // Additional post actions
     deleteModalTitle: 'Delete Post',
     deleteModalMessage: 'Are you sure you want to delete this post? This action cannot be undone.',
@@ -1543,43 +838,26 @@ export default {
     platformSection: 'Platform',
     saveChangesButton: 'Save Changes',
     cancelChangesButton: 'Cancel',
-    editButton: 'Edit',
-    scheduleButton: 'Schedule',
     publishButton: 'Publish',
-    deleteButton: 'Delete',
     postAlt: 'Post',
-    publishToInstagram: 'Publish to Instagram',
-    publishing: 'Publishing...',
-    publishSuccess: 'Successfully published to Instagram!',
-    publishError: 'Failed to publish to Instagram',
     create: {
       captionGenerationFailed: 'Caption Generation Failed',
       imageGenerationFailed: 'Image Generation Failed',
       videoGenerationFailed: 'Video Generation Failed',
       generationFailed: 'Generation Failed',
-      unexpectedError: 'An unexpected error occurred. Please try again.',
-    },
+      unexpectedError: 'An unexpected error occurred. Please try again.'
+    }
   },
 
   // Content Hub View
   contentHub: {
-    title: 'Content',
     loading: 'Loading your content...',
-    createNew: 'Create New Content',
-    createDescription: 'Generate images and posts for your restaurant',
-    startCreating: 'Start Creating',
     yourPosts: 'Your Posts',
-    changeRestaurant: 'Change Restaurant',
     noPosts: 'No posts yet',
     noPostsDescription: 'Create your first post to get started!',
-    loadError: 'Failed to load content',
-    noRestaurant: 'No restaurant selected',
     filterAll: 'All',
-    filterPlatform: 'Platform',
-    filterContentType: 'Content Type',
     sortNewest: 'Newest First',
     sortOldest: 'Oldest First',
-    menuItems: '{count} menu items',
     // Welcome state for new users
     welcomeTitle: 'Welcome!',
     welcomeSubtitle: "Let's get started by adding your first restaurant.",
@@ -1587,17 +865,13 @@ export default {
     addFirstRestaurantDescription:
       "Search for your restaurant and we'll automatically import your menu and branding.",
     noRestaurantPrompt: 'Add a restaurant to start creating posts.',
-    createPost: 'Create Post',
+    createPost: 'Create Post'
   },
 
   // Content Create View
   contentCreate: {
-    title: 'Create Content',
     loading: 'Loading...',
     loadError: 'Failed to load restaurant',
-    advancedMode: 'Advanced Mode',
-    advancedDescription: 'Advanced mode with full customization options is coming soon.',
-    switchToEasy: 'Switch to Easy Mode',
     switchRestaurant: 'Switch',
     imageError: 'Failed to generate image. Please try again.',
     videoError: 'Failed to generate video. Please try again.',
@@ -1605,15 +879,10 @@ export default {
     noPrompts: 'No prompts were generated',
     generateError: 'Failed to generate content',
     publishError: 'Failed to publish to Facebook',
-    connectError: 'Failed to connect Facebook',
     noFacebookPage: 'No Facebook page connected',
     facebookReconnectRequired:
       'Your Facebook connection has expired. Please reconnect to continue.',
-    facebookReconnectMessage:
-      'Your Facebook connection has expired. Please reconnect to publish or schedule posts.',
-    reconnectFacebook: 'Reconnect Facebook',
-    platformNotSupported: 'Publishing to this platform is not yet supported',
-    noPlatformSelected: 'Please select at least one platform',
+    noPlatformSelected: 'Please select at least one platform'
   },
 
   // Restaurant Selector Modal
@@ -1624,36 +893,21 @@ export default {
     delete: 'Remove restaurant',
     deleteTitle: 'Remove Restaurant',
     confirmDelete: 'Are you sure you want to remove "{name}" from your saved restaurants?',
-    restaurantAdded: 'Restaurant added successfully!',
+    restaurantAdded: 'Restaurant added successfully!'
   },
 
   // Profile View
   profile: {
     title: 'Profile Settings',
-    subtitle: 'Manage your account settings',
     subtitleExtended: 'Manage your account information and subscription',
     personalInfo: 'Personal Information',
-    name: 'Name',
     email: 'Email',
     emailAddress: 'Email Address',
-    phone: 'Phone',
-    bio: 'Bio',
-    avatar: 'Avatar',
     userId: 'User ID',
-    changeAvatar: 'Change Avatar',
-    changePassword: 'Change Password',
-    currentPassword: 'Current Password',
-    newPassword: 'New Password',
-    confirmPassword: 'Confirm Password',
-    updateProfile: 'Update Profile',
-    updating: 'Updating...',
     saving: 'Saving...',
     saveChanges: 'Save Changes',
     profileUpdated: 'Profile updated successfully!',
-    passwordUpdated: 'Password updated successfully!',
     deleteAccount: 'Delete Account',
-    deleteAccountWarning: 'This action cannot be undone',
-    confirmDeleteAccount: 'Are you sure you want to delete your account?',
     edit: 'Edit',
     cancel: 'Cancel',
     subscriptionAndPlan: 'Subscription & Plan',
@@ -1666,137 +920,42 @@ export default {
     cancelNotice: 'Your subscription will be cancelled at the end of the current billing period.',
     upgradePlan: 'Upgrade Plan',
     cancelSubscription: 'Cancel Subscription',
-    upgradeToPremium: 'Upgrade to Premium',
     billingInformation: 'Billing Information',
     billingDescription:
       'Billing is managed through Stripe. Click below to manage your payment methods, view invoices, and update billing information.',
     manageBilling: 'Manage Billing',
     loading: 'Loading...',
     accountSecurity: 'Account Security',
-    password: 'Password',
-    resetPasswordDescription: 'Reset your password via email',
-    resetPassword: 'Reset Password',
     deleteAccountDanger: 'Delete Account',
     deleteAccountDescription: 'Permanently delete your account and all data',
     cancelSubscriptionTitle: 'Cancel Subscription',
     cancelSubscriptionMessage:
       "Are you sure you want to cancel your subscription? You'll still have access until the end of your current billing period.",
     keepSubscription: 'Keep Subscription',
-    deleteAccountTitle: 'Delete Account',
-    deleteAccountMessage:
-      'This action cannot be undone. All your data, restaurants, and generated content will be permanently deleted.',
-    typeDeleteConfirm: "Type 'DELETE' to confirm",
-    typeDeletePlaceholder: 'DELETE',
-    deleteMyAccount: 'Delete My Account',
     failedToOpenPortal: 'Failed to open billing portal',
     failedToCancelSubscription: 'Failed to cancel subscription',
-    failedToDeleteAccount: 'Failed to delete account',
-    failedToUpdateProfile: 'Failed to update profile',
+    failedToUpdateProfile: 'Failed to update profile'
   },
 
   // Saved Restaurants View
-  savedRestaurants: {
-    title: 'Saved Restaurants',
-    subtitle: 'Your favorite restaurants',
-    noRestaurants: 'No saved restaurants',
-    removeRestaurant: 'Remove Restaurant',
-    restaurantRemoved: 'Restaurant removed',
-    viewMenu: 'View Menu',
-  },
-
+  
   // Test Post View
-  testPost: {
-    title: 'Test Post',
-    subtitle: 'Preview and test your post',
-    platform: 'Platform',
-    content: 'Content',
-    image: 'Image',
-    sendTest: 'Send Test',
-    sending: 'Sending...',
-    testSent: 'Test sent successfully!',
-  },
-
+  
   // Errors
   errors: {
     generic: 'Something went wrong',
     networkError: 'Network error. Please check your connection.',
-    unauthorized: 'You are not authorized to perform this action',
-    notFound: 'Resource not found',
-    serverError: 'Server error. Please try again later.',
-    validationError: 'Please check your input',
-    sessionExpired: 'Your session has expired. Please log in again.',
+    validationError: 'Please check your input'
   },
 
   // Alerts & Toasts
   alerts: {
-    success: {
-      saved: 'Saved successfully!',
-      deleted: 'Deleted successfully!',
-      updated: 'Updated successfully!',
-      created: 'Created successfully!',
-      uploaded: 'Uploaded successfully!',
-      connected: 'Connected successfully!',
-      disconnected: 'Disconnected successfully!',
-      scheduled: 'Scheduled successfully!',
-      published: 'Published successfully!',
-      copied: 'Copied to clipboard!',
-    },
-    error: {
-      saveFailed: 'Failed to save',
-      deleteFailed: 'Failed to delete',
-      updateFailed: 'Failed to update',
-      createFailed: 'Failed to create',
-      uploadFailed: 'Failed to upload',
-      connectFailed: 'Failed to connect',
-      disconnectFailed: 'Failed to disconnect',
-      scheduleFailed: 'Failed to schedule',
-      publishFailed: 'Failed to publish',
-      loadFailed: 'Failed to load',
-      invalidInput: 'Invalid input',
-      requiredField: 'This field is required',
-    },
-    warning: {
-      unsavedChanges: 'You have unsaved changes',
-      confirmDelete: 'Are you sure you want to delete this?',
-      confirmCancel: 'Are you sure you want to cancel?',
-      confirmDisconnect: 'Are you sure you want to disconnect?',
-      lowCredits: 'Low credits remaining',
-      noInternet: 'No internet connection',
-    },
-    info: {
-      processing: 'Processing...',
-      loading: 'Loading...',
-      uploading: 'Uploading...',
-      generating: 'Generating...',
-      saving: 'Saving...',
-      connecting: 'Connecting...',
-    },
-  },
+                  },
 
   // Form Validation
-  validation: {
-    required: 'This field is required',
-    email: 'Please enter a valid email address',
-    url: 'Please enter a valid URL',
-    minLength: 'Minimum {min} characters required',
-    maxLength: 'Maximum {max} characters allowed',
-    minValue: 'Minimum value is {min}',
-    maxValue: 'Maximum value is {max}',
-    invalidFormat: 'Invalid format',
-    passwordMismatch: 'Passwords do not match',
-    passwordTooWeak: 'Password is too weak',
-    invalidPhone: 'Please enter a valid phone number',
-    fileTooBig: 'File size exceeds maximum allowed',
-    fileTypeInvalid: 'Invalid file type',
-    dateInvalid: 'Please enter a valid date',
-    futureDate: 'Date must be in the future',
-    pastDate: 'Date must be in the past',
-  },
-
+  
   // Languages
   languages: {
-    en: 'English',
-    no: 'Norwegian',
     selectLanguage: 'Language',
     selectCurrency: 'Currency (Dev)',
   },
@@ -1806,27 +965,10 @@ export default {
     title: 'Publish Post',
     preview: 'Preview',
     dateLabel: 'Date',
-    dateHint: 'Date pre-filled from calendar selection',
     timeLabel: 'Time (Optional)',
-    selectedTime: 'Selected: {time}',
     timezoneLabel: 'Timezone',
-    autoDetected: '(Auto-detected)',
-    currentTime: 'Current time: {time}',
-    platformLabel: 'Platform',
-    selectPlatform: 'Select a platform...',
-    platformWarning: 'Please select a platform to publish to',
-    platformLimited: 'Only Facebook is currently supported. Other platforms coming soon.',
-    selectAtLeastOne: 'Please select at least one platform',
-    onlyFacebookSupported:
-      'Note: Only Facebook posting is currently active. Other platforms coming soon.',
-    connected: 'Connected',
-    notConnected: 'Not connected',
-    comingSoon: 'Coming soon',
-    schedulingToMultiple: 'Scheduling to {count} platforms...',
-    partialSuccess: 'Scheduled to {count} platform(s). Some failed.',
     notesLabel: 'Notes (Optional)',
-    notesPlaceholder: 'Add any notes about this scheduled post...',
-    scheduling: 'Scheduling...',
+    notesPlaceholder: 'Add any notes about this scheduled post...'
   },
 
   // Unified Schedule Post
@@ -1837,16 +979,13 @@ export default {
     selectPlatforms: 'Select Platforms',
     selectDate: 'Select Date',
     selectTime: 'Select Time',
-    timezone: 'Timezone',
-    connected: 'Connected',
-    notConnected: 'Not connected',
     tapToConnect: 'Tap to connect',
     comingSoon: 'Coming Soon',
     publish: 'Publish',
     schedule: 'Schedule Post',
     noPlatformSelected: 'Please select at least one platform',
     noDateSelected: 'Please select a date',
-    mustBeInFuture: 'Scheduled time must be after now',
+    mustBeInFuture: 'Scheduled time must be after now'
   },
 
   // Mode Toggle
@@ -1857,35 +996,15 @@ export default {
     advancedTitle: 'Advanced Mode - Full customization',
     confirmTitle: 'Switch Mode?',
     confirmMessage: 'You have unsaved work. Switching modes will discard your current progress.',
-    switchAnyway: 'Switch Anyway',
+    switchAnyway: 'Switch Anyway'
   },
 
   // Confirm Modal
-  confirmModal: {
-    defaultTitle: 'Confirm Action',
-    defaultConfirm: 'Confirm',
-    defaultCancel: 'Cancel',
-    defaultLoading: 'Processing...',
-  },
-
+  
   // Pick Post Modal
-  pickPostModal: {
-    pickTitle: 'Pick a Saved Post',
-    scheduleTitle: 'Schedule Your Post',
-    loadingPosts: 'Loading posts...',
-    noPostsYet: 'No posts yet! Create content in the Playground first.',
-    goToPlayground: 'Go to Playground',
-    previous: '← Previous',
-    pageInfo: 'Page {current} of {total} ({count} posts)',
-  },
-
+  
   // Generation Result Modal
-  generationModal: {
-    failedTitle: 'Generation Failed',
-    successTitle: 'Your Post is Ready!',
-    loadingTitle: 'Cooking Up Your Post...',
-  },
-
+  
   // Publishing Progress Modal
   publishing: {
     title: 'Publishing Your Post...',
@@ -1894,8 +1013,7 @@ export default {
     successMessage: 'Your post has been published successfully!',
     errorTitle: 'Publishing Failed',
     errorMessage: 'Failed to publish to any platform.',
-    viewPost: 'View Post',
-    createAnother: 'Create Another Post',
+    createAnother: 'Create Another Post'
   },
 
   // Sidebar Navigation
@@ -1910,20 +1028,12 @@ export default {
     upgrade: 'Upgrade',
     profile: 'Profile',
     logout: 'Logout',
-    notifications: 'Notifications',
+    notifications: 'Notifications'
   },
 
   // New Dashboard Elements
   dashboardNew: {
-    active: 'Active',
-    createPost: 'Create Post',
-    createPostDesc: 'Design new content',
-    schedule: 'Schedule',
-    scheduleDesc: 'Plan calendar',
-    analytics: 'Analytics',
-    analyticsDesc: 'View insights',
     settings: 'Settings',
-    settingsDesc: 'Manage account',
     recentPosts: 'Recent Posts',
     viewAll: 'View All',
     viewCalendar: 'View Calendar',
@@ -1933,8 +1043,6 @@ export default {
     createFirstPost: 'Create Your First Post',
     post: 'Post',
     status: 'Status',
-    engagement: 'Engagement',
-    reach: 'Reach',
     platforms: 'Platforms',
     activeCount: 'Active',
     allRestaurants: 'All Restaurants',
@@ -1944,16 +1052,10 @@ export default {
     failed: 'Failed',
     cancelled: 'Cancelled',
     draft: 'Draft',
-    upcoming: 'upcoming',
     creditsLeft: 'credits left',
-    drafts: 'drafts',
-    today: 'today',
-    thisWeek: 'this week',
-    week: 'week',
-    month: 'month',
     tierLifetimeDesc: 'Unlimited access forever',
     tierYearlyDesc: 'Best value, billed annually',
-    tierMonthlyDesc: 'Flexible monthly billing',
+    tierMonthlyDesc: 'Flexible monthly billing'
   },
 
   // Privacy Policy
@@ -1964,7 +1066,7 @@ export default {
       introduction: {
         title: '1. Introduction',
         content:
-          'Welcome to SocialChef ("we," "our," or "us"). We are committed to protecting your privacy and ensuring the security of your personal information. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our AI-powered social media management platform for restaurants.',
+          'Welcome to SocialChef ("we," "our," or "us"). We are committed to protecting your privacy and ensuring the security of your personal information. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our AI-powered social media management platform for restaurants.'
       },
       informationWeCollect: {
         title: '2. Information We Collect',
@@ -1979,8 +1081,8 @@ export default {
           usage:
             'Usage Information: How you interact with our platform, including features used, posts created, and scheduling preferences.',
           device:
-            'Device Information: Browser type, IP address, device identifiers, and operating system for security and analytics purposes.',
-        },
+            'Device Information: Browser type, IP address, device identifiers, and operating system for security and analytics purposes.'
+        }
       },
       howWeUse: {
         title: '3. How We Use Your Information',
@@ -1994,8 +1096,8 @@ export default {
             'Send you service-related communications, updates, and marketing materials (with your consent).',
           security:
             'Ensure the security of our platform and protect against fraud or unauthorized access.',
-          legal: 'Comply with legal obligations and enforce our terms of service.',
-        },
+          legal: 'Comply with legal obligations and enforce our terms of service.'
+        }
       },
       dataSharing: {
         title: '4. Data Sharing and Disclosure',
@@ -2007,19 +1109,19 @@ export default {
             'Service Providers: Third-party vendors who help us operate our platform (hosting, analytics, payment processing).',
           legal: 'Legal Requirements: When required by law, court order, or government request.',
           businessTransfer:
-            'Business Transfers: In connection with a merger, acquisition, or sale of assets.',
+            'Business Transfers: In connection with a merger, acquisition, or sale of assets.'
         },
-        noSelling: 'We do not sell your personal information to third parties.',
+        noSelling: 'We do not sell your personal information to third parties.'
       },
       dataSecurity: {
         title: '5. Data Security',
         content:
-          'We implement industry-standard security measures to protect your information, including encryption, secure servers, and regular security audits. However, no method of transmission over the Internet is 100% secure, and we cannot guarantee absolute security.',
+          'We implement industry-standard security measures to protect your information, including encryption, secure servers, and regular security audits. However, no method of transmission over the Internet is 100% secure, and we cannot guarantee absolute security.'
       },
       dataRetention: {
         title: '6. Data Retention',
         content:
-          'We retain your personal information for as long as your account is active or as needed to provide you services. You may request deletion of your data at any time by contacting us or through your account settings.',
+          'We retain your personal information for as long as your account is active or as needed to provide you services. You may request deletion of your data at any time by contacting us or through your account settings.'
       },
       yourRights: {
         title: '7. Your Rights',
@@ -2030,36 +1132,36 @@ export default {
           deletion: 'Deletion: Request deletion of your personal information.',
           portability: 'Portability: Request a copy of your data in a portable format.',
           withdraw:
-            'Withdraw Consent: Withdraw consent for processing where consent is the legal basis.',
+            'Withdraw Consent: Withdraw consent for processing where consent is the legal basis.'
         },
-        contact: 'To exercise these rights, please contact us at the email address below.',
+        contact: 'To exercise these rights, please contact us at the email address below.'
       },
       cookies: {
         title: '8. Cookies and Tracking',
         content:
-          'We use cookies and similar technologies to improve your experience, analyze usage, and personalize content. You can control cookie preferences through your browser settings. Some features may not function properly if cookies are disabled.',
+          'We use cookies and similar technologies to improve your experience, analyze usage, and personalize content. You can control cookie preferences through your browser settings. Some features may not function properly if cookies are disabled.'
       },
       thirdParty: {
         title: '9. Third-Party Links',
         content:
-          'Our platform may contain links to third-party websites or services. We are not responsible for the privacy practices of these external sites. We encourage you to review their privacy policies before providing any personal information.',
+          'Our platform may contain links to third-party websites or services. We are not responsible for the privacy practices of these external sites. We encourage you to review their privacy policies before providing any personal information.'
       },
       children: {
         title: "10. Children's Privacy",
         content:
-          'Our services are not intended for individuals under 18 years of age. We do not knowingly collect personal information from children. If you believe we have collected information from a child, please contact us immediately.',
+          'Our services are not intended for individuals under 18 years of age. We do not knowingly collect personal information from children. If you believe we have collected information from a child, please contact us immediately.'
       },
       changes: {
         title: '11. Changes to This Policy',
         content:
-          'We may update this Privacy Policy from time to time. We will notify you of significant changes by posting the new policy on our platform and updating the "Last Updated" date. Your continued use of our services after changes constitutes acceptance of the updated policy.',
+          'We may update this Privacy Policy from time to time. We will notify you of significant changes by posting the new policy on our platform and updating the "Last Updated" date. Your continued use of our services after changes constitutes acceptance of the updated policy.'
       },
       contact: {
         title: '12. Contact Us',
         content:
-          'If you have questions about this Privacy Policy or our data practices, please contact us at:',
-      },
-    },
+          'If you have questions about this Privacy Policy or our data practices, please contact us at:'
+      }
+    }
   },
 
   // Terms of Service
@@ -2070,17 +1172,17 @@ export default {
       acceptance: {
         title: '1. Acceptance of Terms',
         content:
-          'By accessing or using SocialChef ("Service"), you agree to be bound by these Terms of Service ("Terms"). If you do not agree to these Terms, please do not use our Service. These Terms apply to all users, including visitors, registered users, and subscribers.',
+          'By accessing or using SocialChef ("Service"), you agree to be bound by these Terms of Service ("Terms"). If you do not agree to these Terms, please do not use our Service. These Terms apply to all users, including visitors, registered users, and subscribers.'
       },
       description: {
         title: '2. Description of Service',
         content:
-          'SocialChef is an AI-powered social media management platform designed specifically for restaurants. Our Service enables you to generate marketing content, create images and captions, schedule posts, and publish content to connected social media platforms. Features may vary based on your subscription plan.',
+          'SocialChef is an AI-powered social media management platform designed specifically for restaurants. Our Service enables you to generate marketing content, create images and captions, schedule posts, and publish content to connected social media platforms. Features may vary based on your subscription plan.'
       },
       eligibility: {
         title: '3. Eligibility',
         content:
-          'You must be at least 18 years old and capable of forming a binding contract to use our Service. By using SocialChef, you represent and warrant that you meet these eligibility requirements.',
+          'You must be at least 18 years old and capable of forming a binding contract to use our Service. By using SocialChef, you represent and warrant that you meet these eligibility requirements.'
       },
       account: {
         title: '4. Account Registration and Security',
@@ -2089,8 +1191,8 @@ export default {
           accurate: 'Provide accurate, current, and complete information during registration.',
           security: 'Maintain the security of your password and account credentials.',
           notify: 'Notify us immediately of any unauthorized access or security breach.',
-          responsible: 'Accept responsibility for all activities that occur under your account.',
-        },
+          responsible: 'Accept responsibility for all activities that occur under your account.'
+        }
       },
       acceptableUse: {
         title: '5. Acceptable Use Policy',
@@ -2103,8 +1205,8 @@ export default {
           interfere: 'Interfere with or disrupt the Service or its infrastructure.',
           impersonate: 'Impersonate any person or entity or misrepresent your affiliation.',
           reverse:
-            'Attempt to reverse engineer, decompile, or extract source code from our Service.',
-        },
+            'Attempt to reverse engineer, decompile, or extract source code from our Service.'
+        }
       },
       content: {
         title: '6. User Content',
@@ -2113,12 +1215,12 @@ export default {
         license:
           'For AI-generated content created through our platform, you receive a license to use such content for your business purposes, subject to any restrictions in your subscription plan.',
         responsibility:
-          'You are solely responsible for ensuring that your content complies with applicable laws and does not infringe on third-party rights.',
+          'You are solely responsible for ensuring that your content complies with applicable laws and does not infringe on third-party rights.'
       },
       socialMedia: {
         title: '7. Social Media Integration',
         content:
-          'When you connect third-party social media accounts, you authorize us to access and interact with those accounts on your behalf. You are responsible for complying with the terms of service of each connected platform. We are not liable for any actions taken by or restrictions imposed by third-party platforms.',
+          'When you connect third-party social media accounts, you authorize us to access and interact with those accounts on your behalf. You are responsible for complying with the terms of service of each connected platform. We are not liable for any actions taken by or restrictions imposed by third-party platforms.'
       },
       subscription: {
         title: '8. Subscription and Payment',
@@ -2127,48 +1229,48 @@ export default {
         cancellation:
           'You may cancel your subscription at any time through your account settings. Cancellation takes effect at the end of the current billing period.',
         changes:
-          'We reserve the right to change our pricing with reasonable notice. Continued use after price changes constitutes acceptance of new pricing.',
+          'We reserve the right to change our pricing with reasonable notice. Continued use after price changes constitutes acceptance of new pricing.'
       },
       intellectual: {
         title: '9. Intellectual Property',
         content:
-          'SocialChef and its original content, features, and functionality are owned by us and protected by international copyright, trademark, and other intellectual property laws. Our AI technology, algorithms, and platform design remain our exclusive property.',
+          'SocialChef and its original content, features, and functionality are owned by us and protected by international copyright, trademark, and other intellectual property laws. Our AI technology, algorithms, and platform design remain our exclusive property.'
       },
       disclaimer: {
         title: '10. Disclaimer of Warranties',
         content:
-          'THE SERVICE IS PROVIDED "AS IS" AND "AS AVAILABLE" WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED. WE DO NOT WARRANT THAT THE SERVICE WILL BE UNINTERRUPTED, ERROR-FREE, OR SECURE. AI-GENERATED CONTENT MAY CONTAIN ERRORS OR INACCURACIES, AND YOU ARE RESPONSIBLE FOR REVIEWING ALL CONTENT BEFORE PUBLICATION.',
+          'THE SERVICE IS PROVIDED "AS IS" AND "AS AVAILABLE" WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED. WE DO NOT WARRANT THAT THE SERVICE WILL BE UNINTERRUPTED, ERROR-FREE, OR SECURE. AI-GENERATED CONTENT MAY CONTAIN ERRORS OR INACCURACIES, AND YOU ARE RESPONSIBLE FOR REVIEWING ALL CONTENT BEFORE PUBLICATION.'
       },
       limitation: {
         title: '11. Limitation of Liability',
         content:
-          'TO THE MAXIMUM EXTENT PERMITTED BY LAW, SOCIALCHEF SHALL NOT BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES, INCLUDING LOSS OF PROFITS, DATA, OR BUSINESS OPPORTUNITIES, ARISING FROM YOUR USE OF THE SERVICE.',
+          'TO THE MAXIMUM EXTENT PERMITTED BY LAW, SOCIALCHEF SHALL NOT BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES, INCLUDING LOSS OF PROFITS, DATA, OR BUSINESS OPPORTUNITIES, ARISING FROM YOUR USE OF THE SERVICE.'
       },
       indemnification: {
         title: '12. Indemnification',
         content:
-          'You agree to indemnify and hold harmless SocialChef, its officers, directors, employees, and agents from any claims, damages, losses, or expenses arising from your use of the Service, violation of these Terms, or infringement of any third-party rights.',
+          'You agree to indemnify and hold harmless SocialChef, its officers, directors, employees, and agents from any claims, damages, losses, or expenses arising from your use of the Service, violation of these Terms, or infringement of any third-party rights.'
       },
       termination: {
         title: '13. Termination',
         content:
-          'We may suspend or terminate your access to the Service at any time for violation of these Terms or for any other reason at our discretion. Upon termination, your right to use the Service ceases immediately, though certain provisions of these Terms will survive.',
+          'We may suspend or terminate your access to the Service at any time for violation of these Terms or for any other reason at our discretion. Upon termination, your right to use the Service ceases immediately, though certain provisions of these Terms will survive.'
       },
       changes: {
         title: '14. Changes to Terms',
         content:
-          'We reserve the right to modify these Terms at any time. We will notify users of material changes by posting the updated Terms on our platform. Your continued use of the Service after changes constitutes acceptance of the modified Terms.',
+          'We reserve the right to modify these Terms at any time. We will notify users of material changes by posting the updated Terms on our platform. Your continued use of the Service after changes constitutes acceptance of the modified Terms.'
       },
       governing: {
         title: '15. Governing Law',
         content:
-          'These Terms shall be governed by and construed in accordance with the laws of Norway, without regard to its conflict of law provisions. Any disputes arising from these Terms shall be resolved in the courts of Norway.',
+          'These Terms shall be governed by and construed in accordance with the laws of Norway, without regard to its conflict of law provisions. Any disputes arising from these Terms shall be resolved in the courts of Norway.'
       },
       contact: {
         title: '16. Contact Information',
-        content: 'For questions about these Terms of Service, please contact us at:',
-      },
-    },
+        content: 'For questions about these Terms of Service, please contact us at:'
+      }
+    }
   },
 
   // Inline Feedback
@@ -2176,7 +1278,7 @@ export default {
     inlineTitle: 'Help us improve',
     inlineSubtitle: "This won't be included in your post",
     whatDidYouLike: 'What did you like or dislike about this post?',
-    feedbackPlaceholder: 'Share what worked well or what could be better...',
+    feedbackPlaceholder: 'Share what worked well or what could be better...'
   },
 
   // Generating Progress
@@ -2188,8 +1290,8 @@ export default {
       designing: 'Designing',
       generating: 'Generating',
       refining: 'Refining',
-      finalizing: 'Finalizing',
-    },
+      finalizing: 'Finalizing'
+    }
   },
 
   // Delete Account Page
@@ -2206,7 +1308,7 @@ export default {
       favorites: 'All saved favorites and scheduled posts',
       connections: 'All connected social media accounts',
       subscription: 'Your subscription (will be cancelled immediately)',
-      history: 'All usage history and analytics',
+      history: 'All usage history and analytics'
     },
 
     // Step 2 - Confirmations
@@ -2217,10 +1319,6 @@ export default {
       'I understand that deletion takes effect immediately and I will be logged out',
 
     // Step 3 - Type DELETE
-    step3Title: 'Final confirmation',
-    step3Description: 'Type DELETE below to confirm you want to delete your account:',
-    typeDelete: 'Type DELETE to confirm',
-    deletePlaceholder: 'DELETE',
 
     // Reason
     reasonTitle: 'Help us improve (optional)',
@@ -2235,9 +1333,6 @@ export default {
     deleting: 'Deleting...',
 
     // Final modal
-    finalModalTitle: 'Last chance!',
-    finalModalDescription:
-      'Are you absolutely sure you want to delete your account? This action is irreversible.',
 
     // Success/Goodbye
     goodbyeTitle: 'Goodbye!',
@@ -2246,8 +1341,7 @@ export default {
     returnToHome: 'Return to Home',
 
     // Errors
-    errorGeneric: 'An error occurred while deleting your account. Please try again.',
-    errorValidation: 'Please complete all required confirmations',
+    errorGeneric: 'An error occurred while deleting your account. Please try again.'
   },
 
   // Analytics Page
@@ -2323,6 +1417,6 @@ export default {
     emptyStateTitle: 'Time to cook up some posts!',
     emptyStateDescription:
       "Once you start creating and scheduling content, your analytics will appear here. Let's get started!",
-    createFirstPost: 'Create Your First Post',
-  },
+    createFirstPost: 'Create Your First Post'
+  }
 }

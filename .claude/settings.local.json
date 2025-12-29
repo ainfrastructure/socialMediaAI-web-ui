@@ -40,7 +40,10 @@
       "Bash(\"https://graph.facebook.com/v24.0/819358677927828/videos\" )",
       "Bash(git add:*)",
       "Bash(git rebase:*)",
-      "Bash(node test-video-processing.js:*)"
+      "Bash(node test-video-processing.js:*)",
+      "Bash(npm run i18n:unused:*)",
+      "Bash(wc:*)",
+      "Bash(node scripts/find-unused-i18n-keys.js:*)"
     ],
     "deny": [],
     "ask": []
