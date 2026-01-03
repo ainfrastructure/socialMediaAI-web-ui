@@ -690,7 +690,7 @@ const benefits = [
             <button class="login-link" @click="showLoginModal = true">
               {{ $t('nav.login') }}
             </button>
-            <BaseButton variant="primary" size="small" @click="handleCTAClick">
+            <BaseButton variant="primary" size="small" class="animated-cta" @click="handleCTAClick">
               {{ $t('nav.getStarted') }}
             </BaseButton>
           </template>
@@ -706,10 +706,8 @@ const benefits = [
             <span class="logo-text">SocialChef</span>
           </div>
 
-          <!-- Right side actions -->
+          <!-- Right side actions - simplified for mobile -->
           <div class="pill-actions">
-            <LanguageSelector />
-            <ThemeToggle />
             <template v-if="authStore.isAuthenticated">
               <button class="pill-login-btn" @click="goToDashboard">
                 {{ $t('landing.loginBox.goToDashboard') }}
@@ -747,13 +745,19 @@ const benefits = [
           {{ $t('nav.joinWaitlist') }}
         </button>
         <div class="mobile-nav-divider"></div>
+        <!-- Settings row with language and theme -->
+        <div class="mobile-nav-settings">
+          <LanguageSelector />
+          <ThemeToggle />
+        </div>
+        <div class="mobile-nav-divider"></div>
         <template v-if="authStore.isAuthenticated">
           <BaseButton variant="primary" size="medium" full-width @click="goToDashboard">
             {{ $t('landing.loginBox.goToDashboard') }}
           </BaseButton>
         </template>
         <template v-else>
-          <BaseButton variant="primary" size="medium" full-width @click="handleCTAClick">
+          <BaseButton variant="primary" size="medium" full-width class="animated-cta" @click="handleCTAClick">
             {{ $t('nav.getStarted') }}
           </BaseButton>
         </template>
@@ -1495,6 +1499,14 @@ const benefits = [
   margin: var(--space-sm) 0;
 }
 
+.mobile-nav-settings {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-lg);
+  padding: var(--space-sm) 0;
+}
+
 /* Hero Section */
 .hero-section {
   min-height: 100vh;
@@ -1622,6 +1634,64 @@ const benefits = [
 .hero-cta-secondary:hover {
   background: var(--bg-tertiary);
   border-color: var(--gold-primary);
+}
+
+/* Animated border for primary CTA buttons */
+.hero-cta-primary {
+  position: relative;
+  z-index: 1;
+  overflow: visible;
+}
+
+.hero-cta-primary::before {
+  content: '';
+  position: absolute;
+  top: -3px;
+  left: -3px;
+  right: -3px;
+  bottom: -3px;
+  background: linear-gradient(
+    90deg,
+    var(--gold-primary),
+    var(--gold-light),
+    #d4af37,
+    var(--gold-light),
+    var(--gold-primary)
+  );
+  background-size: 300% 100%;
+  border-radius: inherit;
+  z-index: -1;
+  animation: shimmer-border 3s ease-in-out infinite;
+  opacity: 0.8;
+}
+
+.hero-cta-primary::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--gold-primary);
+  border-radius: inherit;
+  z-index: -1;
+}
+
+@keyframes shimmer-border {
+  0% {
+    background-position: 100% 0;
+  }
+  50% {
+    background-position: 0 0;
+  }
+  100% {
+    background-position: 100% 0;
+  }
+}
+
+.hero-cta-primary:hover::before {
+  opacity: 1;
+  animation-duration: 1.5s;
 }
 
 /* As Seen On Section */
@@ -2948,7 +3018,7 @@ const benefits = [
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    gap: 4px;
+    gap: 5px;
     width: 44px;
     height: 44px;
     background: none;
@@ -2958,21 +3028,24 @@ const benefits = [
   }
 
   .pill-menu-button .hamburger-line {
-    width: 18px;
+    width: 20px;
     height: 2px;
     background: var(--text-primary);
+    transition: var(--transition-base);
+    transform-origin: center;
   }
 
   .pill-menu-button.active .hamburger-line:nth-child(1) {
-    transform: rotate(45deg) translate(4px, 4px);
+    transform: translateY(7px) rotate(45deg);
   }
 
   .pill-menu-button.active .hamburger-line:nth-child(2) {
     opacity: 0;
+    transform: scaleX(0);
   }
 
   .pill-menu-button.active .hamburger-line:nth-child(3) {
-    transform: rotate(-45deg) translate(4px, -4px);
+    transform: translateY(-7px) rotate(-45deg);
   }
 
   /* Style LanguageSelector inside pill */
