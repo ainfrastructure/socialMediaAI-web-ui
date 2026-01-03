@@ -59,6 +59,10 @@ const router = createRouter({
       // No requiresGuest - authenticated users can view landing page
     },
     {
+      path: '/landing',
+      redirect: '/',
+    },
+    {
       path: '/dashboard',
       name: 'dashboard',
       component: DashboardView,
