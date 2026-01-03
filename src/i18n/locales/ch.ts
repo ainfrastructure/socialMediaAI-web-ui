@@ -47,8 +47,9 @@ export default {
       next: 'Weiter →',
       pageInfo: 'Seite {current} von {total} ({count} total)'
     },
-    // Loading progress messages
-      },
+    theme: 'Design',
+    language: 'Sprache',
+  },
 
   // Platforms
   platforms: {
@@ -184,7 +185,7 @@ export default {
     benefits: {
       title: 'Warum Restaurantbesitzer SocialChef lieben',
       time: {
-        title: 'Sparen Sie 10+ Stunden pro Woche',
+        title: 'Sparen Sie unzählige Stunden pro Woche',
         description: 'Hören Sie auf, mit der Content-Erstellung zu kämpfen. Verbringen Sie diese Zeit mit dem, was zählt – Ihrem Essen und Ihren Gästen.'
       },
       professional: {
@@ -661,7 +662,7 @@ export default {
       lora: 'Lora (Klassisch)',
       roboto: 'Roboto (Sauber)'
     },
-            step3: {
+    step3: {
       title: 'Stil wählen',
       subtitle: 'Wählen Sie aus KI-generierten Stilvariationen',
       generatingTitle: 'Ihre Stile werden erstellt',
@@ -674,7 +675,7 @@ export default {
       regenerate: 'Stile neu generieren'
     },
     styleVariations: {
-                            },
+    },
     strictness: {
       label: 'Bildstil',
       hint: 'Wie genau soll das Ergebnis dem Original entsprechen?',
@@ -724,7 +725,7 @@ export default {
       hashtagsLabel: 'Hashtags',
       addHashtag: 'Hashtag hinzufügen...'
     },
-        publish: {
+    publish: {
       publishingTitle: 'Ihr Beitrag wird geteilt',
       publishingSubtitle: 'Upload zu Ihren Social-Media-Konten',
       error: 'Veröffentlichung fehlgeschlagen. Bitte versuchen Sie es erneut.'
@@ -965,7 +966,7 @@ export default {
 
   // Alerts & Toasts
   alerts: {
-                  },
+  },
 
   // Form Validation
 

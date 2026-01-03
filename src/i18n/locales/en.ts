@@ -43,8 +43,9 @@ export default {
       next: 'Next →',
       pageInfo: 'Page {current} of {total} ({count} total)'
     },
-    // Loading progress messages
-      },
+    theme: 'Theme',
+    language: 'Language',
+  },
 
   // Platforms
   platforms: {
@@ -61,7 +62,7 @@ export default {
   },
 
   // Timezones
-  
+
   // Auth / Login View
   auth: {
     brandSubtitle: 'AI-Powered Content for Restaurants',
@@ -180,7 +181,7 @@ export default {
     benefits: {
       title: 'Why Restaurant Owners Love SocialChef',
       time: {
-        title: 'Save 10+ Hours Per Week',
+        title: 'Save Countless Hours Per Week',
         description: 'Stop wrestling with content creation. Spend that time on what matters - your food and customers.'
       },
       professional: {
@@ -201,7 +202,7 @@ export default {
     },
 
     // Social Proof
-    
+
     // Pricing Preview
     pricing: {
       title: 'Simple, Honest Pricing',
@@ -657,7 +658,7 @@ export default {
       lora: 'Lora (Classic)',
       roboto: 'Roboto (Clean)'
     },
-                step3: {
+    step3: {
       title: 'Choose Your Style',
       subtitle: 'Select from AI-generated style variations',
       generatingTitle: 'Crafting your styles',
@@ -670,7 +671,7 @@ export default {
       regenerate: 'Regenerate Styles'
     },
     styleVariations: {
-                            },
+    },
     strictness: {
       label: 'Image Style',
       hint: 'How closely should the result match the original?',
@@ -720,7 +721,7 @@ export default {
       hashtagsLabel: 'Hashtags',
       addHashtag: 'Add hashtag...'
     },
-        publish: {
+    publish: {
       publishingTitle: 'Sharing your post',
       publishingSubtitle: 'Uploading to your social accounts',
       error: 'Failed to publish. Please try again.'
@@ -949,9 +950,9 @@ export default {
   },
 
   // Saved Restaurants View
-  
+
   // Test Post View
-  
+
   // Errors
   errors: {
     generic: 'Something went wrong',
@@ -961,10 +962,10 @@ export default {
 
   // Alerts & Toasts
   alerts: {
-                  },
+  },
 
   // Form Validation
-  
+
   // Languages
   languages: {
     selectCountry: 'Country',
@@ -1011,11 +1012,11 @@ export default {
   },
 
   // Confirm Modal
-  
+
   // Pick Post Modal
-  
+
   // Generation Result Modal
-  
+
   // Publishing Progress Modal
   publishing: {
     title: 'Publishing Your Post...',

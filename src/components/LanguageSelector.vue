@@ -2,7 +2,10 @@
   <div class="language-selector" ref="selectorContainer">
     <!-- Language Button -->
     <button @click="toggleDropdown" class="language-button" :aria-label="$t('languages.selectCountry')">
-      <span class="flag">{{ currentDomainFlag }}</span>
+      <span v-if="currentDomainFlag === '🌐'" class="flag flag-icon">
+        <span class="material-symbols-outlined">language</span>
+      </span>
+      <span v-else class="flag">{{ currentDomainFlag }}</span>
       <span v-if="localeStore.isDevAccess" class="currency-badge">{{ localeStore.currentCurrency }}</span>
       <span class="chevron" :class="{ open: isOpen }">▼</span>
     </button>
@@ -27,7 +30,10 @@
             class="language-card"
             :class="{ active: isCurrentDomain(item.domain) }"
           >
-            <span class="card-flag">{{ item.flag }}</span>
+            <span v-if="item.flag === '🌐'" class="card-flag card-flag-icon">
+              <span class="material-symbols-outlined">language</span>
+            </span>
+            <span v-else class="card-flag">{{ item.flag }}</span>
             <span class="card-name">{{ item.name }}</span>
             <span v-if="isCurrentDomain(item.domain)" class="card-check">✓</span>
           </button>
@@ -76,7 +82,10 @@
                 class="language-card"
                 :class="{ active: isCurrentDomain(item.domain) }"
               >
-                <span class="card-flag">{{ item.flag }}</span>
+                <span v-if="item.flag === '🌐'" class="card-flag card-flag-icon">
+                  <span class="material-symbols-outlined">language</span>
+                </span>
+                <span v-else class="card-flag">{{ item.flag }}</span>
                 <span class="card-name">{{ item.name }}</span>
                 <span v-if="isCurrentDomain(item.domain)" class="card-check">✓</span>
               </button>
@@ -306,6 +315,17 @@ onUnmounted(() => {
   line-height: 1;
 }
 
+.flag-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.flag-icon .material-symbols-outlined {
+  font-size: 20px;
+  color: var(--text-secondary);
+}
+
 .chevron {
   font-size: 10px;
   transition: transform var(--transition-base);
@@ -419,6 +439,21 @@ onUnmounted(() => {
 .card-flag {
   font-size: 1.75rem;
   line-height: 1;
+}
+
+.card-flag-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.card-flag-icon .material-symbols-outlined {
+  font-size: 28px;
+  color: var(--text-secondary);
+}
+
+.language-card.active .card-flag-icon .material-symbols-outlined {
+  color: var(--gold-primary);
 }
 
 .card-name {
@@ -737,6 +772,21 @@ onUnmounted(() => {
 .mobile-dropdown-menu .card-flag {
   font-size: 1.75rem;
   line-height: 1;
+}
+
+.mobile-dropdown-menu .card-flag-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mobile-dropdown-menu .card-flag-icon .material-symbols-outlined {
+  font-size: 28px;
+  color: var(--text-secondary);
+}
+
+.mobile-dropdown-menu .language-card.active .card-flag-icon .material-symbols-outlined {
+  color: var(--gold-primary);
 }
 
 .mobile-dropdown-menu .card-name {

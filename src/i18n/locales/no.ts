@@ -43,8 +43,9 @@ export default {
       next: 'Neste →',
       pageInfo: 'Side {current} av {total} ({count} totalt)'
     },
-    // Loading progress messages
-      },
+    theme: 'Tema',
+    language: 'Språk',
+  },
 
   // Platforms
   platforms: {
@@ -61,7 +62,7 @@ export default {
   },
 
   // Timezones
-  
+
   // Auth / Login View
   auth: {
     brandSubtitle: 'AI-drevet innhold for restauranter',
@@ -179,7 +180,7 @@ export default {
     benefits: {
       title: 'Hvorfor restauranteiere elsker SocialChef',
       time: {
-        title: 'Spar 10+ timer per uke',
+        title: 'Spar timesvis per uke',
         description: 'Slutt å slite med innholdsproduksjon. Bruk tiden på det som betyr noe - maten og kundene dine.'
       },
       professional: {
@@ -197,7 +198,7 @@ export default {
     },
 
     // Social Proof
-    
+
     // Pricing Preview
     pricing: {
       title: 'Enkel, ærlig prising',
@@ -631,7 +632,7 @@ export default {
       lora: 'Lora (Klassisk)',
       roboto: 'Roboto (Ren)'
     },
-                step3: {
+    step3: {
       title: 'Velg din stil',
       subtitle: 'Velg fra AI-genererte stilvarianter',
       generatingTitle: 'Utformer dine stiler',
@@ -644,7 +645,7 @@ export default {
       regenerate: 'Regenerer stiler'
     },
     styleVariations: {
-                            },
+    },
     strictness: {
       label: 'Bildestil',
       hint: 'Hvor nært bør resultatet matche originalen?',
@@ -694,7 +695,7 @@ export default {
       hashtagsLabel: 'Emneknagger',
       addHashtag: 'Legg til emneknagg...'
     },
-        publish: {
+    publish: {
       publishingTitle: 'Deler innlegget ditt',
       publishingSubtitle: 'Laster opp til dine sosiale kontoer',
       error: 'Kunne ikke publisere. Prøv igjen.'
@@ -918,9 +919,9 @@ export default {
   },
 
   // Saved Restaurants View
-  
+
   // Test Post View
-  
+
   // Errors
   errors: {
     generic: 'Noe gikk galt',
@@ -930,10 +931,10 @@ export default {
 
   // Alerts & Toasts
   alerts: {
-                  },
+  },
 
   // Form Validation
-  
+
   // Languages
   languages: {
     selectCountry: 'Land',
@@ -980,11 +981,11 @@ export default {
   },
 
   // Confirm Modal
-  
+
   // Pick Post Modal
-  
+
   // Generation Result Modal
-  
+
   // Publishing Progress Modal
   publishing: {
     title: 'Publiserer innlegget ditt...',

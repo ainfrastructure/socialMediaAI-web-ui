@@ -706,18 +706,10 @@ const benefits = [
             <span class="logo-text">SocialChef</span>
           </div>
 
-          <!-- Right side actions - simplified for mobile -->
+          <!-- Right side actions -->
           <div class="pill-actions">
-            <template v-if="authStore.isAuthenticated">
-              <button class="pill-login-btn" @click="goToDashboard">
-                {{ $t('landing.loginBox.goToDashboard') }}
-              </button>
-            </template>
-            <template v-else>
-              <button class="pill-login-btn" @click="showLoginModal = true">
-                {{ $t('nav.login') }}
-              </button>
-            </template>
+            <ThemeToggle />
+            <LanguageSelector />
             <button
               class="pill-menu-button"
               :class="{ active: isMobileMenuOpen }"
@@ -745,22 +737,34 @@ const benefits = [
           {{ $t('nav.joinWaitlist') }}
         </button>
         <div class="mobile-nav-divider"></div>
-        <!-- Settings row with language and theme -->
-        <div class="mobile-nav-settings">
-          <LanguageSelector />
-          <ThemeToggle />
+        <!-- Settings row -->
+        <div class="mobile-nav-settings-row">
+          <div class="mobile-nav-setting">
+            <span class="setting-label">{{ $t('common.theme') }}</span>
+            <ThemeToggle />
+          </div>
+          <div class="mobile-nav-setting">
+            <span class="setting-label">{{ $t('common.language') }}</span>
+            <LanguageSelector />
+          </div>
         </div>
         <div class="mobile-nav-divider"></div>
-        <template v-if="authStore.isAuthenticated">
-          <BaseButton variant="primary" size="medium" full-width @click="goToDashboard">
-            {{ $t('landing.loginBox.goToDashboard') }}
-          </BaseButton>
-        </template>
-        <template v-else>
-          <BaseButton variant="primary" size="medium" full-width class="animated-cta" @click="handleCTAClick">
-            {{ $t('nav.getStarted') }}
-          </BaseButton>
-        </template>
+        <!-- Action buttons -->
+        <div class="mobile-nav-buttons">
+          <template v-if="authStore.isAuthenticated">
+            <BaseButton variant="primary" size="medium" full-width @click="goToDashboard">
+              {{ $t('landing.loginBox.goToDashboard') }}
+            </BaseButton>
+          </template>
+          <template v-else>
+            <button class="mobile-nav-login-btn" @click="showLoginModal = true; isMobileMenuOpen = false">
+              {{ $t('nav.login') }}
+            </button>
+            <BaseButton variant="primary" size="medium" full-width class="animated-cta" @click="handleCTAClick">
+              {{ $t('nav.getStarted') }}
+            </BaseButton>
+          </template>
+        </div>
       </nav>
     </header>
 
@@ -1296,14 +1300,14 @@ const benefits = [
         <template v-if="ENABLE_SIGNUP">
           <h2 class="final-cta-title">{{ $t('landing.finalCta.title') }}</h2>
           <p class="final-cta-subtitle">{{ $t('landing.finalCta.subtitle') }}</p>
-          <BaseButton variant="primary" size="large" class="final-cta-button" @click="handleCTAClick">
+          <BaseButton variant="primary" size="large" class="final-cta-button animated-cta" @click="handleCTAClick">
             {{ $t('landing.hero.cta') }}
           </BaseButton>
         </template>
         <template v-else>
           <h2 class="final-cta-title">{{ $t('waitlist.finalCta.title') }}</h2>
           <p class="final-cta-subtitle">{{ $t('waitlist.finalCta.subtitle') }}</p>
-          <BaseButton variant="primary" size="large" class="final-cta-button" @click="handleCTAClick">
+          <BaseButton variant="primary" size="large" class="final-cta-button animated-cta" @click="handleCTAClick">
             {{ $t('waitlist.joinButton') }}
           </BaseButton>
         </template>
@@ -1460,7 +1464,7 @@ const benefits = [
   flex-direction: column;
   gap: var(--space-sm);
   padding: var(--space-lg);
-  background: rgba(255, 255, 255, 0.98);
+  background: var(--glass-bg);
   border-top: 1px solid var(--glass-border);
   max-height: 0;
   overflow: hidden;
@@ -1499,12 +1503,89 @@ const benefits = [
   margin: var(--space-sm) 0;
 }
 
-.mobile-nav-settings {
+.mobile-nav-settings-row {
   display: flex;
-  align-items: center;
-  justify-content: center;
+  justify-content: space-around;
   gap: var(--space-lg);
   padding: var(--space-sm) 0;
+}
+
+.mobile-nav-setting {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.mobile-nav-setting .setting-label {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* Larger theme toggle in menu */
+.mobile-nav-setting :deep(.theme-toggle) {
+  width: 48px;
+  height: 48px;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+}
+
+.mobile-nav-setting :deep(.theme-toggle .material-symbols-outlined) {
+  font-size: 24px;
+}
+
+/* Larger language selector in menu */
+.mobile-nav-setting :deep(.language-selector .language-button) {
+  width: 48px;
+  height: 48px;
+  min-width: 48px;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  padding: 0;
+  justify-content: center;
+}
+
+.mobile-nav-setting :deep(.language-selector .language-button .flag) {
+  font-size: 24px;
+}
+
+.mobile-nav-setting :deep(.language-selector .language-button .flag-icon .material-symbols-outlined) {
+  font-size: 24px;
+}
+
+.mobile-nav-setting :deep(.language-selector .language-button .chevron),
+.mobile-nav-setting :deep(.language-selector .language-button .currency-badge) {
+  display: none;
+}
+
+.mobile-nav-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  width: 100%;
+}
+
+.mobile-nav-login-btn {
+  width: 100%;
+  padding: var(--space-md) var(--space-lg);
+  background: transparent;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  font-weight: var(--font-medium);
+  cursor: pointer;
+  transition: var(--transition-base);
+}
+
+.mobile-nav-login-btn:hover {
+  border-color: var(--gold-primary);
+  color: var(--gold-primary);
 }
 
 /* Hero Section */
@@ -1637,13 +1718,15 @@ const benefits = [
 }
 
 /* Animated border for primary CTA buttons */
-.hero-cta-primary {
+.hero-cta-primary,
+.animated-cta {
   position: relative;
   z-index: 1;
   overflow: visible;
 }
 
-.hero-cta-primary::before {
+.hero-cta-primary::before,
+.animated-cta::before {
   content: '';
   position: absolute;
   top: -3px;
@@ -1652,20 +1735,40 @@ const benefits = [
   bottom: -3px;
   background: linear-gradient(
     90deg,
-    var(--gold-primary),
-    var(--gold-light),
-    #d4af37,
-    var(--gold-light),
-    var(--gold-primary)
+    #2d7a5a,
+    #3d9970,
+    #7dd9a8,
+    #b8f0d8,
+    #7dd9a8,
+    #3d9970,
+    #2d7a5a
   );
-  background-size: 300% 100%;
-  border-radius: inherit;
+  background-size: 400% 100%;
+  border-radius: calc(var(--radius-lg) + 3px);
   z-index: -1;
-  animation: shimmer-border 3s ease-in-out infinite;
-  opacity: 0.8;
+  animation: shimmer-border 2.5s linear infinite;
+  opacity: 1;
+  box-shadow: 0 0 12px rgba(90, 191, 138, 0.5);
 }
 
-.hero-cta-primary::after {
+:root[data-theme="dark"] .hero-cta-primary::before,
+:root[data-theme="dark"] .animated-cta::before {
+  background: linear-gradient(
+    90deg,
+    #c9a227,
+    #e8c56c,
+    #ffd700,
+    #fffacd,
+    #ffd700,
+    #e8c56c,
+    #c9a227
+  );
+  background-size: 400% 100%;
+  box-shadow: 0 0 14px rgba(255, 215, 0, 0.6);
+}
+
+.hero-cta-primary::after,
+.animated-cta::after {
   content: '';
   position: absolute;
   top: 0;
@@ -1673,25 +1776,31 @@ const benefits = [
   right: 0;
   bottom: 0;
   background: var(--gold-primary);
-  border-radius: inherit;
+  border-radius: var(--radius-lg);
   z-index: -1;
 }
 
 @keyframes shimmer-border {
   0% {
-    background-position: 100% 0;
-  }
-  50% {
-    background-position: 0 0;
+    background-position: 0% 0;
   }
   100% {
     background-position: 100% 0;
   }
 }
 
-.hero-cta-primary:hover::before {
+.hero-cta-primary:hover::before,
+.animated-cta:hover::before {
   opacity: 1;
   animation-duration: 1.5s;
+}
+
+/* Reduce motion for accessibility */
+@media (prefers-reduced-motion: reduce) {
+  .hero-cta-primary::before,
+  .animated-cta::before {
+    animation: none;
+  }
 }
 
 /* As Seen On Section */
@@ -2963,29 +3072,29 @@ const benefits = [
 
   .mobile-header-pill {
     display: block;
-    padding: var(--space-md) var(--space-lg);
+    padding: 0;
   }
 
   .pill-content {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    background: rgba(255, 255, 255, 0.9);
+    background: var(--glass-bg);
     backdrop-filter: blur(var(--blur-lg));
     border: 1px solid var(--glass-border);
     border-radius: var(--radius-full);
-    padding: var(--space-sm) var(--space-sm) var(--space-sm) var(--space-lg);
+    padding: var(--space-xs) var(--space-xs) var(--space-xs) var(--space-md);
     box-shadow: var(--shadow-lg);
-    max-width: 420px;
+    max-width: 380px;
     margin: 0 auto;
   }
 
   .pill-content .header-logo .logo-image {
-    height: 28px;
+    height: 24px;
   }
 
   .pill-content .header-logo .logo-text {
-    font-size: var(--text-base);
+    font-size: var(--text-sm);
   }
 
   .pill-actions {
@@ -2994,23 +3103,49 @@ const benefits = [
     gap: var(--space-xs);
   }
 
-  .pill-login-btn {
+  /* Style ThemeToggle in header to match hamburger */
+  .pill-actions :deep(.theme-toggle) {
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     background: none;
-    border: 1px solid var(--glass-border);
-    color: var(--text-primary);
-    font-family: var(--font-body);
-    font-size: var(--text-sm);
-    font-weight: var(--font-medium);
-    cursor: pointer;
-    padding: var(--space-sm) var(--space-lg);
-    border-radius: var(--radius-full);
-    transition: var(--transition-base);
-    white-space: nowrap;
+    border: none;
+    padding: 0;
   }
 
-  .pill-login-btn:hover {
-    border-color: var(--gold-primary);
-    color: var(--gold-primary);
+  .pill-actions :deep(.theme-toggle .material-symbols-outlined) {
+    font-size: 20px;
+    color: var(--text-primary);
+  }
+
+  /* Style LanguageSelector in header to match other buttons */
+  .pill-actions :deep(.language-selector .language-button) {
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: none;
+    padding: 0;
+    gap: 0;
+  }
+
+  .pill-actions :deep(.language-selector .language-button .flag) {
+    font-size: 18px;
+  }
+
+  .pill-actions :deep(.language-selector .language-button .flag-icon .material-symbols-outlined) {
+    font-size: 20px;
+    color: var(--text-primary);
+  }
+
+  .pill-actions :deep(.language-selector .language-button .chevron),
+  .pill-actions :deep(.language-selector .language-button .currency-badge) {
+    display: none;
   }
 
   .pill-menu-button {
@@ -3018,13 +3153,13 @@ const benefits = [
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    gap: 5px;
-    width: 44px;
-    height: 44px;
+    gap: 4px;
+    width: 36px;
+    height: 36px;
     background: none;
     border: none;
     cursor: pointer;
-    padding: var(--space-sm);
+    padding: var(--space-xs);
   }
 
   .pill-menu-button .hamburger-line {
@@ -3036,7 +3171,7 @@ const benefits = [
   }
 
   .pill-menu-button.active .hamburger-line:nth-child(1) {
-    transform: translateY(7px) rotate(45deg);
+    transform: translateY(6px) rotate(45deg);
   }
 
   .pill-menu-button.active .hamburger-line:nth-child(2) {
@@ -3045,24 +3180,7 @@ const benefits = [
   }
 
   .pill-menu-button.active .hamburger-line:nth-child(3) {
-    transform: translateY(-7px) rotate(-45deg);
-  }
-
-  /* Style LanguageSelector inside pill */
-  .pill-actions :deep(.language-button) {
-    background: none;
-    border: none;
-    color: var(--text-secondary);
-    padding: var(--space-xs) var(--space-sm);
-    min-width: auto;
-  }
-
-  .pill-actions :deep(.language-button:hover) {
-    background: var(--accent-alpha-10);
-  }
-
-  .pill-actions :deep(.chevron) {
-    color: var(--gold-primary);
+    transform: translateY(-6px) rotate(-45deg);
   }
 
   .mobile-nav {
@@ -3071,7 +3189,9 @@ const benefits = [
     margin-left: var(--space-lg);
     margin-right: var(--space-lg);
     border-radius: var(--radius-xl);
-    background: rgba(30, 30, 30, 0.98);
+    background: var(--glass-bg);
+    backdrop-filter: blur(var(--blur-lg));
+    border: 1px solid var(--glass-border);
   }
 
   .mobile-nav.open {
@@ -3081,6 +3201,7 @@ const benefits = [
   .site-header {
     background: transparent;
     backdrop-filter: none;
+    padding: var(--space-xs) var(--space-sm);
   }
 
   .site-header.scrolled {
@@ -3088,6 +3209,7 @@ const benefits = [
     backdrop-filter: none;
     border-bottom: none;
     box-shadow: none;
+    padding: var(--space-xs) var(--space-sm);
   }
 
   .hero-content {
@@ -3268,13 +3390,6 @@ const benefits = [
   background: var(--surface-alpha-95);
 }
 
-:root[data-theme="dark"] .mobile-nav {
-  background: var(--surface-alpha-98);
-}
-
-:root[data-theme="dark"] .pill-content {
-  background: var(--surface-alpha-90);
-}
 
 :root[data-theme="dark"] .flow-step-card {
   background: var(--bg-secondary);

@@ -163,24 +163,6 @@ const handleClick = (event: MouseEvent) => {
   pointer-events: none;
 }
 
-/* Ripple effect on click */
-.base-button::after {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 0;
-  height: 0;
-  border-radius: 50%;
-  background: rgba(246, 241, 231, 0.3);
-  transform: translate(-50%, -50%);
-  transition: width 0.6s, height 0.6s;
-}
-
-.base-button:active::after {
-  width: 300px;
-  height: 300px;
-}
 
 /* Mobile touch target optimization */
 @media (max-width: 768px) {
@@ -220,10 +202,6 @@ const handleClick = (event: MouseEvent) => {
   /* Disable transform on mobile for better touch feedback */
   .base-button:hover:not(.disabled) {
     transform: none;
-  }
-
-  .base-button:active:not(.disabled) {
-    transform: scale(0.98);
   }
 }
 </style>

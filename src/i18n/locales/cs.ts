@@ -46,8 +46,9 @@ export default {
       next: 'Další →',
       pageInfo: 'Strana {current} z {total} (celkem {count})'
     },
-    // Loading progress messages
-      },
+    theme: 'Motiv',
+    language: 'Jazyk',
+  },
 
   // Platforms
   platforms: {
@@ -183,7 +184,7 @@ export default {
     benefits: {
       title: 'Proč majitelé restaurací milují SocialChef',
       time: {
-        title: 'Ušetřete 10+ hodin týdně',
+        title: 'Ušetřete nepřeberné množství hodin týdně',
         description: 'Přestaňte bojovat s tvorbou obsahu. Věnujte ten čas tomu, na čem záleží - vašemu jídlu a zákazníkům.'
       },
       professional: {
@@ -660,7 +661,7 @@ export default {
       lora: 'Lora (Klasický)',
       roboto: 'Roboto (Čistý)'
     },
-            step3: {
+    step3: {
       title: 'Vyberte svůj styl',
       subtitle: 'Vyberte z AI generovaných stylových variací',
       generatingTitle: 'Vytváříme vaše styly',
@@ -673,7 +674,7 @@ export default {
       regenerate: 'Přegenerovat styly'
     },
     styleVariations: {
-                            },
+    },
     strictness: {
       label: 'Styl obrázku',
       hint: 'Jak přesně by měl výsledek odpovídat originálu?',
@@ -723,7 +724,7 @@ export default {
       hashtagsLabel: 'Hashtagy',
       addHashtag: 'Přidat hashtag...'
     },
-        publish: {
+    publish: {
       publishingTitle: 'Sdílení vašeho příspěvku',
       publishingSubtitle: 'Nahrávání na vaše sociální účty',
       error: 'Publikace selhala. Zkuste to prosím znovu.'
@@ -964,7 +965,7 @@ export default {
 
   // Alerts & Toasts
   alerts: {
-                  },
+  },
 
   // Form Validation
 
