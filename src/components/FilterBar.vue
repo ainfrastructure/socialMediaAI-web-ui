@@ -548,4 +548,61 @@ const getRestaurantName = (id: string) => {
     padding: var(--space-sm);
   }
 }
+
+/* ===== DARK MODE OVERRIDES ===== */
+:root[data-theme="dark"] .filter-bar {
+  background: linear-gradient(135deg, var(--bg-secondary), var(--bg-tertiary)) !important;
+  border-color: var(--border-color);
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.3),
+    0 0 40px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.02);
+}
+
+:root[data-theme="dark"] .filter-bar-header {
+  border-bottom-color: var(--border-color);
+}
+
+:root[data-theme="dark"] .filter-icon {
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+}
+
+:root[data-theme="dark"] .filter-btn {
+  background: var(--bg-tertiary);
+  border-color: var(--border-color);
+}
+
+:root[data-theme="dark"] .filter-btn:hover {
+  background: var(--bg-elevated);
+  box-shadow: 0 0 12px rgba(0, 0, 0, 0.2);
+}
+
+:root[data-theme="dark"] .filter-select {
+  background: var(--bg-tertiary);
+  border-color: var(--border-color);
+}
+
+:root[data-theme="dark"] .filter-select:hover {
+  background: var(--bg-elevated);
+  box-shadow: 0 0 12px rgba(0, 0, 0, 0.2);
+}
+
+:root[data-theme="dark"] .filter-select:focus {
+  background: var(--bg-elevated);
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+}
+
+:root[data-theme="dark"] .active-filters {
+  border-top-color: var(--border-color);
+}
+
+:root[data-theme="dark"] .filter-tag {
+  background: linear-gradient(135deg, var(--accent-alpha-15), var(--accent-alpha-25));
+  border-color: var(--accent-alpha-40);
+}
+
+:root[data-theme="dark"] .filter-tag:hover {
+  background: linear-gradient(135deg, var(--accent-alpha-25), var(--accent-alpha-35));
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
 </style>

@@ -245,4 +245,9 @@ onMounted(() => {
     transition: none;
   }
 }
+
+/* ===== DARK MODE OVERRIDES ===== */
+:root[data-theme="dark"] .toast-close:hover {
+  background: var(--accent-alpha-15);
+}
 </style>

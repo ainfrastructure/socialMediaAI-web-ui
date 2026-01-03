@@ -371,4 +371,25 @@ onUnmounted(() => {
     transition: none;
   }
 }
+
+/* ===== DARK MODE OVERRIDES ===== */
+/* ConfirmModal uses BaseModal which handles most dark mode styling */
+/* These are scoped styles that need dark mode overrides */
+:root[data-theme="dark"] .close-button {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+:root[data-theme="dark"] .close-button:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+:root[data-theme="dark"] .btn-cancel {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+:root[data-theme="dark"] .btn-cancel:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.1);
+}
 </style>

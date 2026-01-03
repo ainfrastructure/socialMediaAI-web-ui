@@ -7,7 +7,14 @@ export default {
     login: 'Přihlášení',
     getStarted: 'Začít',
     pricing: 'Ceník',
-    howItWorks: 'Jak to funguje'
+    howItWorks: 'Jak to funguje',
+    joinWaitlist: 'Přidat se na čekací listinu'
+  },
+
+  // Theme
+  theme: {
+    switchToLight: 'Přepnout na světlý režim',
+    switchToDark: 'Přepnout na tmavý režim'
   },
 
   // Burger Menu
@@ -92,7 +99,11 @@ export default {
     error: 'Něco se pokazilo. Zkuste to prosím znovu.',
     loginLink: 'Máte již účet?',
     loginLinkText: 'Přihlásit se',
-    socialProof: 'Připojte se k {count}+ restauracím na čekací listině'
+    socialProof: 'Připojte se k {count}+ restauracím na čekací listině',
+    finalCta: {
+      title: 'Buďte mezi prvními',
+      subtitle: 'Přidejte se na čekací listinu a získejte přednostní přístup.'
+    }
   },
 
   // Landing Page

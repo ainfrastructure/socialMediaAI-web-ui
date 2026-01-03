@@ -8,7 +8,14 @@ export default {
     login: 'Anmelden',
     getStarted: 'Loslegen',
     pricing: 'Preise',
-    howItWorks: 'So funktionierts'
+    howItWorks: 'So funktionierts',
+    joinWaitlist: 'Auf Warteliste setzen'
+  },
+
+  // Theme
+  theme: {
+    switchToLight: 'Zu hellem Modus wechseln',
+    switchToDark: 'Zu dunklem Modus wechseln'
   },
 
   // Burger Menu
@@ -93,7 +100,11 @@ export default {
     error: 'Etwas ist schiefgelaufen. Bitte versuchen Sie es erneut.',
     loginLink: 'Sie haben bereits ein Konto?',
     loginLinkText: 'Anmelden',
-    socialProof: 'Schliessen Sie sich {count}+ Restaurants auf der Warteliste an'
+    socialProof: 'Schliessen Sie sich {count}+ Restaurants auf der Warteliste an',
+    finalCta: {
+      title: 'Seien Sie unter den Ersten',
+      subtitle: 'Melden Sie sich für die Warteliste an und erhalten Sie frühen Zugang.'
+    }
   },
 
   // Landing Page

@@ -966,4 +966,34 @@ onMounted(() => {
     width: 100%;
   }
 }
+
+/* ===== DARK MODE OVERRIDES ===== */
+:root[data-theme="dark"] .date-picker-inline {
+  background: var(--bg-tertiary);
+  border-color: var(--border-color);
+}
+
+:root[data-theme="dark"] .time-picker-wrapper {
+  background: var(--bg-tertiary);
+  border-color: var(--border-color);
+}
+
+:root[data-theme="dark"] :deep(.dp__theme_dark) {
+  --dp-hover-color: var(--accent-alpha-10);
+  --dp-secondary-color: var(--accent-alpha-05);
+  --dp-border-color: var(--border-color);
+  --dp-highlight-color: var(--accent-alpha-10);
+}
+
+:root[data-theme="dark"] :deep(.dp__calendar_header_item) {
+  color: var(--gold-primary);
+}
+
+:root[data-theme="dark"] :deep(.dp__month_year_select:hover) {
+  background: var(--accent-alpha-10);
+}
+
+:root[data-theme="dark"] :deep(.dp__inner_nav:hover) {
+  background: var(--accent-alpha-10);
+}
 </style>

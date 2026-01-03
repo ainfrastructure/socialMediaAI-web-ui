@@ -264,4 +264,27 @@ const capitalizeFirst = (str: string): string => {
     font-size: var(--text-base);
   }
 }
+
+/* ===== DARK MODE OVERRIDES ===== */
+:root[data-theme="dark"] .nav-arrow {
+  background: var(--bg-tertiary);
+  border-color: var(--border-color);
+}
+
+:root[data-theme="dark"] .nav-arrow:hover {
+  background: var(--bg-elevated);
+  border-color: var(--accent-alpha-20);
+}
+
+:root[data-theme="dark"] .view-mode-toggle {
+  background: var(--bg-tertiary);
+}
+
+:root[data-theme="dark"] .toggle-slider {
+  background: var(--gold-primary);
+}
+
+:root[data-theme="dark"] .view-btn.active {
+  color: var(--bg-primary);
+}
 </style>

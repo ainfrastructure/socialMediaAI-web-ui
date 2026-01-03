@@ -257,8 +257,8 @@ onUnmounted(() => {
   position: absolute;
   top: var(--space-md);
   right: var(--space-md);
-  background: rgba(15, 61, 46, 0.05);
-  border: 1px solid rgba(15, 61, 46, 0.1);
+  background: var(--accent-alpha-05);
+  border: 1px solid var(--accent-alpha-10);
   color: var(--text-muted);
   cursor: pointer;
   padding: var(--space-sm);
@@ -274,8 +274,8 @@ onUnmounted(() => {
 
 .base-modal-close:hover {
   color: var(--text-primary);
-  background: rgba(15, 61, 46, 0.1);
-  border-color: rgba(15, 61, 46, 0.2);
+  background: var(--accent-alpha-10);
+  border-color: var(--accent-alpha-20);
 }
 
 /* Header */
@@ -391,5 +391,12 @@ onUnmounted(() => {
   .modal-leave-active .base-modal-card {
     transition: none;
   }
+}
+</style>
+
+<!-- Global dark mode styles for teleported content -->
+<style>
+:root[data-theme="dark"] .base-modal-overlay {
+  background: rgba(0, 0, 0, 0.7);
 }
 </style>

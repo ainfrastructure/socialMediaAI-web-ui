@@ -272,4 +272,14 @@ function cancelSwitch() {
   transform: translateY(-1px);
   box-shadow: var(--glow-gold-sm);
 }
+
+/* ===== DARK MODE OVERRIDES ===== */
+:root[data-theme="dark"] .confirm-overlay {
+  background: rgba(0, 0, 0, 0.6);
+}
+
+:root[data-theme="dark"] .confirm-dialog {
+  background: var(--bg-secondary);
+  border-color: var(--gold-primary);
+}
 </style>

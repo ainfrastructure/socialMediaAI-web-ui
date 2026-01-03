@@ -4,6 +4,7 @@ import { useAuthStore } from '../stores/auth'
 import { useI18n } from 'vue-i18n'
 import SidebarMenu from './SidebarMenu.vue'
 import LanguageSelector from './LanguageSelector.vue'
+import ThemeToggle from './ThemeToggle.vue'
 import MaterialIcon from './MaterialIcon.vue'
 import NotificationDropdown from './NotificationDropdown.vue'
 
@@ -55,6 +56,9 @@ const userInitial = computed(() => {
         <div class="header-right">
           <!-- Language Selector -->
           <LanguageSelector />
+
+          <!-- Theme Toggle -->
+          <ThemeToggle />
 
           <!-- Notifications -->
           <NotificationDropdown />

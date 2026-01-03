@@ -478,4 +478,19 @@ async function handleSave() {
     text-align: center;
   }
 }
+
+/* ===== DARK MODE OVERRIDES ===== */
+:root[data-theme="dark"] .spinner {
+  border-color: var(--border-color);
+  border-top-color: var(--gold-primary);
+}
+
+:root[data-theme="dark"] .restaurant-card {
+  background: var(--accent-alpha-10);
+  border-color: var(--border-color);
+}
+
+:root[data-theme="dark"] .restaurant-logo {
+  background: var(--bg-tertiary);
+}
 </style>

@@ -859,4 +859,52 @@ async function confirmCancelSubscription() {
     animation: none;
   }
 }
+
+/* ===== DARK MODE OVERRIDES ===== */
+:root[data-theme="dark"] .profile-view {
+  background: var(--bg-primary);
+}
+
+:root[data-theme="dark"] .section-header {
+  border-bottom-color: var(--border-color);
+}
+
+:root[data-theme="dark"] .edit-btn {
+  border-color: var(--border-color);
+  color: var(--gold-primary);
+}
+
+:root[data-theme="dark"] .edit-btn:hover {
+  background: var(--accent-alpha-10);
+  border-color: var(--accent-alpha-30);
+}
+
+:root[data-theme="dark"] .upgrade-link {
+  border-color: var(--border-color);
+  color: var(--gold-primary);
+}
+
+:root[data-theme="dark"] .upgrade-link:hover {
+  background: var(--accent-alpha-10);
+  border-color: var(--accent-alpha-30);
+}
+
+:root[data-theme="dark"] .plan-details {
+  background: var(--bg-tertiary);
+  border-color: var(--border-color);
+}
+
+:root[data-theme="dark"] .security-divider {
+  background: var(--border-color);
+}
+
+:root[data-theme="dark"] .modal-overlay {
+  background: rgba(0, 0, 0, 0.7);
+}
+
+:root[data-theme="dark"] .modal-content {
+  background: var(--bg-secondary);
+  border-color: var(--border-color);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
 </style>

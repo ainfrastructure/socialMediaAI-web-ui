@@ -10,10 +10,17 @@ import { useLogin } from '../composables/useLogin'
 import { api } from '../services/api'
 import BaseCard from '../components/BaseCard.vue'
 import BaseButton from '../components/BaseButton.vue'
+import BaseInput from '../components/BaseInput.vue'
+import BaseAlert from '../components/BaseAlert.vue'
 import MaterialIcon from '../components/MaterialIcon.vue'
 import LoginModal from '../components/LoginModal.vue'
 import PaywallModal from '../components/PaywallModal.vue'
 import LanguageSelector from '../components/LanguageSelector.vue'
+import ThemeToggle from '../components/ThemeToggle.vue'
+
+// ===== FEATURE FLAG =====
+// Set to true to enable signup/payment flow, false for waitlist mode
+const ENABLE_SIGNUP = false
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -48,6 +55,61 @@ const { resetForm } = useLogin()
 
 const showLoginModal = ref(false)
 const showPaywallModal = ref(false)
+
+// ===== WAITLIST STATE (used when ENABLE_SIGNUP = false) =====
+const waitlistEmail = ref('')
+const waitlistLoading = ref(false)
+const waitlistSuccess = ref(false)
+const waitlistError = ref('')
+const waitlistCount = ref(0)
+const WAITLIST_BASE_COUNT = 110
+
+async function loadWaitlistCount() {
+  try {
+    const response = await api.getWaitlistCount()
+    const count = (response as any).count ?? response.data?.count
+    if (response.success && count !== undefined) {
+      waitlistCount.value = WAITLIST_BASE_COUNT + count
+    } else {
+      waitlistCount.value = WAITLIST_BASE_COUNT
+    }
+  } catch {
+    waitlistCount.value = WAITLIST_BASE_COUNT
+  }
+}
+
+async function handleWaitlistSubmit() {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  if (!waitlistEmail.value || !emailRegex.test(waitlistEmail.value)) {
+    waitlistError.value = t('waitlist.invalidEmail')
+    return
+  }
+
+  waitlistLoading.value = true
+  waitlistError.value = ''
+
+  try {
+    const response = await api.joinWaitlist(waitlistEmail.value)
+
+    if (response.success) {
+      waitlistSuccess.value = true
+      const newCount = (response as any).count ?? response.data?.count
+      if (newCount !== undefined) {
+        waitlistCount.value = WAITLIST_BASE_COUNT + newCount
+      } else {
+        waitlistCount.value += 1
+      }
+    } else if ((response as any).error === 'already_on_waitlist') {
+      waitlistError.value = t('waitlist.alreadyOnList')
+    } else {
+      waitlistError.value = response.error || t('waitlist.error')
+    }
+  } catch {
+    waitlistError.value = t('waitlist.error')
+  } finally {
+    waitlistLoading.value = false
+  }
+}
 
 // Pricing data from API
 interface Plan {
@@ -173,6 +235,13 @@ function formatBeforePrice(price: number): string {
 }
 
 function handleCTAClick() {
+  // In waitlist mode, scroll to waitlist section
+  if (!ENABLE_SIGNUP) {
+    scrollToSection('waitlist')
+    return
+  }
+
+  // Normal signup flow
   if (authStore.isAuthenticated) {
     if (hasSubscription.value) {
       router.push('/posts/create')
@@ -524,7 +593,11 @@ function resumeCarouselRotation() {
 
 // Start animations on mount
 onMounted(async () => {
-  await loadPlans()
+  if (ENABLE_SIGNUP) {
+    await loadPlans()
+  } else {
+    await loadWaitlistCount()
+  }
   // Delay start of hint animation
   setTimeout(() => {
     if (!hasInteracted.value) {
@@ -596,14 +669,18 @@ const benefits = [
           <button class="nav-link" @click="scrollToSection('examples')">
             {{ $t('nav.howItWorks') }}
           </button>
-          <button class="nav-link" @click="scrollToSection('pricing')">
+          <button v-if="ENABLE_SIGNUP" class="nav-link" @click="scrollToSection('pricing')">
             {{ $t('nav.pricing') }}
+          </button>
+          <button v-else class="nav-link" @click="scrollToSection('waitlist')">
+            {{ $t('nav.joinWaitlist') }}
           </button>
         </nav>
 
         <!-- Header Actions -->
         <div class="header-actions">
           <LanguageSelector />
+          <ThemeToggle />
           <template v-if="authStore.isAuthenticated">
             <BaseButton variant="primary" size="small" @click="goToDashboard">
               {{ $t('landing.loginBox.goToDashboard') }}
@@ -632,6 +709,7 @@ const benefits = [
           <!-- Right side actions -->
           <div class="pill-actions">
             <LanguageSelector />
+            <ThemeToggle />
             <template v-if="authStore.isAuthenticated">
               <button class="pill-login-btn" @click="goToDashboard">
                 {{ $t('landing.loginBox.goToDashboard') }}
@@ -662,8 +740,11 @@ const benefits = [
         <button class="mobile-nav-link" @click="scrollToSection('examples')">
           {{ $t('nav.howItWorks') }}
         </button>
-        <button class="mobile-nav-link" @click="scrollToSection('pricing')">
+        <button v-if="ENABLE_SIGNUP" class="mobile-nav-link" @click="scrollToSection('pricing')">
           {{ $t('nav.pricing') }}
+        </button>
+        <button v-else class="mobile-nav-link" @click="scrollToSection('waitlist')">
+          {{ $t('nav.joinWaitlist') }}
         </button>
         <div class="mobile-nav-divider"></div>
         <template v-if="authStore.isAuthenticated">
@@ -1036,8 +1117,8 @@ const benefits = [
       </div>
     </section>
 
-    <!-- Pricing Section (Dynamic from API) -->
-    <section id="pricing" class="pricing-section">
+    <!-- Pricing Section (Dynamic from API) - only when signup enabled -->
+    <section v-if="ENABLE_SIGNUP" id="pricing" class="pricing-section">
       <div class="section-container">
         <h2 class="section-title">{{ $t('landing.pricing.title') }}</h2>
         <p class="section-subtitle">{{ $t('landing.pricing.subtitle') }}</p>
@@ -1148,14 +1229,80 @@ const benefits = [
       </div>
     </section>
 
+    <!-- Waitlist Section - only when signup disabled -->
+    <section v-else id="waitlist" class="waitlist-section">
+      <div class="section-container">
+        <h2 class="section-title">{{ $t('waitlist.headline') }}</h2>
+        <p class="section-subtitle">{{ $t('waitlist.subheadline') }}</p>
+
+        <!-- Social Proof -->
+        <p class="waitlist-social-proof">
+          {{ $t('waitlist.socialProof', { count: waitlistCount }) }}
+        </p>
+
+        <!-- Waitlist Form Card -->
+        <BaseCard variant="glass-intense" class="waitlist-card">
+          <!-- Success State -->
+          <div v-if="waitlistSuccess" class="waitlist-success">
+            <div class="success-icon">✓</div>
+            <h3 class="success-title">{{ $t('waitlist.successTitle') }}</h3>
+            <p class="success-message">{{ $t('waitlist.successMessage') }}</p>
+          </div>
+
+          <!-- Form -->
+          <form v-else @submit.prevent="handleWaitlistSubmit" class="waitlist-form">
+            <BaseAlert v-if="waitlistError" type="error" :dismissible="true" @close="waitlistError = ''">
+              {{ waitlistError }}
+            </BaseAlert>
+
+            <div class="waitlist-input-row">
+              <BaseInput
+                v-model="waitlistEmail"
+                type="email"
+                :placeholder="$t('waitlist.emailPlaceholder')"
+                required
+                class="waitlist-email-input"
+              />
+              <BaseButton
+                type="submit"
+                variant="primary"
+                size="large"
+                :disabled="waitlistLoading"
+                class="waitlist-submit-btn"
+              >
+                {{ waitlistLoading ? $t('waitlist.joining') : $t('waitlist.joinButton') }}
+              </BaseButton>
+            </div>
+          </form>
+        </BaseCard>
+
+        <!-- Login Link -->
+        <p class="waitlist-login-link">
+          {{ $t('waitlist.loginLink') }}
+          <button class="login-text-link" @click="showLoginModal = true">
+            {{ $t('waitlist.loginLinkText') }}
+          </button>
+        </p>
+      </div>
+    </section>
+
     <!-- Final CTA Section -->
     <section class="final-cta-section">
       <div class="section-container">
-        <h2 class="final-cta-title">{{ $t('landing.finalCta.title') }}</h2>
-        <p class="final-cta-subtitle">{{ $t('landing.finalCta.subtitle') }}</p>
-        <BaseButton variant="primary" size="large" class="final-cta-button" @click="handleCTAClick">
-          {{ $t('landing.hero.cta') }}
-        </BaseButton>
+        <template v-if="ENABLE_SIGNUP">
+          <h2 class="final-cta-title">{{ $t('landing.finalCta.title') }}</h2>
+          <p class="final-cta-subtitle">{{ $t('landing.finalCta.subtitle') }}</p>
+          <BaseButton variant="primary" size="large" class="final-cta-button" @click="handleCTAClick">
+            {{ $t('landing.hero.cta') }}
+          </BaseButton>
+        </template>
+        <template v-else>
+          <h2 class="final-cta-title">{{ $t('waitlist.finalCta.title') }}</h2>
+          <p class="final-cta-subtitle">{{ $t('waitlist.finalCta.subtitle') }}</p>
+          <BaseButton variant="primary" size="large" class="final-cta-button" @click="handleCTAClick">
+            {{ $t('waitlist.joinButton') }}
+          </BaseButton>
+        </template>
       </div>
     </section>
 
@@ -1371,9 +1518,9 @@ const benefits = [
   bottom: 0;
   background: linear-gradient(
     135deg,
-    rgba(246, 241, 231, 0.92) 0%,
-    rgba(246, 241, 231, 0.85) 50%,
-    rgba(246, 241, 231, 0.92) 100%
+    var(--hero-overlay-start) 0%,
+    var(--hero-overlay-mid) 50%,
+    var(--hero-overlay-end) 100%
   );
   pointer-events: none;
 }
@@ -2050,7 +2197,7 @@ const benefits = [
   position: absolute;
   bottom: var(--space-lg);
   padding: var(--space-xs) var(--space-md);
-  background: rgba(15, 61, 46, 0.35);
+  background: var(--accent-alpha-35);
   color: var(--text-primary);
   font-size: var(--text-sm);
   font-weight: var(--font-semibold);
@@ -2088,7 +2235,7 @@ const benefits = [
   flex: 1;
   width: 3px;
   background: var(--gold-primary);
-  box-shadow: 0 0 10px rgba(15, 61, 46, 0.5);
+  box-shadow: 0 0 10px var(--accent-alpha-50);
 }
 
 .handle-button {
@@ -2101,7 +2248,7 @@ const benefits = [
   justify-content: center;
   box-shadow:
     var(--shadow-lg),
-    0 0 20px rgba(15, 61, 46, 0.4);
+    0 0 20px var(--accent-alpha-40);
   flex-shrink: 0;
   pointer-events: auto;
   cursor: ew-resize;
@@ -2112,7 +2259,7 @@ const benefits = [
   transform: scale(1.1);
   box-shadow:
     var(--shadow-xl),
-    0 0 30px rgba(15, 61, 46, 0.6);
+    0 0 30px var(--accent-alpha-50);
 }
 
 /* Thumbnail Selector */
@@ -2162,7 +2309,7 @@ const benefits = [
   left: 0;
   right: 0;
   height: 3px;
-  background: rgba(15, 61, 46, 0.15);
+  background: var(--accent-alpha-15);
   border-radius: 0 0 var(--radius-md) var(--radius-md);
   overflow: hidden;
 }
@@ -2189,7 +2336,7 @@ const benefits = [
 
 /* Auto-Posting Section */
 .auto-posting-section {
-  background: linear-gradient(135deg, rgba(15, 61, 46, 0.05) 0%, transparent 50%);
+  background: linear-gradient(135deg, var(--accent-alpha-05) 0%, transparent 50%);
 }
 
 .auto-posting-content {
@@ -2349,7 +2496,7 @@ const benefits = [
 }
 
 .pricing-badge.lifetime-badge {
-  background: linear-gradient(135deg, #e8e1d5 0%, #f0ebe1 100%);
+  background: var(--gradient-elevated);
   color: var(--gold-primary);
   border: 1px solid var(--gold-dark);
 }
@@ -2505,9 +2652,159 @@ const benefits = [
   color: var(--text-secondary);
 }
 
+/* ===== WAITLIST SECTION ===== */
+.waitlist-section {
+  padding: var(--space-5xl) var(--space-2xl);
+  text-align: center;
+  background: linear-gradient(180deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+}
+
+.waitlist-social-proof {
+  font-size: var(--text-sm);
+  color: var(--gold-primary);
+  margin-bottom: var(--space-2xl);
+  font-weight: var(--font-medium);
+  letter-spacing: 0.5px;
+}
+
+.waitlist-card {
+  max-width: 650px;
+  margin: 0 auto;
+  padding: var(--space-2xl) var(--space-3xl);
+}
+
+.waitlist-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.waitlist-input-row {
+  display: flex;
+  gap: var(--space-md);
+  align-items: flex-start;
+}
+
+.waitlist-email-input {
+  flex: 1;
+  min-width: 0;
+}
+
+.waitlist-email-input :deep(.form-group) {
+  margin-bottom: 0;
+}
+
+.waitlist-email-input :deep(input) {
+  font-size: var(--text-lg);
+  padding: var(--space-lg) var(--space-xl);
+  min-height: 56px;
+}
+
+.waitlist-submit-btn {
+  flex-shrink: 0;
+  white-space: nowrap;
+  min-height: 56px;
+  padding: var(--space-lg) var(--space-2xl);
+  font-size: var(--text-lg);
+}
+
+/* Waitlist Success State */
+.waitlist-success {
+  text-align: center;
+  padding: var(--space-xl) 0;
+}
+
+.waitlist-success .success-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: var(--gradient-gold);
+  color: var(--text-on-gold);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
+  font-weight: bold;
+  margin: 0 auto var(--space-xl);
+  animation: scaleIn 0.4s var(--ease-smooth);
+}
+
+@keyframes scaleIn {
+  from {
+    transform: scale(0);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.waitlist-success .success-title {
+  font-family: var(--font-heading);
+  font-size: var(--text-2xl);
+  color: var(--text-primary);
+  margin-bottom: var(--space-md);
+}
+
+.waitlist-success .success-message {
+  font-size: var(--text-base);
+  color: var(--text-secondary);
+}
+
+/* Waitlist Login Link */
+.waitlist-login-link {
+  margin-top: var(--space-2xl);
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+}
+
+.login-text-link {
+  background: none;
+  border: none;
+  color: var(--gold-primary);
+  font-weight: var(--font-medium);
+  cursor: pointer;
+  transition: var(--transition-fast);
+  padding: 0;
+}
+
+.login-text-link:hover {
+  color: var(--gold-light);
+  text-decoration: underline;
+}
+
+/* Waitlist Responsive */
+@media (max-width: 640px) {
+  .waitlist-card {
+    padding: var(--space-xl);
+  }
+
+  .waitlist-input-row {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .waitlist-email-input {
+    width: 100%;
+  }
+
+  .waitlist-email-input :deep(input) {
+    font-size: var(--text-base);
+    padding: var(--space-md) var(--space-lg);
+    min-height: 48px;
+  }
+
+  .waitlist-submit-btn {
+    width: 100%;
+    min-height: 48px;
+    font-size: var(--text-base);
+  }
+}
+
 /* Final CTA Section */
 .final-cta-section {
-  background: linear-gradient(135deg, rgba(15, 61, 46, 0.1) 0%, rgba(15, 61, 46, 0.02) 100%);
+  background: linear-gradient(135deg, var(--accent-alpha-10) 0%, var(--accent-alpha-025) 100%);
   text-align: center;
   padding: var(--space-5xl) var(--space-2xl);
 }
@@ -2688,7 +2985,7 @@ const benefits = [
   }
 
   .pill-actions :deep(.language-button:hover) {
-    background: rgba(15, 61, 46, 0.1);
+    background: var(--accent-alpha-10);
   }
 
   .pill-actions :deep(.chevron) {
@@ -2891,5 +3188,50 @@ const benefits = [
   .badge-progress-fill {
     animation: none;
   }
+}
+
+/* ===== DARK THEME OVERRIDES ===== */
+:root[data-theme="dark"] .site-header.scrolled {
+  background: var(--surface-alpha-95);
+}
+
+:root[data-theme="dark"] .mobile-nav {
+  background: var(--surface-alpha-98);
+}
+
+:root[data-theme="dark"] .pill-content {
+  background: var(--surface-alpha-90);
+}
+
+:root[data-theme="dark"] .flow-step-card {
+  background: var(--bg-secondary);
+}
+
+:root[data-theme="dark"] .pricing-card {
+  background: var(--bg-secondary);
+}
+
+:root[data-theme="dark"] .pricing-card.featured {
+  background: var(--gradient-elevated);
+}
+
+:root[data-theme="dark"] .benefit-card {
+  background: var(--bg-secondary);
+}
+
+:root[data-theme="dark"] .final-cta-section {
+  background: var(--gradient-subtle);
+}
+
+:root[data-theme="dark"] .credit-display {
+  background: var(--accent-alpha-15);
+}
+
+:root[data-theme="dark"] .auto-posting-section {
+  background: linear-gradient(135deg, var(--accent-alpha-10) 0%, var(--accent-alpha-025) 100%);
+}
+
+:root[data-theme="dark"] .hamburger-line {
+  background: var(--text-primary);
 }
 </style>

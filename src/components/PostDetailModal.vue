@@ -741,4 +741,18 @@ function handleSchedule() {
     width: 100%;
   }
 }
+
+/* ===== DARK MODE OVERRIDES ===== */
+:root[data-theme="dark"] .modal-media {
+  background: var(--bg-tertiary);
+}
+
+:root[data-theme="dark"] .caption-text,
+:root[data-theme="dark"] .notes-text {
+  background: var(--bg-tertiary);
+}
+
+:root[data-theme="dark"] .hashtag {
+  background: var(--accent-alpha-15);
+}
 </style>

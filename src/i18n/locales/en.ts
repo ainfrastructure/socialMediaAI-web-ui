@@ -4,11 +4,18 @@ export default {
     login: 'Login',
     getStarted: 'Get Started',
     pricing: 'Pricing',
-    howItWorks: 'How it works'
+    howItWorks: 'How it works',
+    joinWaitlist: 'Join Waitlist'
+  },
+
+  // Theme
+  theme: {
+    switchToLight: 'Switch to light mode',
+    switchToDark: 'Switch to dark mode'
   },
 
   // Burger Menu
-  
+
   // Common
   common: {
     loading: 'Loading...',
@@ -89,7 +96,11 @@ export default {
     error: 'Something went wrong. Please try again.',
     loginLink: 'Already have an account?',
     loginLinkText: 'Sign in',
-    socialProof: 'Join {count}+ restaurants on the waitlist'
+    socialProof: 'Join {count}+ restaurants on the waitlist',
+    finalCta: {
+      title: 'Be the First to Know',
+      subtitle: 'Join the waitlist and get early access when we launch.'
+    }
   },
 
   // Landing Page

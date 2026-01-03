@@ -139,15 +139,15 @@ const showLastEllipsis = computed(() => {
   align-items: center;
   gap: var(--space-md);
   padding-top: var(--space-xl);
-  border-top: 1px solid rgba(15, 61, 46, 0.05);
+  border-top: 1px solid var(--accent-alpha-05);
 }
 
 .pagination-btn {
   padding: var(--space-md) var(--space-xl);
-  background: rgba(15, 61, 46, 0.05);
-  border: 1px solid rgba(15, 61, 46, 0.15);
+  background: var(--accent-alpha-05);
+  border: 1px solid var(--accent-alpha-15);
   border-radius: var(--radius-md);
-  color: var(--accent-gold);
+  color: var(--gold-primary);
   font-size: var(--text-sm);
   font-weight: 600;
   cursor: pointer;
@@ -156,8 +156,8 @@ const showLastEllipsis = computed(() => {
 }
 
 .pagination-btn:hover:not(:disabled) {
-  background: rgba(15, 61, 46, 0.1);
-  border-color: rgba(15, 61, 46, 0.25);
+  background: var(--accent-alpha-10);
+  border-color: var(--accent-alpha-25);
   transform: translateY(-2px);
 }
 
@@ -176,8 +176,8 @@ const showLastEllipsis = computed(() => {
   min-width: 36px;
   height: 36px;
   padding: var(--space-xs) var(--space-sm);
-  background: rgba(255, 255, 255, 0.8);
-  border: 1px solid rgba(15, 61, 46, 0.1);
+  background: var(--surface-alpha-80);
+  border: 1px solid var(--accent-alpha-10);
   border-radius: var(--radius-md);
   color: var(--text-secondary);
   font-size: var(--text-sm);
@@ -188,15 +188,15 @@ const showLastEllipsis = computed(() => {
 }
 
 .pagination-page:hover {
-  background: rgba(15, 61, 46, 0.05);
-  border-color: rgba(15, 61, 46, 0.2);
-  color: var(--accent-gold);
+  background: var(--accent-alpha-05);
+  border-color: var(--accent-alpha-20);
+  color: var(--gold-primary);
 }
 
 .pagination-page.active {
-  background: rgba(15, 61, 46, 0.1);
-  border-color: var(--accent-gold);
-  color: var(--accent-gold);
+  background: var(--accent-alpha-10);
+  border-color: var(--gold-primary);
+  color: var(--gold-primary);
   font-weight: 700;
 }
 

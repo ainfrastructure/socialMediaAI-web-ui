@@ -316,4 +316,26 @@ function cancelDelete() {
     height: 48px;
   }
 }
+
+/* ===== DARK MODE OVERRIDES ===== */
+:root[data-theme="dark"] .restaurant-item {
+  background: var(--bg-tertiary);
+}
+
+:root[data-theme="dark"] .restaurant-item:hover {
+  background: var(--bg-elevated);
+  border-color: var(--accent-alpha-30);
+}
+
+:root[data-theme="dark"] .item-logo.placeholder {
+  background: var(--accent-alpha-10);
+}
+
+:root[data-theme="dark"] .restaurants-list::-webkit-scrollbar-thumb {
+  background: var(--accent-alpha-30);
+}
+
+:root[data-theme="dark"] .restaurants-list::-webkit-scrollbar-thumb:hover {
+  background: var(--accent-alpha-50);
+}
 </style>

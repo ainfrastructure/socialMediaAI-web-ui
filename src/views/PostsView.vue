@@ -1689,4 +1689,62 @@ function formatDate(dateString: string): string {
     width: 100%;
   }
 }
+
+/* ===== DARK MODE OVERRIDES ===== */
+:root[data-theme="dark"] .modal-overlay {
+  background: rgba(0, 0, 0, 0.7);
+}
+
+:root[data-theme="dark"] .modal-content {
+  background: var(--bg-secondary);
+  border-color: var(--border-color);
+}
+
+:root[data-theme="dark"] .detail-section {
+  border-bottom-color: var(--border-color);
+}
+
+:root[data-theme="dark"] .edit-textarea,
+:root[data-theme="dark"] .edit-input,
+:root[data-theme="dark"] .edit-select {
+  background: var(--bg-tertiary);
+  border-color: var(--border-color);
+}
+
+:root[data-theme="dark"] .hashtag-editor {
+  background: var(--bg-tertiary);
+  border-color: var(--border-color);
+}
+
+:root[data-theme="dark"] .hashtag-tag {
+  background: var(--accent-alpha-15);
+  border-color: var(--accent-alpha-30);
+}
+
+/* Filter buttons and selects */
+:root[data-theme="dark"] .inline-select {
+  background: var(--bg-tertiary) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23C2A36B' d='M6 8L2 4h8z'/%3E%3C/svg%3E") no-repeat right 10px center;
+  border-color: var(--border-color);
+}
+
+:root[data-theme="dark"] .inline-select:hover {
+  border-color: var(--accent-alpha-40);
+}
+
+:root[data-theme="dark"] .inline-select:focus {
+  border-color: var(--gold-primary);
+  box-shadow: 0 0 0 2px rgba(194, 163, 107, 0.15);
+}
+
+:root[data-theme="dark"] .inline-select option {
+  background: var(--bg-secondary);
+}
+
+:root[data-theme="dark"] .post-card:hover {
+  border-color: var(--accent-alpha-40);
+}
+
+:root[data-theme="dark"] .section-header {
+  border-bottom-color: var(--border-color);
+}
 </style>

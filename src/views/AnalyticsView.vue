@@ -25,6 +25,7 @@ import PlatformLogo from '../components/PlatformLogo.vue'
 import { api } from '../services/api'
 import { useAuthStore } from '../stores/auth'
 import { useRestaurantsStore } from '../stores/restaurants'
+import { useThemeStore } from '../stores/theme'
 
 // Register Chart.js components
 ChartJS.register(
@@ -43,6 +44,10 @@ ChartJS.register(
 const { t } = useI18n()
 const authStore = useAuthStore()
 const restaurantsStore = useRestaurantsStore()
+const themeStore = useThemeStore()
+
+// Theme-aware colors for charts
+const isDark = computed(() => themeStore.theme === 'dark')
 
 // State
 const loading = ref(true)
@@ -238,11 +243,11 @@ const activityChartData = computed(() => {
       label: t('analytics.postsActivity'),
       data,
       borderColor: goldColor,
-      backgroundColor: 'rgba(15, 61, 46, 0.1)',
+      backgroundColor: isDark.value ? 'rgba(194, 163, 107, 0.15)' : 'rgba(15, 61, 46, 0.1)',
       fill: true,
       tension: 0.4,
       pointBackgroundColor: goldColor,
-      pointBorderColor: '#f6f1e7',
+      pointBorderColor: isDark.value ? '#0c0c0c' : '#f6f1e7',
       pointBorderWidth: 2,
       pointRadius: selectedTimeRange.value === '90d' ? 2 : 4,
       pointHoverRadius: 6
@@ -250,7 +255,7 @@ const activityChartData = computed(() => {
   }
 })
 
-const activityChartOptions = {
+const activityChartOptions = computed(() => ({
   responsive: true,
   maintainAspectRatio: false,
   plugins: {
@@ -258,9 +263,9 @@ const activityChartOptions = {
       display: false
     },
     tooltip: {
-      backgroundColor: 'rgba(255, 255, 255, 0.95)',
+      backgroundColor: isDark.value ? 'rgba(21, 21, 21, 0.95)' : 'rgba(255, 255, 255, 0.95)',
       titleColor: goldColor,
-      bodyColor: '#0f3d2e',
+      bodyColor: isDark.value ? '#B8B8B8' : '#0f3d2e',
       borderColor: goldColor,
       borderWidth: 1,
       padding: 12,
@@ -270,25 +275,25 @@ const activityChartOptions = {
   scales: {
     x: {
       grid: {
-        color: 'rgba(15, 61, 46, 0.05)'
+        color: isDark.value ? 'rgba(255, 255, 255, 0.05)' : 'rgba(15, 61, 46, 0.05)'
       },
       ticks: {
-        color: 'rgba(15, 61, 46, 0.5)',
+        color: isDark.value ? 'rgba(255, 255, 255, 0.5)' : 'rgba(15, 61, 46, 0.5)',
         maxRotation: 0
       }
     },
     y: {
       beginAtZero: true,
       grid: {
-        color: 'rgba(15, 61, 46, 0.05)'
+        color: isDark.value ? 'rgba(255, 255, 255, 0.05)' : 'rgba(15, 61, 46, 0.05)'
       },
       ticks: {
-        color: 'rgba(15, 61, 46, 0.5)',
+        color: isDark.value ? 'rgba(255, 255, 255, 0.5)' : 'rgba(15, 61, 46, 0.5)',
         stepSize: 1
       }
     }
   }
-}
+}))
 
 // Platform distribution chart
 const platformChartData = computed(() => {
@@ -306,14 +311,14 @@ const platformChartData = computed(() => {
     datasets: [{
       data: platforms.map(p => platformBreakdown.value[p]),
       backgroundColor: platforms.map(p => colors[p] || goldColor),
-      borderColor: '#f6f1e7',
+      borderColor: isDark.value ? '#0c0c0c' : '#f6f1e7',
       borderWidth: 3,
       hoverBorderWidth: 4
     }]
   }
 })
 
-const platformChartOptions = {
+const platformChartOptions = computed(() => ({
   responsive: true,
   maintainAspectRatio: false,
   cutout: '70%',
@@ -321,23 +326,23 @@ const platformChartOptions = {
     legend: {
       position: 'bottom' as const,
       labels: {
-        color: 'rgba(15, 61, 46, 0.8)',
+        color: isDark.value ? 'rgba(255, 255, 255, 0.8)' : 'rgba(15, 61, 46, 0.8)',
         padding: 20,
         usePointStyle: true,
         pointStyle: 'circle'
       }
     },
     tooltip: {
-      backgroundColor: 'rgba(255, 255, 255, 0.95)',
+      backgroundColor: isDark.value ? 'rgba(21, 21, 21, 0.95)' : 'rgba(255, 255, 255, 0.95)',
       titleColor: goldColor,
-      bodyColor: '#0f3d2e',
+      bodyColor: isDark.value ? '#B8B8B8' : '#0f3d2e',
       borderColor: goldColor,
       borderWidth: 1,
       padding: 12,
       cornerRadius: 8
     }
   }
-}
+}))
 
 // Post status chart - uses time range filtered posts (not affected by status filter)
 const statusChartData = computed(() => ({
@@ -349,13 +354,13 @@ const statusChartData = computed(() => ({
       timeRangeFilteredPosts.value.filter(p => p.status === 'cancelled').length
     ],
     backgroundColor: ['#4ade80', goldColor, '#ef4444'],
-    borderColor: '#f6f1e7',
+    borderColor: isDark.value ? '#0c0c0c' : '#f6f1e7',
     borderWidth: 2,
     borderRadius: 6
   }]
 }))
 
-const statusChartOptions = {
+const statusChartOptions = computed(() => ({
   responsive: true,
   maintainAspectRatio: false,
   plugins: {
@@ -363,9 +368,9 @@ const statusChartOptions = {
       display: false
     },
     tooltip: {
-      backgroundColor: 'rgba(255, 255, 255, 0.95)',
+      backgroundColor: isDark.value ? 'rgba(21, 21, 21, 0.95)' : 'rgba(255, 255, 255, 0.95)',
       titleColor: goldColor,
-      bodyColor: '#0f3d2e',
+      bodyColor: isDark.value ? '#B8B8B8' : '#0f3d2e',
       borderColor: goldColor,
       borderWidth: 1,
       padding: 12,
@@ -378,21 +383,21 @@ const statusChartOptions = {
         display: false
       },
       ticks: {
-        color: 'rgba(15, 61, 46, 0.7)'
+        color: isDark.value ? 'rgba(255, 255, 255, 0.7)' : 'rgba(15, 61, 46, 0.7)'
       }
     },
     y: {
       beginAtZero: true,
       grid: {
-        color: 'rgba(15, 61, 46, 0.05)'
+        color: isDark.value ? 'rgba(255, 255, 255, 0.05)' : 'rgba(15, 61, 46, 0.05)'
       },
       ticks: {
-        color: 'rgba(15, 61, 46, 0.5)',
+        color: isDark.value ? 'rgba(255, 255, 255, 0.5)' : 'rgba(15, 61, 46, 0.5)',
         stepSize: 1
       }
     }
   }
-}
+}))
 
 // Helper to get media URL from post
 function getMediaUrl(post: any): string | null {
@@ -1854,5 +1859,60 @@ onMounted(() => {
     padding: var(--space-xs) var(--space-sm);
     font-size: 10px;
   }
+}
+
+/* ===== DARK MODE OVERRIDES ===== */
+:root[data-theme="dark"] .stat-card-inner {
+  background: var(--bg-secondary);
+}
+
+:root[data-theme="dark"] .chart-card {
+  background: var(--bg-secondary);
+}
+
+:root[data-theme="dark"] .metric-icon {
+  background: var(--accent-alpha-15);
+}
+
+:root[data-theme="dark"] .activity-table th {
+  background: var(--bg-tertiary);
+}
+
+:root[data-theme="dark"] .activity-table td {
+  border-bottom-color: var(--border-color);
+}
+
+:root[data-theme="dark"] .activity-table tbody tr:hover {
+  background: var(--bg-tertiary);
+}
+
+:root[data-theme="dark"] .filter-btn {
+  background: var(--bg-tertiary);
+  border-color: var(--border-color);
+}
+
+:root[data-theme="dark"] .filter-btn:hover {
+  background: var(--bg-elevated);
+  border-color: var(--accent-alpha-30);
+}
+
+:root[data-theme="dark"] .filter-btn.active {
+  background: var(--gold-primary);
+  border-color: var(--gold-primary);
+  color: var(--bg-primary);
+}
+
+:root[data-theme="dark"] .time-range-btn {
+  background: var(--bg-tertiary);
+  border-color: var(--border-color);
+}
+
+:root[data-theme="dark"] .time-range-btn:hover {
+  background: var(--bg-elevated);
+}
+
+:root[data-theme="dark"] .time-range-btn.active {
+  background: var(--gold-primary);
+  color: var(--bg-primary);
 }
 </style>

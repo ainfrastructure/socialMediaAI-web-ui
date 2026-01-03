@@ -4,11 +4,18 @@ export default {
     login: 'Logg inn',
     getStarted: 'Kom i gang',
     pricing: 'Priser',
-    howItWorks: 'Slik fungerer det'
+    howItWorks: 'Slik fungerer det',
+    joinWaitlist: 'Bli med på ventelisten'
+  },
+
+  // Theme
+  theme: {
+    switchToLight: 'Bytt til lys modus',
+    switchToDark: 'Bytt til mørk modus'
   },
 
   // Burger Menu
-  
+
   // Common
   common: {
     loading: 'Laster...',
@@ -88,7 +95,11 @@ export default {
     error: 'Noe gikk galt. Prøv igjen.',
     loginLink: 'Har du allerede en konto?',
     loginLinkText: 'Logg inn',
-    socialProof: 'Bli med {count}+ restauranter på ventelisten'
+    socialProof: 'Bli med {count}+ restauranter på ventelisten',
+    finalCta: {
+      title: 'Vær først ute',
+      subtitle: 'Bli med på ventelisten og få tidlig tilgang når vi lanserer.'
+    }
   },
 
   // Landing Page

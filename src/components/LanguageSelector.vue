@@ -562,6 +562,77 @@ onUnmounted(() => {
     transform: none;
   }
 }
+
+/* ===== DARK MODE OVERRIDES ===== */
+:root[data-theme="dark"] .language-button {
+  border-color: var(--border-color);
+}
+
+:root[data-theme="dark"] .language-button:hover {
+  background: var(--accent-alpha-10);
+  border-color: var(--border-hover);
+}
+
+:root[data-theme="dark"] .currency-badge {
+  background: var(--accent-alpha-15);
+}
+
+:root[data-theme="dark"] .dropdown-menu {
+  background: var(--bg-secondary);
+  border-color: var(--border-color);
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.5);
+}
+
+:root[data-theme="dark"] .dropdown-header {
+  border-bottom-color: var(--border-color);
+}
+
+:root[data-theme="dark"] .close-button {
+  border-color: var(--border-color);
+}
+
+:root[data-theme="dark"] .close-button:hover {
+  background: var(--accent-alpha-10);
+  border-color: var(--border-hover);
+}
+
+:root[data-theme="dark"] .language-card {
+  background: var(--accent-alpha-03);
+  border-color: var(--border-color);
+}
+
+:root[data-theme="dark"] .language-card:hover {
+  background: var(--accent-alpha-10);
+  border-color: var(--border-hover);
+}
+
+:root[data-theme="dark"] .language-card.active {
+  background: var(--accent-alpha-15);
+  border-color: var(--gold-primary);
+}
+
+:root[data-theme="dark"] .card-check {
+  background: var(--accent-alpha-20);
+}
+
+:root[data-theme="dark"] .dropdown-divider {
+  background: var(--border-color);
+}
+
+:root[data-theme="dark"] .currency-card {
+  background: var(--accent-alpha-03);
+  border-color: var(--border-color);
+}
+
+:root[data-theme="dark"] .currency-card:hover {
+  background: var(--accent-alpha-10);
+  border-color: var(--border-hover);
+}
+
+:root[data-theme="dark"] .currency-card.active {
+  background: var(--accent-alpha-15);
+  border-color: var(--gold-primary);
+}
 </style>
 
 <!-- Global styles for teleported mobile dropdown -->
@@ -805,5 +876,67 @@ onUnmounted(() => {
   .mobile-dropdown-leave-active .mobile-dropdown-menu {
     transition: none;
   }
+}
+
+/* ===== MOBILE DARK MODE OVERRIDES ===== */
+:root[data-theme="dark"] .mobile-dropdown-overlay {
+  background: rgba(0, 0, 0, 0.6);
+}
+
+:root[data-theme="dark"] .mobile-dropdown-menu {
+  background: var(--bg-secondary);
+  border-color: var(--border-color);
+  box-shadow: 0 -12px 48px rgba(0, 0, 0, 0.5);
+}
+
+:root[data-theme="dark"] .mobile-dropdown-menu .dropdown-header {
+  border-bottom-color: var(--border-color);
+}
+
+:root[data-theme="dark"] .mobile-dropdown-menu .close-button {
+  border-color: var(--border-color);
+}
+
+:root[data-theme="dark"] .mobile-dropdown-menu .close-button:hover {
+  background: var(--accent-alpha-10);
+  border-color: var(--border-hover);
+}
+
+:root[data-theme="dark"] .mobile-dropdown-menu .language-card {
+  background: var(--accent-alpha-03);
+  border-color: var(--border-color);
+}
+
+:root[data-theme="dark"] .mobile-dropdown-menu .language-card:hover {
+  background: var(--accent-alpha-10);
+  border-color: var(--border-hover);
+}
+
+:root[data-theme="dark"] .mobile-dropdown-menu .language-card.active {
+  background: var(--accent-alpha-15);
+  border-color: var(--gold-primary);
+}
+
+:root[data-theme="dark"] .mobile-dropdown-menu .card-check {
+  background: var(--accent-alpha-20);
+}
+
+:root[data-theme="dark"] .mobile-dropdown-menu .dropdown-divider {
+  background: var(--border-color);
+}
+
+:root[data-theme="dark"] .mobile-dropdown-menu .currency-card {
+  background: var(--accent-alpha-03);
+  border-color: var(--border-color);
+}
+
+:root[data-theme="dark"] .mobile-dropdown-menu .currency-card:hover {
+  background: var(--accent-alpha-10);
+  border-color: var(--border-hover);
+}
+
+:root[data-theme="dark"] .mobile-dropdown-menu .currency-card.active {
+  background: var(--accent-alpha-15);
+  border-color: var(--gold-primary);
 }
 </style>

@@ -4077,4 +4077,27 @@ defineExpose({
   opacity: 0.5;
   cursor: not-allowed;
 }
+
+/* ===== DARK MODE OVERRIDES ===== */
+:root[data-theme="dark"] .layout-option-card,
+:root[data-theme="dark"] .theme-option-card {
+  background: var(--bg-tertiary);
+  border-color: var(--border-color);
+}
+
+:root[data-theme="dark"] .layout-option-card:hover:not(.selected),
+:root[data-theme="dark"] .theme-option-card:hover:not(.selected) {
+  background: var(--bg-elevated);
+  border-color: var(--accent-alpha-30);
+}
+
+:root[data-theme="dark"] .date-input {
+  background: var(--bg-tertiary);
+  border-color: var(--border-color);
+}
+
+:root[data-theme="dark"] .custom-theme-text-input {
+  background: var(--bg-tertiary);
+  border-color: var(--border-color);
+}
 </style>

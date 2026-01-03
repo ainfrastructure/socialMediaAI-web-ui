@@ -463,4 +463,29 @@ const isRestaurantSaved = (suggestion: RestaurantSuggestion): boolean => {
     font-size: var(--text-base);
   }
 }
+
+/* ===== DARK MODE OVERRIDES ===== */
+:root[data-theme="dark"] .autocomplete-dropdown {
+  background: var(--bg-secondary);
+  border-color: var(--border-color);
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.5);
+}
+
+:root[data-theme="dark"] .dropdown-item:hover,
+:root[data-theme="dark"] .dropdown-item.active {
+  background: var(--bg-elevated);
+}
+
+:root[data-theme="dark"] .spinner {
+  border-color: var(--border-color);
+  border-top-color: var(--gold-primary);
+}
+
+:root[data-theme="dark"] .autocomplete-dropdown::-webkit-scrollbar-thumb {
+  background: var(--accent-alpha-30);
+}
+
+:root[data-theme="dark"] .autocomplete-dropdown::-webkit-scrollbar-thumb:hover {
+  background: var(--accent-alpha-50);
+}
 </style>

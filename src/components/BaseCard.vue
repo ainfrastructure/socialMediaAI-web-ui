@@ -42,7 +42,7 @@ const variantClass = computed(() => `card-${props.variant}`)
 }
 
 .card-glass-intense {
-  background: rgba(250, 247, 240, 0.95);
+  background: var(--glass-intense-bg);
   backdrop-filter: blur(var(--blur-lg));
   -webkit-backdrop-filter: blur(var(--blur-lg));
   border: var(--border-width) solid var(--border-color);
@@ -71,7 +71,7 @@ const variantClass = computed(() => `card-${props.variant}`)
 }
 
 .card-glass.hoverable:hover {
-  background: rgba(255, 255, 255, 0.8);
+  background: var(--surface-alpha-80);
 }
 
 .card-solid.hoverable:hover {

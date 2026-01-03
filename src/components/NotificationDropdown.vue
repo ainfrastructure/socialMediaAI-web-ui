@@ -517,4 +517,50 @@ onUnmounted(() => {
     font-size: 10px;
   }
 }
+
+/* ===== DARK MODE OVERRIDES ===== */
+:root[data-theme="dark"] .notification-dropdown {
+  background: var(--bg-secondary);
+  border-color: var(--border-color);
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.5);
+}
+
+:root[data-theme="dark"] .dropdown-header {
+  background: var(--bg-tertiary);
+}
+
+:root[data-theme="dark"] .mark-all-btn:hover {
+  background: var(--accent-alpha-15);
+}
+
+:root[data-theme="dark"] .notification-item:hover {
+  background: var(--accent-alpha-10);
+}
+
+:root[data-theme="dark"] .notification-item.unread {
+  background: var(--accent-alpha-15);
+}
+
+:root[data-theme="dark"] .notification-item.unread:hover {
+  background: var(--accent-alpha-20);
+}
+
+:root[data-theme="dark"] .notification-link {
+  background: var(--accent-alpha-15);
+  border-color: var(--accent-alpha-30);
+}
+
+:root[data-theme="dark"] .notification-link:hover {
+  background: var(--accent-alpha-25);
+  box-shadow: 0 0 8px var(--accent-alpha-40);
+}
+
+:root[data-theme="dark"] .dropdown-footer {
+  background: var(--bg-tertiary);
+}
+
+:root[data-theme="dark"] .clear-all-btn:hover {
+  background: rgba(220, 53, 69, 0.15);
+  border-color: rgba(220, 53, 69, 0.3);
+}
 </style>

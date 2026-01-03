@@ -364,4 +364,10 @@ onUnmounted(() => {
     padding-bottom: 20px;
   }
 }
+
+/* ===== DARK MODE OVERRIDES ===== */
+:root[data-theme="dark"] .step-item.active .step-circle {
+  background: var(--accent-alpha-15);
+  box-shadow: 0 0 0 4px var(--accent-alpha-10);
+}
 </style>

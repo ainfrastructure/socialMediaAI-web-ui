@@ -62,7 +62,7 @@ const handleClick = (event: MouseEvent) => {
 }
 
 .base-button:focus-visible {
-  box-shadow: 0 0 0 3px rgba(15, 61, 46, 0.25);
+  box-shadow: var(--focus-ring);
 }
 
 /* Variants */

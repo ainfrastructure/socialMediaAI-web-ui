@@ -856,4 +856,62 @@ function handleSuccessModalClose() {
     transition: none !important;
   }
 }
+
+/* ===== DARK MODE OVERRIDES ===== */
+:root[data-theme="dark"] .preview-content {
+  background: var(--accent-alpha-15);
+  border-color: var(--border-color);
+}
+
+:root[data-theme="dark"] .notes-section {
+  border-bottom-color: var(--border-color);
+}
+
+:root[data-theme="dark"] .form-input,
+:root[data-theme="dark"] .form-select,
+:root[data-theme="dark"] .form-textarea {
+  background: var(--bg-tertiary);
+  border-color: var(--border-color);
+}
+
+:root[data-theme="dark"] .form-input:focus,
+:root[data-theme="dark"] .form-select:focus,
+:root[data-theme="dark"] .form-textarea:focus {
+  background: var(--bg-elevated);
+}
+
+:root[data-theme="dark"] .time-select,
+:root[data-theme="dark"] .period-select {
+  background: var(--bg-tertiary);
+  border-color: var(--border-color);
+}
+
+:root[data-theme="dark"] .time-select:focus,
+:root[data-theme="dark"] .period-select:focus {
+  background: var(--bg-elevated);
+}
+
+:root[data-theme="dark"] .platform-card {
+  background: var(--accent-alpha-15);
+  border-color: var(--border-color);
+}
+
+:root[data-theme="dark"] .platform-card:hover:not(.disabled) {
+  background: var(--accent-alpha-20);
+  border-color: var(--accent-alpha-40);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+:root[data-theme="dark"] .platform-card.selected {
+  background: var(--accent-alpha-15);
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+}
+
+:root[data-theme="dark"] .platform-card.disabled {
+  background: var(--accent-alpha-10);
+}
+
+:root[data-theme="dark"] .detected-badge {
+  background: var(--accent-alpha-15);
+}
 </style>

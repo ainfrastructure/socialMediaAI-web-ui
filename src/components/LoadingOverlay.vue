@@ -105,4 +105,14 @@ const props = withDefaults(defineProps<Props>(), {
     font-size: var(--text-sm);
   }
 }
+
+/* ===== LIGHT MODE OVERRIDES ===== */
+/* LoadingOverlay uses dark colors by default, so we need to lighten for light mode */
+:root:not([data-theme="dark"]) .loading-overlay {
+  background: rgba(246, 241, 231, 0.95);
+}
+
+:root:not([data-theme="dark"]) .loading-logo {
+  filter: drop-shadow(0 0 20px rgba(15, 61, 46, 0.3));
+}
 </style>

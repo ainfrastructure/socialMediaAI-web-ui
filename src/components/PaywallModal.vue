@@ -552,4 +552,9 @@ function close() {
     animation: none;
   }
 }
+
+/* ===== DARK MODE OVERRIDES ===== */
+:root[data-theme="dark"] .plan-card.lifetime {
+  background: linear-gradient(135deg, var(--accent-alpha-10) 0%, var(--bg-secondary) 100%);
+}
 </style>

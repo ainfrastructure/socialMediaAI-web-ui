@@ -801,4 +801,35 @@ if (urlParams.get('success') === 'true') {
     font-size: var(--text-4xl);
   }
 }
+
+/* ===== DARK MODE OVERRIDES ===== */
+:root[data-theme="dark"] .plan-card.lifetime {
+  background: linear-gradient(135deg, rgba(194, 163, 107, 0.1) 0%, var(--bg-secondary) 100%);
+  border-color: var(--gold-primary);
+  box-shadow: 0 0 30px rgba(194, 163, 107, 0.15), var(--shadow-lg);
+}
+
+:root[data-theme="dark"] .plan-card.lifetime::before {
+  background: linear-gradient(135deg, var(--gold-dark) 0%, var(--gold-primary) 50%, var(--gold-light) 100%);
+  opacity: 0.4;
+}
+
+:root[data-theme="dark"] .plan-badge {
+  background: var(--gradient-gold);
+  color: var(--bg-primary);
+}
+
+:root[data-theme="dark"] .plan-badge.lifetime-badge {
+  background: linear-gradient(135deg, var(--gold-dark), var(--gold-primary));
+}
+
+:root[data-theme="dark"] .limited-badge {
+  background: var(--accent-alpha-10);
+  border-color: var(--gold-primary);
+  color: var(--gold-primary);
+}
+
+:root[data-theme="dark"] .credits-highlight {
+  background: var(--accent-alpha-10);
+}
 </style>

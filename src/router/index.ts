@@ -2,7 +2,6 @@ import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 
 // Lazy load views for better code splitting
-const WaitlistView = () => import('../views/WaitlistView.vue')
 const LandingView = () => import('../views/LandingView.vue')
 const LoginView = () => import('../views/LoginView.vue')
 const DashboardView = () => import('../views/DashboardView.vue')
@@ -55,15 +54,9 @@ const router = createRouter({
   routes: [
     {
       path: '/',
-      name: 'waitlist',
-      component: WaitlistView,
-      meta: { requiresGuest: true },
-    },
-    {
-      path: '/landing',
       name: 'landing',
       component: LandingView,
-      // No requiresGuest - authenticated users can view landing page (work in progress)
+      // No requiresGuest - authenticated users can view landing page
     },
     {
       path: '/dashboard',

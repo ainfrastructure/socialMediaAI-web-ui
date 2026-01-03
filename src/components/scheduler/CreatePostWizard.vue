@@ -206,4 +206,23 @@ const formattedDate = computed(() => {
     grid-template-columns: 1fr;
   }
 }
+
+/* ===== DARK MODE OVERRIDES ===== */
+:root[data-theme="dark"] .modal-overlay {
+  background: rgba(0, 0, 0, 0.7);
+}
+
+:root[data-theme="dark"] .wizard-header {
+  border-bottom-color: var(--border-color);
+}
+
+:root[data-theme="dark"] .creation-option-card {
+  background: var(--bg-tertiary);
+  border-color: var(--border-color);
+}
+
+:root[data-theme="dark"] .creation-option-card:hover {
+  border-color: var(--accent-alpha-30);
+  background: var(--bg-elevated);
+}
 </style>

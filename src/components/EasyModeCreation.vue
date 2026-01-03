@@ -3479,4 +3479,16 @@ onUnmounted(() => {
     animation: none;
   }
 }
+
+/* ===== DARK MODE OVERRIDES ===== */
+:root[data-theme="dark"] .date-picker-container {
+  background: var(--bg-secondary);
+  border-color: var(--border-color);
+}
+
+:root[data-theme="dark"] :deep(.dp__theme_dark) {
+  --dp-hover-color: var(--accent-alpha-10);
+  --dp-secondary-color: var(--accent-alpha-05);
+  --dp-border-color: var(--border-color);
+}
 </style>

@@ -1364,4 +1364,29 @@ async function handleInlineFeedback(feedbackText: string) {
     font-size: var(--text-xs);
   }
 }
+
+/* ===== DARK MODE OVERRIDES ===== */
+:root[data-theme="dark"] .modal-overlay {
+  background: rgba(0, 0, 0, 0.7);
+}
+
+:root[data-theme="dark"] .creation-option-card {
+  background: var(--bg-tertiary);
+  border-color: var(--border-color);
+}
+
+:root[data-theme="dark"] .creation-option-card:hover {
+  border-color: var(--accent-alpha-30);
+  background: var(--bg-elevated);
+}
+
+:root[data-theme="dark"] .restaurant-item {
+  background: var(--bg-tertiary);
+  border-color: var(--border-color);
+}
+
+:root[data-theme="dark"] .restaurant-item:hover {
+  background: var(--bg-elevated);
+  border-color: var(--accent-alpha-20);
+}
 </style>

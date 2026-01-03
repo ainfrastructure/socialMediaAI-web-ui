@@ -3666,4 +3666,241 @@ onMounted(async () => {
   font-family: var(--font-body);
   line-height: var(--leading-normal);
 }
+
+/* ===== DARK MODE OVERRIDES ===== */
+:root[data-theme="dark"] .calendar-day {
+  background: var(--bg-secondary);
+  border-color: var(--border-color);
+}
+
+:root[data-theme="dark"] .calendar-day.other-month {
+  background: var(--bg-primary);
+}
+
+:root[data-theme="dark"] .calendar-day.past-date {
+  background: var(--bg-primary);
+  border-color: rgba(255, 255, 255, 0.05);
+}
+
+:root[data-theme="dark"] .calendar-day.today {
+  border-color: var(--gold-primary);
+  background: var(--accent-alpha-10);
+}
+
+:root[data-theme="dark"] .calendar-day-header {
+  background: var(--bg-tertiary);
+  border-color: var(--border-color);
+}
+
+:root[data-theme="dark"] .day-hover-overlay {
+  background: rgba(0, 0, 0, 0.7);
+}
+
+:root[data-theme="dark"] .hover-action-btn {
+  background: var(--bg-tertiary);
+  border-color: var(--border-color);
+}
+
+:root[data-theme="dark"] .hover-action-btn:hover {
+  background: var(--bg-elevated);
+  border-color: var(--gold-primary);
+}
+
+:root[data-theme="dark"] .post-card,
+:root[data-theme="dark"] .scheduled-post-card {
+  background: var(--bg-tertiary);
+  border-color: var(--border-color);
+}
+
+:root[data-theme="dark"] .post-card:hover,
+:root[data-theme="dark"] .scheduled-post-card:hover {
+  background: var(--bg-elevated);
+  border-color: var(--accent-alpha-30);
+}
+
+:root[data-theme="dark"] .post-thumbnail-placeholder {
+  background: var(--bg-elevated);
+}
+
+:root[data-theme="dark"] .empty-day-message {
+  background: var(--bg-tertiary);
+  border-color: var(--border-color);
+}
+
+:root[data-theme="dark"] .status-badge.scheduled {
+  background: var(--accent-alpha-15);
+  color: var(--gold-primary);
+  border-color: var(--accent-alpha-30);
+}
+
+:root[data-theme="dark"] .status-badge.published {
+  background: rgba(34, 197, 94, 0.15);
+}
+
+:root[data-theme="dark"] .status-badge.failed {
+  background: rgba(239, 68, 68, 0.15);
+}
+
+:root[data-theme="dark"] .calendar-filters {
+  background: var(--bg-tertiary);
+  border-color: var(--border-color);
+}
+
+:root[data-theme="dark"] .filter-section {
+  background: var(--bg-secondary);
+  border-color: var(--border-color);
+}
+
+:root[data-theme="dark"] .filter-checkbox-label {
+  background: var(--bg-tertiary);
+  border-color: var(--border-color);
+}
+
+:root[data-theme="dark"] .filter-checkbox-label:hover {
+  background: var(--bg-elevated);
+  border-color: var(--accent-alpha-30);
+}
+
+:root[data-theme="dark"] .modal-overlay {
+  background: rgba(0, 0, 0, 0.7);
+}
+
+:root[data-theme="dark"] .modal-content {
+  background: var(--bg-secondary);
+  border-color: var(--border-color);
+}
+
+:root[data-theme="dark"] .modal-header {
+  border-bottom-color: var(--border-color);
+}
+
+:root[data-theme="dark"] .modal-close {
+  background: var(--bg-tertiary);
+  border-color: var(--border-color);
+}
+
+:root[data-theme="dark"] .modal-close:hover {
+  background: var(--bg-elevated);
+  border-color: var(--gold-primary);
+}
+
+:root[data-theme="dark"] .detail-row {
+  border-bottom-color: var(--border-color);
+}
+
+:root[data-theme="dark"] .caption-preview,
+:root[data-theme="dark"] .hashtags-preview {
+  background: var(--bg-tertiary);
+  border-color: var(--border-color);
+}
+
+:root[data-theme="dark"] .legend-item {
+  background: var(--bg-tertiary);
+  border-color: var(--border-color);
+}
+
+:root[data-theme="dark"] .view-mode-btn {
+  background: var(--bg-tertiary);
+  border-color: var(--border-color);
+}
+
+:root[data-theme="dark"] .view-mode-btn:hover {
+  background: var(--bg-elevated);
+}
+
+:root[data-theme="dark"] .view-mode-btn.active {
+  background: var(--gold-primary);
+  border-color: var(--gold-primary);
+}
+
+:root[data-theme="dark"] .nav-btn {
+  background: var(--bg-tertiary);
+  border-color: var(--border-color);
+}
+
+:root[data-theme="dark"] .nav-btn:hover {
+  background: var(--bg-elevated);
+  border-color: var(--gold-primary);
+}
+
+:root[data-theme="dark"] .error-text {
+  background: rgba(0, 0, 0, 0.3);
+}
+
+:root[data-theme="dark"] .loading-overlay {
+  background: rgba(12, 12, 12, 0.8);
+}
+
+:root[data-theme="dark"] .spinner {
+  border-color: var(--border-color);
+  border-top-color: var(--gold-primary);
+}
+
+/* Day view header */
+:root[data-theme="dark"] .day-view-header {
+  background: var(--bg-tertiary);
+  border-bottom-color: var(--border-color);
+}
+
+/* Table rows */
+:root[data-theme="dark"] .table-row:hover {
+  background: var(--bg-elevated);
+}
+
+:root[data-theme="dark"] .table-row.is-expanded {
+  background: var(--bg-tertiary);
+}
+
+/* Hover action buttons */
+:root[data-theme="dark"] .hover-action-btn {
+  background: var(--bg-tertiary);
+  border-color: var(--border-color);
+}
+
+:root[data-theme="dark"] .hover-action-btn:hover {
+  background: var(--bg-elevated);
+  border-color: var(--accent-alpha-30);
+}
+
+:root[data-theme="dark"] .hover-action-btn.create-btn {
+  background: var(--accent-alpha-15);
+  border-color: var(--accent-alpha-30);
+}
+
+:root[data-theme="dark"] .hover-action-btn.create-btn:hover {
+  background: var(--gold-primary);
+  color: var(--bg-primary);
+}
+
+/* Action buttons */
+:root[data-theme="dark"] .action-button.create-btn {
+  background: var(--accent-alpha-15);
+  border-color: var(--accent-alpha-40);
+}
+
+:root[data-theme="dark"] .action-button.create-btn:hover {
+  box-shadow: 0 4px 12px rgba(194, 163, 107, 0.3);
+}
+
+/* Select and pickers */
+:root[data-theme="dark"] .time-picker-select {
+  background: var(--bg-tertiary);
+  border-color: var(--border-color);
+}
+
+:root[data-theme="dark"] .time-picker-select:focus {
+  border-color: var(--gold-primary);
+}
+
+/* Expanded panel */
+:root[data-theme="dark"] .expanded-panel {
+  background: var(--bg-tertiary);
+  border-top-color: var(--border-color);
+}
+
+/* Empty state */
+:root[data-theme="dark"] .empty-state-card {
+  background: var(--bg-tertiary);
+  border-color: var(--border-color);
+}
 </style>

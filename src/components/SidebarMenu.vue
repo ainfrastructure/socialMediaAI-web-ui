@@ -637,4 +637,17 @@ function closeMobileMenu() {
     height: 20px;
   }
 }
+
+/* ===== DARK MODE OVERRIDES ===== */
+:root[data-theme="dark"] .brand-badge {
+  background: var(--accent-alpha-15);
+}
+
+:root[data-theme="dark"] .nav-item.active {
+  background: var(--accent-alpha-10);
+}
+
+:root[data-theme="dark"] .action-item.logout:hover {
+  background: rgba(220, 53, 69, 0.15);
+}
 </style>

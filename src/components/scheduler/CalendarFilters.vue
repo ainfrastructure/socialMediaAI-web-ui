@@ -501,4 +501,53 @@ const getRestaurantName = (restaurantId: string): string => {
     margin-top: var(--space-sm);
   }
 }
+
+/* ===== DARK MODE OVERRIDES ===== */
+:root[data-theme="dark"] .filter-toggle {
+  background: var(--bg-tertiary);
+  border-color: var(--border-color);
+}
+
+:root[data-theme="dark"] .filter-toggle:hover {
+  background: var(--bg-elevated);
+  border-color: var(--accent-alpha-20);
+}
+
+:root[data-theme="dark"] .filter-content {
+  background: var(--bg-tertiary);
+  border-color: var(--border-color);
+}
+
+:root[data-theme="dark"] .inline-filter-btn {
+  background: var(--bg-secondary);
+  border-color: var(--border-color);
+}
+
+:root[data-theme="dark"] .inline-filter-btn:hover {
+  background: var(--bg-elevated);
+  border-color: var(--accent-alpha-20);
+}
+
+:root[data-theme="dark"] .inline-filter-options {
+  background: var(--bg-secondary);
+  border-color: var(--border-color);
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.5);
+}
+
+:root[data-theme="dark"] .filter-checkbox:hover {
+  background: var(--bg-elevated);
+}
+
+:root[data-theme="dark"] .filter-divider {
+  background: var(--border-color);
+}
+
+:root[data-theme="dark"] .active-filters {
+  border-top-color: var(--border-color);
+}
+
+:root[data-theme="dark"] .active-filter-tag {
+  background: var(--accent-alpha-15);
+  border-color: var(--accent-alpha-30);
+}
 </style>
