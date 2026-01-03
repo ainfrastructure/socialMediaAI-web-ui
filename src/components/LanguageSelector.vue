@@ -177,9 +177,6 @@ function isCurrentDomain(domain: string): boolean {
   // Direct match
   if (current === domain) return true
 
-  // Check if current hostname contains the domain (e.g., staging.socialchef.no matches socialchef.no)
-  if (current.endsWith('.' + domain)) return true
-
   // For subdomains like de.socialchef.ai, check if current matches
   if (domain.includes('.socialchef.ai')) {
     // Extract subdomain from domain (e.g., 'de' from 'de.socialchef.ai')
@@ -189,6 +186,17 @@ function isCurrentDomain(domain: string): boolean {
       return true
     }
   }
+
+  // For socialchef.ai (international), only match if there's NO subdomain
+  // e.g., socialchef.ai matches, but de.socialchef.ai does NOT match
+  if (domain === 'socialchef.ai') {
+    // Only match if current is exactly socialchef.ai (no subdomain)
+    return current === 'socialchef.ai'
+  }
+
+  // Check if current hostname contains the domain (e.g., staging.socialchef.no matches socialchef.no)
+  // But exclude .ai subdomains which are handled above
+  if (current.endsWith('.' + domain) && !domain.endsWith('.ai')) return true
 
   return false
 }

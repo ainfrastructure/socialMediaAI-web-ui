@@ -52,7 +52,7 @@ export const TLD_CONFIGS: Record<string, DomainConfig> = {
     currency: 'USD',
     region: 'US',
     htmlLang: 'en',
-    flag: '🇺🇸',
+    flag: '🌐',
   },
 
   // Nordic
@@ -224,7 +224,7 @@ export type SelectableDomain = {
 
 export const SELECTABLE_DOMAINS: SelectableDomain[] = [
   // International / English
-  { domain: 'socialchef.ai', locale: 'en', name: 'International', flag: '🇺🇸' },
+  { domain: 'socialchef.ai', locale: 'en', name: 'International', flag: '🌐' },
   { domain: 'socialchef.uk', locale: 'en', name: 'United Kingdom', flag: '🇬🇧' },
   // Nordic
   { domain: 'socialchef.no', locale: 'no', name: 'Norge', flag: '🇳🇴' },
