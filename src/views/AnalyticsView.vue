@@ -403,11 +403,22 @@ const statusChartOptions = computed(() => ({
 function getMediaUrl(post: any): string | null {
   return post.media_url ||
          post.image_url ||
-         post.video_url ||
          post.favorite_posts?.media_url ||
          post.favorite_post?.media_url ||
          post.favorite?.media_url ||
          null
+}
+
+function getVideoUrl(post: any): string | null {
+  return post.video_url ||
+         post.favorite_posts?.video_url ||
+         post.favorite_post?.video_url ||
+         post.favorite?.video_url ||
+         null
+}
+
+function hasVideo(post: any): boolean {
+  return !!getVideoUrl(post)
 }
 
 // Helper to get post text/caption
@@ -786,7 +797,7 @@ onMounted(() => {
                     </div>
                     <div class="post-details">
                       <span class="post-title">{{ getPostText(post).substring(0, 40) || t('analytics.noText') }}{{ getPostText(post).length > 40 ? '...' : '' }}</span>
-                      <span v-if="post.content_type === 'video'" class="post-type">
+                      <span v-if="hasVideo(post)" class="post-type">
                         <MaterialIcon icon="videocam" size="xs" /> {{ t('analytics.video') }}
                       </span>
                     </div>
@@ -874,20 +885,20 @@ onMounted(() => {
               </div>
 
               <div class="post-modal-content">
-                <!-- Media Preview -->
-                <div v-if="getMediaUrl(selectedPost)" class="media-preview">
-                  <img
-                    v-if="selectedPost.content_type !== 'video'"
-                    :src="getMediaUrl(selectedPost)"
-                    :alt="selectedPost.post_text || selectedPost.caption || 'Post'"
-                    class="media-image"
-                  />
+                <!-- Media Preview - Show video if video_url exists, otherwise image -->
+                <div v-if="getMediaUrl(selectedPost) || getVideoUrl(selectedPost)" class="media-preview">
                   <video
-                    v-else
-                    :src="getMediaUrl(selectedPost)"
+                    v-if="hasVideo(selectedPost)"
+                    :src="getVideoUrl(selectedPost)!"
                     controls
                     class="media-video"
                   ></video>
+                  <img
+                    v-else
+                    :src="getMediaUrl(selectedPost)!"
+                    :alt="selectedPost.post_text || selectedPost.caption || 'Post'"
+                    class="media-image"
+                  />
                 </div>
 
                 <!-- Post Details -->

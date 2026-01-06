@@ -249,19 +249,19 @@ const saveChanges = async () => {
     @close="close"
   >
     <div class="modal-content">
-      <!-- Media Section (Left) -->
+      <!-- Media Section (Left) - Show video if video_url exists, otherwise image -->
       <div class="modal-media">
+        <video
+          v-if="currentFavorite?.video_url"
+          :src="currentFavorite.video_url"
+          controls
+          class="media-video"
+        />
         <img
-          v-if="currentFavorite?.content_type === 'image' && currentFavorite?.media_url"
+          v-else-if="currentFavorite?.media_url"
           :src="currentFavorite.media_url"
           alt="Post preview"
           class="media-image"
-        />
-        <video
-          v-else-if="currentFavorite?.content_type === 'video' && currentFavorite?.media_url"
-          :src="currentFavorite.media_url"
-          controls
-          class="media-video"
         />
         <div v-else class="media-placeholder">
           <MaterialIcon icon="image" size="xl" color="var(--text-muted)" />
@@ -446,17 +446,17 @@ const saveChanges = async () => {
             :class="['favorite-card', { selected: selectedFavoriteId === favorite.id }]"
             @click="selectFavorite(favorite)"
           >
-            <img
-              v-if="favorite.content_type === 'image'"
-              :src="favorite.media_url"
-              alt="Post"
-              class="favorite-thumbnail"
-            />
-            <video
-              v-else
-              :src="favorite.media_url"
-              class="favorite-thumbnail"
-            />
+            <!-- Always show image thumbnail for reliable display in grid -->
+            <div class="favorite-thumbnail-wrapper">
+              <img
+                v-if="favorite.media_url"
+                :src="favorite.media_url"
+                alt="Post"
+                class="favorite-thumbnail"
+              />
+              <!-- Video indicator overlay -->
+              <span v-if="favorite.video_url" class="video-indicator">🎥</span>
+            </div>
             <div v-if="selectedFavoriteId === favorite.id" class="selected-check">
               <MaterialIcon icon="check_circle" size="lg" />
             </div>
@@ -1038,10 +1038,26 @@ const saveChanges = async () => {
   box-shadow: var(--glow-gold-md);
 }
 
+.favorite-thumbnail-wrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
 .favorite-thumbnail {
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+.video-indicator {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  font-size: 0.875rem;
+  background: rgba(0, 0, 0, 0.6);
+  padding: 2px 4px;
+  border-radius: var(--radius-sm);
 }
 
 .selected-check {

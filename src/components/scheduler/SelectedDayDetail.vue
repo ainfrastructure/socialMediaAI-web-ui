@@ -56,27 +56,24 @@
             :class="['table-row', { 'is-expanded': expandedPostId === post.id, 'upcoming-view': activeTab === 'upcoming' }]"
             @click="toggleExpanded(post.id, post)"
           >
-            <!-- Post Column -->
+            <!-- Post Column - Always show image thumbnail for reliable display -->
             <div class="td-post">
-              <video
-                v-if="post.media_url && post.content_type === 'video'"
-                :src="getMediaUrl(post.media_url)"
-                class="post-thumb"
-                muted
-                playsinline
-              />
-              <img
-                v-else-if="post.media_url"
-                :src="getMediaUrl(post.media_url)"
-                class="post-thumb"
-                @error="handleImageError"
-              />
-              <div v-else class="post-thumb post-thumb-placeholder">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
-                  <circle cx="8.5" cy="8.5" r="1.5"/>
-                  <polyline points="21 15 16 10 5 21"/>
-                </svg>
+              <div class="post-thumb-wrapper">
+                <img
+                  v-if="post.media_url"
+                  :src="getMediaUrl(post.media_url)"
+                  class="post-thumb"
+                  @error="handleImageError"
+                />
+                <div v-else class="post-thumb post-thumb-placeholder">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                    <circle cx="8.5" cy="8.5" r="1.5"/>
+                    <polyline points="21 15 16 10 5 21"/>
+                  </svg>
+                </div>
+                <!-- Video indicator overlay -->
+                <span v-if="post.video_url" class="video-indicator">🎥</span>
               </div>
               <div class="post-info">
                 <div class="post-time-row">
@@ -143,15 +140,15 @@
           <div v-if="expandedPostId === post.id" class="expanded-details" @click.stop>
             <!-- EDITABLE FORM for scheduled posts (only when editing) -->
             <div v-if="post.status !== 'published' && isEditing" class="edit-expanded">
-              <!-- Left: Image Preview -->
+              <!-- Left: Media Preview - Show video if video_url exists, otherwise image -->
               <div class="edit-image-section">
                 <label class="edit-label">Preview</label>
                 <div class="edit-image-wrapper">
                   <video
-                    v-if="post.media_url && post.content_type === 'video'"
-                    :src="getMediaUrl(post.media_url)"
+                    v-if="post.video_url"
+                    :src="getMediaUrl(post.video_url)"
                     class="edit-preview-img"
-                    muted
+                    controls
                     playsinline
                   />
                   <img
@@ -311,12 +308,12 @@
 
             <!-- READ-ONLY view for published posts and scheduled posts (when not editing) -->
             <div v-else class="expanded-grid">
-              <!-- Preview -->
+              <!-- Preview - Show video if video_url exists, otherwise image -->
               <div class="detail-section">
                 <h4 class="detail-label">Preview</h4>
                 <video
-                  v-if="post.media_url && post.content_type === 'video'"
-                  :src="getMediaUrl(post.media_url)"
+                  v-if="post.video_url"
+                  :src="getMediaUrl(post.video_url)"
                   class="detail-preview-img"
                   controls
                   playsinline
@@ -1126,6 +1123,13 @@ defineExpose({
   min-width: 0;
 }
 
+.post-thumb-wrapper {
+  position: relative;
+  width: 48px;
+  height: 48px;
+  flex-shrink: 0;
+}
+
 .post-thumb {
   width: 48px;
   height: 48px;
@@ -1133,6 +1137,16 @@ defineExpose({
   object-fit: cover;
   flex-shrink: 0;
   background: var(--bg-tertiary);
+}
+
+.video-indicator {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  font-size: 0.7rem;
+  background: rgba(0, 0, 0, 0.6);
+  padding: 1px 3px;
+  border-radius: var(--radius-sm);
 }
 
 .post-thumb-placeholder {

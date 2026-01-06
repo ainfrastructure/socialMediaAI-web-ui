@@ -12,18 +12,20 @@
     <div v-if="favoritePost" class="preview-section">
       <h4 class="section-title">{{ $t('scheduleModal.preview') }}</h4>
       <div class="preview-content">
+        <!-- Show video if video_url exists -->
+        <video
+          v-if="favoritePost.video_url"
+          :src="favoritePost.video_url"
+          class="preview-media"
+          controls
+        ></video>
+        <!-- Otherwise show image -->
         <img
-          v-if="favoritePost.content_type === 'image'"
+          v-else-if="favoritePost.media_url"
           :src="favoritePost.media_url"
           alt="Post preview"
           class="preview-media"
         />
-        <video
-          v-else
-          :src="favoritePost.media_url"
-          class="preview-media"
-          controls
-        ></video>
         <p v-if="favoritePost.post_text" class="preview-text">
           {{ truncateText(favoritePost.post_text, 100) }}
         </p>
@@ -217,13 +219,16 @@ const handleUnifiedPublish = async (data: {
           }
 
           try {
-            const isVideo = props.favoritePost.content_type === 'video'
+            // Use video_url if it exists, otherwise check content_type
+            const hasVideo = !!props.favoritePost.video_url
+            const isVideo = hasVideo || props.favoritePost.content_type === 'video'
+            const videoUrl = props.favoritePost.video_url || props.favoritePost.media_url
             const response = await api.postToFacebook(
               selectedPage.pageId,
               message,
               isVideo ? undefined : props.favoritePost.media_url,
-              isVideo ? props.favoritePost.media_url : undefined,
-              props.favoritePost.content_type
+              isVideo ? videoUrl : undefined,
+              isVideo ? 'video' : 'image'
             )
 
             const postUrl = (response as any).postUrl || response.data?.postUrl
@@ -262,13 +267,16 @@ const handleUnifiedPublish = async (data: {
           }
 
           try {
-            const isVideo = props.favoritePost.content_type === 'video'
+            // Use video_url if it exists, otherwise check content_type
+            const hasVideo = !!props.favoritePost.video_url
+            const isVideo = hasVideo || props.favoritePost.content_type === 'video'
+            const videoUrl = props.favoritePost.video_url || props.favoritePost.media_url
             const response = await api.postToInstagram(
               instagramAccount.instagramAccountId,
               message,
               isVideo ? undefined : props.favoritePost.media_url,
-              isVideo ? props.favoritePost.media_url : undefined,
-              props.favoritePost.content_type
+              isVideo ? videoUrl : undefined,
+              isVideo ? 'video' : 'image'
             )
 
             const postUrl = (response as any).postUrl || response.data?.postUrl

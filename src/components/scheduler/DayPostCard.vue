@@ -3,26 +3,20 @@
     :class="['day-post-card', post.status ? `status-${post.status}` : '']"
     @click="$emit('view', post)"
   >
-    <!-- Thumbnail Section -->
+    <!-- Thumbnail Section - Always show image for reliable thumbnails -->
     <div class="post-card-thumbnail">
       <img
-        v-if="post.content_type === 'image' && post.media_url"
+        v-if="post.media_url"
         :src="getMediaUrl(post.media_url)"
         :alt="post.post_text || 'Post'"
         class="post-thumb-img"
         @error="handleImageError"
       />
-      <video
-        v-else-if="post.content_type === 'video' && post.media_url"
-        :src="getMediaUrl(post.media_url)"
-        class="post-thumb-img"
-        preload="metadata"
-        muted
-        playsinline
-      ></video>
       <div v-else class="post-thumb-placeholder">
         <span class="thumb-icon">📸</span>
       </div>
+      <!-- Video indicator overlay -->
+      <span v-if="post.video_url" class="video-indicator">🎥</span>
     </div>
 
     <!-- Time Section -->
@@ -102,6 +96,7 @@ interface ScheduledPost {
   id: string | number
   post_text?: string
   media_url?: string
+  video_url?: string
   content_type?: string
   platform?: string
   status?: string
@@ -224,12 +219,23 @@ const capitalizeFirst = (str: string): string => {
 }
 
 .post-card-thumbnail {
+  position: relative;
   width: 80px;
   height: 80px;
   flex-shrink: 0;
   border-radius: var(--radius-md);
   overflow: hidden;
   background: rgba(255, 255, 255, 0.8);
+}
+
+.video-indicator {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  font-size: 0.875rem;
+  background: rgba(0, 0, 0, 0.6);
+  padding: 2px 4px;
+  border-radius: var(--radius-sm);
 }
 
 .post-thumb-img {

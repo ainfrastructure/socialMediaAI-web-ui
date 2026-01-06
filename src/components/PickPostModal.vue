@@ -40,23 +40,18 @@
                   :class="['post-item', { selected: selectedPost?.id === post.id }]"
                   @click="selectPost(post)"
                 >
-                  <!-- Media Thumbnail -->
+                  <!-- Media Thumbnail - Always show image for grid view -->
                   <div class="thumbnail-container">
                     <img
-                      v-if="post.content_type === 'image'"
+                      v-if="post.media_url"
                       :src="post.media_url"
                       alt="Post"
                       class="thumbnail"
                     />
-                    <video
-                      v-else
-                      :src="post.media_url"
-                      class="thumbnail"
-                    ></video>
 
-                    <!-- Type Badge -->
-                    <span :class="['type-badge', post.content_type]">
-                      <span class="material-symbols-outlined">{{ post.content_type === 'image' ? 'photo_camera' : 'videocam' }}</span>
+                    <!-- Type Badge - Show video icon if has video_url -->
+                    <span :class="['type-badge', post.video_url ? 'video' : 'image']">
+                      <span class="material-symbols-outlined">{{ post.video_url ? 'videocam' : 'photo_camera' }}</span>
                     </span>
 
                     <!-- Platform Badge -->
@@ -121,17 +116,19 @@
                 </BaseButton>
               </div>
               <div class="preview-card">
+                <!-- Show video if video_url exists, otherwise image -->
+                <video
+                  v-if="selectedPost.video_url"
+                  :src="selectedPost.video_url"
+                  controls
+                  class="preview-thumbnail"
+                ></video>
                 <img
-                  v-if="selectedPost.content_type === 'image'"
+                  v-else-if="selectedPost.media_url"
                   :src="selectedPost.media_url"
                   alt="Selected"
                   class="preview-thumbnail"
                 />
-                <video
-                  v-else
-                  :src="selectedPost.media_url"
-                  class="preview-thumbnail"
-                ></video>
                 <p v-if="!isEditing" class="preview-text">
                   {{ truncateText(selectedPost.post_text, 100) }}
                 </p>
