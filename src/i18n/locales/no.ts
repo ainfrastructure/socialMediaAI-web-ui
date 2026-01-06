@@ -293,6 +293,7 @@ export default {
     upgrade: 'Oppgrader',
     buy: 'Kjøp',
     promoCodeHint: 'Har du en rabattkode? Skriv den inn ved betaling.',
+    referralDiscountApplied: 'Din ververabatt blir automatisk brukt ved betaling!',
     imageGeneration: 'AI-bildegenerering',
     videoGeneration: 'AI-videogenerering',
     facebookPublishing: 'Facebook-publisering',
@@ -1009,7 +1010,8 @@ export default {
     upgrade: 'Oppgrader',
     profile: 'Profil',
     logout: 'Logg ut',
-    notifications: 'Varsler'
+    notifications: 'Varsler',
+    referFriend: 'Verv en venn'
   },
 
   // New Dashboard Elements
@@ -1358,5 +1360,82 @@ export default {
     emptyStateTitle: 'På tide å lage noen innlegg!',
     emptyStateDescription: 'Når du begynner å lage og planlegge innhold, vil analysene dine vises her. La oss komme i gang!',
     createFirstPost: 'Lag ditt første innlegg'
+  },
+
+  // Referral Program
+  referral: {
+    // Landing Page
+    landingTitle: 'Du er invitert!',
+    landingSubtitle: 'Vennen din tror du vil elske Social Chef',
+    benefitsTitle: 'Dine eksklusive fordeler',
+    freeMonth: 'Første måned GRATIS',
+    freeMonthDesc: 'Start med 30 dager helt gratis',
+    fiftyOff: '50% rabatt i 2 måneder',
+    fiftyOffDesc: 'Etter din gratis måned, betal halv pris i måned 2-3',
+    fullAccess: 'Full tilgang',
+    fullAccessDesc: 'Nyt alle premium-funksjoner fra dag én',
+    getStarted: 'Kom i gang nå',
+    invalidCode: 'Ugyldig vervekode',
+    invalidCodeTitle: 'Ugyldig invitasjon',
+    invalidCodeMessage: 'Denne vervekoden er ikke lenger gyldig. Du kan fortsatt registrere deg til full pris.',
+    noCodeTitle: 'Ingen vervekode',
+    noCodeDesc: 'Det ser ut som du ikke har en vervekode. Spør en venn om deres kode eller registrer deg direkte.',
+    goToHome: 'Gå til hjemmesiden',
+    signUpAnyway: 'Registrer deg likevel',
+    validatingCode: 'Validerer invitasjonen din...',
+    validationError: 'Kunne ikke validere vervekode. Vennligst prøv igjen.',
+    invitedBy: 'Invitert av {name}',
+    codeApplied: 'Vervekode ble brukt!',
+    applyError: 'Kunne ikke bruke vervekode. Vennligst prøv igjen.',
+    discountBadge: '1 måned GRATIS + 50% rabatt',
+    ctaTitle: 'Klar til å komme i gang?',
+    ctaDescription: 'Rabatten din blir automatisk brukt ved kjøp.',
+    ctaNote: 'Opprett konto og rabatten venter på deg',
+
+    // Profile Section
+    sectionTitle: 'Verv en venn',
+    yourCode: 'Din vervekode',
+    copyCode: 'Kopier kode',
+    copyLink: 'Kopier lenke',
+    codeCopied: 'Kode kopiert!',
+    linkCopied: 'Lenke kopiert!',
+    shareLink: 'Del lenke',
+    shareVia: 'Del via',
+    share: 'Del',
+    shareTitle: 'Bli med på Social Chef',
+    shareText: 'Jeg har brukt Social Chef for restauranten min og elsker det! Registrer deg med lenken min for å få din første måned gratis + 50% rabatt i 2 måneder.',
+    shareEmailSubject: 'Bli med på Social Chef - Få din første måned gratis!',
+
+    // Stats
+    stats: 'Vervestatistikk',
+    totalReferrals: 'Totalt vervede',
+    successfulReferrals: 'Vellykkede',
+    pendingReferrals: 'Ventende',
+    creditsEarned: 'Totalt opptjente kreditter',
+    currentBalance: 'Nåværende saldo',
+    referralHistory: 'Vervehistorikk',
+    noReferrals: 'Ingen vervinger ennå. Del koden din for å begynne å tjene kreditter!',
+
+    // Status Labels
+    statusPending: 'Ventende',
+    statusConverted: 'Registrert',
+    statusCredited: 'Kreditert',
+    statusExpired: 'Utløpt',
+
+    // How It Works
+    howItWorks: 'Slik fungerer det',
+    step1Title: 'Del koden din',
+    step1Desc: 'Send din unike vervelenke til venner',
+    step2Title: 'Venn abonnerer',
+    step2Desc: 'De får en gratis måned + 50% rabatt i 2 måneder',
+    step3Title: 'Du tjener kreditter',
+    step3Desc: 'Få kontokreditt tilsvarende 50% av 2 måneder',
+
+    // Errors
+    requiresSubscription: 'Vervekoder er tilgjengelig for aktive månedlige eller årlige abonnenter',
+    alreadyReferred: 'Du har allerede brukt en vervekode',
+    cannotUsOwnCode: 'Du kan ikke bruke din egen vervekode',
+    codeNotFound: 'Vervekode ikke funnet',
+    codeInactive: 'Denne vervekoden er ikke lenger aktiv'
   }
 }

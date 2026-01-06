@@ -79,7 +79,14 @@ const tierDisplayName = computed(() => {
 
 const isLifetimeMember = computed(() => authStore.subscriptionTier === 'lifetime')
 const isYearlyMember = computed(() => authStore.subscriptionTier === 'yearly')
+const isMonthlyMember = computed(() => authStore.subscriptionTier === 'monthly')
 const isLifetimeOrYearly = computed(() => isLifetimeMember.value || isYearlyMember.value)
+
+// Referral eligible: any active paid subscriber (monthly, yearly, or lifetime)
+const isReferralEligible = computed(() => {
+  const status = authStore.user?.subscription?.status
+  return status === 'active' && (isMonthlyMember.value || isYearlyMember.value || isLifetimeMember.value)
+})
 
 const progressPercent = computed(() => {
   if (!authStore.usageStats) return 0
@@ -195,6 +202,15 @@ function closeMobileMenu() {
         </div>
         <button v-if="!isLifetimeMember" class="upgrade-btn" @click="navigateTo('/plans')">
           {{ $t('sidebar.upgrade') }}
+        </button>
+      </div>
+
+      <!-- Referral Card -->
+      <div v-if="isReferralEligible" class="referral-card">
+        <button class="referral-btn" @click="navigateTo('/profile')">
+          <MaterialIcon icon="card_giftcard" size="sm" />
+          <span>{{ $t('sidebar.referFriend') }}</span>
+          <MaterialIcon icon="chevron_right" size="sm" class="referral-arrow" />
         </button>
       </div>
 
@@ -473,6 +489,49 @@ function closeMobileMenu() {
 .upgrade-btn:hover {
   background: var(--gradient-gold-hover);
   transform: translateY(-1px);
+}
+
+/* Referral Card */
+.referral-card {
+  margin-bottom: var(--space-lg);
+}
+
+.referral-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-md) var(--space-lg);
+  background: linear-gradient(135deg, rgba(15, 61, 46, 0.08) 0%, rgba(15, 61, 46, 0.15) 100%);
+  border: 1px solid rgba(15, 61, 46, 0.2);
+  border-radius: var(--radius-lg);
+  color: var(--gold-primary);
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  cursor: pointer;
+  transition: var(--transition-base);
+  text-align: left;
+}
+
+.referral-btn:hover {
+  background: linear-gradient(135deg, rgba(15, 61, 46, 0.12) 0%, rgba(15, 61, 46, 0.2) 100%);
+  border-color: rgba(15, 61, 46, 0.3);
+  transform: translateY(-1px);
+}
+
+.referral-btn span {
+  flex: 1;
+  white-space: nowrap;
+}
+
+.referral-arrow {
+  opacity: 0.6;
+  transition: var(--transition-base);
+}
+
+.referral-btn:hover .referral-arrow {
+  opacity: 1;
+  transform: translateX(2px);
 }
 
 /* User Actions */

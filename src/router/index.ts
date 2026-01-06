@@ -20,6 +20,7 @@ const TermsView = () => import('../views/TermsView.vue')
 const DeleteAccountView = () => import('../views/DeleteAccountView.vue')
 const GoodbyeView = () => import('../views/GoodbyeView.vue')
 const AnalyticsView = () => import('../views/AnalyticsView.vue')
+const ReferralLandingView = () => import('../views/ReferralLandingView.vue')
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -170,6 +171,16 @@ const router = createRouter({
       path: '/goodbye',
       name: 'goodbye',
       component: GoodbyeView,
+    },
+    {
+      path: '/join',
+      name: 'referral-landing',
+      component: ReferralLandingView,
+      // Public route - no auth required
+    },
+    {
+      path: '/invite',
+      redirect: '/join',
     },
   ],
 })

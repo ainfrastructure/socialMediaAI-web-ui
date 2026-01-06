@@ -301,6 +301,7 @@ export default {
     upgrade: 'Upgradovat',
     buy: 'Koupit',
     promoCodeHint: 'Máte promo kód? Zadejte ho při platbě.',
+    referralDiscountApplied: 'Vaše doporučovací sleva bude automaticky uplatněna při platbě!',
     imageGeneration: 'AI generování obrázků',
     videoGeneration: 'AI generování videí',
     facebookPublishing: 'Publikování na Facebook',
@@ -1043,7 +1044,8 @@ export default {
     upgrade: 'Upgradovat',
     profile: 'Profil',
     logout: 'Odhlásit se',
-    notifications: 'Oznámení'
+    notifications: 'Oznámení',
+    referFriend: 'Doporučte přítele'
   },
 
   // New Dashboard Elements
@@ -1433,5 +1435,82 @@ export default {
     emptyStateDescription:
       "Jakmile začnete vytvářet a plánovat obsah, vaše analytika se zobrazí zde. Pojďme začít!",
     createFirstPost: 'Vytvořte svůj první příspěvek'
+  },
+
+  // Referral Program (Czech)
+  referral: {
+    // Landing Page
+    landingTitle: 'Byli jste pozváni!',
+    landingSubtitle: 'Váš přítel si myslí, že se vám Social Chef bude líbit',
+    benefitsTitle: 'Vaše exkluzivní výhody',
+    freeMonth: 'První měsíc ZDARMA',
+    freeMonthDesc: 'Začněte s 30 dny zcela zdarma',
+    fiftyOff: '50% sleva na 2 měsíce',
+    fiftyOffDesc: 'Po vašem měsíci zdarma platíte poloviční cenu za měsíce 2-3',
+    fullAccess: 'Plný přístup',
+    fullAccessDesc: 'Užívejte si všechny prémiové funkce od prvního dne',
+    getStarted: 'Začněte nyní',
+    invalidCode: 'Neplatný doporučovací kód',
+    invalidCodeTitle: 'Neplatná pozvánka',
+    invalidCodeMessage: 'Tento doporučovací kód již není platný. Stále se můžete zaregistrovat za plnou cenu.',
+    noCodeTitle: 'Žádný doporučovací kód',
+    noCodeDesc: 'Zdá se, že nemáte doporučovací kód. Požádejte přítele o jeho kód nebo se zaregistrujte přímo.',
+    goToHome: 'Přejít na hlavní stránku',
+    signUpAnyway: 'Zaregistrovat se přesto',
+    validatingCode: 'Ověřujeme vaši pozvánku...',
+    validationError: 'Nepodařilo se ověřit doporučovací kód. Zkuste to prosím znovu.',
+    invitedBy: 'Pozván od {name}',
+    codeApplied: 'Doporučovací kód byl úspěšně použit!',
+    applyError: 'Nepodařilo se použít doporučovací kód. Zkuste to prosím znovu.',
+    discountBadge: '1 měsíc ZDARMA + 50% sleva',
+    ctaTitle: 'Připraveni začít?',
+    ctaDescription: 'Vaše sleva bude automaticky uplatněna při platbě.',
+    ctaNote: 'Klikněte níže pro vytvoření účtu a získání slevy',
+
+    // Profile Section
+    sectionTitle: 'Doporučte přítele',
+    yourCode: 'Váš doporučovací kód',
+    copyCode: 'Kopírovat kód',
+    copyLink: 'Kopírovat odkaz',
+    codeCopied: 'Kód zkopírován!',
+    linkCopied: 'Odkaz zkopírován!',
+    shareLink: 'Sdílet odkaz',
+    shareVia: 'Sdílet přes',
+    share: 'Sdílet',
+    shareTitle: 'Připojte se k Social Chef',
+    shareText: 'Používám Social Chef pro svou restauraci a miluji to! Zaregistrujte se pomocí mého odkazu a získejte první měsíc zdarma + 50% slevu na 2 měsíce.',
+    shareEmailSubject: 'Připojte se k Social Chef - Získejte první měsíc zdarma!',
+
+    // Stats
+    stats: 'Statistiky doporučení',
+    totalReferrals: 'Celkem doporučení',
+    successfulReferrals: 'Úspěšné',
+    pendingReferrals: 'Čekající',
+    creditsEarned: 'Celkem získané kredity',
+    currentBalance: 'Aktuální zůstatek',
+    referralHistory: 'Historie doporučení',
+    noReferrals: 'Zatím žádná doporučení. Sdílejte svůj kód a začněte získávat kredity!',
+
+    // Status Labels
+    statusPending: 'Čekající',
+    statusConverted: 'Zaregistrován',
+    statusCredited: 'Připsáno',
+    statusExpired: 'Vypršelo',
+
+    // How It Works
+    howItWorks: 'Jak to funguje',
+    step1Title: 'Sdílejte svůj kód',
+    step1Desc: 'Pošlete svůj jedinečný doporučovací odkaz přátelům',
+    step2Title: 'Přítel se přihlásí',
+    step2Desc: 'Získají měsíc zdarma + 50% slevu na 2 měsíce',
+    step3Title: 'Vy získáváte kredity',
+    step3Desc: 'Získejte kredit na účet ve výši 50% z 2 měsíců',
+
+    // Errors
+    requiresSubscription: 'Doporučovací kódy jsou k dispozici pro aktivní měsíční nebo roční předplatitele',
+    alreadyReferred: 'Již jste použili doporučovací kód',
+    cannotUsOwnCode: 'Nemůžete použít svůj vlastní doporučovací kód',
+    codeNotFound: 'Doporučovací kód nenalezen',
+    codeInactive: 'Tento doporučovací kód již není aktivní'
   }
 }

@@ -167,6 +167,40 @@
         </div>
       </BaseCard>
 
+      <!-- Referral Program -->
+      <BaseCard v-if="isReferralEligible" variant="glass" class="section-card referral-section">
+        <div class="section-header">
+          <h2 class="section-title">{{ $t('referral.sectionTitle') }}</h2>
+        </div>
+
+        <div v-if="referralLoading" class="referral-loading">
+          <p>{{ $t('common.loading') }}</p>
+        </div>
+
+        <div v-else-if="referralStats && referralStats.code" class="referral-content">
+          <!-- Referral Code Card -->
+          <ReferralCodeCard
+            :code="referralStats.code"
+            :referral-link="referralStats.referral_link || ''"
+            :is-active="true"
+          />
+
+          <!-- Referral Stats Card -->
+          <ReferralStatsCard
+            :total-referrals="referralStats.total_referrals"
+            :successful-referrals="referralStats.successful_referrals"
+            :pending-referrals="referralStats.pending_referrals"
+            :total-credits-formatted="referralStats.total_credits_formatted"
+            :current-balance-formatted="referralStats.current_balance_formatted"
+            :referrals="referralStats.referrals"
+          />
+        </div>
+
+        <div v-else class="referral-not-eligible">
+          <p>{{ $t('referral.requiresSubscription') }}</p>
+        </div>
+      </BaseCard>
+
       <!-- Account Security -->
       <BaseCard variant="glass" class="section-card danger-section">
         <div class="section-header">
@@ -214,15 +248,19 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, reactive } from 'vue'
+import { ref, computed, reactive, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '../stores/auth'
 import { api } from '../services/api'
+import { referralService } from '../services/referralService'
 import DashboardLayout from '../components/DashboardLayout.vue'
 import BaseCard from '../components/BaseCard.vue'
 import BaseButton from '../components/BaseButton.vue'
 import BaseInput from '../components/BaseInput.vue'
 import BaseAlert from '../components/BaseAlert.vue'
+import ReferralCodeCard from '../components/ReferralCodeCard.vue'
+import ReferralStatsCard from '../components/ReferralStatsCard.vue'
+import type { ReferralStats } from '../services/referralService'
 
 const authStore = useAuthStore()
 const { t } = useI18n()
@@ -240,9 +278,55 @@ const personalForm = reactive({
 const showCancelModal = ref(false)
 const loadingPortal = ref(false)
 
-// Computed
+// Referral
+const referralStats = ref<ReferralStats | null>(null)
+const referralLoading = ref(false)
+
+// Computed - must be defined before isReferralEligible uses subscription
 const subscription = computed(() => authStore.user?.subscription)
 const usage = computed(() => authStore.user?.usage)
+
+// Check if user is eligible for referral program (any active paid subscription)
+// Lifetime users can refer others but won't earn credits themselves
+const isReferralEligible = computed(() => {
+  const tier = subscription.value?.tier
+  const status = subscription.value?.status
+  return status === 'active' && (tier === 'monthly' || tier === 'yearly' || tier === 'lifetime')
+})
+
+async function loadReferralStats() {
+  if (!isReferralEligible.value) {
+    return
+  }
+
+  referralLoading.value = true
+  try {
+    const response = await referralService.getStats()
+    if (response.success && response.data) {
+      referralStats.value = {
+        eligible: response.data.eligible ?? true,
+        code: response.data.code,
+        referral_link: response.data.referral_link,
+        total_referrals: response.data.total_referrals,
+        successful_referrals: response.data.successful_referrals,
+        pending_referrals: response.data.pending_referrals,
+        total_credits_earned: response.data.total_credits_earned ?? 0,
+        total_credits_formatted: response.data.total_credits_formatted,
+        current_balance: response.data.current_balance ?? 0,
+        current_balance_formatted: response.data.current_balance_formatted,
+        referrals: response.data.referrals ?? [],
+      }
+    }
+  } catch (err) {
+    console.error('Failed to load referral stats:', err)
+  } finally {
+    referralLoading.value = false
+  }
+}
+
+onMounted(() => {
+  loadReferralStats()
+})
 
 const planDisplayName = computed(() => {
   const tier = subscription.value?.tier || 'monthly'
@@ -626,6 +710,29 @@ async function confirmCancelSubscription() {
 .billing-description {
   color: var(--text-secondary);
   line-height: var(--leading-normal);
+}
+
+/* Referral Section */
+.referral-section {
+  border: 1px solid rgba(15, 61, 46, 0.15);
+}
+
+.referral-loading {
+  text-align: center;
+  padding: var(--space-2xl);
+  color: var(--text-secondary);
+}
+
+.referral-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xl);
+}
+
+.referral-not-eligible {
+  text-align: center;
+  padding: var(--space-xl);
+  color: var(--text-secondary);
 }
 
 /* Security Section */

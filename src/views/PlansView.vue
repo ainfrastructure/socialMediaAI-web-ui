@@ -7,6 +7,7 @@ import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '../stores/auth'
 import { useLocaleStore } from '../stores/locale'
 import { api } from '../services/api'
+import { referralService } from '../services/referralService'
 import DashboardLayout from '../components/DashboardLayout.vue'
 import BaseCard from '../components/BaseCard.vue'
 import BaseButton from '../components/BaseButton.vue'
@@ -51,6 +52,7 @@ const loading = ref(true)
 const portalLoading = ref(false)
 const message = ref('')
 const messageType = ref<'success' | 'error' | 'info'>('info')
+const hasPendingReferral = ref(false)
 
 // Plan tier icons
 const tierIcons: Record<string, string> = {
@@ -68,7 +70,20 @@ const hasActiveSubscription = computed(() => {
 
 onMounted(async () => {
   await loadPlans()
+  await checkPendingReferral()
 })
+
+async function checkPendingReferral() {
+  if (!authStore.isAuthenticated) return
+  try {
+    const response = await referralService.getPendingReferral()
+    if (response.success && (response as any).has_pending_referral) {
+      hasPendingReferral.value = true
+    }
+  } catch {
+    // Ignore errors - just don't show referral info
+  }
+}
 
 async function loadPlans() {
   loading.value = true
@@ -377,10 +392,11 @@ if (urlParams.get('success') === 'true') {
         </BaseCard>
       </div>
 
-      <!-- Promo Code Info -->
-      <div class="promo-info">
-        <MaterialIcon icon="local_offer" size="sm" color="var(--gold-primary)" />
-        <span>{{ $t('plans.promoCodeHint') }}</span>
+      <!-- Promo Code / Referral Info -->
+      <div class="promo-info" :class="{ 'referral-active': hasPendingReferral }">
+        <MaterialIcon :icon="hasPendingReferral ? 'card_giftcard' : 'local_offer'" size="sm" color="var(--gold-primary)" />
+        <span v-if="hasPendingReferral">{{ $t('plans.referralDiscountApplied') }}</span>
+        <span v-else>{{ $t('plans.promoCodeHint') }}</span>
       </div>
 
       <!-- Trust Section -->
@@ -738,6 +754,15 @@ if (urlParams.get('success') === 'true') {
   color: var(--text-muted);
   font-size: var(--text-sm);
   margin-bottom: var(--space-2xl);
+}
+
+.promo-info.referral-active {
+  background: var(--success-bg);
+  color: var(--success-text);
+  padding: var(--space-md) var(--space-lg);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--success-border);
+  font-weight: var(--font-medium);
 }
 
 /* Trust Section */

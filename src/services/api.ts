@@ -14,6 +14,7 @@ import { instagramService } from './instagramService'
 import { favoritesService } from './favoritesService'
 import { schedulerService } from './schedulerService'
 import { waitlistService } from './waitlistService'
+import { referralService } from './referralService'
 import { API_URL, getAuthHeader } from './apiBase'
 
 /**
@@ -95,6 +96,13 @@ class ApiService {
   // Waitlist methods
   joinWaitlist = waitlistService.join.bind(waitlistService)
   getWaitlistCount = waitlistService.getCount.bind(waitlistService)
+
+  // Referral methods
+  getReferralCode = referralService.getCode.bind(referralService)
+  validateReferralCode = referralService.validateCode.bind(referralService)
+  getReferralStats = referralService.getStats.bind(referralService)
+  applyReferralCode = referralService.applyCode.bind(referralService)
+  getPendingReferral = referralService.getPendingReferral.bind(referralService)
 
   // Restaurants - keep inline as it's minimal (most is in restaurantService.ts)
   async getRestaurants(limit?: number) {

@@ -298,6 +298,7 @@ export default {
     upgrade: 'Upgrade',
     buy: 'Buy',
     promoCodeHint: 'Have a promo code? Enter it at checkout.',
+    referralDiscountApplied: 'Your referral discount will be applied automatically at checkout!',
     imageGeneration: 'AI image generation',
     videoGeneration: 'AI video generation',
     facebookPublishing: 'Facebook posting',
@@ -1040,7 +1041,8 @@ export default {
     upgrade: 'Upgrade',
     profile: 'Profile',
     logout: 'Logout',
-    notifications: 'Notifications'
+    notifications: 'Notifications',
+    referFriend: 'Refer a Friend'
   },
 
   // New Dashboard Elements
@@ -1430,5 +1432,82 @@ export default {
     emptyStateDescription:
       "Once you start creating and scheduling content, your analytics will appear here. Let's get started!",
     createFirstPost: 'Create Your First Post'
+  },
+
+  // Referral Program
+  referral: {
+    // Landing Page
+    landingTitle: "You've Been Invited!",
+    landingSubtitle: 'Your friend thinks you\'ll love Social Chef',
+    benefitsTitle: 'Your Exclusive Benefits',
+    freeMonth: 'First Month FREE',
+    freeMonthDesc: 'Start with 30 days completely free',
+    fiftyOff: '50% Off for 2 Months',
+    fiftyOffDesc: 'After your free month, pay half price for months 2-3',
+    fullAccess: 'Full Access',
+    fullAccessDesc: 'Enjoy all premium features from day one',
+    getStarted: 'Get Started Now',
+    invalidCode: 'Invalid referral code',
+    invalidCodeTitle: 'Invalid Invitation',
+    invalidCodeMessage: 'This referral code is no longer valid. You can still sign up at full price.',
+    noCodeTitle: 'No Referral Code',
+    noCodeDesc: 'It looks like you don\'t have a referral code. Ask a friend for their code or sign up directly.',
+    goToHome: 'Go to Homepage',
+    signUpAnyway: 'Sign Up Anyway',
+    validatingCode: 'Validating your invitation...',
+    validationError: 'Could not validate referral code. Please try again.',
+    invitedBy: 'Invited by {name}',
+    codeApplied: 'Referral code applied successfully!',
+    applyError: 'Could not apply referral code. Please try again.',
+    discountBadge: '1 Month FREE + 50% Off',
+    ctaTitle: 'Ready to Get Started?',
+    ctaDescription: 'Your discount will be automatically applied at checkout.',
+    ctaNote: 'Create your account and your discount will be waiting for you',
+
+    // Profile Section
+    sectionTitle: 'Refer a Friend',
+    yourCode: 'Your Referral Code',
+    copyCode: 'Copy Code',
+    copyLink: 'Copy Link',
+    codeCopied: 'Code copied!',
+    linkCopied: 'Link copied!',
+    shareLink: 'Share Link',
+    shareVia: 'Share via',
+    share: 'Share',
+    shareTitle: 'Join Social Chef',
+    shareText: 'I\'ve been using Social Chef for my restaurant and love it! Sign up with my link to get your first month free + 50% off for 2 months.',
+    shareEmailSubject: 'Join Social Chef - Get Your First Month Free!',
+
+    // Stats
+    stats: 'Referral Statistics',
+    totalReferrals: 'Total Referrals',
+    successfulReferrals: 'Successful',
+    pendingReferrals: 'Pending',
+    creditsEarned: 'Total Credits Earned',
+    currentBalance: 'Current Balance',
+    referralHistory: 'Referral History',
+    noReferrals: 'No referrals yet. Share your code to start earning credits!',
+
+    // Status Labels
+    statusPending: 'Pending',
+    statusConverted: 'Signed Up',
+    statusCredited: 'Credited',
+    statusExpired: 'Expired',
+
+    // How It Works
+    howItWorks: 'How It Works',
+    step1Title: 'Share Your Code',
+    step1Desc: 'Send your unique referral link to friends',
+    step2Title: 'Friend Subscribes',
+    step2Desc: 'They get a free month + 50% off for 2 months',
+    step3Title: 'You Earn Credits',
+    step3Desc: 'Get account credit equal to 50% of 2 months',
+
+    // Errors
+    requiresSubscription: 'Referral codes are available for active monthly or yearly subscribers',
+    alreadyReferred: 'You have already used a referral code',
+    cannotUsOwnCode: 'You cannot use your own referral code',
+    codeNotFound: 'Referral code not found',
+    codeInactive: 'This referral code is no longer active'
   }
 }

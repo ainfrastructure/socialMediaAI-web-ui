@@ -302,6 +302,7 @@ export default {
     upgrade: 'Upgraden',
     buy: 'Kaufen',
     promoCodeHint: 'Haben Sie einen Promo-Code? Geben Sie ihn beim Checkout ein.',
+    referralDiscountApplied: 'Ihr Empfehlungsrabatt wird automatisch an der Kasse angewendet!',
     imageGeneration: 'KI-Bildgenerierung',
     videoGeneration: 'KI-Videogenerierung',
     facebookPublishing: 'Facebook-Veröffentlichung',
@@ -1044,7 +1045,8 @@ export default {
     upgrade: 'Upgraden',
     profile: 'Profil',
     logout: 'Abmelden',
-    notifications: 'Benachrichtigungen'
+    notifications: 'Benachrichtigungen',
+    referFriend: 'Freunde werben'
   },
 
   // New Dashboard Elements
@@ -1434,5 +1436,82 @@ export default {
     emptyStateDescription:
       "Sobald Sie mit dem Erstellen und Planen von Content beginnen, erscheinen Ihre Analysen hier. Los gehts!",
     createFirstPost: 'Ihren ersten Beitrag erstellen'
+  },
+
+  // Referral Program (Swiss German - using High German)
+  referral: {
+    // Landing Page
+    landingTitle: 'Sie wurden eingeladen!',
+    landingSubtitle: 'Ihr Freund denkt, dass Sie Social Chef lieben werden',
+    benefitsTitle: 'Ihre exklusiven Vorteile',
+    freeMonth: 'Erster Monat GRATIS',
+    freeMonthDesc: 'Starten Sie mit 30 Tagen völlig kostenlos',
+    fiftyOff: '50% Rabatt für 2 Monate',
+    fiftyOffDesc: 'Nach Ihrem Gratismonat zahlen Sie den halben Preis für Monate 2-3',
+    fullAccess: 'Voller Zugriff',
+    fullAccessDesc: 'Geniessen Sie alle Premium-Funktionen ab dem ersten Tag',
+    getStarted: 'Jetzt starten',
+    invalidCode: 'Ungültiger Empfehlungscode',
+    invalidCodeTitle: 'Ungültige Einladung',
+    invalidCodeMessage: 'Dieser Empfehlungscode ist nicht mehr gültig. Sie können sich trotzdem zum vollen Preis anmelden.',
+    noCodeTitle: 'Kein Empfehlungscode',
+    noCodeDesc: 'Es sieht so aus, als hätten Sie keinen Empfehlungscode. Fragen Sie einen Freund nach seinem Code oder melden Sie sich direkt an.',
+    goToHome: 'Zur Startseite',
+    signUpAnyway: 'Trotzdem anmelden',
+    validatingCode: 'Ihre Einladung wird überprüft...',
+    validationError: 'Empfehlungscode konnte nicht überprüft werden. Bitte versuchen Sie es erneut.',
+    invitedBy: 'Eingeladen von {name}',
+    codeApplied: 'Empfehlungscode wurde erfolgreich angewendet!',
+    applyError: 'Empfehlungscode konnte nicht angewendet werden. Bitte versuchen Sie es erneut.',
+    discountBadge: '1 Monat GRATIS + 50% Rabatt',
+    ctaTitle: 'Bereit loszulegen?',
+    ctaDescription: 'Ihr Rabatt wird automatisch an der Kasse angewendet.',
+    ctaNote: 'Klicken Sie unten, um Ihr Konto zu erstellen und Ihren Rabatt zu erhalten',
+
+    // Profile Section
+    sectionTitle: 'Freunde werben',
+    yourCode: 'Ihr Empfehlungscode',
+    copyCode: 'Code kopieren',
+    copyLink: 'Link kopieren',
+    codeCopied: 'Code kopiert!',
+    linkCopied: 'Link kopiert!',
+    shareLink: 'Link teilen',
+    shareVia: 'Teilen über',
+    share: 'Teilen',
+    shareTitle: 'Social Chef beitreten',
+    shareText: 'Ich benutze Social Chef für mein Restaurant und liebe es! Melden Sie sich mit meinem Link an und erhalten Sie den ersten Monat gratis + 50% Rabatt für 2 Monate.',
+    shareEmailSubject: 'Social Chef beitreten - Erhalten Sie Ihren ersten Monat gratis!',
+
+    // Stats
+    stats: 'Empfehlungsstatistik',
+    totalReferrals: 'Gesamt Empfehlungen',
+    successfulReferrals: 'Erfolgreich',
+    pendingReferrals: 'Ausstehend',
+    creditsEarned: 'Verdiente Guthaben',
+    currentBalance: 'Aktuelles Guthaben',
+    referralHistory: 'Empfehlungsverlauf',
+    noReferrals: 'Noch keine Empfehlungen. Teilen Sie Ihren Code, um Guthaben zu verdienen!',
+
+    // Status Labels
+    statusPending: 'Ausstehend',
+    statusConverted: 'Angemeldet',
+    statusCredited: 'Gutgeschrieben',
+    statusExpired: 'Abgelaufen',
+
+    // How It Works
+    howItWorks: 'So funktioniert es',
+    step1Title: 'Code teilen',
+    step1Desc: 'Senden Sie Ihren einzigartigen Empfehlungslink an Freunde',
+    step2Title: 'Freund abonniert',
+    step2Desc: 'Sie erhalten einen Gratismonat + 50% Rabatt für 2 Monate',
+    step3Title: 'Sie verdienen Guthaben',
+    step3Desc: 'Erhalten Sie Kontoguthaben in Höhe von 50% von 2 Monaten',
+
+    // Errors
+    requiresSubscription: 'Empfehlungscodes sind für aktive Monats- oder Jahresabonnenten verfügbar',
+    alreadyReferred: 'Sie haben bereits einen Empfehlungscode verwendet',
+    cannotUsOwnCode: 'Sie können Ihren eigenen Empfehlungscode nicht verwenden',
+    codeNotFound: 'Empfehlungscode nicht gefunden',
+    codeInactive: 'Dieser Empfehlungscode ist nicht mehr aktiv'
   }
 }
