@@ -49,6 +49,8 @@ export default {
     },
     theme: 'Design',
     language: 'Sprache',
+    allRightsReserved: 'Alle Rechte vorbehalten.',
+    dashboard: 'Dashboard',
   },
 
   // Platforms

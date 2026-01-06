@@ -48,6 +48,8 @@ export default {
     },
     theme: 'Motiv',
     language: 'Jazyk',
+    allRightsReserved: 'Všechna práva vyhrazena.',
+    dashboard: 'Přehled',
   },
 
   // Platforms

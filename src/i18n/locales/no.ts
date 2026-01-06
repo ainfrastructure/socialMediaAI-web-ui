@@ -45,6 +45,8 @@ export default {
     },
     theme: 'Tema',
     language: 'Språk',
+    allRightsReserved: 'Alle rettigheter forbeholdt.',
+    dashboard: 'Dashbord',
   },
 
   // Platforms
