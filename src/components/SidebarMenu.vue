@@ -131,6 +131,18 @@ function navigateTo(path: string) {
   emit('close') // Close mobile menu after navigation
 }
 
+function navigateToReferral() {
+  router.push('/profile').then(() => {
+    setTimeout(() => {
+      const el = document.getElementById('referral-section')
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      }
+    }, 100)
+  })
+  emit('close')
+}
+
 async function handleLogout() {
   await authStore.logout()
   router.push('/login')
@@ -207,7 +219,7 @@ function closeMobileMenu() {
 
       <!-- Referral Card -->
       <div v-if="isReferralEligible" class="referral-card">
-        <button class="referral-btn" @click="navigateTo('/profile')">
+        <button class="referral-btn" @click="navigateToReferral">
           <MaterialIcon icon="card_giftcard" size="sm" />
           <span>{{ $t('sidebar.referFriend') }}</span>
           <MaterialIcon icon="chevron_right" size="sm" class="referral-arrow" />

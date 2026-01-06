@@ -168,7 +168,7 @@
       </BaseCard>
 
       <!-- Referral Program -->
-      <BaseCard v-if="isReferralEligible" variant="glass" class="section-card referral-section">
+      <BaseCard id="referral-section" v-if="isReferralEligible" variant="glass" class="section-card referral-section">
         <div class="section-header">
           <h2 class="section-title">{{ $t('referral.sectionTitle') }}</h2>
         </div>
@@ -185,8 +185,9 @@
             :is-active="true"
           />
 
-          <!-- Referral Stats Card -->
+          <!-- Referral Stats Card (only show if there are any stats) -->
           <ReferralStatsCard
+            v-if="hasReferralStats"
             :total-referrals="referralStats.total_referrals"
             :successful-referrals="referralStats.successful_referrals"
             :pending-referrals="referralStats.pending_referrals"
@@ -292,6 +293,16 @@ const isReferralEligible = computed(() => {
   const tier = subscription.value?.tier
   const status = subscription.value?.status
   return status === 'active' && (tier === 'monthly' || tier === 'yearly' || tier === 'lifetime')
+})
+
+// Check if user has any referral stats to show
+const hasReferralStats = computed(() => {
+  if (!referralStats.value) return false
+  return (
+    referralStats.value.total_referrals > 0 ||
+    referralStats.value.successful_referrals > 0 ||
+    referralStats.value.pending_referrals > 0
+  )
 })
 
 async function loadReferralStats() {
