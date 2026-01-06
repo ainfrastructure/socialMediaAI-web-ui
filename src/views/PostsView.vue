@@ -109,20 +109,10 @@
               class="post-card"
               @click="viewDetails(post)"
             >
-              <!-- Media Preview -->
+              <!-- Media Preview - Always show image as thumbnail for grid view -->
               <div class="media-container">
-                <!-- Show video if video_url exists -->
-                <video
-                  v-if="post.video_url"
-                  :src="post.video_url"
-                  class="post-media"
-                  preload="metadata"
-                  muted
-                  playsinline
-                ></video>
-                <!-- Otherwise show image -->
                 <img
-                  v-else-if="post.media_url"
+                  v-if="post.media_url"
                   :src="post.media_url"
                   :alt="$t('posts.postAlt')"
                   class="post-media"
