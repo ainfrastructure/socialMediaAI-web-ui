@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import BaseModal from './BaseModal.vue'
 import BaseButton from './BaseButton.vue'
@@ -10,6 +10,7 @@ const props = defineProps<{
   modelValue: boolean
   post: any
   mode?: 'view' | 'edit' // For future edit mode support
+  animating?: boolean // When video is being generated from image
 }>()
 
 const emit = defineEmits<{
@@ -17,15 +18,67 @@ const emit = defineEmits<{
   (e: 'edit', post: any): void
   (e: 'delete', post: any): void
   (e: 'schedule', post: any): void
+  (e: 'animate', data: { postId: string; videoOptions: { duration: 4 | 6 | 8; aspectRatio: '16:9' | '9:16'; generateAudio: boolean } }): void
   (e: 'close'): void
 }>()
 
 const { t } = useI18n()
 
+// Animation state
+const showAnimationOptions = ref(false)
+const animationVideoDuration = ref<4 | 6 | 8>(6)
+const animationVideoAspectRatio = ref<'16:9' | '9:16'>('9:16')
+const animationIncludeAudio = ref(true)
+
+// Media toggle state (when post has both image and video)
+const showingVideo = ref(true) // Default to showing video when available
+
+// Check if post has both image and video
+const hasBothMediaTypes = computed(() => {
+  return !!getMediaUrl() && !!getVideoUrl()
+})
+
 // Close modal
 function closeModal() {
   emit('update:modelValue', false)
   emit('close')
+  showAnimationOptions.value = false
+  showingVideo.value = true // Reset to default
+}
+
+// Check if post can be animated (has image, no video yet)
+const canAnimate = computed(() => {
+  const p = props.post
+  if (!p) return false
+
+  // Must have an image (media_url)
+  const hasImage = !!getMediaUrl()
+
+  // Must not already have a video (video_url)
+  const hasVideo = !!getVideoUrl()
+
+  return hasImage && !hasVideo
+})
+
+// Handle animate button click
+function handleAnimateClick() {
+  showAnimationOptions.value = !showAnimationOptions.value
+}
+
+// Handle generate video
+function handleGenerateVideo() {
+  const postId = props.post?.id || props.post?.favorite_post_id
+  if (!postId) return
+
+  emit('animate', {
+    postId,
+    videoOptions: {
+      duration: animationVideoDuration.value,
+      aspectRatio: animationVideoAspectRatio.value,
+      generateAudio: animationIncludeAudio.value
+    }
+  })
+  showAnimationOptions.value = false
 }
 
 // Get media URL from post (handles nested structures)
@@ -35,10 +88,22 @@ function getMediaUrl(): string | null {
 
   if (p.media_url) return p.media_url
   if (p.image_url) return p.image_url
-  if (p.video_url) return p.video_url
   if (p.favorite_posts?.media_url) return p.favorite_posts.media_url
   if (p.favorite_post?.media_url) return p.favorite_post.media_url
   if (p.favorite?.media_url) return p.favorite.media_url
+
+  return null
+}
+
+// Get video URL from post (for animated images)
+function getVideoUrl(): string | null {
+  const p = props.post
+  if (!p) return null
+
+  if (p.video_url) return p.video_url
+  if (p.favorite_posts?.video_url) return p.favorite_posts.video_url
+  if (p.favorite_post?.video_url) return p.favorite_post.video_url
+  if (p.favorite?.video_url) return p.favorite.video_url
 
   return null
 }
@@ -237,21 +302,113 @@ function handleSchedule() {
     <div class="modal-content">
           <!-- Media Section -->
           <div class="modal-media">
+            <!-- Media Type Toggle (when post has both image and video) -->
+            <div v-if="hasBothMediaTypes" class="media-toggle">
+              <button
+                :class="['toggle-btn', { active: showingVideo }]"
+                @click="showingVideo = true"
+              >
+                <MaterialIcon icon="movie" size="sm" />
+                {{ t('posts.video') }}
+              </button>
+              <button
+                :class="['toggle-btn', { active: !showingVideo }]"
+                @click="showingVideo = false"
+              >
+                <MaterialIcon icon="image" size="sm" />
+                {{ t('posts.image') }}
+              </button>
+            </div>
+
+            <!-- Show video if has video and (no image OR toggle is on video) -->
+            <video
+              v-if="getVideoUrl() && (showingVideo || !getMediaUrl())"
+              :src="getVideoUrl()!"
+              controls
+              class="media-video"
+            ></video>
+            <!-- Show image if has image and (no video OR toggle is on image) -->
             <img
-              v-if="getContentType() === 'image' && getMediaUrl()"
+              v-else-if="getMediaUrl()"
               :src="getMediaUrl()!"
               alt="Post content"
               class="media-image"
             />
-            <video
-              v-else-if="getContentType() === 'video' && getMediaUrl()"
-              :src="getMediaUrl()!"
-              controls
-              class="media-video"
-            ></video>
             <div v-else class="media-placeholder">
               <MaterialIcon icon="image" size="xl" color="var(--text-muted)" />
               <span>{{ $t('common.noImage') }}</span>
+            </div>
+
+            <!-- Animate Image Button -->
+            <div v-if="canAnimate && !animating" class="animate-image-section">
+              <BaseButton
+                variant="secondary"
+                size="medium"
+                class="animate-button"
+                @click="handleAnimateClick"
+              >
+                <MaterialIcon icon="movie" size="sm" />
+                {{ t('easyMode.step3.animateImage') }}
+                <span class="credits-hint">{{ t('easyMode.step3.animateCredits') }}</span>
+              </BaseButton>
+
+              <!-- Animation Options Panel -->
+              <div v-if="showAnimationOptions" class="animation-options-panel">
+                <h4 class="options-title">{{ t('easyMode.step3.animationOptionsTitle') }}</h4>
+
+                <!-- Duration Selection -->
+                <div class="video-option-group">
+                  <label class="video-option-label">{{ t('easyMode.step2.durationLabel') }}</label>
+                  <div class="duration-options">
+                    <button
+                      v-for="duration in [4, 6, 8]"
+                      :key="duration"
+                      :class="['duration-button', { 'selected': animationVideoDuration === duration }]"
+                      @click="animationVideoDuration = duration as 4 | 6 | 8"
+                    >
+                      {{ duration }}{{ t('easyMode.step2.seconds') }}
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Aspect Ratio Selection -->
+                <div class="video-option-group">
+                  <label class="video-option-label">{{ t('easyMode.step2.aspectRatioLabel') }}</label>
+                  <div class="aspect-ratio-options">
+                    <button
+                      :class="['aspect-ratio-button', { 'selected': animationVideoAspectRatio === '9:16' }]"
+                      @click="animationVideoAspectRatio = '9:16'"
+                    >
+                      <span>9:16</span>
+                      <span class="aspect-hint">{{ t('easyMode.step2.portrait') }}</span>
+                    </button>
+                    <button
+                      :class="['aspect-ratio-button', { 'selected': animationVideoAspectRatio === '16:9' }]"
+                      @click="animationVideoAspectRatio = '16:9'"
+                    >
+                      <span>16:9</span>
+                      <span class="aspect-hint">{{ t('easyMode.step2.landscape') }}</span>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Generate Video Button -->
+                <BaseButton
+                  variant="primary"
+                  size="medium"
+                  class="generate-animation-button"
+                  @click="handleGenerateVideo"
+                >
+                  <MaterialIcon icon="movie" size="sm" />
+                  {{ t('easyMode.step3.generateVideoFromImage') }} - {{ t('easyMode.step3.generateVideoCredits') }}
+                </BaseButton>
+              </div>
+            </div>
+
+            <!-- Animating Overlay -->
+            <div v-if="animating" class="animating-overlay">
+              <div class="animating-spinner"></div>
+              <span>{{ t('easyMode.step3.animatingImage') }}</span>
             </div>
           </div>
 
@@ -468,10 +625,12 @@ function handleSchedule() {
 .modal-media {
   background: rgba(15, 61, 46, 0.2);
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   min-height: 300px;
   overflow: hidden;
+  position: relative;
 }
 
 .media-image,
@@ -489,6 +648,45 @@ function handleSchedule() {
   gap: var(--space-md);
   color: var(--text-muted);
   padding: var(--space-3xl);
+}
+
+/* Media Toggle */
+.media-toggle {
+  position: absolute;
+  top: var(--space-md);
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: var(--space-xs);
+  background: var(--bg-secondary);
+  padding: var(--space-xs);
+  border-radius: var(--radius-full);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  z-index: 5;
+}
+
+.toggle-btn {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: var(--space-xs) var(--space-md);
+  border: none;
+  border-radius: var(--radius-full);
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.toggle-btn:hover {
+  background: var(--bg-tertiary);
+}
+
+.toggle-btn.active {
+  background: var(--gold-primary);
+  color: #ffffff;
 }
 
 /* Info Section */
@@ -705,6 +903,168 @@ function handleSchedule() {
   margin-top: auto;
   padding-top: var(--space-2xl);
   flex-wrap: wrap;
+}
+
+/* Animate Image Section */
+.animate-image-section {
+  width: 100%;
+  padding: var(--space-md);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-md);
+}
+
+.animate-button {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.credits-hint {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  margin-left: var(--space-xs);
+}
+
+.animation-options-panel {
+  width: 100%;
+  max-width: 320px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: var(--space-lg);
+}
+
+.options-title {
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  color: var(--text-primary);
+  margin: 0 0 var(--space-md) 0;
+}
+
+.video-option-group {
+  margin-bottom: var(--space-md);
+}
+
+.video-option-label {
+  display: block;
+  font-size: var(--text-xs);
+  font-weight: var(--font-medium);
+  color: var(--text-secondary);
+  margin-bottom: var(--space-xs);
+}
+
+.duration-options {
+  display: flex;
+  gap: var(--space-xs);
+}
+
+.duration-button {
+  flex: 1;
+  padding: var(--space-xs) var(--space-sm);
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-size: var(--text-xs);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.duration-button:hover {
+  border-color: var(--gold-primary);
+}
+
+.duration-button.selected {
+  border-color: var(--gold-primary);
+  background: var(--gold-subtle);
+  color: var(--gold-primary);
+}
+
+.aspect-ratio-options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-xs);
+}
+
+.aspect-ratio-button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: var(--space-sm);
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-size: var(--text-xs);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.aspect-ratio-button:hover {
+  border-color: var(--gold-primary);
+}
+
+.aspect-ratio-button.selected {
+  border-color: var(--gold-primary);
+  background: var(--gold-subtle);
+}
+
+.aspect-hint {
+  font-size: 10px;
+  color: var(--text-muted);
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  cursor: pointer;
+}
+
+.checkbox-input {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--gold-primary);
+}
+
+.checkbox-text {
+  font-size: var(--text-xs);
+  color: var(--text-primary);
+}
+
+.generate-animation-button {
+  width: 100%;
+  margin-top: var(--space-sm);
+}
+
+/* Animating Overlay */
+.animating-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(15, 61, 46, 0.85);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-md);
+  z-index: 10;
+  color: #ffffff;
+  font-weight: var(--font-medium);
+}
+
+.animating-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #ffffff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
 
 /* Responsive */

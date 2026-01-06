@@ -60,6 +60,8 @@ class FavoritesService {
       hashtags?: string[]
       platform?: string
       platforms?: string[]
+      video_url?: string
+      content_type?: string
     }
   ): Promise<ApiResponse<{ favorite: any }>> {
     const response = await fetch(`${API_URL}/api/favorites/${id}`, {

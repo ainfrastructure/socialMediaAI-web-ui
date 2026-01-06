@@ -575,7 +575,18 @@ export default {
       title: 'Beitragsvorschau',
       subtitle: 'Überprüfen und bearbeiten Sie Ihren generierten Content',
       editPostText: 'Beitragstext bearbeiten',
-      addHashtagPlaceholder: 'Hashtag eingeben und Enter drücken'
+      addHashtagPlaceholder: 'Hashtag eingeben und Enter drücken',
+      animateImage: 'Bild animieren',
+      animateCredits: '5 Credits',
+      animationOptionsTitle: 'Videoanimationseinstellungen',
+      generateVideoFromImage: 'Video generieren',
+      generateVideoCredits: '5 Credits',
+      showImage: 'Bild',
+      showVideo: 'Video',
+      animatingImage: 'Videoanimation wird erstellt...',
+      insufficientCredits: 'Sie benötigen mindestens 5 Credits, um dieses Bild zu animieren',
+      noImageToAnimate: 'Kein Bild zum Animieren verfügbar',
+      audioDisabledNote: 'Audio deaktiviert für bessere Ergebnisse'
     },
     step4: {
       title: 'Plattform & Zeitplan wählen',
@@ -859,12 +870,21 @@ export default {
     cancelChangesButton: 'Abbrechen',
     publishButton: 'Veröffentlichen',
     postAlt: 'Beitrag',
+    // Background video generation
+    videoGenerationStarted: 'Videogenerierung gestartet',
+    videoGeneratingInBackground: 'Ihr Video wird generiert. Sie werden benachrichtigt, wenn es fertig ist.',
+    videoReady: 'Video bereit',
+    videoReadyToView: 'Video für "{title}" ist bereit zur Ansicht',
+    videoGenerationFailed: 'Videogenerierung fehlgeschlagen',
     create: {
       captionGenerationFailed: 'Bildunterschrift-Generierung fehlgeschlagen',
       imageGenerationFailed: 'Bildgenerierung fehlgeschlagen',
       videoGenerationFailed: 'Videogenerierung fehlgeschlagen',
       generationFailed: 'Generierung fehlgeschlagen',
-      unexpectedError: 'Ein unerwarteter Fehler ist aufgetreten. Bitte versuchen Sie es erneut.'
+      unexpectedError: 'Ein unerwarteter Fehler ist aufgetreten. Bitte versuchen Sie es erneut.',
+      animationFailed: 'Animation fehlgeschlagen',
+      animationSuccess: 'Animation abgeschlossen',
+      videoGenerated: 'Video wurde erfolgreich generiert'
     }
   },
 

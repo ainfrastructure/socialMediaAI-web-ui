@@ -4,7 +4,7 @@ import { API_URL, getAuthHeader, getAuthHeaders } from './apiBase'
 class ContentService {
   // Image generation
   async generateImage(
-    prompt: string,
+    prompt: string | null, // Can be null if using dishInfo
     watermark?: { logoPath: string; position?: string; opacity?: number; scale?: number; padding?: number },
     referenceImage?: { base64Data: string; mimeType: string },
     promotionalSticker?: {
@@ -20,12 +20,15 @@ class ContentService {
     strictnessMode?: 'strict' | 'flexible' | 'creative',
     holidayTheme?: string,
     visualStyle?: 'behindTheScenes' | 'cleanStrict' | 'zoomIn' | 'oneBite' | 'studioShot' | 'infographic' | 'placeOnTable' | 'custom',
-    customPrompt?: string
+    customPrompt?: string,
+    // New: dish/restaurant info for direct prompt building (skips Stage 1)
+    dishInfo?: { name: string; description?: string } | string,
+    restaurantName?: string
   ): Promise<ApiResponse<{ imageUrl: string; usage: any; watermarked?: boolean; promotionalStickerAdded?: boolean }>> {
     const response = await fetch(`${API_URL}/api/gemini/generate-image`, {
       method: 'POST',
       headers: getAuthHeaders(),
-      body: JSON.stringify({ prompt, watermark, referenceImage, promotionalSticker, placeId, strictnessMode, holidayTheme, visualStyle, customPrompt }),
+      body: JSON.stringify({ prompt, watermark, referenceImage, promotionalSticker, placeId, strictnessMode, holidayTheme, visualStyle, customPrompt, dishInfo, restaurantName }),
     })
     return response.json()
   }
@@ -35,7 +38,7 @@ class ContentService {
     prompt: string,
     options?: {
       model?: 'veo-3.1-generate-preview' | 'veo-3.1-fast-generate-preview'
-      duration?: 5 | 6 | 8
+      duration?: 4 | 6 | 8
       aspectRatio?: '16:9' | '9:16'
       resolution?: '720p' | '1080p'
       negativePrompt?: string
@@ -58,7 +61,7 @@ class ContentService {
     imageMimeType: string,
     options?: {
       model?: 'veo-3.1-generate-preview' | 'veo-3.1-fast-generate-preview'
-      duration?: 5 | 6 | 8
+      duration?: 4 | 6 | 8
       aspectRatio?: '16:9' | '9:16'
       resolution?: '720p' | '1080p'
       negativePrompt?: string

@@ -574,7 +574,18 @@ export default {
       title: 'Náhled vašeho příspěvku',
       subtitle: 'Zkontrolujte a upravte vygenerovaný obsah',
       editPostText: 'Upravte text příspěvku',
-      addHashtagPlaceholder: 'Zadejte hashtag a stiskněte Enter'
+      addHashtagPlaceholder: 'Zadejte hashtag a stiskněte Enter',
+      animateImage: 'Animovat obrázek',
+      animateCredits: '5 kreditů',
+      animationOptionsTitle: 'Nastavení video animace',
+      generateVideoFromImage: 'Generovat video',
+      generateVideoCredits: '5 kreditů',
+      showImage: 'Obrázek',
+      showVideo: 'Video',
+      animatingImage: 'Vytváření video animace...',
+      insufficientCredits: 'K animování tohoto obrázku potřebujete alespoň 5 kreditů',
+      noImageToAnimate: 'Žádný obrázek k animování není k dispozici',
+      audioDisabledNote: 'Zvuk vypnut pro lepší výsledky'
     },
     step4: {
       title: 'Vyberte platformu a čas',
@@ -858,12 +869,21 @@ export default {
     cancelChangesButton: 'Zrušit',
     publishButton: 'Publikovat',
     postAlt: 'Příspěvek',
+    // Background video generation
+    videoGenerationStarted: 'Generování videa zahájeno',
+    videoGeneratingInBackground: 'Vaše video se generuje. Budete upozorněni, až bude připraveno.',
+    videoReady: 'Video připraveno',
+    videoReadyToView: 'Video pro "{title}" je připraveno k zobrazení',
+    videoGenerationFailed: 'Generování videa selhalo',
     create: {
       captionGenerationFailed: 'Generování popisku selhalo',
       imageGenerationFailed: 'Generování obrázku selhalo',
       videoGenerationFailed: 'Generování videa selhalo',
       generationFailed: 'Generování selhalo',
-      unexpectedError: 'Došlo k neočekávané chybě. Zkuste to prosím znovu.'
+      unexpectedError: 'Došlo k neočekávané chybě. Zkuste to prosím znovu.',
+      animationFailed: 'Animace selhala',
+      animationSuccess: 'Animace dokončena',
+      videoGenerated: 'Video bylo úspěšně vygenerováno'
     }
   },
 

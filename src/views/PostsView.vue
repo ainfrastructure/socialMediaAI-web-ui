@@ -111,24 +111,26 @@
             >
               <!-- Media Preview -->
               <div class="media-container">
-                <img
-                  v-if="post.content_type === 'image'"
-                  :src="post.media_url"
-                  :alt="$t('posts.postAlt')"
-                  class="post-media"
-                />
+                <!-- Show video if video_url exists -->
                 <video
-                  v-else
-                  :src="post.media_url"
+                  v-if="post.video_url"
+                  :src="post.video_url"
                   class="post-media"
                   preload="metadata"
                   muted
                   playsinline
                 ></video>
+                <!-- Otherwise show image -->
+                <img
+                  v-else-if="post.media_url"
+                  :src="post.media_url"
+                  :alt="$t('posts.postAlt')"
+                  class="post-media"
+                />
 
-                <!-- Content Type Icon -->
-                <span :class="['type-icon', post.content_type]">
-                  {{ post.content_type === 'image' ? '📸' : '🎥' }}
+                <!-- Content Type Icon - show video icon if has video -->
+                <span :class="['type-icon', post.video_url ? 'video' : 'image']">
+                  {{ post.video_url ? '🎥' : '📸' }}
                 </span>
               </div>
 
@@ -231,9 +233,11 @@
       v-if="!isEditMode"
       v-model="showDetailModal"
       :post="selectedPostWithDraftStatus"
+      :animating="animatingPost"
       @edit="enableEditMode"
       @schedule="schedulePost"
       @delete="confirmDeleteFromModal"
+      @animate="handleAnimatePost"
       @close="closeDetailModal"
     />
 
@@ -325,12 +329,15 @@
 <script setup lang="ts">
 import { debugLog, errorLog, warnLog } from '@/utils/debug'
 
-import { ref, computed, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, computed, onMounted, watch } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { usePreferencesStore } from '@/stores/preferences'
+import { useNotificationStore } from '@/stores/notifications'
+import { useVideoGenerationStore } from '@/stores/videoGeneration'
 import { api } from '@/services/api'
 import { restaurantService, type SavedRestaurant } from '@/services/restaurantService'
+import { getFoodAnimationPrompt } from '@/utils/promptHelpers'
 import DashboardLayout from '@/components/DashboardLayout.vue'
 import BaseCard from '@/components/BaseCard.vue'
 import BaseButton from '@/components/BaseButton.vue'
@@ -343,8 +350,11 @@ import AddRestaurantModal from '@/components/AddRestaurantModal.vue'
 import MaterialIcon from '@/components/MaterialIcon.vue'
 
 const router = useRouter()
-useI18n()
+const route = useRoute()
+const { t } = useI18n()
 const preferencesStore = usePreferencesStore()
+const notificationStore = useNotificationStore()
+const videoGenerationStore = useVideoGenerationStore()
 
 // State
 const loading = ref(true)
@@ -365,6 +375,7 @@ const postToDelete = ref<string | null>(null)
 const isEditMode = ref(false)
 const originalPost = ref<any>(null)
 const newHashtag = ref('')
+const animatingPost = ref(false)
 
 // Computed to add draft status for PostDetailModal
 const selectedPostWithDraftStatus = computed(() => {
@@ -420,10 +431,59 @@ onMounted(async () => {
 
     // Load posts for selected restaurant
     await fetchPosts()
+
+    // Check if we should open a specific post (from notification click)
+    checkOpenPostFromQuery()
   } finally {
     loading.value = false
   }
 })
+
+// Watch for route query changes to handle notification clicks
+watch(
+  () => route.query.openPost,
+  (newPostId) => {
+    if (newPostId && !loading.value) {
+      openPostById(newPostId as string)
+    }
+  }
+)
+
+// Open a specific post by ID (from notification)
+async function openPostById(postId: string) {
+  // Always fetch fresh data - the post may have been updated (e.g., video generated)
+  let post = null
+  try {
+    const response = await api.getFavorite(postId)
+    if (response.success && response.data?.favorite) {
+      post = response.data.favorite
+
+      // Also update the local posts array if this post exists there
+      const localIndex = posts.value.findIndex(p => p.id === postId)
+      if (localIndex !== -1) {
+        posts.value[localIndex] = post
+      }
+    }
+  } catch (error) {
+    errorLog('Failed to fetch post:', error)
+    // Fallback to local data if fetch fails
+    post = posts.value.find(p => p.id === postId)
+  }
+
+  if (post) {
+    viewDetails(post)
+    // Clear the query param after opening
+    router.replace({ query: { ...route.query, openPost: undefined } })
+  }
+}
+
+// Check if we should open a post from URL query
+function checkOpenPostFromQuery() {
+  const openPostId = route.query.openPost as string
+  if (openPostId) {
+    openPostById(openPostId)
+  }
+}
 
 // Fetch posts filtered by restaurant
 async function fetchPosts() {
@@ -644,6 +704,94 @@ async function handleDeleteConfirm() {
 function handleDeleteCancel() {
   showDeleteModal.value = false
   postToDelete.value = null
+}
+
+// Animate post (generate video from image) - runs in background
+async function handleAnimatePost(data: { postId: string; videoOptions: { duration: 4 | 6 | 8; aspectRatio: '16:9' | '9:16'; generateAudio: boolean } }) {
+  if (!selectedPost.value) return
+
+  const imageUrl = selectedPost.value.media_url || selectedPost.value.image_url
+  if (!imageUrl) {
+    notificationStore.addNotification({
+      type: 'error',
+      title: t('posts.create.animationFailed', 'Animation failed'),
+      message: t('easyMode.step3.noImageToAnimate', 'No image to animate'),
+    })
+    return
+  }
+
+  const postTitle = selectedPost.value.post_text?.substring(0, 50) || 'Post'
+  const postId = selectedPost.value.id
+
+  try {
+    // Show brief loading while we start the generation
+    animatingPost.value = true
+
+    // Fetch the image and convert to base64
+    const imageResponse = await fetch(imageUrl)
+    const imageBlob = await imageResponse.blob()
+    const base64Data = await new Promise<string>((resolve) => {
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        const result = reader.result as string
+        resolve(result.split(',')[1])
+      }
+      reader.readAsDataURL(imageBlob)
+    })
+
+    // Get optimized food animation prompt
+    const { prompt, negativePrompt } = getFoodAnimationPrompt()
+
+    // Generate video from image with food-optimized settings
+    // Always disable audio to prevent AI-generated voices
+    const videoOptions = {
+      duration: data.videoOptions.duration,
+      aspectRatio: data.videoOptions.aspectRatio,
+      resolution: '1080p' as '720p' | '1080p',
+      generateAudio: false, // Never generate audio - it adds unwanted voices
+      negativePrompt,
+      enhancePrompt: false // Don't let AI modify our carefully crafted prompt
+    }
+
+    const response = await api.generateVideoFromImage(
+      prompt,
+      base64Data,
+      imageBlob.type || 'image/png',
+      videoOptions
+    )
+
+    if (!response.success) {
+      throw new Error(response.error || t('contentCreate.videoError', 'Failed to generate video'))
+    }
+
+    // Add task to background generation store - it will handle polling
+    videoGenerationStore.addTask({
+      postId,
+      postTitle,
+      operationId: response.operationId,
+      modelId: response.modelId
+    })
+
+    // Show notification that generation started
+    notificationStore.addNotification({
+      type: 'info',
+      title: t('posts.videoGenerationStarted', 'Video Generation Started'),
+      message: t('posts.videoGeneratingInBackground', 'Your video is being generated. You\'ll be notified when it\'s ready.'),
+    })
+
+    // Close modal and let user continue
+    closeDetailModal()
+
+  } catch (err: any) {
+    errorLog('[Animate Post] Error starting generation:', err)
+    notificationStore.addNotification({
+      type: 'error',
+      title: t('posts.create.animationFailed', 'Animation failed'),
+      message: err.message || t('contentCreate.videoError', 'Failed to generate video'),
+    })
+  } finally {
+    animatingPost.value = false
+  }
 }
 
 // Utility functions

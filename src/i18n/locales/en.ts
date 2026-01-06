@@ -571,7 +571,18 @@ export default {
       title: 'Preview Your Post',
       subtitle: 'Review and edit your generated content',
       editPostText: 'Edit your post text',
-      addHashtagPlaceholder: 'Type hashtag and press Enter'
+      addHashtagPlaceholder: 'Type hashtag and press Enter',
+      animateImage: 'Animate Image',
+      animateCredits: '5 credits',
+      animationOptionsTitle: 'Video Animation Settings',
+      generateVideoFromImage: 'Generate Video',
+      generateVideoCredits: '5 credits',
+      showImage: 'Image',
+      showVideo: 'Video',
+      animatingImage: 'Creating video animation...',
+      insufficientCredits: 'You need at least 5 credits to animate this image',
+      noImageToAnimate: 'No image available to animate',
+      audioDisabledNote: 'Audio disabled for cleaner results'
     },
     step4: {
       title: 'Choose Platform & Schedule',
@@ -855,12 +866,21 @@ export default {
     cancelChangesButton: 'Cancel',
     publishButton: 'Publish',
     postAlt: 'Post',
+    // Background video generation
+    videoGenerationStarted: 'Video Generation Started',
+    videoGeneratingInBackground: "Your video is being generated. You'll be notified when it's ready.",
+    videoReady: 'Video Ready',
+    videoReadyToView: 'Video for "{title}" is ready to view',
+    videoGenerationFailed: 'Video Generation Failed',
     create: {
       captionGenerationFailed: 'Caption Generation Failed',
       imageGenerationFailed: 'Image Generation Failed',
       videoGenerationFailed: 'Video Generation Failed',
       generationFailed: 'Generation Failed',
-      unexpectedError: 'An unexpected error occurred. Please try again.'
+      unexpectedError: 'An unexpected error occurred. Please try again.',
+      animationFailed: 'Animation Failed',
+      animationSuccess: 'Animation Complete',
+      videoGenerated: 'Video has been generated successfully'
     }
   },
 

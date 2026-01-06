@@ -700,7 +700,7 @@ async function handleEasyModeGenerate(data: {
   uploadedLogo: File | null
   mediaType: 'image' | 'video'
   videoOptions?: {
-    duration: 5 | 6 | 8
+    duration: 4 | 6 | 8
     aspectRatio: '16:9' | '9:16'
     generateAudio: boolean
   }
@@ -745,94 +745,76 @@ async function handleEasyModeGenerate(data: {
     customVisualPrompt.value = data.customPrompt || ''
     logoPosition.value = 'bottom-right'
 
-    // Generate prompts
-    debugLog('[EasyMode] Generating prompts...')
-    await generatePromptsFromSelection()
-    debugLog('[EasyMode] Generated prompts:', imagePrompts.value)
+    // Skip Stage 1 prompt generation - we now pass dish info directly to image generation
+    // This saves ~3.5 seconds by avoiding a separate Gemini call for prompt generation
+    debugLog('[EasyMode] Skipping Stage 1 prompt generation - using direct dish info')
 
-    // Auto-select first image prompt
-    if (imagePrompts.value.length > 0) {
-      editablePrompt.value = imagePrompts.value[0]
-      debugLog('[EasyMode] Using prompt:', editablePrompt.value)
+    // Clear previous content
+    generatedImageUrl.value = ''
+    generatedVideoUrl.value = ''
+    videoOperationId.value = null
+    generatedPostContent.value = null
+    publishResults.value = null
+    lastSavedPost.value = null
 
-      await nextTick()
+    // Don't show modal for Easy Mode - content will show in preview step
+    // Keep generating state true while generating
+    easyModeGenerating.value = true
 
-      // Clear previous content
-      generatedImageUrl.value = ''
-      generatedVideoUrl.value = ''
-      videoOperationId.value = null
-      generatedPostContent.value = null
-      publishResults.value = null
-      lastSavedPost.value = null
-
-      // Don't show modal for Easy Mode - content will show in preview step
-      // Keep generating state true while generating
-      easyModeGenerating.value = true
-
-      // Generate content based on media type
-      try {
-        if (data.mediaType === 'video') {
-          debugLog('[EasyMode] Starting video generation...')
-          await generateVideo(
-            data.uploadedImage,
-            data.uploadedLogo,
-            data.videoOptions,
-            holidayTheme.value,
-            promptContext.value
-          )
-          debugLog('[EasyMode] Video generated successfully:', generatedVideoUrl.value)
-        } else {
-          debugLog('[EasyMode] Starting image generation...')
-          await generateImage(data.uploadedLogo, data.uploadedImage)
-          debugLog('[EasyMode] Image generated successfully:', generatedImageUrl.value)
-        }
-
-        // Upload the image to the restaurant's uploaded_images collection
-        if (data.uploadedImage && restaurant.value?.place_id) {
-          try {
-            await restaurantService.uploadRestaurantImages(
-              restaurant.value.place_id,
-              [data.uploadedImage]
-            )
-          } catch (uploadError) {
-            errorLog('Failed to save uploaded image to restaurant:', uploadError)
-            // Don't fail the entire operation if this fails
-          }
-        }
-
-        generationError.value = null
-        easyModeGenerating.value = false // Generation complete
-      } catch (genError: any) {
-        const errorMessage = genError.message || (data.mediaType === 'video'
-          ? t('contentCreate.videoError', 'Failed to generate video. Please try again.')
-          : t('contentCreate.imageError', 'Failed to generate image. Please try again.'))
-        generationError.value = errorMessage
-        errorLog('[EasyMode] Generation error:', genError)
-        notificationStore.addNotification({
-          type: 'error',
-          title: data.mediaType === 'video'
-            ? t('posts.create.videoGenerationFailed', 'Video generation failed')
-            : t('posts.create.imageGenerationFailed'),
-          message: errorMessage,
-        })
-        easyModeGenerating.value = false // Generation failed
+    // Generate content based on media type
+    try {
+      if (data.mediaType === 'video') {
+        debugLog('[EasyMode] Starting video generation...')
+        await generateVideo(
+          data.uploadedImage,
+          data.uploadedLogo,
+          data.videoOptions,
+          holidayTheme.value,
+          promptContext.value
+        )
+        debugLog('[EasyMode] Video generated successfully:', generatedVideoUrl.value)
+      } else {
+        debugLog('[EasyMode] Starting image generation with dish info...')
+        // Use useDishInfo=true to skip Stage 1 and pass dish info directly
+        await generateImage(data.uploadedLogo, data.uploadedImage, true)
+        debugLog('[EasyMode] Image generated successfully:', generatedImageUrl.value)
       }
-    } else {
-      // No prompts generated - show error
-      warnLog('[EasyMode] No prompts were generated')
-      easyModeGenerating.value = false
-      const errorMessage = t('contentCreate.noPrompts', 'No prompts were generated. Please try again.')
+
+      // Upload the image to the restaurant's uploaded_images collection
+      if (data.uploadedImage && restaurant.value?.place_id) {
+        try {
+          await restaurantService.uploadRestaurantImages(
+            restaurant.value.place_id,
+            [data.uploadedImage]
+          )
+        } catch (uploadError) {
+          errorLog('Failed to save uploaded image to restaurant:', uploadError)
+          // Don't fail the entire operation if this fails
+        }
+      }
+
+      generationError.value = null
+      easyModeGenerating.value = false // Generation complete
+    } catch (genError: any) {
+      const errorMessage = genError.message || (data.mediaType === 'video'
+        ? t('contentCreate.videoError', 'Failed to generate video. Please try again.')
+        : t('contentCreate.imageError', 'Failed to generate image. Please try again.'))
       generationError.value = errorMessage
+      errorLog('[EasyMode] Generation error:', genError)
       notificationStore.addNotification({
         type: 'error',
-        title: t('posts.create.generationFailed'),
+        title: data.mediaType === 'video'
+          ? t('posts.create.videoGenerationFailed', 'Video generation failed')
+          : t('posts.create.imageGenerationFailed'),
         message: errorMessage,
       })
+      easyModeGenerating.value = false // Generation failed
     }
   } catch (err: any) {
     easyModeGenerating.value = false
     const errorMessage = err.message || t('contentCreate.generateError', 'Failed to generate content')
     generationError.value = errorMessage
+    errorLog('[EasyMode] Outer error:', err)
     notificationStore.addNotification({
       type: 'error',
       title: t('posts.create.generationFailed'),
@@ -859,6 +841,108 @@ function handleEasyModeReset() {
   promptContext.value = ''
   editablePrompt.value = ''
   imagePrompts.value = []
+}
+
+// Easy Mode Animate Handler - generates video from image
+async function handleEasyModeAnimate(data: {
+  videoOptions: {
+    duration: 4 | 6 | 8
+    aspectRatio: '16:9' | '9:16'
+    generateAudio: boolean
+  }
+}) {
+  if (!generatedImageUrl.value) {
+    notificationStore.addNotification({
+      type: 'error',
+      title: t('posts.create.animationFailed', 'Animation failed'),
+      message: t('easyMode.step3.noImageToAnimate', 'No image to animate'),
+    })
+    return
+  }
+
+  try {
+    generatingVideo.value = true
+
+    // Fetch the generated image and convert to base64
+    const imageResponse = await fetch(generatedImageUrl.value)
+    const imageBlob = await imageResponse.blob()
+    const base64Data = await new Promise<string>((resolve) => {
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        const result = reader.result as string
+        resolve(result.split(',')[1]) // Remove data URL prefix
+      }
+      reader.readAsDataURL(imageBlob)
+    })
+
+    // Use the current prompt for video generation
+    const prompt = editablePrompt.value || 'Animate this food image with subtle motion'
+
+    // Generate video from image
+    const videoOptions = {
+      duration: data.videoOptions.duration,
+      aspectRatio: data.videoOptions.aspectRatio,
+      resolution: '1080p' as '720p' | '1080p',
+      generateAudio: data.videoOptions.generateAudio
+    }
+
+    debugLog('[EasyMode Animate] Generating video from image...')
+    const response = await api.generateVideoFromImage(
+      prompt,
+      base64Data,
+      imageBlob.type || 'image/png',
+      videoOptions
+    )
+
+    if (!response.success) {
+      throw new Error(response.error || t('contentCreate.videoError', 'Failed to generate video'))
+    }
+
+    // Store the operation ID for polling
+    videoOperationId.value = response.operationId
+
+    // Poll for video completion
+    const videoUrl = await pollVideoUntilComplete(response.operationId, response.modelId)
+
+    // Apply logo watermark if requested
+    if (includeLogo.value && restaurant.value?.brand_dna?.logo_url) {
+      try {
+        const watermarkResponse = await api.addVideoWatermark(
+          videoUrl,
+          restaurant.value.brand_dna.logo_url,
+          {
+            position: logoPosition.value,
+            opacity: 80,
+            scale: 40,
+            padding: 20,
+          }
+        )
+
+        if (watermarkResponse.success && watermarkResponse.videoUrl) {
+          generatedVideoUrl.value = watermarkResponse.videoUrl
+        } else {
+          generatedVideoUrl.value = videoUrl
+        }
+      } catch {
+        generatedVideoUrl.value = videoUrl
+      }
+    } else {
+      generatedVideoUrl.value = videoUrl
+    }
+
+    currentMediaType.value = 'video'
+    debugLog('[EasyMode Animate] Video generated successfully:', generatedVideoUrl.value)
+
+  } catch (err: any) {
+    errorLog('[EasyMode Animate] Error:', err)
+    notificationStore.addNotification({
+      type: 'error',
+      title: t('posts.create.animationFailed', 'Animation failed'),
+      message: err.message || t('contentCreate.videoError', 'Failed to generate video'),
+    })
+  } finally {
+    generatingVideo.value = false
+  }
 }
 
 async function generatePromptsFromSelection() {
@@ -901,8 +985,10 @@ async function generatePromptsFromSelection() {
   }
 }
 
-async function generateImage(uploadedLogo: File | null = null, uploadedImage: File | null = null) {
-  if (!editablePrompt.value || !restaurant.value) return
+async function generateImage(uploadedLogo: File | null = null, uploadedImage: File | null = null, useDishInfo: boolean = false) {
+  // Either need a prompt OR dish info (for direct generation without Stage 1)
+  if (!useDishInfo && !editablePrompt.value) return
+  if (!restaurant.value) return
 
   try {
     generatingImage.value = true
@@ -997,8 +1083,16 @@ async function generateImage(uploadedLogo: File | null = null, uploadedImage: Fi
         }
       : undefined
 
+    // Build dish info for direct generation (skips Stage 1 prompt generation)
+    const dishInfo = useDishInfo && selectedMenuItems.value.length > 0
+      ? {
+          name: selectedMenuItems.value[0].name,
+          description: selectedMenuItems.value[0].description || undefined
+        }
+      : undefined
+
     const response = await api.generateImage(
-      editablePrompt.value,
+      useDishInfo ? null : editablePrompt.value, // null prompt when using dish info
       watermark,
       referenceImage,
       promotionalSticker,
@@ -1006,7 +1100,9 @@ async function generateImage(uploadedLogo: File | null = null, uploadedImage: Fi
       strictnessMode.value,
       holidayTheme.value !== 'none' ? holidayTheme.value : undefined,
       visualStyle.value,
-      visualStyle.value === 'custom' ? customVisualPrompt.value : undefined
+      visualStyle.value === 'custom' ? customVisualPrompt.value : undefined,
+      dishInfo,
+      restaurant.value.name
     )
 
     if (!response.success) {
@@ -1182,7 +1278,7 @@ async function generateVideo(
   uploadedImage: File | null = null,
   uploadedLogo: File | null = null,
   videoOptions?: {
-    duration: 5 | 6 | 8
+    duration: 4 | 6 | 8
     aspectRatio: '16:9' | '9:16'
     generateAudio: boolean
   },
@@ -2043,6 +2139,7 @@ function handlePublishingClose() {
           :restaurant="restaurant"
           :menu-items="menuItems"
           :generating="easyModeGenerating"
+          :animating="generatingVideo"
           :generated-image-url="generatedImageUrl"
           :generated-video-url="generatedVideoUrl"
           :post-text="generatedPostContent?.postText"
@@ -2053,6 +2150,7 @@ function handlePublishingClose() {
           :initial-schedule-date="route.query.scheduleDate as string | undefined"
           @back="goBack"
           @generate="handleEasyModeGenerate"
+          @animate="handleEasyModeAnimate"
           @publish="handleEasyModePublish"
           @feedback="handleInlineFeedback"
           @reset="handleEasyModeReset"

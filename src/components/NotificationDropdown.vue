@@ -3,13 +3,17 @@
     <!-- Bell Button -->
     <button
       class="notification-btn"
-      :class="{ 'has-unread': hasUnread }"
+      :class="{ 'has-unread': hasUnread, 'has-active': hasActiveTasks }"
       @click="toggleDropdown"
       :aria-label="$t('sidebar.notifications')"
     >
       <MaterialIcon icon="notifications" size="md" />
       <span v-if="unreadCount > 0" class="unread-badge">
         {{ unreadCount > 9 ? '9+' : unreadCount }}
+      </span>
+      <!-- Active generation indicator -->
+      <span v-if="hasActiveTasks" class="active-indicator">
+        <span class="pulse-ring"></span>
       </span>
     </button>
 
@@ -26,6 +30,25 @@
           >
             Mark all read
           </button>
+        </div>
+
+        <!-- Active Video Generation Tasks -->
+        <div v-if="activeTasks.length > 0" class="active-tasks-section">
+          <div class="active-tasks-header">
+            <MaterialIcon icon="movie" size="sm" />
+            <span>Generating Videos</span>
+          </div>
+          <div
+            v-for="task in activeTasks"
+            :key="task.id"
+            class="active-task-item"
+          >
+            <div class="task-spinner"></div>
+            <div class="task-content">
+              <div class="task-title">{{ task.postTitle }}</div>
+              <div class="task-status">Creating video...</div>
+            </div>
+          </div>
         </div>
 
         <!-- Notifications List -->
@@ -104,20 +127,26 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { useNotificationStore, type Notification } from '../stores/notifications'
+import { useVideoGenerationStore } from '../stores/videoGeneration'
 import MaterialIcon from './MaterialIcon.vue'
 import PlatformLogo from './PlatformLogo.vue'
 
+const router = useRouter()
 const notificationStore = useNotificationStore()
+const videoGenerationStore = useVideoGenerationStore()
 
 const dropdownRef = ref<HTMLElement | null>(null)
 const isOpen = ref(false)
 
-// Computed from store
+// Computed from stores
 const notifications = computed(() => notificationStore.notifications)
 const sortedNotifications = computed(() => notificationStore.sortedNotifications)
 const unreadCount = computed(() => notificationStore.unreadCount)
 const hasUnread = computed(() => notificationStore.hasUnread)
+const activeTasks = computed(() => videoGenerationStore.activeTasks)
+const hasActiveTasks = computed(() => videoGenerationStore.hasActiveTasks)
 
 // Actions
 const toggleDropdown = () => {
@@ -141,7 +170,18 @@ const handleNotificationClick = (notification: Notification) => {
 }
 
 const openPostUrl = (url: string) => {
-  window.open(url, '_blank', 'noopener,noreferrer')
+  // Check if it's an internal route (starts with /)
+  if (url.startsWith('/')) {
+    router.push(url)
+    isOpen.value = false
+  } else {
+    window.open(url, '_blank', 'noopener,noreferrer')
+  }
+}
+
+const openPost = (postId: string) => {
+  router.push(`/posts?openPost=${postId}`)
+  isOpen.value = false
 }
 
 // Format time ago
@@ -228,6 +268,105 @@ onUnmounted(() => {
   align-items: center;
   justify-content: center;
   line-height: 1;
+}
+
+/* Active generation indicator */
+.notification-btn.has-active {
+  border-color: var(--gold-primary);
+}
+
+.active-indicator {
+  position: absolute;
+  bottom: -2px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 8px;
+  height: 8px;
+}
+
+.pulse-ring {
+  display: block;
+  width: 8px;
+  height: 8px;
+  background: var(--gold-primary);
+  border-radius: 50%;
+  animation: pulse-ring 1.5s ease-out infinite;
+}
+
+@keyframes pulse-ring {
+  0% {
+    transform: scale(0.8);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 0.7;
+  }
+  100% {
+    transform: scale(0.8);
+    opacity: 1;
+  }
+}
+
+/* Active Tasks Section */
+.active-tasks-section {
+  background: rgba(15, 61, 46, 0.08);
+  border-bottom: 1px solid var(--border-color);
+  padding: var(--space-sm) var(--space-lg);
+}
+
+.active-tasks-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  font-size: var(--text-xs);
+  font-weight: var(--font-semibold);
+  color: var(--gold-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: var(--space-sm);
+}
+
+.active-task-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-sm) 0;
+  border-radius: var(--radius-md);
+}
+
+.task-spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid rgba(15, 61, 46, 0.2);
+  border-top-color: var(--gold-primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.task-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.task-title {
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.task-status {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
 }
 
 /* Dropdown */

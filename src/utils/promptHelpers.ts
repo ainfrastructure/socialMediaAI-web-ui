@@ -83,3 +83,33 @@ export function extractDishDescription(imagePrompt: string): string {
 
   return cleaned
 }
+
+/**
+ * Generate a food animation prompt optimized for subtle, realistic motion
+ *
+ * Creates prompts that:
+ * - Keep the food exactly as shown in the image (no modifications)
+ * - Add only subtle environmental motion (steam, light, atmosphere)
+ * - Avoid AI artifacts and unnatural physics
+ * - Never change or add ingredients to the food
+ *
+ * @returns Object with prompt and negativePrompt for video generation
+ */
+export function getFoodAnimationPrompt(): { prompt: string; negativePrompt: string } {
+  const prompt = `Cinematic food video with extremely subtle motion. The food remains completely static and unchanged - do not move, transform, or modify the food in any way. Only animate subtle environmental elements: gentle steam wisps rising naturally, soft light reflections shifting slightly, delicate atmospheric particles floating in the background. Maintain exact food presentation from the original image. Professional food photography style with smooth, natural motion. The dish should look exactly as photographed - same ingredients, same arrangement, same appearance. Very slow, gentle camera movement if any. Hyper-realistic, appetizing, high-end restaurant quality.`
+
+  const negativePrompt = `voice, speech, talking, narration, dialogue, human sounds, loud music, dramatic sound effects, moving food, food transformation, adding ingredients, removing ingredients, food falling, food flying, food being assembled, food being disassembled, hands touching food, utensils moving food, unnatural physics, morphing, melting, objects appearing, objects disappearing, fast motion, jerky movement, glitchy, distorted, blurry, low quality, cartoon, anime, unrealistic, artificial looking, CGI artifacts, AI artifacts, warping, stretching, unnatural colors`
+
+  return { prompt, negativePrompt }
+}
+
+/**
+ * Get audio settings for food videos
+ * Food videos should have very subtle ambient sound, no voices
+ */
+export function getFoodAnimationAudioSettings(): { generateAudio: boolean; audioNote: string } {
+  return {
+    generateAudio: false, // Disable AI audio generation - it often adds unwanted voices
+    audioNote: 'Audio disabled to prevent AI-generated voices. Add ambient music in post-production if needed.'
+  }
+}

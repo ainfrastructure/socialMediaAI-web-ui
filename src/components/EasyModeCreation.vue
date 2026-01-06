@@ -59,6 +59,7 @@ const props = defineProps<{
   restaurant: SavedRestaurant
   menuItems: MenuItem[]
   generating?: boolean
+  animating?: boolean // When true, video is being generated from image
   generatedImageUrl?: string
   generatedVideoUrl?: string
   postText?: string
@@ -83,9 +84,11 @@ const emit = defineEmits<{
     includeLogo: boolean
     uploadedImage: File | null
     uploadedLogo: File | null
-    mediaType: 'image' | 'video'
-    videoOptions?: {
-      duration: 5 | 6 | 8
+    mediaType: 'image'
+  }): void
+  (e: 'animate', data: {
+    videoOptions: {
+      duration: 4 | 6 | 8
       aspectRatio: '16:9' | '9:16'
       generateAudio: boolean
     }
@@ -119,11 +122,14 @@ const promptContext = ref('')
 const selectedStyleTemplate = ref<string>('behindTheScenes')
 const customPrompt = ref<string>('')  // For custom style prompt
 const strictnessMode = ref<'strict' | 'flexible' | 'creative'>('strict')
-const mediaType = ref<'image' | 'video'>('image')
-const videoDuration = ref<5 | 6 | 8>(6)
-const videoAspectRatio = ref<'16:9' | '9:16'>('9:16')
-const includeAudio = ref(true)
 const holidayTheme = ref<string>('none')
+
+// Animation state (for Step 3 - animate image to video)
+const showAnimationOptions = ref(false)
+const animationVideoDuration = ref<4 | 6 | 8>(6)
+const animationVideoAspectRatio = ref<'16:9' | '9:16'>('9:16')
+const animationIncludeAudio = ref(true)
+const activeMediaType = ref<'image' | 'video'>('image') // Toggle between showing image or video
 const customHolidayText = ref<string>('')
 const includeLogo = ref(true)
 const uploadedImage = ref<File | null>(null)
@@ -401,6 +407,7 @@ function handleGenerate() {
   if (!selectedMenuItem.value && !uploadedImage.value) return
 
   // Stay on Step 2 - will auto-advance when generation completes
+  // Always generate image first - video can be created later via "Animate Image" in Step 3
   emit('generate', {
     menuItem: selectedMenuItem.value,
     context: promptContext.value.trim(),
@@ -412,12 +419,7 @@ function handleGenerate() {
     includeLogo: includeLogo.value,
     uploadedImage: uploadedImage.value,
     uploadedLogo: uploadedLogo.value,
-    mediaType: mediaType.value,
-    videoOptions: mediaType.value === 'video' ? {
-      duration: videoDuration.value,
-      aspectRatio: videoAspectRatio.value,
-      generateAudio: includeAudio.value
-    } : undefined
+    mediaType: 'image' // Always generate image first
   })
 }
 
@@ -439,6 +441,29 @@ watch(() => [props.generating, props.generatedImageUrl, props.generatedVideoUrl,
     currentStep.value = 3
   }
 })
+
+// Watch for video URL to know when animation is complete
+watch(() => props.generatedVideoUrl, (newUrl) => {
+  if (newUrl) {
+    showAnimationOptions.value = false
+    activeMediaType.value = 'video' // Switch to show the new video
+  }
+})
+
+// Handle animate image to video
+function handleAnimateImage() {
+  if (!props.generatedImageUrl || props.animating) return
+
+  showAnimationOptions.value = false
+
+  emit('animate', {
+    videoOptions: {
+      duration: animationVideoDuration.value,
+      aspectRatio: animationVideoAspectRatio.value,
+      generateAudio: animationIncludeAudio.value
+    }
+  })
+}
 
 function handlePublish(data: {
   platforms: string[]
@@ -475,6 +500,13 @@ function resetAndCreateNew() {
   editedPostText.value = ''
   editedHashtags.value = []
   newHashtag.value = ''
+
+  // Reset animation state
+  showAnimationOptions.value = false
+  animationVideoDuration.value = 6
+  animationVideoAspectRatio.value = '9:16'
+  animationIncludeAudio.value = true
+  activeMediaType.value = 'image'
 
   // Clear flow state for mode switching
   preferencesStore.clearFlowState()
@@ -762,29 +794,6 @@ onUnmounted(() => {
           </div>
         </div>
 
-        <!-- Media Type Selection -->
-      <div class="customization-section">
-        <SectionLabel icon="perm_media">{{ t('easyMode.step2.mediaTypeLabel', 'Media Type') }}</SectionLabel>
-        <div class="media-type-options">
-          <button
-            :class="['media-type-button', { 'selected': mediaType === 'image' }]"
-            @click="mediaType = 'image'"
-          >
-            <GoldenImageIcon :size="32" class="media-type-icon" />
-            <span class="media-type-label">{{ t('easyMode.step2.imageOption', 'Image') }}</span>
-            <span class="credits-badge">{{ t('easyMode.step2.imageCredits', '1 credit') }}</span>
-          </button>
-          <button
-            :class="['media-type-button', { 'selected': mediaType === 'video' }]"
-            @click="mediaType = 'video'"
-          >
-            <GoldenVideoIcon :size="32" class="media-type-icon" />
-            <span class="media-type-label">{{ t('easyMode.step2.videoOption', 'Video') }}</span>
-            <span class="credits-badge credits-badge-video">{{ t('easyMode.step2.videoCredits', '5 credits') }}</span>
-          </button>
-        </div>
-      </div>
-
         <!-- Style Selection -->
       <div class="customization-section">
         <SectionLabel icon="palette">{{ t('easyMode.step2.styleLabel', 'Visual Style') }}</SectionLabel>
@@ -800,63 +809,6 @@ onUnmounted(() => {
             class="custom-prompt-input"
             rows="4"
           ></textarea>
-        </div>
-      </div>
-
-      <!-- Video Options (shown when video is selected) -->
-      <div v-if="mediaType === 'video'" class="customization-section video-options-section">
-        <SectionLabel icon="movie">{{ t('easyMode.step2.videoOptionsLabel', 'Video Settings') }}</SectionLabel>
-
-        <!-- Duration Selection -->
-        <div class="video-option-group">
-          <label class="video-option-label">{{ t('easyMode.step2.durationLabel', 'Duration') }}</label>
-          <div class="duration-options">
-            <button
-              v-for="duration in [5, 6, 8]"
-              :key="duration"
-              :class="['duration-button', { 'selected': videoDuration === duration }]"
-              @click="videoDuration = duration as 5 | 6 | 8"
-            >
-              {{ duration }}{{ t('easyMode.step2.seconds', 's') }}
-            </button>
-          </div>
-        </div>
-
-        <!-- Aspect Ratio Selection -->
-        <div class="video-option-group">
-          <label class="video-option-label">{{ t('easyMode.step2.aspectRatioLabel', 'Aspect Ratio') }}</label>
-          <div class="aspect-ratio-options">
-            <button
-              :class="['aspect-ratio-button', { 'selected': videoAspectRatio === '9:16' }]"
-              @click="videoAspectRatio = '9:16'"
-            >
-              <MaterialIcon icon="stay_current_portrait" size="md" />
-              <span>9:16</span>
-              <span class="aspect-hint">{{ t('easyMode.step2.portrait', 'Portrait') }}</span>
-            </button>
-            <button
-              :class="['aspect-ratio-button', { 'selected': videoAspectRatio === '16:9' }]"
-              @click="videoAspectRatio = '16:9'"
-            >
-              <MaterialIcon icon="stay_current_landscape" size="md" />
-              <span>16:9</span>
-              <span class="aspect-hint">{{ t('easyMode.step2.landscape', 'Landscape') }}</span>
-            </button>
-          </div>
-        </div>
-
-        <!-- Audio Toggle -->
-        <div class="video-option-group">
-          <label class="checkbox-label-easy">
-            <input
-              type="checkbox"
-              v-model="includeAudio"
-              class="checkbox-input-easy"
-            />
-            <span class="checkbox-text">
-              <span>{{ t('easyMode.step2.includeAudio', 'Include AI-generated audio') }}</span>
-            </span>
-          </label>
         </div>
       </div>
 
@@ -1032,10 +984,7 @@ onUnmounted(() => {
             @click="handleGenerate"
             class="next-button"
           >
-            {{ mediaType === 'video'
-              ? t('easyMode.step2.generateVideoButton', 'Generate Video')
-              : t('easyMode.step2.generateButton', 'Generate Image')
-            }}
+            {{ t('easyMode.step2.generateButton', 'Generate Image') }}
           </BaseButton>
         </div>
       </template>
@@ -1054,19 +1003,26 @@ onUnmounted(() => {
       <div class="preview-section">
         <!-- Consistent Layout: Image top, Content bottom -->
         <div class="preview-content">
-          <!-- Generated Image -->
+          <!-- Generated Media -->
           <div class="preview-image-container">
             <!-- Loading State for Media -->
             <div v-if="props.generating && !props.generatedImageUrl && !props.generatedVideoUrl" class="image-loading">
               <GeneratingProgress
                 :active="props.generating"
-                :estimated-duration="mediaType === 'video' ? 120 : 20"
+                :estimated-duration="20"
               />
             </div>
-            <!-- Generated Video (when ready) -->
+            <!-- Animation Loading State -->
+            <div v-else-if="props.animating" class="image-loading">
+              <GeneratingProgress
+                :active="props.animating"
+                :estimated-duration="120"
+              />
+            </div>
+            <!-- Generated Video (when ready AND selected) -->
             <video
               ref="previewVideoRef"
-              v-else-if="props.generatedVideoUrl"
+              v-else-if="props.generatedVideoUrl && activeMediaType === 'video'"
               :src="props.generatedVideoUrl"
               controls
               autoplay
@@ -1078,8 +1034,113 @@ onUnmounted(() => {
             >
               {{ t('common.videoNotSupported', 'Your browser does not support the video tag.') }}
             </video>
-            <!-- Generated Image (when ready) -->
+            <!-- Generated Image (when ready AND selected, or when video not available) -->
             <img v-else-if="props.generatedImageUrl" :src="props.generatedImageUrl" alt="Generated post image" class="preview-image-display" />
+          </div>
+
+          <!-- Media Type Toggle (shows when both image and video are available) -->
+          <div v-if="props.generatedImageUrl && props.generatedVideoUrl" class="media-toggle-container">
+            <div class="media-toggle">
+              <button
+                :class="['media-toggle-button', { 'active': activeMediaType === 'image' }]"
+                @click="activeMediaType = 'image'"
+              >
+                <GoldenImageIcon :size="20" />
+                <span>{{ t('easyMode.step3.showImage') }}</span>
+              </button>
+              <button
+                :class="['media-toggle-button', { 'active': activeMediaType === 'video' }]"
+                @click="activeMediaType = 'video'"
+              >
+                <GoldenVideoIcon :size="20" />
+                <span>{{ t('easyMode.step3.showVideo') }}</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Animate Image Button (shows after image is generated, before video exists) -->
+          <div v-if="props.generatedImageUrl && !props.generatedVideoUrl && !props.animating && !showAnimationOptions" class="animate-image-section">
+            <button
+              class="animate-image-button"
+              @click="showAnimationOptions = true"
+            >
+              <GoldenVideoIcon :size="24" />
+              <span class="animate-button-text">{{ t('easyMode.step3.animateImage') }}</span>
+              <span class="animate-credits-badge">{{ t('easyMode.step3.animateCredits') }}</span>
+            </button>
+          </div>
+
+          <!-- Animation Options Panel (expandable) -->
+          <div v-if="showAnimationOptions && !props.animating && !props.generatedVideoUrl" class="animation-options-panel">
+            <div class="animation-options-header">
+              <h4 class="animation-options-title">{{ t('easyMode.step3.animationOptionsTitle') }}</h4>
+              <button class="close-animation-options" @click="showAnimationOptions = false">
+                <MaterialIcon icon="close" size="sm" />
+              </button>
+            </div>
+
+            <!-- Duration Selection -->
+            <div class="video-option-group">
+              <label class="video-option-label">{{ t('easyMode.step2.durationLabel') }}</label>
+              <div class="duration-options">
+                <button
+                  v-for="duration in [4, 6, 8]"
+                  :key="duration"
+                  :class="['duration-button', { 'selected': animationVideoDuration === duration }]"
+                  @click="animationVideoDuration = duration as 4 | 6 | 8"
+                >
+                  {{ duration }}{{ t('easyMode.step2.seconds') }}
+                </button>
+              </div>
+            </div>
+
+            <!-- Aspect Ratio Selection -->
+            <div class="video-option-group">
+              <label class="video-option-label">{{ t('easyMode.step2.aspectRatioLabel') }}</label>
+              <div class="aspect-ratio-options">
+                <button
+                  :class="['aspect-ratio-button', { 'selected': animationVideoAspectRatio === '9:16' }]"
+                  @click="animationVideoAspectRatio = '9:16'"
+                >
+                  <MaterialIcon icon="stay_current_portrait" size="md" />
+                  <span>9:16</span>
+                  <span class="aspect-hint">{{ t('easyMode.step2.portrait') }}</span>
+                </button>
+                <button
+                  :class="['aspect-ratio-button', { 'selected': animationVideoAspectRatio === '16:9' }]"
+                  @click="animationVideoAspectRatio = '16:9'"
+                >
+                  <MaterialIcon icon="stay_current_landscape" size="md" />
+                  <span>16:9</span>
+                  <span class="aspect-hint">{{ t('easyMode.step2.landscape') }}</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Audio Toggle -->
+            <div class="video-option-group">
+              <label class="checkbox-label-easy">
+                <input
+                  type="checkbox"
+                  v-model="animationIncludeAudio"
+                  class="checkbox-input-easy"
+                />
+                <span class="checkbox-text">
+                  <span>{{ t('easyMode.step2.includeAudio') }}</span>
+                </span>
+              </label>
+            </div>
+
+            <!-- Generate Video Button -->
+            <BaseButton
+              variant="primary"
+              size="large"
+              class="generate-animation-button"
+              @click="handleAnimateImage"
+            >
+              <GoldenVideoIcon :size="20" />
+              {{ t('easyMode.step3.generateVideoFromImage') }} - {{ t('easyMode.step3.generateVideoCredits') }}
+            </BaseButton>
           </div>
 
           <!-- Post Content - Editable -->
@@ -2053,87 +2114,6 @@ onUnmounted(() => {
   color: var(--text-muted);
   margin-bottom: var(--space-lg);
   line-height: 1.4;
-}
-
-/* Media Type Options */
-.media-type-options {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: var(--space-md);
-}
-
-.media-type-button {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--space-sm);
-  padding: var(--space-lg);
-  background: var(--bg-secondary);
-  border: 2px solid var(--border-color);
-  border-radius: var(--radius-lg);
-  cursor: pointer;
-  transition: all 0.2s ease;
-  position: relative;
-}
-
-.media-type-button:hover:not(.disabled) {
-  border-color: var(--gold-primary);
-  background: var(--gold-subtle);
-}
-
-.media-type-button.selected {
-  border-color: var(--gold-primary);
-  background: var(--gold-subtle);
-  box-shadow: var(--glow-gold-sm);
-}
-
-.media-type-button.disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.media-type-icon {
-  flex-shrink: 0;
-}
-
-.media-type-label {
-  font-size: var(--text-sm);
-  font-weight: var(--font-medium);
-  color: var(--text-primary);
-}
-
-.coming-soon-badge {
-  position: absolute;
-  top: var(--space-xs);
-  right: var(--space-xs);
-  font-size: 9px;
-  font-weight: var(--font-semibold);
-  padding: 2px 6px;
-  background: var(--gold-subtle);
-  color: var(--gold-primary);
-  border-radius: var(--radius-full);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.credits-badge {
-  font-size: 10px;
-  font-weight: var(--font-medium);
-  color: var(--text-muted);
-  margin-top: var(--space-xs);
-}
-
-.credits-badge-video {
-  color: var(--gold-primary);
-}
-
-/* Video Options Section */
-.video-options-section {
-  background: var(--bg-elevated);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-lg);
-  padding: var(--space-xl);
-  margin-top: var(--space-md);
 }
 
 .video-option-group {
@@ -3469,13 +3449,148 @@ onUnmounted(() => {
   font-weight: var(--font-medium);
 }
 
+/* ===== ANIMATE IMAGE SECTION ===== */
+.animate-image-section {
+  margin-top: var(--space-lg);
+  display: flex;
+  justify-content: center;
+}
+
+.animate-image-button {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-md) var(--space-xl);
+  background: linear-gradient(135deg, var(--gold-subtle), var(--bg-secondary));
+  border: 2px solid var(--gold-primary);
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.animate-image-button:hover {
+  background: var(--gold-subtle);
+  box-shadow: var(--glow-gold-sm);
+  transform: translateY(-2px);
+}
+
+.animate-button-text {
+  font-size: var(--text-base);
+  font-weight: var(--font-medium);
+  color: var(--text-primary);
+}
+
+.animate-credits-badge {
+  font-size: var(--text-xs);
+  padding: var(--space-xs) var(--space-sm);
+  background: var(--gold-primary);
+  color: var(--text-on-gold);
+  border-radius: var(--radius-full);
+}
+
+/* Animation Options Panel */
+.animation-options-panel {
+  margin-top: var(--space-lg);
+  padding: var(--space-xl);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animation-options-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-lg);
+}
+
+.animation-options-title {
+  font-family: var(--font-heading);
+  font-size: var(--text-lg);
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.close-animation-options {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: var(--space-xs);
+  color: var(--text-muted);
+  transition: color 0.2s;
+}
+
+.close-animation-options:hover {
+  color: var(--text-primary);
+}
+
+.generate-animation-button {
+  width: 100%;
+  margin-top: var(--space-lg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-sm);
+}
+
+/* Media Toggle */
+.media-toggle-container {
+  display: flex;
+  justify-content: center;
+  margin-top: var(--space-md);
+}
+
+.media-toggle {
+  display: inline-flex;
+  background: var(--bg-secondary);
+  border-radius: var(--radius-lg);
+  padding: var(--space-xs);
+  border: 1px solid var(--border-color);
+}
+
+.media-toggle-button {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: var(--space-sm) var(--space-lg);
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: var(--text-secondary);
+}
+
+.media-toggle-button:hover {
+  color: var(--text-primary);
+}
+
+.media-toggle-button.active {
+  background: var(--gold-subtle);
+  color: var(--gold-primary);
+  box-shadow: var(--glow-gold-sm);
+}
+
 /* Reduced Motion */
 @media (prefers-reduced-motion: reduce) {
   .easy-mode-creation,
   .step-card,
   .spinner,
   .loading-logo,
-  .loading-bar-fill {
+  .loading-bar-fill,
+  .animation-options-panel {
     animation: none;
   }
 }

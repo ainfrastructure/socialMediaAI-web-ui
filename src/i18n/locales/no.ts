@@ -545,7 +545,18 @@ export default {
       title: 'Forhåndsvis innlegget ditt',
       subtitle: 'Gjennomgå og rediger det genererte innholdet',
       editPostText: 'Rediger innleggsteksten',
-      addHashtagPlaceholder: 'Skriv hashtag og trykk Enter'
+      addHashtagPlaceholder: 'Skriv hashtag og trykk Enter',
+      animateImage: 'Animer bilde',
+      animateCredits: '5 kreditter',
+      animationOptionsTitle: 'Videoanimasjonsinnstillinger',
+      generateVideoFromImage: 'Generer video',
+      generateVideoCredits: '5 kreditter',
+      showImage: 'Bilde',
+      showVideo: 'Video',
+      animatingImage: 'Lager videoanimasjon...',
+      insufficientCredits: 'Du trenger minst 5 kreditter for å animere dette bildet',
+      noImageToAnimate: 'Ingen bilde tilgjengelig for animering',
+      audioDisabledNote: 'Lyd deaktivert for bedre resultater'
     },
     step4: {
       title: 'Velg plattform og planlegg',
@@ -828,12 +839,21 @@ export default {
     cancelChangesButton: 'Avbryt',
     publishButton: 'Publiser',
     postAlt: 'Innlegg',
+    // Background video generation
+    videoGenerationStarted: 'Videogenerering startet',
+    videoGeneratingInBackground: 'Videoen din genereres. Du vil bli varslet når den er klar.',
+    videoReady: 'Video klar',
+    videoReadyToView: 'Video for "{title}" er klar til visning',
+    videoGenerationFailed: 'Videogenerering mislyktes',
     create: {
       captionGenerationFailed: 'Kunne ikke generere bildetekst',
       imageGenerationFailed: 'Kunne ikke generere bilde',
       videoGenerationFailed: 'Kunne ikke generere video',
       generationFailed: 'Generering mislyktes',
-      unexpectedError: 'En uventet feil oppstod. Prøv igjen.'
+      unexpectedError: 'En uventet feil oppstod. Prøv igjen.',
+      animationFailed: 'Animering mislyktes',
+      animationSuccess: 'Animering fullført',
+      videoGenerated: 'Video har blitt generert'
     }
   },
 
