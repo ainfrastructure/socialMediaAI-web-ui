@@ -126,7 +126,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useNotificationStore, type Notification } from '../stores/notifications'
 import { useVideoGenerationStore } from '../stores/videoGeneration'
@@ -139,6 +139,15 @@ const videoGenerationStore = useVideoGenerationStore()
 
 const dropdownRef = ref<HTMLElement | null>(null)
 const isOpen = ref(false)
+
+// Watch store's isDropdownOpen to sync with local state
+watch(() => notificationStore.isDropdownOpen, (shouldOpen) => {
+  if (shouldOpen) {
+    isOpen.value = true
+    // Reset the store state so it can be triggered again
+    notificationStore.closeDropdown()
+  }
+})
 
 // Computed from stores
 const notifications = computed(() => notificationStore.notifications)

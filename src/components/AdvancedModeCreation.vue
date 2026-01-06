@@ -35,6 +35,7 @@ import { okamService } from '@/services/okamService'
 import { useFacebookStore } from '@/stores/facebook'
 import { useInstagramStore } from '@/stores/instagram'
 import { useNotificationStore } from '@/stores/notifications'
+import { useVideoGenerationStore } from '@/stores/videoGeneration'
 import { debugLog, errorLog } from '@/utils/debug'
 import { getVideoSinglePrompt, getVideoComboPrompt, getVideoWeeklyPrompt } from '@/config/promptModifiers'
 import { getThemeContext } from '@/utils/videoThemes'
@@ -133,6 +134,7 @@ const router = useRouter()
 const facebookStore = useFacebookStore()
 const instagramStore = useInstagramStore()
 const notificationStore = useNotificationStore()
+const videoGenerationStore = useVideoGenerationStore()
 
 // Platform configuration
 type PlatformType = 'facebook' | 'instagram' | 'tiktok' | 'twitter' | 'linkedin' | 'youtube'
@@ -236,6 +238,7 @@ const customization = ref<CustomizationOptions>({
 // Animation state (for Step 4 - animate image to video)
 const showAnimationOptions = ref(false)
 const animatingToVideo = ref(false)
+const videoGeneratingInBackground = ref(false) // True when video is generating in background
 const animationVideoDuration = ref<4 | 6 | 8>(6)
 const animationVideoAspectRatio = ref<'16:9' | '9:16'>('9:16')
 const animationIncludeAudio = ref(true)
@@ -837,7 +840,8 @@ async function generateImage() {
   }
 }
 
-// Animate image to video
+// Animate image to video - runs in BACKGROUND
+// User can continue to publish with image while video generates
 async function animateImage() {
   if (!generatedImageUrl.value || animatingToVideo.value) return
 
@@ -845,7 +849,7 @@ async function animateImage() {
   animatingToVideo.value = true
 
   try {
-    debugLog('========== ANIMATE IMAGE TO VIDEO START ==========')
+    debugLog('========== ANIMATE IMAGE TO VIDEO START (BACKGROUND) ==========')
 
     // Fetch the generated image and convert to base64
     const imageResponse = await fetch(generatedImageUrl.value)
@@ -895,7 +899,7 @@ async function animateImage() {
       duration: animationVideoDuration.value,
       aspectRatio: animationVideoAspectRatio.value,
       resolution: '1080p' as '720p' | '1080p',
-      generateAudio: animationIncludeAudio.value
+      generateAudio: false // Never generate audio - it adds unwanted voices
     }
 
     const response = await api.generateVideoFromImage(
@@ -909,8 +913,40 @@ async function animateImage() {
       throw new Error(response.error || t('advancedMode.messages.videoError', 'Failed to generate video'))
     }
 
-    // Poll for video completion
-    const videoUrl = await pollVideoUntilComplete(response.operationId, response.modelId)
+    // Mark that video is generating in background
+    videoGeneratingInBackground.value = true
+
+    // Show notification that generation started in background
+    notificationStore.addNotification({
+      type: 'info',
+      title: t('posts.videoGenerationStarted', 'Video Generation Started'),
+      message: t('posts.videoGeneratingInBackground', 'Your video is being generated in the background. You can post the image now or wait for the video.'),
+    })
+
+    // Auto-open notification dropdown so user sees it
+    notificationStore.openDropdown()
+
+    debugLog('========== VIDEO GENERATION STARTED IN BACKGROUND ==========')
+
+    // Poll in background and update when complete
+    pollVideoInBackground(response.operationId, response.modelId)
+
+  } catch (error: any) {
+    errorLog('Error starting video generation:', error)
+    notificationStore.addNotification({
+      type: 'error',
+      title: t('advancedMode.messages.videoGenerationFailed', 'Video generation failed'),
+      message: error.message || 'Failed to generate video',
+    })
+  } finally {
+    animatingToVideo.value = false
+  }
+}
+
+// Poll video in background and update when complete
+async function pollVideoInBackground(operationId: string, modelId?: string) {
+  try {
+    const videoUrl = await pollVideoUntilComplete(operationId, modelId)
 
     // Apply logo watermark if requested
     if (customization.value.logoPosition && customization.value.logoPosition !== 'none' && props.restaurant.brand_dna?.logo_url) {
@@ -938,19 +974,25 @@ async function animateImage() {
       generatedVideoUrl.value = videoUrl
     }
 
-    // Switch to show video
+    // Video is ready!
+    videoGeneratingInBackground.value = false
     activeMediaType.value = 'video'
 
-    debugLog('========== ANIMATE IMAGE TO VIDEO COMPLETE ==========')
+    notificationStore.addNotification({
+      type: 'success',
+      title: t('posts.videoReady', 'Video Ready'),
+      message: t('advancedMode.messages.videoReady', 'Your video is ready to preview and publish!'),
+    })
+
+    debugLog('========== VIDEO GENERATION COMPLETE ==========')
   } catch (error: any) {
-    errorLog('Error animating image to video:', error)
+    videoGeneratingInBackground.value = false
+    errorLog('Error in background video generation:', error)
     notificationStore.addNotification({
       type: 'error',
       title: t('advancedMode.messages.videoGenerationFailed', 'Video generation failed'),
       message: error.message || 'Failed to generate video',
     })
-  } finally {
-    animatingToVideo.value = false
   }
 }
 
@@ -1590,8 +1632,19 @@ defineExpose({
             </div>
           </div>
 
-          <!-- Animate Image Button (shows after image is generated, before video exists) -->
-          <div v-if="generatedImageUrl && !generatedVideoUrl && !animatingToVideo && !showAnimationOptions" class="animate-image-section">
+          <!-- Video Generating in Background Banner -->
+          <div v-if="videoGeneratingInBackground && !generatedVideoUrl" class="video-background-banner">
+            <div class="banner-icon">
+              <div class="spinner-small"></div>
+            </div>
+            <div class="banner-content">
+              <span class="banner-title">{{ t('easyMode.step3.videoGeneratingTitle', 'Video generating...') }}</span>
+              <span class="banner-subtitle">{{ t('easyMode.step3.videoGeneratingSubtitle', 'You can post the image now. Video will be ready soon.') }}</span>
+            </div>
+          </div>
+
+          <!-- Animate Image Button (shows after image is generated, before video exists, not generating) -->
+          <div v-if="generatedImageUrl && !generatedVideoUrl && !animatingToVideo && !videoGeneratingInBackground && !showAnimationOptions" class="animate-image-section">
             <button
               class="animate-image-button"
               @click="showAnimationOptions = true"
@@ -1603,7 +1656,7 @@ defineExpose({
           </div>
 
           <!-- Animation Options Panel (expandable) -->
-          <div v-if="showAnimationOptions && !animatingToVideo && !generatedVideoUrl" class="animation-options-panel">
+          <div v-if="showAnimationOptions && !animatingToVideo && !videoGeneratingInBackground && !generatedVideoUrl" class="animation-options-panel">
             <div class="animation-options-header">
               <h4 class="animation-options-title">{{ t('easyMode.step3.animationOptionsTitle') }}</h4>
               <button class="close-animation-options" @click="showAnimationOptions = false">
@@ -3966,6 +4019,48 @@ defineExpose({
 .add-hashtag-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+/* ===== VIDEO GENERATING BACKGROUND BANNER ===== */
+.video-background-banner {
+  margin-top: var(--space-lg);
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-md) var(--space-lg);
+  background: linear-gradient(135deg, rgba(15, 61, 46, 0.08), rgba(15, 61, 46, 0.04));
+  border: 1px solid rgba(15, 61, 46, 0.2);
+  border-radius: var(--radius-lg);
+}
+
+.video-background-banner .banner-icon {
+  flex-shrink: 0;
+}
+
+.video-background-banner .spinner-small {
+  width: 24px;
+  height: 24px;
+  border: 3px solid rgba(15, 61, 46, 0.2);
+  border-top-color: var(--gold-primary);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+.video-background-banner .banner-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.video-background-banner .banner-title {
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  color: var(--gold-primary);
+}
+
+.video-background-banner .banner-subtitle {
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
 }
 
 /* ===== ANIMATE IMAGE SECTION ===== */

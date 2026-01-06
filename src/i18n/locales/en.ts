@@ -582,7 +582,10 @@ export default {
       animatingImage: 'Creating video animation...',
       insufficientCredits: 'You need at least 5 credits to animate this image',
       noImageToAnimate: 'No image available to animate',
-      audioDisabledNote: 'Audio disabled for cleaner results'
+      audioDisabledNote: 'Audio disabled for cleaner results',
+      videoGeneratingTitle: 'Video generating in background...',
+      videoGeneratingSubtitle: 'You can post the image now. Video will be ready soon.',
+      videoGeneratingNote: 'Video is generating. Save your post to track progress.'
     },
     step4: {
       title: 'Choose Platform & Schedule',
@@ -868,7 +871,7 @@ export default {
     postAlt: 'Post',
     // Background video generation
     videoGenerationStarted: 'Video Generation Started',
-    videoGeneratingInBackground: "Your video is being generated. You'll be notified when it's ready.",
+    videoGeneratingInBackground: 'Your video is being generated in the background. You can post the image now or wait for the video.',
     videoReady: 'Video Ready',
     videoReadyToView: 'Video for "{title}" is ready to view',
     videoGenerationFailed: 'Video Generation Failed',

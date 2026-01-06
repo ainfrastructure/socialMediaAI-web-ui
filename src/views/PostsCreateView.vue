@@ -8,6 +8,7 @@ import { usePreferencesStore } from '@/stores/preferences'
 import { useFacebookStore } from '@/stores/facebook'
 import { useInstagramStore } from '@/stores/instagram'
 import { useNotificationStore } from '@/stores/notifications'
+import { useVideoGenerationStore } from '@/stores/videoGeneration'
 import DashboardLayout from '@/components/DashboardLayout.vue'
 import BaseCard from '@/components/BaseCard.vue'
 import BaseButton from '@/components/BaseButton.vue'
@@ -36,6 +37,7 @@ const preferencesStore = usePreferencesStore()
 const facebookStore = useFacebookStore()
 const instagramStore = useInstagramStore()
 const notificationStore = useNotificationStore()
+const videoGenerationStore = useVideoGenerationStore()
 
 // Restaurant state
 const restaurant = ref<SavedRestaurant | null>(null)
@@ -64,6 +66,7 @@ const generatingPostContent = ref(false)
 const generatedImageUrl = ref('')
 const generatedVideoUrl = ref('')
 const videoOperationId = ref<string | null>(null)
+const videoGeneratingInBackground = ref(false) // True when video is being generated in background
 const currentMediaType = ref<'image' | 'video'>('image')
 const generatedPostContent = ref<{
   postText: string
@@ -829,6 +832,7 @@ function handleEasyModeReset() {
   generatedImageUrl.value = ''
   generatedVideoUrl.value = ''
   videoOperationId.value = null
+  videoGeneratingInBackground.value = false
   currentMediaType.value = 'image'
   generatedPostContent.value = null
   generationError.value = null
@@ -843,7 +847,8 @@ function handleEasyModeReset() {
   imagePrompts.value = []
 }
 
-// Easy Mode Animate Handler - generates video from image
+// Easy Mode Animate Handler - generates video from image IN BACKGROUND
+// User can continue to post the image while video generates
 async function handleEasyModeAnimate(data: {
   videoOptions: {
     duration: 4 | 6 | 8
@@ -861,6 +866,7 @@ async function handleEasyModeAnimate(data: {
   }
 
   try {
+    // Show brief loading while we start the generation
     generatingVideo.value = true
 
     // Fetch the generated image and convert to base64
@@ -883,10 +889,10 @@ async function handleEasyModeAnimate(data: {
       duration: data.videoOptions.duration,
       aspectRatio: data.videoOptions.aspectRatio,
       resolution: '1080p' as '720p' | '1080p',
-      generateAudio: data.videoOptions.generateAudio
+      generateAudio: false // Never generate audio - it adds unwanted voices
     }
 
-    debugLog('[EasyMode Animate] Generating video from image...')
+    debugLog('[EasyMode Animate] Starting background video generation...')
     const response = await api.generateVideoFromImage(
       prompt,
       base64Data,
@@ -898,43 +904,52 @@ async function handleEasyModeAnimate(data: {
       throw new Error(response.error || t('contentCreate.videoError', 'Failed to generate video'))
     }
 
-    // Store the operation ID for polling
+    // Store the operation ID
     videoOperationId.value = response.operationId
 
-    // Poll for video completion
-    const videoUrl = await pollVideoUntilComplete(response.operationId, response.modelId)
+    // First, save the post with just the image so we have a postId for the background task
+    const savedPost = await autoSavePost()
+    const postId = savedPost?.id || lastSavedPost.value?.id
 
-    // Apply logo watermark if requested
-    if (includeLogo.value && restaurant.value?.brand_dna?.logo_url) {
-      try {
-        const watermarkResponse = await api.addVideoWatermark(
-          videoUrl,
-          restaurant.value.brand_dna.logo_url,
-          {
-            position: logoPosition.value,
-            opacity: 80,
-            scale: 40,
-            padding: 20,
-          }
-        )
+    if (postId) {
+      // Get a title for the notification
+      const postTitle = generatedPostContent.value?.postText?.substring(0, 50) ||
+                       selectedMenuItems.value[0]?.name ||
+                       'Your post'
 
-        if (watermarkResponse.success && watermarkResponse.videoUrl) {
-          generatedVideoUrl.value = watermarkResponse.videoUrl
-        } else {
-          generatedVideoUrl.value = videoUrl
-        }
-      } catch {
-        generatedVideoUrl.value = videoUrl
-      }
+      // Add task to background generation store - it will handle polling and save video_url when done
+      videoGenerationStore.addTask({
+        postId,
+        postTitle,
+        operationId: response.operationId,
+        modelId: response.modelId
+      })
+
+      // Mark that video is generating in background
+      videoGeneratingInBackground.value = true
+
+      // Show notification that generation started in background
+      notificationStore.addNotification({
+        type: 'info',
+        title: t('posts.videoGenerationStarted', 'Video Generation Started'),
+        message: t('posts.videoGeneratingInBackground', 'Your video is being generated in the background. You can post the image now or wait for the video.'),
+      })
+
+      // Auto-open notification dropdown so user sees it
+      notificationStore.openDropdown()
+
+      debugLog('[EasyMode Animate] Video generation started in background, postId:', postId)
     } else {
-      generatedVideoUrl.value = videoUrl
+      // Fallback: if no post saved yet, still start background generation but warn user
+      notificationStore.addNotification({
+        type: 'warning',
+        title: t('posts.videoGenerationStarted', 'Video Generation Started'),
+        message: t('easyMode.step3.videoGeneratingNote', 'Video is generating. Save your post to track progress.'),
+      })
     }
 
-    currentMediaType.value = 'video'
-    debugLog('[EasyMode Animate] Video generated successfully:', generatedVideoUrl.value)
-
   } catch (err: any) {
-    errorLog('[EasyMode Animate] Error:', err)
+    errorLog('[EasyMode Animate] Error starting generation:', err)
     notificationStore.addNotification({
       type: 'error',
       title: t('posts.create.animationFailed', 'Animation failed'),
@@ -1600,14 +1615,15 @@ function getBrandColor(): string {
   return restaurant.value?.brand_dna?.primary_color || '#D4AF37'
 }
 
-async function autoSavePost() {
-  const mediaUrl = currentMediaType.value === 'video' ? generatedVideoUrl.value : generatedImageUrl.value
-  if (!mediaUrl || !restaurant.value) return
+async function autoSavePost(): Promise<any | null> {
+  // For video background generation, we may need to save with just the image first
+  const mediaUrl = generatedImageUrl.value || (currentMediaType.value === 'video' ? generatedVideoUrl.value : '')
+  if (!mediaUrl || !restaurant.value) return null
 
   try {
     const favoriteData = {
       restaurant_id: restaurant.value.id,
-      content_type: currentMediaType.value as 'image' | 'video',
+      content_type: 'image' as 'image' | 'video', // Always save as image initially, video_url added by background task
       media_url: mediaUrl,
       post_text: generatedPostContent.value?.postText || '',
       hashtags: generatedPostContent.value?.hashtags || [],
@@ -1625,9 +1641,12 @@ async function autoSavePost() {
     const response = await api.saveFavorite(favoriteData)
     if (response.success && response.data) {
       lastSavedPost.value = response.data.favorite
+      return response.data.favorite
     }
+    return null
   } catch (err) {
     errorLog('Failed to auto-save post:', err)
+    return null
   }
 }
 
@@ -2140,6 +2159,7 @@ function handlePublishingClose() {
           :menu-items="menuItems"
           :generating="easyModeGenerating"
           :animating="generatingVideo"
+          :video-generating-in-background="videoGeneratingInBackground"
           :generated-image-url="generatedImageUrl"
           :generated-video-url="generatedVideoUrl"
           :post-text="generatedPostContent?.postText"

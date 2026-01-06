@@ -585,7 +585,10 @@ export default {
       animatingImage: 'Vytváření video animace...',
       insufficientCredits: 'K animování tohoto obrázku potřebujete alespoň 5 kreditů',
       noImageToAnimate: 'Žádný obrázek k animování není k dispozici',
-      audioDisabledNote: 'Zvuk vypnut pro lepší výsledky'
+      audioDisabledNote: 'Zvuk vypnut pro lepší výsledky',
+      videoGeneratingTitle: 'Video se generuje na pozadí...',
+      videoGeneratingSubtitle: 'Můžete zveřejnit obrázek nyní. Video bude brzy připraveno.',
+      videoGeneratingNote: 'Video se generuje. Uložte příspěvek pro sledování průběhu.'
     },
     step4: {
       title: 'Vyberte platformu a čas',

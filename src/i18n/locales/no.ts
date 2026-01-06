@@ -556,7 +556,10 @@ export default {
       animatingImage: 'Lager videoanimasjon...',
       insufficientCredits: 'Du trenger minst 5 kreditter for å animere dette bildet',
       noImageToAnimate: 'Ingen bilde tilgjengelig for animering',
-      audioDisabledNote: 'Lyd deaktivert for bedre resultater'
+      audioDisabledNote: 'Lyd deaktivert for bedre resultater',
+      videoGeneratingTitle: 'Video genereres i bakgrunnen...',
+      videoGeneratingSubtitle: 'Du kan poste bildet nå. Videoen blir snart klar.',
+      videoGeneratingNote: 'Video genereres. Lagre innlegget for å spore fremdriften.'
     },
     step4: {
       title: 'Velg plattform og planlegg',
@@ -841,7 +844,7 @@ export default {
     postAlt: 'Innlegg',
     // Background video generation
     videoGenerationStarted: 'Videogenerering startet',
-    videoGeneratingInBackground: 'Videoen din genereres. Du vil bli varslet når den er klar.',
+    videoGeneratingInBackground: 'Videoen din genereres i bakgrunnen. Du kan poste bildet nå eller vente på videoen.',
     videoReady: 'Video klar',
     videoReadyToView: 'Video for "{title}" er klar til visning',
     videoGenerationFailed: 'Videogenerering mislyktes',

@@ -586,7 +586,10 @@ export default {
       animatingImage: 'Videoanimation wird erstellt...',
       insufficientCredits: 'Sie benötigen mindestens 5 Credits, um dieses Bild zu animieren',
       noImageToAnimate: 'Kein Bild zum Animieren verfügbar',
-      audioDisabledNote: 'Audio deaktiviert für bessere Ergebnisse'
+      audioDisabledNote: 'Audio deaktiviert für bessere Ergebnisse',
+      videoGeneratingTitle: 'Video wird im Hintergrund erstellt...',
+      videoGeneratingSubtitle: 'Sie können das Bild jetzt posten. Das Video ist bald fertig.',
+      videoGeneratingNote: 'Video wird erstellt. Speichern Sie Ihren Beitrag, um den Fortschritt zu verfolgen.'
     },
     step4: {
       title: 'Plattform & Zeitplan wählen',

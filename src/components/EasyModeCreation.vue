@@ -59,7 +59,8 @@ const props = defineProps<{
   restaurant: SavedRestaurant
   menuItems: MenuItem[]
   generating?: boolean
-  animating?: boolean // When true, video is being generated from image
+  animating?: boolean // When true, video is being generated from image (brief loading)
+  videoGeneratingInBackground?: boolean // When true, video is generating in background (user can continue)
   generatedImageUrl?: string
   generatedVideoUrl?: string
   postText?: string
@@ -1058,8 +1059,19 @@ onUnmounted(() => {
             </div>
           </div>
 
-          <!-- Animate Image Button (shows after image is generated, before video exists) -->
-          <div v-if="props.generatedImageUrl && !props.generatedVideoUrl && !props.animating && !showAnimationOptions" class="animate-image-section">
+          <!-- Video Generating in Background Banner -->
+          <div v-if="props.videoGeneratingInBackground && !props.generatedVideoUrl" class="video-background-banner">
+            <div class="banner-icon">
+              <div class="spinner-small"></div>
+            </div>
+            <div class="banner-content">
+              <span class="banner-title">{{ t('easyMode.step3.videoGeneratingTitle', 'Video generating...') }}</span>
+              <span class="banner-subtitle">{{ t('easyMode.step3.videoGeneratingSubtitle', 'You can post the image now. Video will be ready soon.') }}</span>
+            </div>
+          </div>
+
+          <!-- Animate Image Button (shows after image is generated, before video exists, and not already generating) -->
+          <div v-if="props.generatedImageUrl && !props.generatedVideoUrl && !props.animating && !props.videoGeneratingInBackground && !showAnimationOptions" class="animate-image-section">
             <button
               class="animate-image-button"
               @click="showAnimationOptions = true"
@@ -1071,7 +1083,7 @@ onUnmounted(() => {
           </div>
 
           <!-- Animation Options Panel (expandable) -->
-          <div v-if="showAnimationOptions && !props.animating && !props.generatedVideoUrl" class="animation-options-panel">
+          <div v-if="showAnimationOptions && !props.animating && !props.videoGeneratingInBackground && !props.generatedVideoUrl" class="animation-options-panel">
             <div class="animation-options-header">
               <h4 class="animation-options-title">{{ t('easyMode.step3.animationOptionsTitle') }}</h4>
               <button class="close-animation-options" @click="showAnimationOptions = false">
@@ -3447,6 +3459,48 @@ onUnmounted(() => {
 .date-picker-container :deep(.dp__selection_preview) {
   color: var(--gold-primary);
   font-weight: var(--font-medium);
+}
+
+/* ===== VIDEO GENERATING BACKGROUND BANNER ===== */
+.video-background-banner {
+  margin-top: var(--space-lg);
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-md) var(--space-lg);
+  background: linear-gradient(135deg, rgba(15, 61, 46, 0.08), rgba(15, 61, 46, 0.04));
+  border: 1px solid rgba(15, 61, 46, 0.2);
+  border-radius: var(--radius-lg);
+}
+
+.video-background-banner .banner-icon {
+  flex-shrink: 0;
+}
+
+.video-background-banner .spinner-small {
+  width: 24px;
+  height: 24px;
+  border: 3px solid rgba(15, 61, 46, 0.2);
+  border-top-color: var(--gold-primary);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+.video-background-banner .banner-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.video-background-banner .banner-title {
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  color: var(--gold-primary);
+}
+
+.video-background-banner .banner-subtitle {
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
 }
 
 /* ===== ANIMATE IMAGE SECTION ===== */

@@ -17,6 +17,7 @@ export const useNotificationStore = defineStore('notifications', () => {
   // State
   const notifications = ref<Notification[]>([])
   const maxNotifications = 50 // Keep last 50 notifications
+  const isDropdownOpen = ref(false) // Controls notification dropdown visibility
 
   // Computed
   const unreadCount = computed(() =>
@@ -112,6 +113,14 @@ export const useNotificationStore = defineStore('notifications', () => {
     saveToStorage()
   }
 
+  function openDropdown() {
+    isDropdownOpen.value = true
+  }
+
+  function closeDropdown() {
+    isDropdownOpen.value = false
+  }
+
   // Persistence
   function saveToStorage() {
     try {
@@ -142,6 +151,7 @@ export const useNotificationStore = defineStore('notifications', () => {
   return {
     // State
     notifications,
+    isDropdownOpen,
 
     // Computed
     unreadCount,
@@ -156,6 +166,8 @@ export const useNotificationStore = defineStore('notifications', () => {
     markAllAsRead,
     removeNotification,
     clearAll,
+    openDropdown,
+    closeDropdown,
     loadFromStorage
   }
 })
