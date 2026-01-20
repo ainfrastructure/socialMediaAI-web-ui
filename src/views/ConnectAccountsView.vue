@@ -4,6 +4,7 @@ import { useRouter, useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useFacebookStore } from '../stores/facebook'
 import { useInstagramStore } from '../stores/instagram'
+import { useTikTokStore } from '../stores/tiktok'
 import DashboardLayout from '../components/DashboardLayout.vue'
 import BaseCard from '../components/BaseCard.vue'
 import BaseButton from '../components/BaseButton.vue'
@@ -14,6 +15,7 @@ const router = useRouter()
 const route = useRoute()
 const facebookStore = useFacebookStore()
 const instagramStore = useInstagramStore()
+const tiktokStore = useTikTokStore()
 const { t } = useI18n()
 
 const showSuccessToast = ref(false)
@@ -26,7 +28,7 @@ const showConfirmModal = ref(false)
 const confirmModalMessage = ref('')
 const confirmModalTitle = ref('')
 const pendingDisconnect = ref<{
-  type: 'facebook' | 'instagram'
+  type: 'facebook' | 'instagram' | 'tiktok'
   id: string
   name: string
 } | null>(null)
@@ -37,15 +39,24 @@ const isConnected = computed(() => facebookStore.connectedPages.length > 0)
 // Computed property to check if Instagram is connected
 const isInstagramConnected = computed(() => instagramStore.connectedAccounts.length > 0)
 
+// Computed property to check if TikTok is connected
+const isTikTokConnected = computed(() => tiktokStore.connectedAccounts.length > 0)
+
 onMounted(async () => {
-  // Load connected Facebook pages and Instagram accounts on mount
-  await Promise.all([facebookStore.loadConnectedPages(), instagramStore.loadConnectedAccounts()])
+  // Load connected Facebook pages, Instagram accounts, and TikTok accounts on mount
+  await Promise.all([
+    facebookStore.loadConnectedPages(),
+    instagramStore.loadConnectedAccounts(),
+    tiktokStore.loadConnectedAccounts(),
+  ])
 
   // Check if we just came back from a successful connection
   const urlParams = new URLSearchParams(window.location.search)
   if (urlParams.has('connected')) {
     const totalAccounts =
-      facebookStore.connectedPages.length + instagramStore.connectedAccounts.length
+      facebookStore.connectedPages.length +
+      instagramStore.connectedAccounts.length +
+      tiktokStore.connectedAccounts.length
     if (totalAccounts > 0) {
       // Check if we have a returnTo URL stored in localStorage (from before OAuth redirect)
       const storedReturnTo = localStorage.getItem('oauth_return_to')
@@ -145,6 +156,45 @@ async function executeDisconnectInstagramAccount(accountId: string, username: st
   }
 }
 
+async function handleConnectTikTok() {
+  showSuccessToast.value = false
+  showErrorToast.value = false
+
+  try {
+    // Store returnTo URL before OAuth redirect if present
+    const returnTo = route.query.returnTo as string
+    if (returnTo) {
+      localStorage.setItem('oauth_return_to', returnTo)
+    }
+
+    await tiktokStore.connectTikTok()
+  } catch (error: any) {
+    errorMessage.value = tiktokStore.error || t('connectAccounts.errorOccurred')
+    showErrorToast.value = true
+  }
+}
+
+function requestDisconnectTikTokAccount(accountId: string, displayName: string) {
+  pendingDisconnect.value = { type: 'tiktok', id: accountId, name: displayName }
+  confirmModalTitle.value = t('connectAccounts.disconnectTitle')
+  confirmModalMessage.value = t('connectAccounts.confirmDisconnect', { name: displayName })
+  showConfirmModal.value = true
+}
+
+async function executeDisconnectTikTokAccount(accountId: string, displayName: string) {
+  showSuccessToast.value = false
+  showErrorToast.value = false
+
+  try {
+    await tiktokStore.disconnectAccount(accountId)
+    toastMessage.value = t('connectAccounts.successfullyDisconnected', { name: displayName })
+    showSuccessToast.value = true
+  } catch (error: any) {
+    errorMessage.value = tiktokStore.error || t('connectAccounts.errorOccurred')
+    showErrorToast.value = true
+  }
+}
+
 // Handle confirm from modal
 async function handleConfirmDisconnect() {
   showConfirmModal.value = false
@@ -157,6 +207,8 @@ async function handleConfirmDisconnect() {
     await executeDisconnectPage(id, name)
   } else if (type === 'instagram') {
     await executeDisconnectInstagramAccount(id, name.replace('@', ''))
+  } else if (type === 'tiktok') {
+    await executeDisconnectTikTokAccount(id, name)
   }
 
   pendingDisconnect.value = null
@@ -343,8 +395,8 @@ function handleCancelDisconnect() {
             </div>
           </div>
 
-          <!-- TikTok Row - Coming Soon -->
-          <div class="platform-row disabled">
+          <!-- TikTok Row -->
+          <div class="platform-row" :class="{ connected: isTikTokConnected }">
             <div class="platform-icon platform-icon-tiktok">
               <svg
                 width="16"
@@ -359,10 +411,35 @@ function handleCancelDisconnect() {
               </svg>
             </div>
             <div class="platform-info">
-              <h3>TikTok</h3>
+              <h3>TikTok Business</h3>
+            </div>
+            <div class="connected-account" v-if="isTikTokConnected">
+              <span class="account-name">{{ tiktokStore.connectedAccounts[0]?.displayName }}</span>
             </div>
             <div class="platform-actions">
-              <span class="coming-soon-badge">{{ $t('connectAccounts.comingSoon') }}</span>
+              <BaseButton
+                v-if="isTikTokConnected"
+                @click="
+                  requestDisconnectTikTokAccount(
+                    tiktokStore.connectedAccounts[0]?.tiktokAccountId,
+                    tiktokStore.connectedAccounts[0]?.displayName,
+                  )
+                "
+                variant="danger"
+                size="small"
+                :disabled="tiktokStore.loading"
+              >
+                {{ $t('connectAccounts.disconnect') }}
+              </BaseButton>
+              <BaseButton
+                v-if="!isTikTokConnected"
+                @click="handleConnectTikTok"
+                variant="primary"
+                size="small"
+                :disabled="tiktokStore.loading"
+              >
+                {{ tiktokStore.loading ? $t('connectAccounts.connecting') : $t('connectAccounts.connect') }}
+              </BaseButton>
             </div>
           </div>
 

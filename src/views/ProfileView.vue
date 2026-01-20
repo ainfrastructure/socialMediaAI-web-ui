@@ -202,6 +202,9 @@
         </div>
       </BaseCard>
 
+      <!-- Notification Preferences -->
+      <NotificationPreferencesSection />
+
       <!-- Account Security -->
       <BaseCard variant="glass" class="section-card danger-section">
         <div class="section-header">
@@ -262,6 +265,7 @@ import BaseAlert from '../components/BaseAlert.vue'
 import ReferralCodeCard from '../components/ReferralCodeCard.vue'
 import ReferralStatsCard from '../components/ReferralStatsCard.vue'
 import type { ReferralStats } from '../services/referralService'
+import NotificationPreferencesSection from '../components/NotificationPreferencesSection.vue'
 
 const authStore = useAuthStore()
 const { t } = useI18n()
@@ -475,6 +479,8 @@ async function confirmCancelSubscription() {
 .section-card:nth-child(3) { animation-delay: 0.2s; }
 .section-card:nth-child(4) { animation-delay: 0.3s; }
 .section-card:nth-child(5) { animation-delay: 0.4s; }
+.section-card:nth-child(6) { animation-delay: 0.5s; }
+.section-card:nth-child(7) { animation-delay: 0.6s; }
 
 @keyframes fadeInUp {
   from {

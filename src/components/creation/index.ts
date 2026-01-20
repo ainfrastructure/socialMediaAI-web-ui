@@ -4,6 +4,7 @@
  */
 
 export { default as ImageUploadBox } from './ImageUploadBox.vue'
+export { default as ImageSourceSelector } from './ImageSourceSelector.vue'
 export { default as SectionLabel } from './SectionLabel.vue'
 export { default as StyleTemplateGrid } from './StyleTemplateGrid.vue'
 export { default as MenuItemCard } from './MenuItemCard.vue'

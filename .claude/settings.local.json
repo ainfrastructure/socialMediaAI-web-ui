@@ -43,7 +43,8 @@
       "Bash(node test-video-processing.js:*)",
       "Bash(npm run i18n:unused:*)",
       "Bash(wc:*)",
-      "Bash(node scripts/find-unused-i18n-keys.js:*)"
+      "Bash(node scripts/find-unused-i18n-keys.js:*)",
+      "Bash(npm run:*)"
     ],
     "deny": [],
     "ask": []

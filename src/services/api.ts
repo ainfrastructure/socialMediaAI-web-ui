@@ -11,10 +11,13 @@ import { billingService } from './billingService'
 import { contentService } from './contentService'
 import { facebookService } from './facebookService'
 import { instagramService } from './instagramService'
+import { tiktokService } from './tiktokService'
 import { favoritesService } from './favoritesService'
 import { schedulerService } from './schedulerService'
 import { waitlistService } from './waitlistService'
 import { referralService } from './referralService'
+import { notificationPreferencesService } from './notificationPreferencesService'
+import { engagementService } from './engagementService'
 import { API_URL, getAuthHeader } from './apiBase'
 
 /**
@@ -74,6 +77,13 @@ class ApiService {
   disconnectInstagramAccount = instagramService.disconnectAccount.bind(instagramService)
   postToInstagram = instagramService.post.bind(instagramService)
 
+  // TikTok methods
+  initTikTokAuth = tiktokService.initAuth.bind(tiktokService)
+  completeTikTokAuth = tiktokService.completeAuth.bind(tiktokService)
+  getTikTokAccounts = tiktokService.getAccounts.bind(tiktokService)
+  disconnectTikTokAccount = tiktokService.disconnectAccount.bind(tiktokService)
+  postToTikTok = tiktokService.post.bind(tiktokService)
+
   // Favorites methods
   getFavorites = favoritesService.getFavorites.bind(favoritesService)
   getFavorite = favoritesService.getFavorite.bind(favoritesService)
@@ -103,6 +113,19 @@ class ApiService {
   getReferralStats = referralService.getStats.bind(referralService)
   applyReferralCode = referralService.applyCode.bind(referralService)
   getPendingReferral = referralService.getPendingReferral.bind(referralService)
+
+  // Notification Preferences methods
+  getNotificationPreferences =
+    notificationPreferencesService.getPreferences.bind(notificationPreferencesService)
+  updateNotificationPreferences =
+    notificationPreferencesService.updatePreferences.bind(notificationPreferencesService)
+  sendTestEmail = notificationPreferencesService.sendTestEmail.bind(notificationPreferencesService)
+
+  // Engagement methods
+  getPostEngagement = engagementService.getPostEngagement.bind(engagementService)
+  getBulkEngagement = engagementService.getBulkEngagement.bind(engagementService)
+  refreshEngagement = engagementService.refreshEngagement.bind(engagementService)
+  getEngagementAnalytics = engagementService.getAnalytics.bind(engagementService)
 
   // Restaurants - keep inline as it's minimal (most is in restaurantService.ts)
   async getRestaurants(limit?: number) {

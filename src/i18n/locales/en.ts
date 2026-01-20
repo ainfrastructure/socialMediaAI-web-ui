@@ -25,6 +25,7 @@ export default {
     delete: 'Delete',
     remove: 'Remove',
     edit: 'Edit',
+    change: 'Change',
     back: 'Back',
     next: 'Next',
     previous: 'Previous',
@@ -38,6 +39,14 @@ export default {
     created: 'Created',
     saving: 'Saving...',
     saveChanges: 'Save Changes',
+    create: 'Create',
+    creating: 'Creating...',
+    upload: 'Upload',
+    uploading: 'Uploading...',
+    sending: 'Sending...',
+    test: 'Test',
+    or: 'or',
+    generatingContent: 'Generating content...',
     pagination: {
       previous: '← Previous',
       next: 'Next →',
@@ -931,7 +940,20 @@ export default {
     delete: 'Remove restaurant',
     deleteTitle: 'Remove Restaurant',
     confirmDelete: 'Are you sure you want to remove "{name}" from your saved restaurants?',
-    restaurantAdded: 'Restaurant added successfully!'
+    restaurantAdded: 'Restaurant added successfully!',
+    cantFindAddManually: "Can't find your restaurant? Add manually"
+  },
+
+  // Image Source Selector
+  imageSourceSelector: {
+    uploadNew: 'Upload New',
+    browseExisting: 'Browse Existing',
+    selectImage: 'Select an image',
+    noImagesAvailable: 'No images available',
+    folderEmpty: 'This folder is empty',
+    searchPlaceholder: 'Search images...',
+    selectFromStorage: 'Select from your restaurant images',
+    uploadOrSelect: 'Upload a new image or select from your existing images'
   },
 
   // Profile View
@@ -939,6 +961,7 @@ export default {
     title: 'Profile Settings',
     subtitleExtended: 'Manage your account information and subscription',
     personalInfo: 'Personal Information',
+    manageRestaurants: 'Manage Restaurants',
     email: 'Email',
     emailAddress: 'Email Address',
     userId: 'User ID',
@@ -972,7 +995,217 @@ export default {
     keepSubscription: 'Keep Subscription',
     failedToOpenPortal: 'Failed to open billing portal',
     failedToCancelSubscription: 'Failed to cancel subscription',
-    failedToUpdateProfile: 'Failed to update profile'
+    failedToUpdateProfile: 'Failed to update profile',
+    notificationPreferences: 'Email Notifications',
+    notifications: {
+      saveSuccess: 'Notification preferences saved',
+      saveError: 'Failed to save notification preferences',
+
+      postEvents: {
+        title: 'Post Activity',
+        description: 'Get notified when your posts are published, fail, or are scheduled',
+        published: 'Post Published',
+        publishedHint: 'Receive an email when your post is successfully published to a platform',
+        failed: 'Post Failed',
+        failedHint: 'Get alerted immediately if a post fails to publish',
+        scheduled: 'Post Scheduled',
+        scheduledHint: 'Confirmation email when you schedule a post for later'
+      },
+
+      digest: {
+        title: 'Activity Digest',
+        description: 'Receive periodic summaries of your posting activity',
+        frequency: 'Frequency',
+        never: 'Never',
+        daily: 'Daily',
+        weekly: 'Weekly',
+        monthly: 'Monthly',
+        dayOfWeek: 'Send on',
+        days: {
+          sunday: 'Sunday',
+          monday: 'Monday',
+          tuesday: 'Tuesday',
+          wednesday: 'Wednesday',
+          thursday: 'Thursday',
+          friday: 'Friday',
+          saturday: 'Saturday'
+        }
+      },
+
+      account: {
+        title: 'Account & Billing',
+        description: 'Important updates about your subscription and payments',
+        subscription: 'Subscription Changes',
+        subscriptionHint: 'Renewals, cancellations, and plan changes',
+        payment: 'Payment Issues',
+        paymentHint: 'Failed payments and billing problems',
+        creditsLow: 'Low Credits',
+        creditsLowHint: 'Alert when you\'re running low on credits'
+      },
+
+      product: {
+        title: 'Product Updates',
+        description: 'Stay informed about new features and announcements',
+        features: 'New Features',
+        featuresHint: 'Learn about new capabilities and improvements',
+        announcements: 'Company News',
+        announcementsHint: 'Occasional updates from the Social Chef team'
+      }
+    }
+  },
+
+  // Restaurant Management
+  restaurantManagement: {
+    addRestaurant: 'Add Restaurant',
+    addFirstRestaurant: 'Add Your First Restaurant',
+    createRestaurant: 'Create Restaurant',
+    uploadImages: 'Upload Images',
+    yourImages: 'Your Images',
+
+    noRestaurants: 'No restaurants yet',
+    noRestaurantsHint: 'Add your first restaurant to get started',
+
+    basicInfo: 'Basic Information',
+    contactInfo: 'Contact Information',
+    socialMedia: 'Social Media',
+    branding: 'Branding',
+
+    restaurantName: 'Restaurant Name',
+    restaurantNamePlaceholder: 'e.g., The Golden Spoon',
+    address: 'Address',
+    addressPlaceholder: 'Enter full address',
+    phoneNumber: 'Phone Number',
+    phoneNumberPlaceholder: '+1 (555) 123-4567',
+    website: 'Website',
+    websitePlaceholder: 'https://yourrestaurant.com',
+
+    instagram: 'Instagram',
+    instagramPlaceholder: "{'@'}yourrestaurant",
+    facebook: 'Facebook',
+    facebookPlaceholder: 'facebook.com/yourrestaurant',
+    twitter: 'Twitter/X',
+    twitterPlaceholder: "{'@'}yourrestaurant",
+
+    logoUrl: 'Logo URL',
+    logoUrlPlaceholder: 'https://...',
+    logoUrlHint: 'Enter a URL to your restaurant logo image',
+    logo: 'Logo',
+    dragLogoOrClick: 'Drag & drop logo here or click to browse',
+    logoMaxSize: 'Maximum {size}MB (JPEG, PNG, WebP)',
+    logoPreview: 'Logo preview',
+    primaryColor: 'Primary Brand Color',
+    secondaryColor: 'Secondary Brand Color',
+
+    manualEntry: 'Manual',
+    googlePlaces: 'Google Places',
+    imagesCount: '{count} images',
+
+    details: 'Details',
+    images: 'Images',
+    noImages: 'No images uploaded yet',
+
+    deleteConfirmMessage: 'Delete "{name}"? This cannot be undone.',
+    deleteImageConfirm: 'Are you sure you want to delete this image?',
+
+    // Folder Navigation
+    folderTree: 'Folders',
+    allImages: 'All Images',
+    createFolder: 'Create Folder',
+    renameFolder: 'Rename Folder',
+    deleteFolder: 'Delete Folder',
+    deleteImages: 'Delete Images',
+    folderName: 'Folder Name',
+    folderNamePlaceholder: 'e.g., menu, burgers, desserts',
+    newFolder: 'New Folder',
+    rename: 'Rename',
+    delete: 'Delete',
+
+    // Folder Path
+    createIn: 'Create in',
+    fullPath: 'Full path',
+    currentPath: 'Current path',
+    newPath: 'New path',
+
+    // Breadcrumbs & Navigation
+    breadcrumbHome: 'All Images',
+
+    // View Modes
+    viewMode: 'View',
+    gridView: 'Grid',
+    listView: 'List',
+    timelineView: 'Timeline',
+
+    // Toolbar
+    searchImages: 'Search images...',
+    searchPlaceholder: 'Search by name or folder...',
+    sortBy: 'Sort by',
+    sortByName: 'Name',
+    sortByDate: 'Upload Date',
+    sortBySize: 'File Size',
+
+    // Bulk Actions
+    selectAll: 'Select All',
+    deselectAll: 'Deselect All',
+    selectedCount: '{count} selected',
+    deleteSelected: 'Delete Selected',
+    moveSelected: 'Move to Folder',
+    downloadSelected: 'Download Selected',
+    bulkDeleteConfirm: 'Delete {count} selected images? This cannot be undone.',
+    bulkDeleteSuccess: '{count} images deleted',
+
+    // Move Images
+    moveImages: 'Move {count} Images',
+    moveImagesInfo: 'Select a destination folder for {count} selected images',
+    selectDestination: 'Select Destination Folder',
+    movingTo: 'Moving to',
+    moveCount: 'Move {count} Images',
+
+    // Upload & Folder Actions
+    uploadToFolder: 'Upload to Folder',
+    selectFolder: 'Select Folder',
+    currentFolder: 'Current Folder',
+    newFolderName: 'New Folder Name',
+    enterFolderName: 'Enter folder name',
+    createNewFolder: 'Create New Folder',
+    moveToFolder: 'Move to Folder',
+    dragDropHint: 'Drag and drop images here, or click to browse',
+    maxFilesHint: 'Maximum {max} files per upload',
+    uploadingImages: 'Uploading images...',
+    uploadSuccess: '{count} images uploaded successfully',
+    folderCreated: 'Folder "{name}" created',
+    newFolderReady: 'New folder "{name}" ready - will be created when you upload',
+    folderRenamed: 'Folder renamed successfully',
+    folderDeleted: 'Folder deleted successfully',
+    deleteFolderConfirm: 'Delete folder "{name}" and all its contents? This cannot be undone.',
+
+    // Empty States
+    noImagesInFolder: 'No images in this folder',
+    noImagesFound: 'No images found matching "{query}"',
+    createFolderFirst: 'Create a folder first to organize your images',
+
+    // Folder Errors
+    folderNameRequired: 'Folder name is required',
+    folderNameUnchanged: 'Please enter a different folder name',
+    invalidFolderName: 'Invalid folder name. Avoid special characters like / \\ : * ? " < > |',
+    chooseFolderPlaceholder: 'Choose a folder...',
+    createFolderError: 'Failed to create folder',
+    renameFolderError: 'Failed to rename folder',
+    moveImagesError: 'Failed to move images',
+    selectFolderError: 'Please select a destination folder',
+
+    errors: {
+      createFailed: 'Failed to create restaurant',
+      uploadFailed: 'Failed to upload images',
+      folderExists: 'A folder with this name already exists',
+      invalidFolderName: 'Invalid folder name',
+      noFilesSelected: 'Please select files to upload',
+      selectFolderRequired: 'Please select a folder',
+      tooManyFiles: 'Too many files selected ({count}). Maximum {max} files allowed per upload.',
+      folderNotEmpty: 'Folder is not empty',
+      onlyImages: 'Only image files are allowed',
+      logoTooLarge: 'Logo file size must be less than {size}MB',
+      logoUploadFailed: 'Failed to upload logo'
+    }
   },
 
   // Saved Restaurants View
@@ -1415,6 +1648,15 @@ export default {
     draft: 'Draft',
     allStatuses: 'All',
 
+    // Platform tabs
+    allPlatforms: 'All Platforms',
+    platformFilter: 'Filter by Platform',
+    selectedPlatform: 'Selected Platform',
+    showingDataFor: 'Showing data for {platform}',
+    noPlatformPosts: 'No {platform} posts yet',
+    noPlatformPostsDesc: 'Create and schedule posts for this platform to see analytics here',
+    createPost: 'Create Post',
+
     // Usage
     usageOverview: 'Usage Overview',
     monthlyUsage: 'Your current billing cycle',
@@ -1456,7 +1698,63 @@ export default {
     emptyStateTitle: 'Time to cook up some posts!',
     emptyStateDescription:
       "Once you start creating and scheduling content, your analytics will appear here. Let's get started!",
-    createFirstPost: 'Create Your First Post'
+    createFirstPost: 'Create Your First Post',
+
+    // Engagement metrics
+    engagement: 'Engagement',
+    likes: 'Likes',
+    comments: 'Comments',
+    shares: 'Shares',
+    reach: 'Reach',
+    views: 'Views',
+    impressions: 'Impressions',
+    engagementRate: 'Engagement Rate',
+    totalEngagement: 'Total Engagement',
+    averageEngagement: 'Average Engagement',
+    averageEngagementRate: 'Average Engagement Rate',
+    topPerformingPosts: 'Top Performing Posts',
+    topPerforming: 'Top Performing Posts',
+    highestEngagement: 'Posts with highest engagement rate',
+    performance: 'Performance',
+    noPerformanceData: 'Publish posts and sync metrics to see top performers',
+    viewsTooltip: 'Total reach across all platforms',
+    engagementOverTime: 'Engagement Over Time',
+
+    // Instagram views info
+    instagramViewsLimited: 'Instagram Views Limited',
+    instagramViewsInfo: 'Instagram views require Instagram Business account with Insights API permission. Currently showing likes and comments only.',
+    learnMore: 'Learn More',
+
+    // Sync status
+    syncStatus: 'Sync Status',
+    syncing: 'Syncing...',
+    lastUpdated: 'Last updated {time}',
+    refreshMetrics: 'Refresh Metrics',
+    refreshing: 'Refreshing...',
+    lastSynced: 'Last synced',
+    notSynced: 'Engagement not synced yet',
+
+    // Time relative
+    justNow: 'Just now',
+    oneMinuteAgo: '1 minute ago',
+    minutesAgo: '{minutes} minutes ago',
+    oneHourAgo: '1 hour ago',
+    hoursAgo: '{hours} hours ago',
+    oneDayAgo: '1 day ago',
+    daysAgo: '{days} days ago',
+
+    // Errors and messages
+    noEngagementData: 'No engagement data available. Click "Refresh Metrics" to sync from social platforms.',
+    engagementUnavailable: 'Engagement metrics unavailable',
+    syncError: 'Failed to sync metrics',
+    reconnectRequired: 'Reconnect {platform} to view insights',
+    noPublishedPosts: 'No published posts yet. Publish posts to see engagement metrics!',
+    engagementNotSynced: 'Engagement data not synced yet. Click "Refresh Metrics" to sync from social platforms.',
+    engagementFetchFailed: 'Failed to fetch engagement data. Please try refreshing.',
+    engagementError: 'Error loading engagement data. Please check console for details.',
+    refreshSuccess: 'Successfully refreshed {count} post',
+    refreshFailed: 'Failed to refresh engagement data. The backend may not be syncing from social platforms yet.',
+    refreshError: 'Error refreshing engagement data'
   },
 
   // Referral Program

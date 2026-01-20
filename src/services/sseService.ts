@@ -69,6 +69,26 @@ class SSEService {
       // Connection is alive, no action needed
     })
 
+    // Handle engagement update events
+    this.eventSource.addEventListener('engagement-update', (event) => {
+      try {
+        const data = JSON.parse(event.data)
+        debugLog('[SSE] Engagement update:', data)
+
+        // Dynamically import the engagement store to avoid circular dependencies
+        import('@/stores/engagement').then(({ useEngagementStore }) => {
+          const engagementStore = useEngagementStore()
+          engagementStore.updatePostEngagement(
+            data.scheduled_post_id,
+            data.platform,
+            data.metrics
+          )
+        })
+      } catch (error) {
+        debugError('[SSE] Error parsing engagement-update event:', error)
+      }
+    })
+
     // Handle connection errors
     this.eventSource.onerror = (error) => {
       errorLog('[SSE] Connection error:', error)

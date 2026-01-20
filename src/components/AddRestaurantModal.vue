@@ -24,6 +24,16 @@
         @select="handleRestaurantSelect"
         :disabled="savingRestaurant"
       />
+
+      <!-- Manual Entry Link -->
+      <button
+        v-if="!detailsFetched && !savingRestaurant"
+        class="manual-entry-link"
+        @click="handleSwitchToManual"
+        type="button"
+      >
+        {{ $t('restaurantSelector.cantFindAddManually') }}
+      </button>
     </div>
 
     <!-- Loading State -->
@@ -100,6 +110,7 @@ const props = withDefaults(defineProps<Props>(), {
 const emit = defineEmits<{
   (e: 'update:modelValue', value: boolean): void
   (e: 'restaurantAdded', restaurant: any): void
+  (e: 'switch-to-manual'): void
 }>()
 
 const selectedRestaurant = ref<any>(null)
@@ -135,6 +146,11 @@ function resetState() {
 
 function closeModal() {
   emit('update:modelValue', false)
+}
+
+function handleSwitchToManual() {
+  closeModal()
+  emit('switch-to-manual')
 }
 
 async function handleRestaurantSelect(restaurant: any) {
@@ -310,6 +326,26 @@ async function handleSave() {
   font-size: var(--text-sm);
   font-weight: 600;
   color: var(--text-primary);
+}
+
+.manual-entry-link {
+  align-self: center;
+  background: none;
+  border: none;
+  color: var(--gold-primary);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  cursor: pointer;
+  padding: var(--space-md) 0;
+  transition: var(--transition-base);
+  text-decoration: none;
+  margin-top: var(--space-md);
+}
+
+.manual-entry-link:hover {
+  text-decoration: underline;
+  color: var(--gold-dark);
 }
 
 .loading-state {

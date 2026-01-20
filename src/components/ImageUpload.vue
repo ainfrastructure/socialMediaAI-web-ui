@@ -1,28 +1,37 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
+import BaseInput from './BaseInput.vue'
 
 interface Props {
   modelValue?: File[]
+  category?: string
   maxFiles?: number
   maxSizeMB?: number
   accept?: string
+  showCategoryInput?: boolean
+  allowFolderUpload?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
   modelValue: () => [],
-  maxFiles: 10,
+  category: 'uncategorized',
+  maxFiles: 50,
   maxSizeMB: 5,
-  accept: 'image/jpeg,image/jpg,image/png,image/webp'
+  accept: 'image/jpeg,image/jpg,image/png,image/webp',
+  showCategoryInput: false,
+  allowFolderUpload: false
 })
 
 const emit = defineEmits<{
   (e: 'update:modelValue', files: File[]): void
+  (e: 'update:category', category: string): void
   (e: 'error', message: string): void
 }>()
 
 const isDragging = ref(false)
 const fileInput = ref<HTMLInputElement | null>(null)
 const previewUrls = ref<Map<string, string>>(new Map())
+const mode = ref<'files' | 'folder'>('files')
 
 const selectedFiles = computed(() => props.modelValue)
 
@@ -63,15 +72,6 @@ function processFiles(files: File[]) {
 
   if (imageFiles.length !== files.length) {
     emit('error', 'Only image files are allowed')
-  }
-
-  // Check file sizes
-  const maxSizeBytes = props.maxSizeMB * 1024 * 1024
-  const oversizedFiles = imageFiles.filter(file => file.size > maxSizeBytes)
-
-  if (oversizedFiles.length > 0) {
-    emit('error', `Some files exceed ${props.maxSizeMB}MB limit`)
-    return
   }
 
   // Check total count
@@ -127,6 +127,34 @@ onUnmounted(() => {
 
 <template>
   <div class="image-upload">
+    <!-- Category Input (optional) -->
+    <div v-if="showCategoryInput" class="category-input">
+      <BaseInput
+        :model-value="category"
+        @update:model-value="emit('update:category', $event)"
+        label="Category/Folder Name"
+        placeholder="e.g., burgers, appetizers, drinks"
+      />
+    </div>
+
+    <!-- Upload Mode Toggle (optional) -->
+    <div v-if="allowFolderUpload" class="upload-mode">
+      <button
+        type="button"
+        :class="['mode-btn', { active: mode === 'files' }]"
+        @click="mode = 'files'"
+      >
+        Upload Files
+      </button>
+      <button
+        type="button"
+        :class="['mode-btn', { active: mode === 'folder' }]"
+        @click="mode = 'folder'"
+      >
+        Upload Folder
+      </button>
+    </div>
+
     <!-- Upload Area -->
     <div
       :class="['upload-area', { dragging: isDragging }]"
@@ -140,17 +168,23 @@ onUnmounted(() => {
         ref="fileInput"
         type="file"
         :accept="accept"
-        multiple
+        :multiple="mode === 'files'"
+        v-bind="mode === 'folder' ? { webkitdirectory: true } : {}"
         class="file-input"
         @change="handleFileInput"
       />
 
       <div class="upload-icon">📁</div>
       <p class="upload-text">
-        Drag & drop images here or <span class="highlight">click to browse</span>
+        <template v-if="mode === 'folder'">
+          Drag & drop a folder here or <span class="highlight">click to browse</span>
+        </template>
+        <template v-else>
+          Drag & drop images here or <span class="highlight">click to browse</span>
+        </template>
       </p>
       <p class="upload-hint">
-        Max {{ maxFiles }} files, {{ maxSizeMB }}MB each (JPEG, PNG, WebP)
+        Max {{ maxFiles }} files (JPEG, PNG, WebP)
       </p>
     </div>
 
@@ -192,6 +226,41 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   gap: var(--space-lg);
+}
+
+.category-input {
+  margin-bottom: var(--space-md);
+}
+
+.upload-mode {
+  display: flex;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-md);
+}
+
+.mode-btn {
+  flex: 1;
+  padding: var(--space-md) var(--space-lg);
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  cursor: pointer;
+  transition: var(--transition-base);
+}
+
+.mode-btn:hover {
+  background: var(--bg-elevated);
+  border-color: var(--border-hover);
+}
+
+.mode-btn.active {
+  background: var(--gold-primary);
+  color: var(--text-on-gold);
+  border-color: var(--gold-primary);
 }
 
 .upload-area {

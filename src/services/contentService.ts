@@ -25,12 +25,15 @@ class ContentService {
     dishInfo?: { name: string; description?: string } | string,
     restaurantName?: string
   ): Promise<ApiResponse<{ imageUrl: string; usage: any; watermarked?: boolean; promotionalStickerAdded?: boolean }>> {
+    console.log('[ContentService] Generating image with placeId:', placeId)
     const response = await fetch(`${API_URL}/api/gemini/generate-image`, {
       method: 'POST',
       headers: getAuthHeaders(),
       body: JSON.stringify({ prompt, watermark, referenceImage, promotionalSticker, placeId, strictnessMode, holidayTheme, visualStyle, customPrompt, dishInfo, restaurantName }),
     })
-    return response.json()
+    const result = await response.json()
+    console.log('[ContentService] Image generation result:', result)
+    return result
   }
 
   // Video generation

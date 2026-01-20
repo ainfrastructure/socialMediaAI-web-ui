@@ -25,6 +25,7 @@ export default {
     delete: 'Slett',
     remove: 'Fjern',
     edit: 'Rediger',
+    change: 'Endre',
     back: 'Tilbake',
     next: 'Neste',
     previous: 'Forrige',
@@ -38,6 +39,14 @@ export default {
     created: 'Opprettet',
     saving: 'Lagrer...',
     saveChanges: 'Lagre endringer',
+    create: 'Opprett',
+    creating: 'Oppretter...',
+    upload: 'Last opp',
+    uploading: 'Laster opp...',
+    sending: 'Sender...',
+    test: 'Test',
+    or: 'eller',
+    generatingContent: 'Genererer innhold...',
     pagination: {
       previous: '← Forrige',
       next: 'Neste →',
@@ -902,7 +911,20 @@ export default {
     delete: 'Fjern restaurant',
     deleteTitle: 'Fjern restaurant',
     confirmDelete: 'Er du sikker på at du vil fjerne "{name}" fra dine lagrede restauranter?',
-    restaurantAdded: 'Restaurant lagt til!'
+    restaurantAdded: 'Restaurant lagt til!',
+    cantFindAddManually: 'Finner du ikke restauranten din? Legg til manuelt'
+  },
+
+  // Image Source Selector
+  imageSourceSelector: {
+    uploadNew: 'Last opp ny',
+    browseExisting: 'Bla gjennom eksisterende',
+    selectImage: 'Velg et bilde',
+    noImagesAvailable: 'Ingen bilder tilgjengelig',
+    folderEmpty: 'Denne mappen er tom',
+    searchPlaceholder: 'Søk bilder...',
+    selectFromStorage: 'Velg fra dine restaurantbilder',
+    uploadOrSelect: 'Last opp et nytt bilde eller velg fra dine eksisterende bilder'
   },
 
   // Profile View
@@ -910,6 +932,7 @@ export default {
     title: 'Profilinnstillinger',
     subtitleExtended: 'Administrer kontoinformasjonen og abonnementet ditt',
     personalInfo: 'Personlig informasjon',
+    manageRestaurants: 'Administrer restauranter',
     email: 'E-post',
     emailAddress: 'E-postadresse',
     userId: 'Bruker-ID',
@@ -941,7 +964,218 @@ export default {
     keepSubscription: 'Behold abonnement',
     failedToOpenPortal: 'Kunne ikke åpne faktureringsportalen',
     failedToCancelSubscription: 'Kunne ikke kansellere abonnement',
-    failedToUpdateProfile: 'Kunne ikke oppdatere profil'
+    failedToUpdateProfile: 'Kunne ikke oppdatere profil',
+    notificationPreferences: 'E-postvarsler',
+    notifications: {
+      saveSuccess: 'Varslingsinnstillinger lagret',
+      saveError: 'Kunne ikke lagre varslingsinnstillinger',
+
+      postEvents: {
+        title: 'Innleggsaktivitet',
+        description: 'Få varsler når innleggene dine publiseres, feiler eller planlegges',
+        published: 'Innlegg publisert',
+        publishedHint: 'Motta en e-post når innlegget ditt er publisert på en plattform',
+        failed: 'Innlegg mislyktes',
+        failedHint: 'Få varsler umiddelbart hvis et innlegg ikke blir publisert',
+        scheduled: 'Innlegg planlagt',
+        scheduledHint: 'Bekreftelse e-post når du planlegger et innlegg'
+      },
+
+      digest: {
+        title: 'Aktivitetssammendrag',
+        description: 'Motta periodiske sammendrag av din publiseringsaktivitet',
+        frequency: 'Frekvens',
+        never: 'Aldri',
+        daily: 'Daglig',
+        weekly: 'Ukentlig',
+        monthly: 'Månedlig',
+        dayOfWeek: 'Send på',
+        days: {
+          sunday: 'Søndag',
+          monday: 'Mandag',
+          tuesday: 'Tirsdag',
+          wednesday: 'Onsdag',
+          thursday: 'Torsdag',
+          friday: 'Fredag',
+          saturday: 'Lørdag'
+        }
+      },
+
+      account: {
+        title: 'Konto og fakturering',
+        description: 'Viktige oppdateringer om abonnement og betalinger',
+        subscription: 'Abonnementsendringer',
+        subscriptionHint: 'Fornyelser, kanselleringer og planendringer',
+        payment: 'Betalingsproblemer',
+        paymentHint: 'Mislykkede betalinger og faktureringsproblemer',
+        creditsLow: 'Lave kreditter',
+        creditsLowHint: 'Varsling når du begynner å gå tom for kreditter'
+      },
+
+      product: {
+        title: 'Produktoppdateringer',
+        description: 'Hold deg informert om nye funksjoner og kunngjøringer',
+        features: 'Nye funksjoner',
+        featuresHint: 'Lær om nye muligheter og forbedringer',
+        announcements: 'Bedriftsnyheter',
+        announcementsHint: 'Sporadiske oppdateringer fra Social Chef-teamet'
+      }
+    }
+  },
+
+  // Restaurant Management
+  restaurantManagement: {
+    addRestaurant: 'Legg til restaurant',
+    addFirstRestaurant: 'Legg til din første restaurant',
+    createRestaurant: 'Opprett restaurant',
+    uploadImages: 'Last opp bilder',
+    yourImages: 'Dine bilder',
+
+    noRestaurants: 'Ingen restauranter ennå',
+    noRestaurantsHint: 'Legg til din første restaurant for å komme i gang',
+
+    basicInfo: 'Grunnleggende informasjon',
+    contactInfo: 'Kontaktinformasjon',
+    socialMedia: 'Sosiale medier',
+    branding: 'Merkevare',
+
+    restaurantName: 'Restaurantnavn',
+    restaurantNamePlaceholder: 'f.eks., Den Gylne Skje',
+    address: 'Adresse',
+    addressPlaceholder: 'Skriv inn full adresse',
+    phoneNumber: 'Telefonnummer',
+    phoneNumberPlaceholder: '+47 123 45 678',
+    website: 'Nettside',
+    websitePlaceholder: 'https://dinrestaurant.no',
+
+    instagram: 'Instagram',
+    instagramPlaceholder: "{'@'}dinrestaurant",
+    facebook: 'Facebook',
+    facebookPlaceholder: 'facebook.com/dinrestaurant',
+    twitter: 'Twitter/X',
+    twitterPlaceholder: "{'@'}dinrestaurant",
+
+    logoUrl: 'Logo-URL',
+    logoUrlPlaceholder: 'https://...',
+    logoUrlHint: 'Skriv inn en URL til restaurantens logo',
+    logo: 'Logo',
+    dragLogoOrClick: 'Dra og slipp logo her eller klikk for å velge',
+    logoMaxSize: 'Maksimum {size}MB (JPEG, PNG, WebP)',
+    logoPreview: 'Logoforhåndsvisning',
+    primaryColor: 'Primærfarge for merkevare',
+    secondaryColor: 'Sekundærfarge for merkevare',
+
+    manualEntry: 'Manuell',
+    googlePlaces: 'Google Places',
+    imagesCount: '{count} bilder',
+
+    details: 'Detaljer',
+    images: 'Bilder',
+    noImages: 'Ingen bilder lastet opp ennå',
+
+    deleteConfirmMessage: 'Slette "{name}"? Dette kan ikke angres.',
+    deleteImageConfirm: 'Er du sikker på at du vil slette dette bildet?',
+
+    // Folder Navigation
+    folderTree: 'Mapper',
+    allImages: 'Alle bilder',
+    createFolder: 'Opprett mappe',
+    renameFolder: 'Gi nytt navn til mappe',
+    deleteFolder: 'Slett mappe',
+    deleteImages: 'Slett bilder',
+    folderName: 'Mappenavn',
+    folderNamePlaceholder: 'f.eks., meny, burgere, desserter',
+    newFolder: 'Ny mappe',
+    rename: 'Gi nytt navn',
+    delete: 'Slett',
+
+    // Folder Path
+    createIn: 'Opprett i',
+    fullPath: 'Full sti',
+    currentPath: 'Nåværende sti',
+    newPath: 'Ny sti',
+
+    // Breadcrumbs & Navigation
+    breadcrumbHome: 'Alle bilder',
+
+    // View Modes
+    viewMode: 'Visning',
+    gridView: 'Rutenett',
+    listView: 'Liste',
+    timelineView: 'Tidslinje',
+
+    // Toolbar
+    searchImages: 'Søk i bilder...',
+    searchPlaceholder: 'Søk etter navn eller mappe...',
+    sortBy: 'Sorter etter',
+    sortByName: 'Navn',
+    sortByDate: 'Opplastingsdato',
+    sortBySize: 'Filstørrelse',
+
+    // Bulk Actions
+    selectAll: 'Velg alle',
+    deselectAll: 'Fjern alle valg',
+    selectedCount: '{count} valgt',
+    deleteSelected: 'Slett valgte',
+    moveSelected: 'Flytt til mappe',
+    downloadSelected: 'Last ned valgte',
+    bulkDeleteConfirm: 'Slette {count} valgte bilder? Dette kan ikke angres.',
+    bulkDeleteSuccess: '{count} bilder slettet',
+
+    // Move Images
+    moveImages: 'Flytt {count} bilder',
+    moveImagesInfo: 'Velg en destinasjonsmappe for {count} valgte bilder',
+    selectDestination: 'Velg destinasjonsmappe',
+    movingTo: 'Flytter til',
+    moveCount: 'Flytt {count} bilder',
+
+    // Upload & Folder Actions
+    uploadToFolder: 'Last opp til mappe',
+    selectFolder: 'Velg mappe',
+    selectDestinationFolder: 'Velg destinasjonsmappe',
+    currentFolder: 'Nåværende mappe',
+    newFolderName: 'Nytt mappenavn',
+    enterFolderName: 'Skriv inn mappenavn',
+    createNewFolder: 'Opprett ny mappe',
+    moveToFolder: 'Flytt til mappe',
+    dragDropHint: 'Dra og slipp bilder her, eller klikk for å bla gjennom',
+    maxFilesHint: 'Maksimalt {max} filer per opplasting',
+    uploadingImages: 'Laster opp bilder...',
+    uploadSuccess: '{count} bilder lastet opp',
+    folderCreated: 'Mappe "{name}" opprettet',
+    newFolderReady: 'Ny mappe "{name}" klar - vil bli opprettet når du laster opp',
+    folderRenamed: 'Mappe gitt nytt navn',
+    folderDeleted: 'Mappe slettet',
+    deleteFolderConfirm: 'Slette mappe "{name}" og alt innhold? Dette kan ikke angres.',
+
+    // Empty States
+    noImagesInFolder: 'Ingen bilder i denne mappen',
+    noImagesFound: 'Ingen bilder funnet som matcher "{query}"',
+    createFolderFirst: 'Opprett en mappe først for å organisere bildene dine',
+
+    // Folder Errors
+    folderNameRequired: 'Mappenavn er påkrevd',
+    folderNameUnchanged: 'Vennligst skriv inn et annet mappenavn',
+    chooseFolderPlaceholder: 'Velg en mappe...',
+    invalidFolderName: 'Ugyldig mappenavn. Unngå spesialtegn som / \\ : * ? " < > |',
+    createFolderError: 'Kunne ikke opprette mappe',
+    renameFolderError: 'Kunne ikke gi nytt navn til mappe',
+    moveImagesError: 'Kunne ikke flytte bilder',
+    selectFolderError: 'Vennligst velg en destinasjonsmappe',
+
+    errors: {
+      createFailed: 'Kunne ikke opprette restaurant',
+      uploadFailed: 'Kunne ikke laste opp bilder',
+      folderExists: 'En mappe med dette navnet finnes allerede',
+      invalidFolderName: 'Ugyldig mappenavn',
+      noFilesSelected: 'Vennligst velg filer å laste opp',
+      selectFolderRequired: 'Vennligst velg en mappe',
+      tooManyFiles: 'For mange filer valgt ({count}). Maksimalt {max} filer tillatt per opplasting.',
+      folderNotEmpty: 'Mappen er ikke tom',
+      onlyImages: 'Bare bildefiler er tillatt',
+      logoTooLarge: 'Logofilen må være mindre enn {size}MB',
+      logoUploadFailed: 'Kunne ikke laste opp logo'
+    }
   },
 
   // Saved Restaurants View
@@ -1344,6 +1578,15 @@ export default {
     draft: 'Utkast',
     allStatuses: 'Alle',
 
+    // Platform tabs
+    allPlatforms: 'Alle plattformer',
+    platformFilter: 'Filtrer etter plattform',
+    selectedPlatform: 'Valgt plattform',
+    showingDataFor: 'Viser data for {platform}',
+    noPlatformPosts: 'Ingen {platform}-innlegg ennå',
+    noPlatformPostsDesc: 'Opprett og planlegg innlegg for denne plattformen for å se analyser her',
+    createPost: 'Opprett innlegg',
+
     // Usage
     usageOverview: 'Bruksoversikt',
     monthlyUsage: 'Din nåværende faktureringsperiode',
@@ -1380,6 +1623,62 @@ export default {
     postDetails: 'Innleggsdetaljer',
     postContent: 'Innleggsinnhold',
     viewOnPlatforms: 'Se på plattformer',
+
+    // Engagement metrics
+    engagement: 'Engasjement',
+    likes: 'Likes',
+    comments: 'Kommentarer',
+    shares: 'Delinger',
+    reach: 'Rekkevidde',
+    views: 'Visninger',
+    impressions: 'Visninger',
+    engagementRate: 'Engasjementsrate',
+    totalEngagement: 'Totalt engasjement',
+    averageEngagement: 'Gjennomsnittlig engasjement',
+    averageEngagementRate: 'Gjennomsnittlig engasjementsrate',
+    topPerformingPosts: 'Beste innlegg',
+    topPerforming: 'Beste innlegg',
+    highestEngagement: 'Innlegg med høyest engasjementsrate',
+    performance: 'Ytelse',
+    noPerformanceData: 'Publiser innlegg og synkroniser metrikker for å se beste innlegg',
+    viewsTooltip: 'Total rekkevidde på tvers av alle plattformer',
+    engagementOverTime: 'Engasjement over tid',
+
+    // Instagram views info
+    instagramViewsLimited: 'Instagram-visninger begrenset',
+    instagramViewsInfo: 'Instagram-visninger krever Instagram Business-konto med Insights API-tillatelse. Viser for øyeblikket bare likes og kommentarer.',
+    learnMore: 'Lær mer',
+
+    // Sync status
+    syncStatus: 'Synkroniseringsstatus',
+    syncing: 'Synkroniserer...',
+    lastUpdated: 'Sist oppdatert {time}',
+    refreshMetrics: 'Oppdater metrikker',
+    refreshing: 'Oppdaterer...',
+    lastSynced: 'Sist synkronisert',
+    notSynced: 'Engasjement ikke synkronisert ennå',
+
+    // Time relative
+    justNow: 'Akkurat nå',
+    oneMinuteAgo: '1 minutt siden',
+    minutesAgo: '{minutes} minutter siden',
+    oneHourAgo: '1 time siden',
+    hoursAgo: '{hours} timer siden',
+    oneDayAgo: '1 dag siden',
+    daysAgo: '{days} dager siden',
+
+    // Errors and messages
+    noEngagementData: 'Ingen engasjementsdata tilgjengelig. Klikk "Oppdater metrikker" for å synkronisere fra sosiale plattformer.',
+    engagementUnavailable: 'Engasjementsmetrikker utilgjengelig',
+    syncError: 'Kunne ikke synkronisere metrikker',
+    reconnectRequired: 'Koble til {platform} på nytt for å se innsikt',
+    noPublishedPosts: 'Ingen publiserte innlegg ennå. Publiser innlegg for å se engasjementsmetrikker!',
+    engagementNotSynced: 'Engasjementsdata ikke synkronisert ennå. Klikk "Oppdater metrikker" for å synkronisere fra sosiale plattformer.',
+    engagementFetchFailed: 'Kunne ikke hente engasjementsdata. Vennligst prøv å oppdatere.',
+    engagementError: 'Feil ved lasting av engasjementsdata. Sjekk konsollen for detaljer.',
+    refreshSuccess: 'Oppdatert {count} innlegg',
+    refreshFailed: 'Kunne ikke oppdatere engasjementsdata. Backend synkroniserer kanskje ikke fra sosiale plattformer ennå.',
+    refreshError: 'Feil ved oppdatering av engasjementsdata',
 
     // Empty State
     emptyStateTitle: 'På tide å lage noen innlegg!',

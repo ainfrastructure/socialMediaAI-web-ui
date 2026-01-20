@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import { restaurantService, type SavedRestaurant } from '../services/restaurantService'
+import { restaurantService, type SavedRestaurant, type CreateManualRestaurantData } from '../services/restaurantService'
 import { errorLog } from '@/utils/debug'
 
 export const useRestaurantsStore = defineStore('restaurants', () => {
@@ -36,6 +36,16 @@ export const useRestaurantsStore = defineStore('restaurants', () => {
     })
   )
 
+  // Manual restaurants (created without Google Places)
+  const manualRestaurants = computed(() =>
+    restaurants.value.filter(r => r.is_manual === true)
+  )
+
+  // Google Places restaurants
+  const placesRestaurants = computed(() =>
+    restaurants.value.filter(r => r.place_id !== null && !r.is_manual)
+  )
+
   // Actions
   async function fetchRestaurants(limit: number = 100): Promise<void> {
     loading.value = true
@@ -43,6 +53,12 @@ export const useRestaurantsStore = defineStore('restaurants', () => {
 
     try {
       const data = await restaurantService.getSavedRestaurants(limit)
+      console.log('Fetched restaurants from API:', data.length)
+      data.forEach(r => {
+        if (r.brand_dna?.logo_url) {
+          console.log(`Restaurant "${r.name}" has logo:`, r.brand_dna.logo_url)
+        }
+      })
       restaurants.value = data
       lastFetchTime.value = Date.now()
     } catch (err: any) {
@@ -78,20 +94,46 @@ export const useRestaurantsStore = defineStore('restaurants', () => {
     return restaurants.value.find(r => r.place_id === placeId)
   }
 
-  async function deleteRestaurant(placeId: string): Promise<boolean> {
+  async function createManualRestaurant(
+    restaurantData: CreateManualRestaurantData
+  ): Promise<SavedRestaurant | null> {
     loading.value = true
     error.value = null
 
     try {
-      const success = await restaurantService.deleteRestaurant(placeId)
+      const response = await restaurantService.createManualRestaurant(restaurantData)
+
+      if (response.success && response.data) {
+        // Add to local state
+        restaurants.value.unshift(response.data)
+        return response.data
+      }
+
+      return null
+    } catch (err: any) {
+      error.value = err.message || 'Failed to create restaurant'
+      errorLog('Failed to create restaurant:', err)
+      return null
+    } finally {
+      loading.value = false
+    }
+  }
+
+  async function deleteRestaurant(restaurantIdOrPlaceId: string): Promise<boolean> {
+    loading.value = true
+    error.value = null
+
+    try {
+      const success = await restaurantService.deleteRestaurant(restaurantIdOrPlaceId)
 
       if (success) {
-        // Remove from local state
-        restaurants.value = restaurants.value.filter(r => r.place_id !== placeId)
+        // Remove from local state (match by id or place_id)
+        restaurants.value = restaurants.value.filter(
+          r => r.id !== restaurantIdOrPlaceId && r.place_id !== restaurantIdOrPlaceId
+        )
 
         // Clear selection if deleted restaurant was selected
-        const deleted = restaurants.value.find(r => r.place_id === placeId)
-        if (deleted && selectedRestaurantId.value === deleted.id) {
+        if (selectedRestaurantId.value === restaurantIdOrPlaceId) {
           selectedRestaurantId.value = null
         }
       }
@@ -167,10 +209,13 @@ export const useRestaurantsStore = defineStore('restaurants', () => {
     restaurantsWithMenu,
     restaurantsWithLogo,
     sortedByRecent,
+    manualRestaurants,
+    placesRestaurants,
 
     // Actions
     fetchRestaurants,
     refreshRestaurants,
+    createManualRestaurant,
     selectRestaurant,
     selectRestaurantByPlaceId,
     clearSelection,

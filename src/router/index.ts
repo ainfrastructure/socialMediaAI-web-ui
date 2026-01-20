@@ -10,9 +10,11 @@ const AuthCallbackView = () => import('../views/AuthCallbackView.vue')
 const ConnectAccountsView = () => import('../views/ConnectAccountsView.vue')
 const FacebookCallbackView = () => import('../views/FacebookCallbackView.vue')
 const InstagramCallbackView = () => import('../views/InstagramCallbackView.vue')
+const TikTokCallbackView = () => import('../views/TikTokCallbackView.vue')
 const TestPostView = () => import('../views/TestPostView.vue')
 const SchedulerView = () => import('../views/SchedulerView.vue')
 const ProfileView = () => import('../views/ProfileView.vue')
+const RestaurantsView = () => import('../views/RestaurantsView.vue')
 const PostsView = () => import('../views/PostsView.vue')
 const PostsCreateView = () => import('../views/PostsCreateView.vue')
 const PrivacyPolicyView = () => import('../views/PrivacyPolicyView.vue')
@@ -93,6 +95,12 @@ const router = createRouter({
       meta: { requiresAuth: true },
     },
     {
+      path: '/auth/tiktok/callback',
+      name: 'tiktok-callback',
+      component: TikTokCallbackView,
+      meta: { requiresAuth: true },
+    },
+    {
       path: '/plans',
       name: 'plans',
       component: PlansView,
@@ -149,6 +157,12 @@ const router = createRouter({
       path: '/profile',
       name: 'profile',
       component: ProfileView,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/restaurants',
+      name: 'restaurants',
+      component: RestaurantsView,
       meta: { requiresAuth: true },
     },
     {

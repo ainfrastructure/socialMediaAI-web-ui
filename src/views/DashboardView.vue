@@ -530,7 +530,8 @@ onMounted(async () => {
             </div>
           </div>
           <div class="card-body">
-            <div class="card-value">{{ stats.postsCreated }}</div>
+            <div v-if="loading" class="card-value skeleton-box"></div>
+            <div v-else class="card-value">{{ stats.postsCreated }}</div>
             <div class="card-label">{{ $t('dashboard.postsCreated') }}</div>
           </div>
           <div class="card-footer">
@@ -546,7 +547,8 @@ onMounted(async () => {
             </div>
           </div>
           <div class="card-body">
-            <div class="card-value">{{ stats.scheduledPosts }}</div>
+            <div v-if="loading" class="card-value skeleton-box"></div>
+            <div v-else class="card-value">{{ stats.scheduledPosts }}</div>
             <div class="card-label">{{ $t('dashboard.scheduledPosts') }}</div>
           </div>
           <div class="card-footer">
@@ -562,7 +564,18 @@ onMounted(async () => {
             </div>
           </div>
           <div class="card-body">
-            <div class="card-stats-row">
+            <div v-if="loading" class="card-stats-row">
+              <div class="card-stat">
+                <span class="card-stat-value skeleton-box"></span>
+                <span class="card-stat-label">{{ $t('dashboard.postsSaved') }}</span>
+              </div>
+              <div class="card-stat-divider"></div>
+              <div class="card-stat">
+                <span class="card-stat-value skeleton-box"></span>
+                <span class="card-stat-label">{{ $t('dashboard.restaurants') }}</span>
+              </div>
+            </div>
+            <div v-else class="card-stats-row">
               <div class="card-stat">
                 <span class="card-stat-value">{{ stats.postsSaved }}</span>
                 <span class="card-stat-label">{{ $t('dashboard.postsSaved') }}</span>
@@ -592,7 +605,8 @@ onMounted(async () => {
             <div class="tier-description">{{ tierDescription }}</div>
             <div class="card-mini-stats settings-stats">
               <span class="mini-stat">
-                <span class="mini-stat-value">{{ creditsRemaining }}</span>
+                <span v-if="loading" class="mini-stat-value skeleton-box skeleton-small"></span>
+                <span v-else class="mini-stat-value">{{ creditsRemaining }}</span>
                 <span class="mini-stat-label">{{ $t('dashboardNew.creditsLeft') }}</span>
               </span>
             </div>
@@ -1744,6 +1758,53 @@ onMounted(async () => {
 
   .post-title {
     font-size: var(--text-xs);
+  }
+}
+
+/* Skeleton Loading */
+.skeleton-box {
+  background: linear-gradient(
+    90deg,
+    var(--bg-tertiary) 0%,
+    var(--bg-elevated) 50%,
+    var(--bg-tertiary) 100%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-pulse 1.5s ease-in-out infinite;
+  border-radius: var(--radius-md);
+  min-width: 80px;
+  min-height: 1em;
+  display: inline-block;
+}
+
+.skeleton-box.skeleton-small {
+  min-width: 40px;
+}
+
+.card-value.skeleton-box {
+  min-width: 100px;
+  min-height: 3rem;
+  margin-bottom: var(--space-sm);
+}
+
+.card-stat-value.skeleton-box {
+  min-width: 60px;
+  min-height: 2.5rem;
+}
+
+@keyframes skeleton-pulse {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton-box {
+    animation: none;
+    background: var(--bg-tertiary);
   }
 }
 

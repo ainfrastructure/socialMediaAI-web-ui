@@ -196,6 +196,13 @@
       v-model="showAddRestaurantModal"
       :saved-restaurants="restaurants"
       @restaurant-added="handleRestaurantAdded"
+      @switch-to-manual="handleSwitchToManual"
+    />
+
+    <!-- Create Restaurant Modal -->
+    <CreateRestaurantModal
+      v-model="showCreateRestaurantModal"
+      @created="handleRestaurantCreated"
     />
 
     <!-- Schedule Modal -->
@@ -337,6 +344,7 @@ import ScheduleModal from '@/components/ScheduleModal.vue'
 import RestaurantSelectorModal from '@/components/RestaurantSelectorModal.vue'
 import PostDetailModal from '@/components/PostDetailModal.vue'
 import AddRestaurantModal from '@/components/AddRestaurantModal.vue'
+import CreateRestaurantModal from '@/components/CreateRestaurantModal.vue'
 import MaterialIcon from '@/components/MaterialIcon.vue'
 
 const router = useRouter()
@@ -354,6 +362,7 @@ const selectedRestaurant = ref<SavedRestaurant | null>(null)
 const posts = ref<any[]>([])
 const showRestaurantSelector = ref(false)
 const showAddRestaurantModal = ref(false)
+const showCreateRestaurantModal = ref(false)
 
 // Post detail modal state
 const selectedPost = ref<any>(null)
@@ -541,6 +550,16 @@ async function handleRestaurantAdded() {
   } catch (error) {
     errorLog('Failed to fetch restaurants:', error)
   }
+}
+
+function handleSwitchToManual() {
+  showAddRestaurantModal.value = false
+  showCreateRestaurantModal.value = true
+}
+
+async function handleRestaurantCreated() {
+  showCreateRestaurantModal.value = false
+  await handleRestaurantAdded()
 }
 
 // Handle restaurant deletion

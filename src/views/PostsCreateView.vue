@@ -18,6 +18,7 @@ import AdvancedModeCreation from '@/components/AdvancedModeCreation.vue'
 import ModeToggle from '@/components/ModeToggle.vue'
 import ScheduleModal from '@/components/ScheduleModal.vue'
 import AddRestaurantModal from '@/components/AddRestaurantModal.vue'
+import CreateRestaurantModal from '@/components/CreateRestaurantModal.vue'
 import RestaurantSelectorModal from '@/components/RestaurantSelectorModal.vue'
 import PublishingProgressModal from '@/components/PublishingProgressModal.vue'
 import GoldenRestaurantIcon from '@/components/icons/GoldenRestaurantIcon.vue'
@@ -92,6 +93,7 @@ const advancedModeCreationRef = ref<any>(null)
 // Modal state
 const showScheduleModal = ref(false)
 const showAddRestaurantModal = ref(false)
+const showCreateRestaurantModal = ref(false)
 const showPublishingModal = ref(false)
 const pendingAction = ref<'publish' | 'schedule' | null>(null)
 const noRestaurants = ref(false)
@@ -189,6 +191,19 @@ async function loadRestaurant() {
 // Handle restaurant added from inline prompt
 async function handleRestaurantAddedFromPrompt() {
   showAddRestaurantModal.value = false
+  // Reload the restaurant data
+  await loadRestaurant()
+}
+
+// Handle switch to manual entry
+function handleSwitchToManual() {
+  showAddRestaurantModal.value = false
+  showCreateRestaurantModal.value = true
+}
+
+// Handle restaurant created manually
+async function handleRestaurantCreated() {
+  showCreateRestaurantModal.value = false
   // Reload the restaurant data
   await loadRestaurant()
 }
@@ -717,6 +732,8 @@ async function handleEasyModeGenerate(data: {
     // Set up the generation with values from Easy Mode
     if (data.menuItem) {
       selectedMenuItems.value = [data.menuItem]
+    } else {
+      selectedMenuItems.value = []
     }
     promptContext.value = data.context
 
@@ -1106,12 +1123,20 @@ async function generateImage(uploadedLogo: File | null = null, uploadedImage: Fi
         }
       : undefined
 
+    // Determine prompt: use dish info if available, otherwise use a generic prompt
+    const promptToUse = useDishInfo && dishInfo
+      ? null // Use dishInfo instead of prompt
+      : (editablePrompt.value || 'Create an engaging social media post for this image')
+
+    // Use place_id if available, otherwise use id (for manual restaurants)
+    const restaurantId = restaurant.value.place_id || restaurant.value.id
+
     const response = await api.generateImage(
-      useDishInfo ? null : editablePrompt.value, // null prompt when using dish info
+      promptToUse,
       watermark,
       referenceImage,
       promotionalSticker,
-      restaurant.value.place_id,
+      restaurantId,
       strictnessMode.value,
       holidayTheme.value !== 'none' ? holidayTheme.value : undefined,
       visualStyle.value,
@@ -2211,6 +2236,13 @@ function handlePublishingClose() {
       v-model="showAddRestaurantModal"
       :saved-restaurants="allRestaurants"
       @restaurant-added="handleRestaurantAddedFromPrompt"
+      @switch-to-manual="handleSwitchToManual"
+    />
+
+    <!-- Create Restaurant Modal -->
+    <CreateRestaurantModal
+      v-model="showCreateRestaurantModal"
+      @created="handleRestaurantCreated"
     />
 
     <!-- Restaurant Selector Modal -->

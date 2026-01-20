@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useRouter } from 'vue-router'
 import type { SavedRestaurant } from '@/services/restaurantService'
 import BaseModal from './BaseModal.vue'
 import BaseButton from './BaseButton.vue'
 import AddRestaurantModal from './AddRestaurantModal.vue'
+import CreateRestaurantModal from './CreateRestaurantModal.vue'
 import ConfirmModal from './ConfirmModal.vue'
 
 interface Props {
@@ -26,8 +28,10 @@ const emit = defineEmits<{
 }>()
 
 const { t } = useI18n()
+const router = useRouter()
 
 const showAddModal = ref(false)
+const showCreateModal = ref(false)
 const showDeleteConfirm = ref(false)
 const restaurantToDelete = ref<SavedRestaurant | null>(null)
 
@@ -49,7 +53,22 @@ function handleAddNew() {
   showAddModal.value = true
 }
 
+function handleManageRestaurants() {
+  close()
+  router.push('/restaurants')
+}
+
 function handleRestaurantAdded(_restaurant: any) {
+  emit('restaurant-added')
+}
+
+function handleSwitchToManual() {
+  showAddModal.value = false
+  showCreateModal.value = true
+}
+
+function handleRestaurantCreated() {
+  showCreateModal.value = false
   emit('restaurant-added')
 }
 
@@ -118,9 +137,14 @@ function cancelDelete() {
     </div>
 
     <template v-if="props.showAddButton" #footer>
-      <BaseButton variant="secondary" full-width @click="handleAddNew">
-        {{ t('restaurantSelector.addNew') }}
-      </BaseButton>
+      <div class="modal-footer">
+        <button class="manage-link" @click="handleManageRestaurants">
+          {{ $t('profile.manageRestaurants') }}
+        </button>
+        <BaseButton variant="secondary" @click="handleAddNew" fullWidth>
+          {{ t('restaurantSelector.addNew') }}
+        </BaseButton>
+      </div>
     </template>
   </BaseModal>
 
@@ -129,6 +153,13 @@ function cancelDelete() {
     v-model="showAddModal"
     :saved-restaurants="restaurants"
     @restaurant-added="handleRestaurantAdded"
+    @switch-to-manual="handleSwitchToManual"
+  />
+
+  <!-- Create Restaurant Modal -->
+  <CreateRestaurantModal
+    v-model="showCreateModal"
+    @created="handleRestaurantCreated"
   />
 
   <!-- Delete Confirmation Modal -->
@@ -303,6 +334,35 @@ function cancelDelete() {
 .restaurants-list::-webkit-scrollbar-thumb:hover {
   background: rgba(15, 61, 46, 0.5);
 }
+
+/* Modal Footer */
+.modal-footer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  width: 100%;
+}
+
+.manage-link {
+  align-self: center;
+  background: none;
+  border: none;
+  color: var(--gold-primary);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  cursor: pointer;
+  padding: var(--space-xs) 0;
+  transition: var(--transition-base);
+  text-decoration: none;
+  margin-bottom: var(--space-xs);
+}
+
+.manage-link:hover {
+  text-decoration: underline;
+  color: var(--gold-dark);
+}
+
 
 /* Responsive */
 @media (max-width: 768px) {

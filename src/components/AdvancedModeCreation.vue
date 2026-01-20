@@ -28,7 +28,7 @@ import GoldenCelebrationIcon from './icons/GoldenCelebrationIcon.vue'
 import GoldenEditIcon from './icons/GoldenEditIcon.vue'
 import GoldenImageIcon from './icons/GoldenImageIcon.vue'
 import GoldenVideoIcon from './icons/GoldenVideoIcon.vue'
-import { ImageUploadBox, SectionLabel, ContentDivider } from './creation'
+import { ImageSourceSelector, SectionLabel, ContentDivider } from './creation'
 import { restaurantService, type SavedRestaurant } from '@/services/restaurantService'
 import { api } from '@/services/api'
 import { okamService } from '@/services/okamService'
@@ -1292,12 +1292,10 @@ defineExpose({
         <!-- Image Upload Option -->
         <div class="image-upload-section">
           <SectionLabel :label="t('advancedMode.step1.uploadTitle')" />
-          <ImageUploadBox
+          <ImageSourceSelector
+            :restaurant="restaurant"
             :preview-url="uploadedImagePreview"
-            :upload-text="t('advancedMode.step1.uploadButton')"
-            :upload-hint="t('advancedMode.step1.uploadHint')"
-            :show-golden-icon="true"
-            @upload="handleImageUploadFile"
+            @select="handleImageUploadFile"
             @remove="removeUploadedImage"
           />
         </div>

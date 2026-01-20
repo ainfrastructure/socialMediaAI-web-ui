@@ -20,7 +20,7 @@ import GoldenCelebrationIcon from './icons/GoldenCelebrationIcon.vue'
 import GoldenEditIcon from './icons/GoldenEditIcon.vue'
 import UnifiedSchedulePost from './UnifiedSchedulePost.vue'
 import GeneratingProgress from './GeneratingProgress.vue'
-import { ImageUploadBox, SectionLabel, StyleTemplateGrid, ContentDivider } from './creation'
+import { ImageSourceSelector, SectionLabel, StyleTemplateGrid, ContentDivider } from './creation'
 import { useFacebookStore } from '@/stores/facebook'
 import { useInstagramStore } from '@/stores/instagram'
 import { usePreferencesStore } from '@/stores/preferences'
@@ -694,13 +694,12 @@ onUnmounted(() => {
         {{ step1Error }}
       </BaseAlert>
 
-      <!-- Image Upload Option -->
+      <!-- Image Source Selection (Upload or Browse Existing) -->
       <div class="image-upload-section">
-        <ImageUploadBox
+        <ImageSourceSelector
+          :restaurant="restaurant"
           :preview-url="uploadedImagePreview"
-          :upload-text="t('easyMode.upload.button', 'Upload Your Own Image')"
-          :upload-hint="t('easyMode.upload.hint', 'JPG, PNG, or WebP')"
-          @upload="handleImageUploadFile"
+          @select="handleImageUploadFile"
           @remove="removeUploadedImage"
         />
       </div>
