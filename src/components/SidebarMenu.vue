@@ -73,19 +73,8 @@ const menuItems = computed(() => [
 ])
 
 const tierDisplayName = computed(() => {
-  // Show "Admin" for admin users
-  if (authStore.isAdmin) {
-    return 'Admin'
-  }
-
-  const tier = authStore.user?.subscription.tier || 'monthly'
-
-  // Skip free tier - we don't have a free tier
-  if (tier === 'free') {
-    return 'Monthly' // Default to monthly
-  }
-
-  return tier.charAt(0).toUpperCase() + tier.slice(1)
+  // Always show "Admin" for all users
+  return 'Admin'
 })
 
 const isLifetimeMember = computed(() => authStore.subscriptionTier === 'lifetime')

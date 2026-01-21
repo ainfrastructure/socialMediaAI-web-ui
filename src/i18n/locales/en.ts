@@ -317,7 +317,8 @@ export default {
     included: 'Included',
     postScheduling: 'Post scheduling',
     unlimitedRestaurants: 'Unlimited restaurants',
-    noExpiration: 'Credits never expire'
+    noExpiration: 'Credits never expire',
+    subscriptionRequired: 'A subscription is required to access SocialChef. Choose a plan below to get started.'
   },
 
   // Restaurant Search View

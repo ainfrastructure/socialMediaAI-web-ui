@@ -61,12 +61,7 @@ const tierIcons: Record<string, string> = {
   lifetime: 'all_inclusive'
 }
 
-// Computed: check if user has an active paid subscription
-const hasActiveSubscription = computed(() => {
-  return authStore.isAuthenticated &&
-    authStore.subscriptionTier &&
-    ['monthly', 'yearly', 'lifetime'].includes(authStore.subscriptionTier)
-})
+// Use authStore.hasActiveSubscription for consistency
 
 onMounted(async () => {
   await loadPlans()
@@ -122,7 +117,7 @@ async function subscribe(tier: string) {
   }
 
   try {
-    const successUrl = `${window.location.origin}/posts?success=true`
+    const successUrl = `${window.location.origin}/plans?success=true`
     const cancelUrl = `${window.location.origin}/plans?canceled=true`
 
     debugLog('[Checkout] Creating checkout session for tier:', tier)
@@ -262,19 +257,31 @@ function getFeatureText(feature: string): string {
 const urlParams = new URLSearchParams(window.location.search)
 if (urlParams.get('success') === 'true') {
   showMessage(t('plans.subscriptionSuccess'), 'success')
-  setTimeout(() => {
+  // Sync subscription and redirect to dashboard
+  setTimeout(async () => {
     if (authStore.isAuthenticated) {
-      authStore.refreshProfile()
-      router.push('/posts')
+      // Sync subscription with Stripe to ensure DB is updated
+      try {
+        await api.syncSubscription()
+      } catch {
+        // Continue even if sync fails - webhook may have already processed it
+      }
+      // Refresh profile to get updated subscription status
+      await authStore.refreshProfile()
+      // Now redirect to dashboard if subscription is active
+      if (authStore.hasActiveSubscription) {
+        router.push('/dashboard')
+      }
     }
-  }, 2000)
+  }, 1500)
 } else if (urlParams.get('canceled') === 'true') {
   showMessage(t('plans.subscriptionCanceled'), 'info')
 }
 </script>
 
 <template>
-  <DashboardLayout>
+  <!-- Use DashboardLayout only for users with active subscription -->
+  <component :is="authStore.hasActiveSubscription ? DashboardLayout : 'div'" :class="{ 'plans-standalone': !authStore.hasActiveSubscription }">
     <div class="plans-view">
     <BaseAlert
       v-if="message"
@@ -286,6 +293,15 @@ if (urlParams.get('success') === 'true') {
       {{ message }}
     </BaseAlert>
 
+    <!-- Paywall message for authenticated users without subscription -->
+    <BaseAlert
+      v-if="authStore.isAuthenticated && !authStore.hasActiveSubscription"
+      type="info"
+      class="paywall-alert"
+    >
+      {{ $t('plans.subscriptionRequired') }}
+    </BaseAlert>
+
     <div class="content">
       <h1 class="brand-title">{{ $t('plans.brandTitle') }}</h1>
       <h2 class="section-title">{{ $t('plans.chooseYourPlan') }}</h2>
@@ -293,7 +309,7 @@ if (urlParams.get('success') === 'true') {
 
 
       <!-- Manage Subscription Button for existing subscribers -->
-      <div v-if="hasActiveSubscription" class="manage-subscription-section">
+      <div v-if="authStore.hasActiveSubscription" class="manage-subscription-section">
         <BaseButton
           variant="secondary"
           size="medium"
@@ -416,10 +432,16 @@ if (urlParams.get('success') === 'true') {
       </div>
     </div>
     </div>
-  </DashboardLayout>
+  </component>
 </template>
 
 <style scoped>
+/* Standalone mode (no subscription) - full page with background */
+.plans-standalone {
+  min-height: 100vh;
+  background: var(--bg-primary);
+}
+
 .plans-view {
   min-height: 100vh;
   padding: var(--space-2xl);
@@ -428,6 +450,11 @@ if (urlParams.get('success') === 'true') {
 .plans-alert {
   max-width: var(--max-width-2xl);
   margin: 0 auto var(--space-2xl);
+}
+
+.paywall-alert {
+  max-width: var(--max-width-2xl);
+  margin: 0 auto var(--space-xl);
 }
 
 .content {

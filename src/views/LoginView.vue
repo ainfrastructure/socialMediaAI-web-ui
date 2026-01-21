@@ -55,7 +55,11 @@ onMounted(() => {
       setTimeout(async () => {
         await authStore.loadProfile()
         if (authStore.isAuthenticated) {
-          router.push('/posts')
+          if (authStore.hasActiveSubscription) {
+            router.push('/posts')
+          } else {
+            router.push('/plans')
+          }
         } else {
           showMessage(t('auth.pleaseLogin'), 'info')
           window.location.hash = '' // Clear hash
@@ -68,7 +72,11 @@ onMounted(() => {
 async function handleEmailLogin() {
   const result = await doEmailLogin()
   if (result.success) {
-    router.push('/posts')
+    if (authStore.hasActiveSubscription) {
+      router.push('/posts')
+    } else {
+      router.push('/plans')
+    }
   }
 }
 </script>

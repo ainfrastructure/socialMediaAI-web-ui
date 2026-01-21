@@ -69,7 +69,7 @@ const router = createRouter({
       path: '/dashboard',
       name: 'dashboard',
       component: DashboardView,
-      meta: { requiresAuth: true },
+      meta: { requiresAuth: true, requiresSubscription: true },
     },
     {
       path: '/login',
@@ -109,13 +109,13 @@ const router = createRouter({
       path: '/posts',
       name: 'posts',
       component: PostsView,
-      meta: { requiresAuth: true },
+      meta: { requiresAuth: true, requiresSubscription: true },
     },
     {
       path: '/posts/create',
       name: 'posts-create',
       component: PostsCreateView,
-      meta: { requiresAuth: true },
+      meta: { requiresAuth: true, requiresSubscription: true },
     },
     {
       path: '/content',
@@ -133,25 +133,25 @@ const router = createRouter({
       path: '/connect-accounts',
       name: 'connect-accounts',
       component: ConnectAccountsView,
-      meta: { requiresAuth: true },
+      meta: { requiresAuth: true, requiresSubscription: true },
     },
     {
       path: '/test-post',
       name: 'test-post',
       component: TestPostView,
-      meta: { requiresAuth: true },
+      meta: { requiresAuth: true, requiresSubscription: true },
     },
     {
       path: '/scheduler',
       name: 'scheduler',
       component: SchedulerView,
-      meta: { requiresAuth: true },
+      meta: { requiresAuth: true, requiresSubscription: true },
     },
     {
       path: '/analytics',
       name: 'analytics',
       component: AnalyticsView,
-      meta: { requiresAuth: true },
+      meta: { requiresAuth: true, requiresSubscription: true },
     },
     {
       path: '/profile',
@@ -163,7 +163,7 @@ const router = createRouter({
       path: '/restaurants',
       name: 'restaurants',
       component: RestaurantsView,
-      meta: { requiresAuth: true },
+      meta: { requiresAuth: true, requiresSubscription: true },
     },
     {
       path: '/privacy-policy',
@@ -203,9 +203,8 @@ const router = createRouter({
 router.beforeEach(async (to, from, next) => {
   const authStore = useAuthStore()
 
-  // Only wait for auth initialization on protected routes or guest-only routes
-  // Public routes render immediately without waiting
-  if (to.meta.requiresAuth || to.meta.requiresGuest) {
+  // Wait for auth initialization on protected, guest-only, or subscription-required routes
+  if (to.meta.requiresAuth || to.meta.requiresGuest || to.meta.requiresSubscription) {
     await authStore.waitForInitialization()
   }
 
@@ -215,9 +214,20 @@ router.beforeEach(async (to, from, next) => {
     return
   }
 
+  // Check if route requires subscription (only when authenticated)
+  if (to.meta.requiresSubscription && authStore.isAuthenticated && !authStore.hasActiveSubscription) {
+    next('/plans')
+    return
+  }
+
   // Check if route is for guests only (login/signup)
   if (to.meta.requiresGuest && authStore.isAuthenticated) {
-    next('/dashboard')
+    // Redirect based on subscription status
+    if (authStore.hasActiveSubscription) {
+      next('/dashboard')
+    } else {
+      next('/plans')
+    }
     return
   }
 

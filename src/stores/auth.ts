@@ -24,7 +24,7 @@ export const useAuthStore = defineStore('auth', () => {
 
   // Computed
   const isAuthenticated = computed(() => !!accessToken.value && !!user.value)
-  const subscriptionTier = computed(() => user.value?.subscription.tier || 'monthly')
+  const subscriptionTier = computed(() => user.value?.subscription?.tier || 'free')
   const usageStats = computed(() => user.value?.usage)
   const isLifetimeMember = computed(() => subscriptionTier.value === 'lifetime')
   const isYearlyMember = computed(() => subscriptionTier.value === 'yearly')
@@ -40,6 +40,33 @@ export const useAuthStore = defineStore('auth', () => {
     if (isAdmin.value) return true
     // Video generation costs 5 credits
     return user.value.usage.remaining_credits >= 5
+  })
+
+  // Check if user has an active paid subscription
+  const hasActiveSubscription = computed(() => {
+    if (!user.value) return false
+    if (isAdmin.value) return true // Admins always have access
+
+    const tier = user.value.subscription?.tier
+    const status = user.value.subscription?.status
+
+    // Free tier = no subscription
+    if (!tier || tier === 'free') return false
+
+    // Paid tiers (monthly, yearly, lifetime) grant access
+    const paidTiers = ['monthly', 'yearly', 'lifetime']
+    if (paidTiers.includes(tier)) {
+      // For canceled subscriptions, check if still within billing period
+      if (status === 'canceled') {
+        const periodEnd = user.value.subscription?.current_period_end
+        if (!periodEnd || new Date(periodEnd) <= new Date()) {
+          return false // Canceled and period ended
+        }
+      }
+      return true // Has paid tier and not expired
+    }
+
+    return false
   })
 
   // Helper to store session
@@ -528,6 +555,7 @@ export const useAuthStore = defineStore('auth', () => {
     hasUnlimitedCredits,
     canGenerateContent,
     canGenerateVideo,
+    hasActiveSubscription,
 
     // Actions
     signup,

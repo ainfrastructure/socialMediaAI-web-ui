@@ -312,7 +312,8 @@ export default {
     included: 'Inkludert',
     postScheduling: 'Innleggsplanlegging',
     unlimitedRestaurants: 'Ubegrensede restauranter',
-    noExpiration: 'Poeng utløper aldri'
+    noExpiration: 'Poeng utløper aldri',
+    subscriptionRequired: 'Et abonnement kreves for å bruke SocialChef. Velg en plan nedenfor for å komme i gang.'
   },
 
   // Restaurant Search View
