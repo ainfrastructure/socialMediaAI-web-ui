@@ -692,7 +692,7 @@ onMounted(async () => {
                       </div>
                     </div>
                   </td>
-                  <td class="platforms-cell">
+                  <td data-label="Platforms" class="platforms-cell">
                     <div class="platform-icons">
                       <div
                         v-for="platform in getPostPlatforms(post)"
@@ -706,12 +706,12 @@ onMounted(async () => {
                       <span v-if="getPostPlatforms(post).length === 0" class="muted">—</span>
                     </div>
                   </td>
-                  <td>
+                  <td data-label="Status">
                     <span class="status-badge" :class="getStatusClass(post.status || 'scheduled')">
                       {{ getStatusLabel(post.status || 'scheduled') }}
                     </span>
                   </td>
-                  <td class="restaurant-cell">
+                  <td data-label="Restaurant" class="restaurant-cell">
                     <span v-if="getPostRestaurantName(post)" class="restaurant-name">
                       {{ getPostRestaurantName(post) }}
                     </span>
@@ -1634,7 +1634,7 @@ onMounted(async () => {
   }
 
   .card-stat-label {
-    font-size: 10px;
+    font-size: var(--text-mobile-xs);
   }
 
   .card-stats-row {
@@ -1664,6 +1664,16 @@ onMounted(async () => {
 }
 
 @media (max-width: 480px) {
+  /* Single column stats grid on small phones */
+  .dashboard-cards-grid {
+    grid-template-columns: 1fr;
+    gap: var(--space-lg);
+  }
+
+  .dashboard-card {
+    min-height: 140px;
+  }
+
   .dashboard-content {
     padding: var(--space-md);
   }
@@ -1732,7 +1742,7 @@ onMounted(async () => {
   }
 
   .card-stat-label {
-    font-size: 9px;
+    font-size: var(--text-mobile-xs);
   }
 
   .card-stats-row {
@@ -1808,6 +1818,75 @@ onMounted(async () => {
   }
 }
 
+/* Mobile Card Pattern - Table to Cards */
+@media (max-width: 768px) {
+  /* Hide table headers */
+  .posts-table thead {
+    display: none;
+  }
+
+  /* Convert to block layout */
+  .posts-table,
+  .posts-table tbody,
+  .posts-table tr {
+    display: block;
+    width: 100%;
+  }
+
+  .post-row {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    margin-bottom: var(--space-md);
+    padding: var(--space-md);
+  }
+
+  .post-row:hover {
+    background: var(--bg-tertiary);
+    border-color: var(--gold-primary);
+  }
+
+  .posts-table td {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--space-sm) 0;
+    border-bottom: none;
+  }
+
+  /* Add labels via data-label attribute */
+  .posts-table td:not(.post-cell)::before {
+    content: attr(data-label);
+    font-weight: var(--font-semibold);
+    color: var(--text-muted);
+    font-size: var(--text-xs);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  /* Post cell full width */
+  .post-cell {
+    flex-direction: column;
+    align-items: flex-start;
+    padding-bottom: var(--space-md);
+    margin-bottom: var(--space-sm);
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .post-info {
+    width: 100%;
+  }
+
+  /* Override table min-width for mobile cards */
+  .posts-table {
+    min-width: 0;
+  }
+
+  .posts-table-card {
+    overflow-x: visible;
+  }
+}
+
 /* Welcome Modal */
 .welcome-modal {
   display: flex;
@@ -1841,5 +1920,37 @@ onMounted(async () => {
   color: var(--text-secondary);
   margin: 0 0 var(--space-xl) 0;
   line-height: 1.5;
+}
+
+/* Landscape: Reduce vertical padding */
+@media (max-height: 500px) and (orientation: landscape) {
+  .dashboard-content {
+    padding: var(--space-md) var(--space-lg);
+  }
+
+  .section-header {
+    margin-bottom: var(--space-md);
+  }
+
+  .dashboard-card {
+    min-height: auto;
+    padding: var(--space-md);
+  }
+
+  .dashboard-cards-grid {
+    margin-bottom: var(--space-xl);
+  }
+
+  /* Hide non-essential elements */
+  .welcome-section,
+  .tier-badge,
+  .landscape-hide {
+    display: none;
+  }
+
+  .card-footer {
+    margin-top: var(--space-sm);
+    padding-top: var(--space-xs);
+  }
 }
 </style>

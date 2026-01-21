@@ -457,6 +457,42 @@
   }
 }
 
+/* ===== RESPONSIVE TYPOGRAPHY UTILITIES ===== */
+@media (max-width: 768px) {
+  .responsive-text-xs { font-size: var(--text-mobile-xs); }
+  .responsive-text-sm { font-size: var(--text-mobile-sm); }
+  .responsive-text-base { font-size: var(--text-mobile-base); }
+  .responsive-text-lg { font-size: var(--text-mobile-lg); }
+  .responsive-text-xl { font-size: var(--text-mobile-xl); }
+  .responsive-text-2xl { font-size: var(--text-mobile-2xl); }
+  .responsive-text-3xl { font-size: var(--text-mobile-3xl); }
+  .responsive-text-4xl { font-size: var(--text-mobile-4xl); }
+}
+
+/* ===== HORIZONTAL SCROLL CONTAINER ===== */
+.mobile-scroll-container {
+  overflow-x: auto;
+  overflow-y: visible;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: var(--gold-primary) transparent;
+}
+
+.mobile-scroll-container::-webkit-scrollbar {
+  height: 6px;
+}
+
+.mobile-scroll-container::-webkit-scrollbar-thumb {
+  background: var(--gold-primary);
+  border-radius: 3px;
+}
+
+/* ===== LANDSCAPE MODE HELPERS ===== */
+@media (max-height: 500px) and (orientation: landscape) {
+  .landscape-hide { display: none !important; }
+  .landscape-compact { padding: var(--space-sm) !important; }
+}
+
 /* ===== UTILITY CLASSES ===== */
 
 /* Glass Effect Utilities */

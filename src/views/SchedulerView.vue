@@ -1969,7 +1969,7 @@ onMounted(async () => {
 }
 
 .char-count {
-  font-size: 10px;
+  font-size: var(--text-xs);
   color: var(--text-muted);
   background: var(--bg-tertiary);
   padding: 2px 6px;
@@ -2121,7 +2121,7 @@ onMounted(async () => {
 }
 
 .link-arrow {
-  font-size: 10px;
+  font-size: var(--text-xs);
   opacity: 0.7;
 }
 
@@ -2275,7 +2275,7 @@ onMounted(async () => {
 /* Past dates from other months - same disabled gray style */
 .calendar-day.other-month.past-date {
   opacity: 1;
-  background: #e8e5de;
+  background: var(--bg-elevated);
   cursor: not-allowed;
 }
 
@@ -2283,20 +2283,20 @@ onMounted(async () => {
 .calendar-day.past-date {
   opacity: 1;
   cursor: not-allowed;
-  background: #e8e5de;
-  border-color: rgba(0, 0, 0, 0.06);
+  background: var(--bg-elevated);
+  border-color: var(--border-color);
 }
 
 .calendar-day.past-date:hover {
   transform: none;
-  border-color: rgba(0, 0, 0, 0.06);
-  background: #e8e5de;
+  border-color: var(--border-color);
+  background: var(--bg-elevated);
 }
 
 .calendar-day.past-date .day-number {
-  color: #a0a0a0;
+  color: var(--text-disabled);
   text-decoration: line-through;
-  text-decoration-color: #a0a0a0;
+  text-decoration-color: var(--text-disabled);
 }
 
 /* Future dates - clearly selectable */
@@ -2880,8 +2880,33 @@ onMounted(async () => {
     font-size: 2rem;
   }
 
+  /* Reduce calendar complexity on mobile */
   .calendar-grid {
-    gap: 0;
+    gap: 2px;
+  }
+
+  .calendar-grid.view-month {
+    gap: 2px;
+  }
+
+  .calendar-day {
+    min-height: 80px;
+    padding: var(--space-xs);
+  }
+
+  .day-number {
+    font-size: var(--text-mobile-xs);
+  }
+
+  /* Hide hover overlays on touch */
+  .day-hover-overlay {
+    display: none;
+  }
+
+  .holiday-indicator,
+  .post-indicator {
+    font-size: var(--text-mobile-xs);
+    padding: 2px 4px;
   }
 
   .schedule-settings {
@@ -3028,7 +3053,7 @@ onMounted(async () => {
 
   .calendar-day-header {
     padding: var(--space-xs);
-    font-size: 10px;
+    font-size: var(--text-mobile-xs);
   }
 
   /* Hover action buttons - icon only on mobile, stacked vertically */
@@ -3079,14 +3104,14 @@ onMounted(async () => {
 
   .view-mode-btn {
     min-height: var(--touch-target-min);
-    font-size: 10px;
+    font-size: var(--text-mobile-xs);
     padding: var(--space-xs) var(--space-sm);
   }
 
   /* Hide holiday text, only show emoji */
   .holiday-indicator {
     padding: 2px;
-    font-size: 10px;
+    font-size: var(--text-mobile-xs);
     background: transparent;
     border: none;
   }
@@ -3103,7 +3128,7 @@ onMounted(async () => {
   }
 
   .more-posts {
-    font-size: 10px;
+    font-size: var(--text-mobile-xs);
   }
 
   /* Day view mobile */
@@ -3134,16 +3159,40 @@ onMounted(async () => {
     gap: var(--space-sm);
   }
 
-  /* Day view table mobile - make scrollable */
-  .day-view-table {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    max-width: 100%;
+  /* Day view table mobile - convert to cards */
+  .day-view-table .table-header {
+    display: none;
   }
 
-  .table-header,
+  .day-view-table {
+    display: block;
+    width: 100%;
+  }
+
+  .table-row-wrapper {
+    display: block;
+    margin-bottom: var(--space-md);
+  }
+
   .table-row {
-    min-width: 500px;
+    display: block;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: var(--space-md);
+    min-width: 0;
+  }
+
+  .table-row:hover {
+    background: var(--bg-tertiary);
+    border-color: var(--gold-primary);
+  }
+
+  /* Convert table cells to stacked layout */
+  .table-row > * {
+    display: flex;
+    justify-content: space-between;
+    padding: var(--space-sm) 0;
   }
 }
 
@@ -3169,11 +3218,11 @@ onMounted(async () => {
   }
 
   .day-number {
-    font-size: 11px;
+    font-size: var(--text-mobile-xs);
   }
 
   .calendar-day-header {
-    font-size: 10px;
+    font-size: var(--text-mobile-xs);
     padding: 4px 2px;
   }
 
@@ -3194,7 +3243,7 @@ onMounted(async () => {
 
   .nav-button {
     padding: var(--space-xs);
-    font-size: 10px;
+    font-size: var(--text-mobile-xs);
   }
 
   .day-view-title {
@@ -3210,7 +3259,7 @@ onMounted(async () => {
 
   .day-holidays::before {
     content: attr(data-holidays);
-    font-size: 10px;
+    font-size: var(--text-mobile-xs);
   }
 
   /* Hide post text on smallest screens */
@@ -3902,5 +3951,50 @@ onMounted(async () => {
 :root[data-theme="dark"] .empty-state-card {
   background: var(--bg-tertiary);
   border-color: var(--border-color);
+}
+
+/* Landscape: Reduce vertical padding and hide non-essential elements */
+@media (max-height: 500px) and (orientation: landscape) {
+  .scheduler-view {
+    padding: var(--space-md) var(--space-lg);
+  }
+
+  .header {
+    margin-bottom: var(--space-md);
+  }
+
+  .calendar-card {
+    padding: var(--space-sm);
+  }
+
+  .calendar-day {
+    min-height: 60px;
+    padding: var(--space-xs);
+  }
+
+  .day-view-header {
+    padding: var(--space-sm);
+  }
+
+  .day-view-posts,
+  .day-view-holidays {
+    padding: var(--space-sm);
+  }
+
+  .landscape-hide {
+    display: none;
+  }
+
+  /* Landscape warning for month view */
+  .landscape-warning {
+    display: block;
+    padding: var(--space-lg);
+    text-align: center;
+    color: var(--text-muted);
+  }
+
+  .calendar-grid.view-month {
+    display: none;
+  }
 }
 </style>

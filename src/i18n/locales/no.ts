@@ -544,7 +544,8 @@ export default {
       removeLogo: 'Fjern opplastet logo',
       includeLogo: 'Inkluder logo på bildet',
       generateButton: 'Generer bilde',
-      generateVideoButton: 'Generer video (5 kreditter)'
+      generateVideoButton: 'Generer video (5 kreditter)',
+      outOfCredits: 'Du har ikke flere kreditter. Vennligst oppgrader planen din for å generere mer innhold.'
     },
     upload: {
       button: 'Last opp ditt eget bilde',
@@ -668,7 +669,8 @@ export default {
       editPrompt: 'Rediger ledetekst',
       promptLabel: 'AI-ledetekst (redigerbar)',
       promptPlaceholder: 'Beskriv hvordan du vil at bildet ditt skal se ut...',
-      regenerate: 'Regenerer stiler'
+      regenerate: 'Regenerer stiler',
+      outOfCredits: 'Du har ikke flere kreditter. Vennligst oppgrader planen din for å generere mer innhold.'
     },
     styleVariations: {
     },
@@ -1270,7 +1272,9 @@ export default {
     profile: 'Profil',
     logout: 'Logg ut',
     notifications: 'Varsler',
-    referFriend: 'Verv en venn'
+    referFriend: 'Verv en venn',
+    unlimited: 'Ubegrenset',
+    unlimitedCredits: 'Ubegrenset'
   },
 
   // New Dashboard Elements

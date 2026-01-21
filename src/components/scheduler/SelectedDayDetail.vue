@@ -937,7 +937,7 @@ defineExpose({
   display: flex;
   gap: var(--space-sm);
   padding: var(--space-md) var(--space-lg);
-  background: rgba(255, 255, 255, 0.8);
+  background: var(--bg-secondary);
   border-bottom: 1px solid var(--border-color);
 }
 
@@ -1044,7 +1044,7 @@ defineExpose({
   grid-template-columns: 4fr 2fr 2fr 2fr 40px;
   gap: var(--space-md);
   padding: var(--space-md) var(--space-lg);
-  background: rgba(255, 255, 255, 0.6);
+  background: var(--bg-tertiary);
   border-bottom: 1px solid var(--border-color);
 }
 
@@ -1088,11 +1088,11 @@ defineExpose({
 }
 
 .table-row:hover {
-  background: rgba(255, 255, 255, 0.8);
+  background: var(--bg-elevated);
 }
 
 .table-row.is-expanded {
-  background: rgba(255, 255, 255, 0.9);
+  background: var(--bg-elevated);
 }
 
 /* Date Column */
@@ -1296,7 +1296,7 @@ defineExpose({
 
 /* Expanded Details */
 .expanded-details {
-  background: rgba(255, 255, 255, 0.9);
+  background: var(--bg-tertiary);
   border-top: 1px solid var(--border-color);
   padding: var(--space-xl);
 }
@@ -1555,7 +1555,7 @@ defineExpose({
   justify-content: center;
   gap: var(--space-lg);
   padding: var(--space-md) var(--space-lg);
-  background: rgba(255, 255, 255, 0.6);
+  background: var(--bg-secondary);
   border-top: 1px solid var(--border-color);
 }
 

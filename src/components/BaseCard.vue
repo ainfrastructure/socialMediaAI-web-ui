@@ -29,7 +29,9 @@ const variantClass = computed(() => `card-${props.variant}`)
   transition: var(--transition-base);
   position: relative;
   max-width: 100%;
-  overflow: hidden;
+  overflow-x: auto;
+  overflow-y: visible;
+  -webkit-overflow-scrolling: touch;
 }
 
 /* Glass Variants */
@@ -88,5 +90,18 @@ const variantClass = computed(() => `card-${props.variant}`)
   height: 1px;
   background: var(--glass-highlight);
   border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+}
+
+/* Mobile padding reduction */
+@media (max-width: 768px) {
+  .base-card {
+    padding: var(--space-lg);
+  }
+}
+
+@media (max-width: 480px) {
+  .base-card {
+    padding: var(--space-md);
+  }
 }
 </style>

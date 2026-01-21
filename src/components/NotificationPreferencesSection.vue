@@ -13,41 +13,6 @@
     </div>
 
     <div v-else class="preferences-content">
-      <!-- Test Email Section -->
-      <div class="test-email-section">
-        <h3 class="test-title">{{ $t('common.test') }} Email Previews</h3>
-        <p class="test-description">Send a test email to see what your notifications will look like</p>
-
-        <div class="test-buttons">
-          <BaseButton
-            variant="secondary"
-            size="small"
-            @click="sendTestEmail('post_failed')"
-            :disabled="testEmailSending !== null"
-          >
-            {{ testEmailSending === 'post_failed' ? $t('common.sending') : '📧 Test Post Failure Email' }}
-          </BaseButton>
-
-          <BaseButton
-            variant="secondary"
-            size="small"
-            @click="sendTestEmail('digest')"
-            :disabled="testEmailSending !== null"
-          >
-            {{ testEmailSending === 'digest' ? $t('common.sending') : '📧 Test Weekly Digest' }}
-          </BaseButton>
-        </div>
-
-        <BaseAlert v-if="testEmailSuccess" type="success" class="test-alert">
-          ✅ Test email sent! Check your inbox.
-        </BaseAlert>
-        <BaseAlert v-if="testEmailError" type="error" class="test-alert">
-          {{ testEmailError }}
-        </BaseAlert>
-      </div>
-
-      <div class="preference-divider"></div>
-
       <!-- Post Failures -->
       <div class="preference-group">
         <h3 class="group-title">Post Failures</h3>
@@ -173,7 +138,6 @@ import { useNotificationPreferencesStore } from '@/stores/notificationPreference
 import type { NotificationPreferences } from '@/types/notifications'
 import BaseCard from './BaseCard.vue'
 import BaseAlert from './BaseAlert.vue'
-import BaseButton from './BaseButton.vue'
 
 const { t } = useI18n()
 const prefsStore = useNotificationPreferencesStore()
@@ -195,9 +159,6 @@ const localPrefs = ref<NotificationPreferences>({
 
 const saveSuccess = ref(false)
 const saveError = ref<string | null>(null)
-const testEmailSending = ref<string | null>(null)
-const testEmailSuccess = ref<string | null>(null)
-const testEmailError = ref<string | null>(null)
 let saveTimeout: number | null = null
 
 // Load preferences on mount
@@ -240,35 +201,6 @@ async function handleUpdate() {
       saveError.value = result.error || t('profile.notifications.saveError')
     }
   }, 500)
-}
-
-async function sendTestEmail(type: 'post_published' | 'post_failed' | 'digest') {
-  testEmailSending.value = type
-  testEmailSuccess.value = null
-  testEmailError.value = null
-
-  try {
-    const result = await prefsStore.sendTestEmail(type)
-
-    if (result.success) {
-      testEmailSuccess.value = type
-      setTimeout(() => {
-        testEmailSuccess.value = null
-      }, 5000)
-    } else {
-      testEmailError.value = result.error || 'Failed to send test email'
-      setTimeout(() => {
-        testEmailError.value = null
-      }, 5000)
-    }
-  } catch (err: any) {
-    testEmailError.value = err.message || 'Failed to send test email'
-    setTimeout(() => {
-      testEmailError.value = null
-    }, 5000)
-  } finally {
-    testEmailSending.value = null
-  }
 }
 </script>
 
@@ -425,37 +357,6 @@ async function sendTestEmail(type: 'post_published' | 'post_failed' | 'digest') 
   margin-top: var(--space-lg);
 }
 
-/* Test Email Section */
-.test-email-section {
-  background: linear-gradient(135deg, rgba(15, 61, 46, 0.05), rgba(15, 61, 46, 0.02));
-  padding: var(--space-xl);
-  border-radius: var(--radius-lg);
-  border: 2px dashed rgba(15, 61, 46, 0.2);
-}
-
-.test-title {
-  font-family: var(--font-heading);
-  font-size: var(--text-lg);
-  color: var(--text-primary);
-  margin-bottom: var(--space-xs);
-}
-
-.test-description {
-  color: var(--text-secondary);
-  font-size: var(--text-sm);
-  margin-bottom: var(--space-lg);
-}
-
-.test-buttons {
-  display: flex;
-  gap: var(--space-md);
-  flex-wrap: wrap;
-}
-
-.test-alert {
-  margin-top: var(--space-lg);
-}
-
 @keyframes fadeInUp {
   from {
     opacity: 0;
@@ -464,16 +365,6 @@ async function sendTestEmail(type: 'post_published' | 'post_failed' | 'digest') 
   to {
     opacity: 1;
     transform: translateY(0);
-  }
-}
-
-@media (max-width: 768px) {
-  .test-buttons {
-    flex-direction: column;
-  }
-
-  .test-buttons button {
-    width: 100%;
   }
 }
 

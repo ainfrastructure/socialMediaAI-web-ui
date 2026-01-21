@@ -4,6 +4,7 @@ import { API_URL, getAuthHeader, getAuthHeaders } from './apiBase'
 export interface User {
   id: string
   email: string
+  role?: 'user' | 'admin'
   has_completed_onboarding?: boolean
   accepted_terms_at?: string | null
   onboarding_completed_at?: string | null

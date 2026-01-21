@@ -570,7 +570,8 @@ export default {
       removeLogo: 'Remove uploaded logo',
       includeLogo: 'Include logo on image',
       generateButton: 'Generate Image',
-      generateVideoButton: 'Generate Video'
+      generateVideoButton: 'Generate Video',
+      outOfCredits: 'You are out of credits. Please upgrade your plan to generate more content.'
     },
     upload: {
       button: 'Upload Your Own Image',
@@ -694,7 +695,8 @@ export default {
       editPrompt: 'Edit Prompt',
       promptLabel: 'AI Prompt (Editable)',
       promptPlaceholder: 'Describe how you want your image to look...',
-      regenerate: 'Regenerate Styles'
+      regenerate: 'Regenerate Styles',
+      outOfCredits: 'You are out of credits. Please upgrade your plan to generate more content.'
     },
     styleVariations: {
     },
@@ -1300,7 +1302,9 @@ export default {
     profile: 'Profile',
     logout: 'Logout',
     notifications: 'Notifications',
-    referFriend: 'Refer a Friend'
+    referFriend: 'Refer a Friend',
+    unlimited: 'Unlimited',
+    unlimitedCredits: 'Unlimited'
   },
 
   // New Dashboard Elements

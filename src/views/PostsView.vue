@@ -1676,6 +1676,34 @@ function formatDate(dateString: string): string {
 }
 
 @media (max-width: 480px) {
+  /* Stack filters vertically on small screens */
+  .inline-filters {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--space-sm);
+  }
+
+  .filter-group {
+    width: 100%;
+  }
+
+  .inline-select {
+    width: 100%;
+    min-height: var(--touch-target-min);
+    font-size: var(--text-mobile-base);
+  }
+
+  .posts-count {
+    text-align: left;
+    margin-left: 0;
+    margin-top: var(--space-xs);
+  }
+
+  /* Compact grid on small phones */
+  .posts-grid {
+    gap: var(--space-md);
+  }
+
   .content-hub-view {
     padding: var(--space-lg) var(--space-sm);
   }
@@ -1903,5 +1931,30 @@ function formatDate(dateString: string): string {
 
 :root[data-theme="dark"] .section-header {
   border-bottom-color: var(--border-color);
+}
+
+/* Landscape: Reduce vertical padding */
+@media (max-height: 500px) and (orientation: landscape) {
+  .content-hub-view {
+    padding: var(--space-md) var(--space-lg);
+  }
+
+  .restaurant-header {
+    margin-bottom: var(--space-lg);
+    padding-bottom: var(--space-md);
+  }
+
+  .create-card {
+    padding: var(--space-lg);
+    margin-bottom: var(--space-lg);
+  }
+
+  .section-header {
+    margin-bottom: var(--space-md);
+  }
+
+  .landscape-hide {
+    display: none;
+  }
 }
 </style>

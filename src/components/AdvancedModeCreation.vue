@@ -36,6 +36,7 @@ import { useFacebookStore } from '@/stores/facebook'
 import { useInstagramStore } from '@/stores/instagram'
 import { useNotificationStore } from '@/stores/notifications'
 import { useVideoGenerationStore } from '@/stores/videoGeneration'
+import { useAuthStore } from '@/stores/auth'
 import { debugLog, errorLog } from '@/utils/debug'
 import { getVideoSinglePrompt, getVideoComboPrompt, getVideoWeeklyPrompt } from '@/config/promptModifiers'
 import { getThemeContext } from '@/utils/videoThemes'
@@ -135,6 +136,7 @@ const facebookStore = useFacebookStore()
 const instagramStore = useInstagramStore()
 const notificationStore = useNotificationStore()
 const videoGenerationStore = useVideoGenerationStore()
+const authStore = useAuthStore()
 
 // Platform configuration
 type PlatformType = 'facebook' | 'instagram' | 'tiktok' | 'twitter' | 'linkedin' | 'youtube'
@@ -344,8 +346,12 @@ const canProceedStep2 = computed(() => {
 })
 
 const canProceedStep3 = computed(() => {
-  return selectedVariation.value !== null
+  const hasSelection = selectedVariation.value !== null
+  const hasCredits = authStore.canGenerateContent
+  return hasSelection && hasCredits
 })
+
+const outOfCredits = computed(() => !authStore.canGenerateContent)
 
 const canProceedStep4 = computed(() => {
   // Preview step - require media (image or video) and text to be generated
@@ -1554,6 +1560,11 @@ defineExpose({
         @select="handleVariationSelect"
         @regenerate="regenerateVariations"
       />
+
+      <!-- Out of Credits Alert -->
+      <BaseAlert v-if="outOfCredits" type="warning" class="credits-warning">
+        {{ t('advancedMode.step3.outOfCredits', 'You are out of credits. Please upgrade your plan to generate more content.') }}
+      </BaseAlert>
 
       <div class="step-navigation">
         <BaseButton variant="ghost" @click="prevStep">

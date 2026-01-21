@@ -24,6 +24,7 @@ import { ImageSourceSelector, SectionLabel, StyleTemplateGrid, ContentDivider } 
 import { useFacebookStore } from '@/stores/facebook'
 import { useInstagramStore } from '@/stores/instagram'
 import { usePreferencesStore } from '@/stores/preferences'
+import { useAuthStore } from '@/stores/auth'
 import { useSocialAccounts } from '@/composables/useSocialAccounts'
 import type { SavedRestaurant } from '@/services/restaurantService'
 import { debugLog } from '@/utils/debug'
@@ -110,6 +111,7 @@ const emit = defineEmits<{
 const facebookStore = useFacebookStore()
 const instagramStore = useInstagramStore()
 const preferencesStore = usePreferencesStore()
+const authStore = useAuthStore()
 const { isConnected: _isConnected } = useSocialAccounts()
 const { t } = useI18n()
 
@@ -253,8 +255,12 @@ const totalPages = computed(() => {
 })
 
 const canGenerate = computed(() => {
-  return selectedMenuItem.value !== null || uploadedImage.value !== null
+  const hasSelection = selectedMenuItem.value !== null || uploadedImage.value !== null
+  const hasCredits = authStore.canGenerateContent
+  return hasSelection && hasCredits
 })
+
+const outOfCredits = computed(() => !authStore.canGenerateContent)
 
 // Check if has logo (existing or uploaded)
 const hasLogo = computed(() => {
@@ -966,6 +972,11 @@ onUnmounted(() => {
           </label>
         </div>
       </div>
+
+        <!-- Out of Credits Alert -->
+        <BaseAlert v-if="outOfCredits" type="warning" class="credits-warning">
+          {{ t('easyMode.step2.outOfCredits', 'You are out of credits. Please upgrade your plan to generate more content.') }}
+        </BaseAlert>
 
         <!-- Step 2 Navigation -->
         <div class="step-navigation">

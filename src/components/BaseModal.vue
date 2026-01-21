@@ -309,10 +309,11 @@ onUnmounted(() => {
   gap: var(--space-md);
 }
 
-/* Responsive */
+/* Responsive - Bottom-sheet pattern for mobile */
 @media (max-width: 768px) {
   .base-modal-overlay {
-    padding: var(--space-md);
+    padding: 0;
+    align-items: flex-end;
   }
 
   .modal-sm,
@@ -320,6 +321,20 @@ onUnmounted(() => {
   .modal-lg,
   .modal-xl {
     max-width: 100%;
+    width: 100%;
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  }
+
+  .base-modal-card {
+    max-height: 95vh;
+    max-height: 95dvh;
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  }
+
+  /* Bottom-sheet slide-up animation */
+  .modal-enter-from .base-modal-card,
+  .modal-leave-to .base-modal-card {
+    transform: translateY(100%);
   }
 
   .base-modal-body {
@@ -374,12 +389,29 @@ onUnmounted(() => {
 }
 
 @media (max-width: 390px) {
-  .base-modal-overlay {
-    padding: var(--space-xs);
-  }
-
   .base-modal-title {
     font-size: var(--text-base);
+  }
+}
+
+/* Landscape: Reduce max-height */
+@media (max-height: 500px) and (orientation: landscape) {
+  .base-modal-card {
+    max-height: 90vh;
+    max-height: 90dvh;
+  }
+
+  .base-modal-header {
+    padding: var(--space-sm) var(--space-lg);
+    padding-right: var(--space-3xl);
+  }
+
+  .base-modal-body {
+    padding: var(--space-md) var(--space-lg);
+  }
+
+  .base-modal-footer {
+    padding: var(--space-sm) var(--space-lg);
   }
 }
 

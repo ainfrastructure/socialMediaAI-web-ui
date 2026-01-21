@@ -28,12 +28,16 @@ export const useAuthStore = defineStore('auth', () => {
   const usageStats = computed(() => user.value?.usage)
   const isLifetimeMember = computed(() => subscriptionTier.value === 'lifetime')
   const isYearlyMember = computed(() => subscriptionTier.value === 'yearly')
+  const isAdmin = computed(() => user.value?.role === 'admin')
+  const hasUnlimitedCredits = computed(() => isAdmin.value)
   const canGenerateContent = computed(() => {
     if (!user.value) return false
+    if (isAdmin.value) return true
     return user.value.usage.remaining_credits > 0
   })
   const canGenerateVideo = computed(() => {
     if (!user.value) return false
+    if (isAdmin.value) return true
     // Video generation costs 5 credits
     return user.value.usage.remaining_credits >= 5
   })
@@ -520,6 +524,8 @@ export const useAuthStore = defineStore('auth', () => {
     usageStats,
     isLifetimeMember,
     isYearlyMember,
+    isAdmin,
+    hasUnlimitedCredits,
     canGenerateContent,
     canGenerateVideo,
 

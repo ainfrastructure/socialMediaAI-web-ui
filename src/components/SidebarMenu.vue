@@ -73,7 +73,18 @@ const menuItems = computed(() => [
 ])
 
 const tierDisplayName = computed(() => {
+  // Show "Admin" for admin users
+  if (authStore.isAdmin) {
+    return 'Admin'
+  }
+
   const tier = authStore.user?.subscription.tier || 'monthly'
+
+  // Skip free tier - we don't have a free tier
+  if (tier === 'free') {
+    return 'Monthly' // Default to monthly
+  }
+
   return tier.charAt(0).toUpperCase() + tier.slice(1)
 })
 
@@ -90,6 +101,10 @@ const isReferralEligible = computed(() => {
 
 const progressPercent = computed(() => {
   if (!authStore.usageStats) return 0
+
+  // Admin bypass: no percentage for unlimited credits
+  if (authStore.isAdmin) return 0
+
   const { credits_this_month, monthly_limit, remaining_credits } = authStore.usageStats
 
   // For lifetime/yearly, show remaining credits as percentage of total
@@ -108,6 +123,16 @@ const progressPercent = computed(() => {
 
 const creditsDisplay = computed(() => {
   if (!authStore.usageStats) return { used: 0, total: 0, remaining: 0 }
+
+  // Admin/superuser shows "Unlimited"
+  if (authStore.isAdmin) {
+    return {
+      used: 0,
+      total: 'unlimited',
+      remaining: 'unlimited'
+    }
+  }
+
   const { credits_this_month, monthly_limit, remaining_credits } = authStore.usageStats
 
   if (isLifetimeOrYearly.value) {
@@ -203,16 +228,22 @@ function closeMobileMenu() {
       <div class="credits-card">
         <div class="credits-header">
           <span class="credits-label">{{ $t('sidebar.creditsUsed') }}</span>
-          <span class="credits-percent">{{ Math.round(progressPercent) }}%</span>
+          <span v-if="!authStore.isAdmin" class="credits-percent">{{ Math.round(progressPercent) }}%</span>
+          <span v-else class="credits-unlimited">{{ $t('sidebar.unlimited') }}</span>
         </div>
-        <div class="credits-bar">
+        <div v-if="!authStore.isAdmin" class="credits-bar">
           <div class="credits-progress" :style="{ width: `${progressPercent}%` }"></div>
         </div>
         <div class="credits-info">
-          <span class="credits-count">{{ creditsDisplay.used }}</span>
-          <span class="credits-total">/{{ creditsDisplay.total }}</span>
+          <span v-if="authStore.isAdmin" class="credits-unlimited-text">
+            {{ $t('sidebar.unlimitedCredits') }}
+          </span>
+          <template v-else>
+            <span class="credits-count">{{ creditsDisplay.used }}</span>
+            <span class="credits-total">/{{ creditsDisplay.total }}</span>
+          </template>
         </div>
-        <button v-if="!isLifetimeMember" class="upgrade-btn" @click="navigateTo('/plans')">
+        <button v-if="!isLifetimeMember && !authStore.isAdmin" class="upgrade-btn" @click="navigateTo('/plans')">
           {{ $t('sidebar.upgrade') }}
         </button>
       </div>

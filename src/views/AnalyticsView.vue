@@ -56,6 +56,19 @@ const engagementStore = useEngagementStore()
 // Theme-aware colors for charts
 const isDark = computed(() => themeStore.theme === 'dark')
 
+// Subscription tier display
+const subscriptionTierDisplay = computed(() => {
+  if (authStore.isAdmin) {
+    return 'Admin'
+  }
+  const tier = authStore.user?.subscription?.tier
+  // Skip free tier - we don't have a free tier
+  if (!tier || tier === 'free') {
+    return 'Monthly' // Default to monthly
+  }
+  return tier.charAt(0).toUpperCase() + tier.slice(1)
+})
+
 // State
 const loading = ref(true)
 const refreshingEngagement = ref(false)
@@ -196,7 +209,7 @@ async function fetchAnalyticsData() {
             engagementDataAvailable.value = false
           } else {
             // Store engagement data
-            let totalEngagement = { likes: 0, comments: 0, shares: 0 }
+            const totalEngagement = { likes: 0, comments: 0, shares: 0 }
             postsData.forEach((post: any) => {
               debugLog(`[Analytics] Processing post ${post.scheduled_post_id}:`, post.platforms)
               engagementStore.setPostEngagement(post.scheduled_post_id, post.platforms)
@@ -1007,7 +1020,7 @@ async function refreshAllEngagement() {
     // Refresh each post (with rate limiting handled by backend)
     let successCount = 0
     let errorCount = 0
-    let totalEngagement = { likes: 0, comments: 0, shares: 0 }
+    const totalEngagement = { likes: 0, comments: 0, shares: 0 }
 
     for (const post of publishedPosts) {
       try {
@@ -1502,7 +1515,7 @@ onMounted(async () => {
                   <MaterialIcon icon="workspace_premium" size="md" color="var(--gold-primary)" />
                   <div class="sub-details">
                     <span class="sub-label">{{ t('analytics.subscription') }}</span>
-                    <span class="sub-value">{{ authStore.user?.subscription?.tier || 'Free' }}</span>
+                    <span class="sub-value">{{ subscriptionTierDisplay }}</span>
                   </div>
                 </div>
                 <div class="sub-item">
@@ -3379,7 +3392,7 @@ onMounted(async () => {
   }
 
   .platform-tab-count {
-    font-size: 10px;
+    font-size: var(--text-mobile-xs);
   }
 
   .metrics-grid {
@@ -3454,7 +3467,31 @@ onMounted(async () => {
 
   .filter-btn {
     padding: var(--space-xs) var(--space-sm);
-    font-size: 10px;
+    font-size: var(--text-mobile-xs);
+  }
+
+  /* Chart horizontal scroll on mobile */
+  .chart-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: var(--space-sm);
+  }
+
+  .chart-container canvas {
+    min-width: 600px; /* Ensure readability */
+  }
+
+  /* Time range selector mobile */
+  .time-range-selector {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .range-btn {
+    flex: 1;
+    min-height: var(--touch-target-min);
+    padding: var(--space-sm);
+    font-size: var(--text-xs);
   }
 }
 
@@ -3465,6 +3502,17 @@ onMounted(async () => {
 
   .platform-tab {
     padding: var(--space-sm);
+  }
+
+  /* Compact filters on small screens */
+  .time-range-selector {
+    gap: 2px;
+    padding: 2px;
+  }
+
+  .range-btn {
+    padding: var(--space-xs) var(--space-sm);
+    font-size: var(--text-mobile-xs);
   }
 }
 
@@ -3521,5 +3569,33 @@ onMounted(async () => {
 :root[data-theme="dark"] .time-range-btn.active {
   background: var(--gold-primary);
   color: var(--bg-primary);
+}
+
+/* Landscape: Reduce vertical padding */
+@media (max-height: 500px) and (orientation: landscape) {
+  .analytics-view {
+    padding: var(--space-md) var(--space-lg);
+  }
+
+  .stats-grid {
+    margin-bottom: var(--space-lg);
+  }
+
+  .stat-card {
+    min-height: auto;
+    padding: var(--space-md);
+  }
+
+  .chart-card {
+    padding: var(--space-md);
+  }
+
+  .section-header {
+    margin-bottom: var(--space-md);
+  }
+
+  .landscape-hide {
+    display: none;
+  }
 }
 </style>
