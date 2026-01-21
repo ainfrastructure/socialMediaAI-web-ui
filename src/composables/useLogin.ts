@@ -15,8 +15,8 @@ export function useLogin() {
   const loggingIn = ref(false)
   const lastUsedProvider = ref<string | null>(localStorage.getItem('last_login_provider'))
 
-  // Check if we're in development or staging mode (for dev login)
-  const isDev = computed(() => env.isDevelopment || env.isStaging)
+  // Check if we're in development mode (for dev login)
+  const isDev = computed(() => env.isDevelopment)
 
   function showMessage(msg: string, type: 'success' | 'error' | 'info') {
     message.value = msg
