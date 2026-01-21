@@ -12,9 +12,7 @@
  *   debugError('Failed to fetch data', error)
  */
 
-// Read debug flag from environment variables
-// In production builds, Vite will replace import.meta.env.VITE_DEBUG with the actual value
-const DEBUG = import.meta.env.VITE_DEBUG === 'true'
+import { DEBUG } from '@/config/environment'
 
 /**
  * Debug log - only shows when DEBUG is enabled

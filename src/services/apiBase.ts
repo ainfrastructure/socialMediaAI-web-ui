@@ -1,5 +1,7 @@
 // Shared API configuration and types
-export const API_URL = import.meta.env.VITE_API_URL || ''
+import { env } from '@/config/environment'
+
+export const API_URL = env.api.baseUrl
 
 export interface ApiResponse<T = any> {
   success: boolean

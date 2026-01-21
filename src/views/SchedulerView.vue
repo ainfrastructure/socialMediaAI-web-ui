@@ -455,6 +455,7 @@ import { CalendarHeader, CalendarLegend, CreatePostWizard, CalendarFilters, Sele
 import PlatformLogo from '../components/PlatformLogo.vue'
 import { api } from '../services/api'
 import { schedulerService } from '../services/schedulerService'
+import { API_URL } from '../services/apiBase'
 import { useRestaurantsStore } from '../stores/restaurants'
 import { usePreferencesStore } from '../stores/preferences'
 
@@ -1463,8 +1464,7 @@ const getMediaUrl = (url: string): string => {
 
   // Replace localhost URLs with production API URL
   if (url.includes('localhost:3000')) {
-    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000'
-    return url.replace('http://localhost:3000', apiUrl)
+    return url.replace('http://localhost:3000', API_URL)
   }
 
   // If it's already a full URL (Supabase), return it
@@ -1473,8 +1473,7 @@ const getMediaUrl = (url: string): string => {
   }
 
   // If it's a relative path, construct the full URL
-  const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000'
-  return `${baseUrl}${url.startsWith('/') ? '' : '/'}${url}`
+  return `${API_URL}${url.startsWith('/') ? '' : '/'}${url}`
 }
 
 // Fetch restaurants for filter dropdown (uses store)

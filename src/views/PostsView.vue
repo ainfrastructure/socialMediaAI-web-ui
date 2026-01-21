@@ -94,7 +94,7 @@
           <!-- Empty State -->
           <BaseCard v-else-if="posts.length === 0" variant="glass" class="empty-state">
             <div class="empty-content">
-              <span class="empty-icon">📝</span>
+              <GoldenDocumentIcon :size="48" class="empty-icon" />
               <h3>{{ $t('contentHub.noPosts') }}</h3>
               <p>{{ $t('contentHub.noPostsDescription') }}</p>
             </div>
@@ -346,6 +346,7 @@ import PostDetailModal from '@/components/PostDetailModal.vue'
 import AddRestaurantModal from '@/components/AddRestaurantModal.vue'
 import CreateRestaurantModal from '@/components/CreateRestaurantModal.vue'
 import MaterialIcon from '@/components/MaterialIcon.vue'
+import GoldenDocumentIcon from '@/components/icons/GoldenDocumentIcon.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -1212,7 +1213,7 @@ function formatDate(dateString: string): string {
 }
 
 .empty-icon {
-  font-size: 3rem;
+  filter: drop-shadow(0 0 12px rgba(15, 61, 46, 0.3));
 }
 
 .empty-content h3 {
@@ -1813,10 +1814,6 @@ function formatDate(dateString: string): string {
 
   .empty-state {
     padding: var(--space-xl);
-  }
-
-  .empty-icon {
-    font-size: 2rem;
   }
 
   .empty-content h3 {

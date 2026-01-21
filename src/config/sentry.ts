@@ -2,21 +2,19 @@ import * as Sentry from '@sentry/vue'
 import type { App } from 'vue'
 import type { Router } from 'vue-router'
 import { warnLog } from '@/utils/debug'
+import { env } from './environment'
 
 export function initSentry(app: App, router: Router) {
-  const dsn = import.meta.env.VITE_SENTRY_DSN
-  const environment = import.meta.env.VITE_SENTRY_ENVIRONMENT || import.meta.env.MODE
-
   // Only initialize Sentry if DSN is provided
-  if (!dsn) {
+  if (!env.sentry.enabled) {
     warnLog('Sentry DSN not configured - error tracking disabled')
     return
   }
 
   Sentry.init({
     app,
-    dsn,
-    environment,
+    dsn: env.sentry.dsn!,
+    environment: env.sentry.environment,
 
     // Performance Monitoring
     integrations: [
@@ -28,7 +26,7 @@ export function initSentry(app: App, router: Router) {
     ],
 
     // Performance Monitoring sample rate (10% of transactions)
-    tracesSampleRate: environment === 'production' ? 0.1 : 1.0,
+    tracesSampleRate: env.isProduction ? 0.1 : 1.0,
 
     // Session Replay sample rate
     replaysSessionSampleRate: 0.1, // 10% of sessions
@@ -44,7 +42,7 @@ export function initSentry(app: App, router: Router) {
     // Add context to errors
     beforeSend(event, _hint) {
       // Filter out localhost/development noise if needed
-      if (environment === 'development' && event.request?.url?.includes('localhost')) {
+      if (env.isDevelopment && event.request?.url?.includes('localhost')) {
         return null
       }
       return event

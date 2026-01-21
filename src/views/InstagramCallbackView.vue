@@ -93,7 +93,7 @@ onMounted(async () => {
   align-items: center;
   justify-content: center;
   padding: var(--space-lg);
-  background: linear-gradient(135deg, rgba(246, 241, 231, 0.9) 0%, rgba(240, 235, 225, 0.95) 100%);
+  background: var(--gradient-subtle);
 }
 
 .container {

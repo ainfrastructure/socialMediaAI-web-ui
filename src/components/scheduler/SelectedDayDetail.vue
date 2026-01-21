@@ -451,6 +451,7 @@
 import { ref, computed, watch, nextTick } from 'vue'
 import { useI18n } from 'vue-i18n'
 import PlatformLogo from '../PlatformLogo.vue'
+import { API_URL } from '@/services/apiBase'
 
 const { t } = useI18n()
 
@@ -882,14 +883,12 @@ const getHolidayIcon = (holiday: any) => {
 const getMediaUrl = (url: string): string => {
   if (!url) return ''
   if (url.includes('localhost:3000')) {
-    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000'
-    return url.replace('http://localhost:3000', apiUrl)
+    return url.replace('http://localhost:3000', API_URL)
   }
   if (url.startsWith('http://') || url.startsWith('https://')) {
     return url
   }
-  const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000'
-  return `${baseUrl}${url.startsWith('/') ? '' : '/'}${url}`
+  return `${API_URL}${url.startsWith('/') ? '' : '/'}${url}`
 }
 
 const handleImageError = (event: Event) => {

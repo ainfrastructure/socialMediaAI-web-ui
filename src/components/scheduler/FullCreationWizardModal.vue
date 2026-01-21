@@ -16,6 +16,7 @@ import { useInstagramStore } from '@/stores/instagram'
 import { useNotificationStore } from '@/stores/notifications'
 import { restaurantService, type SavedRestaurant } from '@/services/restaurantService'
 import { api } from '@/services/api'
+import { API_URL } from '@/services/apiBase'
 import { okamService } from '@/services/okamService'
 import { debugLog, errorLog, warnLog } from '@/utils/debug'
 
@@ -539,6 +540,12 @@ async function handleEasyModePublish(data: {
       return
     }
 
+    // Validate restaurant is selected
+    if (!selectedRestaurant.value?.id) {
+      generationError.value = 'Please select a restaurant first'
+      return
+    }
+
     publishing.value = true
 
     // Use edited post text if provided
@@ -547,7 +554,7 @@ async function handleEasyModePublish(data: {
 
     // Save post as favorite first
     const saveResponse = await api.saveFavorite({
-      restaurant_id: selectedRestaurant.value?.id,
+      restaurant_id: selectedRestaurant.value.id,
       content_type: 'image',
       media_url: generatedImageUrl.value,
       post_text: finalPostText,
@@ -742,7 +749,7 @@ async function handleInlineFeedback(feedbackText: string) {
 
   // Submit feedback to backend (non-blocking)
   try {
-    await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/feedback`, {
+    await fetch(`${API_URL}/api/feedback`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

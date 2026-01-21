@@ -2,6 +2,7 @@ import { ref, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '../stores/auth'
 import { api } from '../services/api'
+import { env } from '../config/environment'
 
 export function useLogin() {
   const authStore = useAuthStore()
@@ -14,8 +15,8 @@ export function useLogin() {
   const loggingIn = ref(false)
   const lastUsedProvider = ref<string | null>(localStorage.getItem('last_login_provider'))
 
-  // Check if we're in development mode
-  const isDev = computed(() => import.meta.env.DEV)
+  // Check if we're in development or staging mode (for dev login)
+  const isDev = computed(() => env.isDevelopment || env.isStaging)
 
   function showMessage(msg: string, type: 'success' | 'error' | 'info') {
     message.value = msg

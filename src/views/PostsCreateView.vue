@@ -273,6 +273,12 @@ async function handleEasyModePublish(data: {
       return
     }
 
+    // Validate restaurant is selected
+    if (!restaurant.value?.id) {
+      generationError.value = 'Please select a restaurant first'
+      return
+    }
+
     // Use edited values if provided, otherwise fall back to generated values
     const finalPostText = data.postText ?? generatedPostContent.value.postText
     const finalHashtags = data.hashtags ?? generatedPostContent.value.hashtags
@@ -298,7 +304,7 @@ async function handleEasyModePublish(data: {
       const isVideo = currentMediaType.value === 'video'
       const mediaUrl = isVideo ? generatedVideoUrl.value : generatedImageUrl.value
       const saveResponse = await api.saveFavorite({
-        restaurant_id: restaurant.value?.id,
+        restaurant_id: restaurant.value.id,
         content_type: isVideo ? 'video' : 'image',
         media_url: mediaUrl,
         post_text: finalPostText,
@@ -1645,6 +1651,11 @@ async function autoSavePost(): Promise<any | null> {
   const mediaUrl = generatedImageUrl.value || (currentMediaType.value === 'video' ? generatedVideoUrl.value : '')
   if (!mediaUrl || !restaurant.value) return null
 
+  // Don't auto-save if no restaurant selected
+  if (!restaurant.value?.id) {
+    return null
+  }
+
   try {
     const favoriteData = {
       restaurant_id: restaurant.value.id,
@@ -1959,6 +1970,11 @@ async function handleAdvancedModeComplete(data: {
 async function autoSaveAdvancedPost() {
   if (!advancedModeData.value || !restaurant.value) return
 
+  // Don't auto-save if no restaurant selected
+  if (!restaurant.value?.id) {
+    return
+  }
+
   try {
     const favoriteData = {
       restaurant_id: restaurant.value.id,
@@ -1992,7 +2008,7 @@ async function handleInlineFeedback(feedbackText: string) {
 
   // Submit feedback to backend (non-blocking)
   try {
-    await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/feedback`, {
+    await fetch(`${API_URL}/api/feedback`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

@@ -1,20 +1,17 @@
 import posthog from 'posthog-js'
 import type { Router } from 'vue-router'
 import { warnLog, infoLog } from '@/utils/debug'
+import { env } from './environment'
 
 export function initPostHog(router: Router) {
-  const apiKey = import.meta.env.VITE_POSTHOG_API_KEY
-  const apiHost = import.meta.env.VITE_POSTHOG_HOST || 'https://us.i.posthog.com'
-  const environment = import.meta.env.VITE_POSTHOG_ENVIRONMENT || import.meta.env.MODE
-
   // Only initialize PostHog if API key is provided
-  if (!apiKey) {
+  if (!env.posthog.enabled) {
     warnLog('PostHog API key not configured - analytics disabled')
     return
   }
 
-  posthog.init(apiKey, {
-    api_host: apiHost,
+  posthog.init(env.posthog.apiKey!, {
+    api_host: env.posthog.apiHost,
     person_profiles: 'identified_only', // Only create profiles for logged-in users
 
     // Capture pageviews and other events
@@ -22,7 +19,7 @@ export function initPostHog(router: Router) {
     capture_pageleave: true,
 
     // Session recording (optional - can be expensive)
-    session_recording: environment === 'production' ? {
+    session_recording: env.isProduction ? {
       recordCrossOriginIframes: false,
       maskAllInputs: true, // Mask sensitive form inputs
       maskTextSelector: '.sensitive, [data-private]',
@@ -45,7 +42,7 @@ export function initPostHog(router: Router) {
 
     // Development
     loaded: (posthog) => {
-      if (environment === 'development') {
+      if (env.isDevelopment) {
         posthog.debug()
       }
     },

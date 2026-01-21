@@ -29,6 +29,17 @@ coverage
 
 *.tsbuildinfo
 
-.env
+# Environment files
+.env                    # Local environment (ignored)
+.env.local              # Local overrides (ignored)
+.env.*.local            # Environment-specific local overrides (ignored)
+# Note: .env.development, .env.staging, .env.production are committed to the repo
+
 AuthKey_*.p8
 .claude/
+
+.env
+.env.development
+.env.local
+.env.production
+.env.staging

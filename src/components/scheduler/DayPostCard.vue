@@ -91,6 +91,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
+import { API_URL } from '@/services/apiBase'
 
 interface ScheduledPost {
   id: string | number
@@ -121,8 +122,7 @@ const getMediaUrl = (url: string): string => {
   if (url.startsWith('http://') || url.startsWith('https://')) {
     return url
   }
-  const apiBase = import.meta.env.VITE_API_URL || 'http://localhost:8000'
-  return `${apiBase}${url.startsWith('/') ? '' : '/'}${url}`
+  return `${API_URL}${url.startsWith('/') ? '' : '/'}${url}`
 }
 
 const handleImageError = (event: Event): void => {
