@@ -281,6 +281,7 @@ export default {
     manageSubscription: 'Administrer abonnement',
     perMonth: '/måned',
     perYear: '/år',
+    equalsMonthly: 'kun {price}/mnd',
     oneTime: 'engangsbetaling',
     failedToLoad: 'Kunne ikke laste planer',
     failedToOpenPortal: 'Kunne ikke åpne faktureringsportalen',

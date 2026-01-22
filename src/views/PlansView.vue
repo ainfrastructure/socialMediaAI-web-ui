@@ -519,7 +519,7 @@ if (urlParams.get('success') === 'true') {
             <div class="price">{{ plan.formatted_price }}</div>
             <span class="price-period">{{ getPriceInterval(plan) }}</span>
             <span v-if="plan.tier === 'yearly'" class="monthly-equivalent">
-              {{ getMonthlyEquivalent(plan) }} {{ $t('plans.perMonth') }}
+              ({{ $t('plans.equalsMonthly', { price: getMonthlyEquivalent(plan) }) }})
             </span>
             <div v-if="plan.savings" class="savings-badge">
               {{ plan.savings }}

@@ -286,6 +286,7 @@ export default {
     manageSubscription: 'Manage Subscription',
     perMonth: '/month',
     perYear: '/year',
+    equalsMonthly: 'only {price}/month',
     oneTime: 'one-time',
     failedToLoad: 'Failed to load plans',
     failedToOpenPortal: 'Failed to open billing portal',
