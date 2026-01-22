@@ -20,7 +20,7 @@ import ThemeToggle from '../components/ThemeToggle.vue'
 
 // ===== FEATURE FLAG =====
 // Set to true to enable signup/payment flow, false for waitlist mode
-const ENABLE_SIGNUP = false
+const ENABLE_SIGNUP = true
 
 const router = useRouter()
 const authStore = useAuthStore()
