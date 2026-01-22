@@ -318,7 +318,20 @@ export default {
     postScheduling: 'Post scheduling',
     unlimitedRestaurants: 'Unlimited restaurants',
     noExpiration: 'Credits never expire',
-    subscriptionRequired: 'A subscription is required to access SocialChef. Choose a plan below to get started.'
+    subscriptionRequired: 'A subscription is required to access SocialChef. Choose a plan below to get started.',
+    // Processing states
+    activatingSubscription: 'Activating Your Subscription',
+    paymentReceived: 'Payment received',
+    settingUpAccount: 'Setting up your account',
+    almostReady: 'Almost ready!',
+    processingHint: 'This usually takes just a few seconds...',
+    // Success
+    subscriptionActivated: 'Subscription activated successfully!',
+    // Error/Timeout states
+    activationDelayed: 'Taking Longer Than Expected',
+    activationTakingLong: 'Your payment was successful, but account activation is taking longer than usual. Your subscription will be active shortly.',
+    checkLater: 'Go to Dashboard',
+    contactSupport: 'If this persists, please contact support at support@socialchef.ai'
   },
 
   // Restaurant Search View

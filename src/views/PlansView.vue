@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { debugLog, errorLog, warnLog } from '@/utils/debug'
 
-import { ref, onMounted, computed, watch } from 'vue'
+import { ref, onMounted, onUnmounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '../stores/auth'
@@ -54,6 +54,14 @@ const message = ref('')
 const messageType = ref<'success' | 'error' | 'info'>('info')
 const hasPendingReferral = ref(false)
 
+// Payment processing state
+const processingPayment = ref(false)
+const processingAttempts = ref(0)
+const processingError = ref<string | null>(null)
+const MAX_POLLING_ATTEMPTS = 12  // 12 attempts × 3 sec = 36 sec max
+const POLL_INTERVAL = 3000
+let pollingAborted = false
+
 // Plan tier icons
 const tierIcons: Record<string, string> = {
   monthly: 'calendar_month',
@@ -68,6 +76,10 @@ onMounted(async () => {
   await checkPendingReferral()
 })
 
+onUnmounted(() => {
+  pollingAborted = true
+})
+
 async function checkPendingReferral() {
   if (!authStore.isAuthenticated) return
   try {
@@ -78,6 +90,66 @@ async function checkPendingReferral() {
   } catch {
     // Ignore errors - just don't show referral info
   }
+}
+
+// Polling function for subscription activation
+async function pollForSubscriptionActivation(): Promise<boolean> {
+  if (pollingAborted) return false
+
+  processingAttempts.value++
+
+  try {
+    // Try to sync subscription with Stripe
+    await api.syncSubscription()
+
+    // Refresh the user profile to get updated subscription status
+    await authStore.refreshProfile()
+
+    // Check if subscription is now active
+    if (authStore.hasActiveSubscription) {
+      return true // Success!
+    }
+
+    // Still not active, check if we should keep trying
+    if (processingAttempts.value >= MAX_POLLING_ATTEMPTS) {
+      return false // Max attempts reached
+    }
+
+    // Wait and try again
+    await new Promise(resolve => setTimeout(resolve, POLL_INTERVAL))
+    return pollForSubscriptionActivation() // Recursive poll
+
+  } catch (error) {
+    // Log error but continue polling (network issues shouldn't stop us)
+    warnLog('Polling attempt failed:', error)
+
+    if (processingAttempts.value >= MAX_POLLING_ATTEMPTS) {
+      return false
+    }
+
+    await new Promise(resolve => setTimeout(resolve, POLL_INTERVAL))
+    return pollForSubscriptionActivation()
+  }
+}
+
+async function retryActivation() {
+  processingError.value = null
+  processingAttempts.value = 0
+
+  const activated = await pollForSubscriptionActivation()
+
+  if (activated) {
+    showMessage(t('plans.subscriptionActivated'), 'success')
+    await new Promise(resolve => setTimeout(resolve, 1000))
+    router.push('/dashboard')
+  } else {
+    processingError.value = t('plans.activationTakingLong')
+  }
+}
+
+function goToDashboard() {
+  // User chooses to check later - go to dashboard which will show paywall if still not active
+  router.push('/dashboard')
 }
 
 async function loadPlans() {
@@ -199,6 +271,28 @@ function getPriceInterval(plan: Plan): string {
   return ''
 }
 
+function getMonthlyEquivalent(plan: Plan): string {
+  if (plan.interval !== 'year') return ''
+
+  const monthlyPrice = Math.round(plan.price / 12)
+
+  // Format with currency symbol
+  const currencySymbols: Record<string, string> = {
+    usd: '$',
+    nok: 'kr ',
+    eur: '€',
+    gbp: '£'
+  }
+  const symbol = currencySymbols[currency.value.toLowerCase()] || '$'
+
+  // For NOK, put symbol after the number
+  if (currency.value.toLowerCase() === 'nok') {
+    return `${monthlyPrice} ${symbol.trim()}`
+  }
+
+  return `${symbol}${monthlyPrice}`
+}
+
 function getButtonText(plan: Plan): string {
   // Lifetime is always "Buy"
   if (plan.tier === 'lifetime') {
@@ -256,32 +350,98 @@ function getFeatureText(feature: string): string {
 // Check for success/canceled parameters
 const urlParams = new URLSearchParams(window.location.search)
 if (urlParams.get('success') === 'true') {
-  showMessage(t('plans.subscriptionSuccess'), 'success')
-  // Sync subscription and redirect to dashboard
-  setTimeout(async () => {
-    if (authStore.isAuthenticated) {
-      // Sync subscription with Stripe to ensure DB is updated
-      try {
-        await api.syncSubscription()
-      } catch {
-        // Continue even if sync fails - webhook may have already processed it
-      }
-      // Refresh profile to get updated subscription status
-      await authStore.refreshProfile()
-      // Now redirect to dashboard if subscription is active
-      if (authStore.hasActiveSubscription) {
-        router.push('/dashboard')
-      }
+  // Immediately set processing state to hide plans
+  processingPayment.value = true
+  processingAttempts.value = 0
+  processingError.value = null
+
+  // Clear the URL parameter to prevent re-triggering on refresh
+  window.history.replaceState({}, '', window.location.pathname)
+
+  // Start polling for subscription activation (async IIFE)
+  ;(async () => {
+    const activated = await pollForSubscriptionActivation()
+
+    if (activated) {
+      // Success! Show brief success message then redirect
+      showMessage(t('plans.subscriptionActivated'), 'success')
+      await new Promise(resolve => setTimeout(resolve, 1000)) // Brief pause for user to see success
+      router.push('/dashboard')
+    } else {
+      // Max retries reached - show fallback message
+      processingError.value = t('plans.activationTakingLong')
     }
-  }, 1500)
+  })()
 } else if (urlParams.get('canceled') === 'true') {
   showMessage(t('plans.subscriptionCanceled'), 'info')
 }
 </script>
 
 <template>
-  <!-- Use DashboardLayout only for users with active subscription -->
-  <component :is="authStore.hasActiveSubscription ? DashboardLayout : 'div'" :class="{ 'plans-standalone': !authStore.hasActiveSubscription }">
+  <!-- Payment Processing State -->
+  <div v-if="processingPayment && !processingError" class="processing-overlay">
+    <BaseCard variant="solid" class="processing-card">
+      <div class="processing-content">
+        <!-- Logo with animation -->
+        <img
+          src="/socialchef_logo.svg"
+          alt="Social Chef"
+          class="processing-logo"
+        />
+
+        <!-- Title -->
+        <h2 class="processing-title">{{ $t('plans.activatingSubscription') }}</h2>
+
+        <!-- Progress steps -->
+        <div class="processing-steps">
+          <div class="processing-step" :class="{ active: processingAttempts >= 1 }">
+            <MaterialIcon icon="check_circle" size="sm" />
+            <span>{{ $t('plans.paymentReceived') }}</span>
+          </div>
+          <div class="processing-step" :class="{ active: processingAttempts >= 2 }">
+            <MaterialIcon icon="sync" size="sm" :class="{ spinning: processingAttempts >= 2 && processingAttempts < MAX_POLLING_ATTEMPTS }" />
+            <span>{{ $t('plans.settingUpAccount') }}</span>
+          </div>
+          <div class="processing-step pending">
+            <MaterialIcon icon="rocket_launch" size="sm" />
+            <span>{{ $t('plans.almostReady') }}</span>
+          </div>
+        </div>
+
+        <!-- Hint text -->
+        <p class="processing-hint">{{ $t('plans.processingHint') }}</p>
+      </div>
+    </BaseCard>
+  </div>
+
+  <!-- Error/Timeout State -->
+  <div v-else-if="processingPayment && processingError" class="processing-overlay">
+    <BaseCard variant="solid" class="processing-card">
+      <div class="processing-content">
+        <MaterialIcon icon="schedule" size="xl" color="var(--warning-text)" />
+
+        <h2 class="processing-title">{{ $t('plans.activationDelayed') }}</h2>
+
+        <p class="processing-message">{{ processingError }}</p>
+
+        <div class="processing-actions">
+          <BaseButton variant="primary" @click="retryActivation">
+            {{ $t('common.retry') }}
+          </BaseButton>
+          <BaseButton variant="secondary" @click="goToDashboard">
+            {{ $t('plans.checkLater') }}
+          </BaseButton>
+        </div>
+
+        <p class="processing-support">
+          {{ $t('plans.contactSupport') }}
+        </p>
+      </div>
+    </BaseCard>
+  </div>
+
+  <!-- Existing plans content - only show when NOT processing -->
+  <component v-else :is="authStore.hasActiveSubscription ? DashboardLayout : 'div'" :class="{ 'plans-standalone': !authStore.hasActiveSubscription }">
     <div class="plans-view">
     <BaseAlert
       v-if="message"
@@ -358,6 +518,9 @@ if (urlParams.get('success') === 'true') {
           <div class="price-wrapper">
             <div class="price">{{ plan.formatted_price }}</div>
             <span class="price-period">{{ getPriceInterval(plan) }}</span>
+            <span v-if="plan.tier === 'yearly'" class="monthly-equivalent">
+              {{ getMonthlyEquivalent(plan) }} {{ $t('plans.perMonth') }}
+            </span>
             <div v-if="plan.savings" class="savings-badge">
               {{ plan.savings }}
             </div>
@@ -436,6 +599,150 @@ if (urlParams.get('success') === 'true') {
 </template>
 
 <style scoped>
+/* Processing Overlay */
+.processing-overlay {
+  min-height: 100vh;
+  background: var(--bg-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-2xl);
+}
+
+.processing-card {
+  max-width: 500px;
+  width: 100%;
+  text-align: center;
+}
+
+.processing-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: var(--space-xl);
+}
+
+.processing-logo {
+  width: 100px;
+  height: 100px;
+  margin-bottom: var(--space-2xl);
+  animation: pulse-logo 2s ease-in-out infinite;
+  filter: drop-shadow(0 4px 20px rgba(176, 138, 90, 0.4));
+}
+
+@keyframes pulse-logo {
+  0%, 100% {
+    transform: scale(1);
+    filter: drop-shadow(0 4px 20px rgba(176, 138, 90, 0.4));
+  }
+  50% {
+    transform: scale(1.05);
+    filter: drop-shadow(0 4px 30px rgba(176, 138, 90, 0.5));
+  }
+}
+
+.processing-title {
+  font-family: var(--font-heading);
+  font-size: var(--text-2xl);
+  color: var(--gold-primary);
+  margin: 0 0 var(--space-2xl) 0;
+}
+
+.processing-steps {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+  margin-bottom: var(--space-2xl);
+  width: 100%;
+  max-width: 280px;
+}
+
+.processing-step {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-md);
+  border-radius: var(--radius-md);
+  background: var(--bg-tertiary);
+  color: var(--text-muted);
+  transition: all 0.3s ease;
+}
+
+.processing-step.active {
+  background: var(--gold-subtle);
+  color: var(--gold-primary);
+}
+
+.processing-step.active .material-symbols-rounded {
+  color: var(--gold-primary);
+}
+
+.processing-step.pending {
+  opacity: 0.5;
+}
+
+.processing-hint {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.processing-message {
+  font-size: var(--text-base);
+  color: var(--text-secondary);
+  margin: var(--space-lg) 0 var(--space-2xl) 0;
+  line-height: var(--leading-relaxed);
+}
+
+.processing-actions {
+  display: flex;
+  gap: var(--space-lg);
+  margin-bottom: var(--space-xl);
+}
+
+.processing-support {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.spinning {
+  animation: spin 1s linear infinite;
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .processing-logo,
+  .spinning {
+    animation: none !important;
+  }
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+  .processing-overlay {
+    padding: var(--space-lg);
+  }
+
+  .processing-logo {
+    width: 80px;
+    height: 80px;
+  }
+
+  .processing-title {
+    font-size: var(--text-xl);
+  }
+
+  .processing-actions {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .processing-actions button {
+    width: 100%;
+  }
+}
+
 /* Standalone mode (no subscription) - full page with background */
 .plans-standalone {
   min-height: 100vh;
@@ -689,6 +996,13 @@ if (urlParams.get('success') === 'true') {
 .price-period {
   color: var(--text-muted);
   font-size: var(--text-sm);
+}
+
+.monthly-equivalent {
+  display: block;
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+  margin-top: var(--space-xs);
 }
 
 .savings-badge {

@@ -313,7 +313,20 @@ export default {
     postScheduling: 'Innleggsplanlegging',
     unlimitedRestaurants: 'Ubegrensede restauranter',
     noExpiration: 'Poeng utløper aldri',
-    subscriptionRequired: 'Et abonnement kreves for å bruke SocialChef. Velg en plan nedenfor for å komme i gang.'
+    subscriptionRequired: 'Et abonnement kreves for å bruke SocialChef. Velg en plan nedenfor for å komme i gang.',
+    // Processing states
+    activatingSubscription: 'Aktiverer abonnementet ditt',
+    paymentReceived: 'Betaling mottatt',
+    settingUpAccount: 'Setter opp kontoen din',
+    almostReady: 'Nesten klar!',
+    processingHint: 'Dette tar vanligvis bare noen sekunder...',
+    // Success
+    subscriptionActivated: 'Abonnementet er aktivert!',
+    // Error/Timeout states
+    activationDelayed: 'Tar lengre tid enn forventet',
+    activationTakingLong: 'Betalingen din var vellykket, men aktivering av kontoen tar lengre tid enn vanlig. Abonnementet ditt vil snart bli aktivt.',
+    checkLater: 'Gå til dashbord',
+    contactSupport: 'Hvis dette fortsetter, vennligst kontakt support på support@socialchef.ai'
   },
 
   // Restaurant Search View
