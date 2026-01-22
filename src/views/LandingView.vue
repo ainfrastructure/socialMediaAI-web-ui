@@ -290,26 +290,44 @@ const multiExample = {
 const comparisonExamples = [
   {
     id: 1,
-    original: '/example/original-2.jpeg',
-    generated: '/example/behind-the-scens-of-original-2.jpeg',
-    templateKey: 'behindTheScenes',
+    original: '/example/example8-original.jpeg',
+    generated: '/example/example8-enhanced.jpg',
+    templateKey: 'studioShot',
   },
   {
     id: 2,
-    original: '/example/orignal-3.png',
-    generated: '/example/orignal-3-studio.jpeg',
+    original: '/example/example6-original.jpeg',
+    generated: '/example/example6-enhanced.jpg',
     templateKey: 'studioShot',
   },
   {
     id: 3,
-    original: '/example/pizza-original.png',
-    generated: '/example/pizza-enhanced.png',
-    templateKey: 'oneBite',
+    original: '/example/example5-original.jpeg',
+    generated: '/example/example5-enhanced.jpg',
+    templateKey: 'studioShot',
   },
   {
     id: 4,
     original: '/example/kebab-original.jpg',
     generated: '/example/kebab-enhanced.jpg',
+    templateKey: 'studioShot',
+  },
+  {
+    id: 5,
+    original: '/example/orignal-3.png',
+    generated: '/example/orignal-3-studio.jpeg',
+    templateKey: 'studioShot',
+  },
+  {
+    id: 6,
+    original: '/example/original-2.jpeg',
+    generated: '/example/behind-the-scens-of-original-2.jpeg',
+    templateKey: 'behindTheScenes',
+  },
+  {
+    id: 7,
+    original: '/example/example10-original.png',
+    generated: '/example/example10-enhanced.jpg',
     templateKey: 'studioShot',
   },
 ]
