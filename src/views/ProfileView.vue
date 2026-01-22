@@ -135,13 +135,6 @@
                 {{ $t('profile.upgradePlan') }}
               </BaseButton>
             </router-link>
-            <BaseButton
-              v-if="!subscription?.cancel_at_period_end"
-              variant="ghost"
-              @click="showCancelModal = true"
-            >
-              {{ $t('profile.cancelSubscription') }}
-            </BaseButton>
           </div>
         </div>
       </BaseCard>
@@ -227,25 +220,6 @@
       </BaseCard>
     </div>
 
-    <!-- Cancel Subscription Modal -->
-    <Teleport to="body">
-      <div v-if="showCancelModal" class="modal-overlay" @click="showCancelModal = false">
-        <div class="modal-content" @click.stop>
-          <h3 class="modal-title">{{ $t('profile.cancelSubscriptionTitle') }}</h3>
-          <p class="modal-text">
-            {{ $t('profile.cancelSubscriptionMessage') }}
-          </p>
-          <div class="modal-actions">
-            <BaseButton variant="ghost" @click="showCancelModal = false">
-              {{ $t('profile.keepSubscription') }}
-            </BaseButton>
-            <BaseButton variant="danger" @click="confirmCancelSubscription">
-              {{ $t('profile.cancelSubscription') }}
-            </BaseButton>
-          </div>
-        </div>
-      </div>
-    </Teleport>
 
         </div>
   </DashboardLayout>
@@ -279,8 +253,7 @@ const personalForm = reactive({
   email: authStore.user?.email || ''
 })
 
-// Modals
-const showCancelModal = ref(false)
+// Billing portal
 const loadingPortal = ref(false)
 
 // Referral
@@ -415,18 +388,6 @@ async function openCustomerPortal() {
   }
 }
 
-async function confirmCancelSubscription() {
-  try {
-    // API call to cancel subscription would go here
-    await new Promise(resolve => setTimeout(resolve, 1000)) // Simulated API call
-
-    showCancelModal.value = false
-    await authStore.refreshProfile()
-  } catch (err) {
-
-    alert(t('profile.failedToCancelSubscription'))
-  }
-}
 </script>
 
 <style scoped>
@@ -795,51 +756,6 @@ async function confirmCancelSubscription() {
   color: #fca5a5;
 }
 
-/* Modal */
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(15, 61, 46, 0.4);
-  backdrop-filter: blur(8px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-  padding: var(--space-xl);
-}
-
-.modal-content {
-  background: rgba(255, 255, 255, 0.95);
-  border: 1px solid rgba(15, 61, 46, 0.2);
-  border-radius: var(--radius-lg);
-  padding: var(--space-3xl);
-  max-width: 500px;
-  width: 100%;
-  box-shadow: 0 20px 60px rgba(15, 61, 46, 0.35);
-}
-
-.modal-title {
-  font-family: var(--font-heading);
-  font-size: var(--text-2xl);
-  color: var(--text-primary);
-  margin-bottom: var(--space-lg);
-}
-
-.modal-text {
-  color: var(--text-secondary);
-  line-height: var(--leading-normal);
-  margin-bottom: var(--space-2xl);
-}
-
-.modal-actions {
-  display: flex;
-  gap: var(--space-md);
-  justify-content: flex-end;
-}
-
 /* Responsive */
 @media (max-width: 768px) {
   .profile-view {
@@ -871,13 +787,11 @@ async function confirmCancelSubscription() {
     align-items: flex-start;
   }
 
-  .form-actions,
-  .modal-actions {
+  .form-actions {
     flex-direction: column;
   }
 
-  .form-actions button,
-  .modal-actions button {
+  .form-actions button {
     width: 100%;
   }
 
@@ -888,14 +802,6 @@ async function confirmCancelSubscription() {
   .plan-actions a,
   .plan-actions button {
     width: 100%;
-  }
-
-  .modal-content {
-    padding: var(--space-2xl);
-  }
-
-  .modal-overlay {
-    padding: var(--space-md);
   }
 }
 
@@ -924,24 +830,7 @@ async function confirmCancelSubscription() {
     font-size: var(--text-sm);
   }
 
-  .modal-overlay {
-    padding: var(--space-sm);
-    align-items: flex-end;
-  }
-
-  .modal-content {
-    padding: var(--space-lg);
-    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
-    max-height: 95vh;
-    max-height: 95dvh;
-  }
-
-  .modal-header h2 {
-    font-size: var(--text-lg);
-  }
-
-  .form-actions button,
-  .modal-actions button {
+  .form-actions button {
     min-height: var(--touch-target-min);
   }
 
@@ -961,10 +850,6 @@ async function confirmCancelSubscription() {
   }
 
   .section-card {
-    padding: var(--space-md);
-  }
-
-  .modal-content {
     padding: var(--space-md);
   }
 
@@ -1020,15 +905,5 @@ async function confirmCancelSubscription() {
 
 :root[data-theme="dark"] .security-divider {
   background: var(--border-color);
-}
-
-:root[data-theme="dark"] .modal-overlay {
-  background: rgba(0, 0, 0, 0.7);
-}
-
-:root[data-theme="dark"] .modal-content {
-  background: var(--bg-secondary);
-  border-color: var(--border-color);
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
 }
 </style>

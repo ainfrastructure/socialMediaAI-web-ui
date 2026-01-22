@@ -338,12 +338,12 @@ function handlePostDelete(_post: any) {
 const showRestaurantColumn = computed(() => selectedRestaurantFilter.value === 'all')
 
 
-// User subscription tier display with price
+// User subscription tier display (no hardcoded prices - prices are on Plans page)
 const userTierDisplay = computed(() => {
   const tier = authStore.subscriptionTier
   if (tier === 'lifetime') return 'Lifetime'
-  if (tier === 'yearly') return '$99/yr'
-  return '$19/mo'
+  if (tier === 'yearly') return 'Yearly'
+  return 'Monthly'
 })
 
 // Tier description and perks
