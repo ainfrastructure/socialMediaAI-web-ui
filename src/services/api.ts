@@ -12,6 +12,7 @@ import { contentService } from './contentService'
 import { facebookService } from './facebookService'
 import { instagramService } from './instagramService'
 import { tiktokService } from './tiktokService'
+import { twitterService } from './twitterService'
 import { favoritesService } from './favoritesService'
 import { schedulerService } from './schedulerService'
 import { waitlistService } from './waitlistService'
@@ -84,6 +85,13 @@ class ApiService {
   disconnectTikTokAccount = tiktokService.disconnectAccount.bind(tiktokService)
   postToTikTok = tiktokService.post.bind(tiktokService)
 
+  // Twitter methods
+  initTwitterAuth = twitterService.initAuth.bind(twitterService)
+  completeTwitterAuth = twitterService.completeAuth.bind(twitterService)
+  getTwitterAccounts = twitterService.getAccounts.bind(twitterService)
+  disconnectTwitterAccount = twitterService.disconnectAccount.bind(twitterService)
+  postToTwitter = twitterService.post.bind(twitterService)
+
   // Favorites methods
   getFavorites = favoritesService.getFavorites.bind(favoritesService)
   getFavorite = favoritesService.getFavorite.bind(favoritesService)
@@ -98,6 +106,7 @@ class ApiService {
   schedulePost = schedulerService.schedulePost.bind(schedulerService)
   updateScheduledPost = schedulerService.updateScheduledPost.bind(schedulerService)
   cancelScheduledPost = schedulerService.cancelScheduledPost.bind(schedulerService)
+  retryScheduledPost = schedulerService.retryScheduledPost.bind(schedulerService)
   createPublishedPost = schedulerService.createPublishedPost.bind(schedulerService)
   getHolidays = schedulerService.getHolidays.bind(schedulerService)
   getHolidaysForMonth = schedulerService.getHolidaysForMonth.bind(schedulerService)

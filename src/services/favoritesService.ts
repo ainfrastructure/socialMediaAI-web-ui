@@ -22,6 +22,19 @@ class FavoritesService {
     const response = await fetch(url, {
       headers: getAuthHeader(),
     })
+
+    if (!response.ok) {
+      const text = await response.text()
+      try {
+        return JSON.parse(text)
+      } catch {
+        return {
+          success: false,
+          error: `HTTP ${response.status}: ${text || response.statusText}`
+        }
+      }
+    }
+
     return response.json()
   }
 
@@ -29,6 +42,19 @@ class FavoritesService {
     const response = await fetch(`${API_URL}/api/favorites/${id}`, {
       headers: getAuthHeader(),
     })
+
+    if (!response.ok) {
+      const text = await response.text()
+      try {
+        return JSON.parse(text)
+      } catch {
+        return {
+          success: false,
+          error: `HTTP ${response.status}: ${text || response.statusText}`
+        }
+      }
+    }
+
     return response.json()
   }
 
@@ -50,6 +76,19 @@ class FavoritesService {
       headers: getAuthHeaders(),
       body: JSON.stringify(favoriteData),
     })
+
+    if (!response.ok) {
+      const text = await response.text()
+      try {
+        return JSON.parse(text)
+      } catch {
+        return {
+          success: false,
+          error: `HTTP ${response.status}: ${text || response.statusText}`
+        }
+      }
+    }
+
     return response.json()
   }
 
@@ -69,6 +108,19 @@ class FavoritesService {
       headers: getAuthHeaders(),
       body: JSON.stringify(updates),
     })
+
+    if (!response.ok) {
+      const text = await response.text()
+      try {
+        return JSON.parse(text)
+      } catch {
+        return {
+          success: false,
+          error: `HTTP ${response.status}: ${text || response.statusText}`
+        }
+      }
+    }
+
     return response.json()
   }
 
@@ -77,6 +129,19 @@ class FavoritesService {
       method: 'DELETE',
       headers: getAuthHeader(),
     })
+
+    if (!response.ok) {
+      const text = await response.text()
+      try {
+        return JSON.parse(text)
+      } catch {
+        return {
+          success: false,
+          error: `HTTP ${response.status}: ${text || response.statusText}`
+        }
+      }
+    }
+
     return response.json()
   }
 }

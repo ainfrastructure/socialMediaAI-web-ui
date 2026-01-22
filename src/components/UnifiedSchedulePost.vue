@@ -4,13 +4,17 @@ import { useRouter, useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import BaseButton from './BaseButton.vue'
 import BaseAlert from './BaseAlert.vue'
+import BaseModal from './BaseModal.vue'
 import { VueDatePicker } from '@vuepic/vue-datepicker'
 import '@vuepic/vue-datepicker/dist/main.css'
 import MobileTimePicker from './MobileTimePicker.vue'
+import AccountSelector from './AccountSelector.vue'
 import { useSocialAccounts } from '@/composables/useSocialAccounts'
 import { useScheduleTime } from '@/composables/useScheduleTime'
 import { useFacebookStore } from '@/stores/facebook'
 import { useInstagramStore } from '@/stores/instagram'
+import { useTikTokStore } from '@/stores/tiktok'
+import { useTwitterStore } from '@/stores/twitter'
 import { errorLog } from '@/utils/debug'
 
 interface Props {
@@ -45,6 +49,12 @@ const emit = defineEmits<{
     scheduledDate?: string
     scheduledTime?: string
     timezone?: string
+    accountSelections?: {
+      facebook?: string[]
+      instagram?: string[]
+      tiktok?: string[]
+      twitter?: string[]
+    }
   }): void
   (e: 'cancel'): void
 }>()
@@ -54,6 +64,8 @@ const router = useRouter()
 const route = useRoute()
 const facebookStore = useFacebookStore()
 const instagramStore = useInstagramStore()
+const tiktokStore = useTikTokStore()
+const twitterStore = useTwitterStore()
 const { platforms: socialPlatforms, isConnected } = useSocialAccounts()
 const { timezoneOptions, getDefaultTimezone } = useScheduleTime()
 
@@ -62,6 +74,24 @@ const publishType = ref<'now' | 'schedule'>(
   props.forceScheduleMode ? 'schedule' : props.initialPublishType
 )
 const selectedPlatforms = ref<string[]>(props.initialPlatforms.length > 0 ? [...props.initialPlatforms] : [])
+
+// Account selections for each platform
+const accountSelections = ref<{
+  facebook?: string[]
+  instagram?: string[]
+  tiktok?: string[]
+  twitter?: string[]
+}>({
+  facebook: [],
+  instagram: [],
+  tiktok: [],
+  twitter: []
+})
+
+// Modal state for account selection
+const showAccountModal = ref(false)
+const currentPlatformForSelection = ref<'facebook' | 'instagram' | 'tiktok' | 'twitter' | null>(null)
+const tempAccountSelections = ref<string[]>([])
 
 // Initialize scheduleDateTime from initialScheduleDate if provided
 const initScheduleDateTime = (): Date | null => {
@@ -100,17 +130,17 @@ const availablePlatforms = computed(() => {
     {
       id: 'tiktok',
       name: 'TikTok',
-      isConnected: false,
-      connectedAccounts: [],
-      comingSoon: true,
+      isConnected: isConnected('tiktok'),
+      connectedAccounts: socialPlatforms.value.find(p => p.id === 'tiktok')?.connectedAccounts || [],
+      comingSoon: false,
       bgColor: '#000000'
     },
     {
       id: 'twitter',
       name: 'X (Twitter)',
-      isConnected: false,
-      connectedAccounts: [],
-      comingSoon: true,
+      isConnected: isConnected('twitter'),
+      connectedAccounts: socialPlatforms.value.find(p => p.id === 'twitter')?.connectedAccounts || [],
+      comingSoon: false,
       bgColor: '#000000'
     },
     {
@@ -127,6 +157,18 @@ const availablePlatforms = computed(() => {
 // Computed
 const canPublish = computed(() => {
   if (selectedPlatforms.value.length === 0) return false
+  // Check that all selected platforms have accounts selected
+  for (const platform of selectedPlatforms.value) {
+    if (platform === 'facebook' && (!accountSelections.value.facebook || accountSelections.value.facebook.length === 0)) {
+      return false
+    }
+    if (platform === 'instagram' && (!accountSelections.value.instagram || accountSelections.value.instagram.length === 0)) {
+      return false
+    }
+    if (platform === 'tiktok' && (!accountSelections.value.tiktok || accountSelections.value.tiktok.length === 0)) {
+      return false
+    }
+  }
   if (publishType.value === 'schedule' && !scheduleDateTime.value) return false
   return true
 })
@@ -148,19 +190,114 @@ const formattedLockedDate = computed(() => {
   })
 })
 
+// Summary of selected platforms and accounts
+const publishSummary = computed(() => {
+  const summary: Array<{ platform: string; accounts: Array<{ id: string; name: string; pictureUrl?: string }> }> = []
+
+  for (const platformId of selectedPlatforms.value) {
+    if (platformId === 'facebook') {
+      const fbAccounts = (accountSelections.value.facebook || []).map(pageId => {
+        const page = facebookStore.connectedPages.find(p => p.pageId === pageId)
+        return {
+          id: pageId,
+          name: page?.pageName || pageId,
+          pictureUrl: page?.profilePictureUrl
+        }
+      })
+      if (fbAccounts.length > 0) {
+        summary.push({ platform: 'Facebook', accounts: fbAccounts })
+      }
+    } else if (platformId === 'instagram') {
+      const igAccounts = (accountSelections.value.instagram || []).map(accountId => {
+        const account = instagramStore.connectedAccounts.find(a => a.instagramAccountId === accountId)
+        return {
+          id: accountId,
+          name: account?.username || accountId,
+          pictureUrl: account?.profilePictureUrl
+        }
+      })
+      if (igAccounts.length > 0) {
+        summary.push({ platform: 'Instagram', accounts: igAccounts })
+      }
+    } else if (platformId === 'tiktok') {
+      const ttAccounts = (accountSelections.value.tiktok || []).map(accountId => {
+        const account = tiktokStore.connectedAccounts.find(a => a.tiktokAccountId === accountId)
+        return {
+          id: accountId,
+          name: account?.username || accountId,
+          pictureUrl: account?.profilePictureUrl
+        }
+      })
+      if (ttAccounts.length > 0) {
+        summary.push({ platform: 'TikTok', accounts: ttAccounts })
+      }
+    }
+  }
+
+  return summary
+})
+
+const hasPlatformsWithAccounts = computed(() => publishSummary.value.length > 0)
+
 // Methods
 function togglePlatform(platformId: string) {
   const index = selectedPlatforms.value.indexOf(platformId)
   if (index > -1) {
     selectedPlatforms.value.splice(index, 1)
+    // Clear account selections when deselecting platform
+    if (platformId === 'facebook') {
+      accountSelections.value.facebook = []
+    } else if (platformId === 'instagram') {
+      accountSelections.value.instagram = []
+    } else if (platformId === 'tiktok') {
+      accountSelections.value.tiktok = []
+    } else if (platformId === 'twitter') {
+      accountSelections.value.twitter = []
+    }
   } else {
     selectedPlatforms.value.push(platformId)
   }
 }
 
+function openAccountSelectionModal(platformId: 'facebook' | 'instagram' | 'tiktok' | 'twitter') {
+  currentPlatformForSelection.value = platformId
+  // Initialize with existing selections
+  tempAccountSelections.value = [...(accountSelections.value[platformId] || [])]
+  showAccountModal.value = true
+}
+
+function confirmAccountSelection() {
+  if (currentPlatformForSelection.value) {
+    accountSelections.value[currentPlatformForSelection.value] = [...tempAccountSelections.value]
+
+    // If accounts were selected, ensure platform is in selectedPlatforms
+    if (tempAccountSelections.value.length > 0) {
+      if (!selectedPlatforms.value.includes(currentPlatformForSelection.value)) {
+        selectedPlatforms.value.push(currentPlatformForSelection.value)
+      }
+    } else {
+      // If no accounts selected, remove platform from selection
+      const index = selectedPlatforms.value.indexOf(currentPlatformForSelection.value)
+      if (index > -1) {
+        selectedPlatforms.value.splice(index, 1)
+      }
+    }
+  }
+  closeAccountModal()
+}
+
+function closeAccountModal() {
+  showAccountModal.value = false
+  currentPlatformForSelection.value = null
+  tempAccountSelections.value = []
+}
+
 async function handlePlatformClick(platform: typeof availablePlatforms.value[0]) {
   if (platform.isConnected) {
-    togglePlatform(platform.id)
+    // Open account selection modal for connected platforms
+    if (platform.id === 'facebook' || platform.id === 'instagram' || platform.id === 'tiktok' || platform.id === 'twitter') {
+      openAccountSelectionModal(platform.id)
+    }
   } else if (!platform.comingSoon) {
     // Trigger connection directly based on platform
     // Pass current URL so user returns here after OAuth
@@ -170,6 +307,10 @@ async function handlePlatformClick(platform: typeof availablePlatforms.value[0])
         await facebookStore.connectFacebook(returnUrl)
       } else if (platform.id === 'instagram') {
         await instagramStore.connectInstagram(returnUrl)
+      } else if (platform.id === 'tiktok') {
+        await tiktokStore.connectTikTok(returnUrl)
+      } else if (platform.id === 'twitter') {
+        await twitterStore.connectTwitter(returnUrl)
       }
       // The stores are reactive, so UI will update automatically after connection
     } catch (error) {
@@ -192,6 +333,26 @@ function handlePublish() {
   if (selectedPlatforms.value.length === 0) {
     error.value = t('unifiedSchedule.noPlatformSelected', 'Please select at least one platform')
     return
+  }
+
+  // Validate account selections for each selected platform
+  for (const platform of selectedPlatforms.value) {
+    if (platform === 'facebook' && (!accountSelections.value.facebook || accountSelections.value.facebook.length === 0)) {
+      error.value = t('accountSelector.noAccountsSelected', { platform: 'Facebook' })
+      return
+    }
+    if (platform === 'instagram' && (!accountSelections.value.instagram || accountSelections.value.instagram.length === 0)) {
+      error.value = t('accountSelector.noAccountsSelected', { platform: 'Instagram' })
+      return
+    }
+    if (platform === 'tiktok' && (!accountSelections.value.tiktok || accountSelections.value.tiktok.length === 0)) {
+      error.value = t('accountSelector.noAccountsSelected', { platform: 'TikTok' })
+      return
+    }
+    if (platform === 'twitter' && (!accountSelections.value.twitter || accountSelections.value.twitter.length === 0)) {
+      error.value = t('accountSelector.noAccountsSelected', { platform: 'Twitter' })
+      return
+    }
   }
 
   let scheduledDate: string | undefined
@@ -236,7 +397,8 @@ function handlePublish() {
     publishType: publishType.value,
     scheduledDate,
     scheduledTime,
-    timezone: selectedTimezone.value
+    timezone: selectedTimezone.value,
+    accountSelections: accountSelections.value
   })
 }
 
@@ -244,15 +406,29 @@ function handleCancel() {
   emit('cancel')
 }
 
-// Initialize with connected platforms if none specified
-onMounted(() => {
-  if (selectedPlatforms.value.length === 0) {
-    // Auto-select first connected platform
-    const firstConnected = availablePlatforms.value.find(p => p.isConnected)
-    if (firstConnected) {
-      selectedPlatforms.value = [firstConnected.id]
+// Load connected accounts when component mounts
+onMounted(async () => {
+  // Load connected accounts from all platforms
+  await Promise.all([
+    facebookStore.loadConnectedPages(),
+    instagramStore.loadConnectedAccounts(),
+    tiktokStore.loadConnectedAccounts(),
+    twitterStore.loadConnectedAccounts()
+  ])
+
+  // Clean up: remove any platforms from selectedPlatforms that don't have accounts selected
+  selectedPlatforms.value = selectedPlatforms.value.filter(platformId => {
+    if (platformId === 'facebook') {
+      return accountSelections.value.facebook && accountSelections.value.facebook.length > 0
     }
-  }
+    if (platformId === 'instagram') {
+      return accountSelections.value.instagram && accountSelections.value.instagram.length > 0
+    }
+    if (platformId === 'tiktok') {
+      return accountSelections.value.tiktok && accountSelections.value.tiktok.length > 0
+    }
+    return false
+  })
 })
 </script>
 
@@ -352,7 +528,7 @@ onMounted(() => {
           :class="[
             'platform-card',
             {
-              selected: selectedPlatforms.includes(platform.id),
+              selected: selectedPlatforms.includes(platform.id) && accountSelections[platform.id]?.length > 0,
               'not-connected': !platform.isConnected && !platform.comingSoon,
               'coming-soon': platform.comingSoon
             }
@@ -392,16 +568,57 @@ onMounted(() => {
             <span v-else-if="!platform.isConnected" class="status not-connected">
               {{ t('unifiedSchedule.tapToConnect', 'Tap to connect') }}
             </span>
+            <span v-else-if="platform.isConnected && accountSelections[platform.id]?.length > 0" class="status accounts-selected">
+              {{ accountSelections[platform.id].length }} {{ accountSelections[platform.id].length === 1 ? 'account' : 'accounts' }} selected
+            </span>
+            <span v-else-if="platform.isConnected" class="status click-to-select">
+              {{ t('unifiedSchedule.clickToSelectAccounts', 'Click to select accounts') }}
+            </span>
           </div>
 
-          <!-- Connected indicator (green dot) or Selection Checkmark -->
-          <div v-if="selectedPlatforms.includes(platform.id)" class="selection-check">
+          <!-- Selection Checkmark (only show when accounts are selected) -->
+          <div v-if="selectedPlatforms.includes(platform.id) && accountSelections[platform.id]?.length > 0" class="selection-check">
             <svg viewBox="0 0 24 24" fill="none" width="24" height="24">
               <circle cx="12" cy="12" r="10" fill="var(--gold-primary)"/>
               <path d="M9 12L11 14L15 10" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
           </div>
+          <!-- Connected indicator (green dot) for connected platforms without selection -->
           <div v-else-if="platform.isConnected" class="connected-dot"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TikTok Privacy Notice -->
+    <BaseAlert v-if="selectedPlatforms.includes('tiktok')" type="info" class="tiktok-notice">
+      <strong>TikTok Privacy Notice:</strong> Videos will be posted as <strong>Private (Only Me)</strong> due to TikTok's requirements for unaudited apps. You can change the privacy to Public later in the TikTok app.
+    </BaseAlert>
+
+    <!-- Publish Summary -->
+    <div v-if="hasPlatformsWithAccounts" class="summary-section">
+      <h4 class="section-label">{{ $t('unifiedSchedule.publishSummary', 'Where your content will be posted') }}</h4>
+      <div class="summary-list">
+        <div v-for="item in publishSummary" :key="item.platform" class="summary-platform">
+          <div class="summary-platform-header">
+            <span class="summary-platform-name">{{ item.platform }}</span>
+            <span class="summary-account-count">{{ item.accounts.length }} {{ item.accounts.length === 1 ? 'account' : 'accounts' }}</span>
+          </div>
+          <div class="summary-accounts">
+            <div v-for="account in item.accounts" :key="account.id" class="summary-account">
+              <img
+                v-if="account.pictureUrl"
+                :src="account.pictureUrl"
+                :alt="account.name"
+                class="summary-account-avatar"
+              />
+              <div v-else class="summary-account-avatar-placeholder">
+                <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16">
+                  <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                </svg>
+              </div>
+              <span class="summary-account-name">{{ account.name }}</span>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -427,6 +644,51 @@ onMounted(() => {
         }}
       </BaseButton>
     </div>
+
+    <!-- Account Selection Modal -->
+    <Teleport to="body">
+      <BaseModal
+        v-model="showAccountModal"
+        size="md"
+        :show-close-button="true"
+        @close="closeAccountModal"
+      >
+        <div class="account-modal-content">
+          <h3 class="account-modal-title">
+            {{ currentPlatformForSelection === 'facebook'
+              ? $t('accountSelector.selectFacebookPages', 'Select Facebook Pages')
+              : currentPlatformForSelection === 'instagram'
+              ? $t('accountSelector.selectInstagramAccounts', 'Select Instagram Accounts')
+              : currentPlatformForSelection === 'tiktok'
+              ? $t('accountSelector.selectTikTokAccounts', 'Select TikTok Accounts')
+              : $t('accountSelector.selectTwitterAccounts', 'Select Twitter Accounts')
+            }}
+          </h3>
+          <p class="account-modal-subtitle">
+            {{ $t('unifiedSchedule.selectAccountsInfo', 'Choose which accounts to post to') }}
+          </p>
+
+          <AccountSelector
+            v-if="currentPlatformForSelection"
+            :platform="currentPlatformForSelection"
+            :multi-select="true"
+            v-model="tempAccountSelections"
+          />
+
+          <div class="account-modal-actions">
+            <BaseButton variant="ghost" @click="closeAccountModal">
+              {{ $t('common.cancel', 'Cancel') }}
+            </BaseButton>
+            <BaseButton
+              variant="primary"
+              @click="confirmAccountSelection"
+            >
+              {{ $t('common.save', 'Confirm') }}
+            </BaseButton>
+          </div>
+        </div>
+      </BaseModal>
+    </Teleport>
   </div>
 </template>
 
@@ -724,6 +986,16 @@ onMounted(() => {
   color: var(--gold-primary);
 }
 
+.status.click-to-select {
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
+.status.accounts-selected {
+  color: var(--success-text);
+  font-weight: 600;
+}
+
 .selection-check {
   position: absolute;
   top: var(--space-sm);
@@ -740,9 +1012,126 @@ onMounted(() => {
   background: #4ade80;
 }
 
+/* Publish Summary Section */
+.summary-section {
+  margin-top: var(--space-xl);
+  padding: var(--space-xl);
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-lg);
+  border: 2px solid var(--gold-primary);
+}
+
+.summary-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+  margin-top: var(--space-md);
+}
+
+.summary-platform {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.summary-platform-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: var(--space-sm);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.summary-platform-name {
+  font-size: var(--text-lg);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.summary-account-count {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.summary-accounts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  margin-top: var(--space-sm);
+}
+
+.summary-account {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: var(--space-sm) var(--space-md);
+  background: var(--bg-secondary);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+}
+
+.summary-account-avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: var(--radius-full);
+  object-fit: cover;
+}
+
+.summary-account-avatar-placeholder {
+  width: 24px;
+  height: 24px;
+  border-radius: var(--radius-full);
+  background: var(--bg-elevated);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+}
+
+.summary-account-name {
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+/* Account Selection Modal */
+.account-modal-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+  padding: var(--space-xl);
+}
+
+.account-modal-title {
+  font-size: var(--text-2xl);
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.account-modal-subtitle {
+  font-size: var(--text-base);
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.account-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-md);
+  padding-top: var(--space-lg);
+  border-top: 1px solid var(--border-color);
+}
+
 /* Error Alert */
 .error-alert {
   margin-top: var(--space-md);
+}
+
+/* TikTok Notice */
+.tiktok-notice {
+  margin-top: var(--space-lg);
 }
 
 /* Actions */

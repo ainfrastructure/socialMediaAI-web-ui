@@ -11,6 +11,7 @@ const ConnectAccountsView = () => import('../views/ConnectAccountsView.vue')
 const FacebookCallbackView = () => import('../views/FacebookCallbackView.vue')
 const InstagramCallbackView = () => import('../views/InstagramCallbackView.vue')
 const TikTokCallbackView = () => import('../views/TikTokCallbackView.vue')
+const TwitterCallbackView = () => import('../views/TwitterCallbackView.vue')
 const TestPostView = () => import('../views/TestPostView.vue')
 const SchedulerView = () => import('../views/SchedulerView.vue')
 const ProfileView = () => import('../views/ProfileView.vue')
@@ -98,6 +99,12 @@ const router = createRouter({
       path: '/auth/tiktok/callback',
       name: 'tiktok-callback',
       component: TikTokCallbackView,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/auth/twitter/callback',
+      name: 'twitter-callback',
+      component: TwitterCallbackView,
       meta: { requiresAuth: true },
     },
     {

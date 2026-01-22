@@ -31,6 +31,19 @@ class ContentService {
       headers: getAuthHeaders(),
       body: JSON.stringify({ prompt, watermark, referenceImage, promotionalSticker, placeId, strictnessMode, holidayTheme, visualStyle, customPrompt, dishInfo, restaurantName }),
     })
+
+    if (!response.ok) {
+      const text = await response.text()
+      try {
+        return JSON.parse(text)
+      } catch {
+        return {
+          success: false,
+          error: `HTTP ${response.status}: ${text || response.statusText}`
+        }
+      }
+    }
+
     const result = await response.json()
     console.log('[ContentService] Image generation result:', result)
     return result
@@ -55,6 +68,19 @@ class ContentService {
       headers: getAuthHeaders(),
       body: JSON.stringify({ prompt, ...options }),
     })
+
+    if (!response.ok) {
+      const text = await response.text()
+      try {
+        return JSON.parse(text)
+      } catch {
+        return {
+          success: false,
+          error: `HTTP ${response.status}: ${text || response.statusText}`
+        }
+      }
+    }
+
     return response.json()
   }
 
@@ -78,6 +104,19 @@ class ContentService {
       headers: getAuthHeaders(),
       body: JSON.stringify({ prompt, imageData, imageMimeType, ...options }),
     })
+
+    if (!response.ok) {
+      const text = await response.text()
+      try {
+        return JSON.parse(text)
+      } catch {
+        return {
+          success: false,
+          error: `HTTP ${response.status}: ${text || response.statusText}`
+        }
+      }
+    }
+
     return response.json()
   }
 
@@ -91,6 +130,19 @@ class ContentService {
     const response = await fetch(url, {
       headers: getAuthHeader(),
     })
+
+    if (!response.ok) {
+      const text = await response.text()
+      try {
+        return JSON.parse(text)
+      } catch {
+        return {
+          success: false,
+          error: `HTTP ${response.status}: ${text || response.statusText}`
+        }
+      }
+    }
+
     return response.json()
   }
 
@@ -105,6 +157,19 @@ class ContentService {
       headers: getAuthHeaders(),
       body: JSON.stringify({ restaurantData, menuItems, context }),
     })
+
+    if (!response.ok) {
+      const text = await response.text()
+      try {
+        return JSON.parse(text)
+      } catch {
+        return {
+          success: false,
+          error: `HTTP ${response.status}: ${text || response.statusText}`
+        }
+      }
+    }
+
     return response.json()
   }
 
@@ -142,6 +207,19 @@ class ContentService {
       headers: getAuthHeaders(),
       body: JSON.stringify({ restaurantData, menuItems, customization, postTypeOptions }),
     })
+
+    if (!response.ok) {
+      const text = await response.text()
+      try {
+        return JSON.parse(text)
+      } catch {
+        return {
+          success: false,
+          error: `HTTP ${response.status}: ${text || response.statusText}`
+        }
+      }
+    }
+
     return response.json()
   }
 
@@ -182,6 +260,19 @@ class ContentService {
       headers: getAuthHeaders(),
       body: JSON.stringify({ prompt, customization, menuItems, restaurantLogoPath, placeId, postTypeOptions, referenceImage }),
     })
+
+    if (!response.ok) {
+      const text = await response.text()
+      try {
+        return JSON.parse(text)
+      } catch {
+        return {
+          success: false,
+          error: `HTTP ${response.status}: ${text || response.statusText}`
+        }
+      }
+    }
+
     return response.json()
   }
 
@@ -195,6 +286,19 @@ class ContentService {
       headers: getAuthHeaders(),
       body: JSON.stringify({ videoPath, logoPath, ...options }),
     })
+
+    if (!response.ok) {
+      const text = await response.text()
+      try {
+        return JSON.parse(text)
+      } catch {
+        return {
+          success: false,
+          error: `HTTP ${response.status}: ${text || response.statusText}`
+        }
+      }
+    }
+
     return response.json()
   }
 
@@ -208,6 +312,19 @@ class ContentService {
       headers: getAuthHeaders(),
       body: JSON.stringify({ videoPath, text, ...options }),
     })
+
+    if (!response.ok) {
+      const text = await response.text()
+      try {
+        return JSON.parse(text)
+      } catch {
+        return {
+          success: false,
+          error: `HTTP ${response.status}: ${text || response.statusText}`
+        }
+      }
+    }
+
     return response.json()
   }
 
@@ -234,6 +351,19 @@ class ContentService {
         language,
       }),
     })
+
+    if (!response.ok) {
+      const text = await response.text()
+      try {
+        return JSON.parse(text)
+      } catch {
+        return {
+          success: false,
+          error: `HTTP ${response.status}: ${text || response.statusText}`
+        }
+      }
+    }
+
     return response.json()
   }
 }

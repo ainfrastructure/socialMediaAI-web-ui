@@ -83,6 +83,8 @@ class SSEService {
             data.platform,
             data.metrics
           )
+        }).catch((error) => {
+          debugError('[SSE] Failed to import or update engagement store:', error)
         })
       } catch (error) {
         debugError('[SSE] Error parsing engagement-update event:', error)

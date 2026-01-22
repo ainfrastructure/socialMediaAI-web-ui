@@ -5,6 +5,7 @@ import type { User } from '../services/authService'
 import { sseService } from '../services/sseService'
 import { useNotificationStore } from './notifications'
 import { usePreferencesStore } from './preferences'
+import { errorLog } from '@/utils/debug'
 
 export const useAuthStore = defineStore('auth', () => {
   // State
@@ -516,10 +517,16 @@ export const useAuthStore = defineStore('auth', () => {
             if (accessToken.value) {
               sseService.connect(accessToken.value)
             }
+          }).catch((error) => {
+            errorLog('Failed to load profile after token refresh:', error)
+            markInitialized()
           })
         } else {
           markInitialized()
         }
+      }).catch((error) => {
+        errorLog('Failed to refresh access token:', error)
+        markInitialized()
       })
     } else {
       // Token is still valid, just load profile
@@ -528,6 +535,9 @@ export const useAuthStore = defineStore('auth', () => {
         if (accessToken.value) {
           sseService.connect(accessToken.value)
         }
+      }).catch((error) => {
+        errorLog('Failed to load profile:', error)
+        markInitialized()
       })
       scheduleTokenRefresh()
     }

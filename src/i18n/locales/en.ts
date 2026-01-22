@@ -768,7 +768,9 @@ export default {
     publish: {
       publishingTitle: 'Sharing your post',
       publishingSubtitle: 'Uploading to your social accounts',
-      error: 'Failed to publish. Please try again.'
+      error: 'Failed to publish. Please try again.',
+      retrying: 'Retrying ({attempt}/{max})...',
+      retryFailedPlatforms: 'Retry Failed Platforms'
     },
     navigation: {
       back: '← Back',
@@ -830,14 +832,24 @@ export default {
       'Connect your social media accounts to start posting content directly from our platform',
     facebookPages: 'Facebook Pages',
     connect: 'Connect',
+    connectMore: 'Connect More',
     disconnect: 'Disconnect',
+    disconnectAll: 'Disconnect All',
     connecting: 'Connecting...',
     comingSoon: 'Coming Soon',
+    accountsConnected: '{count} account connected | {count} accounts connected',
     errorOccurred: 'An error occurred. Please try again.',
-    successfullyConnected: 'Successfully connected {count} Facebook page(s)!',
+    successfullyConnected: 'Successfully connected {count} account(s)!',
+    successfullyConnectedFacebook: 'Successfully connected {count} Facebook page(s)!',
+    successfullyConnectedInstagram: 'Successfully connected {count} Instagram account(s)!',
+    successfullyConnectedTikTok: 'Successfully connected {count} TikTok account(s)!',
+    successfullyConnectedTwitter: 'Successfully connected {count} Twitter account(s)!',
     successfullyDisconnected: 'Successfully disconnected "{name}"',
+    successfullyDisconnectedAll: 'Successfully disconnected {count} accounts',
     confirmDisconnect: 'Are you sure you want to disconnect "{name}"?',
-    disconnectTitle: 'Disconnect Account'
+    confirmDisconnectAll: 'Are you sure you want to disconnect all {count} {platform} accounts?',
+    disconnectTitle: 'Disconnect Account',
+    disconnectAllTitle: 'Disconnect All Accounts'
   },
 
   // Scheduler View
@@ -850,6 +862,7 @@ export default {
     moreHolidays: 'more',
     postDetails: 'Post Details',
     publishedAt: 'Published At',
+    viewPost: 'View Post',
     viewOn: 'View on',
     restaurant: 'Restaurant',
     caption: 'Caption',
@@ -857,12 +870,19 @@ export default {
     cancelPost: 'Cancel Post',
     noTime: 'No time',
     noMedia: 'No media',
-    post: 'post',
+    post: 'Post',
+    status: 'Status',
     publishTime: 'Publish Time',
     captionGenerationFailed: 'Caption Generation Failed',
     imageGenerationFailed: 'Image Generation Failed',
     generationFailed: 'Generation Failed',
-    unexpectedError: 'An unexpected error occurred. Please try again.'
+    unexpectedError: 'An unexpected error occurred. Please try again.',
+    retryPost: 'Retry Post',
+    retrying: 'Retrying...',
+    retrySuccess: 'Post queued for retry',
+    retryError: 'Failed to retry post',
+    partial: 'Partially Published',
+    overdue: 'Overdue'
   },
 
   // Edit Scheduled Post Modal
@@ -1234,7 +1254,13 @@ export default {
   errors: {
     generic: 'Something went wrong',
     networkError: 'Network error. Please check your connection.',
-    validationError: 'Please check your input'
+    validationError: 'Please check your input',
+    timeout: 'Request timed out. Please try again.',
+    httpError: 'Server error: {status}',
+    publishPartial: 'Published to {success} of {total} platforms',
+    retryFailed: 'Retry failed after {attempts} attempts',
+    postSavedScheduleFailed: 'Post Saved, But Scheduling Failed',
+    postSavedScheduleFailedMessage: 'Your post was saved to Favorites. You can schedule it later from the Posts page.'
   },
 
   // Alerts & Toasts
@@ -1260,6 +1286,28 @@ export default {
     notesPlaceholder: 'Add any notes about this scheduled post...'
   },
 
+  // Pick Post Modal
+  pickPostModal: {
+    showAllRestaurants: 'Show all restaurants',
+    showCurrentRestaurant: 'Show current restaurant only',
+    allRestaurantsLabel: 'All Restaurants'
+  },
+
+  // Account Selector
+  accountSelector: {
+    selectAccounts: 'Select Accounts',
+    selectFacebookPages: 'Select Facebook Pages',
+    selectInstagramAccounts: 'Select Instagram Accounts',
+    selectTikTokAccounts: 'Select TikTok Accounts',
+    selectTwitterAccounts: 'Select Twitter Accounts',
+    noAccountsConnected: 'No {platform} accounts connected',
+    noAccountsSelected: 'Please select at least one {platform} account',
+    connectAccount: 'Connect Account',
+    multipleSelected: '{count} accounts selected',
+    accountId: 'Account ID',
+    singleAccountInfo: 'This is your only connected account. It will be used for posting.'
+  },
+
   // Unified Schedule Post
   unifiedSchedule: {
     whenToPublish: 'When to Publish',
@@ -1274,7 +1322,10 @@ export default {
     schedule: 'Schedule Post',
     noPlatformSelected: 'Please select at least one platform',
     noDateSelected: 'Please select a date',
-    mustBeInFuture: 'Scheduled time must be after now'
+    mustBeInFuture: 'Scheduled time must be after now',
+    selectAccountsInfo: 'Choose which accounts to post to',
+    publishSummary: 'Where your content will be posted',
+    clickToSelectAccounts: 'Click to select accounts'
   },
 
   // Mode Toggle
@@ -1300,6 +1351,7 @@ export default {
     message: 'Please wait while we publish your post to the selected platforms.',
     successTitle: 'Congratulations!',
     successMessage: 'Your post has been published successfully!',
+    partialSuccessTitle: 'Partially Published',
     errorTitle: 'Publishing Failed',
     errorMessage: 'Failed to publish to any platform.',
     createAnother: 'Create Another Post'
@@ -1342,6 +1394,7 @@ export default {
     published: 'Published',
     scheduled: 'Scheduled',
     failed: 'Failed',
+    partial: 'Partially Published',
     cancelled: 'Cancelled',
     draft: 'Draft',
     creditsLeft: 'credits left',
@@ -1726,7 +1779,7 @@ export default {
     comments: 'Comments',
     shares: 'Shares',
     reach: 'Reach',
-    views: 'Views',
+    views: 'Views (Reach)',
     impressions: 'Impressions',
     engagementRate: 'Engagement Rate',
     totalEngagement: 'Total Engagement',
@@ -1740,7 +1793,12 @@ export default {
     viewsTooltip: 'Total reach across all platforms',
     engagementOverTime: 'Engagement Over Time',
 
-    // Instagram views info
+    // Reach/impressions data info
+    reachDataLimited: 'Views & Reach Data Limited',
+    reachDataInfo: 'Views (reach/impressions) require Business accounts with Insights API permissions. Personal accounts only show likes, comments, and shares. To see views data, connect a Business or Creator account with proper permissions.',
+    reachDataUnavailable: 'Views data requires Business account permissions',
+
+    // Instagram views info (legacy)
     instagramViewsLimited: 'Instagram Views Limited',
     instagramViewsInfo: 'Instagram views require Instagram Business account with Insights API permission. Currently showing likes and comments only.',
     learnMore: 'Learn More',

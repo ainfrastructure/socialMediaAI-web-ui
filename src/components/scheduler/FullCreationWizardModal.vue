@@ -31,6 +31,7 @@ interface PublishResult {
   platform: string
   success: boolean
   url?: string
+  accountName?: string
   error?: string
 }
 
@@ -113,8 +114,14 @@ const isOpen = computed({
 })
 
 // Watch for modal close to reset state
-watch(() => props.modelValue, (newVal) => {
-  if (!newVal) {
+watch(() => props.modelValue, async (newVal) => {
+  if (newVal) {
+    // Load connected accounts when modal opens
+    await Promise.all([
+      facebookStore.loadConnectedPages(),
+      instagramStore.loadConnectedAccounts()
+    ])
+  } else {
     resetWizard()
   }
 })
@@ -527,6 +534,10 @@ async function handleEasyModePublish(data: {
   timezone?: string
   postText?: string
   hashtags?: string[]
+  accountSelections?: {
+    facebook?: string[]
+    instagram?: string[]
+  }
 }) {
   try {
     if (!generatedImageUrl.value) {
@@ -552,50 +563,74 @@ async function handleEasyModePublish(data: {
     const finalPostText = data.postText || postText.value
     const finalHashtags = data.hashtags || hashtags.value
 
-    // Save post as favorite first
-    const saveResponse = await api.saveFavorite({
-      restaurant_id: selectedRestaurant.value.id,
-      content_type: 'image',
-      media_url: generatedImageUrl.value,
-      post_text: finalPostText,
-      hashtags: finalHashtags,
-      platform: platforms[0],
-      platforms: platforms,
-      prompt: editablePrompt.value,
-      menu_items: selectedMenuItems.value,
-      context: promptContext.value,
-      brand_dna: selectedRestaurant.value?.brand_dna
-    })
-
-    if (!saveResponse.success || !saveResponse.data?.favorite?.id) {
-      throw new Error('Failed to save post')
-    }
-
-    const favoritePostId = saveResponse.data.favorite.id
-    lastSavedPost.value = saveResponse.data.favorite
-
-    if (data.publishType === 'schedule') {
-      // Schedule the post
-      const scheduleResponse = await api.schedulePost({
-        favorite_post_id: favoritePostId,
-        scheduled_date: data.scheduleDate || props.selectedDate!,
-        scheduled_time: data.scheduleTime,
+    // Step 1: Save post as favorite first
+    let favoritePostId: string | null = null
+    try {
+      const saveResponse = await api.saveFavorite({
+        restaurant_id: selectedRestaurant.value.id,
+        content_type: 'image',
+        media_url: generatedImageUrl.value,
+        post_text: finalPostText,
+        hashtags: finalHashtags,
+        platform: platforms[0],
         platforms: platforms,
-        timezone: data.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone
+        prompt: editablePrompt.value,
+        menu_items: selectedMenuItems.value,
+        context: promptContext.value,
+        brand_dna: selectedRestaurant.value?.brand_dna
       })
 
-      if (!scheduleResponse.success) {
-        throw new Error('Failed to schedule post')
+      if (!saveResponse.success || !saveResponse.data?.favorite?.id) {
+        throw new Error(saveResponse.error || 'Failed to save post')
       }
 
+      favoritePostId = saveResponse.data.favorite.id
+      lastSavedPost.value = saveResponse.data.favorite
+    } catch (saveError: any) {
+      errorLog('Failed to save post:', saveError)
+      generationError.value = saveError.message || 'Failed to save post'
       publishing.value = false
-      showSuccessAndClose()
-    } else {
-      // Publish now
-      await publishToSocialMedia(favoritePostId, platforms, finalPostText, finalHashtags)
+      return
+    }
+
+    // Step 2: Schedule or publish (wrapped in inner try/catch)
+    try {
+      if (data.publishType === 'schedule') {
+        // Schedule the post
+        const scheduleResponse = await api.schedulePost({
+          favorite_post_id: favoritePostId,
+          scheduled_date: data.scheduleDate || props.selectedDate!,
+          scheduled_time: data.scheduleTime,
+          platforms: platforms,
+          platform_settings: data.accountSelections,
+          timezone: data.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone
+        })
+
+        if (!scheduleResponse.success) {
+          throw new Error(scheduleResponse.error || 'Failed to schedule post')
+        }
+
+        publishing.value = false
+        showSuccessAndClose()
+      } else {
+        // Publish now
+        await publishToSocialMedia(favoritePostId, platforms, finalPostText, finalHashtags, data.accountSelections)
+      }
+    } catch (schedulePublishError: any) {
+      errorLog('Failed to schedule/publish (but post was saved):', schedulePublishError)
+      publishing.value = false
+
+      // Post was saved but schedule/publish failed - inform user
+      notificationStore.addNotification({
+        type: 'warning',
+        title: t('errors.postSavedScheduleFailed'),
+        message: t('errors.postSavedScheduleFailedMessage')
+      })
+
+      generationError.value = schedulePublishError.message || 'Failed to schedule/publish post. However, your post was saved to Favorites.'
     }
   } catch (err: any) {
-    errorLog('Failed to handle publish:', err)
+    errorLog('Unexpected error in handlePublish:', err)
     generationError.value = err.message || 'Failed to publish post'
     publishing.value = false
   }
@@ -606,7 +641,11 @@ async function publishToSocialMedia(
   favoritePostId: string,
   platforms: string[],
   finalPostText: string,
-  finalHashtags: string[]
+  finalHashtags: string[],
+  accountSelections?: {
+    facebook?: string[]
+    instagram?: string[]
+  }
 ) {
   const results: PublishResult[] = []
 
@@ -617,54 +656,111 @@ async function publishToSocialMedia(
 
   for (const platform of platforms) {
     if (platform === 'facebook') {
-      const selectedPage = facebookStore.connectedPages[0]
-      if (!selectedPage) {
-        results.push({ platform: 'facebook', success: false, error: 'No Facebook page connected' })
+      const selectedPageIds = accountSelections?.facebook || []
+
+      // If no accounts selected, show error
+      if (selectedPageIds.length === 0) {
+        results.push({ platform: 'facebook', success: false, error: 'No Facebook pages selected' })
         continue
       }
 
-      try {
-        const response = await api.postToFacebook(
-          selectedPage.pageId,
-          message,
-          generatedImageUrl.value
-        )
-
-        const postUrl = (response as any).postUrl || response.data?.postUrl
-        if (response.success && postUrl) {
-          results.push({ platform: 'facebook', success: true, url: postUrl })
-          notificationStore.addPublishSuccess('facebook', postUrl)
-        } else if ((response as any).code === 'FACEBOOK_RECONNECT_REQUIRED') {
-          results.push({ platform: 'facebook', success: false, error: 'Facebook connection expired' })
-        } else {
-          results.push({ platform: 'facebook', success: false, error: response.error || 'Unknown error' })
+      // Loop through all selected Facebook pages
+      for (const pageId of selectedPageIds) {
+        const page = facebookStore.connectedPages.find(p => p.pageId === pageId)
+        if (!page) {
+          results.push({ platform: 'facebook', success: false, error: `Facebook page ${pageId} not found` })
+          continue
         }
-      } catch (err: any) {
-        results.push({ platform: 'facebook', success: false, error: err.message || 'Failed to publish' })
+
+        try {
+          const response = await api.postToFacebook(
+            page.pageId,
+            message,
+            generatedImageUrl.value
+          )
+
+          const postUrl = (response as any).postUrl || response.data?.postUrl
+          if (response.success && postUrl) {
+            results.push({
+              platform: 'facebook',
+              accountName: page.pageName,
+              success: true,
+              url: postUrl
+            })
+            notificationStore.addPublishSuccess('facebook', postUrl)
+          } else if ((response as any).code === 'FACEBOOK_RECONNECT_REQUIRED') {
+            results.push({
+              platform: 'facebook',
+              accountName: page.pageName,
+              success: false,
+              error: 'Facebook connection expired'
+            })
+          } else {
+            results.push({
+              platform: 'facebook',
+              accountName: page.pageName,
+              success: false,
+              error: response.error || 'Unknown error'
+            })
+          }
+        } catch (err: any) {
+          results.push({
+            platform: 'facebook',
+            accountName: page.pageName,
+            success: false,
+            error: err.message || 'Failed to publish'
+          })
+        }
       }
     } else if (platform === 'instagram') {
-      const instagramAccount = instagramStore.connectedAccounts[0]
-      if (!instagramAccount) {
-        results.push({ platform: 'instagram', success: false, error: 'No Instagram account connected' })
+      const selectedAccountIds = accountSelections?.instagram || []
+
+      // If no accounts selected, show error
+      if (selectedAccountIds.length === 0) {
+        results.push({ platform: 'instagram', success: false, error: 'No Instagram accounts selected' })
         continue
       }
 
-      try {
-        const response = await api.postToInstagram(
-          instagramAccount.instagramAccountId,
-          message,
-          generatedImageUrl.value
-        )
-
-        const postUrl = (response as any).postUrl || response.data?.postUrl
-        if (response.success && postUrl) {
-          results.push({ platform: 'instagram', success: true, url: postUrl })
-          notificationStore.addPublishSuccess('instagram', postUrl)
-        } else {
-          results.push({ platform: 'instagram', success: false, error: response.error || 'Failed to publish to Instagram' })
+      // Loop through all selected Instagram accounts
+      for (const accountId of selectedAccountIds) {
+        const account = instagramStore.connectedAccounts.find(a => a.instagramAccountId === accountId)
+        if (!account) {
+          results.push({ platform: 'instagram', success: false, error: `Instagram account ${accountId} not found` })
+          continue
         }
-      } catch (err: any) {
-        results.push({ platform: 'instagram', success: false, error: err.message || 'Failed to publish' })
+
+        try {
+          const response = await api.postToInstagram(
+            account.instagramAccountId,
+            message,
+            generatedImageUrl.value
+          )
+
+          const postUrl = (response as any).postUrl || response.data?.postUrl
+          if (response.success && postUrl) {
+            results.push({
+              platform: 'instagram',
+              accountName: account.username,
+              success: true,
+              url: postUrl
+            })
+            notificationStore.addPublishSuccess('instagram', postUrl)
+          } else {
+            results.push({
+              platform: 'instagram',
+              accountName: account.username,
+              success: false,
+              error: response.error || 'Failed to publish to Instagram'
+            })
+          }
+        } catch (err: any) {
+          results.push({
+            platform: 'instagram',
+            accountName: account.username,
+            success: false,
+            error: err.message || 'Failed to publish'
+          })
+        }
       }
     } else {
       results.push({ platform, success: false, error: `${platform} publishing not yet supported` })

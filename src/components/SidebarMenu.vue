@@ -4,6 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '../stores/auth'
 import MaterialIcon from './MaterialIcon.vue'
+import { errorLog } from '@/utils/debug'
 
 const props = defineProps<{
   mobileOpen?: boolean
@@ -153,6 +154,8 @@ function navigateToReferral() {
         el.scrollIntoView({ behavior: 'smooth', block: 'start' })
       }
     }, 100)
+  }).catch((error) => {
+    errorLog('Failed to navigate to profile:', error)
   })
   emit('close')
 }

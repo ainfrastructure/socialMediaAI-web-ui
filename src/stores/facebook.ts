@@ -7,6 +7,7 @@ export interface FacebookPage {
   id: string
   pageId: string
   pageName: string
+  profilePictureUrl?: string
   connectedAt: string
 }
 

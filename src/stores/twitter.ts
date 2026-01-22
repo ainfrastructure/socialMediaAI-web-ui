@@ -3,35 +3,34 @@ import { ref } from 'vue'
 import { api } from '../services/api'
 import { debugLog } from '@/utils/debug'
 
-export interface InstagramAccount {
+export interface TwitterAccount {
   id: string
-  instagramAccountId: string
+  twitterAccountId: string
   username: string
-  pageId: string
-  pageName: string
+  displayName: string
   profilePictureUrl?: string
   connectedAt: string
 }
 
-export const useInstagramStore = defineStore('instagram', () => {
-  const connectedAccounts = ref<InstagramAccount[]>([])
+export const useTwitterStore = defineStore('twitter', () => {
+  const connectedAccounts = ref<TwitterAccount[]>([])
   const loading = ref(false)
   const error = ref<string | null>(null)
 
   /**
-   * Initialize Instagram OAuth flow with redirect
+   * Initialize Twitter OAuth flow with redirect
    * @param returnUrl - Optional URL to return to after OAuth completes
    */
-  async function connectInstagram(returnUrl?: string): Promise<void> {
+  async function connectTwitter(returnUrl?: string): Promise<void> {
     loading.value = true
     error.value = null
 
     try {
       // Step 1: Get authorization URL from backend
-      const initResponse = await api.initInstagramAuth()
+      const initResponse = await api.initTwitterAuth()
 
       if (!initResponse.success) {
-        const errorMsg = initResponse.error || 'Failed to initialize Instagram authentication'
+        const errorMsg = initResponse.error || 'Failed to initialize Twitter authentication'
         throw new Error(errorMsg)
       }
 
@@ -42,20 +41,20 @@ export const useInstagramStore = defineStore('instagram', () => {
       const { authUrl, state } = initResponse.data
 
       // Step 2: Store state in localStorage for verification after redirect
-      localStorage.setItem('instagram_oauth_state', state)
+      localStorage.setItem('twitter_oauth_state', state)
 
       // Step 2b: Store return URL if provided
       if (returnUrl) {
-        debugLog('[InstagramStore] Storing return URL:', returnUrl)
+        debugLog('[TwitterStore] Storing return URL:', returnUrl)
         localStorage.setItem('oauth_return_url', returnUrl)
       } else {
         localStorage.removeItem('oauth_return_url')
       }
 
-      // Step 3: Redirect to Facebook OAuth (Instagram uses Facebook OAuth)
+      // Step 3: Redirect to Twitter OAuth
       window.location.href = authUrl
     } catch (err: any) {
-      error.value = err.message || 'Failed to connect Instagram account'
+      error.value = err.message || 'Failed to connect Twitter account'
       loading.value = false
       throw err
     }
@@ -63,14 +62,14 @@ export const useInstagramStore = defineStore('instagram', () => {
   }
 
   /**
-   * Load user's connected Instagram accounts
+   * Load user's connected Twitter accounts
    */
   async function loadConnectedAccounts(): Promise<void> {
     loading.value = true
     error.value = null
 
     try {
-      const response = await api.getInstagramAccounts()
+      const response = await api.getTwitterAccounts()
 
       if (!response.success) {
         throw new Error(response.error || 'Failed to load connected accounts')
@@ -85,14 +84,14 @@ export const useInstagramStore = defineStore('instagram', () => {
   }
 
   /**
-   * Disconnect an Instagram account
+   * Disconnect a Twitter account
    */
   async function disconnectAccount(accountId: string): Promise<void> {
     loading.value = true
     error.value = null
 
     try {
-      const response = await api.disconnectInstagramAccount(accountId)
+      const response = await api.disconnectTwitterAccount(accountId)
 
       if (!response.success) {
         throw new Error(response.error || 'Failed to disconnect account')
@@ -100,7 +99,7 @@ export const useInstagramStore = defineStore('instagram', () => {
 
       // Remove from local state
       connectedAccounts.value = connectedAccounts.value.filter(
-        (account) => account.instagramAccountId !== accountId
+        (account) => account.twitterAccountId !== accountId
       )
     } catch (err: any) {
       error.value = err.message || 'Failed to disconnect account'
@@ -111,7 +110,7 @@ export const useInstagramStore = defineStore('instagram', () => {
   }
 
   /**
-   * Complete Instagram OAuth callback after redirect
+   * Complete Twitter OAuth callback after redirect
    * Called by the callback page/component
    */
   async function handleOAuthCallback(code: string, state: string): Promise<void> {
@@ -120,26 +119,26 @@ export const useInstagramStore = defineStore('instagram', () => {
 
     try {
       // Verify state matches what we stored
-      const storedState = localStorage.getItem('instagram_oauth_state')
+      const storedState = localStorage.getItem('twitter_oauth_state')
       if (state !== storedState) {
         throw new Error('Invalid state parameter - possible CSRF attack')
       }
 
       // Clear stored state
-      localStorage.removeItem('instagram_oauth_state')
+      localStorage.removeItem('twitter_oauth_state')
 
       // Send code to backend to complete OAuth
-      const callbackResponse = await api.completeInstagramAuth(code, state)
+      const callbackResponse = await api.completeTwitterAuth(code, state)
 
       if (!callbackResponse.success) {
-        throw new Error(callbackResponse.error || 'Failed to complete Instagram authentication')
+        throw new Error(callbackResponse.error || 'Failed to complete Twitter authentication')
       }
 
       // Update connected accounts
       connectedAccounts.value = callbackResponse.data?.accounts || []
       error.value = null
     } catch (err: any) {
-      error.value = err.message || 'Failed to complete Instagram authentication'
+      error.value = err.message || 'Failed to complete Twitter authentication'
       throw err
     } finally {
       loading.value = false
@@ -150,7 +149,7 @@ export const useInstagramStore = defineStore('instagram', () => {
     connectedAccounts,
     loading,
     error,
-    connectInstagram,
+    connectTwitter,
     handleOAuthCallback,
     loadConnectedAccounts,
     disconnectAccount,

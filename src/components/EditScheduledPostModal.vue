@@ -9,8 +9,11 @@ import '@vuepic/vue-datepicker/dist/main.css'
 import MobileTimePicker from './MobileTimePicker.vue'
 import MaterialIcon from './MaterialIcon.vue'
 import PlatformLogo from './PlatformLogo.vue'
+import AccountSelector from './AccountSelector.vue'
 import { useSocialAccounts } from '../composables/useSocialAccounts'
 import { useScheduleTime } from '../composables/useScheduleTime'
+import { useFacebookStore } from '@/stores/facebook'
+import { useInstagramStore } from '@/stores/instagram'
 import { errorLog } from '@/utils/debug'
 
 interface Props {
@@ -27,6 +30,10 @@ const emit = defineEmits<{
 
 useI18n()
 
+// Stores
+const facebookStore = useFacebookStore()
+const instagramStore = useInstagramStore()
+
 // Social accounts integration
 const { availablePlatforms } = useSocialAccounts()
 
@@ -38,6 +45,19 @@ const scheduledDate = ref<Date | null>(null)
 const selectedTime = ref<{ hours: number; minutes: number }>({ hours: 12, minutes: 0 })
 const timezone = ref(getDefaultTimezone())
 const selectedPlatforms = ref<string[]>([])
+const accountSelections = ref<{
+  facebook?: string[]
+  instagram?: string[]
+}>({
+  facebook: [],
+  instagram: []
+})
+
+// Modal state for account selection
+const showAccountModal = ref(false)
+const currentPlatformForSelection = ref<'facebook' | 'instagram' | null>(null)
+const tempAccountSelections = ref<string[]>([])
+
 const notes = ref('')
 const postText = ref('')
 const hashtags = ref<string[]>([])
@@ -47,6 +67,17 @@ const saving = ref(false)
 const showImagePicker = ref(false)
 const availableFavorites = ref<any[]>([])
 const selectedFavoriteId = ref<string | null>(null)
+
+// Watch for modal opening to load connected accounts
+watch(() => props.modelValue, async (newValue) => {
+  if (newValue) {
+    // Load connected accounts from all platforms
+    await Promise.all([
+      facebookStore.loadConnectedPages(),
+      instagramStore.loadConnectedAccounts()
+    ])
+  }
+})
 
 // Watch for post changes and populate form
 watch(() => props.post, (newPost) => {
@@ -85,6 +116,20 @@ const populateForm = (post: any) => {
     selectedPlatforms.value = [post.platform]
   } else {
     selectedPlatforms.value = []
+  }
+
+  // Load account selections from platform_settings
+  if (post.platform_settings) {
+    accountSelections.value = {
+      facebook: post.platform_settings.facebook || [],
+      instagram: post.platform_settings.instagram || []
+    }
+  } else {
+    // Backward compatibility: initialize empty
+    accountSelections.value = {
+      facebook: [],
+      instagram: []
+    }
   }
 
   if (post.notes) {
@@ -192,6 +237,77 @@ const currentFavorite = computed(() => {
   return props.post
 })
 
+// Account selection modal functions
+function openAccountSelectionModal(platformId: 'facebook' | 'instagram') {
+  currentPlatformForSelection.value = platformId
+  // Initialize with existing selections
+  tempAccountSelections.value = [...(accountSelections.value[platformId] || [])]
+  showAccountModal.value = true
+}
+
+function confirmAccountSelection() {
+  if (currentPlatformForSelection.value) {
+    accountSelections.value[currentPlatformForSelection.value] = [...tempAccountSelections.value]
+
+    // If accounts were selected, ensure platform is in selectedPlatforms
+    if (tempAccountSelections.value.length > 0) {
+      if (!selectedPlatforms.value.includes(currentPlatformForSelection.value)) {
+        selectedPlatforms.value.push(currentPlatformForSelection.value)
+      }
+    } else {
+      // If no accounts selected, remove platform from selection
+      const index = selectedPlatforms.value.indexOf(currentPlatformForSelection.value)
+      if (index > -1) {
+        selectedPlatforms.value.splice(index, 1)
+      }
+    }
+  }
+  closeAccountModal()
+}
+
+function closeAccountModal() {
+  showAccountModal.value = false
+  currentPlatformForSelection.value = null
+  tempAccountSelections.value = []
+}
+
+// Summary of selected platforms and accounts
+const publishSummary = computed(() => {
+  const summary: Array<{ platform: string; accounts: Array<{ id: string; name: string; pictureUrl?: string }> }> = []
+  const facebookStore = useFacebookStore()
+  const instagramStore = useInstagramStore()
+
+  for (const platformId of selectedPlatforms.value) {
+    if (platformId === 'facebook') {
+      const fbAccounts = (accountSelections.value.facebook || []).map(pageId => {
+        const page = facebookStore.connectedPages.find(p => p.pageId === pageId)
+        return {
+          id: pageId,
+          name: page?.pageName || pageId,
+          pictureUrl: page?.profilePictureUrl
+        }
+      })
+      if (fbAccounts.length > 0) {
+        summary.push({ platform: 'Facebook', accounts: fbAccounts })
+      }
+    } else if (platformId === 'instagram') {
+      const igAccounts = (accountSelections.value.instagram || []).map(accountId => {
+        const account = instagramStore.connectedAccounts.find(a => a.instagramAccountId === accountId)
+        return {
+          id: accountId,
+          name: account?.username || accountId,
+          pictureUrl: account?.profilePictureUrl
+        }
+      })
+      if (igAccounts.length > 0) {
+        summary.push({ platform: 'Instagram', accounts: igAccounts })
+      }
+    }
+  }
+
+  return summary
+})
+
 // Save changes
 const saveChanges = async () => {
   error.value = ''
@@ -207,6 +323,19 @@ const saveChanges = async () => {
     return
   }
 
+  // Validate account selections for each selected platform
+  const { t } = useI18n()
+  for (const platform of selectedPlatforms.value) {
+    if (platform === 'facebook' && (!accountSelections.value.facebook || accountSelections.value.facebook.length === 0)) {
+      error.value = t('accountSelector.noAccountsSelected', { platform: 'Facebook' })
+      return
+    }
+    if (platform === 'instagram' && (!accountSelections.value.instagram || accountSelections.value.instagram.length === 0)) {
+      error.value = t('accountSelector.noAccountsSelected', { platform: 'Instagram' })
+      return
+    }
+  }
+
   if (!postText.value.trim()) {
     error.value = 'Please enter post text'
     return
@@ -220,6 +349,7 @@ const saveChanges = async () => {
       scheduled_time: get24HourTime(),
       timezone: timezone.value,
       platforms: selectedPlatforms.value,
+      platform_settings: accountSelections.value,
       notes: notes.value || undefined,
       post_text: postText.value,
       hashtags: hashtags.value,
@@ -387,6 +517,49 @@ const saveChanges = async () => {
           </p>
         </div>
 
+        <!-- Account Selection Modal Triggers -->
+        <div v-if="selectedPlatforms.includes('facebook')" class="info-section">
+          <div class="account-trigger" @click="openAccountSelectionModal('facebook')">
+            <MaterialIcon icon="manage_accounts" size="sm" />
+            <span>
+              {{ accountSelections.facebook && accountSelections.facebook.length > 0
+                ? `Facebook: ${accountSelections.facebook.length} account${accountSelections.facebook.length !== 1 ? 's' : ''} selected`
+                : 'Select Facebook accounts'
+              }}
+            </span>
+            <MaterialIcon icon="chevron_right" size="sm" />
+          </div>
+        </div>
+
+        <div v-if="selectedPlatforms.includes('instagram')" class="info-section">
+          <div class="account-trigger" @click="openAccountSelectionModal('instagram')">
+            <MaterialIcon icon="manage_accounts" size="sm" />
+            <span>
+              {{ accountSelections.instagram && accountSelections.instagram.length > 0
+                ? `Instagram: ${accountSelections.instagram.length} account${accountSelections.instagram.length !== 1 ? 's' : ''} selected`
+                : 'Select Instagram accounts'
+              }}
+            </span>
+            <MaterialIcon icon="chevron_right" size="sm" />
+          </div>
+        </div>
+
+        <!-- Publish Summary -->
+        <div v-if="publishSummary.length > 0" class="info-section">
+          <div class="info-label">
+            <MaterialIcon icon="publish" size="sm" />
+            <span>{{ $t('unifiedSchedule.publishSummary', 'Where your content will be posted') }}</span>
+          </div>
+          <div class="summary-list">
+            <div v-for="item in publishSummary" :key="item.platform" class="summary-item">
+              <strong>{{ item.platform }}:</strong>
+              <span class="summary-accounts">
+                {{ item.accounts.map(a => a.name).join(', ') }}
+              </span>
+            </div>
+          </div>
+        </div>
+
         <!-- Timezone -->
         <div class="info-section">
           <div class="info-label">
@@ -465,6 +638,48 @@ const saveChanges = async () => {
       </div>
     </div>
   </BaseModal>
+
+  <!-- Account Selection Modal -->
+  <Teleport to="body">
+    <BaseModal
+      v-model="showAccountModal"
+      size="md"
+      :show-close-button="true"
+      @close="closeAccountModal"
+    >
+      <div class="account-modal-content">
+        <h3 class="account-modal-title">
+          {{ currentPlatformForSelection === 'facebook'
+            ? $t('accountSelector.selectFacebookPages', 'Select Facebook Pages')
+            : $t('accountSelector.selectInstagramAccounts', 'Select Instagram Accounts')
+          }}
+        </h3>
+        <p class="account-modal-subtitle">
+          {{ $t('unifiedSchedule.selectAccountsInfo', 'Choose which accounts to post to') }}
+        </p>
+
+        <AccountSelector
+          v-if="currentPlatformForSelection"
+          :platform="currentPlatformForSelection"
+          :multi-select="true"
+          v-model="tempAccountSelections"
+        />
+
+        <div class="account-modal-actions">
+          <BaseButton variant="ghost" @click="closeAccountModal">
+            {{ $t('common.cancel', 'Cancel') }}
+          </BaseButton>
+          <BaseButton
+            variant="primary"
+            @click="confirmAccountSelection"
+            :disabled="tempAccountSelections.length === 0"
+          >
+            {{ $t('common.save', 'Confirm') }}
+          </BaseButton>
+        </div>
+      </div>
+    </BaseModal>
+  </Teleport>
 </template>
 
 <style scoped>
@@ -1123,5 +1338,85 @@ const saveChanges = async () => {
   .modal-actions > * {
     width: 100%;
   }
+}
+
+/* Account Trigger (Clickable to open modal) */
+.account-trigger {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-md);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: var(--transition-base);
+}
+
+.account-trigger:hover {
+  border-color: var(--gold-primary);
+  background: var(--bg-elevated);
+}
+
+.account-trigger span {
+  flex: 1;
+  font-size: var(--text-sm);
+  color: var(--text-primary);
+}
+
+/* Summary List */
+.summary-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  margin-top: var(--space-sm);
+}
+
+.summary-item {
+  display: flex;
+  gap: var(--space-sm);
+  padding: var(--space-sm);
+  background: var(--bg-secondary);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-sm);
+}
+
+.summary-item strong {
+  color: var(--text-primary);
+  font-weight: 600;
+  min-width: 80px;
+}
+
+.summary-accounts {
+  color: var(--text-secondary);
+}
+
+/* Account Modal Content */
+.account-modal-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+  padding: var(--space-xl);
+}
+
+.account-modal-title {
+  font-size: var(--text-2xl);
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.account-modal-subtitle {
+  font-size: var(--text-base);
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.account-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-md);
+  padding-top: var(--space-lg);
+  border-top: 1px solid var(--border-color);
 }
 </style>

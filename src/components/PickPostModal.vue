@@ -33,6 +33,22 @@
 
             <!-- Posts Grid -->
             <div v-else>
+              <!-- Restaurant Filter Toggle (only show if restaurantId is provided) -->
+              <div v-if="restaurantId" class="filter-toggle-container">
+                <button
+                  type="button"
+                  class="filter-toggle-button"
+                  @click="showAllRestaurants = !showAllRestaurants"
+                >
+                  <span class="material-symbols-outlined">
+                    {{ showAllRestaurants ? 'filter_list_off' : 'filter_list' }}
+                  </span>
+                  <span class="filter-toggle-text">
+                    {{ showAllRestaurants ? $t('pickPostModal.showCurrentRestaurant') : $t('pickPostModal.showAllRestaurants') }}
+                  </span>
+                </button>
+              </div>
+
               <div class="posts-grid">
                 <div
                   v-for="post in paginatedPosts"
@@ -189,141 +205,15 @@
               </div>
             </div>
 
-            <!-- Schedule Settings Grid -->
-            <div class="schedule-grid">
-              <!-- Date Selection -->
-              <div class="schedule-section date-section">
-                <label class="form-label">
-                  Date <span class="required">*</span>
-                </label>
-                <VueDatePicker
-                  v-model="scheduleDate"
-                  :min-date="today"
-                  :enable-time-picker="false"
-                  inline
-                  auto-apply
-                  dark
-                  class="date-picker-inline"
-                />
-              </div>
-
-              <!-- Time & Timezone Section -->
-              <div class="schedule-section time-section">
-                <div class="form-group">
-                  <label class="form-label">
-                    Time <span class="required">*</span>
-                  </label>
-                  <div class="time-picker-wrapper">
-                    <MobileTimePicker
-                      v-model="selectedTime"
-                      :minutes-increment="1"
-                    />
-                  </div>
-                </div>
-
-                <div class="form-group">
-                  <label for="timezone" class="form-label">
-                    Timezone
-                    <span v-if="timezone === defaultTimezone" class="detected-badge">
-                      (Auto-detected)
-                    </span>
-                  </label>
-                  <select id="timezone" v-model="timezone" class="form-select">
-                    <option value="UTC">UTC (Coordinated Universal Time)</option>
-                    <option value="America/New_York">Eastern Time (ET)</option>
-                    <option value="America/Chicago">Central Time (CT)</option>
-                    <option value="America/Denver">Mountain Time (MT)</option>
-                    <option value="America/Los_Angeles">Pacific Time (PT)</option>
-                    <option value="Europe/London">London (GMT/BST)</option>
-                    <option value="Europe/Paris">Paris (CET/CEST)</option>
-                    <option value="Europe/Oslo">Oslo (CET/CEST)</option>
-                    <option value="Asia/Tokyo">Tokyo (JST)</option>
-                    <option value="Asia/Dubai">Dubai (GST)</option>
-                    <option value="Australia/Sydney">Sydney (AEDT/AEST)</option>
-                  </select>
-                </div>
-
-                <!-- Platform Selection -->
-                <div class="form-group">
-                  <label class="form-label">
-                    Platform <span class="required">*</span>
-                  </label>
-                  <div class="platform-grid">
-                    <div
-                      v-for="platform in availablePlatforms"
-                      :key="platform.id"
-                      :class="[
-                        'platform-card',
-                        {
-                          selected: selectedPlatforms.includes(platform.id),
-                          'not-connected': !platform.isConnected && !platform.comingSoon,
-                          'coming-soon': platform.comingSoon
-                        }
-                      ]"
-                      @click="handlePlatformClick(platform)"
-                    >
-                      <!-- Platform Icon -->
-                      <div class="platform-icon" :style="getPlatformIconStyle(platform.id)">
-                        <!-- Facebook -->
-                        <svg v-if="platform.id === 'facebook'" width="20" height="20" viewBox="0 0 24 24" fill="white">
-                          <path d="M9.101 23.691v-7.98H6.627v-3.667h2.474v-1.58c0-4.085 1.848-5.978 5.858-5.978.401 0 .955.042 1.468.103a8.68 8.68 0 0 1 1.141.195v3.325a8.623 8.623 0 0 0-.653-.036 26.805 26.805 0 0 0-.733-.009c-.707 0-1.259.096-1.675.309a1.686 1.686 0 0 0-.679.622c-.258.42-.374.995-.374 1.752v1.297h3.919l-.386 2.103-.287 1.564h-3.246v8.245C19.396 23.238 24 18.179 24 12.044c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.628 3.874 10.35 9.101 11.647Z"/>
-                        </svg>
-                        <!-- Instagram -->
-                        <svg v-else-if="platform.id === 'instagram'" width="20" height="20" viewBox="0 0 24 24" fill="white">
-                          <path d="M7.8 2h8.4C19.4 2 22 4.6 22 7.8v8.4a5.8 5.8 0 0 1-5.8 5.8H7.8C4.6 22 2 19.4 2 16.2V7.8A5.8 5.8 0 0 1 7.8 2m-.2 2A3.6 3.6 0 0 0 4 7.6v8.8C4 18.39 5.61 20 7.6 20h8.8a3.6 3.6 0 0 0 3.6-3.6V7.6C20 5.61 18.39 4 16.4 4H7.6m9.65 1.5a1.25 1.25 0 0 1 1.25 1.25A1.25 1.25 0 0 1 17.25 8 1.25 1.25 0 0 1 16 6.75a1.25 1.25 0 0 1 1.25-1.25M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3z"/>
-                        </svg>
-                        <!-- TikTok -->
-                        <svg v-else-if="platform.id === 'tiktok'" width="18" height="18" viewBox="0 0 24 24" fill="white">
-                          <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z"/>
-                        </svg>
-                      </div>
-
-                      <!-- Platform Info -->
-                      <div class="platform-info">
-                        <span class="platform-name">{{ platform.name }}</span>
-                        <span v-if="platform.comingSoon" class="status coming-soon">
-                          Coming Soon
-                        </span>
-                        <span v-else-if="!platform.isConnected" class="status not-connected">
-                          Tap to connect
-                        </span>
-                      </div>
-
-                      <!-- Connected indicator (green dot) or Selection Checkmark -->
-                      <div v-if="selectedPlatforms.includes(platform.id)" class="platform-check">
-                        <svg viewBox="0 0 24 24" fill="none" width="24" height="24">
-                          <circle cx="12" cy="12" r="10" fill="var(--gold-primary)"/>
-                          <path d="M9 12L11 14L15 10" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                        </svg>
-                      </div>
-                      <div v-else-if="platform.isConnected" class="connected-dot"></div>
-                    </div>
-                  </div>
-                  <p v-if="selectedPlatforms.length === 0" class="platform-hint error">
-                    <span class="material-symbols-outlined">warning</span>
-                    Please select a platform to publish to
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <!-- Wizard Actions for Step 2 -->
-            <div class="wizard-actions step-2-actions">
-              <BaseButton
-                variant="ghost"
-                size="medium"
-                @click="goBackToSelection"
-              >
-                ← Back
-              </BaseButton>
-              <BaseButton
-                variant="primary"
-                size="large"
-                @click="scheduleSelectedPost"
-              >
-                Schedule Post
-              </BaseButton>
-            </div>
+            <!-- Unified Schedule Component -->
+            <UnifiedSchedulePost
+              :initial-schedule-date="selectedDate"
+              :lock-date="!!selectedDate"
+              :force-schedule-mode="true"
+              :show-cancel-button="true"
+              @publish="handleSchedulePublish"
+              @cancel="goBackToSelection"
+            />
           </div>
   </BaseModal>
 </template>
@@ -334,12 +224,8 @@ import { useRouter, useRoute } from 'vue-router'
 import BaseModal from './BaseModal.vue'
 import BaseButton from './BaseButton.vue'
 import BasePagination from './BasePagination.vue'
-import { VueDatePicker } from '@vuepic/vue-datepicker'
-import '@vuepic/vue-datepicker/dist/main.css'
-import MobileTimePicker from './MobileTimePicker.vue'
+import UnifiedSchedulePost from './UnifiedSchedulePost.vue'
 import { api } from '../services/api'
-import { useScheduleTime } from '../composables/useScheduleTime'
-import { useSocialAccounts } from '../composables/useSocialAccounts'
 import { useFacebookStore } from '../stores/facebook'
 import { useInstagramStore } from '../stores/instagram'
 import { errorLog } from '@/utils/debug'
@@ -362,75 +248,6 @@ const facebookStore = useFacebookStore()
 const instagramStore = useInstagramStore()
 const posts = ref<any[]>([])
 const loading = ref(false)
-const selectedPlatforms = ref<string[]>([])
-const { platforms: socialPlatforms, isConnected } = useSocialAccounts()
-
-// Platform display info
-const availablePlatforms = computed(() => {
-  return [
-    {
-      id: 'facebook',
-      name: 'Facebook',
-      isConnected: isConnected('facebook'),
-      connectedAccounts: socialPlatforms.value.find(p => p.id === 'facebook')?.connectedAccounts || [],
-      comingSoon: false,
-      bgColor: '#1877F2'
-    },
-    {
-      id: 'instagram',
-      name: 'Instagram',
-      isConnected: isConnected('instagram'),
-      connectedAccounts: socialPlatforms.value.find(p => p.id === 'instagram')?.connectedAccounts || [],
-      comingSoon: false,
-      bgColor: '#E4405F'
-    },
-    {
-      id: 'tiktok',
-      name: 'TikTok',
-      isConnected: false,
-      connectedAccounts: [],
-      comingSoon: true,
-      bgColor: '#000000'
-    }
-  ]
-})
-
-function togglePlatform(platformId: string) {
-  const index = selectedPlatforms.value.indexOf(platformId)
-  if (index > -1) {
-    selectedPlatforms.value.splice(index, 1)
-  } else {
-    selectedPlatforms.value.push(platformId)
-  }
-}
-
-async function handlePlatformClick(platform: typeof availablePlatforms.value[0]) {
-  if (platform.isConnected) {
-    togglePlatform(platform.id)
-  } else if (!platform.comingSoon) {
-    // Trigger connection directly based on platform
-    // Pass current URL so user returns here after OAuth
-    const returnUrl = window.location.pathname + window.location.search
-    try {
-      if (platform.id === 'facebook') {
-        await facebookStore.connectFacebook(returnUrl)
-      } else if (platform.id === 'instagram') {
-        await instagramStore.connectInstagram(returnUrl)
-      }
-      // The stores are reactive, so UI will update automatically after connection
-    } catch (error) {
-      errorLog('Failed to connect:', error)
-    }
-  }
-}
-
-function getPlatformIconStyle(platformId: string) {
-  const platform = availablePlatforms.value.find(p => p.id === platformId)
-  return {
-    backgroundColor: platform?.bgColor || '#666'
-  }
-}
-const selectedTime = ref<{ hours: number; minutes: number }>({ hours: 12, minutes: 0 })
 const currentPage = ref(1)
 const itemsPerPage = 6
 
@@ -445,24 +262,17 @@ const editedPostText = ref('')
 const editedHashtags = ref<string[]>([])
 const newHashtag = ref('')
 
-// Schedule time utilities from composable
-const { getDefaultTimezone } = useScheduleTime()
-const defaultTimezone = getDefaultTimezone()
-const timezone = ref(defaultTimezone)
+// Restaurant filter state
+const showAllRestaurants = ref(false)
 
-// Initialize scheduleDate from prop or null
-const initScheduleDate = (): Date | null => {
-  if (props.selectedDate) {
-    const [year, month, day] = props.selectedDate.split('-').map(Number)
-    return new Date(year, month - 1, day, 12, 0, 0)
-  }
-  return null
-}
-const scheduleDate = ref<Date | null>(initScheduleDate())
+// Reset pagination when restaurant filter changes
+watch(showAllRestaurants, () => {
+  currentPage.value = 1
+})
 
-// Filter posts by restaurant if restaurantId is provided
+// Filter posts by restaurant if restaurantId is provided (unless showAllRestaurants is true)
 const filteredPosts = computed(() => {
-  if (!props.restaurantId) return posts.value
+  if (!props.restaurantId || showAllRestaurants.value) return posts.value
   return posts.value.filter(post => post.restaurant_id === props.restaurantId)
 })
 
@@ -475,32 +285,9 @@ const paginatedPosts = computed(() => {
   return filteredPosts.value.slice(start, end)
 })
 
-const today = computed(() => {
-  const now = new Date()
-  now.setHours(0, 0, 0, 0)
-  return now
-})
-
-// Update scheduleDate when selectedDate prop changes
-watch(() => props.selectedDate, (newDate) => {
-  if (newDate) {
-    const [year, month, day] = newDate.split('-').map(Number)
-    scheduleDate.value = new Date(year, month - 1, day, 12, 0, 0)
-  }
-})
-
-// Set default time to current time when modal opens
 watch(() => props.modelValue, async (newValue) => {
   if (newValue) {
-    // Set default time to current time
-    const now = new Date()
-    selectedTime.value = { hours: now.getHours(), minutes: now.getMinutes() }
-
-    // Reset timezone to auto-detected
-    timezone.value = defaultTimezone
-
-    // Reset platform selection and pagination
-    selectedPlatforms.value = []
+    // Reset pagination
     currentPage.value = 1
 
     // Reset wizard state
@@ -508,7 +295,15 @@ watch(() => props.modelValue, async (newValue) => {
     selectedPost.value = null
     isEditing.value = false
 
-    await fetchPosts()
+    // Reset restaurant filter
+    showAllRestaurants.value = false
+
+    // Load connected accounts from all platforms
+    await Promise.all([
+      facebookStore.loadConnectedPages(),
+      instagramStore.loadConnectedAccounts(),
+      fetchPosts()
+    ])
   }
 })
 
@@ -548,50 +343,50 @@ const goBackToSelection = () => {
   isEditing.value = false
 }
 
-const scheduleSelectedPost = async () => {
+const handleSchedulePublish = async (data: {
+  platforms: string[]
+  publishType: 'now' | 'schedule'
+  scheduledDate?: string
+  scheduledTime?: string
+  timezone?: string
+  accountSelections?: {
+    facebook?: string[]
+    instagram?: string[]
+  }
+}) => {
   const post = selectedPost.value
   if (!post) {
     alert('No post selected')
     return
   }
-  if (!scheduleDate.value) {
-    alert('No date selected')
+
+  if (data.publishType !== 'schedule' || !data.scheduledDate || !data.scheduledTime) {
+    alert('Please select a date and time')
     return
   }
 
-  if (selectedPlatforms.value.length === 0) {
+  if (data.platforms.length === 0) {
     alert('Please select at least one platform')
     return
   }
 
-  // Format date as YYYY-MM-DD
-  const year = scheduleDate.value.getFullYear()
-  const month = String(scheduleDate.value.getMonth() + 1).padStart(2, '0')
-  const day = String(scheduleDate.value.getDate()).padStart(2, '0')
-  const formattedDate = `${year}-${month}-${day}`
-
-  // Format time as HH:MM
-  const hours = String(selectedTime.value.hours).padStart(2, '0')
-  const minutes = String(selectedTime.value.minutes).padStart(2, '0')
-  const formattedTime = `${hours}:${minutes}`
-
   try {
     const response = await api.schedulePost({
       favorite_post_id: post.id,
-      scheduled_date: formattedDate,
-      scheduled_time: formattedTime,
-      timezone: timezone.value,
-      platforms: selectedPlatforms.value,
+      scheduled_date: data.scheduledDate,
+      scheduled_time: data.scheduledTime,
+      timezone: data.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone,
+      platforms: data.platforms,
+      platform_settings: data.accountSelections,
     })
 
     if (response.success) {
-      emit('scheduled', { post, date: formattedDate })
+      emit('scheduled', { post, date: data.scheduledDate })
       closeModal()
     } else {
       alert(response.error || 'Failed to schedule post')
     }
   } catch (error: any) {
-
     alert(error.message || 'Failed to schedule post')
   }
 }
@@ -1143,6 +938,42 @@ const handlePageChange = (page: number) => {
 .empty-state p {
   color: var(--text-secondary);
   margin: 0;
+}
+
+/* Restaurant Filter Toggle */
+.filter-toggle-container {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: var(--space-lg);
+}
+
+.filter-toggle-button {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-lg);
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  cursor: pointer;
+  transition: all var(--transition-base);
+}
+
+.filter-toggle-button:hover {
+  background: var(--bg-elevated);
+  border-color: var(--gold-primary);
+  color: var(--gold-primary);
+}
+
+.filter-toggle-button .material-symbols-outlined {
+  font-size: 18px;
+}
+
+.filter-toggle-text {
+  white-space: nowrap;
 }
 
 .posts-grid {

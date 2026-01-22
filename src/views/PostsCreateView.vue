@@ -7,6 +7,7 @@ import { useI18n } from 'vue-i18n'
 import { usePreferencesStore } from '@/stores/preferences'
 import { useFacebookStore } from '@/stores/facebook'
 import { useInstagramStore } from '@/stores/instagram'
+import { useTwitterStore } from '@/stores/twitter'
 import { useNotificationStore } from '@/stores/notifications'
 import { useVideoGenerationStore } from '@/stores/videoGeneration'
 import DashboardLayout from '@/components/DashboardLayout.vue'
@@ -37,6 +38,7 @@ const { t, locale } = useI18n()
 const preferencesStore = usePreferencesStore()
 const facebookStore = useFacebookStore()
 const instagramStore = useInstagramStore()
+const twitterStore = useTwitterStore()
 const notificationStore = useNotificationStore()
 const videoGenerationStore = useVideoGenerationStore()
 
@@ -1807,8 +1809,9 @@ async function handleAdvancedModeComplete(data: {
           }
 
           if (platform === 'facebook') {
-            const selectedPage = facebookStore.connectedPages[0]
-            if (!selectedPage) {
+            // Post to all connected Facebook pages
+            const connectedPages = facebookStore.connectedPages
+            if (connectedPages.length === 0) {
               results.push({ platform: 'facebook', success: false, error: 'No Facebook page connected' })
               if (progressItem) {
                 progressItem.status = 'error'
@@ -1817,51 +1820,55 @@ async function handleAdvancedModeComplete(data: {
               continue
             }
 
-            try {
-              const response = await api.postToFacebook(
-                selectedPage.pageId,
-                message,
-                isVideo ? undefined : data.imageUrl,
-                isVideo ? data.imageUrl : undefined,
-                contentType
-              )
+            // Post to each connected page
+            for (const page of connectedPages) {
+              try {
+                const response = await api.postToFacebook(
+                  page.pageId,
+                  message,
+                  isVideo ? undefined : data.imageUrl,
+                  isVideo ? data.imageUrl : undefined,
+                  contentType
+                )
 
-              const postUrl = (response as any).postUrl || response.data?.postUrl
-              if (response.success && postUrl) {
-                results.push({ platform: 'facebook', success: true, url: postUrl })
-                postUrls.facebook = postUrl
-                notificationStore.addPublishSuccess('facebook', postUrl)
-                // Update progress
-                if (progressItem) {
-                  progressItem.status = 'success'
-                  progressItem.url = postUrl
+                const postUrl = (response as any).postUrl || response.data?.postUrl
+                if (response.success && postUrl) {
+                  results.push({ platform: 'facebook', success: true, url: postUrl })
+                  postUrls.facebook = postUrl
+                  notificationStore.addPublishSuccess('facebook', postUrl)
+                  // Update progress
+                  if (progressItem) {
+                    progressItem.status = 'success'
+                    progressItem.url = postUrl
+                  }
+                } else if ((response as any).code === 'FACEBOOK_RECONNECT_REQUIRED') {
+                  const errorMsg = 'Facebook connection expired'
+                  results.push({ platform: 'facebook', success: false, error: errorMsg })
+                  if (progressItem) {
+                    progressItem.status = 'error'
+                    progressItem.error = errorMsg
+                  }
+                } else {
+                  const errorMsg = response.error || 'Failed to publish'
+                  results.push({ platform: 'facebook', success: false, error: errorMsg })
+                  if (progressItem) {
+                    progressItem.status = 'error'
+                    progressItem.error = errorMsg
+                  }
                 }
-              } else if ((response as any).code === 'FACEBOOK_RECONNECT_REQUIRED') {
-                const errorMsg = 'Facebook connection expired'
+              } catch (err: any) {
+                const errorMsg = err.message || 'Failed to publish'
                 results.push({ platform: 'facebook', success: false, error: errorMsg })
                 if (progressItem) {
                   progressItem.status = 'error'
                   progressItem.error = errorMsg
                 }
-              } else {
-                const errorMsg = response.error || 'Failed to publish'
-                results.push({ platform: 'facebook', success: false, error: errorMsg })
-                if (progressItem) {
-                  progressItem.status = 'error'
-                  progressItem.error = errorMsg
-                }
-              }
-            } catch (err: any) {
-              const errorMsg = err.message || 'Failed to publish'
-              results.push({ platform: 'facebook', success: false, error: errorMsg })
-              if (progressItem) {
-                progressItem.status = 'error'
-                progressItem.error = errorMsg
               }
             }
           } else if (platform === 'instagram') {
-            const instagramAccount = instagramStore.connectedAccounts[0]
-            if (!instagramAccount) {
+            // Post to all connected Instagram accounts
+            const connectedAccounts = instagramStore.connectedAccounts
+            if (connectedAccounts.length === 0) {
               const errorMsg = 'No Instagram account connected'
               results.push({ platform: 'instagram', success: false, error: errorMsg })
               if (progressItem) {
@@ -1871,39 +1878,108 @@ async function handleAdvancedModeComplete(data: {
               continue
             }
 
-            try {
-              const response = await api.postToInstagram(
-                instagramAccount.instagramAccountId,
-                message,
-                data.imageUrl,
-                undefined,
-                contentType
-              )
+            // Post to each connected account
+            for (const account of connectedAccounts) {
+              try {
+                const response = await api.postToInstagram(
+                  account.instagramAccountId,
+                  message,
+                  data.imageUrl,
+                  undefined,
+                  contentType
+                )
 
-              const postUrl = (response as any).postUrl || response.data?.postUrl
-              if (response.success && postUrl) {
-                results.push({ platform: 'instagram', success: true, url: postUrl })
-                postUrls.instagram = postUrl
-                notificationStore.addPublishSuccess('instagram', postUrl)
-                // Update progress
-                if (progressItem) {
-                  progressItem.status = 'success'
-                  progressItem.url = postUrl
+                const postUrl = (response as any).postUrl || response.data?.postUrl
+                if (response.success && postUrl) {
+                  results.push({ platform: 'instagram', success: true, url: postUrl })
+                  postUrls.instagram = postUrl
+                  notificationStore.addPublishSuccess('instagram', postUrl)
+                  // Update progress
+                  if (progressItem) {
+                    progressItem.status = 'success'
+                    progressItem.url = postUrl
+                  }
+                } else {
+                  const errorMsg = response.error || 'Failed to publish'
+                  results.push({ platform: 'instagram', success: false, error: errorMsg })
+                  if (progressItem) {
+                    progressItem.status = 'error'
+                    progressItem.error = errorMsg
+                  }
                 }
-              } else {
-                const errorMsg = response.error || 'Failed to publish'
+              } catch (err: any) {
+                const errorMsg = err.message || 'Failed to publish'
                 results.push({ platform: 'instagram', success: false, error: errorMsg })
                 if (progressItem) {
                   progressItem.status = 'error'
                   progressItem.error = errorMsg
                 }
               }
-            } catch (err: any) {
-              const errorMsg = err.message || 'Failed to publish'
-              results.push({ platform: 'instagram', success: false, error: errorMsg })
+            }
+          } else if (platform === 'twitter') {
+            // Post to all connected Twitter accounts
+            const connectedAccounts = twitterStore.connectedAccounts
+            if (connectedAccounts.length === 0) {
+              const errorMsg = 'No Twitter account connected'
+              results.push({ platform: 'twitter', success: false, error: errorMsg })
               if (progressItem) {
                 progressItem.status = 'error'
                 progressItem.error = errorMsg
+              }
+              continue
+            }
+
+            // Validate character limit (280 chars for standard accounts)
+            if (message.length > 280) {
+              const errorMsg = 'Tweet text exceeds 280 character limit'
+              results.push({ platform: 'twitter', success: false, error: errorMsg })
+              if (progressItem) {
+                progressItem.status = 'error'
+                progressItem.error = errorMsg
+              }
+              continue
+            }
+
+            // Post to each connected account
+            for (const account of connectedAccounts) {
+              try {
+                // Prepare media URLs for Twitter
+                const mediaUrls: string[] = []
+                if (data.imageUrl) {
+                  mediaUrls.push(data.imageUrl)
+                }
+
+                const response = await api.postToTwitter(
+                  account.twitterAccountId,
+                  message,
+                  mediaUrls
+                )
+
+                const tweetUrl = (response as any).tweetUrl || response.data?.tweetUrl
+                if (response.success && tweetUrl) {
+                  results.push({ platform: 'twitter', success: true, url: tweetUrl })
+                  postUrls.twitter = tweetUrl
+                  notificationStore.addPublishSuccess('twitter', tweetUrl)
+                  // Update progress
+                  if (progressItem) {
+                    progressItem.status = 'success'
+                    progressItem.url = tweetUrl
+                  }
+                } else {
+                  const errorMsg = response.error || 'Failed to publish'
+                  results.push({ platform: 'twitter', success: false, error: errorMsg })
+                  if (progressItem) {
+                    progressItem.status = 'error'
+                    progressItem.error = errorMsg
+                  }
+                }
+              } catch (err: any) {
+                const errorMsg = err.message || 'Failed to publish'
+                results.push({ platform: 'twitter', success: false, error: errorMsg })
+                if (progressItem) {
+                  progressItem.status = 'error'
+                  progressItem.error = errorMsg
+                }
               }
             }
           } else {

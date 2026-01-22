@@ -742,7 +742,9 @@ export default {
     publish: {
       publishingTitle: 'Deler innlegget ditt',
       publishingSubtitle: 'Laster opp til dine sosiale kontoer',
-      error: 'Kunne ikke publisere. Prøv igjen.'
+      error: 'Kunne ikke publisere. Prøv igjen.',
+      retrying: 'Prøver igjen ({attempt}/{max})...',
+      retryFailedPlatforms: 'Prøv mislykkede plattformer på nytt'
     },
     navigation: {
       back: '← Tilbake',
@@ -803,14 +805,24 @@ export default {
     pageSubtitle: 'Koble til dine sosiale mediekontoer for å publisere innhold direkte fra plattformen vår',
     facebookPages: 'Facebook-sider',
     connect: 'Koble til',
+    connectMore: 'Koble til flere',
     disconnect: 'Koble fra',
+    disconnectAll: 'Koble fra alle',
     connecting: 'Kobler til...',
     comingSoon: 'Kommer snart',
+    accountsConnected: '{count} konto tilkoblet | {count} kontoer tilkoblet',
     errorOccurred: 'En feil oppstod. Vennligst prøv igjen.',
-    successfullyConnected: 'Koblet til {count} Facebook-side(r)!',
+    successfullyConnected: 'Koblet til {count} konto(er)!',
+    successfullyConnectedFacebook: 'Koblet til {count} Facebook-side(r)!',
+    successfullyConnectedInstagram: 'Koblet til {count} Instagram-konto(er)!',
+    successfullyConnectedTikTok: 'Koblet til {count} TikTok-konto(er)!',
+    successfullyConnectedTwitter: 'Koblet til {count} Twitter-konto(er)!',
     successfullyDisconnected: 'Frakoblet "{name}"',
+    successfullyDisconnectedAll: 'Frakoblet {count} kontoer',
     confirmDisconnect: 'Er du sikker på at du vil frakoble "{name}"?',
-    disconnectTitle: 'Frakoble konto'
+    confirmDisconnectAll: 'Er du sikker på at du vil frakoble alle {count} {platform} kontoer?',
+    disconnectTitle: 'Frakoble konto',
+    disconnectAllTitle: 'Frakoble alle kontoer'
   },
 
   // Scheduler View
@@ -823,6 +835,7 @@ export default {
     moreHolidays: 'flere',
     postDetails: 'Innleggsdetaljer',
     publishedAt: 'Publisert',
+    viewPost: 'Se innlegg',
     viewOn: 'Se på',
     restaurant: 'Restaurant',
     caption: 'Bildetekst',
@@ -830,12 +843,19 @@ export default {
     cancelPost: 'Avbryt innlegg',
     noTime: 'Ingen tid',
     noMedia: 'Ingen media',
-    post: 'innlegg',
+    post: 'Innlegg',
+    status: 'Status',
     publishTime: 'Publiseringstid',
     captionGenerationFailed: 'Kunne ikke generere bildetekst',
     imageGenerationFailed: 'Kunne ikke generere bilde',
     generationFailed: 'Generering mislyktes',
-    unexpectedError: 'En uventet feil oppstod. Prøv igjen.'
+    unexpectedError: 'En uventet feil oppstod. Prøv igjen.',
+    retryPost: 'Prøv på nytt',
+    retrying: 'Prøver på nytt...',
+    retrySuccess: 'Innlegget er satt i kø for nytt forsøk',
+    retryError: 'Kunne ikke prøve innlegget på nytt',
+    partial: 'Delvis publisert',
+    overdue: 'Forsinket'
   },
 
   // Edit Scheduled Post Modal
@@ -1204,7 +1224,13 @@ export default {
   errors: {
     generic: 'Noe gikk galt',
     networkError: 'Nettverksfeil. Vennligst sjekk tilkoblingen din.',
-    validationError: 'Vennligst sjekk inndata'
+    validationError: 'Vennligst sjekk inndata',
+    timeout: 'Forespørsel tidsavbrutt. Vennligst prøv igjen.',
+    httpError: 'Serverfeil: {status}',
+    publishPartial: 'Publisert til {success} av {total} plattformer',
+    retryFailed: 'Nytt forsøk mislyktes etter {attempts} forsøk',
+    postSavedScheduleFailed: 'Innlegg lagret, men planlegging mislyktes',
+    postSavedScheduleFailedMessage: 'Innlegget ditt ble lagret i Favoritter. Du kan planlegge det senere fra Innlegg-siden.'
   },
 
   // Alerts & Toasts
@@ -1230,6 +1256,28 @@ export default {
     notesPlaceholder: 'Legg til notater om dette planlagte innlegget...'
   },
 
+  // Pick Post Modal
+  pickPostModal: {
+    showAllRestaurants: 'Vis alle restauranter',
+    showCurrentRestaurant: 'Vis kun valgt restaurant',
+    allRestaurantsLabel: 'Alle restauranter'
+  },
+
+  // Account Selector
+  accountSelector: {
+    selectAccounts: 'Velg kontoer',
+    selectFacebookPages: 'Velg Facebook-sider',
+    selectInstagramAccounts: 'Velg Instagram-kontoer',
+    selectTikTokAccounts: 'Velg TikTok-kontoer',
+    selectTwitterAccounts: 'Velg Twitter-kontoer',
+    noAccountsConnected: 'Ingen {platform}-kontoer tilkoblet',
+    noAccountsSelected: 'Vennligst velg minst én {platform}-konto',
+    connectAccount: 'Koble til konto',
+    multipleSelected: '{count} kontoer valgt',
+    accountId: 'Konto-ID',
+    singleAccountInfo: 'Dette er din eneste tilkoblede konto. Den vil bli brukt til å publisere.'
+  },
+
   // Unified Schedule Post
   unifiedSchedule: {
     whenToPublish: 'Når skal du publisere',
@@ -1244,7 +1292,10 @@ export default {
     schedule: 'Planlegg innlegg',
     noPlatformSelected: 'Vennligst velg minst én plattform',
     noDateSelected: 'Vennligst velg en dato',
-    mustBeInFuture: 'Planlagt tid må være etter nå'
+    mustBeInFuture: 'Planlagt tid må være etter nå',
+    selectAccountsInfo: 'Velg hvilke kontoer du vil publisere til',
+    publishSummary: 'Hvor innholdet ditt vil bli publisert',
+    clickToSelectAccounts: 'Klikk for å velge kontoer'
   },
 
   // Mode Toggle
@@ -1270,6 +1321,7 @@ export default {
     message: 'Vennligst vent mens vi publiserer innlegget ditt til de valgte plattformene.',
     successTitle: 'Gratulerer!',
     successMessage: 'Innlegget ditt har blitt publisert!',
+    partialSuccessTitle: 'Delvis publisert',
     errorTitle: 'Publisering mislyktes',
     errorMessage: 'Kunne ikke publisere til noen plattform.',
     createAnother: 'Lag et nytt innlegg'
@@ -1312,6 +1364,7 @@ export default {
     published: 'Publisert',
     scheduled: 'Planlagt',
     failed: 'Mislykket',
+    partial: 'Delvis publisert',
     cancelled: 'Avbrutt',
     draft: 'Utkast',
     creditsLeft: 'kreditter igjen',
@@ -1650,7 +1703,7 @@ export default {
     comments: 'Kommentarer',
     shares: 'Delinger',
     reach: 'Rekkevidde',
-    views: 'Visninger',
+    views: 'Visninger (Rekkevidde)',
     impressions: 'Visninger',
     engagementRate: 'Engasjementsrate',
     totalEngagement: 'Totalt engasjement',
@@ -1664,7 +1717,12 @@ export default {
     viewsTooltip: 'Total rekkevidde på tvers av alle plattformer',
     engagementOverTime: 'Engasjement over tid',
 
-    // Instagram views info
+    // Reach/impressions data info
+    reachDataLimited: 'Visnings- og rekkeviddedataLimited',
+    reachDataInfo: 'Visninger (rekkevidde/visninger) krever Business-kontoer med Insights API-tillatelser. Personlige kontoer viser bare likes, kommentarer og delinger. For å se visningsdata, koble til en Business- eller Creator-konto med riktige tillatelser.',
+    reachDataUnavailable: 'Visningsdata krever Business-kontotillatelser',
+
+    // Instagram views info (legacy)
     instagramViewsLimited: 'Instagram-visninger begrenset',
     instagramViewsInfo: 'Instagram-visninger krever Instagram Business-konto med Insights API-tillatelse. Viser for øyeblikket bare likes og kommentarer.',
     learnMore: 'Lær mer',

@@ -26,6 +26,19 @@ class SchedulerService {
     const response = await fetch(url, {
       headers: getAuthHeader(),
     })
+
+    if (!response.ok) {
+      const text = await response.text()
+      try {
+        return JSON.parse(text)
+      } catch {
+        return {
+          success: false,
+          error: `HTTP ${response.status}: ${text || response.statusText}`
+        }
+      }
+    }
+
     return response.json()
   }
 
@@ -36,6 +49,19 @@ class SchedulerService {
         headers: getAuthHeader(),
       }
     )
+
+    if (!response.ok) {
+      const text = await response.text()
+      try {
+        return JSON.parse(text)
+      } catch {
+        return {
+          success: false,
+          error: `HTTP ${response.status}: ${text || response.statusText}`
+        }
+      }
+    }
+
     return response.json()
   }
 
@@ -43,6 +69,19 @@ class SchedulerService {
     const response = await fetch(`${API_URL}/api/scheduler/${id}`, {
       headers: getAuthHeader(),
     })
+
+    if (!response.ok) {
+      const text = await response.text()
+      try {
+        return JSON.parse(text)
+      } catch {
+        return {
+          success: false,
+          error: `HTTP ${response.status}: ${text || response.statusText}`
+        }
+      }
+    }
+
     return response.json()
   }
 
@@ -60,6 +99,19 @@ class SchedulerService {
       headers: getAuthHeaders(),
       body: JSON.stringify(scheduleData),
     })
+
+    if (!response.ok) {
+      const text = await response.text()
+      try {
+        return JSON.parse(text)
+      } catch {
+        return {
+          success: false,
+          error: `HTTP ${response.status}: ${text || response.statusText}`
+        }
+      }
+    }
+
     return response.json()
   }
 
@@ -83,6 +135,19 @@ class SchedulerService {
       headers: getAuthHeaders(),
       body: JSON.stringify(updates),
     })
+
+    if (!response.ok) {
+      const text = await response.text()
+      try {
+        return JSON.parse(text)
+      } catch {
+        return {
+          success: false,
+          error: `HTTP ${response.status}: ${text || response.statusText}`
+        }
+      }
+    }
+
     return response.json()
   }
 
@@ -91,6 +156,40 @@ class SchedulerService {
       method: 'DELETE',
       headers: getAuthHeader(),
     })
+
+    if (!response.ok) {
+      const text = await response.text()
+      try {
+        return JSON.parse(text)
+      } catch {
+        return {
+          success: false,
+          error: `HTTP ${response.status}: ${text || response.statusText}`
+        }
+      }
+    }
+
+    return response.json()
+  }
+
+  async retryScheduledPost(id: string): Promise<ApiResponse<{ scheduled_post_id: string; platforms: string[] }>> {
+    const response = await fetch(`${API_URL}/api/scheduler/${id}/retry`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+    })
+
+    if (!response.ok) {
+      const text = await response.text()
+      try {
+        return JSON.parse(text)
+      } catch {
+        return {
+          success: false,
+          error: `HTTP ${response.status}: ${text || response.statusText}`
+        }
+      }
+    }
+
     return response.json()
   }
 
@@ -108,6 +207,19 @@ class SchedulerService {
       headers: getAuthHeaders(),
       body: JSON.stringify(data),
     })
+
+    if (!response.ok) {
+      const text = await response.text()
+      try {
+        return JSON.parse(text)
+      } catch {
+        return {
+          success: false,
+          error: `HTTP ${response.status}: ${text || response.statusText}`
+        }
+      }
+    }
+
     return response.json()
   }
 
@@ -119,6 +231,19 @@ class SchedulerService {
         headers: getAuthHeader(),
       }
     )
+
+    if (!response.ok) {
+      const text = await response.text()
+      try {
+        return JSON.parse(text)
+      } catch {
+        return {
+          success: false,
+          error: `HTTP ${response.status}: ${text || response.statusText}`
+        }
+      }
+    }
+
     return response.json()
   }
 
@@ -133,6 +258,19 @@ class SchedulerService {
         headers: getAuthHeader(),
       }
     )
+
+    if (!response.ok) {
+      const text = await response.text()
+      try {
+        return JSON.parse(text)
+      } catch {
+        return {
+          success: false,
+          error: `HTTP ${response.status}: ${text || response.statusText}`
+        }
+      }
+    }
+
     return response.json()
   }
 
@@ -140,6 +278,19 @@ class SchedulerService {
     const response = await fetch(`${API_URL}/api/holidays/countries`, {
       headers: getAuthHeader(),
     })
+
+    if (!response.ok) {
+      const text = await response.text()
+      try {
+        return JSON.parse(text)
+      } catch {
+        return {
+          success: false,
+          error: `HTTP ${response.status}: ${text || response.statusText}`
+        }
+      }
+    }
+
     return response.json()
   }
 }

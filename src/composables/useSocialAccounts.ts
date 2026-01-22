@@ -2,6 +2,7 @@ import { computed } from 'vue'
 import { useFacebookStore } from '../stores/facebook'
 import { useInstagramStore } from '../stores/instagram'
 import { useTikTokStore } from '../stores/tiktok'
+import { useTwitterStore } from '../stores/twitter'
 
 export type SocialPlatform = 'facebook' | 'instagram' | 'twitter' | 'linkedin' | 'tiktok' | 'youtube'
 
@@ -23,6 +24,7 @@ export function useSocialAccounts() {
   const facebookStore = useFacebookStore()
   const instagramStore = useInstagramStore()
   const tiktokStore = useTikTokStore()
+  const twitterStore = useTwitterStore()
 
   /**
    * Check if a specific platform is connected
@@ -35,8 +37,9 @@ export function useSocialAccounts() {
         return instagramStore.connectedAccounts.length > 0
       case 'tiktok':
         return tiktokStore.connectedAccounts.length > 0
-      // Future platforms
       case 'twitter':
+        return twitterStore.connectedAccounts.length > 0
+      // Future platforms
       case 'linkedin':
       case 'youtube':
         return false
@@ -65,6 +68,11 @@ export function useSocialAccounts() {
           id: account.tiktokAccountId,
           name: account.displayName,
         }))
+      case 'twitter':
+        return twitterStore.connectedAccounts.map((account) => ({
+          id: account.twitterAccountId,
+          name: account.username,
+        }))
       // Future platforms
       default:
         return []
@@ -78,7 +86,8 @@ export function useSocialAccounts() {
     return (
       facebookStore.connectedPages.length +
       instagramStore.connectedAccounts.length +
-      tiktokStore.connectedAccounts.length
+      tiktokStore.connectedAccounts.length +
+      twitterStore.connectedAccounts.length
     )
   })
 
@@ -188,5 +197,6 @@ export function useSocialAccounts() {
     facebookStore,
     instagramStore,
     tiktokStore,
+    twitterStore,
   }
 }

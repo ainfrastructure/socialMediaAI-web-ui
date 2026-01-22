@@ -200,8 +200,21 @@
                       <div class="td-status">
                         <span :class="['status-badge', `status-${post.status || 'scheduled'}`]">
                           <span class="status-dot"></span>
-                          {{ post.status === 'published' ? $t('dashboardNew.published') : post.status === 'failed' ? $t('dashboardNew.failed') : $t('dashboardNew.scheduled') }}
+                          {{
+                            post.status === 'published' ? $t('dashboardNew.published') :
+                            post.status === 'failed' ? $t('dashboardNew.failed') :
+                            post.status === 'partial' ? $t('dashboardNew.partial') :
+                            $t('dashboardNew.scheduled')
+                          }}
                         </span>
+                        <button
+                          v-if="post.status === 'partial' || post.status === 'failed'"
+                          class="retry-button"
+                          :title="$t('common.retry')"
+                          @click.stop="retryPost(post.id)"
+                        >
+                          <MaterialIcon icon="refresh" :size="16" />
+                        </button>
                       </div>
 
                       <!-- Restaurant Column -->
@@ -1220,6 +1233,32 @@ const showCancelConfirmation = (postId: string) => {
   showConfirmModal.value = true
 }
 
+// Retry a failed or partial post
+const retryPost = async (postId: string) => {
+  try {
+    loading.value = true
+    const response = await schedulerService.retryScheduledPost(postId)
+
+    if (response.success) {
+      toastMessage.value = 'Post queued for retry. It will be processed within 1 minute.'
+      toastType.value = 'success'
+      showToast.value = true
+
+      // Refresh the scheduled posts
+      await fetchScheduledPosts()
+    } else {
+      throw new Error(response.error || 'Failed to retry post')
+    }
+  } catch (error: any) {
+    errorLog('Error retrying post:', error)
+    toastMessage.value = error.message || 'Failed to retry post'
+    toastType.value = 'error'
+    showToast.value = true
+  } finally {
+    loading.value = false
+  }
+}
+
 const confirmCancelPost = async () => {
   if (!postIdToCancel.value) return
 
@@ -1861,6 +1900,31 @@ onMounted(async () => {
 .td-status {
   display: flex;
   align-items: center;
+  gap: var(--space-sm);
+}
+
+.retry-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  background: transparent;
+  border: 1px solid var(--gold-primary);
+  border-radius: var(--radius-sm);
+  color: var(--gold-primary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  opacity: 0.7;
+}
+
+.retry-button:hover {
+  opacity: 1;
+  background: rgba(15, 61, 46, 0.08);
+  transform: scale(1.05);
+}
+
+.retry-button:active {
+  transform: scale(0.95);
 }
 
 .status-badge {
@@ -1904,6 +1968,15 @@ onMounted(async () => {
 
 .status-badge.status-failed .status-dot {
   background: #ef4444;
+}
+
+.status-badge.status-partial {
+  background: rgba(245, 158, 11, 0.2);
+  color: #d97706;
+}
+
+.status-badge.status-partial .status-dot {
+  background: #f59e0b;
 }
 
 /* Restaurant Column */
@@ -2726,6 +2799,12 @@ onMounted(async () => {
   border: 1px solid rgba(239, 68, 68, 0.3);
 }
 
+.status-badge.status-partial {
+  background: rgba(245, 158, 11, 0.2);
+  color: #d97706;
+  border: 1px solid rgba(245, 158, 11, 0.4);
+}
+
 .post-actions {
   display: flex;
   gap: 0.75rem;
@@ -3525,6 +3604,12 @@ onMounted(async () => {
   background: rgba(239, 68, 68, 0.15);
   color: #dc2626;
   border: 1px solid rgba(239, 68, 68, 0.4);
+}
+
+.status-badge-large.status-partial {
+  background: rgba(245, 158, 11, 0.2);
+  color: #d97706;
+  border: 1px solid rgba(245, 158, 11, 0.4);
 }
 
 .post-caption {

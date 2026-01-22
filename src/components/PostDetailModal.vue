@@ -5,6 +5,7 @@ import BaseModal from './BaseModal.vue'
 import BaseButton from './BaseButton.vue'
 import MaterialIcon from './MaterialIcon.vue'
 import PlatformLogo from './PlatformLogo.vue'
+import { useEngagementStore } from '@/stores/engagement'
 
 const props = defineProps<{
   modelValue: boolean
@@ -19,10 +20,12 @@ const emit = defineEmits<{
   (e: 'delete', post: any): void
   (e: 'schedule', post: any): void
   (e: 'animate', data: { postId: string; videoOptions: { duration: 4 | 6 | 8; aspectRatio: '16:9' | '9:16'; generateAudio: boolean } }): void
+  (e: 'retry', post: any): void
   (e: 'close'): void
 }>()
 
 const { t } = useI18n()
+const engagementStore = useEngagementStore()
 
 // Animation state
 const showAnimationOptions = ref(false)
@@ -201,6 +204,7 @@ const postStatus = computed(() => {
 function getStatusClass(status: string): string {
   switch (status?.toLowerCase()) {
     case 'published': return 'status-published'
+    case 'partial': return 'status-partial'
     case 'failed': return 'status-failed'
     case 'cancelled': return 'status-cancelled'
     case 'draft': return 'status-draft'
@@ -213,6 +217,7 @@ function getStatusClass(status: string): string {
 function getStatusLabel(status: string): string {
   switch (status?.toLowerCase()) {
     case 'published': return t('dashboardNew.published')
+    case 'partial': return t('scheduler.partial')
     case 'failed': return t('dashboardNew.failed')
     case 'cancelled': return t('dashboardNew.cancelled')
     case 'draft': return t('dashboardNew.draft')
@@ -276,6 +281,19 @@ function getTimeRemaining(): string {
   return `${minutes}m`
 }
 
+// Check if post has engagement but missing reach/impressions data
+const hasMissingReachData = computed(() => {
+  if (!props.post?.id) return false
+  const engagement = engagementStore.getPostEngagement(props.post.id)
+  if (!engagement) return false
+
+  return Object.values(engagement).some((metrics: any) => {
+    const hasEngagement = (metrics.likes > 0 || metrics.comments > 0 || metrics.shares > 0)
+    const hasNoReach = metrics.reach === 0 && metrics.impressions === 0
+    return hasEngagement && hasNoReach
+  })
+})
+
 // Actions
 function handleEdit() {
   emit('edit', props.post)
@@ -288,17 +306,32 @@ function handleDelete() {
 function handleSchedule() {
   emit('schedule', props.post)
 }
+
+function handleRetry() {
+  emit('retry', props.post)
+}
 </script>
 
 <template>
   <BaseModal
     :model-value="modelValue && !!post"
     size="xl"
-    :show-close-button="true"
+    :show-close-button="false"
     card-variant="glass-intense"
     @update:model-value="(val: boolean) => !val && closeModal()"
     @close="closeModal"
   >
+    <!-- Custom Close Button -->
+    <button
+      class="post-detail-close-button"
+      @click="closeModal"
+      aria-label="Close"
+    >
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M18 6L6 18M6 6l12 12" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </button>
+
     <div class="modal-content">
           <!-- Media Section -->
           <div class="modal-media">
@@ -486,6 +519,66 @@ function handleSchedule() {
               </div>
             </div>
 
+            <!-- Engagement Metrics (for published posts) -->
+            <div v-if="postStatus === 'published' && post?.id" class="info-section">
+              <div class="info-section-inner">
+                <div class="info-label">
+                  <MaterialIcon icon="trending_up" size="sm" />
+                  <span>{{ $t('analytics.engagement') }}</span>
+                </div>
+                <div class="engagement-details">
+                  <template v-if="engagementStore.getPostEngagement(post.id)">
+                    <div
+                      v-for="(metrics, platform) in engagementStore.getPostEngagement(post.id)"
+                      :key="platform"
+                      class="platform-engagement-card"
+                    >
+                      <div class="platform-engagement-header">
+                        <PlatformLogo :platform="platform as any" :size="20" />
+                        <span class="platform-engagement-name">{{ platform.charAt(0).toUpperCase() + platform.slice(1) }}</span>
+                      </div>
+                      <div class="platform-engagement-stats">
+                        <div class="engagement-stat">
+                          <MaterialIcon icon="thumb_up" size="xs" />
+                          <span class="stat-value">{{ (metrics.likes || 0).toLocaleString() }}</span>
+                          <span class="stat-label">{{ $t('analytics.likes') }}</span>
+                        </div>
+                        <div class="engagement-stat">
+                          <MaterialIcon icon="comment" size="xs" />
+                          <span class="stat-value">{{ (metrics.comments || 0).toLocaleString() }}</span>
+                          <span class="stat-label">{{ $t('analytics.comments') }}</span>
+                        </div>
+                        <div class="engagement-stat">
+                          <MaterialIcon icon="share" size="xs" />
+                          <span class="stat-value">{{ (metrics.shares || 0).toLocaleString() }}</span>
+                          <span class="stat-label">{{ $t('analytics.shares') }}</span>
+                        </div>
+                        <div v-if="metrics.reach > 0" class="engagement-stat">
+                          <MaterialIcon icon="visibility" size="xs" />
+                          <span class="stat-value">{{ (metrics.reach || 0).toLocaleString() }}</span>
+                          <span class="stat-label">{{ $t('analytics.reach') }}</span>
+                        </div>
+                        <div v-if="metrics.impressions > 0" class="engagement-stat">
+                          <MaterialIcon icon="bar_chart" size="xs" />
+                          <span class="stat-value">{{ (metrics.impressions || 0).toLocaleString() }}</span>
+                          <span class="stat-label">{{ $t('analytics.impressions') }}</span>
+                        </div>
+                      </div>
+                      <!-- Missing reach data notice -->
+                      <div v-if="metrics.reach === 0 && metrics.impressions === 0 && (metrics.likes > 0 || metrics.comments > 0)" class="missing-reach-notice">
+                        <MaterialIcon icon="info" size="xs" />
+                        <span>{{ $t('analytics.reachDataUnavailable') }}</span>
+                      </div>
+                    </div>
+                  </template>
+                  <div v-else class="no-engagement-data">
+                    <MaterialIcon icon="info" size="sm" />
+                    <p>{{ $t('analytics.noEngagementData') }}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             <!-- Restaurant -->
             <div v-if="getRestaurantName()" class="info-section">
               <div class="info-section-inner">
@@ -601,11 +694,15 @@ function handleSchedule() {
                 </BaseButton>
               </template>
 
-              <!-- Failed actions -->
-              <template v-else-if="postStatus === 'failed'">
-                <BaseButton variant="primary" size="medium" @click="handleEdit">
+              <!-- Failed or Partial actions -->
+              <template v-else-if="postStatus === 'failed' || postStatus === 'partial'">
+                <BaseButton variant="primary" size="medium" @click="handleRetry">
                   <MaterialIcon icon="refresh" size="sm" />
-                  {{ $t('common.retry') }}
+                  {{ $t('scheduler.retryPost') }}
+                </BaseButton>
+                <BaseButton variant="secondary" size="medium" @click="handleEdit">
+                  <MaterialIcon icon="edit" size="sm" />
+                  {{ $t('common.edit') }}
                 </BaseButton>
                 <BaseButton variant="danger" size="medium" @click="handleDelete">
                   <MaterialIcon icon="delete" size="sm" />
@@ -619,9 +716,37 @@ function handleSchedule() {
 </template>
 
 <style scoped>
+/* Custom Close Button */
+.post-detail-close-button {
+  position: absolute;
+  top: var(--space-md);
+  right: var(--space-md);
+  background: var(--accent-alpha-05);
+  border: 1px solid var(--accent-alpha-10);
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: var(--space-sm);
+  border-radius: var(--radius-sm);
+  transition: var(--transition-fast);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 20;
+  min-width: 44px;
+  min-height: 44px;
+}
+
+.post-detail-close-button:hover {
+  color: var(--text-primary);
+  background: var(--accent-alpha-10);
+  border-color: var(--accent-alpha-20);
+}
+
 .modal-content {
   display: grid;
   grid-template-columns: 1fr 1fr;
+  max-height: 80vh;
+  overflow: hidden;
 }
 
 /* Media Section */
@@ -698,6 +823,8 @@ function handleSchedule() {
   display: flex;
   flex-direction: column;
   gap: var(--space-lg);
+  overflow-y: auto;
+  max-height: 80vh;
 }
 
 .modal-title {
@@ -733,6 +860,11 @@ function handleSchedule() {
 .status-scheduled {
   background: rgba(59, 130, 246, 0.15);
   color: #3b82f6;
+}
+
+.status-partial {
+  background: rgba(245, 158, 11, 0.15);
+  color: #f59e0b;
 }
 
 .status-failed {
@@ -905,7 +1037,7 @@ function handleSchedule() {
   gap: var(--space-md);
   margin-top: auto;
   padding-top: var(--space-2xl);
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
 }
 
 /* Animate Image Section */
@@ -1081,6 +1213,8 @@ function handleSchedule() {
 @media (max-width: 900px) {
   .modal-content {
     grid-template-columns: 1fr;
+    max-height: none;
+    overflow: visible;
   }
 
   .modal-media {
@@ -1090,6 +1224,11 @@ function handleSchedule() {
   .media-image,
   .media-video {
     max-height: 35vh;
+  }
+
+  .modal-info {
+    max-height: none;
+    overflow-y: visible;
   }
 }
 
@@ -1110,6 +1249,114 @@ function handleSchedule() {
   .modal-actions > * {
     width: 100%;
   }
+
+  .post-detail-close-button {
+    top: var(--space-sm);
+    right: var(--space-sm);
+  }
+}
+
+/* Override BaseModal body overflow to prevent double scroll */
+:deep(.base-modal-body) {
+  overflow: hidden;
+  padding: 0;
+}
+
+/* Engagement Details */
+.engagement-details {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.platform-engagement-card {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: var(--space-md);
+}
+
+.platform-engagement-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-md);
+  padding-bottom: var(--space-sm);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.platform-engagement-name {
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  color: var(--text-primary);
+  text-transform: capitalize;
+}
+
+.platform-engagement-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+  gap: var(--space-md);
+}
+
+.engagement-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-xs);
+  text-align: center;
+}
+
+.engagement-stat .material-icon {
+  color: var(--gold-primary);
+}
+
+.stat-value {
+  font-size: var(--text-lg);
+  font-weight: var(--font-bold);
+  color: var(--text-primary);
+}
+
+.stat-label {
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+  text-transform: capitalize;
+}
+
+.no-engagement-data {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-xl);
+  text-align: center;
+  color: var(--text-muted);
+  background: var(--bg-primary);
+  border-radius: var(--radius-md);
+}
+
+.no-engagement-data p {
+  margin: 0;
+  font-size: var(--text-sm);
+}
+
+/* Missing reach data notice */
+.missing-reach-notice {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: var(--space-sm) var(--space-md);
+  margin-top: var(--space-sm);
+  background: var(--info-bg);
+  border: 1px solid var(--info-border);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  font-size: var(--text-xs);
+  line-height: 1.4;
+}
+
+.missing-reach-notice .material-icon {
+  color: var(--info-text);
+  flex-shrink: 0;
 }
 
 /* ===== DARK MODE OVERRIDES ===== */
@@ -1124,5 +1371,10 @@ function handleSchedule() {
 
 :root[data-theme="dark"] .hashtag {
   background: var(--accent-alpha-15);
+}
+
+:root[data-theme="dark"] .platform-engagement-card,
+:root[data-theme="dark"] .no-engagement-data {
+  background: var(--bg-tertiary);
 }
 </style>

@@ -24,6 +24,7 @@ const props = defineProps<Props>()
 const emit = defineEmits<{
   (e: 'createAnother'): void
   (e: 'close'): void
+  (e: 'retry', platforms: string[]): void
 }>()
 
 const { t } = useI18n()
@@ -40,6 +41,18 @@ const isPublishing = computed(() => {
   return props.platforms.some(p => p.status === 'publishing' || p.status === 'pending')
 })
 
+const hasPartialFailure = computed(() => {
+  return props.isComplete && errorCount.value > 0 && successCount.value > 0
+})
+
+const hasFullFailure = computed(() => {
+  return props.isComplete && errorCount.value > 0 && successCount.value === 0
+})
+
+const failedPlatforms = computed(() => {
+  return props.platforms.filter(p => p.status === 'error')
+})
+
 function capitalizeFirst(str: string): string {
   return str.charAt(0).toUpperCase() + str.slice(1)
 }
@@ -50,6 +63,11 @@ function handleCreateAnother() {
 
 function handleClose() {
   emit('close')
+}
+
+function handleRetry() {
+  const platformsToRetry = failedPlatforms.value.map(p => p.platform)
+  emit('retry', platformsToRetry)
 }
 </script>
 
@@ -85,6 +103,7 @@ function handleClose() {
       <!-- Title -->
       <h3 class="publishing-title">
         <span v-if="isPublishing">{{ t('publishing.title', 'Publishing Your Post...') }}</span>
+        <span v-else-if="hasPartialFailure">{{ t('publishing.partialSuccessTitle', 'Partially Published') }}</span>
         <span v-else-if="successCount > 0">{{ t('publishing.successTitle', 'Congratulations!') }}</span>
         <span v-else>{{ t('publishing.errorTitle', 'Publishing Failed') }}</span>
       </h3>
@@ -93,6 +112,9 @@ function handleClose() {
       <p class="publishing-message">
         <span v-if="isPublishing">
           {{ t('publishing.message', 'Please wait while we publish your post to the selected platforms.') }}
+        </span>
+        <span v-else-if="hasPartialFailure">
+          {{ t('errors.publishPartial', { success: successCount, total: platforms.length }) }}
         </span>
         <span v-else-if="successCount > 0">
           {{ t('publishing.successMessage', 'Your post has been published successfully!') }}
@@ -159,6 +181,15 @@ function handleClose() {
 
       <!-- Actions (only show when complete) -->
       <div v-if="isComplete" class="publishing-actions">
+        <!-- Show retry button if there are failed platforms -->
+        <BaseButton
+          v-if="errorCount > 0"
+          variant="secondary"
+          size="large"
+          @click="handleRetry"
+        >
+          {{ t('publish.retryFailedPlatforms', 'Retry Failed Platforms') }}
+        </BaseButton>
         <BaseButton variant="primary" size="large" @click="handleCreateAnother">
           {{ t('publishing.createAnother', 'Create Another Post') }}
         </BaseButton>

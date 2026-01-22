@@ -7,7 +7,7 @@ export interface Notification {
   type: 'success' | 'error' | 'info' | 'warning'
   title: string
   message: string
-  platform?: 'facebook' | 'instagram' | 'tiktok'
+  platform?: 'facebook' | 'instagram' | 'tiktok' | 'twitter'
   postUrl?: string
   timestamp: Date
   read: boolean
@@ -54,11 +54,12 @@ export const useNotificationStore = defineStore('notifications', () => {
     return newNotification
   }
 
-  function addPublishSuccess(platform: 'facebook' | 'instagram' | 'tiktok', postUrl?: string) {
+  function addPublishSuccess(platform: 'facebook' | 'instagram' | 'tiktok' | 'twitter', postUrl?: string) {
     const platformNames: Record<string, string> = {
       facebook: 'Facebook',
       instagram: 'Instagram',
-      tiktok: 'TikTok'
+      tiktok: 'TikTok',
+      twitter: 'Twitter'
     }
 
     return addNotification({
@@ -70,11 +71,12 @@ export const useNotificationStore = defineStore('notifications', () => {
     })
   }
 
-  function addPublishError(platform: 'facebook' | 'instagram' | 'tiktok', errorMessage?: string) {
+  function addPublishError(platform: 'facebook' | 'instagram' | 'tiktok' | 'twitter', errorMessage?: string) {
     const platformNames: Record<string, string> = {
       facebook: 'Facebook',
       instagram: 'Instagram',
-      tiktok: 'TikTok'
+      tiktok: 'TikTok',
+      twitter: 'Twitter'
     }
 
     return addNotification({

@@ -8,6 +8,7 @@ export interface TikTokAccount {
   tiktokAccountId: string
   username: string
   displayName: string
+  profilePictureUrl?: string
   connectedAt: string
 }
 

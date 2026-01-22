@@ -1,11 +1,16 @@
 import type { ApiResponse } from './apiBase'
 import { API_URL, getAuthHeader, getAuthHeaders } from './apiBase'
+import { fetchWithTimeout, TIMEOUTS } from '@/utils/fetchWithTimeout'
 
-class InstagramService {
+class TwitterService {
   async initAuth(): Promise<ApiResponse<{ authUrl: string; state: string }>> {
-    const response = await fetch(`${API_URL}/api/instagram/auth/init`, {
-      headers: getAuthHeader(),
-    })
+    const response = await fetchWithTimeout(
+      `${API_URL}/api/twitter/auth/init`,
+      {
+        headers: getAuthHeader(),
+      },
+      TIMEOUTS.AUTH
+    )
 
     if (!response.ok) {
       const text = await response.text()
@@ -26,11 +31,15 @@ class InstagramService {
     code: string,
     state: string
   ): Promise<ApiResponse<{ accounts: any[] }>> {
-    const response = await fetch(`${API_URL}/api/instagram/auth/callback`, {
-      method: 'POST',
-      headers: getAuthHeaders(),
-      body: JSON.stringify({ code, state }),
-    })
+    const response = await fetchWithTimeout(
+      `${API_URL}/api/twitter/auth/callback`,
+      {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ code, state }),
+      },
+      TIMEOUTS.POST
+    )
 
     if (!response.ok) {
       const text = await response.text()
@@ -48,9 +57,13 @@ class InstagramService {
   }
 
   async getAccounts(): Promise<ApiResponse<{ accounts: any[] }>> {
-    const response = await fetch(`${API_URL}/api/instagram/accounts`, {
-      headers: getAuthHeader(),
-    })
+    const response = await fetchWithTimeout(
+      `${API_URL}/api/twitter/accounts`,
+      {
+        headers: getAuthHeader(),
+      },
+      TIMEOUTS.GET
+    )
 
     if (!response.ok) {
       const text = await response.text()
@@ -68,10 +81,14 @@ class InstagramService {
   }
 
   async disconnectAccount(accountId: string): Promise<ApiResponse> {
-    const response = await fetch(`${API_URL}/api/instagram/accounts/${accountId}`, {
-      method: 'DELETE',
-      headers: getAuthHeader(),
-    })
+    const response = await fetchWithTimeout(
+      `${API_URL}/api/twitter/accounts/${accountId}`,
+      {
+        method: 'DELETE',
+        headers: getAuthHeader(),
+      },
+      TIMEOUTS.POST
+    )
 
     if (!response.ok) {
       const text = await response.text()
@@ -90,16 +107,21 @@ class InstagramService {
 
   async post(
     accountId: string,
-    caption: string,
-    imageUrl?: string,
-    videoUrl?: string,
-    contentType?: 'image' | 'video'
-  ): Promise<ApiResponse<{ postId: string; postUrl: string }>> {
-    const response = await fetch(`${API_URL}/api/instagram/accounts/${accountId}/post`, {
-      method: 'POST',
-      headers: getAuthHeaders(),
-      body: JSON.stringify({ caption, imageUrl, videoUrl, contentType }),
-    })
+    text: string,
+    mediaUrls?: string[]
+  ): Promise<ApiResponse<{ tweetId: string; tweetUrl: string }>> {
+    const response = await fetchWithTimeout(
+      `${API_URL}/api/twitter/accounts/${accountId}/post`,
+      {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({
+          text,
+          mediaUrls: mediaUrls || []
+        }),
+      },
+      TIMEOUTS.POST
+    )
 
     if (!response.ok) {
       const text = await response.text()
@@ -117,4 +139,4 @@ class InstagramService {
   }
 }
 
-export const instagramService = new InstagramService()
+export const twitterService = new TwitterService()

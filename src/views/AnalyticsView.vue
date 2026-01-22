@@ -25,6 +25,7 @@ import BaseAlert from '../components/BaseAlert.vue'
 import MaterialIcon from '../components/MaterialIcon.vue'
 import PlatformLogo from '../components/PlatformLogo.vue'
 import Toast from '../components/Toast.vue'
+import PostDetailModal from '../components/PostDetailModal.vue'
 import { api } from '../services/api'
 import { useAuthStore } from '../stores/auth'
 import { useRestaurantsStore } from '../stores/restaurants'
@@ -284,7 +285,7 @@ const timeRangeFilteredPosts = computed(() => {
   if (selectedTimeRange.value === 'all') return scheduledPosts.value
 
   return scheduledPosts.value.filter(post => {
-    const postDate = post.scheduled_date || post.published_date
+    const postDate = post.scheduled_date || post.published_at
     return isWithinTimeRange(postDate)
   })
 })
@@ -357,8 +358,8 @@ const sortedAndFilteredPosts = computed(() => {
 
   if (sortBy.value === 'date') {
     return posts.sort((a, b) => {
-      const dateA = new Date(a.scheduled_date || a.published_date).getTime()
-      const dateB = new Date(b.scheduled_date || b.published_date).getTime()
+      const dateA = new Date(a.scheduled_date || a.published_at).getTime()
+      const dateB = new Date(b.scheduled_date || b.published_at).getTime()
       return sortDirection.value === 'desc' ? dateB - dateA : dateA - dateB
     })
   }
@@ -449,7 +450,7 @@ const activityChartData = computed(() => {
     const monthlyData: Record<string, number> = {}
 
     platformFilteredPosts.value.forEach(post => {
-      const postDate = post.scheduled_date || post.published_date
+      const postDate = post.scheduled_date || post.published_at
       if (postDate) {
         const date = new Date(postDate)
         const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
@@ -499,7 +500,7 @@ const activityChartData = computed(() => {
       }
 
       const postsOnDay = platformFilteredPosts.value.filter(p => {
-        const postDate = p.scheduled_date || p.published_date
+        const postDate = p.scheduled_date || p.published_at
         return postDate?.startsWith(dateStr)
       }).length
       data.push(postsOnDay)
@@ -930,7 +931,24 @@ const averageEngagementRate = computed(() => {
   return totalReach > 0 ? (totalEngagement / totalReach) * 100 : 0
 })
 
-// Check if there are Instagram posts with engagement but no views
+// Check if there are posts with engagement but no reach/impressions data
+const hasPostsWithMissingReachData = computed(() => {
+  return timeRangeFilteredPosts.value.some(post => {
+    if (post.status !== 'published') return false
+
+    const engagement = engagementStore.getPostEngagement(post.id)
+    if (!engagement) return false
+
+    // Check if ANY platform has engagement (likes/comments) but no reach data
+    return Object.values(engagement).some((platformMetrics: any) => {
+      const hasEngagement = (platformMetrics.likes > 0 || platformMetrics.comments > 0 || platformMetrics.shares > 0)
+      const hasNoReach = platformMetrics.reach === 0 && platformMetrics.impressions === 0
+      return hasEngagement && hasNoReach
+    })
+  })
+})
+
+// Check if there are Instagram posts with engagement but no views (legacy - kept for specificity)
 const hasInstagramPostsWithNoViews = computed(() => {
   return timeRangeFilteredPosts.value.some(post => {
     if (post.status !== 'published') return false
@@ -1096,6 +1114,27 @@ function closeModal() {
   selectedPost.value = null
 }
 
+// Retry a failed or partial post
+async function handleRetryPost(post: any) {
+  if (!post?.id) return
+
+  try {
+    const response = await api.retryScheduledPost(post.id)
+
+    if (response.success) {
+      displayToast(t('scheduler.retrySuccess'), 'success')
+      closeModal()
+      // Refresh the scheduled posts list to show updated status
+      await fetchAnalyticsData()
+    } else {
+      displayToast(response.error || t('scheduler.retryError'), 'error')
+    }
+  } catch (error) {
+    console.error('Failed to retry post:', error)
+    displayToast(t('scheduler.retryError'), 'error')
+  }
+}
+
 // Auto-sync engagement data if stale
 async function autoSyncEngagementIfNeeded() {
   const publishedPosts = scheduledPosts.value.filter(p => p.status === 'published')
@@ -1194,45 +1233,15 @@ onMounted(async () => {
       </div>
 
       <template v-else>
-        <!-- Diagnostic Banner -->
-        <div v-if="diagnosticInfo.backendIssue && diagnosticInfo.publishedPostsCount > 0" class="diagnostic-banner">
-          <div class="diagnostic-icon">
-            <MaterialIcon icon="bug_report" size="lg" />
-          </div>
-          <div class="diagnostic-content">
-            <h3 class="diagnostic-title">⚠️ Backend Issue Detected</h3>
-            <p class="diagnostic-message">
-              You have <strong>{{ diagnosticInfo.publishedPostsCount }} published post{{ diagnosticInfo.publishedPostsCount !== 1 ? 's' : '' }}</strong>,
-              but the backend is returning <strong>zero engagement data</strong>.
-            </p>
-            <div class="diagnostic-details">
-              <p><strong>What this means:</strong> The backend server is not fetching engagement metrics (likes, comments, shares) from social platforms like Instagram and Facebook.</p>
-              <p><strong>What needs to be fixed:</strong></p>
-              <ul>
-                <li>Backend needs to implement Instagram Graph API integration</li>
-                <li>Backend needs to implement Facebook Graph API integration</li>
-                <li>Backend needs to periodically sync engagement data from these APIs</li>
-              </ul>
-              <p class="diagnostic-note">
-                <MaterialIcon icon="info" size="sm" />
-                This is a <strong>backend/server issue</strong>, not a frontend issue. The API endpoint exists but returns empty data.
-              </p>
-            </div>
-            <div class="diagnostic-actions">
-              <button class="diagnostic-btn" @click="openInstagramApiDocs">
-                <MaterialIcon icon="open_in_new" size="sm" />
-                Instagram API Docs
-              </button>
-              <button class="diagnostic-btn" @click="openFacebookApiDocs">
-                <MaterialIcon icon="open_in_new" size="sm" />
-                Facebook API Docs
-              </button>
-              <button class="diagnostic-btn-secondary" @click="diagnosticInfo.backendIssue = false">
-                <MaterialIcon icon="close" size="sm" />
-                Dismiss
-              </button>
-            </div>
-          </div>
+        <!-- Engagement Sync Warning -->
+        <div v-if="diagnosticInfo.backendIssue && diagnosticInfo.publishedPostsCount > 0" class="engagement-warning">
+          <MaterialIcon icon="info" size="sm" />
+          <span>
+            Engagement data is still syncing from social platforms. This may take a few minutes.
+          </span>
+          <button class="warning-dismiss" @click="diagnosticInfo.backendIssue = false" aria-label="Dismiss">
+            <MaterialIcon icon="close" size="xs" />
+          </button>
         </div>
 
         <!-- Platform Tabs -->
@@ -1273,23 +1282,6 @@ onMounted(async () => {
             {{ t('analytics.createPost') }}
           </button>
         </div>
-
-        <!-- Instagram Views Info Banner -->
-        <BaseAlert
-          v-if="hasInstagramPostsWithNoViews && platformFilteredPosts.length > 0"
-          type="info"
-          :dismissible="true"
-          class="instagram-info-banner"
-        >
-          <div class="info-content">
-            <strong>{{ t('analytics.instagramViewsLimited') }}</strong>
-            <p>{{ t('analytics.instagramViewsInfo') }}</p>
-            <a href="https://developers.facebook.com/docs/instagram-api/guides/insights" target="_blank" class="learn-more-link">
-              {{ t('analytics.learnMore') }}
-              <MaterialIcon icon="open_in_new" size="xs" />
-            </a>
-          </div>
-        </BaseAlert>
 
         <!-- Key Metrics Cards -->
         <div class="metrics-grid">
@@ -1650,7 +1642,7 @@ onMounted(async () => {
 
                 <!-- Date Cell -->
                 <td class="date-cell">
-                  <span class="post-date">{{ formatDate(post.scheduled_date || post.published_date) }}</span>
+                  <span class="post-date">{{ formatDate(post.scheduled_date || post.published_at) }}</span>
                 </td>
 
                 <!-- Views Cell -->
@@ -1672,6 +1664,10 @@ onMounted(async () => {
                     <span class="metric-badge">
                       <MaterialIcon icon="comment" size="xs" />
                       {{ getPostEngagementMetric(post.id, 'comments', selectedPlatform === 'all' ? undefined : selectedPlatform) }}
+                    </span>
+                    <span class="metric-badge">
+                      <MaterialIcon icon="share" size="xs" />
+                      {{ getPostEngagementMetric(post.id, 'shares', selectedPlatform === 'all' ? undefined : selectedPlatform) }}
                     </span>
                   </div>
                   <span v-else class="muted">—</span>
@@ -1725,153 +1721,12 @@ onMounted(async () => {
         </BaseCard>
 
         <!-- Post Detail Modal -->
-        <Teleport to="body">
-          <BaseModal v-model="showPostModal" size="lg">
-            <div v-if="selectedPost" class="post-modal">
-              <div class="post-modal-header">
-                <h2 class="modal-title">{{ t('analytics.postDetails') }}</h2>
-                <button class="close-btn" @click="closeModal">
-                  <MaterialIcon icon="close" size="md" />
-                </button>
-              </div>
-
-              <div class="post-modal-content">
-                <!-- Media Preview - Show video if video_url exists, otherwise image -->
-                <div v-if="getMediaUrl(selectedPost) || getVideoUrl(selectedPost)" class="media-preview">
-                  <video
-                    v-if="hasVideo(selectedPost)"
-                    :src="getVideoUrl(selectedPost)!"
-                    controls
-                    class="media-video"
-                  ></video>
-                  <img
-                    v-else
-                    :src="getMediaUrl(selectedPost)!"
-                    :alt="selectedPost.post_text || selectedPost.caption || 'Post'"
-                    class="media-image"
-                  />
-                </div>
-
-                <!-- Post Details -->
-                <div class="post-details-section">
-                  <!-- Text Content -->
-                  <div class="detail-group">
-                    <h3 class="detail-label">{{ t('analytics.postContent') }}</h3>
-                    <p class="post-text">{{ getPostText(selectedPost) || t('analytics.noText') }}</p>
-                  </div>
-
-                  <!-- Platforms -->
-                  <div class="detail-group">
-                    <h3 class="detail-label">{{ t('analytics.platforms') }}</h3>
-                    <div class="platform-badges">
-                      <div
-                        v-for="platform in (selectedPost.platforms || [])"
-                        :key="platform"
-                        class="platform-badge"
-                        :class="`platform-bg-${platform}`"
-                      >
-                        <PlatformLogo :platform="(platform as 'facebook' | 'instagram' | 'tiktok' | 'twitter' | 'linkedin')" :size="16" />
-                        <span>{{ platform.charAt(0).toUpperCase() + platform.slice(1) }}</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <!-- Engagement Metrics (for published posts) -->
-                  <div v-if="selectedPost.status === 'published'" class="detail-group">
-                    <h3 class="detail-label">{{ t('analytics.engagement') }}</h3>
-                    <div class="engagement-details">
-                      <template v-if="engagementStore.getPostEngagement(selectedPost.id)">
-                        <div
-                          v-for="(metrics, platform) in engagementStore.getPostEngagement(selectedPost.id)"
-                          :key="platform"
-                          class="platform-engagement-card"
-                        >
-                          <div class="platform-engagement-header">
-                            <PlatformLogo :platform="(platform as 'facebook' | 'instagram' | 'tiktok' | 'twitter' | 'linkedin')" :size="20" />
-                            <span class="platform-engagement-name">{{ platform.charAt(0).toUpperCase() + platform.slice(1) }}</span>
-                          </div>
-                          <div class="platform-engagement-stats">
-                            <div class="engagement-stat">
-                              <MaterialIcon icon="thumb_up" size="xs" />
-                              <span class="stat-value">{{ (metrics.likes || 0).toLocaleString() }}</span>
-                              <span class="stat-label">{{ t('analytics.likes') }}</span>
-                            </div>
-                            <div class="engagement-stat">
-                              <MaterialIcon icon="comment" size="xs" />
-                              <span class="stat-value">{{ (metrics.comments || 0).toLocaleString() }}</span>
-                              <span class="stat-label">{{ t('analytics.comments') }}</span>
-                            </div>
-                            <div class="engagement-stat">
-                              <MaterialIcon icon="share" size="xs" />
-                              <span class="stat-value">{{ (metrics.shares || 0).toLocaleString() }}</span>
-                              <span class="stat-label">{{ t('analytics.shares') }}</span>
-                            </div>
-                            <div v-if="metrics.reach" class="engagement-stat">
-                              <MaterialIcon icon="visibility" size="xs" />
-                              <span class="stat-value">{{ (metrics.reach || 0).toLocaleString() }}</span>
-                              <span class="stat-label">{{ t('analytics.reach') }}</span>
-                            </div>
-                            <div v-if="metrics.impressions" class="engagement-stat">
-                              <MaterialIcon icon="bar_chart" size="xs" />
-                              <span class="stat-value">{{ (metrics.impressions || 0).toLocaleString() }}</span>
-                              <span class="stat-label">{{ t('analytics.impressions') }}</span>
-                            </div>
-                          </div>
-                        </div>
-                      </template>
-                      <div v-else class="no-engagement-data">
-                        <MaterialIcon icon="info" size="sm" color="var(--text-muted)" />
-                        <p>{{ t('analytics.noEngagementData', 'No engagement data available. Click "Refresh Metrics" to sync from social platforms.') }}</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <!-- Status & Date -->
-                  <div class="detail-row">
-                    <div class="detail-group">
-                      <h3 class="detail-label">{{ t('analytics.status') }}</h3>
-                      <span class="status-badge" :class="selectedPost.status">
-                        {{ selectedPost.status && t(`analytics.${selectedPost.status}`, selectedPost.status) }}
-                      </span>
-                    </div>
-
-                    <div class="detail-group">
-                      <h3 class="detail-label">{{ t('analytics.date') }}</h3>
-                      <span class="detail-text">{{ formatDate(selectedPost.scheduled_date || selectedPost.published_date) }}</span>
-                    </div>
-                  </div>
-
-                  <!-- Error Message (for failed posts) -->
-                  <div v-if="selectedPost.status === 'failed'" class="error-section">
-                    <h3 class="detail-label">{{ t('analytics.errorReason', 'Error') }}</h3>
-                    <div class="error-message-box">
-                      {{ selectedPost.error_message || t('analytics.unknownError', 'Post failed to publish. Please try again or contact support.') }}
-                    </div>
-                  </div>
-
-                  <!-- Platform Links -->
-                  <div v-if="selectedPost.status === 'published' && selectedPost.platform_post_urls && Object.keys(selectedPost.platform_post_urls).length > 0" class="detail-group">
-                    <h3 class="detail-label">{{ t('analytics.viewOnPlatforms') }}</h3>
-                    <div class="platform-links">
-                      <a
-                        v-for="(url, platform) in (selectedPost.platform_post_urls as Record<string, string>)"
-                        :key="platform"
-                        :href="url"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        class="platform-link-btn"
-                        @click.stop
-                      >
-                        <PlatformLogo :platform="(platform as 'facebook' | 'instagram' | 'tiktok' | 'twitter' | 'linkedin')" :size="16" />
-                        {{ platform.charAt(0).toUpperCase() + platform.slice(1) }}
-                      </a>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </BaseModal>
-        </Teleport>
+        <PostDetailModal
+          v-model="showPostModal"
+          :post="selectedPost"
+          @retry="handleRetryPost"
+          @close="closeModal"
+        />
       </template>
     </div>
 
@@ -2030,135 +1885,44 @@ onMounted(async () => {
 }
 
 /* Diagnostic Banner */
-.diagnostic-banner {
-  background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(245, 158, 11, 0.05));
-  border: 2px solid rgba(245, 158, 11, 0.3);
-  border-radius: var(--radius-lg);
-  padding: var(--space-xl);
-  margin-bottom: var(--space-2xl);
+/* Engagement sync warning - small, unobtrusive */
+.engagement-warning {
   display: flex;
-  gap: var(--space-lg);
-  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.15);
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-md) var(--space-lg);
+  margin-bottom: var(--space-lg);
+  background: rgba(245, 158, 11, 0.08);
+  border-left: 3px solid rgba(245, 158, 11, 0.5);
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
 }
 
-.diagnostic-icon {
+.engagement-warning .material-icon {
+  color: #f59e0b;
   flex-shrink: 0;
-  width: 48px;
-  height: 48px;
-  background: rgba(245, 158, 11, 0.15);
-  border-radius: var(--radius-md);
+}
+
+.warning-dismiss {
+  margin-left: auto;
+  background: none;
+  border: none;
+  padding: var(--space-xs);
+  cursor: pointer;
+  color: var(--text-muted);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #f59e0b;
-}
-
-.diagnostic-content {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-md);
-}
-
-.diagnostic-title {
-  font-family: var(--font-heading);
-  font-size: var(--text-xl);
-  color: var(--text-primary);
-  margin: 0;
-}
-
-.diagnostic-message {
-  font-size: var(--text-base);
-  color: var(--text-primary);
-  margin: 0;
-  line-height: var(--leading-relaxed);
-}
-
-.diagnostic-details {
-  background: var(--bg-secondary);
-  border-radius: var(--radius-md);
-  padding: var(--space-lg);
-  margin: var(--space-sm) 0;
-}
-
-.diagnostic-details p {
-  margin: 0 0 var(--space-sm) 0;
-  color: var(--text-secondary);
-  font-size: var(--text-sm);
-  line-height: var(--leading-relaxed);
-}
-
-.diagnostic-details ul {
-  margin: var(--space-xs) 0 var(--space-md) var(--space-lg);
-  padding: 0;
-  list-style: disc;
-}
-
-.diagnostic-details li {
-  margin: var(--space-xs) 0;
-  color: var(--text-secondary);
-  font-size: var(--text-sm);
-  line-height: var(--leading-relaxed);
-}
-
-.diagnostic-note {
-  display: flex;
-  align-items: center;
-  gap: var(--space-sm);
-  padding: var(--space-md);
-  background: rgba(59, 130, 246, 0.1);
-  border-left: 3px solid #3b82f6;
   border-radius: var(--radius-sm);
-  margin-top: var(--space-md);
-  color: var(--text-primary) !important;
-  font-weight: var(--font-medium);
+  transition: var(--transition-fast);
 }
 
-.diagnostic-actions {
-  display: flex;
-  gap: var(--space-sm);
-  flex-wrap: wrap;
-}
-
-.diagnostic-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-xs);
-  padding: var(--space-sm) var(--space-md);
-  background: var(--gradient-gold);
-  color: var(--text-on-gold);
-  border: none;
-  border-radius: var(--radius-md);
-  font-size: var(--text-sm);
-  font-weight: var(--font-medium);
-  cursor: pointer;
-  transition: var(--transition-base);
-}
-
-.diagnostic-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--glow-gold-md);
-}
-
-.diagnostic-btn-secondary {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-xs);
-  padding: var(--space-sm) var(--space-md);
-  background: var(--bg-tertiary);
-  color: var(--text-secondary);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
-  font-size: var(--text-sm);
-  font-weight: var(--font-medium);
-  cursor: pointer;
-  transition: var(--transition-base);
-}
-
-.diagnostic-btn-secondary:hover {
-  background: var(--bg-elevated);
+.warning-dismiss:hover {
+  background: rgba(0, 0, 0, 0.05);
   color: var(--text-primary);
 }
+
 
 /* Empty Analytics State */
 .empty-analytics-state {
@@ -3343,48 +3107,6 @@ onMounted(async () => {
     align-items: stretch;
   }
 
-  /* Diagnostic banner mobile */
-  .diagnostic-banner {
-    flex-direction: column;
-    padding: var(--space-lg);
-  }
-
-  .diagnostic-icon {
-    width: 40px;
-    height: 40px;
-  }
-
-  .diagnostic-title {
-    font-size: var(--text-lg);
-  }
-
-  .diagnostic-message {
-    font-size: var(--text-sm);
-  }
-
-  .diagnostic-details {
-    padding: var(--space-md);
-  }
-
-  .diagnostic-actions {
-    flex-direction: column;
-  }
-
-  .diagnostic-btn,
-  .diagnostic-btn-secondary {
-    width: 100%;
-    justify-content: center;
-  }
-
-  .time-range-selector {
-    justify-content: center;
-    flex-wrap: wrap;
-  }
-
-  .range-btn {
-    padding: var(--space-sm) var(--space-md);
-    font-size: var(--text-xs);
-  }
 
   .platform-tab {
     font-size: var(--text-sm);
