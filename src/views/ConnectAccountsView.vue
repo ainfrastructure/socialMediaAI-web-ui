@@ -666,54 +666,6 @@ async function executeDisconnectAll(type: 'facebook' | 'instagram' | 'tiktok' | 
             </div>
           </div>
 
-          <!-- X (Twitter) - Coming Soon -->
-          <div class="platform-section disabled">
-            <div class="platform-header">
-              <div class="platform-icon platform-icon-x">
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="currentColor"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    d="M18.901 1.153h3.68l-8.04 9.19L24 22.846h-7.406l-5.8-7.584-6.638 7.584H.474l8.6-9.83L0 1.154h7.594l5.243 6.932ZM17.61 20.644h2.039L6.486 3.24H4.298Z"
-                  />
-                </svg>
-              </div>
-              <div class="platform-info">
-                <h3>X (Twitter)</h3>
-                <span class="coming-soon-badge">{{ $t('connectAccounts.comingSoon') }}</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- LinkedIn - Coming Soon -->
-          <div class="platform-section disabled">
-            <div class="platform-header">
-              <div class="platform-icon platform-icon-linkedin">
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="white"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"
-                  />
-                </svg>
-              </div>
-              <div class="platform-info">
-                <h3>LinkedIn</h3>
-              </div>
-              <div class="platform-actions">
-                <span class="coming-soon-badge">{{ $t('connectAccounts.comingSoon') }}</span>
-              </div>
-            </div>
-          </div>
-
           <!-- TikTok Section -->
           <div class="platform-section" :class="{ expanded: expandedPlatforms.has('tiktok') }">
             <div class="platform-header" :class="{ clickable: isTikTokConnected }" @click="isTikTokConnected ? togglePlatform('tiktok') : null">
@@ -834,6 +786,155 @@ async function executeDisconnectAll(type: 'facebook' | 'instagram' | 'tiktok' | 
                   </svg>
                   {{ tiktokStore.loading ? $t('connectAccounts.connecting') : $t('connectAccounts.connectMore') }}
                 </BaseButton>
+              </div>
+            </div>
+          </div>
+
+          <!-- X (Twitter) Section -->
+          <div class="platform-section" :class="{ expanded: expandedPlatforms.has('twitter') }">
+            <div class="platform-header" :class="{ clickable: isTwitterConnected }" @click="isTwitterConnected ? togglePlatform('twitter') : null">
+              <div class="platform-icon platform-icon-x">
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M18.901 1.153h3.68l-8.04 9.19L24 22.846h-7.406l-5.8-7.584-6.638 7.584H.474l8.6-9.83L0 1.154h7.594l5.243 6.932ZM17.61 20.644h2.039L6.486 3.24H4.298Z"
+                  />
+                </svg>
+              </div>
+              <div class="platform-info">
+                <h3>X (Twitter)</h3>
+                <span v-if="isTwitterConnected" class="connection-count">
+                  {{ $t('connectAccounts.accountsConnected', { count: twitterStore.connectedAccounts.length }) }}
+                </span>
+              </div>
+              <div v-if="isTwitterConnected" class="expand-icon">
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path d="M6 9l6 6 6-6" />
+                </svg>
+              </div>
+              <div class="platform-actions" @click.stop>
+                <BaseButton
+                  v-if="isTwitterConnected"
+                  @click="requestDisconnectAll('twitter')"
+                  variant="danger"
+                  size="small"
+                  :disabled="twitterStore.loading"
+                >
+                  {{ $t('connectAccounts.disconnect') }}
+                </BaseButton>
+                <BaseButton
+                  v-if="!isTwitterConnected"
+                  @click="handleConnectTwitter"
+                  variant="primary"
+                  size="small"
+                  :disabled="twitterStore.loading"
+                >
+                  {{ twitterStore.loading ? $t('connectAccounts.connecting') : $t('connectAccounts.connect') }}
+                </BaseButton>
+              </div>
+            </div>
+
+            <!-- Connected Twitter Accounts -->
+            <div v-if="isTwitterConnected && expandedPlatforms.has('twitter')" class="connected-accounts-list">
+              <div
+                v-for="account in twitterStore.connectedAccounts"
+                :key="account.twitterAccountId"
+                class="connected-account-item"
+              >
+                <img
+                  v-if="account.profilePictureUrl"
+                  :src="account.profilePictureUrl"
+                  :alt="account.username"
+                  class="profile-picture"
+                />
+                <div v-else class="profile-picture-placeholder">
+                  <svg
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M18.901 1.153h3.68l-8.04 9.19L24 22.846h-7.406l-5.8-7.584-6.638 7.584H.474l8.6-9.83L0 1.154h7.594l5.243 6.932ZM17.61 20.644h2.039L6.486 3.24H4.298Z"
+                    />
+                  </svg>
+                </div>
+                <div class="account-details">
+                  <span class="account-name">@{{ account.username }}</span>
+                  <span class="account-id">ID: {{ account.twitterAccountId }}</span>
+                </div>
+                <BaseButton
+                  @click="requestDisconnectTwitterAccount(account.twitterAccountId, account.username)"
+                  variant="danger"
+                  size="small"
+                  :disabled="twitterStore.loading"
+                  class="disconnect-btn"
+                >
+                  {{ $t('connectAccounts.disconnect') }}
+                </BaseButton>
+              </div>
+
+              <!-- Connect More Button -->
+              <div class="connect-more-item">
+                <BaseButton
+                  @click="handleConnectTwitter"
+                  variant="ghost"
+                  size="small"
+                  :disabled="twitterStore.loading"
+                  class="connect-more-btn"
+                >
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path d="M12 5v14M5 12h14" />
+                  </svg>
+                  {{ twitterStore.loading ? $t('connectAccounts.connecting') : $t('connectAccounts.connectMore') }}
+                </BaseButton>
+              </div>
+            </div>
+          </div>
+
+          <!-- LinkedIn - Coming Soon -->
+          <div class="platform-section disabled">
+            <div class="platform-header">
+              <div class="platform-icon platform-icon-linkedin">
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="white"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"
+                  />
+                </svg>
+              </div>
+              <div class="platform-info">
+                <h3>LinkedIn</h3>
+              </div>
+              <div class="platform-actions">
+                <span class="coming-soon-badge">{{ $t('connectAccounts.comingSoon') }}</span>
               </div>
             </div>
           </div>
