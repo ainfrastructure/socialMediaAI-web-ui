@@ -330,6 +330,12 @@ const comparisonExamples = [
     generated: '/example/example10-enhanced.jpg',
     templateKey: 'studioShot',
   },
+  {
+    id: 8,
+    original: '/example/example20-original.jpeg',
+    generated: '/example/example20-enhanced.jpg',
+    templateKey: 'studioShot',
+  },
 ]
 
 // Before/After slider state
