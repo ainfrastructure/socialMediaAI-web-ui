@@ -44,7 +44,12 @@
       "Bash(npm run i18n:unused:*)",
       "Bash(wc:*)",
       "Bash(node scripts/find-unused-i18n-keys.js:*)",
-      "Bash(npm run:*)"
+      "Bash(npm run:*)",
+      "Bash(sort:*)",
+      "Bash(sips --help:*)",
+      "Bash(sips:*)",
+      "Bash( for f in *.jpeg *.jpg)",
+      "Bash(do sips -s formatOptions 70 \"$f\" --out \"$f\" done)"
     ],
     "deny": [],
     "ask": []

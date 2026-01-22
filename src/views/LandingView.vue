@@ -314,7 +314,7 @@ const comparisonExamples = [
   },
   {
     id: 5,
-    original: '/example/orignal-3.png',
+    original: '/example/orignal-3.jpg',
     generated: '/example/orignal-3-studio.jpeg',
     templateKey: 'studioShot',
   },
@@ -326,7 +326,7 @@ const comparisonExamples = [
   },
   {
     id: 7,
-    original: '/example/example10-original.png',
+    original: '/example/example10-original.jpg',
     generated: '/example/example10-enhanced.jpg',
     templateKey: 'studioShot',
   },
@@ -902,6 +902,7 @@ const benefits = [
                   :alt="$t('landing.examples.gallery.after')"
                   class="slider-image"
                   draggable="false"
+                  loading="lazy"
                 />
                 <div class="image-label after-label">
                   {{ $t('landing.examples.gallery.after') }}
@@ -918,6 +919,7 @@ const benefits = [
                   :alt="$t('landing.examples.gallery.before')"
                   class="slider-image"
                   draggable="false"
+                  loading="lazy"
                 />
                 <div class="image-label before-label">
                   {{ $t('landing.examples.gallery.before') }}
@@ -950,6 +952,7 @@ const benefits = [
                   :src="example.original"
                   :alt="$t(`landing.examples.templates.${example.templateKey}`)"
                   class="thumbnail-image"
+                  loading="lazy"
                 />
                 <!-- Progress indicator -->
                 <div class="thumbnail-progress-bar">
@@ -988,6 +991,7 @@ const benefits = [
                   :src="multiExample.original"
                   :alt="$t('landing.examples.originalPhoto')"
                   class="example-image"
+                  loading="lazy"
                 />
               </div>
             </div>
@@ -1020,6 +1024,7 @@ const benefits = [
                     :src="multiExample.generated[currentTemplateIndex].src"
                     :alt="$t('landing.examples.aiGenerated')"
                     class="carousel-image"
+                    loading="lazy"
                   />
                 </div>
                 <!-- Template badge selectors with progress bars -->
@@ -2412,8 +2417,8 @@ const benefits = [
   position: absolute;
   bottom: var(--space-lg);
   padding: var(--space-xs) var(--space-md);
-  background: var(--accent-alpha-35);
-  color: var(--text-primary);
+  background: rgba(0, 0, 0, 0.7);
+  color: #ffffff;
   font-size: var(--text-sm);
   font-weight: var(--font-semibold);
   text-transform: uppercase;
