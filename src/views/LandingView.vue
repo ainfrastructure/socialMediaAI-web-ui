@@ -300,6 +300,18 @@ const comparisonExamples = [
     generated: '/example/orignal-3-studio.jpeg',
     templateKey: 'studioShot',
   },
+  {
+    id: 3,
+    original: '/example/pizza-original.png',
+    generated: '/example/pizza-enhanced.png',
+    templateKey: 'oneBite',
+  },
+  {
+    id: 4,
+    original: '/example/kebab-original.jpg',
+    generated: '/example/kebab-enhanced.jpg',
+    templateKey: 'studioShot',
+  },
 ]
 
 // Before/After slider state
