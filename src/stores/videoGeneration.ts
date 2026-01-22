@@ -195,10 +195,18 @@ export const useVideoGenerationStore = defineStore('videoGeneration', () => {
 
   function addFailureNotification(task: VideoGenerationTask, errorMessage?: string) {
     const notificationStore = useNotificationStore()
+
+    // Detect if this is a throttling/overload error and suggest retry
+    const isThrottlingError = errorMessage?.toLowerCase().includes('overload') ||
+                              errorMessage?.toLowerCase().includes('throttl') ||
+                              errorMessage?.toLowerCase().includes('high demand') ||
+                              errorMessage?.toLowerCase().includes('try again')
+
     notificationStore.addNotification({
       type: 'error',
       title: 'Video Generation Failed',
-      message: errorMessage || `Failed to generate video for "${task.postTitle}"`
+      message: errorMessage || `Failed to generate video for "${task.postTitle}"`,
+      postUrl: isThrottlingError ? `/posts?openPost=${task.postId}` : undefined
     })
   }
 

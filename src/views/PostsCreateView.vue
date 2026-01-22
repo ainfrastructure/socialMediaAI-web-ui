@@ -1656,6 +1656,12 @@ async function autoSavePost(): Promise<any | null> {
     return null
   }
 
+  // If we already have a saved post, return it instead of creating a duplicate
+  if (lastSavedPost.value?.id) {
+    debugLog('Post already saved, returning existing post:', lastSavedPost.value.id)
+    return lastSavedPost.value
+  }
+
   try {
     const favoriteData = {
       restaurant_id: restaurant.value.id,
