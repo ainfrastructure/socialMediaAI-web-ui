@@ -1626,6 +1626,23 @@ export default {
     feedbackPlaceholder: 'Share what worked well or what could be better...'
   },
 
+  // Contact Feedback
+  contactFeedback: {
+    modalTitle: 'Send us your feedback',
+    description: "Have a question, suggestion, or issue? We'd love to hear from you!",
+    messageLabel: 'Your Message',
+    messagePlaceholder: 'Share your thoughts, suggestions, or issues...',
+    characterCount: '{count}/2000',
+    cancel: 'Cancel',
+    send: 'Send Feedback',
+    sending: 'Sending...',
+    successMessage: "Thank you for your feedback! We've received your message and will get back to you soon.",
+    errorRequired: 'Please enter a message',
+    errorFailed: 'Failed to send feedback. Please try again.',
+    buttonLabel: 'Feedback',
+    buttonAriaLabel: 'Send Feedback'
+  },
+
   // Generating Progress
   generatingProgress: {
     title: 'Creating your post',

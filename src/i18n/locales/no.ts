@@ -1557,6 +1557,23 @@ export default {
     feedbackPlaceholder: 'Del hva som fungerte bra eller hva som kunne vært bedre...'
   },
 
+  // Contact Feedback
+  contactFeedback: {
+    modalTitle: 'Send oss tilbakemelding',
+    description: 'Har du et spørsmål, forslag eller problem? Vi vil gjerne høre fra deg!',
+    messageLabel: 'Din melding',
+    messagePlaceholder: 'Del dine tanker, forslag eller problemer...',
+    characterCount: '{count}/2000',
+    cancel: 'Avbryt',
+    send: 'Send tilbakemelding',
+    sending: 'Sender...',
+    successMessage: 'Takk for tilbakemeldingen! Vi har mottatt meldingen din og vil ta kontakt snart.',
+    errorRequired: 'Vennligst skriv inn en melding',
+    errorFailed: 'Kunne ikke sende tilbakemelding. Vennligst prøv igjen.',
+    buttonLabel: 'Tilbakemelding',
+    buttonAriaLabel: 'Send tilbakemelding'
+  },
+
   // Generating Progress
   generatingProgress: {
     title: 'Lager innlegget ditt',

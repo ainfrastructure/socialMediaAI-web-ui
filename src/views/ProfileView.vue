@@ -198,6 +198,53 @@
       <!-- Notification Preferences -->
       <NotificationPreferencesSection />
 
+      <!-- Contact Us -->
+      <BaseCard variant="glass" class="section-card">
+        <div class="section-header">
+          <h2 class="section-title">Contact Us</h2>
+        </div>
+
+        <div class="feedback-section">
+          <p class="feedback-description">
+            Have a question, suggestion, or feedback? We'd love to hear from you! Send us a message and we'll get back to you as soon as possible.
+          </p>
+
+          <form @submit.prevent="submitFeedback" class="feedback-form">
+            <div class="form-group">
+              <label for="feedback-message" class="form-label">Your Message</label>
+              <textarea
+                id="feedback-message"
+                v-model="feedbackMessage"
+                class="feedback-textarea"
+                placeholder="Share your thoughts, suggestions, or issues..."
+                rows="5"
+                maxlength="2000"
+                :disabled="submittingFeedback"
+              ></textarea>
+              <div class="character-count">
+                {{ feedbackMessage.length }}/2000
+              </div>
+            </div>
+
+            <BaseAlert v-if="feedbackError" type="error">
+              {{ feedbackError }}
+            </BaseAlert>
+
+            <BaseAlert v-if="feedbackSuccess" type="success">
+              Thank you for your feedback! We've received your message and will get back to you soon.
+            </BaseAlert>
+
+            <BaseButton
+              type="submit"
+              variant="primary"
+              :disabled="submittingFeedback || !feedbackMessage.trim()"
+            >
+              {{ submittingFeedback ? 'Sending...' : 'Send Feedback' }}
+            </BaseButton>
+          </form>
+        </div>
+      </BaseCard>
+
       <!-- Account Security -->
       <BaseCard variant="glass" class="section-card danger-section">
         <div class="section-header">
@@ -240,6 +287,7 @@ import ReferralCodeCard from '../components/ReferralCodeCard.vue'
 import ReferralStatsCard from '../components/ReferralStatsCard.vue'
 import type { ReferralStats } from '../services/referralService'
 import NotificationPreferencesSection from '../components/NotificationPreferencesSection.vue'
+import { notificationPreferencesService } from '../services/notificationPreferencesService'
 
 const authStore = useAuthStore()
 const { t } = useI18n()
@@ -255,6 +303,16 @@ const personalForm = reactive({
 
 // Billing portal
 const loadingPortal = ref(false)
+
+// Sentry test
+const testingSentry = ref(false)
+const sentryTestSuccess = ref(false)
+
+// Feedback
+const feedbackMessage = ref('')
+const submittingFeedback = ref(false)
+const feedbackSuccess = ref(false)
+const feedbackError = ref('')
 
 // Referral
 const referralStats = ref<ReferralStats | null>(null)
@@ -385,6 +443,72 @@ async function openCustomerPortal() {
     alert(t('profile.failedToOpenPortal'))
   } finally {
     loadingPortal.value = false
+  }
+}
+
+async function testSentryError() {
+  testingSentry.value = true
+  sentryTestSuccess.value = false
+
+  try {
+    // Call backend to send test error to Sentry
+    const response = await notificationPreferencesService.testSentry()
+
+    if (response.success) {
+      // Show success message
+      sentryTestSuccess.value = true
+      console.log('[Sentry Test] Event ID:', response.data?.eventId)
+
+      // Hide success message after 5 seconds
+      setTimeout(() => {
+        sentryTestSuccess.value = false
+      }, 5000)
+    } else {
+      console.error('[Sentry Test] Failed:', response.error)
+      alert('Failed to send test error: ' + response.error)
+    }
+  } catch (error) {
+    console.error('[Sentry Test] Error:', error)
+    alert('Failed to send test error')
+  } finally {
+    testingSentry.value = false
+  }
+}
+
+async function submitFeedback() {
+  submittingFeedback.value = true
+  feedbackSuccess.value = false
+  feedbackError.value = ''
+
+  try {
+    // Validate message
+    if (!feedbackMessage.value.trim()) {
+      feedbackError.value = 'Please enter a message'
+      return
+    }
+
+    // Call backend to send feedback
+    const response = await notificationPreferencesService.submitFeedback(feedbackMessage.value.trim())
+
+    if (response.success) {
+      // Show success message
+      feedbackSuccess.value = true
+      feedbackMessage.value = '' // Clear the form
+      console.log('[Feedback] Message sent successfully')
+
+      // Hide success message after 10 seconds
+      setTimeout(() => {
+        feedbackSuccess.value = false
+      }, 10000)
+    } else {
+      feedbackError.value = response.error || 'Failed to send feedback. Please try again.'
+      console.error('[Feedback] Failed:', response.error)
+    }
+  } catch (error) {
+    feedbackError.value = 'Failed to send feedback. Please try again.'
+    console.error('[Feedback] Error:', error)
+  } finally {
+    submittingFeedback.value = false
   }
 }
 
@@ -713,6 +837,74 @@ async function openCustomerPortal() {
   color: var(--text-secondary);
 }
 
+/* Feedback Section */
+.feedback-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+
+.feedback-description {
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  line-height: 1.6;
+}
+
+.feedback-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.form-label {
+  font-family: var(--font-heading);
+  font-size: var(--text-sm);
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.feedback-textarea {
+  width: 100%;
+  padding: var(--space-md);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  line-height: 1.6;
+  resize: vertical;
+  min-height: 120px;
+  transition: all 0.2s ease;
+}
+
+.feedback-textarea:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.feedback-textarea:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.feedback-textarea::placeholder {
+  color: var(--text-tertiary);
+}
+
+.character-count {
+  text-align: right;
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+}
+
 /* Security Section */
 .danger-section {
   border: 1px solid rgba(239, 68, 68, 0.2);
@@ -782,7 +974,8 @@ async function openCustomerPortal() {
     text-align: left;
   }
 
-  .security-item {
+  .security-item,
+  .dev-tool-item {
     flex-direction: column;
     align-items: flex-start;
   }

@@ -7,9 +7,10 @@ import LanguageSelector from './LanguageSelector.vue'
 import ThemeToggle from './ThemeToggle.vue'
 import MaterialIcon from './MaterialIcon.vue'
 import NotificationDropdown from './NotificationDropdown.vue'
+import FloatingFeedbackButton from './FloatingFeedbackButton.vue'
 
 const authStore = useAuthStore()
-useI18n()
+const { t } = useI18n()
 
 // Mobile menu state
 const mobileMenuOpen = ref(false)
@@ -75,6 +76,9 @@ const userInitial = computed(() => {
         <slot></slot>
       </main>
     </div>
+
+    <!-- Floating Feedback Button -->
+    <FloatingFeedbackButton />
   </div>
 </template>
 
