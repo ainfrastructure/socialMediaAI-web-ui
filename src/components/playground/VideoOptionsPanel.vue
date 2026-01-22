@@ -21,7 +21,6 @@
       <label>{{ $t('playground.resolution', 'Resolution') }}</label>
       <select :value="resolution" @change="$emit('update:resolution', ($event.target as HTMLSelectElement).value)" class="option-select">
         <option value="720p">720p</option>
-        <option value="1080p">1080p</option>
       </select>
     </div>
   </div>

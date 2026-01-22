@@ -570,6 +570,7 @@ export default {
       videoCredits: '5 credits',
       videoOptionsLabel: 'Video Settings',
       durationLabel: 'Duration',
+      durationWarning: 'Longer videos take more time to generate and may fail during high demand.',
       seconds: 's',
       aspectRatioLabel: 'Aspect Ratio',
       portrait: 'Portrait',

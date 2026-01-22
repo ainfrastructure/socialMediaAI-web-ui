@@ -20,8 +20,8 @@ export interface VideoGenerationTask {
 }
 
 const STORAGE_KEY = 'video-generation-tasks'
-const POLL_INTERVAL = 5000 // 5 seconds
-const MAX_POLL_ATTEMPTS = 180 // 15 minutes max
+const POLL_INTERVAL = 10000 // 10 seconds (recommended by Google docs)
+const MAX_POLL_ATTEMPTS = 60 // 10 minutes max (Google says up to 6 min in peak)
 
 export const useVideoGenerationStore = defineStore('videoGeneration', () => {
   // State

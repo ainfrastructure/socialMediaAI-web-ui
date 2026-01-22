@@ -241,7 +241,7 @@ const customization = ref<CustomizationOptions>({
 const showAnimationOptions = ref(false)
 const animatingToVideo = ref(false)
 const videoGeneratingInBackground = ref(false) // True when video is generating in background
-const animationVideoDuration = ref<4 | 6 | 8>(6)
+const animationVideoDuration = ref<4 | 6 | 8>(4)
 const animationVideoAspectRatio = ref<'16:9' | '9:16'>('9:16')
 const animationIncludeAudio = ref(true)
 const activeMediaType = ref<'image' | 'video'>('image') // Toggle between showing image or video
@@ -904,7 +904,7 @@ async function animateImage() {
     const videoOptions = {
       duration: animationVideoDuration.value,
       aspectRatio: animationVideoAspectRatio.value,
-      resolution: '1080p' as '720p' | '1080p',
+      resolution: '720p' as '720p' | '1080p',
       generateAudio: false // Never generate audio - it adds unwanted voices
     }
 
@@ -1182,7 +1182,7 @@ function createAnother() {
   // Reset animation state
   showAnimationOptions.value = false
   animatingToVideo.value = false
-  animationVideoDuration.value = 6
+  animationVideoDuration.value = 4
   animationVideoAspectRatio.value = '9:16'
   animationIncludeAudio.value = true
   activeMediaType.value = 'image'
@@ -1686,6 +1686,9 @@ defineExpose({
                   {{ duration }}{{ t('easyMode.step2.seconds') }}
                 </button>
               </div>
+              <p v-if="animationVideoDuration > 4" class="duration-warning">
+                {{ t('easyMode.step2.durationWarning', 'Longer videos take more time to generate and may fail during high demand.') }}
+              </p>
             </div>
 
             <!-- Aspect Ratio Selection -->
@@ -3312,6 +3315,13 @@ defineExpose({
   border-color: var(--gold-primary);
   background: var(--gold-subtle);
   color: var(--gold-primary);
+}
+
+.duration-warning {
+  margin-top: var(--space-xs);
+  font-size: var(--text-xs);
+  color: var(--warning-text, #f59e0b);
+  font-style: italic;
 }
 
 /* Aspect Ratio Options */

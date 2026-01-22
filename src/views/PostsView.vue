@@ -757,7 +757,7 @@ async function handleAnimatePost(data: { postId: string; videoOptions: { duratio
     const videoOptions = {
       duration: data.videoOptions.duration,
       aspectRatio: data.videoOptions.aspectRatio,
-      resolution: '1080p' as '720p' | '1080p',
+      resolution: '720p' as '720p' | '1080p',
       generateAudio: false, // Never generate audio - it adds unwanted voices
       negativePrompt,
       enhancePrompt: false // Don't let AI modify our carefully crafted prompt

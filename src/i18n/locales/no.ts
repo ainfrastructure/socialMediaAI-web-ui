@@ -544,6 +544,7 @@ export default {
       videoCredits: '5 kreditter',
       videoOptionsLabel: 'Videoinnstillinger',
       durationLabel: 'Varighet',
+      durationWarning: 'Lengre videoer tar lengre tid å generere og kan feile ved høy etterspørsel.',
       seconds: 's',
       aspectRatioLabel: 'Størrelsesforhold',
       portrait: 'Portrett',

@@ -129,7 +129,7 @@ const holidayTheme = ref<string>('none')
 
 // Animation state (for Step 3 - animate image to video)
 const showAnimationOptions = ref(false)
-const animationVideoDuration = ref<4 | 6 | 8>(6)
+const animationVideoDuration = ref<4 | 6 | 8>(4)
 const animationVideoAspectRatio = ref<'16:9' | '9:16'>('9:16')
 const animationIncludeAudio = ref(true)
 const activeMediaType = ref<'image' | 'video'>('image') // Toggle between showing image or video
@@ -510,7 +510,7 @@ function resetAndCreateNew() {
 
   // Reset animation state
   showAnimationOptions.value = false
-  animationVideoDuration.value = 6
+  animationVideoDuration.value = 4
   animationVideoAspectRatio.value = '9:16'
   animationIncludeAudio.value = true
   activeMediaType.value = 'image'
@@ -1114,6 +1114,9 @@ onUnmounted(() => {
                   {{ duration }}{{ t('easyMode.step2.seconds') }}
                 </button>
               </div>
+              <p v-if="animationVideoDuration > 4" class="duration-warning">
+                {{ t('easyMode.step2.durationWarning', 'Longer videos take more time to generate and may fail during high demand.') }}
+              </p>
             </div>
 
             <!-- Aspect Ratio Selection -->
@@ -2182,6 +2185,13 @@ onUnmounted(() => {
   border-color: var(--gold-primary);
   background: var(--gold-subtle);
   color: var(--gold-primary);
+}
+
+.duration-warning {
+  margin-top: var(--space-xs);
+  font-size: var(--text-xs);
+  color: var(--warning-text, #f59e0b);
+  font-style: italic;
 }
 
 /* Aspect Ratio Options */

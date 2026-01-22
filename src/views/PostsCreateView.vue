@@ -911,7 +911,7 @@ async function handleEasyModeAnimate(data: {
     const videoOptions = {
       duration: data.videoOptions.duration,
       aspectRatio: data.videoOptions.aspectRatio,
-      resolution: '1080p' as '720p' | '1080p',
+      resolution: '720p' as '720p' | '1080p',
       generateAudio: false // Never generate audio - it adds unwanted voices
     }
 
@@ -1407,7 +1407,7 @@ async function generateVideo(
     const options = {
       duration: videoOptions?.duration || 6,
       aspectRatio: videoOptions?.aspectRatio || '9:16',
-      resolution: '1080p' as '720p' | '1080p',
+      resolution: '720p' as '720p' | '1080p',
       generateAudio: videoOptions?.generateAudio ?? true,
       enhancePrompt: true,
       model: 'veo-3.1-fast-generate-preview' as const,
