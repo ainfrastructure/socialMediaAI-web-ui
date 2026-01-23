@@ -886,7 +886,7 @@ async function submitFeedback() {
 
 .feedback-textarea:focus {
   outline: none;
-  border-color: var(--primary-color);
+  border-color: var(--border-focus);
   background: rgba(255, 255, 255, 0.08);
 }
 
