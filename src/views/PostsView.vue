@@ -118,16 +118,19 @@
                   class="post-media"
                 />
 
-                <!-- Content Type Icon - show video icon if has video -->
-                <span :class="['type-icon', post.video_url ? 'video' : 'image']">
-                  {{ post.video_url ? '🎥' : '📸' }}
-                </span>
+                <!-- Video Overlay - Large centered play button for videos -->
+                <div v-if="post.video_url" class="video-overlay">
+                  <div class="video-play-button">
+                    <span class="material-symbols-outlined">play_arrow</span>
+                  </div>
+                  <div class="video-label">VIDEO</div>
+                </div>
               </div>
 
               <!-- Post Details -->
               <div class="post-details">
-                <!-- Post Text -->
-                <p v-if="post.post_text" class="post-text">
+                <!-- Post Text (only for images, not videos) -->
+                <p v-if="post.post_text && !post.video_url" class="post-text">
                   {{ truncateText(post.post_text, 120) }}
                 </p>
 
@@ -1265,12 +1268,52 @@ function formatDate(dateString: string): string {
   transform: scale(1.05);
 }
 
-.type-icon {
+/* Video Overlay */
+.video-overlay {
   position: absolute;
-  top: var(--space-sm);
-  left: var(--space-sm);
-  font-size: 1.25rem;
-  filter: drop-shadow(0 2px 4px rgba(15, 61, 46, 0.25));
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(2px);
+  pointer-events: none;
+  z-index: 2;
+}
+
+.video-play-button {
+  width: 64px;
+  height: 64px;
+  border-radius: var(--radius-full);
+  background: rgba(255, 255, 255, 0.95);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  transition: all 0.3s ease;
+}
+
+.post-card:hover .video-play-button {
+  transform: scale(1.1);
+  background: rgba(255, 255, 255, 1);
+}
+
+.video-play-button .material-symbols-outlined {
+  font-size: 40px;
+  color: var(--gold-primary);
+}
+
+.video-label {
+  margin-top: var(--space-sm);
+  padding: var(--space-xs) var(--space-md);
+  background: rgba(255, 255, 255, 0.95);
+  color: var(--text-primary);
+  border-radius: var(--radius-full);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
 .post-details {
@@ -1281,10 +1324,11 @@ function formatDate(dateString: string): string {
 }
 
 .post-text {
-  color: var(--text-secondary);
+  color: #2d2d2d;
   line-height: 1.5;
   margin: 0;
   font-size: var(--text-sm);
+  font-weight: 600;
 }
 
 .hashtags {

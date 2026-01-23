@@ -45,15 +45,14 @@
       "Bash(wc:*)",
       "Bash(node scripts/find-unused-i18n-keys.js:*)",
       "Bash(npm run:*)",
-<<<<<<< Updated upstream
       "Bash(sort:*)",
       "Bash(sips --help:*)",
       "Bash(sips:*)",
       "Bash( for f in *.jpeg *.jpg)",
-      "Bash(do sips -s formatOptions 70 \"$f\" --out \"$f\" done)"
-=======
-      "Bash(node:*)"
->>>>>>> Stashed changes
+      "Bash(do sips -s formatOptions 70 \"$f\" --out \"$f\" done)",
+      "Bash(node:*)",
+      "Bash(kill:*)",
+      "Bash(./verify-init-sql.sh:*)"
     ],
     "deny": [],
     "ask": []

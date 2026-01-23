@@ -37,6 +37,7 @@
       <div :class="['table-header', { 'upcoming-view': activeTab === 'upcoming' }]">
         <div class="th-post">{{ $t('scheduler.post') || 'Post' }}</div>
         <div v-if="activeTab === 'upcoming'" class="th-date">Date</div>
+        <div class="th-post-type">{{ $t('postType.label') || 'Post Type' }}</div>
         <div class="th-platforms">{{ $t('dashboardNew.platforms') || 'Platforms' }}</div>
         <div class="th-status">{{ $t('scheduler.status') || 'Status' }}</div>
         <div class="th-restaurant">{{ $t('scheduler.restaurant') || 'Restaurant' }}</div>
@@ -90,14 +91,41 @@
               <span class="date-badge">{{ formatPostDate(post.scheduled_date) }}</span>
             </div>
 
+            <!-- Post Type Column -->
+            <div class="td-post-type">
+              <PostTypeBadge
+                :post-type-settings="post.post_type_settings"
+                :platforms="getPostPlatforms(post)"
+                size="small"
+              />
+            </div>
+
             <!-- Platforms Column -->
             <div class="td-platforms">
-              <PlatformLogo
+              <div
                 v-for="platform in getPostPlatforms(post)"
                 :key="platform"
-                :platform="platform as 'facebook' | 'instagram' | 'tiktok'"
-                :size="24"
-              />
+                class="platform-logo-wrapper"
+              >
+                <PlatformLogo
+                  :platform="platform as 'facebook' | 'instagram' | 'tiktok'"
+                  :size="24"
+                />
+                <!-- Status badge (success = green checkmark, failed = red X) -->
+                <span
+                  v-if="post.platform_statuses && post.platform_statuses[platform]"
+                  :class="['platform-status-badge', `status-${post.platform_statuses[platform].status}`]"
+                  :title="post.platform_statuses[platform].status === 'failed' ? post.platform_statuses[platform].error : 'Published successfully'"
+                >
+                  <svg v-if="post.platform_statuses[platform].status === 'success'" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
+                  <svg v-else width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                    <line x1="18" y1="6" x2="6" y2="18"/>
+                    <line x1="6" y1="6" x2="18" y2="18"/>
+                  </svg>
+                </span>
+              </div>
             </div>
 
             <!-- Mobile-only compact info row -->
@@ -343,6 +371,16 @@
                     {{ capitalizeFirst(platform) }}
                   </span>
                 </div>
+
+                <h4 class="detail-label" style="margin-top: var(--space-lg)">{{ $t('postType.label') || 'Post Type' }}</h4>
+                <div class="detail-post-types">
+                  <PostTypeBadge
+                    :post-type-settings="post.post_type_settings"
+                    :platforms="getPostPlatforms(post)"
+                    size="medium"
+                    :show-icon="true"
+                  />
+                </div>
               </div>
 
               <!-- Caption -->
@@ -370,8 +408,11 @@
                 </div>
                 <p v-else class="detail-empty">No hashtags</p>
 
-                <!-- View Post Links (only for published posts) -->
-                <div v-if="post.status === 'published' && post.platform_post_urls && Object.keys(post.platform_post_urls).length > 0" class="detail-links">
+                <!-- View Post Links (show for published and partial posts) -->
+                <div
+                  v-if="['published', 'partial'].includes(post.status) && post.platform_post_urls && Object.keys(post.platform_post_urls).length > 0"
+                  class="detail-links"
+                >
                   <h4 class="detail-label" style="margin-top: var(--space-lg)">View Post</h4>
                   <a
                     v-for="(url, platform) in (post.platform_post_urls as Record<string, string>)"
@@ -384,6 +425,35 @@
                     <PlatformLogo :platform="(platform as string) as 'facebook' | 'instagram' | 'tiktok'" :size="14" />
                     View on {{ capitalizeFirst(platform as string) }} ↗
                   </a>
+                </div>
+
+                <!-- Show failed platforms with errors -->
+                <div v-if="post.platform_statuses && hasFailedPlatforms(post)" class="detail-error-section">
+                  <h4 class="detail-label error-label" style="margin-top: var(--space-lg)">Failed Platforms</h4>
+                  <div
+                    v-for="(platformStatus, platform) in getFailedPlatforms(post)"
+                    :key="platform"
+                    class="failed-platform-item"
+                  >
+                    <div class="failed-platform-header">
+                      <PlatformLogo :platform="platform as 'facebook' | 'instagram' | 'tiktok'" :size="16" />
+                      <span class="failed-platform-name">{{ capitalizeFirst(platform) }}</span>
+                    </div>
+                    <p class="failed-platform-error">{{ formatErrorMessage(platformStatus.error) }}</p>
+                  </div>
+
+                  <!-- Retry button for failed/partial posts -->
+                  <button
+                    v-if="['failed', 'partial'].includes(post.status)"
+                    class="action-btn retry-btn"
+                    @click="retryPost(post.id)"
+                    type="button"
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/>
+                    </svg>
+                    Retry Failed Platforms
+                  </button>
                 </div>
 
                 <!-- Action buttons for scheduled posts -->
@@ -451,9 +521,13 @@
 import { ref, computed, watch, nextTick } from 'vue'
 import { useI18n } from 'vue-i18n'
 import PlatformLogo from '../PlatformLogo.vue'
+import PostTypeBadge from '../PostTypeBadge.vue'
 import { API_URL } from '@/services/apiBase'
+import { api } from '@/services/api'
+import { useNotificationStore } from '@/stores/notifications'
 
 const { t } = useI18n()
+const notificationStore = useNotificationStore()
 
 interface CalendarDay {
   day: number
@@ -479,6 +553,7 @@ const emit = defineEmits<{
   (e: 'create', day: CalendarDay): void
   (e: 'tab-change', tab: 'day' | 'upcoming'): void
   (e: 'save', postId: string, data: any): void
+  (e: 'retry', post: any): void
 }>()
 
 const postsPerPage = props.postsPerPage || 5
@@ -853,6 +928,68 @@ const truncateText = (text: string, maxLength: number) => {
   return text.substring(0, maxLength) + '...'
 }
 
+// Check if post has any failed platforms
+const hasFailedPlatforms = (post: any): boolean => {
+  if (!post.platform_statuses) return false
+  return Object.values(post.platform_statuses).some(
+    (status: any) => status.status === 'failed'
+  )
+}
+
+// Get only failed platforms
+const getFailedPlatforms = (post: any): Record<string, any> => {
+  if (!post.platform_statuses) return {}
+  return Object.fromEntries(
+    Object.entries(post.platform_statuses).filter(
+      ([_, status]: [string, any]) => status.status === 'failed'
+    )
+  )
+}
+
+// Format error message to be user-friendly
+const formatErrorMessage = (error: string | null): string => {
+  if (!error) return 'Publishing failed'
+
+  // Map common technical errors to user-friendly messages
+  const errorMappings: Record<string, string> = {
+    'token': 'Account connection expired. Please reconnect your account.',
+    'expired': 'Account connection expired. Please reconnect your account.',
+    'permission': 'Missing required permissions. Please reconnect your account.',
+    'rate limit': 'Rate limit exceeded. Please try again later.',
+    'schema': 'System error. Please contact support.',
+    'database': 'System error. Please contact support.',
+    'not found': 'Account not found. Please reconnect your account.',
+    'invalid': 'Invalid account or post data.',
+    'timeout': 'Request timed out. Please try again.',
+    'network': 'Network error. Please check your connection.'
+  }
+
+  // Check if error contains any known patterns
+  const lowerError = error.toLowerCase()
+  for (const [pattern, message] of Object.entries(errorMappings)) {
+    if (lowerError.includes(pattern)) {
+      return message
+    }
+  }
+
+  // If error is too long (technical message), show generic error
+  if (error.length > 100) {
+    return 'Publishing failed. Please try again or contact support.'
+  }
+
+  // Return the original error if it's short and user-friendly
+  return error
+}
+
+// Retry a post - emit event to parent to handle publishing with progress modal
+const retryPost = (postId: string) => {
+  // Find the post in the current list
+  const post = displayPosts.value.find(p => p.id === postId)
+  if (post) {
+    emit('retry', post)
+  }
+}
+
 const getHolidayIcon = (holiday: any) => {
   // Star/sparkle icon for celebrations - gold colored
   const starIcon = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>'
@@ -1040,7 +1177,7 @@ defineExpose({
 
 .table-header {
   display: grid;
-  grid-template-columns: 4fr 2fr 2fr 2fr 40px;
+  grid-template-columns: 4fr 1.5fr 2fr 2fr 2fr 40px;
   gap: var(--space-md);
   padding: var(--space-md) var(--space-lg);
   background: var(--bg-tertiary);
@@ -1049,7 +1186,7 @@ defineExpose({
 
 /* Upcoming view - add date column */
 .table-header.upcoming-view {
-  grid-template-columns: 3fr 1.5fr 2fr 2fr 2fr 40px;
+  grid-template-columns: 3fr 1.5fr 1.5fr 2fr 2fr 2fr 40px;
 }
 
 .table-header > div {
@@ -1074,7 +1211,7 @@ defineExpose({
 
 .table-row {
   display: grid;
-  grid-template-columns: 4fr 2fr 2fr 2fr 40px;
+  grid-template-columns: 4fr 1.5fr 2fr 2fr 2fr 40px;
   gap: var(--space-md);
   padding: var(--space-lg);
   cursor: pointer;
@@ -1083,7 +1220,7 @@ defineExpose({
 
 /* Upcoming view - add date column */
 .table-row.upcoming-view {
-  grid-template-columns: 3fr 1.5fr 2fr 2fr 2fr 40px;
+  grid-template-columns: 3fr 1.5fr 1.5fr 2fr 2fr 2fr 40px;
 }
 
 .table-row:hover {
@@ -1198,6 +1335,12 @@ defineExpose({
 }
 
 /* Platforms Column */
+/* Post Type Column */
+.td-post-type {
+  display: flex;
+  align-items: center;
+}
+
 .td-platforms {
   display: flex;
   align-items: center;
@@ -1366,6 +1509,12 @@ defineExpose({
 }
 
 .detail-platforms {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+}
+
+.detail-post-types {
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-sm);
@@ -2128,5 +2277,88 @@ defineExpose({
   font-size: var(--text-base);
   color: var(--text-muted);
   margin: 0;
+}
+
+/* Platform logo wrapper with status badge */
+.platform-logo-wrapper {
+  position: relative;
+  display: inline-block;
+  margin-right: 4px;
+}
+
+.platform-status-badge {
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px solid var(--bg-secondary);
+}
+
+.platform-status-badge.status-success {
+  background: #22c55e;
+  color: white;
+}
+
+.platform-status-badge.status-failed {
+  background: #ef4444;
+  color: white;
+}
+
+/* Failed platforms section */
+.detail-error-section {
+  margin-top: var(--space-lg);
+}
+
+.error-label {
+  color: #ef4444;
+}
+
+.failed-platform-item {
+  padding: var(--space-md);
+  background: rgba(239, 68, 68, 0.05);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-sm);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+.failed-platform-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  margin-bottom: var(--space-xs);
+}
+
+.failed-platform-name {
+  font-weight: var(--font-medium);
+  font-size: var(--text-sm);
+  color: var(--text-primary);
+}
+
+.failed-platform-error {
+  font-size: var(--text-xs);
+  color: #dc2626;
+  line-height: 1.5;
+  margin: 0;
+  padding-left: calc(16px + var(--space-xs)); /* Align with platform name */
+}
+
+.retry-btn {
+  margin-top: var(--space-md);
+  background: rgba(59, 130, 246, 0.1);
+  color: #3b82f6;
+  border: 1px solid rgba(59, 130, 246, 0.2);
+}
+
+.retry-btn svg {
+  stroke: #3b82f6;
+}
+
+.retry-btn:hover {
+  background: rgba(59, 130, 246, 0.15);
 }
 </style>

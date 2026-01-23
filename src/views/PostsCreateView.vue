@@ -27,6 +27,7 @@ import { restaurantService, type SavedRestaurant } from '@/services/restaurantSe
 import { api } from '@/services/api'
 import { okamService } from '@/services/okamService'
 import { API_URL } from '@/services/apiBase'
+import type { AccountSelection, CarouselItem } from '@/types/scheduling'
 import { getVideoSinglePrompt } from '@/config/promptModifiers'
 import { getVideoThemeModifier } from '@/utils/videoThemes'
 import { getVideoStyleInstruction, getVideoFidelityNote } from '@/config/videoStyleModifiers'
@@ -77,6 +78,16 @@ const generatedPostContent = ref<{
 } | null>(null)
 const generationError = ref<string | null>(null)
 const lastEasyModeData = ref<any>(null)
+
+// Carousel state
+const carouselItems = ref<CarouselItem[]>([])
+const isCarouselMode = ref(false)
+
+const hasValidCarousel = computed(() => {
+  return isCarouselMode.value &&
+         carouselItems.value.length >= 2 &&
+         carouselItems.value.length <= 10
+})
 
 // Advanced Mode state (completely separate from easy mode)
 const advancedModeData = ref<{
@@ -261,11 +272,29 @@ async function handleEasyModePublish(data: {
   timezone?: string
   postText?: string
   hashtags?: string[]
+  accountSelections?: {
+    facebook?: AccountSelection[]
+    instagram?: AccountSelection[]
+    tiktok?: string[]
+    twitter?: string[]
+  }
 }) {
   try {
-    const hasMedia = generatedImageUrl.value || generatedVideoUrl.value
-    if (!hasMedia || !generatedPostContent.value) {
-      generationError.value = 'No content to publish. Please generate content first.'
+    // Check if we have media (generated image/video OR carousel items)
+    const hasGeneratedMedia = generatedImageUrl.value || generatedVideoUrl.value
+    const hasCarouselItems = (
+      (data.accountSelections?.facebook?.some(sel => sel.carouselItems && sel.carouselItems.length >= 2)) ||
+      (data.accountSelections?.instagram?.some(sel => sel.carouselItems && sel.carouselItems.length >= 2))
+    )
+
+    console.log('[handleEasyModePublish] Media check:', {
+      hasGeneratedMedia,
+      hasCarouselItems,
+      accountSelections: data.accountSelections
+    })
+
+    if ((!hasGeneratedMedia && !hasCarouselItems) || !generatedPostContent.value) {
+      generationError.value = 'No content to publish. Please generate content first or select carousel images.'
       return
     }
 
@@ -304,7 +333,21 @@ async function handleEasyModePublish(data: {
       // No existing saved post, save a new one
       debugLog('Saving post as favorite...')
       const isVideo = currentMediaType.value === 'video'
-      const mediaUrl = isVideo ? generatedVideoUrl.value : generatedImageUrl.value
+
+      // For carousel posts, use the first carousel item as the preview media_url
+      let mediaUrl = isVideo ? generatedVideoUrl.value : generatedImageUrl.value
+      if (hasCarouselItems && !mediaUrl) {
+        // Get the first carousel item from any platform
+        const firstCarouselItem =
+          data.accountSelections?.facebook?.find(sel => sel.carouselItems && sel.carouselItems.length > 0)?.carouselItems?.[0] ||
+          data.accountSelections?.instagram?.find(sel => sel.carouselItems && sel.carouselItems.length > 0)?.carouselItems?.[0]
+
+        if (firstCarouselItem) {
+          mediaUrl = firstCarouselItem.mediaUrl
+          console.log('[handleEasyModePublish] Using first carousel item as preview:', mediaUrl)
+        }
+      }
+
       const saveResponse = await api.saveFavorite({
         restaurant_id: restaurant.value.id,
         content_type: isVideo ? 'video' : 'image',
@@ -332,12 +375,38 @@ async function handleEasyModePublish(data: {
       // Schedule the post
       debugLog('Scheduling post for:', data.scheduleDate, data.scheduleTime, 'to platforms:', platforms)
 
+      // Build platform_settings with account selections (includes post types and carousel items)
+      const platform_settings: any = {}
+      if (data.accountSelections) {
+        if (data.accountSelections.facebook) {
+          platform_settings.facebook = data.accountSelections.facebook.map((sel: AccountSelection) => ({
+            accountId: sel.accountId,
+            postType: sel.postType,
+            carouselItems: sel.carouselItems
+          }))
+        }
+        if (data.accountSelections.instagram) {
+          platform_settings.instagram = data.accountSelections.instagram.map((sel: AccountSelection) => ({
+            accountId: sel.accountId,
+            postType: sel.postType,
+            carouselItems: sel.carouselItems
+          }))
+        }
+        if (data.accountSelections.tiktok) {
+          platform_settings.tiktok = data.accountSelections.tiktok
+        }
+        if (data.accountSelections.twitter) {
+          platform_settings.twitter = data.accountSelections.twitter
+        }
+      }
+
       const scheduleResponse = await api.schedulePost({
         favorite_post_id: favoritePostId,
         scheduled_date: data.scheduleDate!,
         scheduled_time: data.scheduleTime,
         platforms: platforms,
-        timezone: data.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone
+        timezone: data.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone,
+        platform_settings
       })
 
       if (!scheduleResponse.success) {
@@ -357,11 +426,17 @@ async function handleEasyModePublish(data: {
       // Publish now to selected platforms (feedback already shown in step 3->4 transition)
       debugLog('[DEBUG] Easy Mode: Publishing now to platforms:', platforms)
 
+      console.log('🔴 [handleEasyModePublish] Setting pendingPublishData with accountSelections:', data.accountSelections)
+
       // Just call continueEasyModePublish directly, feedback was already shown
       pendingPublishData.value = {
         favoritePostId,
-        platforms
+        platforms,
+        accountSelections: data.accountSelections
       }
+
+      console.log('🔴 [handleEasyModePublish] pendingPublishData set to:', pendingPublishData.value)
+
       await continueEasyModePublish()
     }
   } catch (err: any) {
@@ -380,6 +455,8 @@ async function continueEasyModePublish() {
 
   const { favoritePostId, platforms } = pendingPublishData.value
 
+  console.log('🔴 [continueEasyModePublish] Full pendingPublishData:', JSON.stringify(pendingPublishData.value, null, 2))
+
   try {
     // Publish now to selected platforms
     debugLog('Publishing now to platforms:', platforms)
@@ -389,12 +466,17 @@ async function continueEasyModePublish() {
       facebookReconnectRequired.value = false
 
       // Initialize progress tracking
-      publishingProgress.value = platforms.map(platform => ({
-        platform,
-        status: 'pending' as const,
-        url: undefined,
-        error: undefined
-      }))
+      publishingProgress.value = platforms.map(platform => {
+        // Default post type based on media type: reels for videos, feed for images
+        const postType = currentMediaType.value === 'video' ? 'reel' : 'feed'
+        return {
+          platform,
+          status: 'pending' as const,
+          url: undefined,
+          error: undefined,
+          postType
+        }
+      })
       publishingComplete.value = false
 
       // Show publishing modal immediately
@@ -421,21 +503,65 @@ async function continueEasyModePublish() {
 
           debugLog('Publishing to page:', selectedPage.pageId, selectedPage.pageName)
 
+          // Get post type and carousel items from account selections
+          const accountSelections = pendingPublishData.value?.accountSelections
+          const facebookSelections = accountSelections?.facebook || []
+          const accountSelection = facebookSelections.find((sel: AccountSelection) =>
+            sel.accountId === selectedPage.pageId
+          )
+          const postType = accountSelection?.postType || 'feed'
+          const carouselItems = accountSelection?.carouselItems
+
+          if (carouselItems) {
+            debugLog('Facebook carousel items:', carouselItems.length)
+          }
+
           // Build the message with post text and hashtags
-          const hashtags = generatedPostContent.value?.hashtags || []
-          const postText = generatedPostContent.value?.postText || ''
-          const message = hashtags.length > 0
-            ? `${postText}\n\n${hashtags.join(' ')}`
-            : postText
+          // Use carousel-specific content if available
+          const carouselCaption = accountSelection?.carouselCaption
+          const carouselHashtags = accountSelection?.carouselHashtags
+
+          let message: string
+          if (carouselCaption && postType === 'carousel') {
+            // Use carousel-specific caption and hashtags
+            message = carouselHashtags && carouselHashtags.length > 0
+              ? `${carouselCaption}\n\n${carouselHashtags.join(' ')}`
+              : carouselCaption
+            debugLog('Using carousel-specific caption')
+          } else {
+            // Use default generated content
+            const hashtags = generatedPostContent.value?.hashtags || []
+            const postText = generatedPostContent.value?.postText || ''
+            message = hashtags.length > 0
+              ? `${postText}\n\n${hashtags.join(' ')}`
+              : postText
+          }
 
           debugLog('Calling API to post to Facebook...')
           const isVideo = currentMediaType.value === 'video'
+
+          // For carousel posts, only send carouselItems, not individual image/video
+          const isCarousel = postType === 'carousel'
+          const imageUrl = isCarousel ? undefined : (isVideo ? undefined : generatedImageUrl.value)
+          const videoUrl = isCarousel ? undefined : (isVideo ? generatedVideoUrl.value : undefined)
+          const contentType = isCarousel ? 'image' : currentMediaType.value
+
+          console.log('[PostsCreateView] Facebook API call params:', {
+            postType,
+            isCarousel,
+            carouselItemsCount: carouselItems?.length || 0,
+            hasImageUrl: !!imageUrl,
+            hasVideoUrl: !!videoUrl
+          })
+
           const response = await api.postToFacebook(
             selectedPage.pageId,
             message,
-            isVideo ? undefined : generatedImageUrl.value,
-            isVideo ? generatedVideoUrl.value : undefined,
-            currentMediaType.value
+            imageUrl,
+            videoUrl,
+            contentType,
+            postType,
+            carouselItems
           )
           debugLog('Facebook API response:', response)
 
@@ -480,21 +606,78 @@ async function continueEasyModePublish() {
 
           debugLog('Publishing to Instagram account:', instagramAccount.username)
 
+          // Get post type from account selections (default to reel for video, feed for image)
+          const accountSelections = pendingPublishData.value?.accountSelections
+          const instagramSelections = accountSelections?.instagram || []
+
+          console.log('🔴 [Instagram] accountSelections:', accountSelections)
+          console.log('🔴 [Instagram] instagramSelections:', instagramSelections)
+
+          const accountSelection = instagramSelections.find((sel: AccountSelection) =>
+            sel.accountId === instagramAccount.instagramAccountId
+          )
+
+          console.log('🔴 [Instagram] accountSelection found:', accountSelection)
+
+          const isVideo = currentMediaType.value === 'video'
+          const postType = accountSelection?.postType || (isVideo ? 'reel' : 'feed')
+          const carouselItems = accountSelection?.carouselItems
+
+          console.log('🔴 [Instagram] Final values:', {
+            postType,
+            carouselItemsCount: carouselItems?.length || 0,
+            carouselItems: carouselItems
+          })
+
+          debugLog('Instagram post type:', postType)
+          if (carouselItems) {
+            debugLog('Instagram carousel items:', carouselItems.length)
+          }
+
           // Build the message with post text and hashtags
-          const hashtags = generatedPostContent.value?.hashtags || []
-          const postText = generatedPostContent.value?.postText || ''
-          const caption = hashtags.length > 0
-            ? `${postText}\n\n${hashtags.join(' ')}`
-            : postText
+          // Use carousel-specific content if available
+          const carouselCaption = accountSelection?.carouselCaption
+          const carouselHashtags = accountSelection?.carouselHashtags
+
+          let caption: string
+          if (carouselCaption && postType === 'carousel') {
+            // Use carousel-specific caption and hashtags
+            caption = carouselHashtags && carouselHashtags.length > 0
+              ? `${carouselCaption}\n\n${carouselHashtags.join(' ')}`
+              : carouselCaption
+            debugLog('Using carousel-specific caption')
+          } else {
+            // Use default generated content
+            const hashtags = generatedPostContent.value?.hashtags || []
+            const postText = generatedPostContent.value?.postText || ''
+            caption = hashtags.length > 0
+              ? `${postText}\n\n${hashtags.join(' ')}`
+              : postText
+          }
+
+          // For carousel posts, only send carouselItems, not individual image/video
+          const isCarousel = postType === 'carousel'
+          const imageUrl = isCarousel ? undefined : (isVideo ? undefined : generatedImageUrl.value)
+          const videoUrl = isCarousel ? undefined : (isVideo ? generatedVideoUrl.value : undefined)
+          const contentType = isCarousel ? 'image' : currentMediaType.value
+
+          console.log('[PostsCreateView] Instagram API call params:', {
+            postType,
+            isCarousel,
+            carouselItemsCount: carouselItems?.length || 0,
+            hasImageUrl: !!imageUrl,
+            hasVideoUrl: !!videoUrl
+          })
 
           try {
-            const isVideo = currentMediaType.value === 'video'
             const response = await api.postToInstagram(
               instagramAccount.instagramAccountId,
               caption,
-              isVideo ? undefined : generatedImageUrl.value,
-              isVideo ? generatedVideoUrl.value : undefined,
-              currentMediaType.value
+              imageUrl,
+              videoUrl,
+              contentType,
+              postType,
+              carouselItems
             )
             debugLog('Instagram API response:', response)
 
@@ -619,11 +802,40 @@ async function _continueAdvancedModePublish() {
           continue
         }
 
+        // Get post type and carousel items from account selections if available
+        const accountSelections = data.accountSelections
+        const facebookSelections = accountSelections?.facebook || []
+        const accountSelection = facebookSelections.find((sel: AccountSelection) =>
+          sel.accountId === selectedPage.pageId
+        )
+        const postType = accountSelection?.postType || 'feed'
+        const carouselItems = accountSelection?.carouselItems
+
+        // Use carousel-specific content if available
+        const carouselCaption = accountSelection?.carouselCaption
+        const carouselHashtags = accountSelection?.carouselHashtags
+        let finalMessage: string
+        if (carouselCaption && postType === 'carousel') {
+          finalMessage = carouselHashtags && carouselHashtags.length > 0
+            ? `${carouselCaption}\n\n${carouselHashtags.join(' ')}`
+            : carouselCaption
+        } else {
+          finalMessage = message
+        }
+
+        // For carousel posts, don't send imageUrl
+        const isCarousel = postType === 'carousel'
+        const imageUrl = isCarousel ? undefined : data.imageUrl
+
         try {
           const response = await api.postToFacebook(
             selectedPage.pageId,
-            message,
-            data.imageUrl
+            finalMessage,
+            imageUrl,
+            undefined,
+            'image',
+            postType,
+            carouselItems
           )
 
           const postUrl = (response as any).postUrl || response.data?.postUrl
@@ -645,11 +857,40 @@ async function _continueAdvancedModePublish() {
           continue
         }
 
+        // Get post type and carousel items from account selections if available
+        const accountSelections = data.accountSelections
+        const instagramSelections = accountSelections?.instagram || []
+        const accountSelection = instagramSelections.find((sel: AccountSelection) =>
+          sel.accountId === instagramAccount.instagramAccountId
+        )
+        const postType = accountSelection?.postType || 'feed'
+        const carouselItems = accountSelection?.carouselItems
+
+        // Use carousel-specific content if available
+        const carouselCaption = accountSelection?.carouselCaption
+        const carouselHashtags = accountSelection?.carouselHashtags
+        let finalMessage: string
+        if (carouselCaption && postType === 'carousel') {
+          finalMessage = carouselHashtags && carouselHashtags.length > 0
+            ? `${carouselCaption}\n\n${carouselHashtags.join(' ')}`
+            : carouselCaption
+        } else {
+          finalMessage = message
+        }
+
+        // For carousel posts, don't send imageUrl
+        const isCarousel = postType === 'carousel'
+        const imageUrl = isCarousel ? undefined : data.imageUrl
+
         try {
           const response = await api.postToInstagram(
             instagramAccount.instagramAccountId,
-            message,
-            data.imageUrl
+            finalMessage,
+            imageUrl,
+            undefined,
+            'image',
+            postType,
+            carouselItems
           )
 
           const postUrl = (response as any).postUrl || response.data?.postUrl
@@ -1741,6 +1982,12 @@ async function handleAdvancedModeComplete(data: {
   publishNow?: boolean
   scheduledTime?: string
   timezone?: string
+  accountSelections?: {
+    facebook?: AccountSelection[]
+    instagram?: AccountSelection[]
+    tiktok?: string[]
+    twitter?: string[]
+  }
   onResult?: (result: { success: boolean; postUrls?: Record<string, string>; error?: string }) => void
 }) {
   try {
@@ -1775,13 +2022,22 @@ async function handleAdvancedModeComplete(data: {
     // If platforms and publish options provided, handle publishing directly
     if (platforms.length > 0 && data.onResult) {
       if (data.publishNow) {
+        // Determine content type (video or image) first
+        const isVideo = data.imageUrl?.includes('.mp4') || currentMediaType.value === 'video'
+        const contentType = isVideo ? 'video' : 'image'
+
         // Initialize publishing progress
-        publishingProgress.value = platforms.map(platform => ({
-          platform,
-          status: 'pending' as const,
-          url: undefined,
-          error: undefined
-        }))
+        publishingProgress.value = platforms.map(platform => {
+          // Default post type based on media type: reels for videos, feed for images
+          const postType = isVideo ? 'reel' : 'feed'
+          return {
+            platform,
+            status: 'pending' as const,
+            url: undefined,
+            error: undefined,
+            postType
+          }
+        })
         publishingComplete.value = false
 
         // Show publishing modal immediately
@@ -1795,10 +2051,6 @@ async function handleAdvancedModeComplete(data: {
         const message = hashtags.length > 0
           ? `${data.postText}\n\n${hashtags.map(h => `#${h}`).join(' ')}`
           : data.postText
-
-        // Determine content type (video or image)
-        const isVideo = data.imageUrl?.includes('.mp4') || currentMediaType.value === 'video'
-        const contentType = isVideo ? 'video' : 'image'
 
         // Publish to each platform
         for (const platform of platforms) {
@@ -1822,13 +2074,41 @@ async function handleAdvancedModeComplete(data: {
 
             // Post to each connected page
             for (const page of connectedPages) {
+              // Get post type and carousel items from account selections if available
+              const accountSelections = data.accountSelections
+              const facebookSelections = accountSelections?.facebook || []
+              const accountSelection = facebookSelections.find((sel: AccountSelection) =>
+                sel.accountId === page.pageId
+              )
+              const postType = accountSelection?.postType || 'feed'
+              const carouselItems = accountSelection?.carouselItems
+
+              // Use carousel-specific content if available
+              const carouselCaption = accountSelection?.carouselCaption
+              const carouselHashtags = accountSelection?.carouselHashtags
+              let finalMessage: string
+              if (carouselCaption && postType === 'carousel') {
+                finalMessage = carouselHashtags && carouselHashtags.length > 0
+                  ? `${carouselCaption}\n\n${carouselHashtags.join(' ')}`
+                  : carouselCaption
+              } else {
+                finalMessage = message
+              }
+
+              // For carousel posts, don't send imageUrl/videoUrl
+              const isCarousel = postType === 'carousel'
+              const imageUrl = isCarousel ? undefined : (isVideo ? undefined : data.imageUrl)
+              const videoUrl = isCarousel ? undefined : (isVideo ? data.imageUrl : undefined)
+
               try {
                 const response = await api.postToFacebook(
                   page.pageId,
-                  message,
-                  isVideo ? undefined : data.imageUrl,
-                  isVideo ? data.imageUrl : undefined,
-                  contentType
+                  finalMessage,
+                  imageUrl,
+                  videoUrl,
+                  contentType,
+                  postType,
+                  carouselItems
                 )
 
                 const postUrl = (response as any).postUrl || response.data?.postUrl
@@ -1880,13 +2160,40 @@ async function handleAdvancedModeComplete(data: {
 
             // Post to each connected account
             for (const account of connectedAccounts) {
+              // Get post type and carousel items from account selections if available
+              const accountSelections = data.accountSelections
+              const instagramSelections = accountSelections?.instagram || []
+              const accountSelection = instagramSelections.find((sel: AccountSelection) =>
+                sel.accountId === account.instagramAccountId
+              )
+              const postType = accountSelection?.postType || (contentType === 'video' ? 'reel' : 'feed')
+              const carouselItems = accountSelection?.carouselItems
+
+              // Use carousel-specific content if available
+              const carouselCaption = accountSelection?.carouselCaption
+              const carouselHashtags = accountSelection?.carouselHashtags
+              let finalMessage: string
+              if (carouselCaption && postType === 'carousel') {
+                finalMessage = carouselHashtags && carouselHashtags.length > 0
+                  ? `${carouselCaption}\n\n${carouselHashtags.join(' ')}`
+                  : carouselCaption
+              } else {
+                finalMessage = message
+              }
+
+              // For carousel posts, don't send imageUrl
+              const isCarousel = postType === 'carousel'
+              const imageUrl = isCarousel ? undefined : data.imageUrl
+
               try {
                 const response = await api.postToInstagram(
                   account.instagramAccountId,
-                  message,
-                  data.imageUrl,
+                  finalMessage,
+                  imageUrl,
                   undefined,
-                  contentType
+                  contentType,
+                  postType,
+                  carouselItems
                 )
 
                 const postUrl = (response as any).postUrl || response.data?.postUrl

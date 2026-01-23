@@ -53,7 +53,10 @@
                 :checked="selectedPlatforms.includes(platform.id)"
                 @change="togglePlatform(platform.id)"
               />
-              <span class="checkbox-label">{{ platform.icon }} {{ platform.name }}</span>
+              <span class="checkbox-label">
+                <PlatformLogo :platform="platform.id as 'facebook' | 'instagram' | 'tiktok'" :size="16" />
+                {{ platform.name }}
+              </span>
             </label>
           </div>
         </div>
@@ -100,7 +103,9 @@
                 :checked="selectedRestaurants.includes(restaurant.id)"
                 @change="toggleRestaurant(restaurant.id)"
               />
-              <span class="checkbox-label">{{ restaurant.name }}</span>
+              <span class="checkbox-label">
+                {{ restaurant.name }}
+              </span>
             </label>
           </div>
         </div>
@@ -122,6 +127,7 @@
           :key="'p-' + platformId"
           class="active-filter-tag"
         >
+          <PlatformLogo :platform="platformId as 'facebook' | 'instagram' | 'tiktok'" :size="14" />
           {{ getPlatformName(platformId) }}
           <button @click="removePlatform(platformId)">✕</button>
         </span>
@@ -140,11 +146,11 @@
 
 <script setup lang="ts">
 import { ref, computed, nextTick } from 'vue'
+import PlatformLogo from '../PlatformLogo.vue'
 
 interface Platform {
   id: string
   name: string
-  icon: string
 }
 
 interface Restaurant {
@@ -244,7 +250,7 @@ const resetFilters = () => {
 
 const getPlatformName = (platformId: string): string => {
   const platform = props.platforms.find(p => p.id === platformId)
-  return platform ? `${platform.icon} ${platform.name}` : platformId
+  return platform ? platform.name : platformId
 }
 
 const getRestaurantName = (restaurantId: string): string => {
@@ -257,7 +263,9 @@ const getRestaurantName = (restaurantId: string): string => {
 .filter-accordion {
   margin-bottom: var(--space-lg);
   max-width: 100%;
-  overflow: hidden;
+  overflow: visible;
+  position: relative;
+  z-index: 100;
 }
 
 .filter-toggle {
@@ -325,6 +333,7 @@ const getRestaurantName = (restaurantId: string): string => {
   border: 1px solid rgba(15, 61, 46, 0.05);
   border-top: none;
   border-radius: 0 0 var(--radius-md) var(--radius-md);
+  overflow: visible;
 }
 
 .inline-filters {
@@ -332,6 +341,7 @@ const getRestaurantName = (restaurantId: string): string => {
   flex-wrap: wrap;
   gap: var(--space-md);
   align-items: center;
+  overflow: visible;
 }
 
 .inline-filter-group {
@@ -396,7 +406,7 @@ const getRestaurantName = (restaurantId: string): string => {
   border: 1px solid rgba(15, 61, 46, 0.15);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-lg);
-  z-index: 100;
+  z-index: 1000;
 }
 
 .filter-checkbox {
@@ -425,6 +435,9 @@ const getRestaurantName = (restaurantId: string): string => {
 .checkbox-label {
   font-size: var(--text-sm);
   color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
 }
 
 .filter-divider {

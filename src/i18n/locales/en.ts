@@ -47,6 +47,9 @@ export default {
     test: 'Test',
     or: 'or',
     generatingContent: 'Generating content...',
+    justNow: 'Just now',
+    minuteAgo: 'minute ago',
+    minutesAgo: 'minutes ago',
     pagination: {
       previous: '← Previous',
       next: 'Next →',
@@ -65,11 +68,13 @@ export default {
     tiktok: 'TikTok',
     twitter: 'Twitter/X',
     linkedin: 'LinkedIn',
+    pinterest: 'Pinterest',
     facebookWithIcon: 'Facebook',
     instagramWithIcon: 'Instagram',
     tiktokWithIcon: 'TikTok',
     twitterWithIcon: 'Twitter/X',
-    linkedinWithIcon: 'LinkedIn'
+    linkedinWithIcon: 'LinkedIn',
+    pinterestWithIcon: 'Pinterest'
   },
 
   // Timezones
@@ -844,6 +849,7 @@ export default {
     successfullyConnectedInstagram: 'Successfully connected {count} Instagram account(s)!',
     successfullyConnectedTikTok: 'Successfully connected {count} TikTok account(s)!',
     successfullyConnectedTwitter: 'Successfully connected {count} Twitter account(s)!',
+    successfullyConnectedLinkedIn: 'Successfully connected {count} LinkedIn page(s)!',
     successfullyDisconnected: 'Successfully disconnected "{name}"',
     successfullyDisconnectedAll: 'Successfully disconnected {count} accounts',
     confirmDisconnect: 'Are you sure you want to disconnect "{name}"?',
@@ -967,7 +973,27 @@ export default {
     noFacebookPage: 'No Facebook page connected',
     facebookReconnectRequired:
       'Your Facebook connection has expired. Please reconnect to continue.',
-    noPlatformSelected: 'Please select at least one platform'
+    noPlatformSelected: 'Please select at least one platform',
+    carouselMode: 'Carousel Mode',
+    singleImageMode: 'Single Image',
+    selectCarouselImages: 'Select 2-10 images',
+    imageCount: '{current} of {max} images',
+    minImagesRequired: 'Select at least 2 images for carousel',
+    maxImagesExceeded: 'Maximum 10 images allowed',
+    reorderHint: 'Drag images to reorder',
+    uploadImages: 'Upload Images',
+    dropOrClick: 'Drop images here or click to select',
+    removeImage: 'Remove image',
+    fromLibrary: 'From Library',
+    uploadNew: 'Upload New',
+    selectFromLibrary: 'Select from Library',
+    librarySubtitle: 'Choose 2-10 images or videos from your saved posts',
+    selectedOrder: 'Selected Order (drag to reorder)',
+    noSavedMedia: 'No saved posts found',
+    createPostsFirst: 'Create some posts first to use them in carousels',
+    selectMoreItems: 'Select {count} more to continue',
+    uploadInstructions: 'Upload 2-10 new images for your carousel',
+    uploadFeatureComingSoon: 'Direct upload coming soon. For now, please use the Library tab to select from your existing posts.'
   },
 
   // Restaurant Selector Modal
@@ -1290,7 +1316,8 @@ export default {
   pickPostModal: {
     showAllRestaurants: 'Show all restaurants',
     showCurrentRestaurant: 'Show current restaurant only',
-    allRestaurantsLabel: 'All Restaurants'
+    allRestaurantsLabel: 'All Restaurants',
+    videoLabel: 'VIDEO'
   },
 
   // Account Selector
@@ -1305,7 +1332,21 @@ export default {
     connectAccount: 'Connect Account',
     multipleSelected: '{count} accounts selected',
     accountId: 'Account ID',
-    singleAccountInfo: 'This is your only connected account. It will be used for posting.'
+    singleAccountInfo: 'This is your only connected account. It will be used for posting.',
+    postTypeLabel: 'Post Type',
+    reelsRequireVideo: 'Reels require video content',
+    feedShort: 'Main feed',
+    feedDescription: 'Appears in followers\' feeds and on your profile. Permanent content with full engagement features.',
+    storyShort: '24h temporary',
+    storyDescription: 'Disappears after 24 hours. Full-screen vertical format with interactive stickers and polls.',
+    reelShort: 'Short video',
+    reelDescription: 'Short-form video content (15-90s). Optimized for discovery and engagement. Requires video content.',
+    carouselShort: '2-10 items',
+    carouselDescription: 'Click to select 2-10 images or videos in swipeable format',
+    carouselRequiresImages: 'Select 2-10 images to enable carousel',
+    carouselItemsSelected: '{count} items',
+    carouselModalTitle: 'Select Carousel Items',
+    carouselModalSubtitle: 'Choose 2-10 items and drag to reorder'
   },
 
   // Unified Schedule Post
@@ -1348,13 +1389,32 @@ export default {
   // Publishing Progress Modal
   publishing: {
     title: 'Publishing Your Post...',
+    titleWithType: 'Publishing Your {type}...',
     message: 'Please wait while we publish your post to the selected platforms.',
+    messageWithType: 'Please wait while we publish your {type} to the selected platforms.',
+    publishingTo: 'Publishing to {platform}...',
+    publishingTypeTo: 'Publishing {type} to {platform}...',
     successTitle: 'Congratulations!',
     successMessage: 'Your post has been published successfully!',
+    successMessageWithType: 'Your {type} has been published successfully!',
     partialSuccessTitle: 'Partially Published',
     errorTitle: 'Publishing Failed',
     errorMessage: 'Failed to publish to any platform.',
     createAnother: 'Create Another Post'
+  },
+
+  // Carousel Content
+  carousel: {
+    generateContentTitle: 'Customize Carousel Content',
+    generating: 'Generating content...',
+    selectedImages: 'Selected Images',
+    caption: 'Caption',
+    captionPlaceholder: 'Write your carousel caption...',
+    hashtags: 'Hashtags (one per line)',
+    hashtagsPlaceholder: '#food\n#restaurant\n#delicious',
+    hashtagsHint: 'Enter one hashtag per line',
+    regenerate: 'Regenerate Content',
+    useContent: 'Use This Content'
   },
 
   // Sidebar Navigation
@@ -1927,5 +1987,22 @@ export default {
     cannotUsOwnCode: 'You cannot use your own referral code',
     codeNotFound: 'Referral code not found',
     codeInactive: 'This referral code is no longer active'
+  },
+
+  // Post Type Selection
+  postType: {
+    label: 'Post Type',
+    selectType: 'Post Type',
+    feed: 'Feed Post',
+    feedDesc: 'Regular post on timeline/profile',
+    story: 'Story',
+    storyDesc: '24-hour story (image or video)',
+    storyExpiryNotice: 'Stories expire after 24 hours and may not have permanent links',
+    reel: 'Reel',
+    reelDesc: 'Short-form content (image or video)',
+    carousel: 'Carousel',
+    carouselDesc: '2-10 images/videos',
+    notSet: 'Not Set',
+    multiple: '{count} types'
   }
 }

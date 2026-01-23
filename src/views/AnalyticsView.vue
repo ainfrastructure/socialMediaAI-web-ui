@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { debugLog, errorLog, warnLog } from '@/utils/debug'
 
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import { Line, Doughnut, Bar } from 'vue-chartjs'
@@ -98,6 +98,11 @@ const toastType = ref<'success' | 'error' | 'info' | 'warning'>('info')
 
 // Engagement sync status
 const lastEngagementSync = ref<Date | null>(null)
+
+// Window width tracking for mobile detection
+const windowWidth = ref(typeof window !== 'undefined' ? window.innerWidth : 768)
+const isMobile = computed(() => windowWidth.value <= 768)
+const isSmallMobile = computed(() => windowWidth.value <= 480)
 const engagementDataAvailable = ref(false)
 
 // Diagnostic info
@@ -538,28 +543,43 @@ const activityChartOptions = computed(() => ({
       bodyColor: isDark.value ? '#B8B8B8' : '#0f3d2e',
       borderColor: goldColor,
       borderWidth: 1,
-      padding: 12,
-      cornerRadius: 8
+      padding: isMobile.value ? 14 : 12,
+      cornerRadius: 8,
+      titleFont: {
+        size: isMobile.value ? 14 : 12
+      },
+      bodyFont: {
+        size: isMobile.value ? 13 : 11
+      }
     }
   },
   scales: {
     x: {
       grid: {
+        display: !isMobile.value,
         color: isDark.value ? 'rgba(255, 255, 255, 0.05)' : 'rgba(15, 61, 46, 0.05)'
       },
       ticks: {
         color: isDark.value ? 'rgba(255, 255, 255, 0.5)' : 'rgba(15, 61, 46, 0.5)',
-        maxRotation: 0
+        maxRotation: isMobile.value ? 45 : 0,
+        maxTicksLimit: isMobile.value ? 8 : undefined,
+        font: {
+          size: isMobile.value ? 11 : 12
+        }
       }
     },
     y: {
       beginAtZero: true,
       grid: {
+        display: !isMobile.value,
         color: isDark.value ? 'rgba(255, 255, 255, 0.05)' : 'rgba(15, 61, 46, 0.05)'
       },
       ticks: {
         color: isDark.value ? 'rgba(255, 255, 255, 0.5)' : 'rgba(15, 61, 46, 0.5)',
-        stepSize: 1
+        stepSize: 1,
+        font: {
+          size: isMobile.value ? 11 : 12
+        }
       }
     }
   }
@@ -597,9 +617,13 @@ const platformChartOptions = computed(() => ({
       position: 'bottom' as const,
       labels: {
         color: isDark.value ? 'rgba(255, 255, 255, 0.8)' : 'rgba(15, 61, 46, 0.8)',
-        padding: 20,
+        padding: isMobile.value ? 12 : 20,
         usePointStyle: true,
-        pointStyle: 'circle'
+        pointStyle: 'circle',
+        boxWidth: isMobile.value ? 12 : 15,
+        font: {
+          size: isMobile.value ? 11 : 12
+        }
       }
     },
     tooltip: {
@@ -608,8 +632,14 @@ const platformChartOptions = computed(() => ({
       bodyColor: isDark.value ? '#B8B8B8' : '#0f3d2e',
       borderColor: goldColor,
       borderWidth: 1,
-      padding: 12,
-      cornerRadius: 8
+      padding: isMobile.value ? 14 : 12,
+      cornerRadius: 8,
+      titleFont: {
+        size: isMobile.value ? 14 : 12
+      },
+      bodyFont: {
+        size: isMobile.value ? 13 : 11
+      }
     }
   }
 }))
@@ -643,8 +673,14 @@ const statusChartOptions = computed(() => ({
       bodyColor: isDark.value ? '#B8B8B8' : '#0f3d2e',
       borderColor: goldColor,
       borderWidth: 1,
-      padding: 12,
-      cornerRadius: 8
+      padding: isMobile.value ? 14 : 12,
+      cornerRadius: 8,
+      titleFont: {
+        size: isMobile.value ? 14 : 12
+      },
+      bodyFont: {
+        size: isMobile.value ? 13 : 11
+      }
     }
   },
   scales: {
@@ -653,17 +689,24 @@ const statusChartOptions = computed(() => ({
         display: false
       },
       ticks: {
-        color: isDark.value ? 'rgba(255, 255, 255, 0.7)' : 'rgba(15, 61, 46, 0.7)'
+        color: isDark.value ? 'rgba(255, 255, 255, 0.7)' : 'rgba(15, 61, 46, 0.7)',
+        font: {
+          size: isMobile.value ? 11 : 12
+        }
       }
     },
     y: {
       beginAtZero: true,
       grid: {
+        display: !isMobile.value,
         color: isDark.value ? 'rgba(255, 255, 255, 0.05)' : 'rgba(15, 61, 46, 0.05)'
       },
       ticks: {
         color: isDark.value ? 'rgba(255, 255, 255, 0.5)' : 'rgba(15, 61, 46, 0.5)',
-        stepSize: 1
+        stepSize: 1,
+        font: {
+          size: isMobile.value ? 11 : 12
+        }
       }
     }
   }
@@ -1169,6 +1212,17 @@ onMounted(async () => {
   await fetchAnalyticsData()
   // Auto-sync engagement data after initial data load
   await autoSyncEngagementIfNeeded()
+
+  // Setup window resize listener for responsive charts
+  const handleResize = () => {
+    windowWidth.value = window.innerWidth
+  }
+  window.addEventListener('resize', handleResize)
+
+  // Cleanup on unmount
+  onUnmounted(() => {
+    window.removeEventListener('resize', handleResize)
+  })
 })
 </script>
 
@@ -1564,6 +1618,95 @@ onMounted(async () => {
             <p>{{ t('analytics.noRecentActivity') }}</p>
           </div>
 
+          <!-- Mobile Card Layout -->
+          <div v-else-if="isMobile" class="mobile-activity-list">
+            <div
+              v-for="post in paginatedPosts"
+              :key="post.id"
+              class="mobile-activity-card"
+              @click="viewPost(post)"
+            >
+              <!-- Card Header: Thumbnail + Status -->
+              <div class="mobile-card-header">
+                <div class="mobile-post-thumb">
+                  <img
+                    v-if="getMediaUrl(post)"
+                    :src="getMediaUrl(post)"
+                    :alt="post.post_text || 'Post'"
+                    @error="(e: Event) => (e.target as HTMLImageElement).style.display = 'none'"
+                  />
+                  <MaterialIcon v-else icon="image" size="sm" />
+                  <span v-if="hasVideo(post)" class="video-badge">
+                    <MaterialIcon icon="videocam" size="xs" />
+                  </span>
+                </div>
+
+                <div class="mobile-card-main">
+                  <div class="mobile-post-text">
+                    {{ getPostText(post).substring(0, 60) }}{{ getPostText(post).length > 60 ? '...' : '' }}
+                  </div>
+                  <div class="mobile-restaurant-name">
+                    <MaterialIcon icon="restaurant" size="xs" />
+                    {{ getRestaurantName(post) }}
+                  </div>
+                </div>
+
+                <span :class="['mobile-status-badge', post.status]">
+                  {{ post.status && t(`analytics.${post.status}`, post.status) }}
+                </span>
+              </div>
+
+              <!-- Card Body: Date + Metrics -->
+              <div class="mobile-card-body">
+                <div class="mobile-date">
+                  <MaterialIcon icon="schedule" size="xs" />
+                  {{ formatDate(post.scheduled_date || post.published_at) }}
+                </div>
+
+                <div v-if="post.status === 'published'" class="mobile-metrics-row">
+                  <div class="mobile-metric">
+                    <MaterialIcon icon="visibility" size="xs" />
+                    <span>{{ getPostViews(post.id, selectedPlatform === 'all' ? undefined : selectedPlatform) }}</span>
+                  </div>
+                  <div class="mobile-metric">
+                    <MaterialIcon icon="thumb_up" size="xs" />
+                    <span>{{ getPostEngagementMetric(post.id, 'likes', selectedPlatform === 'all' ? undefined : selectedPlatform) }}</span>
+                  </div>
+                  <div class="mobile-metric">
+                    <MaterialIcon icon="comment" size="xs" />
+                    <span>{{ getPostEngagementMetric(post.id, 'comments', selectedPlatform === 'all' ? undefined : selectedPlatform) }}</span>
+                  </div>
+                  <div class="mobile-metric">
+                    <MaterialIcon icon="share" size="xs" />
+                    <span>{{ getPostEngagementMetric(post.id, 'shares', selectedPlatform === 'all' ? undefined : selectedPlatform) }}</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Card Footer: Platform Links -->
+              <div
+                v-if="post.status === 'published' && post.platform_post_urls && Object.keys(post.platform_post_urls).length > 0"
+                class="mobile-card-footer"
+              >
+                <div class="mobile-platform-links">
+                  <a
+                    v-for="(url, platform) in (post.platform_post_urls as Record<string, string>)"
+                    :key="platform"
+                    :href="url"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="mobile-platform-link"
+                    :title="t('analytics.viewOn', { platform })"
+                    @click.stop
+                  >
+                    <PlatformLogo :platform="(platform as 'facebook' | 'instagram' | 'tiktok' | 'twitter' | 'linkedin')" :size="20" />
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Desktop Table Layout -->
           <table v-else class="activity-table">
             <thead>
               <tr>
@@ -2443,6 +2586,190 @@ onMounted(async () => {
   gap: var(--space-md);
 }
 
+/* Mobile Activity Cards */
+.mobile-activity-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  padding: var(--space-md);
+}
+
+.mobile-activity-card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: var(--space-md);
+  cursor: pointer;
+  transition: var(--transition-base);
+  min-height: 48px;
+}
+
+.mobile-activity-card:active {
+  transform: scale(0.98);
+}
+
+.mobile-card-header {
+  display: flex;
+  gap: var(--space-md);
+  align-items: flex-start;
+  margin-bottom: var(--space-md);
+}
+
+.mobile-post-thumb {
+  position: relative;
+  width: 60px;
+  height: 60px;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  flex-shrink: 0;
+  background: var(--bg-elevated);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mobile-post-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.mobile-post-thumb .material-icon {
+  color: var(--text-muted);
+}
+
+.video-badge {
+  position: absolute;
+  bottom: 4px;
+  right: 4px;
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  border-radius: var(--radius-sm);
+  padding: 2px 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.video-badge .material-icon {
+  color: white;
+}
+
+.mobile-card-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.mobile-post-text {
+  font-size: var(--text-sm);
+  color: var(--text-primary);
+  font-weight: var(--font-medium);
+  margin-bottom: var(--space-xs);
+  line-height: 1.4;
+  word-break: break-word;
+}
+
+.mobile-restaurant-name {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+}
+
+.mobile-status-badge {
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  font-size: var(--text-xs);
+  font-weight: var(--font-semibold);
+  text-transform: capitalize;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.mobile-status-badge.published {
+  background: rgba(74, 222, 128, 0.15);
+  color: #22c55e;
+  border: 1px solid rgba(74, 222, 128, 0.3);
+}
+
+.mobile-status-badge.scheduled {
+  background: rgba(245, 158, 11, 0.15);
+  color: #f59e0b;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.mobile-status-badge.failed,
+.mobile-status-badge.cancelled {
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.mobile-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  padding-top: var(--space-sm);
+  border-top: 1px solid var(--border-color);
+}
+
+.mobile-date {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+}
+
+.mobile-metrics-row {
+  display: flex;
+  gap: var(--space-md);
+  flex-wrap: wrap;
+}
+
+.mobile-metric {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+  min-height: 24px;
+}
+
+.mobile-metric .material-icon {
+  color: var(--gold-primary);
+}
+
+.mobile-card-footer {
+  margin-top: var(--space-sm);
+  padding-top: var(--space-sm);
+  border-top: 1px solid var(--border-color);
+}
+
+.mobile-platform-links {
+  display: flex;
+  gap: var(--space-sm);
+  align-items: center;
+}
+
+.mobile-platform-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-md);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-color);
+  transition: var(--transition-base);
+}
+
+.mobile-platform-link:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(15, 61, 46, 0.1);
+}
+
 /* Pagination */
 .pagination {
   display: flex;
@@ -3134,8 +3461,18 @@ onMounted(async () => {
     font-size: var(--text-2xl);
   }
 
+  /* Charts - taller and no horizontal scroll */
   .chart-container {
-    height: 220px;
+    height: 300px;
+    overflow: visible;
+  }
+
+  .doughnut-container {
+    height: 280px;
+  }
+
+  .charts-grid {
+    gap: var(--space-lg);
   }
 
   /* Table becomes more compact on mobile */
@@ -3184,23 +3521,17 @@ onMounted(async () => {
 
   /* Make status filter more compact on mobile */
   .status-filter {
-    justify-content: center;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    flex-wrap: nowrap;
+    justify-content: flex-start;
   }
 
   .filter-btn {
-    padding: var(--space-xs) var(--space-sm);
-    font-size: var(--text-mobile-xs);
-  }
-
-  /* Chart horizontal scroll on mobile */
-  .chart-container {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    padding-bottom: var(--space-sm);
-  }
-
-  .chart-container canvas {
-    min-width: 600px; /* Ensure readability */
+    padding: var(--space-sm) var(--space-md);
+    font-size: var(--text-xs);
+    flex-shrink: 0;
+    min-height: 44px;
   }
 
   /* Time range selector mobile */
@@ -3218,12 +3549,37 @@ onMounted(async () => {
 }
 
 @media (max-width: 480px) {
-  .platform-tab span:not(.platform-tab-count) {
-    display: none; /* Hide text labels on very small screens */
+  /* Single column metrics on very small screens */
+  .metrics-grid {
+    grid-template-columns: 1fr;
+    gap: var(--space-sm);
+  }
+
+  .metric-card {
+    padding: var(--space-md);
+  }
+
+  .metric-icon {
+    width: 44px;
+    height: 44px;
+  }
+
+  .metric-value {
+    font-size: var(--text-xl);
+  }
+
+  /* Keep platform tabs visible with horizontal scroll */
+  .platform-tabs {
+    gap: 4px;
+    padding: 4px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
   }
 
   .platform-tab {
-    padding: var(--space-sm);
+    padding: var(--space-xs) var(--space-md);
+    font-size: var(--text-xs);
+    flex-shrink: 0;
   }
 
   /* Compact filters on small screens */

@@ -2,6 +2,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
+import type { AccountSelection } from '@/types/scheduling'
 import BaseButton from './BaseButton.vue'
 import BaseAlert from './BaseAlert.vue'
 import BaseModal from './BaseModal.vue'
@@ -9,6 +10,7 @@ import { VueDatePicker } from '@vuepic/vue-datepicker'
 import '@vuepic/vue-datepicker/dist/main.css'
 import MobileTimePicker from './MobileTimePicker.vue'
 import AccountSelector from './AccountSelector.vue'
+import PlatformLogo from './PlatformLogo.vue'
 import { useSocialAccounts } from '@/composables/useSocialAccounts'
 import { useScheduleTime } from '@/composables/useScheduleTime'
 import { useFacebookStore } from '@/stores/facebook'
@@ -30,6 +32,7 @@ interface Props {
   forceScheduleMode?: boolean
   showCancelButton?: boolean
   lockDate?: boolean // When true, date picker is hidden and date is displayed as read-only
+  carouselItems?: Array<{ mediaUrl: string; contentType: 'image' | 'video' }>
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -50,8 +53,8 @@ const emit = defineEmits<{
     scheduledTime?: string
     timezone?: string
     accountSelections?: {
-      facebook?: string[]
-      instagram?: string[]
+      facebook?: AccountSelection[]
+      instagram?: AccountSelection[]
       tiktok?: string[]
       twitter?: string[]
     }
@@ -77,8 +80,8 @@ const selectedPlatforms = ref<string[]>(props.initialPlatforms.length > 0 ? [...
 
 // Account selections for each platform
 const accountSelections = ref<{
-  facebook?: string[]
-  instagram?: string[]
+  facebook?: AccountSelection[]
+  instagram?: AccountSelection[]
   tiktok?: string[]
   twitter?: string[]
 }>({
@@ -91,7 +94,7 @@ const accountSelections = ref<{
 // Modal state for account selection
 const showAccountModal = ref(false)
 const currentPlatformForSelection = ref<'facebook' | 'instagram' | 'tiktok' | 'twitter' | null>(null)
-const tempAccountSelections = ref<string[]>([])
+const tempAccountSelections = ref<AccountSelection[] | string[]>([])
 
 // Initialize scheduleDateTime from initialScheduleDate if provided
 const initScheduleDateTime = (): Date | null => {
@@ -104,7 +107,13 @@ const initScheduleDateTime = (): Date | null => {
   return null
 }
 const scheduleDateTime = ref<Date | null>(initScheduleDateTime())
-const scheduleTime = ref<{ hours: number; minutes: number }>({ hours: 12, minutes: 0 })
+
+// Initialize scheduleTime to current time
+const initScheduleTime = (): { hours: number; minutes: number } => {
+  const now = new Date()
+  return { hours: now.getHours(), minutes: now.getMinutes() }
+}
+const scheduleTime = ref<{ hours: number; minutes: number }>(initScheduleTime())
 const selectedTimezone = ref(getDefaultTimezone())
 const error = ref('')
 
@@ -116,40 +125,49 @@ const availablePlatforms = computed(() => {
       name: 'Facebook',
       isConnected: isConnected('facebook'),
       connectedAccounts: socialPlatforms.value.find(p => p.id === 'facebook')?.connectedAccounts || [],
-      comingSoon: false,
-      bgColor: '#1877F2'
+      comingSoon: false
     },
     {
       id: 'instagram',
       name: 'Instagram',
       isConnected: isConnected('instagram'),
       connectedAccounts: socialPlatforms.value.find(p => p.id === 'instagram')?.connectedAccounts || [],
-      comingSoon: false,
-      bgColor: '#E4405F'
+      comingSoon: false
     },
     {
       id: 'tiktok',
       name: 'TikTok',
       isConnected: isConnected('tiktok'),
       connectedAccounts: socialPlatforms.value.find(p => p.id === 'tiktok')?.connectedAccounts || [],
-      comingSoon: false,
-      bgColor: '#000000'
+      comingSoon: true
     },
     {
       id: 'twitter',
       name: 'X (Twitter)',
       isConnected: isConnected('twitter'),
       connectedAccounts: socialPlatforms.value.find(p => p.id === 'twitter')?.connectedAccounts || [],
-      comingSoon: false,
-      bgColor: '#000000'
+      comingSoon: true
     },
     {
       id: 'linkedin',
       name: 'LinkedIn',
       isConnected: false,
       connectedAccounts: [],
-      comingSoon: true,
-      bgColor: '#0A66C2'
+      comingSoon: true
+    },
+    {
+      id: 'pinterest',
+      name: 'Pinterest',
+      isConnected: false,
+      connectedAccounts: [],
+      comingSoon: true
+    },
+    {
+      id: 'youtube',
+      name: 'YouTube',
+      isConnected: false,
+      connectedAccounts: [],
+      comingSoon: true
     },
   ]
 })
@@ -192,28 +210,30 @@ const formattedLockedDate = computed(() => {
 
 // Summary of selected platforms and accounts
 const publishSummary = computed(() => {
-  const summary: Array<{ platform: string; accounts: Array<{ id: string; name: string; pictureUrl?: string }> }> = []
+  const summary: Array<{ platform: string; accounts: Array<{ id: string; name: string; pictureUrl?: string; postType?: string }> }> = []
 
   for (const platformId of selectedPlatforms.value) {
     if (platformId === 'facebook') {
-      const fbAccounts = (accountSelections.value.facebook || []).map(pageId => {
-        const page = facebookStore.connectedPages.find(p => p.pageId === pageId)
+      const fbAccounts = (accountSelections.value.facebook || []).map(selection => {
+        const page = facebookStore.connectedPages.find(p => p.pageId === selection.accountId)
         return {
-          id: pageId,
-          name: page?.pageName || pageId,
-          pictureUrl: page?.profilePictureUrl
+          id: selection.accountId,
+          name: page?.pageName || selection.accountId,
+          pictureUrl: page?.profilePictureUrl,
+          postType: selection.postType
         }
       })
       if (fbAccounts.length > 0) {
         summary.push({ platform: 'Facebook', accounts: fbAccounts })
       }
     } else if (platformId === 'instagram') {
-      const igAccounts = (accountSelections.value.instagram || []).map(accountId => {
-        const account = instagramStore.connectedAccounts.find(a => a.instagramAccountId === accountId)
+      const igAccounts = (accountSelections.value.instagram || []).map(selection => {
+        const account = instagramStore.connectedAccounts.find(a => a.instagramAccountId === selection.accountId)
         return {
-          id: accountId,
-          name: account?.username || accountId,
-          pictureUrl: account?.profilePictureUrl
+          id: selection.accountId,
+          name: account?.username || selection.accountId,
+          pictureUrl: account?.profilePictureUrl,
+          postType: selection.postType
         }
       })
       if (igAccounts.length > 0) {
@@ -262,13 +282,33 @@ function togglePlatform(platformId: string) {
 function openAccountSelectionModal(platformId: 'facebook' | 'instagram' | 'tiktok' | 'twitter') {
   currentPlatformForSelection.value = platformId
   // Initialize with existing selections
-  tempAccountSelections.value = [...(accountSelections.value[platformId] || [])]
+  const existing = accountSelections.value[platformId] || []
+  tempAccountSelections.value = [...existing] as typeof tempAccountSelections.value
   showAccountModal.value = true
 }
 
 function confirmAccountSelection() {
   if (currentPlatformForSelection.value) {
-    accountSelections.value[currentPlatformForSelection.value] = [...tempAccountSelections.value]
+    const platform = currentPlatformForSelection.value
+
+    // Handle Facebook and Instagram with AccountSelection[]
+    if (platform === 'facebook' || platform === 'instagram') {
+      const selections = [...tempAccountSelections.value] as AccountSelection[]
+
+      // Attach carousel items to selections with carousel post type
+      if (props.carouselItems && props.carouselItems.length >= 2) {
+        selections.forEach(selection => {
+          if (selection.postType === 'carousel') {
+            selection.carouselItems = props.carouselItems
+          }
+        })
+      }
+
+      accountSelections.value[platform] = selections
+    } else if (platform === 'tiktok' || platform === 'twitter') {
+      // Handle TikTok and Twitter with string[]
+      accountSelections.value[platform] = [...tempAccountSelections.value] as string[]
+    }
 
     // If accounts were selected, ensure platform is in selectedPlatforms
     if (tempAccountSelections.value.length > 0) {
@@ -316,13 +356,6 @@ async function handlePlatformClick(platform: typeof availablePlatforms.value[0])
     } catch (error) {
       errorLog('Failed to connect:', error)
     }
-  }
-}
-
-function getPlatformIconStyle(platformId: string) {
-  const platform = availablePlatforms.value.find(p => p.id === platformId)
-  return {
-    backgroundColor: platform?.bgColor || '#666'
   }
 }
 
@@ -391,6 +424,12 @@ function handlePublish() {
     scheduledDate = `${year}-${month}-${day}`
     scheduledTime = `${String(hour24).padStart(2, '0')}:${String(minute).padStart(2, '0')}`
   }
+
+  console.log('[UnifiedSchedulePost] Publishing with data:', {
+    platforms: selectedPlatforms.value,
+    publishType: publishType.value,
+    accountSelections: accountSelections.value
+  })
 
   emit('publish', {
     platforms: [...selectedPlatforms.value],
@@ -465,7 +504,12 @@ onMounted(async () => {
 
     <!-- Locked Date Header (shown when date is locked) -->
     <div v-if="lockDate" class="locked-date-header">
-      <span class="locked-date-icon">📅</span>
+      <svg class="locked-date-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+        <line x1="16" y1="2" x2="16" y2="6"></line>
+        <line x1="8" y1="2" x2="8" y2="6"></line>
+        <line x1="3" y1="10" x2="21" y2="10"></line>
+      </svg>
       <h3 class="locked-date-title">{{ formattedLockedDate }}</h3>
     </div>
 
@@ -536,28 +580,7 @@ onMounted(async () => {
           @click="handlePlatformClick(platform)"
         >
           <!-- Platform Icon -->
-          <div class="platform-icon" :style="getPlatformIconStyle(platform.id)">
-            <!-- Facebook -->
-            <svg v-if="platform.id === 'facebook'" width="20" height="20" viewBox="0 0 24 24" fill="white">
-              <path d="M9.101 23.691v-7.98H6.627v-3.667h2.474v-1.58c0-4.085 1.848-5.978 5.858-5.978.401 0 .955.042 1.468.103a8.68 8.68 0 0 1 1.141.195v3.325a8.623 8.623 0 0 0-.653-.036 26.805 26.805 0 0 0-.733-.009c-.707 0-1.259.096-1.675.309a1.686 1.686 0 0 0-.679.622c-.258.42-.374.995-.374 1.752v1.297h3.919l-.386 2.103-.287 1.564h-3.246v8.245C19.396 23.238 24 18.179 24 12.044c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.628 3.874 10.35 9.101 11.647Z"/>
-            </svg>
-            <!-- Instagram -->
-            <svg v-else-if="platform.id === 'instagram'" width="20" height="20" viewBox="0 0 24 24" fill="white">
-              <path d="M7.8 2h8.4C19.4 2 22 4.6 22 7.8v8.4a5.8 5.8 0 0 1-5.8 5.8H7.8C4.6 22 2 19.4 2 16.2V7.8A5.8 5.8 0 0 1 7.8 2m-.2 2A3.6 3.6 0 0 0 4 7.6v8.8C4 18.39 5.61 20 7.6 20h8.8a3.6 3.6 0 0 0 3.6-3.6V7.6C20 5.61 18.39 4 16.4 4H7.6m9.65 1.5a1.25 1.25 0 0 1 1.25 1.25A1.25 1.25 0 0 1 17.25 8 1.25 1.25 0 0 1 16 6.75a1.25 1.25 0 0 1 1.25-1.25M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3z"/>
-            </svg>
-            <!-- TikTok -->
-            <svg v-else-if="platform.id === 'tiktok'" width="18" height="18" viewBox="0 0 24 24" fill="white">
-              <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z"/>
-            </svg>
-            <!-- Twitter -->
-            <svg v-else-if="platform.id === 'twitter'" width="16" height="16" viewBox="0 0 24 24" fill="white">
-              <path d="M18.901 1.153h3.68l-8.04 9.19L24 22.846h-7.406l-5.8-7.584-6.638 7.584H.474l8.6-9.83L0 1.154h7.594l5.243 6.932ZM17.61 20.644h2.039L6.486 3.24H4.298Z"/>
-            </svg>
-            <!-- LinkedIn -->
-            <svg v-else-if="platform.id === 'linkedin'" width="18" height="18" viewBox="0 0 24 24" fill="white">
-              <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
-            </svg>
-          </div>
+          <PlatformLogo :platform="platform.id as 'facebook' | 'instagram' | 'tiktok' | 'twitter' | 'linkedin' | 'youtube' | 'pinterest' | 'wolt'" :size="40" />
 
           <!-- Platform Info -->
           <div class="platform-info">
@@ -616,7 +639,13 @@ onMounted(async () => {
                   <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
                 </svg>
               </div>
-              <span class="summary-account-name">{{ account.name }}</span>
+              <div class="summary-account-info">
+                <span class="summary-account-name">{{ account.name }}</span>
+                <span v-if="account.postType" class="summary-post-type">
+                  <span class="post-type-name">{{ $t(`postType.${account.postType}`) }}</span>
+                  <span class="post-type-desc">{{ $t(`postType.${account.postType}Desc`) }}</span>
+                </span>
+              </div>
             </div>
           </div>
         </div>
@@ -672,6 +701,9 @@ onMounted(async () => {
             v-if="currentPlatformForSelection"
             :platform="currentPlatformForSelection"
             :multi-select="true"
+            :show-post-type-selector="['facebook', 'instagram'].includes(currentPlatformForSelection)"
+            :content-type="props.videoUrl ? 'video' : 'image'"
+            :has-multiple-images="(props.carouselItems?.length || 0) >= 2"
             v-model="tempAccountSelections"
           />
 
@@ -814,8 +846,8 @@ onMounted(async () => {
 
 /* Schedule Section */
 .schedule-section {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+  display: flex;
+  flex-direction: column;
   gap: var(--space-xl);
   padding: var(--space-xl);
   background: var(--glass-bg);
@@ -874,14 +906,17 @@ onMounted(async () => {
   justify-content: center;
   gap: var(--space-md);
   padding: var(--space-lg) var(--space-xl);
-  background: var(--gold-subtle);
-  border: var(--border-width) solid var(--gold-primary);
+  background: rgba(15, 61, 46, 0.05);
+  border: var(--border-width) solid rgba(15, 61, 46, 0.15);
   border-radius: var(--radius-lg);
   margin-bottom: var(--space-md);
 }
 
 .locked-date-icon {
-  font-size: var(--text-2xl);
+  width: 24px;
+  height: 24px;
+  color: var(--gold-primary);
+  flex-shrink: 0;
 }
 
 .locked-date-title {
@@ -890,10 +925,6 @@ onMounted(async () => {
   font-weight: var(--font-semibold);
   color: var(--text-primary);
   margin: 0;
-  background: var(--gradient-gold);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
 }
 
 /* Platform Section */
@@ -1076,6 +1107,7 @@ onMounted(async () => {
   height: 24px;
   border-radius: var(--radius-full);
   object-fit: cover;
+  flex-shrink: 0;
 }
 
 .summary-account-avatar-placeholder {
@@ -1087,12 +1119,42 @@ onMounted(async () => {
   align-items: center;
   justify-content: center;
   color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.summary-account-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
 }
 
 .summary-account-name {
   font-size: var(--text-sm);
   font-weight: 500;
   color: var(--text-primary);
+}
+
+.summary-post-type {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.post-type-name {
+  font-size: var(--text-xs);
+  color: var(--gold-primary);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.post-type-desc {
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+  font-weight: 400;
+  line-height: 1.3;
 }
 
 /* Account Selection Modal */
@@ -1148,9 +1210,11 @@ onMounted(async () => {
   background: rgba(255, 255, 255, 0.8);
   border: 1px solid rgba(15, 61, 46, 0.1);
   border-radius: var(--radius-lg);
-  padding: var(--space-sm);
+  padding: var(--space-lg);
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
+  display: flex;
+  justify-content: center;
 }
 
 /* Force the calendar to not have minimum widths */
@@ -1335,10 +1399,6 @@ onMounted(async () => {
 
 /* Responsive */
 @media (max-width: 768px) {
-  .schedule-section {
-    grid-template-columns: 1fr;
-  }
-
   .platform-grid {
     grid-template-columns: 1fr;
   }

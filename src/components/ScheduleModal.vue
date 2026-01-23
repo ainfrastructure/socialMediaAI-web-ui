@@ -178,8 +178,8 @@ const handleUnifiedPublish = async (data: {
   scheduledTime?: string
   timezone?: string
   accountSelections?: {
-    facebook?: string[]
-    instagram?: string[]
+    facebook?: Array<{ accountId: string; postType: string; carouselItems?: any[]; carouselCaption?: string; carouselHashtags?: string[] }>
+    instagram?: Array<{ accountId: string; postType: string; carouselItems?: any[]; carouselCaption?: string; carouselHashtags?: string[] }>
     tiktok?: string[]
     twitter?: string[]
   }
@@ -231,9 +231,9 @@ const handleUnifiedPublish = async (data: {
         }
         if (platform === 'facebook') {
           // Get selected page IDs from user selection
-          const selectedPageIds = data.accountSelections?.facebook || []
+          const selectedPages = data.accountSelections?.facebook || []
 
-          if (selectedPageIds.length === 0) {
+          if (selectedPages.length === 0) {
             results.push({ platform: 'facebook', success: false, error: 'No Facebook page selected' })
             // Update progress
             if (progressItem) {
@@ -244,7 +244,8 @@ const handleUnifiedPublish = async (data: {
           }
 
           // Post to each selected page
-          for (const pageId of selectedPageIds) {
+          for (const pageSelection of selectedPages) {
+            const pageId = typeof pageSelection === 'string' ? pageSelection : pageSelection.accountId
             const selectedPage = facebookStore.connectedPages.find(p => p.pageId === pageId)
             if (!selectedPage) {
               warnLog(`Facebook page with ID ${pageId} not found in connected pages`)
@@ -295,9 +296,9 @@ const handleUnifiedPublish = async (data: {
           }
         } else if (platform === 'instagram') {
           // Get selected Instagram account IDs from user selection
-          const selectedAccountIds = data.accountSelections?.instagram || []
+          const selectedAccounts = data.accountSelections?.instagram || []
 
-          if (selectedAccountIds.length === 0) {
+          if (selectedAccounts.length === 0) {
             results.push({ platform: 'instagram', success: false, error: 'No Instagram account selected' })
             // Update progress
             if (progressItem) {
@@ -308,7 +309,8 @@ const handleUnifiedPublish = async (data: {
           }
 
           // Post to each selected account
-          for (const accountId of selectedAccountIds) {
+          for (const accountSelection of selectedAccounts) {
+            const accountId = typeof accountSelection === 'string' ? accountSelection : accountSelection.accountId
             const selectedAccount = instagramStore.connectedAccounts.find(a => a.instagramAccountId === accountId)
             if (!selectedAccount) {
               warnLog(`Instagram account with ID ${accountId} not found in connected accounts`)
@@ -525,27 +527,26 @@ const handleUnifiedPublish = async (data: {
       const successfulPlatforms = results.filter(r => r.success)
       const failed = results.filter(r => !r.success)
 
-      if (successfulPlatforms.length > 0) {
-        // Save to calendar with published status
+      // Save ALL platforms (successful + failed) to database
+      if (results.length > 0) {
         const now = new Date()
         try {
           await api.createPublishedPost({
             favorite_post_id: props.favoritePost.id,
             published_date: now.toISOString().split('T')[0],
             published_time: `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`,
-            platforms: successfulPlatforms.map(r => r.platform),
+            platforms: data.platforms,  // ALL platforms (not just successful)
             timezone: data.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone,
-            platform_post_urls: postUrls
+            platform_post_urls: postUrls,
+            platform_settings: data.accountSelections,
+            platform_results: results  // NEW: Pass all results (success + failed)
           })
         } catch (calendarErr) {
           warnLog('Failed to save to calendar:', calendarErr)
         }
 
-        // Close the main schedule modal (publishing progress modal stays open)
+        // Close modal after saving
         closeModal()
-      } else {
-        // All platforms failed
-        error.value = failed.map(f => f.error).join('. ')
       }
     } else {
       // Schedule for later

@@ -4,8 +4,6 @@ import { useRouter, useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useFacebookStore } from '../stores/facebook'
 import { useInstagramStore } from '../stores/instagram'
-import { useTikTokStore } from '../stores/tiktok'
-import { useTwitterStore } from '../stores/twitter'
 import DashboardLayout from '../components/DashboardLayout.vue'
 import BaseCard from '../components/BaseCard.vue'
 import BaseButton from '../components/BaseButton.vue'
@@ -16,8 +14,6 @@ const router = useRouter()
 const route = useRoute()
 const facebookStore = useFacebookStore()
 const instagramStore = useInstagramStore()
-const tiktokStore = useTikTokStore()
-const twitterStore = useTwitterStore()
 const { t } = useI18n()
 
 const showSuccessToast = ref(false)
@@ -33,7 +29,7 @@ const showConfirmModal = ref(false)
 const confirmModalMessage = ref('')
 const confirmModalTitle = ref('')
 const pendingDisconnect = ref<{
-  type: 'facebook' | 'instagram' | 'tiktok' | 'twitter' | 'all-facebook' | 'all-instagram' | 'all-tiktok' | 'all-twitter'
+  type: 'facebook' | 'instagram' | 'all-facebook' | 'all-instagram'
   id?: string
   name: string
 } | null>(null)
@@ -44,19 +40,11 @@ const isConnected = computed(() => facebookStore.connectedPages.length > 0)
 // Computed property to check if Instagram is connected
 const isInstagramConnected = computed(() => instagramStore.connectedAccounts.length > 0)
 
-// Computed property to check if TikTok is connected
-const isTikTokConnected = computed(() => tiktokStore.connectedAccounts.length > 0)
-
-// Computed property to check if Twitter is connected
-const isTwitterConnected = computed(() => twitterStore.connectedAccounts.length > 0)
-
 onMounted(async () => {
-  // Load connected Facebook pages, Instagram accounts, TikTok accounts, and Twitter accounts on mount
+  // Load connected Facebook pages and Instagram accounts on mount
   await Promise.all([
     facebookStore.loadConnectedPages(),
     instagramStore.loadConnectedAccounts(),
-    tiktokStore.loadConnectedAccounts(),
-    twitterStore.loadConnectedAccounts(),
   ])
 
   // Check if we just came back from a successful connection
@@ -75,12 +63,6 @@ onMounted(async () => {
     } else if (connectedPlatform === 'instagram') {
       count = instagramStore.connectedAccounts.length
       messageKey = 'connectAccounts.successfullyConnectedInstagram'
-    } else if (connectedPlatform === 'tiktok') {
-      count = tiktokStore.connectedAccounts.length
-      messageKey = 'connectAccounts.successfullyConnectedTikTok'
-    } else if (connectedPlatform === 'twitter') {
-      count = twitterStore.connectedAccounts.length
-      messageKey = 'connectAccounts.successfullyConnectedTwitter'
     }
 
     if (count > 0) {
@@ -190,90 +172,6 @@ async function executeDisconnectInstagramAccount(accountId: string, username: st
   }
 }
 
-async function handleConnectTikTok() {
-  showSuccessToast.value = false
-  showErrorToast.value = false
-
-  try {
-    // Store returnTo URL before OAuth redirect if present
-    const returnTo = route.query.returnTo as string
-    if (returnTo) {
-      localStorage.setItem('oauth_return_to', returnTo)
-    }
-
-    // Store which platform is being connected
-    localStorage.setItem('oauth_platform', 'tiktok')
-
-    await tiktokStore.connectTikTok()
-  } catch (error: any) {
-    errorMessage.value = tiktokStore.error || t('connectAccounts.errorOccurred')
-    showErrorToast.value = true
-  }
-}
-
-function requestDisconnectTikTokAccount(accountId: string, displayName: string) {
-  pendingDisconnect.value = { type: 'tiktok', id: accountId, name: displayName }
-  confirmModalTitle.value = t('connectAccounts.disconnectTitle')
-  confirmModalMessage.value = t('connectAccounts.confirmDisconnect', { name: displayName })
-  showConfirmModal.value = true
-}
-
-async function executeDisconnectTikTokAccount(accountId: string, displayName: string) {
-  showSuccessToast.value = false
-  showErrorToast.value = false
-
-  try {
-    await tiktokStore.disconnectAccount(accountId)
-    toastMessage.value = t('connectAccounts.successfullyDisconnected', { name: displayName })
-    showSuccessToast.value = true
-  } catch (error: any) {
-    errorMessage.value = tiktokStore.error || t('connectAccounts.errorOccurred')
-    showErrorToast.value = true
-  }
-}
-
-async function handleConnectTwitter() {
-  showSuccessToast.value = false
-  showErrorToast.value = false
-
-  try {
-    // Store returnTo URL before OAuth redirect if present
-    const returnTo = route.query.returnTo as string
-    if (returnTo) {
-      localStorage.setItem('oauth_return_to', returnTo)
-    }
-
-    // Store which platform is being connected
-    localStorage.setItem('oauth_platform', 'twitter')
-
-    await twitterStore.connectTwitter()
-  } catch (error: any) {
-    errorMessage.value = twitterStore.error || t('connectAccounts.errorOccurred')
-    showErrorToast.value = true
-  }
-}
-
-function requestDisconnectTwitterAccount(accountId: string, username: string) {
-  pendingDisconnect.value = { type: 'twitter', id: accountId, name: `@${username}` }
-  confirmModalTitle.value = t('connectAccounts.disconnectTitle')
-  confirmModalMessage.value = t('connectAccounts.confirmDisconnect', { name: `@${username}` })
-  showConfirmModal.value = true
-}
-
-async function executeDisconnectTwitterAccount(accountId: string, username: string) {
-  showSuccessToast.value = false
-  showErrorToast.value = false
-
-  try {
-    await twitterStore.disconnectAccount(accountId)
-    toastMessage.value = t('connectAccounts.successfullyDisconnected', { name: `@${username}` })
-    showSuccessToast.value = true
-  } catch (error: any) {
-    errorMessage.value = twitterStore.error || t('connectAccounts.errorOccurred')
-    showErrorToast.value = true
-  }
-}
-
 // Handle confirm from modal
 async function handleConfirmDisconnect() {
   showConfirmModal.value = false
@@ -286,18 +184,10 @@ async function handleConfirmDisconnect() {
     await executeDisconnectAll('facebook')
   } else if (type === 'all-instagram') {
     await executeDisconnectAll('instagram')
-  } else if (type === 'all-tiktok') {
-    await executeDisconnectAll('tiktok')
-  } else if (type === 'all-twitter') {
-    await executeDisconnectAll('twitter')
   } else if (type === 'facebook' && id) {
     await executeDisconnectPage(id, name)
   } else if (type === 'instagram' && id) {
     await executeDisconnectInstagramAccount(id, name.replace('@', ''))
-  } else if (type === 'tiktok' && id) {
-    await executeDisconnectTikTokAccount(id, name)
-  } else if (type === 'twitter' && id) {
-    await executeDisconnectTwitterAccount(id, name.replace('@', ''))
   }
 
   pendingDisconnect.value = null
@@ -318,7 +208,7 @@ function togglePlatform(platform: string) {
 }
 
 // Request disconnect all accounts for a platform
-function requestDisconnectAll(type: 'facebook' | 'instagram' | 'tiktok' | 'twitter') {
+function requestDisconnectAll(type: 'facebook' | 'instagram') {
   let count = 0
   let platformName = ''
 
@@ -328,12 +218,6 @@ function requestDisconnectAll(type: 'facebook' | 'instagram' | 'tiktok' | 'twitt
   } else if (type === 'instagram') {
     count = instagramStore.connectedAccounts.length
     platformName = 'Instagram Business'
-  } else if (type === 'tiktok') {
-    count = tiktokStore.connectedAccounts.length
-    platformName = 'TikTok Business'
-  } else if (type === 'twitter') {
-    count = twitterStore.connectedAccounts.length
-    platformName = 'X (Twitter)'
   }
 
   pendingDisconnect.value = { type: `all-${type}` as any, name: platformName }
@@ -343,7 +227,7 @@ function requestDisconnectAll(type: 'facebook' | 'instagram' | 'tiktok' | 'twitt
 }
 
 // Execute disconnect all accounts for a platform
-async function executeDisconnectAll(type: 'facebook' | 'instagram' | 'tiktok' | 'twitter') {
+async function executeDisconnectAll(type: 'facebook' | 'instagram') {
   showSuccessToast.value = false
   showErrorToast.value = false
 
@@ -358,18 +242,6 @@ async function executeDisconnectAll(type: 'facebook' | 'instagram' | 'tiktok' | 
       const accounts = [...instagramStore.connectedAccounts]
       for (const account of accounts) {
         await instagramStore.disconnectAccount(account.instagramAccountId)
-      }
-      toastMessage.value = t('connectAccounts.successfullyDisconnectedAll', { count: accounts.length })
-    } else if (type === 'tiktok') {
-      const accounts = [...tiktokStore.connectedAccounts]
-      for (const account of accounts) {
-        await tiktokStore.disconnectAccount(account.tiktokAccountId)
-      }
-      toastMessage.value = t('connectAccounts.successfullyDisconnectedAll', { count: accounts.length })
-    } else if (type === 'twitter') {
-      const accounts = [...twitterStore.connectedAccounts]
-      for (const account of accounts) {
-        await twitterStore.disconnectAccount(account.twitterAccountId)
       }
       toastMessage.value = t('connectAccounts.successfullyDisconnectedAll', { count: accounts.length })
     }
@@ -666,9 +538,9 @@ async function executeDisconnectAll(type: 'facebook' | 'instagram' | 'tiktok' | 
             </div>
           </div>
 
-          <!-- TikTok Section -->
-          <div class="platform-section" :class="{ expanded: expandedPlatforms.has('tiktok') }">
-            <div class="platform-header" :class="{ clickable: isTikTokConnected }" @click="isTikTokConnected ? togglePlatform('tiktok') : null">
+          <!-- TikTok - Coming Soon -->
+          <div class="platform-section disabled">
+            <div class="platform-header">
               <div class="platform-icon platform-icon-tiktok">
                 <svg
                   width="16"
@@ -683,122 +555,23 @@ async function executeDisconnectAll(type: 'facebook' | 'instagram' | 'tiktok' | 
                 </svg>
               </div>
               <div class="platform-info">
-                <h3>TikTok Business</h3>
-                <span v-if="isTikTokConnected" class="connection-count">
-                  {{ $t('connectAccounts.accountsConnected', { count: tiktokStore.connectedAccounts.length }) }}
-                </span>
+                <h3>TikTok</h3>
               </div>
-              <div v-if="isTikTokConnected" class="expand-icon">
-                <svg
-                  width="20"
-                  height="20"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path d="M6 9l6 6 6-6" />
-                </svg>
-              </div>
-              <div class="platform-actions" @click.stop>
-                <BaseButton
-                  v-if="isTikTokConnected"
-                  @click="requestDisconnectAll('tiktok')"
-                  variant="danger"
-                  size="small"
-                  :disabled="tiktokStore.loading"
-                >
-                  {{ $t('connectAccounts.disconnect') }}
-                </BaseButton>
-                <BaseButton
-                  v-if="!isTikTokConnected"
-                  @click="handleConnectTikTok"
-                  variant="primary"
-                  size="small"
-                  :disabled="tiktokStore.loading"
-                >
-                  {{ tiktokStore.loading ? $t('connectAccounts.connecting') : $t('connectAccounts.connect') }}
-                </BaseButton>
-              </div>
-            </div>
-
-            <!-- Connected TikTok Accounts -->
-            <div v-if="isTikTokConnected && expandedPlatforms.has('tiktok')" class="connected-accounts-list">
-              <div
-                v-for="account in tiktokStore.connectedAccounts"
-                :key="account.tiktokAccountId"
-                class="connected-account-item"
-              >
-                <img
-                  v-if="account.profilePictureUrl"
-                  :src="account.profilePictureUrl"
-                  :alt="account.displayName"
-                  class="profile-picture"
-                />
-                <div v-else class="profile-picture-placeholder">
-                  <svg
-                    width="16"
-                    height="16"
-                    viewBox="0 0 24 24"
-                    fill="currentColor"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path
-                      d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"
-                    />
-                  </svg>
-                </div>
-                <div class="account-details">
-                  <span class="account-name">{{ account.displayName }}</span>
-                  <span class="account-id">ID: {{ account.tiktokAccountId }}</span>
-                </div>
-                <BaseButton
-                  @click="requestDisconnectTikTokAccount(account.tiktokAccountId, account.displayName)"
-                  variant="danger"
-                  size="small"
-                  :disabled="tiktokStore.loading"
-                  class="disconnect-btn"
-                >
-                  {{ $t('connectAccounts.disconnect') }}
-                </BaseButton>
-              </div>
-
-              <!-- Connect More Button -->
-              <div class="connect-more-item">
-                <BaseButton
-                  @click="handleConnectTikTok"
-                  variant="ghost"
-                  size="small"
-                  :disabled="tiktokStore.loading"
-                  class="connect-more-btn"
-                >
-                  <svg
-                    width="16"
-                    height="16"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path d="M12 5v14M5 12h14" />
-                  </svg>
-                  {{ tiktokStore.loading ? $t('connectAccounts.connecting') : $t('connectAccounts.connectMore') }}
-                </BaseButton>
+              <div class="platform-actions">
+                <span class="coming-soon-badge">{{ $t('connectAccounts.comingSoon') }}</span>
               </div>
             </div>
           </div>
 
-          <!-- X (Twitter) Section -->
-          <div class="platform-section" :class="{ expanded: expandedPlatforms.has('twitter') }">
-            <div class="platform-header" :class="{ clickable: isTwitterConnected }" @click="isTwitterConnected ? togglePlatform('twitter') : null">
+          <!-- X (Twitter) - Coming Soon -->
+          <div class="platform-section disabled">
+            <div class="platform-header">
               <div class="platform-icon platform-icon-x">
                 <svg
                   width="16"
                   height="16"
                   viewBox="0 0 24 24"
-                  fill="currentColor"
+                  fill="white"
                   xmlns="http://www.w3.org/2000/svg"
                 >
                   <path
@@ -808,108 +581,9 @@ async function executeDisconnectAll(type: 'facebook' | 'instagram' | 'tiktok' | 
               </div>
               <div class="platform-info">
                 <h3>X (Twitter)</h3>
-                <span v-if="isTwitterConnected" class="connection-count">
-                  {{ $t('connectAccounts.accountsConnected', { count: twitterStore.connectedAccounts.length }) }}
-                </span>
               </div>
-              <div v-if="isTwitterConnected" class="expand-icon">
-                <svg
-                  width="20"
-                  height="20"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path d="M6 9l6 6 6-6" />
-                </svg>
-              </div>
-              <div class="platform-actions" @click.stop>
-                <BaseButton
-                  v-if="isTwitterConnected"
-                  @click="requestDisconnectAll('twitter')"
-                  variant="danger"
-                  size="small"
-                  :disabled="twitterStore.loading"
-                >
-                  {{ $t('connectAccounts.disconnect') }}
-                </BaseButton>
-                <BaseButton
-                  v-if="!isTwitterConnected"
-                  @click="handleConnectTwitter"
-                  variant="primary"
-                  size="small"
-                  :disabled="twitterStore.loading"
-                >
-                  {{ twitterStore.loading ? $t('connectAccounts.connecting') : $t('connectAccounts.connect') }}
-                </BaseButton>
-              </div>
-            </div>
-
-            <!-- Connected Twitter Accounts -->
-            <div v-if="isTwitterConnected && expandedPlatforms.has('twitter')" class="connected-accounts-list">
-              <div
-                v-for="account in twitterStore.connectedAccounts"
-                :key="account.twitterAccountId"
-                class="connected-account-item"
-              >
-                <img
-                  v-if="account.profilePictureUrl"
-                  :src="account.profilePictureUrl"
-                  :alt="account.username"
-                  class="profile-picture"
-                />
-                <div v-else class="profile-picture-placeholder">
-                  <svg
-                    width="20"
-                    height="20"
-                    viewBox="0 0 24 24"
-                    fill="currentColor"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path
-                      d="M18.901 1.153h3.68l-8.04 9.19L24 22.846h-7.406l-5.8-7.584-6.638 7.584H.474l8.6-9.83L0 1.154h7.594l5.243 6.932ZM17.61 20.644h2.039L6.486 3.24H4.298Z"
-                    />
-                  </svg>
-                </div>
-                <div class="account-details">
-                  <span class="account-name">@{{ account.username }}</span>
-                  <span class="account-id">ID: {{ account.twitterAccountId }}</span>
-                </div>
-                <BaseButton
-                  @click="requestDisconnectTwitterAccount(account.twitterAccountId, account.username)"
-                  variant="danger"
-                  size="small"
-                  :disabled="twitterStore.loading"
-                  class="disconnect-btn"
-                >
-                  {{ $t('connectAccounts.disconnect') }}
-                </BaseButton>
-              </div>
-
-              <!-- Connect More Button -->
-              <div class="connect-more-item">
-                <BaseButton
-                  @click="handleConnectTwitter"
-                  variant="ghost"
-                  size="small"
-                  :disabled="twitterStore.loading"
-                  class="connect-more-btn"
-                >
-                  <svg
-                    width="16"
-                    height="16"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path d="M12 5v14M5 12h14" />
-                  </svg>
-                  {{ twitterStore.loading ? $t('connectAccounts.connecting') : $t('connectAccounts.connectMore') }}
-                </BaseButton>
+              <div class="platform-actions">
+                <span class="coming-soon-badge">{{ $t('connectAccounts.comingSoon') }}</span>
               </div>
             </div>
           </div>
@@ -932,6 +606,31 @@ async function executeDisconnectAll(type: 'facebook' | 'instagram' | 'tiktok' | 
               </div>
               <div class="platform-info">
                 <h3>LinkedIn</h3>
+              </div>
+              <div class="platform-actions">
+                <span class="coming-soon-badge">{{ $t('connectAccounts.comingSoon') }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Pinterest - Coming Soon -->
+          <div class="platform-section disabled">
+            <div class="platform-header">
+              <div class="platform-icon platform-icon-pinterest">
+                <svg
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="white"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M12.017 0C5.396 0 .029 5.367.029 11.987c0 5.079 3.158 9.417 7.618 11.162-.105-.949-.199-2.403.041-3.439.219-.937 1.406-5.957 1.406-5.957s-.359-.72-.359-1.781c0-1.663.967-2.911 2.168-2.911 1.024 0 1.518.769 1.518 1.688 0 1.029-.653 2.567-.992 3.992-.285 1.193.6 2.165 1.775 2.165 2.128 0 3.768-2.245 3.768-5.487 0-2.861-2.063-4.869-5.008-4.869-3.41 0-5.409 2.562-5.409 5.199 0 1.033.394 2.143.889 2.741.099.12.112.225.085.345-.09.375-.293 1.199-.334 1.363-.053.225-.172.271-.401.165-1.495-.69-2.433-2.878-2.433-4.646 0-3.776 2.748-7.252 7.92-7.252 4.158 0 7.392 2.967 7.392 6.923 0 4.135-2.607 7.462-6.233 7.462-1.214 0-2.354-.629-2.758-1.379l-.749 2.848c-.269 1.045-1.004 2.352-1.498 3.146 1.123.345 2.306.535 3.55.535 6.607 0 11.985-5.365 11.985-11.987C23.97 5.39 18.592.026 11.985.026L12.017 0z"
+                  />
+                </svg>
+              </div>
+              <div class="platform-info">
+                <h3>Pinterest</h3>
               </div>
               <div class="platform-actions">
                 <span class="coming-soon-badge">{{ $t('connectAccounts.comingSoon') }}</span>
@@ -1197,6 +896,10 @@ async function executeDisconnectAll(type: 'facebook' | 'instagram' | 'tiktok' | 
 
 .platform-icon-youtube {
   background: #ff0000;
+}
+
+.platform-icon-pinterest {
+  background: #E60023;
 }
 
 .platform-info {

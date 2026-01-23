@@ -13,6 +13,7 @@ import { facebookService } from './facebookService'
 import { instagramService } from './instagramService'
 import { tiktokService } from './tiktokService'
 import { twitterService } from './twitterService'
+import { linkedinService } from './linkedinService'
 import { favoritesService } from './favoritesService'
 import { schedulerService } from './schedulerService'
 import { waitlistService } from './waitlistService'
@@ -92,6 +93,13 @@ class ApiService {
   disconnectTwitterAccount = twitterService.disconnectAccount.bind(twitterService)
   postToTwitter = twitterService.post.bind(twitterService)
 
+  // LinkedIn methods
+  initLinkedInAuth = linkedinService.initAuth.bind(linkedinService)
+  completeLinkedInAuth = linkedinService.completeAuth.bind(linkedinService)
+  getLinkedInPages = linkedinService.getPages.bind(linkedinService)
+  disconnectLinkedInPage = linkedinService.disconnectPage.bind(linkedinService)
+  postToLinkedIn = linkedinService.post.bind(linkedinService)
+
   // Favorites methods
   getFavorites = favoritesService.getFavorites.bind(favoritesService)
   getFavorite = favoritesService.getFavorite.bind(favoritesService)
@@ -144,6 +152,16 @@ class ApiService {
     const url = params.toString() ? `${API_URL}/api/restaurants?${params}` : `${API_URL}/api/restaurants`
     const response = await fetch(url, {
       headers: getAuthHeader(),
+    })
+    return response.json()
+  }
+
+  // Image upload for carousel (uploads to Supabase storage)
+  async uploadCarouselImage(formData: FormData) {
+    const response = await fetch(`${API_URL}/api/upload/image`, {
+      method: 'POST',
+      headers: getAuthHeader(),
+      body: formData
     })
     return response.json()
   }

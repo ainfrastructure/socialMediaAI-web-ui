@@ -3,8 +3,9 @@ import { useFacebookStore } from '../stores/facebook'
 import { useInstagramStore } from '../stores/instagram'
 import { useTikTokStore } from '../stores/tiktok'
 import { useTwitterStore } from '../stores/twitter'
+import { useLinkedInStore } from '../stores/linkedin'
 
-export type SocialPlatform = 'facebook' | 'instagram' | 'twitter' | 'linkedin' | 'tiktok' | 'youtube'
+export type SocialPlatform = 'facebook' | 'instagram' | 'twitter' | 'linkedin' | 'tiktok' | 'youtube' | 'pinterest'
 
 export interface PlatformInfo {
   id: SocialPlatform
@@ -25,6 +26,7 @@ export function useSocialAccounts() {
   const instagramStore = useInstagramStore()
   const tiktokStore = useTikTokStore()
   const twitterStore = useTwitterStore()
+  const linkedinStore = useLinkedInStore()
 
   /**
    * Check if a specific platform is connected
@@ -39,9 +41,11 @@ export function useSocialAccounts() {
         return tiktokStore.connectedAccounts.length > 0
       case 'twitter':
         return twitterStore.connectedAccounts.length > 0
-      // Future platforms
       case 'linkedin':
+        return linkedinStore.connectedPages.length > 0
+      // Future platforms
       case 'youtube':
+      case 'pinterest':
         return false
       default:
         return false
@@ -73,6 +77,11 @@ export function useSocialAccounts() {
           id: account.twitterAccountId,
           name: account.username,
         }))
+      case 'linkedin':
+        return linkedinStore.connectedPages.map((page) => ({
+          id: page.organizationId,
+          name: page.pageName,
+        }))
       // Future platforms
       default:
         return []
@@ -87,7 +96,8 @@ export function useSocialAccounts() {
       facebookStore.connectedPages.length +
       instagramStore.connectedAccounts.length +
       tiktokStore.connectedAccounts.length +
-      twitterStore.connectedAccounts.length
+      twitterStore.connectedAccounts.length +
+      linkedinStore.connectedPages.length
     )
   })
 
@@ -102,6 +112,7 @@ export function useSocialAccounts() {
    * Get all platform information with connection status
    */
   const platforms = computed<PlatformInfo[]>(() => [
+    // Active platforms
     {
       id: 'facebook',
       name: 'Facebook',
@@ -126,34 +137,38 @@ export function useSocialAccounts() {
       isAvailable: true,
       comingSoon: false,
     },
+    // Coming soon platforms
     {
       id: 'tiktok',
       name: 'TikTok',
       icon: '🎵',
-      isConnected: tiktokStore.connectedAccounts.length > 0,
-      connectedAccounts: tiktokStore.connectedAccounts.map((account) => ({
-        id: account.tiktokAccountId,
-        name: account.displayName,
-      })),
-      isAvailable: true,
-      comingSoon: false,
+      isConnected: false,
+      connectedAccounts: [],
+      isAvailable: false,
+      comingSoon: true,
     },
     {
       id: 'twitter',
       name: 'Twitter',
       icon: '🐦',
-      isConnected: twitterStore.connectedAccounts.length > 0,
-      connectedAccounts: twitterStore.connectedAccounts.map((account) => ({
-        id: account.twitterAccountId,
-        name: account.username,
-      })),
-      isAvailable: true,
-      comingSoon: false,
+      isConnected: false,
+      connectedAccounts: [],
+      isAvailable: false,
+      comingSoon: true,
     },
     {
       id: 'linkedin',
       name: 'LinkedIn',
       icon: '💼',
+      isConnected: false,
+      connectedAccounts: [],
+      isAvailable: false,
+      comingSoon: true,
+    },
+    {
+      id: 'pinterest',
+      name: 'Pinterest',
+      icon: '📌',
       isConnected: false,
       connectedAccounts: [],
       isAvailable: false,
@@ -201,5 +216,6 @@ export function useSocialAccounts() {
     instagramStore,
     tiktokStore,
     twitterStore,
+    linkedinStore,
   }
 }

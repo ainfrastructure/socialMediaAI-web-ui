@@ -148,6 +148,7 @@
                 <!-- Table Header -->
                 <div class="table-header">
                   <div class="th-post">{{ $t('scheduler.post') || 'Post' }}</div>
+                  <div class="th-post-type">{{ $t('postType.label') || 'Post Type' }}</div>
                   <div class="th-platforms">{{ $t('dashboardNew.platforms') || 'Platforms' }}</div>
                   <div class="th-status">{{ $t('scheduler.status') || 'Status' }}</div>
                   <div class="th-restaurant">{{ $t('scheduler.restaurant') || 'Restaurant' }}</div>
@@ -184,6 +185,15 @@
                           </div>
                           <p class="post-caption-preview">{{ truncateCaption(getPostCaption(post)) }}</p>
                         </div>
+                      </div>
+
+                      <!-- Post Type Column -->
+                      <div class="td-post-type">
+                        <PostTypeBadge
+                          :post-type-settings="post.post_type_settings"
+                          :platforms="getPostPlatforms(post)"
+                          size="small"
+                        />
                       </div>
 
                       <!-- Platforms Column -->
@@ -260,6 +270,22 @@
                               <PlatformLogo :platform="platform as 'facebook' | 'instagram' | 'tiktok'" :size="14" />
                               {{ capitalizeFirst(platform) }}
                             </span>
+                          </div>
+
+                          <h4 class="detail-label" style="margin-top: var(--space-lg)">{{ $t('postType.label') || 'Post Type' }}</h4>
+                          <div class="detail-post-types">
+                            <PostTypeBadge
+                              :post-type-settings="post.post_type_settings"
+                              :platforms="getPostPlatforms(post)"
+                              size="medium"
+                              :show-icon="true"
+                            />
+                          </div>
+
+                          <!-- Story expiry notice -->
+                          <div v-if="post.post_type_settings && Object.values(post.post_type_settings).includes('story')" class="story-notice">
+                            <span class="material-symbols-outlined notice-icon">schedule</span>
+                            <span class="notice-text">{{ $t('postType.storyExpiryNotice', 'Stories expire after 24 hours') }}</span>
                           </div>
 
                           <!-- Error for failed posts -->
@@ -346,8 +372,17 @@
                   :key="post.id"
                   :class="['post-indicator', post.status ? `status-${post.status}` : `platform-${post.platform}`]"
                   :title="`${formatTime(post.scheduled_time) || $t('scheduler.noTime')} - ${post.post_text || $t('scheduler.scheduledPosts')}`"
+                  @click.stop="openPostFromIndicator(day, post)"
                 >
-                  {{ getContentTypeEmoji(post.content_type) }}
+                  <div class="post-indicator-thumb">
+                    <img
+                      v-if="post.media_url"
+                      :src="getMediaUrl(post.media_url)"
+                      class="post-indicator-img"
+                      @error="(e: Event) => (e.target as HTMLImageElement).src = 'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2248%22 height=%2248%22><rect fill=%22%23e8e1d5%22 width=%2248%22 height=%2248%22/><text x=%2224%22 y=%2228%22 text-anchor=%22middle%22 font-size=%2220%22>📷</text></svg>'"
+                    />
+                    <div v-else class="post-indicator-placeholder">📷</div>
+                  </div>
                   <span class="post-time-mini">{{ formatTime(post.scheduled_time) }}</span>
                 </div>
                 <span v-if="day.posts.length > 3" class="more-posts">
@@ -374,6 +409,7 @@
         @create="openCreatePostWizard"
         @tab-change="handleBottomPanelTabChange"
         @save="saveScheduledPost"
+        @retry="handleRetryPost"
       />
 
     </div>
@@ -438,6 +474,14 @@
       @confirm="confirmModalConfig.onConfirm"
     />
 
+    <!-- Retry Publishing Progress Modal -->
+    <PublishingProgressModal
+      :visible="showRetryModal"
+      :platforms="retryPublishingProgress"
+      :is-complete="retryPublishingComplete"
+      @close="showRetryModal = false"
+    />
+
     <!-- Toast Notification -->
     <Toast
       v-model="showToast"
@@ -464,13 +508,18 @@ import Toast from '../components/Toast.vue'
 import ConfirmModal from '../components/ConfirmModal.vue'
 import PostDetailModal from '../components/PostDetailModal.vue'
 import RestaurantSelectorModal from '../components/RestaurantSelectorModal.vue'
+import PublishingProgressModal from '../components/PublishingProgressModal.vue'
 import { CalendarHeader, CalendarLegend, CreatePostWizard, CalendarFilters, SelectedDayDetail, FullCreationWizardModal } from '../components/scheduler'
 import PlatformLogo from '../components/PlatformLogo.vue'
+import PostTypeBadge from '../components/PostTypeBadge.vue'
 import { api } from '../services/api'
 import { schedulerService } from '../services/schedulerService'
 import { API_URL } from '../services/apiBase'
 import { useRestaurantsStore } from '../stores/restaurants'
 import { usePreferencesStore } from '../stores/preferences'
+import { useFacebookStore } from '../stores/facebook'
+import { useInstagramStore } from '../stores/instagram'
+import { useNotificationStore } from '../stores/notifications'
 
 const router = useRouter()
 const preferencesStore = usePreferencesStore()
@@ -491,6 +540,10 @@ const showPostDetailModal = ref(false)
 const selectedPostForDetail = ref<any>(null)
 const showEditModal = ref(false)
 const postToEdit = ref<any>(null)
+const showRetryModal = ref(false)
+const retryPublishingProgress = ref<Array<{ platform: string; status: 'pending' | 'publishing' | 'success' | 'error'; url?: string; error?: string }>>([])
+const retryPublishingComplete = ref(false)
+const postToRetry = ref<any>(null)
 const showCreatePostWizard = ref(false)
 const showFullCreationWizard = ref(false)
 const wizardStep = ref(1) // 1 = Choose Method, 2 = Create/Select Content
@@ -520,6 +573,31 @@ const toggleExpandedPost = (postId: string | number, _event?: Event) => {
   }
 }
 
+// Open a specific post from the calendar indicator
+const openPostFromIndicator = (day: any, post: any) => {
+  // Select the day
+  selectedDay.value = day
+  // Switch to day tab
+  bottomPanelTab.value = 'day'
+  // Expand the specific post
+  expandedPostId.value = post.id
+
+  // Scroll to the bottom panel and the post
+  nextTick(() => {
+    // First scroll to the panel
+    if (selectedDayDetailRef.value?.$el) {
+      selectedDayDetailRef.value.$el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
+    // Then scroll to the specific expanded post
+    setTimeout(() => {
+      const expandedElement = document.querySelector(`[data-post-id="${post.id}"]`)
+      if (expandedElement) {
+        expandedElement.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+      }
+    }, 300)
+  })
+}
+
 // Toast and confirmation state
 const showToast = ref(false)
 const toastMessage = ref('')
@@ -547,9 +625,9 @@ const filters = ref({
 const restaurants = computed(() => restaurantsStore.restaurants)
 
 const availablePlatforms = [
-  { id: 'facebook', name: 'Facebook', icon: '📘' },
-  { id: 'instagram', name: 'Instagram', icon: '📷' },
-  { id: 'tiktok', name: 'TikTok', icon: '🎵' },
+  { id: 'facebook', name: 'Facebook' },
+  { id: 'instagram', name: 'Instagram' },
+  { id: 'tiktok', name: 'TikTok' },
 ]
 
 // Transform restaurants for CalendarFilters component
@@ -1498,6 +1576,212 @@ const handlePostDetailDelete = (post: any) => {
   closePostDetailModal()
 }
 
+// Handle retry failed/partial post
+const handleRetryPost = async (post: any) => {
+  postToRetry.value = post
+
+  // Get only the failed platforms from platform_statuses
+  const failedPlatforms: string[] = []
+  if (post.platform_statuses) {
+    Object.entries(post.platform_statuses).forEach(([platform, status]: [string, any]) => {
+      if (status.status === 'failed') {
+        failedPlatforms.push(platform)
+      }
+    })
+  }
+
+  if (failedPlatforms.length === 0) {
+    toastMessage.value = 'No failed platforms to retry'
+    toastType.value = 'error'
+    showToast.value = true
+    return
+  }
+
+  // Initialize publishing progress for failed platforms only
+  retryPublishingProgress.value = failedPlatforms.map(platform => ({
+    platform,
+    status: 'pending' as const,
+    url: undefined,
+    error: undefined
+  }))
+  retryPublishingComplete.value = false
+  showRetryModal.value = true
+
+  // Get the favorite post details
+  const favoritePost = post.favorite_posts
+  if (!favoritePost) {
+    toastMessage.value = 'Post content not found'
+    toastType.value = 'error'
+    showToast.value = true
+    return
+  }
+
+  const message = favoritePost.post_text || ''
+  const results: Array<{ platform: string; success: boolean; url?: string; postId?: string; error?: string }> = []
+  const postUrls: Record<string, string> = {}
+
+  // Import stores
+  const facebookStore = useFacebookStore()
+  const instagramStore = useInstagramStore()
+  const notificationStore = useNotificationStore()
+
+  // Publish to each failed platform
+  for (const platform of failedPlatforms) {
+    const progressItem = retryPublishingProgress.value.find(p => p.platform === platform)
+    if (progressItem) {
+      progressItem.status = 'publishing'
+    }
+
+    if (platform === 'facebook') {
+      // Get Facebook page IDs from platform_settings
+      const pageIds = post.platform_settings?.facebook || []
+
+      for (const pageId of pageIds) {
+        const selectedPage = facebookStore.connectedPages.find(p => p.pageId === pageId)
+        if (!selectedPage) continue
+
+        try {
+          const hasVideo = !!favoritePost.video_url
+          const isVideo = hasVideo || favoritePost.content_type === 'video'
+          const videoUrl = favoritePost.video_url || favoritePost.media_url
+          const response = await api.postToFacebook(
+            selectedPage.pageId,
+            message,
+            isVideo ? undefined : favoritePost.media_url,
+            isVideo ? videoUrl : undefined,
+            isVideo ? 'video' : 'image'
+          )
+
+          const postUrl = (response as any).postUrl || response.data?.postUrl
+          if (response.success && postUrl) {
+            results.push({ platform: 'facebook', success: true, url: postUrl })
+            postUrls.facebook = postUrl
+            if (progressItem) {
+              progressItem.status = 'success'
+              progressItem.url = postUrl
+            }
+          } else {
+            const errorMsg = response.error || 'Failed to publish'
+            results.push({ platform: 'facebook', success: false, error: errorMsg })
+            if (progressItem) {
+              progressItem.status = 'error'
+              progressItem.error = errorMsg
+            }
+          }
+        } catch (err: any) {
+          const errorMsg = err.message || 'Failed to publish'
+          results.push({ platform: 'facebook', success: false, error: errorMsg })
+          if (progressItem) {
+            progressItem.status = 'error'
+            progressItem.error = errorMsg
+          }
+        }
+      }
+    } else if (platform === 'instagram') {
+      // Get Instagram account IDs from platform_settings
+      const accountIds = post.platform_settings?.instagram || []
+
+      for (const accountId of accountIds) {
+        const selectedAccount = instagramStore.connectedAccounts.find(a => a.instagramAccountId === accountId)
+        if (!selectedAccount) continue
+
+        try {
+          const hasVideo = !!favoritePost.video_url
+          const isVideo = hasVideo || favoritePost.content_type === 'video'
+          const videoUrl = favoritePost.video_url || favoritePost.media_url
+          const response = await api.postToInstagram(
+            selectedAccount.instagramAccountId,
+            message,
+            isVideo ? undefined : favoritePost.media_url,
+            isVideo ? videoUrl : undefined,
+            isVideo ? 'video' : 'image'
+          )
+
+          const postUrl = (response as any).postUrl || response.data?.postUrl
+          if (response.success && postUrl) {
+            results.push({ platform: 'instagram', success: true, url: postUrl })
+            postUrls.instagram = postUrl
+            if (progressItem) {
+              progressItem.status = 'success'
+              progressItem.url = postUrl
+            }
+          } else {
+            const errorMsg = response.error || 'Failed to publish'
+            results.push({ platform: 'instagram', success: false, error: errorMsg })
+            if (progressItem) {
+              progressItem.status = 'error'
+              progressItem.error = errorMsg
+            }
+          }
+        } catch (err: any) {
+          const errorMsg = err.message || 'Failed to publish'
+          results.push({ platform: 'instagram', success: false, error: errorMsg })
+          if (progressItem) {
+            progressItem.status = 'error'
+            progressItem.error = errorMsg
+          }
+        }
+      }
+    }
+  }
+
+  // Mark retry as complete
+  retryPublishingComplete.value = true
+
+  // Update the database with new platform_statuses
+  try {
+    // Merge old successful platforms with new retry results
+    const allPlatforms = [...post.platforms]
+    const platform_statuses = { ...post.platform_statuses }
+    const updatedPlatformPostIds = { ...post.platform_post_ids }
+    const updatedPlatformPostUrls = { ...post.platform_post_urls }
+
+    // Update statuses for retried platforms
+    for (const result of results) {
+      platform_statuses[result.platform] = {
+        status: result.success ? 'success' : 'failed',
+        post_id: result.postId || null,
+        url: result.url || null,
+        error: result.error || null
+      }
+
+      if (result.success && result.url) {
+        updatedPlatformPostUrls[result.platform] = result.url
+        if (result.postId) {
+          updatedPlatformPostIds[result.platform] = result.postId
+        }
+      }
+    }
+
+    // Determine overall status
+    const successCount = Object.values(platform_statuses).filter((s: any) => s.status === 'success').length
+    let overallStatus = 'published'
+    if (successCount === 0) {
+      overallStatus = 'failed'
+    } else if (successCount < allPlatforms.length) {
+      overallStatus = 'partial'
+    }
+
+    // Update the scheduled post
+    await api.updateScheduledPost(post.id, {
+      platform_statuses,
+      platform_post_ids: updatedPlatformPostIds,
+      platform_post_urls: updatedPlatformPostUrls,
+      status: overallStatus,
+      published_at: successCount > 0 ? new Date().toISOString() : post.published_at
+    })
+
+    // Refresh the calendar
+    await fetchScheduledPosts()
+
+  } catch (error: any) {
+    console.error('Failed to update post after retry:', error)
+    toastMessage.value = 'Published but failed to update status'
+    toastType.value = 'warning'
+    showToast.value = true
+  }
+}
+
 const getMediaUrl = (url: string): string => {
   if (!url) return ''
 
@@ -1783,7 +2067,7 @@ onMounted(async () => {
 
 .table-header {
   display: grid;
-  grid-template-columns: 5fr 2fr 2fr 2fr 40px;
+  grid-template-columns: 4fr 1.5fr 2fr 2fr 2fr 40px;
   gap: var(--space-md);
   padding: var(--space-md) var(--space-lg);
   background: rgba(13, 13, 13, 0.8);
@@ -1812,7 +2096,7 @@ onMounted(async () => {
 
 .table-row {
   display: grid;
-  grid-template-columns: 5fr 2fr 2fr 2fr 40px;
+  grid-template-columns: 4fr 1.5fr 2fr 2fr 2fr 40px;
   gap: var(--space-md);
   padding: var(--space-lg);
   cursor: pointer;
@@ -1887,6 +2171,12 @@ onMounted(async () => {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+/* Post Type Column */
+.td-post-type {
+  display: flex;
+  align-items: center;
 }
 
 /* Platforms Column */
@@ -2085,6 +2375,12 @@ onMounted(async () => {
   gap: var(--space-sm);
 }
 
+.detail-post-types {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+}
+
 .platform-pill {
   display: inline-flex;
   align-items: center;
@@ -2145,6 +2441,29 @@ onMounted(async () => {
   color: var(--text-muted);
   font-style: italic;
   margin: 0;
+}
+
+.story-notice {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  margin-top: var(--space-md);
+  padding: var(--space-sm) var(--space-md);
+  background: rgba(245, 158, 11, 0.1);
+  border: 1px solid rgba(245, 158, 11, 0.2);
+  border-radius: var(--radius-md);
+}
+
+.notice-icon {
+  font-size: 18px;
+  color: #f59e0b;
+  flex-shrink: 0;
+}
+
+.notice-text {
+  font-size: var(--text-sm);
+  color: #d97706;
+  font-weight: 500;
 }
 
 .detail-error {
@@ -2237,9 +2556,12 @@ onMounted(async () => {
 }
 
 .post-time-mini {
-  font-size: 0.65rem;
-  margin-left: 0.25rem;
-  opacity: 0.8;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  flex: 1;
+  text-overflow: ellipsis;
+  overflow: hidden;
 }
 
 .day-view-holidays {
@@ -2528,52 +2850,108 @@ onMounted(async () => {
 }
 
 .post-indicator {
-  padding: 0.25rem 0.5rem;
-  background: rgba(15, 61, 46, 0.2);
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.25rem 0.375rem;
+  background: var(--bg-secondary);
   border-radius: 4px;
+  border: 1px solid var(--border-color);
   font-size: 0.75rem;
   color: var(--text-primary);
   white-space: nowrap;
   overflow: hidden;
-  text-overflow: ellipsis;
   max-width: 100%;
   box-sizing: border-box;
+  cursor: pointer;
+  transition: all var(--transition-fast);
 }
 
+.post-indicator:hover {
+  background: var(--bg-elevated);
+  border-color: var(--gold-primary);
+  box-shadow: 0 2px 4px rgba(15, 61, 46, 0.1);
+}
+
+.post-indicator-thumb {
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  border-radius: 3px;
+  overflow: hidden;
+  background: var(--bg-elevated);
+}
+
+.post-indicator-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.post-indicator-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  background: var(--bg-elevated);
+}
+
+/* Platform colors - keep subtle since we now show thumbnails */
 .post-indicator.platform-instagram {
-  background: rgba(225, 48, 108, 0.2);
-  border-left: 3px solid #e1306c;
+  border-left-width: 3px;
+  border-left-color: #e1306c;
 }
 
 .post-indicator.platform-facebook {
-  background: rgba(66, 103, 178, 0.2);
-  border-left: 3px solid #4267b2;
+  border-left-width: 3px;
+  border-left-color: #4267b2;
 }
 
 .post-indicator.platform-tiktok {
-  background: rgba(105, 105, 105, 0.2);
-  border-left: 3px solid #696969;
+  border-left-width: 3px;
+  border-left-color: #696969;
 }
 
 .post-indicator.platform-twitter {
-  background: rgba(29, 161, 242, 0.2);
-  border-left: 3px solid #1da1f2;
+  border-left-width: 3px;
+  border-left-color: #1da1f2;
 }
 
 /* Status-based coloring for post indicators (overrides platform colors) */
 .post-indicator.status-scheduled {
-  background: rgba(245, 158, 11, 0.15);
-  border-left: 3px solid #f59e0b;
+  border-left-width: 3px;
+  border-left-color: #f59e0b;
+  background: rgba(245, 158, 11, 0.08);
+}
+
+.post-indicator.status-scheduled:hover {
+  background: rgba(245, 158, 11, 0.12);
+  border-color: #f59e0b;
 }
 
 .post-indicator.status-published {
+  border-left-width: 3px;
+  border-left-color: #0f3d2e;
+  background: rgba(15, 61, 46, 0.08);
+}
+
+.post-indicator.status-published:hover {
   background: rgba(15, 61, 46, 0.12);
-  border-left: 3px solid #0f3d2e;
+  border-color: #0f3d2e;
 }
 
 .post-indicator.status-failed {
-  background: rgba(239, 68, 68, 0.15);
-  border-left: 3px solid #ef4444;
+  border-left-width: 3px;
+  border-left-color: #ef4444;
+  background: rgba(239, 68, 68, 0.08);
+}
+
+.post-indicator.status-failed:hover {
+  background: rgba(239, 68, 68, 0.12);
+  border-color: #ef4444;
 }
 
 .more-posts {
@@ -2981,10 +3359,23 @@ onMounted(async () => {
     display: none;
   }
 
-  .holiday-indicator,
-  .post-indicator {
+  .holiday-indicator {
     font-size: var(--text-mobile-xs);
     padding: 2px 4px;
+  }
+
+  .post-indicator {
+    gap: 0.25rem;
+    padding: 0.125rem 0.25rem;
+  }
+
+  .post-indicator-thumb {
+    width: 22px;
+    height: 22px;
+  }
+
+  .post-time-mini {
+    font-size: var(--text-mobile-xs);
   }
 
   .schedule-settings {
@@ -3194,15 +3585,19 @@ onMounted(async () => {
     border: none;
   }
 
-  /* Hide post indicator text on small calendar */
+  /* Compact post indicators on mobile */
   .post-indicator {
-    font-size: 8px;
-    padding: 1px 3px;
-    max-width: 100%;
+    gap: 0.25rem;
+    padding: 0.125rem;
+  }
+
+  .post-indicator-thumb {
+    width: 20px;
+    height: 20px;
   }
 
   .post-time-mini {
-    display: none;
+    font-size: 0.65rem;
   }
 
   .more-posts {
@@ -3340,10 +3735,19 @@ onMounted(async () => {
     font-size: var(--text-mobile-xs);
   }
 
-  /* Hide post text on smallest screens */
+  /* Very compact post indicators on smallest screens */
   .post-indicator {
-    font-size: 6px;
-    padding: 1px 2px;
+    padding: 0.125rem;
+    gap: 0.125rem;
+  }
+
+  .post-indicator-thumb {
+    width: 16px;
+    height: 16px;
+  }
+
+  .post-time-mini {
+    font-size: 0.6rem;
   }
 
   .more-posts {

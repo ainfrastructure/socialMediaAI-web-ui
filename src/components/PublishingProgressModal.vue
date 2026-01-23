@@ -11,6 +11,7 @@ interface PlatformProgress {
   status: 'pending' | 'publishing' | 'success' | 'error'
   url?: string
   error?: string
+  postType?: 'feed' | 'story' | 'reel' | 'carousel'
 }
 
 interface Props {
@@ -51,6 +52,18 @@ const hasFullFailure = computed(() => {
 
 const failedPlatforms = computed(() => {
   return props.platforms.filter(p => p.status === 'error')
+})
+
+// Get the primary post type from the first platform that has it defined
+const primaryPostType = computed(() => {
+  const platformWithType = props.platforms.find(p => p.postType)
+  return platformWithType?.postType
+})
+
+// Get the localized label for the post type
+const postTypeLabel = computed(() => {
+  if (!primaryPostType.value) return null
+  return t(`postType.${primaryPostType.value}`)
 })
 
 function capitalizeFirst(str: string): string {
@@ -102,7 +115,10 @@ function handleRetry() {
 
       <!-- Title -->
       <h3 class="publishing-title">
-        <span v-if="isPublishing">{{ t('publishing.title', 'Publishing Your Post...') }}</span>
+        <span v-if="isPublishing && postTypeLabel">
+          {{ t('publishing.titleWithType', { type: postTypeLabel }) }}
+        </span>
+        <span v-else-if="isPublishing">{{ t('publishing.title', 'Publishing Your Post...') }}</span>
         <span v-else-if="hasPartialFailure">{{ t('publishing.partialSuccessTitle', 'Partially Published') }}</span>
         <span v-else-if="successCount > 0">{{ t('publishing.successTitle', 'Congratulations!') }}</span>
         <span v-else>{{ t('publishing.errorTitle', 'Publishing Failed') }}</span>
@@ -110,11 +126,17 @@ function handleRetry() {
 
       <!-- Message -->
       <p class="publishing-message">
-        <span v-if="isPublishing">
+        <span v-if="isPublishing && postTypeLabel">
+          {{ t('publishing.messageWithType', { type: postTypeLabel.toLowerCase() }) }}
+        </span>
+        <span v-else-if="isPublishing">
           {{ t('publishing.message', 'Please wait while we publish your post to the selected platforms.') }}
         </span>
         <span v-else-if="hasPartialFailure">
           {{ t('errors.publishPartial', { success: successCount, total: platforms.length }) }}
+        </span>
+        <span v-else-if="successCount > 0 && postTypeLabel">
+          {{ t('publishing.successMessageWithType', { type: postTypeLabel.toLowerCase() }) }}
         </span>
         <span v-else-if="successCount > 0">
           {{ t('publishing.successMessage', 'Your post has been published successfully!') }}
@@ -138,7 +160,15 @@ function handleRetry() {
               :show-background="false"
             />
             <span class="platform-loading-button-text">
-              Publishing to {{ capitalizeFirst(platform.platform) }}...
+              <template v-if="platform.postType">
+                {{ t('publishing.publishingTypeTo', {
+                  type: t(`postType.${platform.postType}`).toLowerCase(),
+                  platform: capitalizeFirst(platform.platform)
+                }) }}
+              </template>
+              <template v-else>
+                {{ t('publishing.publishingTo', { platform: capitalizeFirst(platform.platform) }) }}
+              </template>
             </span>
             <MaterialIcon
               icon="sync"

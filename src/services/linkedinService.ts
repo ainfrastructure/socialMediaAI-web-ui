@@ -1,11 +1,16 @@
 import type { ApiResponse } from './apiBase'
 import { API_URL, getAuthHeader, getAuthHeaders } from './apiBase'
+import { fetchWithTimeout, TIMEOUTS } from '@/utils/fetchWithTimeout'
 
-class InstagramService {
+class LinkedInService {
   async initAuth(): Promise<ApiResponse<{ authUrl: string; state: string }>> {
-    const response = await fetch(`${API_URL}/api/instagram/auth/init`, {
-      headers: getAuthHeader(),
-    })
+    const response = await fetchWithTimeout(
+      `${API_URL}/api/linkedin/auth/init`,
+      {
+        headers: getAuthHeader(),
+      },
+      TIMEOUTS.AUTH
+    )
 
     if (!response.ok) {
       const text = await response.text()
@@ -25,12 +30,16 @@ class InstagramService {
   async completeAuth(
     code: string,
     state: string
-  ): Promise<ApiResponse<{ accounts: any[] }>> {
-    const response = await fetch(`${API_URL}/api/instagram/auth/callback`, {
-      method: 'POST',
-      headers: getAuthHeaders(),
-      body: JSON.stringify({ code, state }),
-    })
+  ): Promise<ApiResponse<{ pages: any[] }>> {
+    const response = await fetchWithTimeout(
+      `${API_URL}/api/linkedin/auth/callback`,
+      {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ code, state }),
+      },
+      TIMEOUTS.POST
+    )
 
     if (!response.ok) {
       const text = await response.text()
@@ -47,10 +56,14 @@ class InstagramService {
     return response.json()
   }
 
-  async getAccounts(): Promise<ApiResponse<{ accounts: any[] }>> {
-    const response = await fetch(`${API_URL}/api/instagram/accounts`, {
-      headers: getAuthHeader(),
-    })
+  async getPages(): Promise<ApiResponse<{ pages: any[] }>> {
+    const response = await fetchWithTimeout(
+      `${API_URL}/api/linkedin/pages`,
+      {
+        headers: getAuthHeader(),
+      },
+      TIMEOUTS.GET
+    )
 
     if (!response.ok) {
       const text = await response.text()
@@ -67,11 +80,15 @@ class InstagramService {
     return response.json()
   }
 
-  async disconnectAccount(accountId: string): Promise<ApiResponse> {
-    const response = await fetch(`${API_URL}/api/instagram/accounts/${accountId}`, {
-      method: 'DELETE',
-      headers: getAuthHeader(),
-    })
+  async disconnectPage(pageId: string): Promise<ApiResponse> {
+    const response = await fetchWithTimeout(
+      `${API_URL}/api/linkedin/pages/${pageId}`,
+      {
+        method: 'DELETE',
+        headers: getAuthHeader(),
+      },
+      TIMEOUTS.POST
+    )
 
     if (!response.ok) {
       const text = await response.text()
@@ -89,30 +106,24 @@ class InstagramService {
   }
 
   async post(
-    accountId: string,
-    caption: string,
-    imageUrl?: string,
-    videoUrl?: string,
-    contentType?: 'image' | 'video',
-    postType?: 'feed' | 'story' | 'reel' | 'carousel',
-    carouselItems?: Array<{ mediaUrl: string; contentType: 'image' | 'video' }>
+    pageId: string,
+    text: string,
+    mediaUrls?: string[],
+    mediaType?: 'image' | 'video'
   ): Promise<ApiResponse<{ postId: string; postUrl: string }>> {
-    const requestBody = {
-      caption,
-      imageUrl,
-      videoUrl,
-      contentType,
-      postType: postType || 'feed',
-      carouselItems // Keep camelCase - backend expects this format
-    }
-
-    console.log('🚨🚨🚨 [instagramService.post] REQUEST BODY:', JSON.stringify(requestBody, null, 2))
-
-    const response = await fetch(`${API_URL}/api/instagram/accounts/${accountId}/post`, {
-      method: 'POST',
-      headers: getAuthHeaders(),
-      body: JSON.stringify(requestBody),
-    })
+    const response = await fetchWithTimeout(
+      `${API_URL}/api/linkedin/pages/${pageId}/post`,
+      {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({
+          text,
+          mediaUrls: mediaUrls || [],
+          mediaType
+        }),
+      },
+      mediaType === 'video' ? TIMEOUTS.VIDEO_GEN : TIMEOUTS.POST
+    )
 
     if (!response.ok) {
       const text = await response.text()
@@ -130,4 +141,4 @@ class InstagramService {
   }
 }
 
-export const instagramService = new InstagramService()
+export const linkedinService = new LinkedInService()

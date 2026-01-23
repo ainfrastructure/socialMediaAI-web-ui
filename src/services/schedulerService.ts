@@ -201,6 +201,14 @@ class SchedulerService {
     platforms: string[]
     timezone?: string
     platform_post_urls?: Record<string, string>
+    platform_settings?: any
+    platform_results?: Array<{  // NEW
+      platform: string
+      success: boolean
+      url?: string
+      postId?: string
+      error?: string
+    }>
   }): Promise<ApiResponse<{ scheduled_post: any }>> {
     const response = await fetch(`${API_URL}/api/scheduler/published`, {
       method: 'POST',

@@ -47,6 +47,9 @@ export default {
     test: 'Test',
     or: 'eller',
     generatingContent: 'Genererer innhold...',
+    justNow: 'Akkurat nå',
+    minuteAgo: 'minutt siden',
+    minutesAgo: 'minutter siden',
     pagination: {
       previous: '← Forrige',
       next: 'Neste →',
@@ -65,11 +68,13 @@ export default {
     tiktok: 'TikTok',
     twitter: 'Twitter/X',
     linkedin: 'LinkedIn',
+    pinterest: 'Pinterest',
     facebookWithIcon: 'Facebook',
     instagramWithIcon: 'Instagram',
     tiktokWithIcon: 'TikTok',
     twitterWithIcon: 'Twitter/X',
-    linkedinWithIcon: 'LinkedIn'
+    linkedinWithIcon: 'LinkedIn',
+    pinterestWithIcon: 'Pinterest'
   },
 
   // Timezones
@@ -817,6 +822,7 @@ export default {
     successfullyConnectedInstagram: 'Koblet til {count} Instagram-konto(er)!',
     successfullyConnectedTikTok: 'Koblet til {count} TikTok-konto(er)!',
     successfullyConnectedTwitter: 'Koblet til {count} Twitter-konto(er)!',
+    successfullyConnectedLinkedIn: 'Koblet til {count} LinkedIn-side(r)!',
     successfullyDisconnected: 'Frakoblet "{name}"',
     successfullyDisconnectedAll: 'Frakoblet {count} kontoer',
     confirmDisconnect: 'Er du sikker på at du vil frakoble "{name}"?',
@@ -938,7 +944,27 @@ export default {
     publishError: 'Kunne ikke publisere til Facebook',
     noFacebookPage: 'Ingen Facebook-side tilkoblet',
     facebookReconnectRequired: 'Facebook-tilkoblingen din har utløpt. Koble til på nytt for å fortsette.',
-    noPlatformSelected: 'Vennligst velg minst én plattform'
+    noPlatformSelected: 'Vennligst velg minst én plattform',
+    carouselMode: 'Karusell-modus',
+    singleImageMode: 'Enkelt bilde',
+    selectCarouselImages: 'Velg 2-10 bilder',
+    imageCount: '{current} av {max} bilder',
+    minImagesRequired: 'Velg minst 2 bilder for karusell',
+    maxImagesExceeded: 'Maksimalt 10 bilder tillatt',
+    reorderHint: 'Dra bilder for å endre rekkefølge',
+    uploadImages: 'Last opp bilder',
+    dropOrClick: 'Slipp bilder her eller klikk for å velge',
+    removeImage: 'Fjern bilde',
+    fromLibrary: 'Fra bibliotek',
+    uploadNew: 'Last opp ny',
+    selectFromLibrary: 'Velg fra bibliotek',
+    librarySubtitle: 'Velg 2-10 bilder eller videoer fra dine lagrede innlegg',
+    selectedOrder: 'Valgt rekkefølge (dra for å endre)',
+    noSavedMedia: 'Ingen lagrede innlegg funnet',
+    createPostsFirst: 'Opprett noen innlegg først for å bruke dem i karuseller',
+    selectMoreItems: 'Velg {count} til for å fortsette',
+    uploadInstructions: 'Last opp 2-10 nye bilder for karusellen din',
+    uploadFeatureComingSoon: 'Direkte opplasting kommer snart. Bruk bibliotek-fanen for å velge fra eksisterende innlegg.'
   },
 
   // Restaurant Selector Modal
@@ -1260,7 +1286,8 @@ export default {
   pickPostModal: {
     showAllRestaurants: 'Vis alle restauranter',
     showCurrentRestaurant: 'Vis kun valgt restaurant',
-    allRestaurantsLabel: 'Alle restauranter'
+    allRestaurantsLabel: 'Alle restauranter',
+    videoLabel: 'VIDEO'
   },
 
   // Account Selector
@@ -1275,7 +1302,21 @@ export default {
     connectAccount: 'Koble til konto',
     multipleSelected: '{count} kontoer valgt',
     accountId: 'Konto-ID',
-    singleAccountInfo: 'Dette er din eneste tilkoblede konto. Den vil bli brukt til å publisere.'
+    singleAccountInfo: 'Dette er din eneste tilkoblede konto. Den vil bli brukt til å publisere.',
+    postTypeLabel: 'Innleggstype',
+    reelsRequireVideo: 'Reels krever videoinnhold',
+    feedShort: 'Hoved-feed',
+    feedDescription: 'Vises i følgeres feeder og på profilen din. Permanent innhold med fulle engasjementsfunksjoner.',
+    storyShort: '24t midlertidig',
+    storyDescription: 'Forsvinner etter 24 timer. Fullskjerm vertikalt format med interaktive klistremerker og avstemninger.',
+    reelShort: 'Kort video',
+    reelDescription: 'Kort videoinnhold (15-90s). Optimalisert for oppdagelse og engasjement. Krever videoinnhold.',
+    carouselShort: '2-10 elementer',
+    carouselDescription: 'Klikk for å velge 2-10 bilder eller videoer i sveipbart format',
+    carouselRequiresImages: 'Velg 2-10 bilder for å aktivere karusell',
+    carouselItemsSelected: '{count} elementer',
+    carouselModalTitle: 'Velg karusellelementer',
+    carouselModalSubtitle: 'Velg 2-10 elementer og dra for å endre rekkefølge'
   },
 
   // Unified Schedule Post
@@ -1318,13 +1359,32 @@ export default {
   // Publishing Progress Modal
   publishing: {
     title: 'Publiserer innlegget ditt...',
+    titleWithType: 'Publiserer {type}...',
     message: 'Vennligst vent mens vi publiserer innlegget ditt til de valgte plattformene.',
+    messageWithType: 'Vennligst vent mens vi publiserer {type} til de valgte plattformene.',
+    publishingTo: 'Publiserer til {platform}...',
+    publishingTypeTo: 'Publiserer {type} til {platform}...',
     successTitle: 'Gratulerer!',
     successMessage: 'Innlegget ditt har blitt publisert!',
+    successMessageWithType: '{type} har blitt publisert!',
     partialSuccessTitle: 'Delvis publisert',
     errorTitle: 'Publisering mislyktes',
     errorMessage: 'Kunne ikke publisere til noen plattform.',
     createAnother: 'Lag et nytt innlegg'
+  },
+
+  // Carousel Content
+  carousel: {
+    generateContentTitle: 'Tilpass karusellinnhold',
+    generating: 'Genererer innhold...',
+    selectedImages: 'Valgte bilder',
+    caption: 'Bildetekst',
+    captionPlaceholder: 'Skriv bildeteksten for karusellen...',
+    hashtags: 'Hashtags (en per linje)',
+    hashtagsPlaceholder: '#mat\n#restaurant\n#deilig',
+    hashtagsHint: 'Skriv en hashtag per linje',
+    regenerate: 'Generer innhold på nytt',
+    useContent: 'Bruk dette innholdet'
   },
 
   // Sidebar Navigation
@@ -1856,5 +1916,22 @@ export default {
     cannotUsOwnCode: 'Du kan ikke bruke din egen vervekode',
     codeNotFound: 'Vervekode ikke funnet',
     codeInactive: 'Denne vervekoden er ikke lenger aktiv'
+  },
+
+  // Post Type Selection
+  postType: {
+    label: 'Innleggstype',
+    selectType: 'Innleggstype',
+    feed: 'Vanlig innlegg',
+    feedDesc: 'Vanlig innlegg på tidslinje/profil',
+    story: 'Story',
+    storyDesc: '24-timers story (bilde eller video)',
+    storyExpiryNotice: 'Stories utløper etter 24 timer og har muligens ikke permanente lenker',
+    reel: 'Reel',
+    reelDesc: 'Kortformat innhold (bilde eller video)',
+    carousel: 'Karusell',
+    carouselDesc: '2-10 bilder/videoer',
+    notSet: 'Ikke angitt',
+    multiple: '{count} typer'
   }
 }

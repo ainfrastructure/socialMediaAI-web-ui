@@ -55,15 +55,28 @@ class FacebookService {
     message: string,
     imageUrl?: string,
     videoUrl?: string,
-    contentType?: 'image' | 'video'
+    contentType?: 'image' | 'video',
+    postType?: 'feed' | 'story' | 'reel' | 'carousel',
+    carouselItems?: Array<{ mediaUrl: string; contentType: 'image' | 'video' }>
   ): Promise<ApiResponse<{ postId: string; postUrl: string }>> {
-    debugLog('[FacebookService] Posting to Facebook:', { pageId, messageLength: message.length, hasImage: !!imageUrl, hasVideo: !!videoUrl, contentType, apiUrl: `${API_URL}/api/facebook/pages/${pageId}/post` })
+    debugLog('[FacebookService] Posting to Facebook:', { pageId, messageLength: message.length, hasImage: !!imageUrl, hasVideo: !!videoUrl, contentType, postType, carouselItems: carouselItems?.length, apiUrl: `${API_URL}/api/facebook/pages/${pageId}/post` })
+
+    const requestBody = {
+      message,
+      imageUrl,
+      videoUrl,
+      contentType,
+      postType: postType || 'feed',
+      carouselItems // Keep camelCase - backend expects this format
+    }
+
+    console.log('🚨🚨🚨 [facebookService.post] REQUEST BODY:', JSON.stringify(requestBody, null, 2))
 
     try {
       const response = await fetch(`${API_URL}/api/facebook/pages/${pageId}/post`, {
         method: 'POST',
         headers: getAuthHeaders(),
-        body: JSON.stringify({ message, imageUrl, videoUrl, contentType }),
+        body: JSON.stringify(requestBody),
       })
 
       debugLog('[FacebookService] Response status:', response.status, response.statusText)

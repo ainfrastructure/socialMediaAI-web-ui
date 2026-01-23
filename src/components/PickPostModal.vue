@@ -65,10 +65,13 @@
                       class="thumbnail"
                     />
 
-                    <!-- Type Badge - Show video icon if has video_url -->
-                    <span :class="['type-badge', post.video_url ? 'video' : 'image']">
-                      <span class="material-symbols-outlined">{{ post.video_url ? 'videocam' : 'photo_camera' }}</span>
-                    </span>
+                    <!-- Video Overlay - Large centered play button for videos -->
+                    <div v-if="post.video_url" class="video-overlay">
+                      <div class="video-play-button">
+                        <span class="material-symbols-outlined">play_arrow</span>
+                      </div>
+                      <div class="video-label">{{ $t('pickPostModal.videoLabel') }}</div>
+                    </div>
 
                     <!-- Platform Badge -->
                     <span v-if="post.platform" :class="['platform-badge', `platform-${post.platform}`]">
@@ -118,92 +121,17 @@
 
           <!-- STEP 2: Set Schedule -->
           <div v-if="currentStep === 2" class="wizard-step">
-            <!-- Selected Post Preview -->
-            <div v-if="selectedPost" class="selected-post-preview">
-              <div class="preview-header">
-                <h4 class="preview-title">Selected Post:</h4>
-                <BaseButton
-                  v-if="!isEditing"
-                  variant="secondary"
-                  size="small"
-                  @click="toggleEditMode"
-                >
-                  edit Edit Content
-                </BaseButton>
-              </div>
-              <div class="preview-card">
-                <!-- Show video if video_url exists, otherwise image -->
-                <video
-                  v-if="selectedPost.video_url"
-                  :src="selectedPost.video_url"
-                  controls
-                  class="preview-thumbnail"
-                ></video>
-                <img
-                  v-else-if="selectedPost.media_url"
-                  :src="selectedPost.media_url"
-                  alt="Selected"
-                  class="preview-thumbnail"
-                />
-                <p v-if="!isEditing" class="preview-text">
-                  {{ truncateText(selectedPost.post_text, 100) }}
-                </p>
-              </div>
-
-              <!-- Edit Section -->
-              <div v-if="isEditing" class="edit-section">
-                <div class="edit-field">
-                  <label class="edit-label">Post Text</label>
-                  <textarea
-                    v-model="editedPostText"
-                    class="edit-textarea"
-                    rows="4"
-                    placeholder="Enter post text..."
-                  ></textarea>
-                </div>
-
-                <div class="edit-field">
-                  <label class="edit-label">Hashtags</label>
-                  <div class="hashtag-editor">
-                    <div class="hashtag-tags">
-                      <span
-                        v-for="(tag, idx) in editedHashtags"
-                        :key="idx"
-                        class="hashtag-tag"
-                      >
-                        {{ tag }}
-                        <button @click="removeHashtag(idx)" class="remove-tag">&times;</button>
-                      </span>
-                    </div>
-                    <input
-                      v-model="newHashtag"
-                      @keydown.enter.prevent="addHashtag"
-                      @keydown.,.prevent="addHashtag"
-                      placeholder="Add hashtag and press Enter..."
-                      class="hashtag-input"
-                    />
-                  </div>
-                </div>
-
-                <div class="edit-actions">
-                  <BaseButton
-                    variant="ghost"
-                    size="small"
-                    @click="cancelEdits"
-                  >
-                    Cancel
-                  </BaseButton>
-                  <BaseButton
-                    variant="primary"
-                    size="small"
-                    :disabled="savingEdits"
-                    @click="saveEdits"
-                  >
-                    {{ savingEdits ? 'Saving...' : 'Save Changes' }}
-                  </BaseButton>
-                </div>
-              </div>
-            </div>
+            <!-- Use the new reusable PostPreviewCard component -->
+            <PostPreviewCard
+              v-if="selectedPost"
+              :image-url="selectedPost.media_url"
+              :video-url="selectedPost.video_url"
+              :post-text="selectedPost.post_text"
+              :hashtags="selectedPost.hashtags || []"
+              :editable="true"
+              @update:post-text="handlePostTextUpdate"
+              @update:hashtags="handleHashtagsUpdate"
+            />
 
             <!-- Unified Schedule Component -->
             <UnifiedSchedulePost
@@ -211,6 +139,9 @@
               :lock-date="!!selectedDate"
               :force-schedule-mode="true"
               :show-cancel-button="true"
+              :image-url="selectedPost?.media_url"
+              :video-url="selectedPost?.video_url"
+              :carousel-items="selectedPost?.carousel_items"
               @publish="handleSchedulePublish"
               @cancel="goBackToSelection"
             />
@@ -221,10 +152,12 @@
 <script setup lang="ts">
 import { ref, watch, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
+import type { AccountSelection } from '@/types/scheduling'
 import BaseModal from './BaseModal.vue'
 import BaseButton from './BaseButton.vue'
 import BasePagination from './BasePagination.vue'
 import UnifiedSchedulePost from './UnifiedSchedulePost.vue'
+import PostPreviewCard from './PostPreviewCard.vue'
 import { api } from '../services/api'
 import { useFacebookStore } from '../stores/facebook'
 import { useInstagramStore } from '../stores/instagram'
@@ -350,8 +283,10 @@ const handleSchedulePublish = async (data: {
   scheduledTime?: string
   timezone?: string
   accountSelections?: {
-    facebook?: string[]
-    instagram?: string[]
+    facebook?: AccountSelection[]
+    instagram?: AccountSelection[]
+    tiktok?: string[]
+    twitter?: string[]
   }
 }) => {
   const post = selectedPost.value
@@ -455,6 +390,51 @@ const saveEdits = async () => {
     alert(error.message || 'Failed to save changes')
   } finally {
     savingEdits.value = false
+  }
+}
+
+// Handlers for PostPreviewCard updates
+const handlePostTextUpdate = async (newText: string) => {
+  if (!selectedPost.value) return
+
+  try {
+    const response = await api.updateFavorite(selectedPost.value.id, {
+      post_text: newText,
+      hashtags: selectedPost.value.hashtags || [],
+    })
+
+    if (response.success) {
+      selectedPost.value = {
+        ...selectedPost.value,
+        post_text: newText,
+      }
+    } else {
+      alert(response.error || 'Failed to save changes')
+    }
+  } catch (error: any) {
+    alert(error.message || 'Failed to save changes')
+  }
+}
+
+const handleHashtagsUpdate = async (newHashtags: string[]) => {
+  if (!selectedPost.value) return
+
+  try {
+    const response = await api.updateFavorite(selectedPost.value.id, {
+      post_text: selectedPost.value.post_text || '',
+      hashtags: newHashtags,
+    })
+
+    if (response.success) {
+      selectedPost.value = {
+        ...selectedPost.value,
+        hashtags: newHashtags,
+      }
+    } else {
+      alert(response.error || 'Failed to save changes')
+    }
+  } catch (error: any) {
+    alert(error.message || 'Failed to save changes')
   }
 }
 
@@ -1016,32 +996,60 @@ const handlePageChange = (page: number) => {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  transition: all 0.3s ease;
 }
 
-.type-badge {
+/* Video Overlay - Large centered play button */
+.video-overlay {
   position: absolute;
-  top: 0.5rem;
-  left: 0.5rem;
-  padding: 0.375rem;
-  background: rgba(15, 61, 46, 0.4);
-  backdrop-filter: blur(10px);
-  border-radius: 6px;
-  color: var(--text-primary);
+  inset: 0;
+  background: rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(2px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-sm);
+  transition: all 0.3s ease;
+}
+
+.post-item:hover .video-overlay {
+  background: rgba(0, 0, 0, 0.4);
+}
+
+.video-play-button {
+  width: 64px;
+  height: 64px;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  transition: all 0.3s ease;
 }
 
-.type-badge .material-symbols-outlined {
-  font-size: 18px;
+.post-item:hover .video-play-button {
+  transform: scale(1.1);
+  background: rgba(255, 255, 255, 1);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
 }
 
-.type-badge.image {
-  border-left: 3px solid #4CAF50;
+.video-play-button .material-symbols-outlined {
+  font-size: 40px;
+  color: #2196F3;
+  margin-left: 4px; /* Slight offset for visual centering */
 }
 
-.type-badge.video {
-  border-left: 3px solid #2196F3;
+.video-label {
+  font-size: var(--text-xs);
+  font-weight: var(--font-bold);
+  color: #1a1a1a;
+  background: rgba(255, 255, 255, 0.95);
+  padding: 0.25rem 0.75rem;
+  border-radius: var(--radius-full);
+  letter-spacing: 0.5px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 .platform-badge {
@@ -1113,6 +1121,7 @@ const handlePageChange = (page: number) => {
   color: var(--text-on-gold);
   box-shadow: var(--glow-gold-md);
   animation: scaleIn 0.3s ease;
+  z-index: 2;
 }
 
 .selection-check .material-symbols-outlined {
@@ -1154,7 +1163,7 @@ const handlePageChange = (page: number) => {
   font-family: var(--font-heading);
   font-size: var(--text-lg);
   color: var(--text-primary);
-  margin: 0 0 var(--space-md) 0;
+  margin: 0;
 }
 
 .preview-card {
@@ -1179,142 +1188,7 @@ const handlePageChange = (page: number) => {
   margin: 0;
 }
 
-/* Preview Header */
-.preview-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: var(--space-md);
-}
-
-.preview-header .preview-title {
-  margin: 0;
-}
-
-/* Edit Section Styles */
-.edit-section {
-  margin-top: var(--space-lg);
-  padding: var(--space-lg);
-  background: rgba(15, 61, 46, 0.15);
-  border-radius: var(--radius-lg);
-  border: 1px solid rgba(15, 61, 46, 0.2);
-  animation: fadeIn 0.3s ease;
-}
-
-.edit-field {
-  margin-bottom: var(--space-lg);
-}
-
-.edit-field:last-of-type {
-  margin-bottom: 0;
-}
-
-.edit-label {
-  display: block;
-  font-size: var(--text-sm);
-  font-weight: 600;
-  color: var(--text-primary);
-  margin-bottom: var(--space-sm);
-}
-
-.edit-textarea,
-.edit-input {
-  width: 100%;
-  padding: var(--space-md);
-  background: rgba(15, 61, 46, 0.2);
-  border: 1px solid rgba(15, 61, 46, 0.3);
-  border-radius: var(--radius-md);
-  color: var(--text-primary);
-  font-family: var(--font-body);
-  font-size: var(--text-base);
-  transition: all 0.2s ease;
-  resize: vertical;
-}
-
-.edit-textarea:focus,
-.edit-input:focus {
-  outline: none;
-  border-color: var(--gold-primary);
-  background: rgba(15, 61, 46, 0.25);
-}
-
-/* Hashtag Editor */
-.hashtag-editor {
-  background: rgba(15, 61, 46, 0.2);
-  border: 1px solid rgba(15, 61, 46, 0.3);
-  border-radius: var(--radius-md);
-  padding: var(--space-md);
-  transition: all 0.2s ease;
-}
-
-.hashtag-editor:focus-within {
-  border-color: var(--gold-primary);
-  background: rgba(15, 61, 46, 0.25);
-}
-
-.hashtag-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-sm);
-  margin-bottom: var(--space-sm);
-}
-
-.hashtag-tag {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-xs);
-  padding: var(--space-xs) var(--space-sm);
-  background: rgba(212, 175, 55, 0.15);
-  border: 1px solid rgba(212, 175, 55, 0.3);
-  border-radius: var(--radius-full);
-  color: var(--gold-primary);
-  font-size: var(--text-sm);
-  font-weight: var(--font-medium);
-}
-
-.remove-tag {
-  background: none;
-  border: none;
-  color: var(--gold-primary);
-  font-size: var(--text-base);
-  cursor: pointer;
-  padding: 0;
-  line-height: 1;
-  opacity: 0.7;
-  transition: opacity 0.2s ease;
-}
-
-.remove-tag:hover {
-  opacity: 1;
-}
-
-.hashtag-input {
-  width: 100%;
-  background: transparent;
-  border: none;
-  color: var(--text-primary);
-  font-family: var(--font-body);
-  font-size: var(--text-base);
-  padding: var(--space-xs) 0;
-}
-
-.hashtag-input:focus {
-  outline: none;
-}
-
-.hashtag-input::placeholder {
-  color: var(--text-muted);
-}
-
-/* Edit Actions */
-.edit-actions {
-  display: flex;
-  gap: var(--space-md);
-  justify-content: flex-end;
-  margin-top: var(--space-lg);
-  padding-top: var(--space-md);
-  border-top: 1px solid rgba(212, 175, 55, 0.1);
-}
+/* Preview styles now in PostPreviewCard.vue component */
 
 /* Responsive */
 @media (max-width: 768px) {
