@@ -45,8 +45,8 @@ function closeModal() {
   align-items: center;
   gap: var(--space-sm);
 
-  background: var(--primary-color);
-  color: white;
+  background: var(--gold-primary);
+  color: var(--text-on-gold);
   border: none;
   border-radius: var(--radius-full);
   padding: var(--space-md) var(--space-lg);
@@ -66,7 +66,7 @@ function closeModal() {
   transform: translateY(-2px);
   box-shadow: 0 15px 30px -5px rgba(0, 0, 0, 0.4),
               0 6px 8px -2px rgba(0, 0, 0, 0.3);
-  background: var(--primary-hover);
+  background: var(--gold-light);
 }
 
 .floating-feedback-button:active {
