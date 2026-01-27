@@ -52,7 +52,10 @@
       "Bash(do sips -s formatOptions 70 \"$f\" --out \"$f\" done)",
       "Bash(node:*)",
       "Bash(kill:*)",
-      "Bash(./verify-init-sql.sh:*)"
+      "Bash(./verify-init-sql.sh:*)",
+      "Bash([ -f .env ])",
+      "Bash(git push:*)",
+      "Bash(git commit:*)"
     ],
     "deny": [],
     "ask": []

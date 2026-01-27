@@ -1,0 +1,48 @@
+{
+  "ai": {
+    "provider": "anthropic",
+    "model": "claude-sonnet-4.5",
+    "timeout": 45,
+    "apiCallsPerHour": 50,
+    "maxTokensPerCall": 8192
+  },
+  "project": {
+    "name": "social-chef-native",
+    "rootDir": ".",
+    "promptFile": ".ralph/PROMPT.md",
+    "taskFile": ".ralph/fix_plan.md",
+    "specsDir": ".ralph/specs"
+  },
+  "quality": {
+    "commands": [
+      "npm run type-check",
+      "npm run lint",
+      "npm run build"
+    ],
+    "requiredToPass": ["type-check", "build"],
+    "failOnError": true
+  },
+  "git": {
+    "autoCommit": true,
+    "branchPrefix": "ralph",
+    "commitMessageTemplate": "ralph: {task_summary}",
+    "pushAfterCommit": true
+  },
+  "monitoring": {
+    "logFile": ".ralph/logs/ralph.log",
+    "verboseLogging": true,
+    "webhookUrl": null
+  },
+  "exitConditions": {
+    "maxIterations": 100,
+    "requireExplicitSignal": true,
+    "circuitBreaker": {
+      "noChangesThreshold": 3,
+      "errorRepeatThreshold": 5
+    }
+  },
+  "costControl": {
+    "maxDailyCost": 40,
+    "estimatedCostPerCall": 0.03
+  }
+}

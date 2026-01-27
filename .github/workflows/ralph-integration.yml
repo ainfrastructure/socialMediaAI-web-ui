@@ -1,0 +1,42 @@
+name: Ralf Loop - GitHub Integration
+
+on:
+  issues:
+    types: [opened, labeled]
+  issue_comment:
+    types: [created]
+
+jobs:
+  sync-issue-to-ralph:
+    runs-on: ubuntu-latest
+    if: contains(github.event.issue.labels.*.name, 'ralph-task')
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Add issue to fix_plan.md
+        run: |
+          ISSUE_TITLE="${{ github.event.issue.title }}"
+          ISSUE_NUMBER="${{ github.event.issue.number }}"
+
+          echo "- [ ] [GH-${ISSUE_NUMBER}] ${ISSUE_TITLE}" >> .ralph/fix_plan.md
+
+      - name: Commit changes
+        run: |
+          git config user.name "Ralf Bot"
+          git config user.email "ralf@social-chef.app"
+          git add .ralph/fix_plan.md
+          git commit -m "Add task from issue #${{ github.event.issue.number }}"
+          git push
+
+      - name: Comment on issue
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: '✅ Task added to Ralf Loop queue. The autonomous agent will process this overnight.'
+            })

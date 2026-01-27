@@ -47,3 +47,7 @@ AuthKey_*.p8
 # Test artifacts
 test-results/
 playwright-report/
+
+# Ralf Loop
+.ralph/logs/
+*.ralph.log
