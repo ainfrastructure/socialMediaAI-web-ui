@@ -1,1 +1,1 @@
-npm run type-check && npm run lint
+npm run type-check && npm run lint:oxlint && npm run lint:eslint -- --max-warnings=999

@@ -1384,7 +1384,12 @@ export default {
     hashtagsPlaceholder: '#mat\n#restaurant\n#deilig',
     hashtagsHint: 'Skriv en hashtag per linje',
     regenerate: 'Generer innhold på nytt',
-    useContent: 'Bruk dette innholdet'
+    useContent: 'Bruk dette innholdet',
+    wizardTitle: 'Lag karusellinnlegg',
+    step1Title: 'Velg bilder',
+    step2Title: 'Tilpass innhold',
+    nextStep: 'Neste',
+    previousStep: 'Tilbake'
   },
 
   // Sidebar Navigation

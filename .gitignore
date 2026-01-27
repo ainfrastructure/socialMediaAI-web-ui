@@ -43,3 +43,7 @@ AuthKey_*.p8
 .env.local
 .env.production
 .env.staging
+
+# Ralf Loop
+.ralph/logs/
+*.ralph.log

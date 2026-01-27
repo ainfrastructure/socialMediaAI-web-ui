@@ -1414,7 +1414,12 @@ export default {
     hashtagsPlaceholder: '#food\n#restaurant\n#delicious',
     hashtagsHint: 'Enter one hashtag per line',
     regenerate: 'Regenerate Content',
-    useContent: 'Use This Content'
+    useContent: 'Use This Content',
+    wizardTitle: 'Create Carousel Post',
+    step1Title: 'Select Images',
+    step2Title: 'Customize Content',
+    nextStep: 'Next',
+    previousStep: 'Back'
   },
 
   // Sidebar Navigation
