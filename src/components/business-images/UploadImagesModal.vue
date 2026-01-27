@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { restaurantService } from '@/services/restaurantService'
-import type { SavedRestaurant } from '@/services/restaurantService'
-import type { FolderNode } from '@/composables/useRestaurantImages'
+import { businessService } from '@/services/businessService'
+import type { SavedBusiness } from '@/services/businessService'
+import type { FolderNode } from '@/composables/useBusinessImages'
 import BaseModal from '../BaseModal.vue'
 import BaseButton from '../BaseButton.vue'
 import BaseInput from '../BaseInput.vue'
@@ -11,7 +11,7 @@ import BaseAlert from '../BaseAlert.vue'
 
 interface Props {
   modelValue: boolean
-  restaurant: SavedRestaurant
+  business: SavedBusiness
   folderStructure: FolderNode | null
   currentFolderPath?: string
 }
@@ -81,7 +81,7 @@ function handleFileSelect(event: Event) {
 
     // Check file limit
     if (files.length > MAX_FILES) {
-      uploadError.value = t('restaurantManagement.errors.tooManyFiles', { max: MAX_FILES, count: files.length })
+      uploadError.value = t('businessManagement.errors.tooManyFiles', { max: MAX_FILES, count: files.length })
       selectedFiles.value = []
       return
     }
@@ -111,7 +111,7 @@ function handleDrop(event: DragEvent) {
 
     // Check file limit
     if (files.length > MAX_FILES) {
-      uploadError.value = t('restaurantManagement.errors.tooManyFiles', { max: MAX_FILES, count: files.length })
+      uploadError.value = t('businessManagement.errors.tooManyFiles', { max: MAX_FILES, count: files.length })
       selectedFiles.value = []
       return
     }
@@ -136,12 +136,12 @@ function validateFolderName(name: string): boolean {
 // Create new folder
 function handleCreateFolder() {
   if (!newFolderName.value.trim()) {
-    uploadError.value = t('restaurantManagement.errors.invalidFolderName')
+    uploadError.value = t('businessManagement.errors.invalidFolderName')
     return
   }
 
   if (!validateFolderName(newFolderName.value)) {
-    uploadError.value = t('restaurantManagement.errors.invalidFolderName')
+    uploadError.value = t('businessManagement.errors.invalidFolderName')
     return
   }
 
@@ -152,7 +152,7 @@ function handleCreateFolder() {
   )
 
   if (exists) {
-    uploadError.value = t('restaurantManagement.errors.folderExists')
+    uploadError.value = t('businessManagement.errors.folderExists')
     return
   }
 
@@ -162,18 +162,18 @@ function handleCreateFolder() {
   newFolderName.value = ''
   isCreatingFolder.value = false
   uploadError.value = ''
-  uploadSuccess.value = t('restaurantManagement.newFolderReady', { name: folderName })
+  uploadSuccess.value = t('businessManagement.newFolderReady', { name: folderName })
 }
 
 // Upload images
 async function handleUpload() {
   if (selectedFiles.value.length === 0) {
-    uploadError.value = t('restaurantManagement.errors.noFilesSelected')
+    uploadError.value = t('businessManagement.errors.noFilesSelected')
     return
   }
 
   if (!targetFolder.value || targetFolder.value === '/') {
-    uploadError.value = t('restaurantManagement.errors.selectFolderRequired')
+    uploadError.value = t('businessManagement.errors.selectFolderRequired')
     return
   }
 
@@ -182,16 +182,16 @@ async function handleUpload() {
   uploadSuccess.value = ''
 
   try {
-    const restaurantId = props.restaurant.place_id || props.restaurant.id
+    const businessId = props.business.place_id || props.business.id
     const category = targetFolder.value
 
-    await restaurantService.uploadRestaurantImages(
-      restaurantId,
+    await businessService.uploadBusinessImages(
+      businessId,
       selectedFiles.value,
       category
     )
 
-    uploadSuccess.value = t('restaurantManagement.uploadSuccess', {
+    uploadSuccess.value = t('businessManagement.uploadSuccess', {
       count: selectedFiles.value.length
     })
 
@@ -204,7 +204,7 @@ async function handleUpload() {
     }, 1500)
   } catch (err: any) {
     console.error('Upload failed:', err)
-    uploadError.value = err.message || t('restaurantManagement.errors.uploadFailed')
+    uploadError.value = err.message || t('businessManagement.errors.uploadFailed')
   } finally {
     uploading.value = false
   }
@@ -224,7 +224,7 @@ function handleClose() {
 
 <template>
   <BaseModal :model-value="modelValue" @update:model-value="handleClose" size="lg">
-    <template #title>{{ $t('restaurantManagement.uploadImages') }}</template>
+    <template #title>{{ $t('businessManagement.uploadImages') }}</template>
 
     <div class="upload-modal-content">
       <BaseAlert v-if="uploadError" type="error" class="upload-alert">
@@ -238,12 +238,12 @@ function handleClose() {
       <!-- Folder Selection -->
       <div class="folder-selection-section">
         <label class="section-label">
-          {{ $t('restaurantManagement.selectFolder') }}
+          {{ $t('businessManagement.selectFolder') }}
         </label>
 
         <div class="folder-select-row">
           <select v-model="targetFolder" class="folder-select" :disabled="uploading">
-            <option value="" disabled>{{ $t('restaurantManagement.chooseFolderPlaceholder') }}</option>
+            <option value="" disabled>{{ $t('businessManagement.chooseFolderPlaceholder') }}</option>
             <option v-for="option in folderOptions" :key="option.path" :value="option.path">
               {{ option.label }}
             </option>
@@ -256,7 +256,7 @@ function handleClose() {
             size="small"
             :disabled="uploading"
           >
-            {{ $t('restaurantManagement.createNewFolder') }}
+            {{ $t('businessManagement.createNewFolder') }}
           </BaseButton>
         </div>
 
@@ -264,8 +264,8 @@ function handleClose() {
         <div v-if="isCreatingFolder" class="create-folder-row">
           <BaseInput
             v-model="newFolderName"
-            :placeholder="$t('restaurantManagement.enterFolderName')"
-            :hint="$t('restaurantManagement.errors.invalidFolderName')"
+            :placeholder="$t('businessManagement.enterFolderName')"
+            :hint="$t('businessManagement.errors.invalidFolderName')"
             @keyup.enter="handleCreateFolder"
           />
           <div class="create-folder-actions">
@@ -303,16 +303,16 @@ function handleClose() {
               <circle cx="17" cy="8" r="2"/>
             </svg>
           </div>
-          <p class="drop-zone-text">{{ $t('restaurantManagement.dragDropHint') }}</p>
+          <p class="drop-zone-text">{{ $t('businessManagement.dragDropHint') }}</p>
           <p class="drop-zone-subtext">{{ $t('common.or') }} <span class="browse-link">browse files</span></p>
-          <p class="drop-zone-limit">{{ $t('restaurantManagement.maxFilesHint', { max: MAX_FILES }) }}</p>
+          <p class="drop-zone-limit">{{ $t('businessManagement.maxFilesHint', { max: MAX_FILES }) }}</p>
         </label>
       </div>
 
       <!-- Selected Files List -->
       <div v-if="selectedFiles.length > 0" class="selected-files-section">
         <h4 class="section-label">
-          {{ $t('restaurantManagement.selectedCount', { count: selectedFiles.length }) }}
+          {{ $t('businessManagement.selectedCount', { count: selectedFiles.length }) }}
         </h4>
 
         <div class="selected-files-list">
@@ -343,7 +343,7 @@ function handleClose() {
           variant="primary"
           :disabled="selectedFiles.length === 0 || uploading || !targetFolder || targetFolder === '/'"
         >
-          {{ uploading ? $t('restaurantManagement.uploadingImages') : $t('common.upload') }}
+          {{ uploading ? $t('businessManagement.uploadingImages') : $t('common.upload') }}
         </BaseButton>
       </div>
     </div>

@@ -2,7 +2,7 @@
   <BaseModal
     :model-value="modelValue"
     size="xl"
-    title="Select Restaurants"
+    title="Select Businesses"
     :show-close-button="true"
     @update:model-value="(val: boolean) => !val && close()"
     @close="close"
@@ -10,7 +10,7 @@
     <template #header>
       <div class="modal-header-content">
         <div class="header-icon">🏪</div>
-        <h2 class="modal-title">Select Restaurants</h2>
+        <h2 class="modal-title">Select Businesses</h2>
       </div>
     </template>
 
@@ -22,61 +22,61 @@
           v-model="searchQuery"
           type="text"
           class="search-input"
-          placeholder="Search restaurants..."
+          placeholder="Search businesses..."
         />
       </div>
     </div>
 
     <!-- Selected Count -->
     <div v-if="selectedCount > 0" class="selected-count">
-      {{ selectedCount }} restaurant{{ selectedCount !== 1 ? 's' : '' }} selected
+      {{ selectedCount }} business{{ selectedCount !== 1 ? 's' : '' }} selected
     </div>
 
-    <!-- Restaurant Grid -->
-    <div class="restaurants-grid">
+    <!-- Business Grid -->
+    <div class="businesses-grid">
       <div
-        v-for="restaurant in filteredRestaurants"
-        :key="restaurant.id"
-        :class="['restaurant-card', { selected: isSelected(restaurant.id) }]"
-        @click="toggleRestaurant(restaurant.id)"
+        v-for="business in filteredBusinesses"
+        :key="business.id"
+        :class="['business-card', { selected: isSelected(business.id) }]"
+        @click="toggleBusiness(business.id)"
       >
         <!-- Checkbox -->
         <div class="checkbox-wrapper">
           <input
             type="checkbox"
-            :checked="isSelected(restaurant.id)"
+            :checked="isSelected(business.id)"
             class="checkbox-input"
             @click.stop
           />
           <span class="checkbox-custom"></span>
         </div>
 
-        <!-- Restaurant Logo/Image -->
-        <div class="restaurant-logo">
+        <!-- Business Logo/Image -->
+        <div class="business-logo">
           <img
-            v-if="restaurant.brand_dna?.logo_url"
-            :src="restaurant.brand_dna.logo_url"
-            :alt="restaurant.name"
+            v-if="business.brand_dna?.logo_url"
+            :src="business.brand_dna.logo_url"
+            :alt="business.name"
             class="logo-image"
-            @error="handleImageError($event, restaurant)"
+            @error="handleImageError($event, business)"
           />
           <div v-else class="logo-placeholder">
-            {{ getInitials(restaurant.name) }}
+            {{ getInitials(business.name) }}
           </div>
         </div>
 
-        <!-- Restaurant Info -->
-        <div class="restaurant-info">
-          <h3 class="restaurant-name">{{ restaurant.name }}</h3>
-          <p v-if="restaurant.city || restaurant.address" class="restaurant-location">
-            📍 {{ restaurant.city || restaurant.address }}
+        <!-- Business Info -->
+        <div class="business-info">
+          <h3 class="business-name">{{ business.name }}</h3>
+          <p v-if="business.city || business.address" class="business-location">
+            📍 {{ business.city || business.address }}
           </p>
         </div>
 
         <!-- Social Media Platforms -->
-        <div v-if="restaurant.platforms && restaurant.platforms.length > 0" class="platforms">
+        <div v-if="business.platforms && business.platforms.length > 0" class="platforms">
           <span
-            v-for="platform in restaurant.platforms"
+            v-for="platform in business.platforms"
             :key="platform"
             :class="['platform-icon', `platform-${platform}`]"
             :title="platform"
@@ -87,9 +87,9 @@
       </div>
 
       <!-- Empty State -->
-      <div v-if="filteredRestaurants.length === 0" class="empty-state">
+      <div v-if="filteredBusinesses.length === 0" class="empty-state">
         <div class="empty-icon">🔍</div>
-        <p class="empty-text">No restaurants found</p>
+        <p class="empty-text">No businesses found</p>
         <p class="empty-hint">Try a different search term</p>
       </div>
     </div>
@@ -111,7 +111,7 @@ import BaseModal from './BaseModal.vue'
 import BaseButton from './BaseButton.vue'
 import { warnLog } from '@/utils/debug'
 
-interface Restaurant {
+interface Business {
   id: string
   name: string
   brand_dna?: {
@@ -126,40 +126,40 @@ interface Restaurant {
 
 interface Props {
   modelValue: boolean
-  restaurants: Restaurant[]
-  selectedRestaurantIds: string[]
+  businesses: Business[]
+  selectedBusinessIds: string[]
 }
 
 const props = defineProps<Props>()
 
 const emit = defineEmits<{
   (e: 'update:modelValue', value: boolean): void
-  (e: 'update:selectedRestaurantIds', value: string[]): void
+  (e: 'update:selectedBusinessIds', value: string[]): void
 }>()
 
 const searchQuery = ref('')
 
-const filteredRestaurants = computed(() => {
+const filteredBusinesses = computed(() => {
   if (!searchQuery.value.trim()) {
-    return props.restaurants
+    return props.businesses
   }
   const query = searchQuery.value.toLowerCase()
-  return props.restaurants.filter((restaurant) =>
-    restaurant.name.toLowerCase().includes(query) ||
-    restaurant.location?.toLowerCase().includes(query) ||
-    restaurant.city?.toLowerCase().includes(query) ||
-    restaurant.address?.toLowerCase().includes(query)
+  return props.businesses.filter((business) =>
+    business.name.toLowerCase().includes(query) ||
+    business.location?.toLowerCase().includes(query) ||
+    business.city?.toLowerCase().includes(query) ||
+    business.address?.toLowerCase().includes(query)
   )
 })
 
-const selectedCount = computed(() => props.selectedRestaurantIds.length)
+const selectedCount = computed(() => props.selectedBusinessIds.length)
 
 const isSelected = (id: string) => {
-  return props.selectedRestaurantIds.includes(id)
+  return props.selectedBusinessIds.includes(id)
 }
 
-const toggleRestaurant = (id: string) => {
-  const currentIds = [...props.selectedRestaurantIds]
+const toggleBusiness = (id: string) => {
+  const currentIds = [...props.selectedBusinessIds]
   const index = currentIds.indexOf(id)
 
   if (index > -1) {
@@ -168,11 +168,11 @@ const toggleRestaurant = (id: string) => {
     currentIds.push(id)
   }
 
-  emit('update:selectedRestaurantIds', currentIds)
+  emit('update:selectedBusinessIds', currentIds)
 }
 
 const clearSelection = () => {
-  emit('update:selectedRestaurantIds', [])
+  emit('update:selectedBusinessIds', [])
 }
 
 const close = () => {
@@ -199,10 +199,10 @@ const getPlatformEmoji = (platform: string) => {
   return emojis[platform] || '📱'
 }
 
-const handleImageError = (event: Event, restaurant: Restaurant) => {
+const handleImageError = (event: Event, business: Business) => {
   const img = event.target as HTMLImageElement
   img.style.display = 'none'
-  warnLog(`Failed to load logo for restaurant: ${restaurant.name}`)
+  warnLog(`Failed to load logo for business: ${business.name}`)
 }
 </script>
 
@@ -279,8 +279,8 @@ const handleImageError = (event: Event, restaurant: Restaurant) => {
   margin-bottom: var(--space-lg);
 }
 
-/* Restaurant Grid */
-.restaurants-grid {
+/* Business Grid */
+.businesses-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: var(--space-lg);
@@ -289,26 +289,26 @@ const handleImageError = (event: Event, restaurant: Restaurant) => {
   overflow-y: auto;
 }
 
-.restaurants-grid::-webkit-scrollbar {
+.businesses-grid::-webkit-scrollbar {
   width: 8px;
 }
 
-.restaurants-grid::-webkit-scrollbar-track {
+.businesses-grid::-webkit-scrollbar-track {
   background: rgba(15, 61, 46, 0.1);
   border-radius: 4px;
 }
 
-.restaurants-grid::-webkit-scrollbar-thumb {
+.businesses-grid::-webkit-scrollbar-thumb {
   background: rgba(15, 61, 46, 0.3);
   border-radius: 4px;
 }
 
-.restaurants-grid::-webkit-scrollbar-thumb:hover {
+.businesses-grid::-webkit-scrollbar-thumb:hover {
   background: rgba(15, 61, 46, 0.5);
 }
 
-/* Restaurant Card */
-.restaurant-card {
+/* Business Card */
+.business-card {
   position: relative;
   padding: var(--space-lg);
   background: rgba(255, 255, 255, 0.6);
@@ -321,14 +321,14 @@ const handleImageError = (event: Event, restaurant: Restaurant) => {
   gap: var(--space-md);
 }
 
-.restaurant-card:hover {
+.business-card:hover {
   border-color: rgba(15, 61, 46, 0.4);
   background: rgba(255, 255, 255, 0.8);
   transform: translateY(-4px);
   box-shadow: 0 8px 24px rgba(15, 61, 46, 0.2), 0 0 20px rgba(15, 61, 46, 0.15);
 }
 
-.restaurant-card.selected {
+.business-card.selected {
   border-color: var(--gold-primary);
   background: linear-gradient(135deg, rgba(15, 61, 46, 0.1), rgba(15, 61, 46, 0.05));
   box-shadow: 0 0 24px rgba(15, 61, 46, 0.2);
@@ -357,12 +357,12 @@ const handleImageError = (event: Event, restaurant: Restaurant) => {
   transition: all 0.2s ease;
 }
 
-.restaurant-card.selected .checkbox-custom {
+.business-card.selected .checkbox-custom {
   background: var(--gradient-gold);
   border-color: var(--gold-primary);
 }
 
-.restaurant-card.selected .checkbox-custom::after {
+.business-card.selected .checkbox-custom::after {
   content: '✓';
   position: absolute;
   top: 50%;
@@ -373,8 +373,8 @@ const handleImageError = (event: Event, restaurant: Restaurant) => {
   font-weight: bold;
 }
 
-/* Restaurant Logo */
-.restaurant-logo {
+/* Business Logo */
+.business-logo {
   width: 80px;
   height: 80px;
   border-radius: var(--radius-md);
@@ -400,12 +400,12 @@ const handleImageError = (event: Event, restaurant: Restaurant) => {
   text-shadow: 0 2px 4px rgba(15, 61, 46, 0.25);
 }
 
-/* Restaurant Info */
-.restaurant-info {
+/* Business Info */
+.business-info {
   flex: 1;
 }
 
-.restaurant-name {
+.business-name {
   font-family: var(--font-heading);
   font-size: var(--text-lg);
   color: var(--text-primary);
@@ -413,7 +413,7 @@ const handleImageError = (event: Event, restaurant: Restaurant) => {
   font-weight: 600;
 }
 
-.restaurant-location {
+.business-location {
   font-size: var(--text-sm);
   color: var(--text-secondary);
   margin: 0;
@@ -475,7 +475,7 @@ const handleImageError = (event: Event, restaurant: Restaurant) => {
 
 /* Responsive */
 @media (max-width: 768px) {
-  .restaurants-grid {
+  .businesses-grid {
     grid-template-columns: 1fr;
   }
 }

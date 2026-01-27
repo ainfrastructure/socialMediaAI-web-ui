@@ -57,7 +57,7 @@ export const VIDEO_STYLE_MODIFIERS: Record<string, VideoStyleModifier> = {
       'Dish revealed gradually through controlled camera movement or lighting changes → final reveal matches reference exactly',
 
     atmosphere:
-      'Professional, polished, restaurant-quality presentation. Clean and inviting.',
+      'Professional, polished, business-quality presentation. Clean and inviting.',
 
     fidelityNote: 'Dish composition and plating exactly match reference image.'
   },
@@ -158,13 +158,13 @@ export const VIDEO_STYLE_MODIFIERS: Record<string, VideoStyleModifier> = {
     pacing: 'Calm arrival. Moment of presentation. Brief pause after placement to appreciate.',
 
     lighting:
-      'Natural restaurant or dining lighting. Warm, inviting ambiance. Light catches dish as it settles into position.',
+      'Natural business or dining lighting. Warm, inviting ambiance. Light catches dish as it settles into position.',
 
     temporalProgression:
       'Empty table or table setting → hands enter frame carrying dish → gentle placement → slight adjustment → final reveal',
 
     atmosphere:
-      'Welcoming, service moment, restaurant experience. Anticipation of enjoying.',
+      'Welcoming, service moment, business experience. Anticipation of enjoying.',
 
     fidelityNote: 'Placed dish matches reference image.'
   }

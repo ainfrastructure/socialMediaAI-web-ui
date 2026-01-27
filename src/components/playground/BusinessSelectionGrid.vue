@@ -1,34 +1,34 @@
 <template>
-  <div class="restaurant-selection-view">
+  <div class="business-selection-view">
     <div class="selection-header">
-      <h2 class="selection-title">{{ $t('playground.chooseRestaurant', 'Choose a Restaurant') }}</h2>
-      <p class="selection-subtitle">{{ $t('playground.selectRestaurant', 'Select which restaurant to create content for') }}</p>
+      <h2 class="selection-title">{{ $t('playground.chooseBusiness', 'Choose a Business') }}</h2>
+      <p class="selection-subtitle">{{ $t('playground.selectBusiness', 'Select which business to create content for') }}</p>
       <BaseButton variant="primary" @click="$emit('addNew')">
-        + {{ $t('playground.addNewRestaurant', 'Add New Restaurant') }}
+        + {{ $t('playground.addNewBusiness', 'Add New Business') }}
       </BaseButton>
     </div>
 
-    <div class="restaurants-grid">
+    <div class="businesses-grid">
       <BaseCard
-        v-for="restaurant in restaurants"
-        :key="restaurant.id"
+        v-for="business in businesses"
+        :key="business.id"
         variant="glass"
         hoverable
-        class="restaurant-card"
-        @click="$emit('select', restaurant.id)"
+        class="business-card"
+        @click="$emit('select', business.id)"
       >
         <div class="card-header">
           <div class="card-title-section">
-            <div v-if="restaurant.brand_dna?.logo_url" class="card-logo-container">
+            <div v-if="business.brand_dna?.logo_url" class="card-logo-container">
               <img
-                :src="restaurant.brand_dna.logo_url"
-                :alt="restaurant.brand_dna.brand_name || restaurant.name"
+                :src="business.brand_dna.logo_url"
+                :alt="business.brand_dna.brand_name || business.name"
                 class="card-logo"
               />
             </div>
-            <h3 class="restaurant-name">{{ restaurant.name }}</h3>
+            <h3 class="business-name">{{ business.name }}</h3>
           </div>
-          <button class="edit-btn" @click.stop="$emit('edit', restaurant)" title="Edit Restaurant">
+          <button class="edit-btn" @click.stop="$emit('edit', business)" title="Edit Business">
             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
               <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
@@ -36,22 +36,22 @@
           </button>
         </div>
 
-        <p class="restaurant-address">{{ restaurant.address }}</p>
+        <p class="business-address">{{ business.address }}</p>
 
-        <div class="restaurant-meta">
-          <div v-if="restaurant.rating" class="meta-item">
+        <div class="business-meta">
+          <div v-if="business.rating" class="meta-item">
             <span class="meta-icon">⭐</span>
-            <span>{{ restaurant.rating }} / 5</span>
+            <span>{{ business.rating }} / 5</span>
           </div>
 
-          <div v-if="restaurant.menu && restaurant.menu.items && restaurant.menu.items.length > 0" class="meta-item">
+          <div v-if="business.menu && business.menu.items && business.menu.items.length > 0" class="meta-item">
             <span class="meta-icon">📋</span>
-            <span>{{ restaurant.menu.items.length }} {{ $t('playground.menuItems', 'menu items') }}</span>
+            <span>{{ business.menu.items.length }} {{ $t('playground.menuItems', 'menu items') }}</span>
           </div>
 
-          <div v-if="restaurant.saved_at" class="meta-item">
+          <div v-if="business.saved_at" class="meta-item">
             <span class="meta-icon">📅</span>
-            <span>{{ $t('playground.saved', 'Saved') }} {{ formatDate(restaurant.saved_at) }}</span>
+            <span>{{ $t('playground.saved', 'Saved') }} {{ formatDate(business.saved_at) }}</span>
           </div>
         </div>
       </BaseCard>
@@ -74,7 +74,7 @@ interface MenuItem {
   imageUrl?: string
 }
 
-interface Restaurant {
+interface Business {
   id: string | number
   name: string
   address?: string
@@ -87,12 +87,12 @@ interface Restaurant {
 }
 
 defineProps<{
-  restaurants: Restaurant[]
+  businesses: Business[]
 }>()
 
 defineEmits<{
   (e: 'select', id: string | number): void
-  (e: 'edit', restaurant: Restaurant): void
+  (e: 'edit', business: Business): void
   (e: 'addNew'): void
 }>()
 
@@ -107,7 +107,7 @@ const formatDate = (dateString: string): string => {
 </script>
 
 <style scoped>
-.restaurant-selection-view {
+.business-selection-view {
   animation: fadeIn 0.5s ease;
 }
 
@@ -139,18 +139,18 @@ const formatDate = (dateString: string): string => {
   margin-bottom: var(--space-lg);
 }
 
-.restaurants-grid {
+.businesses-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: var(--space-xl);
 }
 
-.restaurant-card {
+.business-card {
   cursor: pointer;
   transition: all var(--transition-base);
 }
 
-.restaurant-card:hover {
+.business-card:hover {
   transform: translateY(-4px);
   border-color: rgba(212, 175, 55, 0.5);
 }
@@ -182,7 +182,7 @@ const formatDate = (dateString: string): string => {
   object-fit: cover;
 }
 
-.restaurant-name {
+.business-name {
   font-family: var(--font-heading);
   font-size: var(--text-lg);
   color: var(--text-primary);
@@ -204,13 +204,13 @@ const formatDate = (dateString: string): string => {
   color: var(--gold-primary);
 }
 
-.restaurant-address {
+.business-address {
   font-size: var(--text-sm);
   color: var(--text-muted);
   margin-bottom: var(--space-md);
 }
 
-.restaurant-meta {
+.business-meta {
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-md);
@@ -229,7 +229,7 @@ const formatDate = (dateString: string): string => {
 }
 
 @media (max-width: 768px) {
-  .restaurants-grid {
+  .businesses-grid {
     grid-template-columns: 1fr;
   }
 }

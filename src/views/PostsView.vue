@@ -8,8 +8,8 @@
         <p>{{ $t('contentHub.loading') }}</p>
       </div>
 
-      <!-- Welcome State for New Users (No Restaurants) -->
-      <div v-else-if="restaurants.length === 0" class="welcome-state">
+      <!-- Welcome State for New Users (No Businesses) -->
+      <div v-else-if="businesses.length === 0" class="welcome-state">
         <div class="welcome-content">
           <div class="welcome-icon">
             <img src="@/assets/socialchef_logo.svg" alt="Social Chef" class="logo-svg" />
@@ -17,35 +17,35 @@
           <h1 class="welcome-title">{{ $t('contentHub.welcomeTitle') }}</h1>
           <p class="welcome-subtitle">{{ $t('contentHub.welcomeSubtitle') }}</p>
 
-          <BaseCard variant="glass" hoverable class="add-restaurant-card" @click="showAddRestaurantModal = true">
+          <BaseCard variant="glass" hoverable class="add-business-card" @click="showAddBusinessModal = true">
             <div class="card-icon">
-              <MaterialIcon icon="storefront" size="3xl" color="#D4AF37" class="restaurant-material-icon" />
+              <MaterialIcon icon="storefront" size="3xl" color="#D4AF37" class="business-material-icon" />
             </div>
-            <h3 class="card-title">{{ $t('contentHub.addFirstRestaurant') }}</h3>
-            <p class="card-description">{{ $t('contentHub.addFirstRestaurantDescription') }}</p>
+            <h3 class="card-title">{{ $t('contentHub.addFirstBusiness') }}</h3>
+            <p class="card-description">{{ $t('contentHub.addFirstBusinessDescription') }}</p>
             <BaseButton variant="primary" size="large">
-              {{ $t('restaurantSelector.addNew') }}
+              {{ $t('businessSelector.addNew') }}
             </BaseButton>
           </BaseCard>
         </div>
       </div>
 
-      <!-- Main Content (Has Restaurants) -->
+      <!-- Main Content (Has Businesses) -->
       <div v-else class="content-hub">
-        <!-- Restaurant Header -->
-        <div class="restaurant-header">
-          <div class="header-content clickable-header" @click="showRestaurantSelector = true">
+        <!-- Business Header -->
+        <div class="business-header">
+          <div class="header-content clickable-header" @click="showBusinessSelector = true">
             <div class="logo-container">
-              <div v-if="selectedRestaurant?.brand_dna?.logo_url" class="restaurant-logo">
-                <img :src="selectedRestaurant.brand_dna.logo_url" :alt="selectedRestaurant.name" />
+              <div v-if="selectedBusiness?.brand_dna?.logo_url" class="business-logo">
+                <img :src="selectedBusiness.brand_dna.logo_url" :alt="selectedBusiness.name" />
               </div>
-              <div v-else class="restaurant-logo placeholder">
+              <div v-else class="business-logo placeholder">
                 <span class="placeholder-icon">🏪</span>
               </div>
             </div>
-            <div class="restaurant-info">
-              <h1 class="restaurant-name">{{ selectedRestaurant?.name }}</h1>
-              <p class="restaurant-address">{{ selectedRestaurant?.address }}</p>
+            <div class="business-info">
+              <h1 class="business-name">{{ selectedBusiness?.name }}</h1>
+              <p class="business-address">{{ selectedBusiness?.address }}</p>
             </div>
           </div>
         </div>
@@ -184,28 +184,28 @@
       </div>
     </div>
 
-    <!-- Restaurant Selector Modal -->
-    <RestaurantSelectorModal
-      v-model="showRestaurantSelector"
-      :restaurants="restaurants"
-      :current-id="selectedRestaurant?.id"
-      @select="handleRestaurantChange"
-      @restaurant-added="handleRestaurantAdded"
-      @delete="handleDeleteRestaurant"
+    <!-- Business Selector Modal -->
+    <BusinessSelectorModal
+      v-model="showBusinessSelector"
+      :businesses="businesses"
+      :current-id="selectedBusiness?.id"
+      @select="handleBusinessChange"
+      @business-added="handleBusinessAdded"
+      @delete="handleDeleteBusiness"
     />
 
-    <!-- Add Restaurant Modal (for welcome state) -->
-    <AddRestaurantModal
-      v-model="showAddRestaurantModal"
-      :saved-restaurants="restaurants"
-      @restaurant-added="handleRestaurantAdded"
+    <!-- Add Business Modal (for welcome state) -->
+    <AddBusinessModal
+      v-model="showAddBusinessModal"
+      :saved-businesses="businesses"
+      @business-added="handleBusinessAdded"
       @switch-to-manual="handleSwitchToManual"
     />
 
-    <!-- Create Restaurant Modal -->
-    <CreateRestaurantModal
-      v-model="showCreateRestaurantModal"
-      @created="handleRestaurantCreated"
+    <!-- Create Business Modal -->
+    <CreateBusinessModal
+      v-model="showCreateBusinessModal"
+      @created="handleBusinessCreated"
     />
 
     <!-- Schedule Modal -->
@@ -336,7 +336,7 @@ import { usePreferencesStore } from '@/stores/preferences'
 import { useNotificationStore } from '@/stores/notifications'
 import { useVideoGenerationStore } from '@/stores/videoGeneration'
 import { api } from '@/services/api'
-import { restaurantService, type SavedRestaurant } from '@/services/restaurantService'
+import { businessService, type SavedBusiness } from '@/services/businessService'
 import { getFoodAnimationPrompt } from '@/utils/promptHelpers'
 import DashboardLayout from '@/components/DashboardLayout.vue'
 import BaseCard from '@/components/BaseCard.vue'
@@ -344,10 +344,10 @@ import BaseButton from '@/components/BaseButton.vue'
 import BasePagination from '@/components/BasePagination.vue'
 import ConfirmModal from '@/components/ConfirmModal.vue'
 import ScheduleModal from '@/components/ScheduleModal.vue'
-import RestaurantSelectorModal from '@/components/RestaurantSelectorModal.vue'
+import BusinessSelectorModal from '@/components/BusinessSelectorModal.vue'
 import PostDetailModal from '@/components/PostDetailModal.vue'
-import AddRestaurantModal from '@/components/AddRestaurantModal.vue'
-import CreateRestaurantModal from '@/components/CreateRestaurantModal.vue'
+import AddBusinessModal from '@/components/AddBusinessModal.vue'
+import CreateBusinessModal from '@/components/CreateBusinessModal.vue'
 import MaterialIcon from '@/components/MaterialIcon.vue'
 import GoldenDocumentIcon from '@/components/icons/GoldenDocumentIcon.vue'
 
@@ -361,12 +361,12 @@ const videoGenerationStore = useVideoGenerationStore()
 // State
 const loading = ref(true)
 const loadingPosts = ref(false)
-const restaurants = ref<SavedRestaurant[]>([])
-const selectedRestaurant = ref<SavedRestaurant | null>(null)
+const businesses = ref<SavedBusiness[]>([])
+const selectedBusiness = ref<SavedBusiness | null>(null)
 const posts = ref<any[]>([])
-const showRestaurantSelector = ref(false)
-const showAddRestaurantModal = ref(false)
-const showCreateRestaurantModal = ref(false)
+const showBusinessSelector = ref(false)
+const showAddBusinessModal = ref(false)
+const showCreateBusinessModal = ref(false)
 
 // Post detail modal state
 const selectedPost = ref<any>(null)
@@ -405,34 +405,34 @@ const totalPages = ref(0)
 // Initialize
 onMounted(async () => {
   try {
-    // Fetch restaurants
-    const response = await api.getRestaurants()
+    // Fetch businesses
+    const response = await api.getBusinesses()
     if (response.success) {
-      restaurants.value = response.data || []
+      businesses.value = response.data || []
     }
 
-    // If no restaurants, show welcome state (don't redirect)
-    if (restaurants.value.length === 0) {
+    // If no businesses, show welcome state (don't redirect)
+    if (businesses.value.length === 0) {
       loading.value = false
       return
     }
 
-    // Auto-select restaurant
-    const savedId = preferencesStore.selectedRestaurantId
+    // Auto-select business
+    const savedId = preferencesStore.selectedBusinessId
     if (savedId) {
-      const found = restaurants.value.find((r) => r.id === savedId)
+      const found = businesses.value.find((r) => r.id === savedId)
       if (found) {
-        selectedRestaurant.value = found
+        selectedBusiness.value = found
       }
     }
 
-    // If no saved selection or invalid, use first restaurant
-    if (!selectedRestaurant.value) {
-      selectedRestaurant.value = restaurants.value[0]
-      preferencesStore.setSelectedRestaurant(restaurants.value[0].id)
+    // If no saved selection or invalid, use first business
+    if (!selectedBusiness.value) {
+      selectedBusiness.value = businesses.value[0]
+      preferencesStore.setSelectedBusiness(businesses.value[0].id)
     }
 
-    // Load posts for selected restaurant
+    // Load posts for selected business
     await fetchPosts()
 
     // Check if we should open a specific post (from notification click)
@@ -488,16 +488,16 @@ function checkOpenPostFromQuery() {
   }
 }
 
-// Fetch posts filtered by restaurant
+// Fetch posts filtered by business
 async function fetchPosts() {
-  if (!selectedRestaurant.value) return
+  if (!selectedBusiness.value) return
 
   try {
     loadingPosts.value = true
     const offset = (currentPage.value - 1) * itemsPerPage
 
     const response = await api.getFavorites({
-      restaurant_id: selectedRestaurant.value.id,
+      business_id: selectedBusiness.value.id,
       platform: filters.value.platform || undefined,
       content_type: filters.value.content_type as 'image' | 'video' | undefined,
       limit: itemsPerPage,
@@ -517,11 +517,11 @@ async function fetchPosts() {
   }
 }
 
-// Handle restaurant change
-function handleRestaurantChange(restaurant: SavedRestaurant) {
-  selectedRestaurant.value = restaurant
-  preferencesStore.setSelectedRestaurant(restaurant.id)
-  showRestaurantSelector.value = false
+// Handle business change
+function handleBusinessChange(business: SavedBusiness) {
+  selectedBusiness.value = business
+  preferencesStore.setSelectedBusiness(business.id)
+  showBusinessSelector.value = false
 
   // Reset and reload posts
   currentPage.value = 1
@@ -535,59 +535,59 @@ function goToCreate() {
   router.push('/posts/create')
 }
 
-// Handle restaurant added
-async function handleRestaurantAdded() {
+// Handle business added
+async function handleBusinessAdded() {
   try {
-    // Refresh restaurants list
-    const response = await api.getRestaurants()
+    // Refresh businesses list
+    const response = await api.getBusinesses()
     if (response.success) {
-      restaurants.value = response.data || []
+      businesses.value = response.data || []
 
-      // If this is the first restaurant, auto-select it and load posts
-      if (restaurants.value.length > 0 && !selectedRestaurant.value) {
-        selectedRestaurant.value = restaurants.value[0]
-        preferencesStore.setSelectedRestaurant(restaurants.value[0].id)
+      // If this is the first business, auto-select it and load posts
+      if (businesses.value.length > 0 && !selectedBusiness.value) {
+        selectedBusiness.value = businesses.value[0]
+        preferencesStore.setSelectedBusiness(businesses.value[0].id)
         await fetchPosts()
       }
     }
-    showAddRestaurantModal.value = false
+    showAddBusinessModal.value = false
   } catch (error) {
-    errorLog('Failed to fetch restaurants:', error)
+    errorLog('Failed to fetch businesses:', error)
   }
 }
 
 function handleSwitchToManual() {
-  showAddRestaurantModal.value = false
-  showCreateRestaurantModal.value = true
+  showAddBusinessModal.value = false
+  showCreateBusinessModal.value = true
 }
 
-async function handleRestaurantCreated() {
-  showCreateRestaurantModal.value = false
-  await handleRestaurantAdded()
+async function handleBusinessCreated() {
+  showCreateBusinessModal.value = false
+  await handleBusinessAdded()
 }
 
-// Handle restaurant deletion
-async function handleDeleteRestaurant(restaurant: SavedRestaurant) {
+// Handle business deletion
+async function handleDeleteBusiness(business: SavedBusiness) {
   try {
-    await restaurantService.deleteRestaurant(restaurant.place_id)
+    await businessService.deleteBusiness(business.place_id)
 
     // Remove from local list
-    restaurants.value = restaurants.value.filter((r) => r.id !== restaurant.id)
+    businesses.value = businesses.value.filter((r) => r.id !== business.id)
 
-    // If the deleted restaurant was selected, select another one or clear
-    if (selectedRestaurant.value?.id === restaurant.id) {
-      if (restaurants.value.length > 0) {
-        selectedRestaurant.value = restaurants.value[0]
-        preferencesStore.setSelectedRestaurant(restaurants.value[0].id)
+    // If the deleted business was selected, select another one or clear
+    if (selectedBusiness.value?.id === business.id) {
+      if (businesses.value.length > 0) {
+        selectedBusiness.value = businesses.value[0]
+        preferencesStore.setSelectedBusiness(businesses.value[0].id)
       } else {
-        selectedRestaurant.value = null
-        preferencesStore.setSelectedRestaurant(null)
+        selectedBusiness.value = null
+        preferencesStore.setSelectedBusiness(null)
       }
       // Reload posts for new selection
       fetchPosts()
     }
   } catch (error) {
-    errorLog('Failed to delete restaurant:', error)
+    errorLog('Failed to delete business:', error)
   }
 }
 
@@ -930,7 +930,7 @@ function formatDate(dateString: string): string {
   line-height: 1.5;
 }
 
-.add-restaurant-card {
+.add-business-card {
   padding: var(--space-3xl);
   display: flex;
   flex-direction: column;
@@ -941,13 +941,13 @@ function formatDate(dateString: string): string {
   width: 100%;
 }
 
-.add-restaurant-card:hover {
+.add-business-card:hover {
   transform: translateY(-4px);
   border-color: var(--gold-primary);
   box-shadow: 0 0 30px rgba(15, 61, 46, 0.2);
 }
 
-.add-restaurant-card .card-icon {
+.add-business-card .card-icon {
   width: 64px;
   height: 64px;
   display: flex;
@@ -955,28 +955,28 @@ function formatDate(dateString: string): string {
   justify-content: center;
 }
 
-.add-restaurant-card .restaurant-material-icon {
+.add-business-card .business-material-icon {
   color: var(--gold-primary);
   filter: drop-shadow(0 0 12px rgba(15, 61, 46, 0.3));
   font-size: 48px;
 }
 
-.add-restaurant-card .card-title {
+.add-business-card .card-title {
   font-family: var(--font-heading);
   font-size: var(--text-xl);
   color: var(--text-primary);
   margin: 0;
 }
 
-.add-restaurant-card .card-description {
+.add-business-card .card-description {
   font-size: var(--text-base);
   color: var(--text-secondary);
   margin: 0;
   line-height: 1.5;
 }
 
-/* Restaurant Header */
-.restaurant-header {
+/* Business Header */
+.business-header {
   margin-bottom: var(--space-3xl);
   padding-bottom: var(--space-2xl);
   border-bottom: 1px solid rgba(15, 61, 46, 0.15);
@@ -1003,7 +1003,7 @@ function formatDate(dateString: string): string {
   transform: scale(1.01);
 }
 
-.change-restaurant-hint {
+.change-business-hint {
   position: absolute;
   top: 0;
   right: 0;
@@ -1019,7 +1019,7 @@ function formatDate(dateString: string): string {
   font-weight: var(--font-semibold);
 }
 
-.clickable-header:hover .change-restaurant-hint {
+.clickable-header:hover .change-business-hint {
   opacity: 1;
 }
 
@@ -1032,7 +1032,7 @@ function formatDate(dateString: string): string {
   justify-content: center;
 }
 
-.restaurant-logo {
+.business-logo {
   width: 100%;
   min-height: 80px;
   max-height: 120px;
@@ -1043,7 +1043,7 @@ function formatDate(dateString: string): string {
   padding: var(--space-md);
 }
 
-.restaurant-logo img {
+.business-logo img {
   max-width: 100%;
   max-height: 120px;
   width: auto;
@@ -1051,7 +1051,7 @@ function formatDate(dateString: string): string {
   object-fit: contain;
 }
 
-.restaurant-logo.placeholder {
+.business-logo.placeholder {
   background: rgba(15, 61, 46, 0.1);
   border-radius: var(--radius-lg);
   min-height: 120px;
@@ -1061,11 +1061,11 @@ function formatDate(dateString: string): string {
   font-size: 4rem;
 }
 
-.restaurant-info {
+.business-info {
   text-align: center;
 }
 
-.restaurant-name {
+.business-name {
   font-family: var(--font-heading);
   font-size: var(--text-4xl);
   font-weight: var(--font-bold);
@@ -1078,7 +1078,7 @@ function formatDate(dateString: string): string {
   line-height: 1.2;
 }
 
-.restaurant-address {
+.business-address {
   font-size: var(--text-base);
   color: var(--text-secondary);
   margin: 0;
@@ -1631,25 +1631,25 @@ function formatDate(dateString: string): string {
     width: 80px;
   }
 
-  .add-restaurant-card {
+  .add-business-card {
     padding: var(--space-2xl);
   }
 
-  .restaurant-header {
+  .business-header {
     margin-bottom: var(--space-2xl);
     padding-bottom: var(--space-xl);
   }
 
-  .restaurant-logo {
+  .business-logo {
     width: 100px;
     height: 100px;
   }
 
-  .restaurant-name {
+  .business-name {
     font-size: var(--text-3xl);
   }
 
-  .restaurant-address {
+  .business-address {
     font-size: var(--text-sm);
   }
 
@@ -1753,7 +1753,7 @@ function formatDate(dateString: string): string {
     padding: var(--space-lg) var(--space-sm);
   }
 
-  .restaurant-header {
+  .business-header {
     margin-bottom: var(--space-xl);
     padding-bottom: var(--space-lg);
   }
@@ -1767,16 +1767,16 @@ function formatDate(dateString: string): string {
     max-width: 200px;
   }
 
-  .restaurant-logo {
+  .business-logo {
     min-height: 60px;
     max-height: 80px;
   }
 
-  .restaurant-logo img {
+  .business-logo img {
     max-height: 80px;
   }
 
-  .restaurant-logo.placeholder {
+  .business-logo.placeholder {
     min-height: 80px;
   }
 
@@ -1784,11 +1784,11 @@ function formatDate(dateString: string): string {
     font-size: 2.5rem;
   }
 
-  .restaurant-name {
+  .business-name {
     font-size: var(--text-2xl);
   }
 
-  .restaurant-address {
+  .business-address {
     font-size: var(--text-xs);
   }
 
@@ -1874,7 +1874,7 @@ function formatDate(dateString: string): string {
     max-width: 160px;
   }
 
-  .restaurant-name {
+  .business-name {
     font-size: var(--text-xl);
   }
 
@@ -1980,7 +1980,7 @@ function formatDate(dateString: string): string {
     padding: var(--space-md) var(--space-lg);
   }
 
-  .restaurant-header {
+  .business-header {
     margin-bottom: var(--space-lg);
     padding-bottom: var(--space-md);
   }

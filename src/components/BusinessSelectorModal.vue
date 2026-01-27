@@ -2,16 +2,16 @@
 import { ref, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
-import type { SavedRestaurant } from '@/services/restaurantService'
+import type { SavedBusiness } from '@/services/businessService'
 import BaseModal from './BaseModal.vue'
 import BaseButton from './BaseButton.vue'
-import AddRestaurantModal from './AddRestaurantModal.vue'
-import CreateRestaurantModal from './CreateRestaurantModal.vue'
+import AddBusinessModal from './AddBusinessModal.vue'
+import CreateBusinessModal from './CreateBusinessModal.vue'
 import ConfirmModal from './ConfirmModal.vue'
 
 interface Props {
   modelValue: boolean
-  restaurants: SavedRestaurant[]
+  businesses: SavedBusiness[]
   currentId?: string
   showAddButton?: boolean
 }
@@ -22,9 +22,9 @@ const props = withDefaults(defineProps<Props>(), {
 
 const emit = defineEmits<{
   (e: 'update:modelValue', value: boolean): void
-  (e: 'select', restaurant: SavedRestaurant): void
-  (e: 'restaurant-added'): void
-  (e: 'delete', restaurant: SavedRestaurant): void
+  (e: 'select', business: SavedBusiness): void
+  (e: 'business-added'): void
+  (e: 'delete', business: SavedBusiness): void
 }>()
 
 const { t } = useI18n()
@@ -33,7 +33,7 @@ const router = useRouter()
 const showAddModal = ref(false)
 const showCreateModal = ref(false)
 const showDeleteConfirm = ref(false)
-const restaurantToDelete = ref<SavedRestaurant | null>(null)
+const businessToDelete = ref<SavedBusiness | null>(null)
 
 const isOpen = computed({
   get: () => props.modelValue,
@@ -44,8 +44,8 @@ function close() {
   isOpen.value = false
 }
 
-function selectRestaurant(restaurant: SavedRestaurant) {
-  emit('select', restaurant)
+function selectBusiness(business: SavedBusiness) {
+  emit('select', business)
   close()
 }
 
@@ -53,13 +53,13 @@ function handleAddNew() {
   showAddModal.value = true
 }
 
-function handleManageRestaurants() {
+function handleManageBusinesses() {
   close()
-  router.push('/restaurants')
+  router.push('/businesses')
 }
 
-function handleRestaurantAdded(_restaurant: any) {
-  emit('restaurant-added')
+function handleBusinessAdded(_business: any) {
+  emit('business-added')
 }
 
 function handleSwitchToManual() {
@@ -67,28 +67,28 @@ function handleSwitchToManual() {
   showCreateModal.value = true
 }
 
-function handleRestaurantCreated() {
+function handleBusinessCreated() {
   showCreateModal.value = false
-  emit('restaurant-added')
+  emit('business-added')
 }
 
-function handleDeleteClick(event: Event, restaurant: SavedRestaurant) {
+function handleDeleteClick(event: Event, business: SavedBusiness) {
   event.stopPropagation()
-  restaurantToDelete.value = restaurant
+  businessToDelete.value = business
   showDeleteConfirm.value = true
 }
 
 function confirmDelete() {
-  if (restaurantToDelete.value) {
-    emit('delete', restaurantToDelete.value)
+  if (businessToDelete.value) {
+    emit('delete', businessToDelete.value)
   }
   showDeleteConfirm.value = false
-  restaurantToDelete.value = null
+  businessToDelete.value = null
 }
 
 function cancelDelete() {
   showDeleteConfirm.value = false
-  restaurantToDelete.value = null
+  businessToDelete.value = null
 }
 </script>
 
@@ -96,39 +96,39 @@ function cancelDelete() {
   <BaseModal
     :model-value="isOpen"
     size="sm"
-    :title="t('restaurantSelector.title')"
+    :title="t('businessSelector.title')"
     :show-close-button="true"
     @update:model-value="(val: boolean) => isOpen = val"
     @close="close"
   >
-    <div class="restaurants-list">
+    <div class="businesses-list">
       <div
-        v-for="restaurant in restaurants"
-        :key="restaurant.id"
-        :class="['restaurant-item', { selected: restaurant.id === currentId }]"
-        @click="selectRestaurant(restaurant)"
+        v-for="business in businesses"
+        :key="business.id"
+        :class="['business-item', { selected: business.id === currentId }]"
+        @click="selectBusiness(business)"
       >
-        <div v-if="restaurant.brand_dna?.logo_url" class="item-logo">
-          <img :src="restaurant.brand_dna.logo_url" :alt="restaurant.name" />
+        <div v-if="business.brand_dna?.logo_url" class="item-logo">
+          <img :src="business.brand_dna.logo_url" :alt="business.name" />
         </div>
         <div v-else class="item-logo placeholder">
           <span class="placeholder-icon">🏪</span>
         </div>
 
         <div class="item-info">
-          <h4 class="item-name">{{ restaurant.name }}</h4>
-          <p class="item-address">{{ restaurant.address }}</p>
-          <div v-if="restaurant.menu?.items?.length" class="item-meta">
-            {{ t('restaurantSelector.menuItems', { count: restaurant.menu.items.length }) }}
+          <h4 class="item-name">{{ business.name }}</h4>
+          <p class="item-address">{{ business.address }}</p>
+          <div v-if="business.menu?.items?.length" class="item-meta">
+            {{ t('businessSelector.menuItems', { count: business.menu.items.length }) }}
           </div>
         </div>
 
         <div class="item-actions">
-          <span v-if="restaurant.id === currentId" class="check-icon">✓</span>
+          <span v-if="business.id === currentId" class="check-icon">✓</span>
           <button
             class="delete-btn"
-            @click="handleDeleteClick($event, restaurant)"
-            :title="t('restaurantSelector.delete')"
+            @click="handleDeleteClick($event, business)"
+            :title="t('businessSelector.delete')"
           >
             <span class="delete-icon">×</span>
           </button>
@@ -138,35 +138,35 @@ function cancelDelete() {
 
     <template v-if="props.showAddButton" #footer>
       <div class="modal-footer">
-        <button class="manage-link" @click="handleManageRestaurants">
-          {{ $t('profile.manageRestaurants') }}
+        <button class="manage-link" @click="handleManageBusinesses">
+          {{ $t('profile.manageBusinesses') }}
         </button>
         <BaseButton variant="secondary" @click="handleAddNew" fullWidth>
-          {{ t('restaurantSelector.addNew') }}
+          {{ t('businessSelector.addNew') }}
         </BaseButton>
       </div>
     </template>
   </BaseModal>
 
-  <!-- Add Restaurant Modal -->
-  <AddRestaurantModal
+  <!-- Add Business Modal -->
+  <AddBusinessModal
     v-model="showAddModal"
-    :saved-restaurants="restaurants"
-    @restaurant-added="handleRestaurantAdded"
+    :saved-businesses="businesses"
+    @business-added="handleBusinessAdded"
     @switch-to-manual="handleSwitchToManual"
   />
 
-  <!-- Create Restaurant Modal -->
-  <CreateRestaurantModal
+  <!-- Create Business Modal -->
+  <CreateBusinessModal
     v-model="showCreateModal"
-    @created="handleRestaurantCreated"
+    @created="handleBusinessCreated"
   />
 
   <!-- Delete Confirmation Modal -->
   <ConfirmModal
     v-model="showDeleteConfirm"
-    :title="t('restaurantSelector.deleteTitle', 'Remove Restaurant')"
-    :message="t('restaurantSelector.confirmDelete', { name: restaurantToDelete?.name || '' })"
+    :title="t('businessSelector.deleteTitle', 'Remove Business')"
+    :message="t('businessSelector.confirmDelete', { name: businessToDelete?.name || '' })"
     :confirm-text="t('common.delete', 'Delete')"
     :cancel-text="t('common.cancel', 'Cancel')"
     type="danger"
@@ -177,7 +177,7 @@ function cancelDelete() {
 </template>
 
 <style scoped>
-.restaurants-list {
+.businesses-list {
   display: flex;
   flex-direction: column;
   gap: var(--space-md);
@@ -186,7 +186,7 @@ function cancelDelete() {
   padding-right: var(--space-sm);
 }
 
-.restaurant-item {
+.business-item {
   display: flex;
   align-items: center;
   gap: var(--space-lg);
@@ -198,13 +198,13 @@ function cancelDelete() {
   transition: all 0.2s ease;
 }
 
-.restaurant-item:hover {
+.business-item:hover {
   background: rgba(255, 255, 255, 0.8);
   border-color: rgba(15, 61, 46, 0.3);
   transform: translateX(4px);
 }
 
-.restaurant-item.selected {
+.business-item.selected {
   background: var(--gold-subtle);
   border-color: var(--gold-primary);
 }
@@ -298,7 +298,7 @@ function cancelDelete() {
   opacity: 0;
 }
 
-.restaurant-item:hover .delete-btn {
+.business-item:hover .delete-btn {
   opacity: 1;
 }
 
@@ -318,20 +318,20 @@ function cancelDelete() {
 }
 
 /* Scrollbar styling */
-.restaurants-list::-webkit-scrollbar {
+.businesses-list::-webkit-scrollbar {
   width: 6px;
 }
 
-.restaurants-list::-webkit-scrollbar-track {
+.businesses-list::-webkit-scrollbar-track {
   background: transparent;
 }
 
-.restaurants-list::-webkit-scrollbar-thumb {
+.businesses-list::-webkit-scrollbar-thumb {
   background: rgba(15, 61, 46, 0.3);
   border-radius: var(--radius-full);
 }
 
-.restaurants-list::-webkit-scrollbar-thumb:hover {
+.businesses-list::-webkit-scrollbar-thumb:hover {
   background: rgba(15, 61, 46, 0.5);
 }
 
@@ -366,7 +366,7 @@ function cancelDelete() {
 
 /* Responsive */
 @media (max-width: 768px) {
-  .restaurant-item {
+  .business-item {
     padding: var(--space-md);
     gap: var(--space-md);
   }
@@ -378,11 +378,11 @@ function cancelDelete() {
 }
 
 /* ===== DARK MODE OVERRIDES ===== */
-:root[data-theme="dark"] .restaurant-item {
+:root[data-theme="dark"] .business-item {
   background: var(--bg-tertiary);
 }
 
-:root[data-theme="dark"] .restaurant-item:hover {
+:root[data-theme="dark"] .business-item:hover {
   background: var(--bg-elevated);
   border-color: var(--accent-alpha-30);
 }
@@ -391,11 +391,11 @@ function cancelDelete() {
   background: var(--accent-alpha-10);
 }
 
-:root[data-theme="dark"] .restaurants-list::-webkit-scrollbar-thumb {
+:root[data-theme="dark"] .businesses-list::-webkit-scrollbar-thumb {
   background: var(--accent-alpha-30);
 }
 
-:root[data-theme="dark"] .restaurants-list::-webkit-scrollbar-thumb:hover {
+:root[data-theme="dark"] .businesses-list::-webkit-scrollbar-thumb:hover {
   background: var(--accent-alpha-50);
 }
 </style>

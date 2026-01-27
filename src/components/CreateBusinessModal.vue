@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { ref, reactive } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useRestaurantsStore } from '@/stores/restaurants'
-import { restaurantService } from '@/services/restaurantService'
+import { useBusinessesStore } from '@/stores/businesses'
+import { businessService } from '@/services/businessService'
 import BaseModal from './BaseModal.vue'
 import BaseInput from './BaseInput.vue'
 import BaseButton from './BaseButton.vue'
@@ -13,11 +13,11 @@ import ColorPicker from './ColorPicker.vue'
 const props = defineProps<{ modelValue: boolean }>()
 const emit = defineEmits<{
   (e: 'update:modelValue', value: boolean): void
-  (e: 'created', restaurant: any): void
+  (e: 'created', business: any): void
 }>()
 
 const { t } = useI18n()
-const restaurantsStore = useRestaurantsStore()
+const businessesStore = useBusinessesStore()
 const creating = ref(false)
 const uploadingLogo = ref(false)
 const error = ref('')
@@ -53,10 +53,10 @@ async function handleSubmit() {
   error.value = ''
 
   try {
-    // First create the restaurant
-    const restaurant = await restaurantsStore.createManualRestaurant(form)
-    if (!restaurant) {
-      error.value = restaurantsStore.error || t('restaurantManagement.errors.createFailed')
+    // First create the business
+    const business = await businessesStore.createManualBusiness(form)
+    if (!business) {
+      error.value = businessesStore.error || t('businessManagement.errors.createFailed')
       creating.value = false
       return
     }
@@ -65,10 +65,10 @@ async function handleSubmit() {
     if (logoFile.value) {
       uploadingLogo.value = true
       try {
-        const logoUrl = await restaurantService.uploadLogo(restaurant.id, logoFile.value)
+        const logoUrl = await businessService.uploadLogo(business.id, logoFile.value)
 
-        // Update the restaurant with the logo URL
-        await restaurantService.updateRestaurant(restaurant.id, {
+        // Update the business with the logo URL
+        await businessService.updateBusiness(business.id, {
           brand_dna: {
             logo_url: logoUrl,
             primary_color: form.brand_dna.primary_color,
@@ -76,11 +76,11 @@ async function handleSubmit() {
           }
         })
 
-        // Refresh restaurants list to get updated data
-        await restaurantsStore.fetchRestaurants()
+        // Refresh businesses list to get updated data
+        await businessesStore.fetchBusinesses()
       } catch (err: any) {
         console.error('Failed to upload logo:', err)
-        error.value = t('restaurantManagement.errors.logoUploadFailed')
+        error.value = t('businessManagement.errors.logoUploadFailed')
         creating.value = false
         uploadingLogo.value = false
         return // Don't close modal if logo upload fails
@@ -89,7 +89,7 @@ async function handleSubmit() {
       }
     }
 
-    emit('created', restaurant)
+    emit('created', business)
     emit('update:modelValue', false)
 
     // Reset form
@@ -103,7 +103,7 @@ async function handleSubmit() {
     form.brand_dna.logo_url = ''
     logoFile.value = null
   } catch (err: any) {
-    error.value = err.message || t('restaurantManagement.errors.createFailed')
+    error.value = err.message || t('businessManagement.errors.createFailed')
   } finally {
     creating.value = false
   }
@@ -116,69 +116,69 @@ function handleCancel() {
 
 <template>
   <BaseModal :model-value="modelValue" @update:model-value="$emit('update:modelValue', $event)" size="xl">
-    <template #title>{{ $t('restaurantManagement.createRestaurant') }}</template>
+    <template #title>{{ $t('businessManagement.createBusiness') }}</template>
 
     <form @submit.prevent="handleSubmit" class="create-form">
       <!-- Basic Info -->
       <div class="form-section">
-        <h3>{{ $t('restaurantManagement.basicInfo') }}</h3>
+        <h3>{{ $t('businessManagement.basicInfo') }}</h3>
         <BaseInput
           v-model="form.name"
-          :label="$t('restaurantManagement.restaurantName')"
-          :placeholder="$t('restaurantManagement.restaurantNamePlaceholder')"
+          :label="$t('businessManagement.businessName')"
+          :placeholder="$t('businessManagement.businessNamePlaceholder')"
           required
         />
         <BaseInput
           v-model="form.address"
           type="textarea"
-          :label="$t('restaurantManagement.address')"
-          :placeholder="$t('restaurantManagement.addressPlaceholder')"
+          :label="$t('businessManagement.address')"
+          :placeholder="$t('businessManagement.addressPlaceholder')"
           required
         />
       </div>
 
       <!-- Contact Info -->
       <div class="form-section">
-        <h3>{{ $t('restaurantManagement.contactInfo') }}</h3>
+        <h3>{{ $t('businessManagement.contactInfo') }}</h3>
         <BaseInput
           v-model="form.phone_number"
           type="tel"
-          :label="$t('restaurantManagement.phoneNumber')"
-          :placeholder="$t('restaurantManagement.phoneNumberPlaceholder')"
+          :label="$t('businessManagement.phoneNumber')"
+          :placeholder="$t('businessManagement.phoneNumberPlaceholder')"
         />
         <BaseInput
           v-model="form.website"
           type="url"
-          :label="$t('restaurantManagement.website')"
-          :placeholder="$t('restaurantManagement.websitePlaceholder')"
+          :label="$t('businessManagement.website')"
+          :placeholder="$t('businessManagement.websitePlaceholder')"
         />
       </div>
 
       <!-- Social Media -->
       <div class="form-section">
-        <h3>{{ $t('restaurantManagement.socialMedia') }}</h3>
+        <h3>{{ $t('businessManagement.socialMedia') }}</h3>
         <BaseInput
           v-model="form.social_media.instagram"
-          :label="$t('restaurantManagement.instagram')"
-          :placeholder="$t('restaurantManagement.instagramPlaceholder')"
+          :label="$t('businessManagement.instagram')"
+          :placeholder="$t('businessManagement.instagramPlaceholder')"
         />
         <BaseInput
           v-model="form.social_media.facebook"
-          :label="$t('restaurantManagement.facebook')"
-          :placeholder="$t('restaurantManagement.facebookPlaceholder')"
+          :label="$t('businessManagement.facebook')"
+          :placeholder="$t('businessManagement.facebookPlaceholder')"
         />
         <BaseInput
           v-model="form.social_media.twitter"
-          :label="$t('restaurantManagement.twitter')"
-          :placeholder="$t('restaurantManagement.twitterPlaceholder')"
+          :label="$t('businessManagement.twitter')"
+          :placeholder="$t('businessManagement.twitterPlaceholder')"
         />
       </div>
 
       <!-- Branding -->
       <div class="form-section">
-        <h3>{{ $t('restaurantManagement.branding') }}</h3>
+        <h3>{{ $t('businessManagement.branding') }}</h3>
         <div class="logo-section">
-          <label class="form-label">{{ $t('restaurantManagement.logo') }}</label>
+          <label class="form-label">{{ $t('businessManagement.logo') }}</label>
           <LogoUpload
             v-model="form.brand_dna.logo_url"
             :uploading="uploadingLogo"
@@ -189,11 +189,11 @@ function handleCancel() {
         <div class="color-inputs">
           <ColorPicker
             v-model="form.brand_dna.primary_color"
-            :label="$t('restaurantManagement.primaryColor')"
+            :label="$t('businessManagement.primaryColor')"
           />
           <ColorPicker
             v-model="form.brand_dna.secondary_color"
-            :label="$t('restaurantManagement.secondaryColor')"
+            :label="$t('businessManagement.secondaryColor')"
           />
         </div>
       </div>

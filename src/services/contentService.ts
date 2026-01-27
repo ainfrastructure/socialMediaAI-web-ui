@@ -21,15 +21,15 @@ class ContentService {
     holidayTheme?: string,
     visualStyle?: 'behindTheScenes' | 'cleanStrict' | 'zoomIn' | 'oneBite' | 'studioShot' | 'infographic' | 'placeOnTable' | 'custom',
     customPrompt?: string,
-    // New: dish/restaurant info for direct prompt building (skips Stage 1)
+    // New: dish/business info for direct prompt building (skips Stage 1)
     dishInfo?: { name: string; description?: string } | string,
-    restaurantName?: string
+    businessName?: string
   ): Promise<ApiResponse<{ imageUrl: string; usage: any; watermarked?: boolean; promotionalStickerAdded?: boolean }>> {
     console.log('[ContentService] Generating image with placeId:', placeId)
     const response = await fetch(`${API_URL}/api/gemini/generate-image`, {
       method: 'POST',
       headers: getAuthHeaders(),
-      body: JSON.stringify({ prompt, watermark, referenceImage, promotionalSticker, placeId, strictnessMode, holidayTheme, visualStyle, customPrompt, dishInfo, restaurantName }),
+      body: JSON.stringify({ prompt, watermark, referenceImage, promotionalSticker, placeId, strictnessMode, holidayTheme, visualStyle, customPrompt, dishInfo, businessName }),
     })
 
     if (!response.ok) {
@@ -148,14 +148,14 @@ class ContentService {
 
   // Prompt generation
   async generatePrompts(
-    restaurantData: any,
+    businessData: any,
     menuItems?: any[],
     context?: string
   ): Promise<ApiResponse<{ imagePrompts: string[]; videoPrompts: string[] }>> {
     const response = await fetch(`${API_URL}/api/prompts/generate`, {
       method: 'POST',
       headers: getAuthHeaders(),
-      body: JSON.stringify({ restaurantData, menuItems, context }),
+      body: JSON.stringify({ businessData, menuItems, context }),
     })
 
     if (!response.ok) {
@@ -175,7 +175,7 @@ class ContentService {
 
   // Advanced mode: Generate 4 style variations
   async generateStyleVariations(
-    restaurantData: any,
+    businessData: any,
     menuItems: any[],
     customization?: any,
     postTypeOptions?: {
@@ -205,7 +205,7 @@ class ContentService {
     const response = await fetch(`${API_URL}/api/prompts/generate-style-variations`, {
       method: 'POST',
       headers: getAuthHeaders(),
-      body: JSON.stringify({ restaurantData, menuItems, customization, postTypeOptions }),
+      body: JSON.stringify({ businessData, menuItems, customization, postTypeOptions }),
     })
 
     if (!response.ok) {
@@ -228,7 +228,7 @@ class ContentService {
     prompt: string,
     customization: any,
     menuItems: any[],
-    restaurantLogoPath?: string,
+    businessLogoPath?: string,
     placeId?: string,
     postTypeOptions?: {
       postType: 'single' | 'combo' | 'weekly'
@@ -258,7 +258,7 @@ class ContentService {
     const response = await fetch(`${API_URL}/api/images/generate-advanced`, {
       method: 'POST',
       headers: getAuthHeaders(),
-      body: JSON.stringify({ prompt, customization, menuItems, restaurantLogoPath, placeId, postTypeOptions, referenceImage }),
+      body: JSON.stringify({ prompt, customization, menuItems, businessLogoPath, placeId, postTypeOptions, referenceImage }),
     })
 
     if (!response.ok) {
@@ -331,7 +331,7 @@ class ContentService {
   // Post content generation
   async generatePostContent(
     platform: string,
-    restaurantName: string,
+    businessName: string,
     menuItems: Array<string | { name: string; description?: string }>,
     contentType: 'image' | 'video',
     context?: string,
@@ -343,7 +343,7 @@ class ContentService {
       headers: getAuthHeaders(),
       body: JSON.stringify({
         platform,
-        restaurantName,
+        businessName,
         menuItems,
         contentType,
         context,

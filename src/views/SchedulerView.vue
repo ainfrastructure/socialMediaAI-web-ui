@@ -17,9 +17,9 @@
         <!-- Filters Accordion -->
         <CalendarFilters
           :platforms="availablePlatforms"
-          :restaurants="restaurantsForFilter"
+          :businesses="businessesForFilter"
           v-model:selectedPlatforms="filters.platforms"
-          v-model:selectedRestaurants="filters.restaurant_ids"
+          v-model:selectedBusinesss="filters.business_ids"
           @apply="applyFilters"
         />
 
@@ -151,7 +151,7 @@
                   <div class="th-post-type">{{ $t('postType.label') || 'Post Type' }}</div>
                   <div class="th-platforms">{{ $t('dashboardNew.platforms') || 'Platforms' }}</div>
                   <div class="th-status">{{ $t('scheduler.status') || 'Status' }}</div>
-                  <div class="th-restaurant">{{ $t('scheduler.restaurant') || 'Restaurant' }}</div>
+                  <div class="th-business">{{ $t('scheduler.business') || 'Business' }}</div>
                   <div class="th-expand"></div>
                 </div>
 
@@ -227,9 +227,9 @@
                         </button>
                       </div>
 
-                      <!-- Restaurant Column -->
-                      <div class="td-restaurant">
-                        <span class="restaurant-name">{{ post.restaurant_name || '-' }}</span>
+                      <!-- Business Column -->
+                      <div class="td-business">
+                        <span class="business-name">{{ post.business_name || '-' }}</span>
                       </div>
 
                       <!-- Expand Toggle -->
@@ -418,7 +418,7 @@
     <PickPostModal
       v-model="showPickPostModal"
       :selected-date="selectedDateForScheduling"
-      :restaurant-id="selectedRestaurantIdForPosts"
+      :business-id="selectedBusinessIdForPosts"
       @scheduled="handlePostScheduled"
     />
 
@@ -429,19 +429,19 @@
       @select="selectCreationMethod"
     />
 
-    <!-- Restaurant Selector Modal (shown when user has multiple restaurants) -->
-    <RestaurantSelectorModal
-      v-model="showRestaurantSelector"
-      :restaurants="restaurants"
+    <!-- Business Selector Modal (shown when user has multiple businesses) -->
+    <BusinessSelectorModal
+      v-model="showBusinessSelector"
+      :businesses="businesses"
       :show-add-button="false"
-      @select="handleRestaurantSelected"
+      @select="handleBusinessSelected"
     />
 
     <!-- Full Creation Wizard Modal -->
     <FullCreationWizardModal
       v-model="showFullCreationWizard"
       :selected-date="selectedDateForScheduling"
-      :restaurants="restaurants"
+      :businesses="businesses"
       @post-created="handleFullWizardPostCreated"
       @open-pick-post-modal="handleFullWizardOpenPickPost"
     />
@@ -507,7 +507,7 @@ import EditScheduledPostModal from '../components/EditScheduledPostModal.vue'
 import Toast from '../components/Toast.vue'
 import ConfirmModal from '../components/ConfirmModal.vue'
 import PostDetailModal from '../components/PostDetailModal.vue'
-import RestaurantSelectorModal from '../components/RestaurantSelectorModal.vue'
+import BusinessSelectorModal from '../components/BusinessSelectorModal.vue'
 import PublishingProgressModal from '../components/PublishingProgressModal.vue'
 import { CalendarHeader, CalendarLegend, CreatePostWizard, CalendarFilters, SelectedDayDetail, FullCreationWizardModal } from '../components/scheduler'
 import PlatformLogo from '../components/PlatformLogo.vue'
@@ -515,7 +515,7 @@ import PostTypeBadge from '../components/PostTypeBadge.vue'
 import { api } from '../services/api'
 import { schedulerService } from '../services/schedulerService'
 import { API_URL } from '../services/apiBase'
-import { useRestaurantsStore } from '../stores/restaurants'
+import { useBusinessesStore } from '../stores/businesses'
 import { usePreferencesStore } from '../stores/preferences'
 import { useFacebookStore } from '../stores/facebook'
 import { useInstagramStore } from '../stores/instagram'
@@ -524,7 +524,7 @@ import { useNotificationStore } from '../stores/notifications'
 const router = useRouter()
 const preferencesStore = usePreferencesStore()
 const { t } = useI18n()
-const restaurantsStore = useRestaurantsStore()
+const businessesStore = useBusinessesStore()
 
 // Calendar state
 const currentDate = ref(new Date())
@@ -548,9 +548,9 @@ const showCreatePostWizard = ref(false)
 const showFullCreationWizard = ref(false)
 const wizardStep = ref(1) // 1 = Choose Method, 2 = Create/Select Content
 const selectedCreationMethod = ref<'saved' | 'new' | null>(null)
-const showRestaurantSelector = ref(false)
+const showBusinessSelector = ref(false)
 const pendingCreationMethod = ref<'saved' | 'new' | null>(null)
-const selectedRestaurantIdForPosts = ref<string | undefined>(undefined)
+const selectedBusinessIdForPosts = ref<string | undefined>(undefined)
 const dayViewPage = ref(1)
 const postsPerPage = 5
 const expandedPostId = ref<string | number | null>(null)
@@ -618,11 +618,11 @@ const viewMode = ref<'month' | 'week' | 'day'>('month')
 // Filters (now using arrays for multi-select)
 const filters = ref({
   platforms: [] as string[],
-  restaurant_ids: [] as string[],
+  business_ids: [] as string[],
 })
 
-// Use restaurants from store
-const restaurants = computed(() => restaurantsStore.restaurants)
+// Use businesses from store
+const businesses = computed(() => businessesStore.businesses)
 
 const availablePlatforms = [
   { id: 'facebook', name: 'Facebook' },
@@ -630,9 +630,9 @@ const availablePlatforms = [
   { id: 'tiktok', name: 'TikTok' },
 ]
 
-// Transform restaurants for CalendarFilters component
-const restaurantsForFilter = computed(() => {
-  return restaurants.value.map(r => ({
+// Transform businesses for CalendarFilters component
+const businessesForFilter = computed(() => {
+  return businesses.value.map(r => ({
     id: String(r.id),
     name: r.name
   }))
@@ -1070,14 +1070,14 @@ const fetchScheduledPosts = async () => {
     const year = currentDate.value.getFullYear()
 
     // Check if filters are active
-    const hasFilters = filters.value.platforms.length > 0 || filters.value.restaurant_ids.length > 0
+    const hasFilters = filters.value.platforms.length > 0 || filters.value.business_ids.length > 0
 
     // Fetch current month posts (with filters for calendar)
     const response = await api.getScheduledPosts({
       month,
       year,
       platforms: filters.value.platforms.length > 0 ? filters.value.platforms : undefined,
-      restaurant_ids: filters.value.restaurant_ids.length > 0 ? filters.value.restaurant_ids : undefined,
+      business_ids: filters.value.business_ids.length > 0 ? filters.value.business_ids : undefined,
     })
 
     // Also fetch adjacent months for calendar display (previous and next month days shown in grid)
@@ -1091,13 +1091,13 @@ const fetchScheduledPosts = async () => {
         month: prevMonth,
         year: prevYear,
         platforms: filters.value.platforms.length > 0 ? filters.value.platforms : undefined,
-        restaurant_ids: filters.value.restaurant_ids.length > 0 ? filters.value.restaurant_ids : undefined,
+        business_ids: filters.value.business_ids.length > 0 ? filters.value.business_ids : undefined,
       }),
       api.getScheduledPosts({
         month: nextMonth,
         year: nextYear,
         platforms: filters.value.platforms.length > 0 ? filters.value.platforms : undefined,
-        restaurant_ids: filters.value.restaurant_ids.length > 0 ? filters.value.restaurant_ids : undefined,
+        business_ids: filters.value.business_ids.length > 0 ? filters.value.business_ids : undefined,
       }),
     ])
 
@@ -1142,7 +1142,7 @@ const fetchScheduledPosts = async () => {
         let postText = post.post_text || post.caption
         let contentType = post.content_type
         let platform = post.platform
-        let restaurantName = post.restaurant_name
+        let businessName = post.business_name
 
         // Check if this is a scheduled favorite (has favorite_posts field)
         if (!mediaUrl && post.favorite_posts) {
@@ -1153,7 +1153,7 @@ const fetchScheduledPosts = async () => {
           postText = postText || post.favorite_posts.post_text || post.favorite_posts.caption
           contentType = contentType || post.favorite_posts.content_type
           platform = platform || post.favorite_posts.platform
-          restaurantName = restaurantName || post.favorite_posts.restaurant_name
+          businessName = businessName || post.favorite_posts.business_name
         }
 
         // Also check legacy field names
@@ -1162,7 +1162,7 @@ const fetchScheduledPosts = async () => {
           postText = postText || post.favorite.post_text || post.favorite.caption
           contentType = contentType || post.favorite.content_type
           platform = platform || post.favorite.platform
-          restaurantName = restaurantName || post.favorite.restaurant_name
+          businessName = businessName || post.favorite.business_name
         }
 
         if (!mediaUrl && post.favorite_post) {
@@ -1173,7 +1173,7 @@ const fetchScheduledPosts = async () => {
           postText = postText || post.favorite_post.post_text || post.favorite_post.caption
           contentType = contentType || post.favorite_post.content_type
           platform = platform || post.favorite_post.platform
-          restaurantName = restaurantName || post.favorite_post.restaurant_name
+          businessName = businessName || post.favorite_post.business_name
         }
 
         // If content_type is still missing, detect from URL
@@ -1189,7 +1189,7 @@ const fetchScheduledPosts = async () => {
           post_text: postText,
           content_type: detectedType,
           platform: platform,
-          restaurant_name: restaurantName,
+          business_name: businessName,
         }
       })
 
@@ -1203,28 +1203,28 @@ const fetchScheduledPosts = async () => {
         let postText = post.post_text || post.caption
         let contentType = post.content_type
         let platform = post.platform
-        let restaurantName = post.restaurant_name
+        let businessName = post.business_name
 
         if (!mediaUrl && post.favorite_posts) {
           mediaUrl = post.favorite_posts.media_url || post.favorite_posts.image_url || post.favorite_posts.video_url
           postText = postText || post.favorite_posts.post_text || post.favorite_posts.caption
           contentType = contentType || post.favorite_posts.content_type
           platform = platform || post.favorite_posts.platform
-          restaurantName = restaurantName || post.favorite_posts.restaurant_name
+          businessName = businessName || post.favorite_posts.business_name
         }
         if (!mediaUrl && post.favorite) {
           mediaUrl = post.favorite.media_url || post.favorite.image_url || post.favorite.video_url
           postText = postText || post.favorite.post_text || post.favorite.caption
           contentType = contentType || post.favorite.content_type
           platform = platform || post.favorite.platform
-          restaurantName = restaurantName || post.favorite.restaurant_name
+          businessName = businessName || post.favorite.business_name
         }
         if (!mediaUrl && post.favorite_post) {
           mediaUrl = post.favorite_post.media_url || post.favorite_post.image_url || post.favorite_post.video_url
           postText = postText || post.favorite_post.post_text || post.favorite_post.caption
           contentType = contentType || post.favorite_post.content_type
           platform = platform || post.favorite_post.platform
-          restaurantName = restaurantName || post.favorite_post.restaurant_name
+          businessName = businessName || post.favorite_post.business_name
         }
 
         const detectedType = contentType || detectContentTypeFromUrl(mediaUrl || '')
@@ -1237,7 +1237,7 @@ const fetchScheduledPosts = async () => {
           post_text: postText,
           content_type: detectedType,
           platform: platform,
-          restaurant_name: restaurantName,
+          business_name: businessName,
         }
       })
     } else {
@@ -1451,40 +1451,40 @@ const selectCreationMethod = (method: 'saved' | 'new') => {
   selectedCreationMethod.value = method
   showCreatePostWizard.value = false
 
-  // If user has more than one restaurant, show restaurant selector first
-  if (restaurants.value.length > 1) {
+  // If user has more than one business, show business selector first
+  if (businesses.value.length > 1) {
     pendingCreationMethod.value = method
-    showRestaurantSelector.value = true
+    showBusinessSelector.value = true
   } else {
-    // Single restaurant or no restaurants - proceed directly
-    const restaurantId = restaurants.value.length === 1 ? restaurants.value[0].id : undefined
-    proceedWithCreationMethod(method, restaurantId)
+    // Single business or no businesses - proceed directly
+    const businessId = businesses.value.length === 1 ? businesses.value[0].id : undefined
+    proceedWithCreationMethod(method, businessId)
   }
 }
 
-// Proceed with the creation method after restaurant selection (or if only one restaurant)
-const proceedWithCreationMethod = (method: 'saved' | 'new', restaurantId?: string) => {
+// Proceed with the creation method after business selection (or if only one business)
+const proceedWithCreationMethod = (method: 'saved' | 'new', businessId?: string) => {
   if (method === 'new') {
     // Always start in easy mode when creating new content
     preferencesStore.setCreationMode('easy', true)
-    // Go to posts create page with optional restaurant ID
+    // Go to posts create page with optional business ID
     let url = `/posts/create?scheduleDate=${selectedDateForScheduling.value}`
-    if (restaurantId) {
-      url += `&restaurantId=${restaurantId}`
+    if (businessId) {
+      url += `&businessId=${businessId}`
     }
     router.push(url)
   } else if (method === 'saved') {
-    // Set the restaurant filter and open pick post modal
-    selectedRestaurantIdForPosts.value = restaurantId
+    // Set the business filter and open pick post modal
+    selectedBusinessIdForPosts.value = businessId
     showPickPostModal.value = true
   }
 }
 
-// Handle restaurant selection from modal
-const handleRestaurantSelected = (restaurant: any) => {
-  showRestaurantSelector.value = false
+// Handle business selection from modal
+const handleBusinessSelected = (business: any) => {
+  showBusinessSelector.value = false
   if (pendingCreationMethod.value) {
-    proceedWithCreationMethod(pendingCreationMethod.value, restaurant.id)
+    proceedWithCreationMethod(pendingCreationMethod.value, business.id)
     pendingCreationMethod.value = null
   }
 }
@@ -1799,9 +1799,9 @@ const getMediaUrl = (url: string): string => {
   return `${API_URL}${url.startsWith('/') ? '' : '/'}${url}`
 }
 
-// Fetch restaurants for filter dropdown (uses store)
-const fetchRestaurants = async () => {
-  await restaurantsStore.initialize()
+// Fetch businesses for filter dropdown (uses store)
+const fetchBusinesses = async () => {
+  await businessesStore.initialize()
 }
 
 // Apply filters
@@ -1810,7 +1810,7 @@ const applyFilters = () => {
 }
 
 onMounted(async () => {
-  await Promise.all([fetchScheduledPosts(), fetchHolidays(), fetchRestaurants()])
+  await Promise.all([fetchScheduledPosts(), fetchHolidays(), fetchBusinesses()])
 
   // Auto-select today's date
   const todayDay = calendarDays.value.find((day) => !day.isOtherMonth && day.isToday)
@@ -2269,13 +2269,13 @@ onMounted(async () => {
   background: #f59e0b;
 }
 
-/* Restaurant Column */
-.td-restaurant {
+/* Business Column */
+.td-business {
   display: flex;
   align-items: center;
 }
 
-.restaurant-name {
+.business-name {
   font-size: var(--text-sm);
   color: var(--text-muted);
 }
@@ -3130,7 +3130,7 @@ onMounted(async () => {
   margin: 0;
 }
 
-.post-restaurant {
+.post-business {
   font-size: 0.875rem;
   color: var(--text-muted);
 }

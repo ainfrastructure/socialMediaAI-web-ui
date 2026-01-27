@@ -12,7 +12,7 @@ interface Props {
   modelValue: boolean
   carouselImages: CarouselItem[]
   platform: 'facebook' | 'instagram'
-  restaurantName?: string
+  businessName?: string
   brandDNA?: any
 }
 
@@ -65,7 +65,7 @@ async function generateContent() {
       body: JSON.stringify({
         imageUrls: props.carouselImages.map(img => img.mediaUrl),
         platform: props.platform,
-        restaurantName: props.restaurantName,
+        businessName: props.businessName,
         brandDNA: props.brandDNA
       })
     })
@@ -168,7 +168,7 @@ if (props.modelValue && !caption.value) {
             type="textarea"
             :label="t('carousel.hashtags') || 'Hashtags (one per line)'"
             :rows="4"
-            :placeholder="t('carousel.hashtagsPlaceholder') || '#food\n#restaurant\n#delicious'"
+            :placeholder="t('carousel.hashtagsPlaceholder') || '#food\n#business\n#delicious'"
             :hint="t('carousel.hashtagsHint') || 'Enter one hashtag per line'"
           />
 

@@ -328,7 +328,7 @@ function getFeatureText(feature: string): string {
     'Facebook publishing': 'plans.facebookPublishing',
     'Instagram publishing': 'plans.instagramPublishing',
     'Post scheduling': 'plans.postScheduling',
-    'Unlimited restaurants': 'plans.unlimitedRestaurants',
+    'Unlimited businesses': 'plans.unlimitedBusinesses',
     'Credits never expire': 'plans.noExpiration',
   }
 

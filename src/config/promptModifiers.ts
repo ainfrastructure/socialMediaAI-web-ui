@@ -172,7 +172,7 @@ MANDATORY REQUIREMENTS:
 1. Show multiple dishes in an appealing arrangement
 2. Create a sense of variety and abundance across the week
 3. Emphasize the weekly menu concept visually
-4. Professional restaurant presentation
+4. Professional business presentation
 
 Video showcasing a week's worth of delicious dishes. Show one featured dish prominently with others visible around it in a grid. Professional kitchen setting with steam and motion. Conveys weekly variety and quality.`,
 
@@ -182,7 +182,7 @@ MANDATORY REQUIREMENTS:
 1. Show multiple dishes in an appealing arrangement
 2. Create a sense of variety and abundance across the week
 3. Emphasize the weekly menu concept visually
-4. Professional restaurant presentation
+4. Professional business presentation
 
 Video panning across multiple dishes arranged in a calendar-style grid. Each dish represents a different day. Professional setting showcasing weekly variety.`,
 
@@ -192,7 +192,7 @@ MANDATORY REQUIREMENTS:
 1. Show multiple dishes in an appealing arrangement
 2. Create a sense of variety and abundance across the week
 3. Emphasize the weekly menu concept visually
-4. Professional restaurant presentation
+4. Professional business presentation
 
 Video revealing dishes stacked vertically or shown in sequence, one after another. Each dish represents a different day of the week. Professional presentation emphasizing variety.`,
 
@@ -202,7 +202,7 @@ MANDATORY REQUIREMENTS:
 1. Show multiple dishes in an appealing arrangement
 2. Create a sense of variety and abundance across the week
 3. Emphasize the weekly menu concept visually
-4. Professional restaurant presentation
+4. Professional business presentation
 
 Video showcasing dishes in a structured grid layout. Camera pans across the weekly offerings. Professional setting with excellent lighting highlighting each dish.`,
 

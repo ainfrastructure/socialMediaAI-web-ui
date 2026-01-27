@@ -1,37 +1,37 @@
 <script setup lang="ts">
 import { onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useRestaurantsStore } from '@/stores/restaurants'
+import { useBusinessesStore } from '@/stores/businesses'
 import DashboardLayout from '../components/DashboardLayout.vue'
-import RestaurantManagementSection from '../components/RestaurantManagementSection.vue'
+import BusinessManagementSection from '../components/BusinessManagementSection.vue'
 
 const { t } = useI18n()
-const restaurantsStore = useRestaurantsStore()
+const businessesStore = useBusinessesStore()
 
 onMounted(async () => {
-  if (!restaurantsStore.restaurants.length) {
-    await restaurantsStore.fetchRestaurants()
+  if (!businessesStore.businesses.length) {
+    await businessesStore.fetchBusinesses()
   }
 })
 </script>
 
 <template>
   <DashboardLayout>
-    <div class="restaurants-view">
+    <div class="businesses-view">
       <div class="page-header">
-        <h1 class="page-title">{{ $t('profile.manageRestaurants') }}</h1>
+        <h1 class="page-title">{{ $t('profile.manageBusinesses') }}</h1>
         <p class="page-subtitle">
-          {{ $t('restaurantManagement.noRestaurantsHint') }}
+          {{ $t('businessManagement.noBusinessesHint') }}
         </p>
       </div>
 
-      <RestaurantManagementSection />
+      <BusinessManagementSection />
     </div>
   </DashboardLayout>
 </template>
 
 <style scoped>
-.restaurants-view {
+.businesses-view {
   max-width: 1400px;
   margin: 0 auto;
   padding: var(--space-2xl);
@@ -66,7 +66,7 @@ onMounted(async () => {
 }
 
 @media (max-width: 768px) {
-  .restaurants-view {
+  .businesses-view {
     padding: var(--space-xl) var(--space-md);
   }
 
@@ -80,7 +80,7 @@ onMounted(async () => {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .restaurants-view {
+  .businesses-view {
     animation: none;
   }
 }

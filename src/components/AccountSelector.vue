@@ -24,7 +24,7 @@ interface Props {
   showPostTypeSelector?: boolean
   contentType?: 'image' | 'video'
   hasMultipleImages?: boolean
-  restaurantName?: string
+  businessName?: string
   brandDNA?: any
 }
 
@@ -495,7 +495,7 @@ const handleCarouselContentCancel = () => {
       v-model="showCarouselContentModal"
       :carousel-images="carouselContentItems"
       :platform="platform as 'facebook' | 'instagram'"
-      :restaurant-name="restaurantName"
+      :business-name="businessName"
       :brand-d-n-a="brandDNA"
       @confirm="handleCarouselContentConfirm"
       @cancel="handleCarouselContentCancel"

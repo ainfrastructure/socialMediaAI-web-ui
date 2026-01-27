@@ -81,7 +81,7 @@ export default {
 
   // Auth / Login View
   auth: {
-    brandSubtitle: 'AI-drevet innhold for restauranter',
+    brandSubtitle: 'AI-drevet innhold for businesser',
     email: 'E-post',
     emailPlaceholder: 'din{\'@\'}epost.no',
     signIn: 'Logg inn',
@@ -100,8 +100,8 @@ export default {
 
   // Waitlist Landing Page
   waitlist: {
-    headline: 'Din restaurants automatiserte sosiale medier-ansvarlig',
-    subheadline: 'Lag fantastisk matinnhold, planlegg innlegg og utvid restaurantens tilstedeværelse—alt med AI.',
+    headline: 'Din businesses automatiserte sosiale medier-ansvarlig',
+    subheadline: 'Lag fantastisk matinnhold, planlegg innlegg og utvid businessens tilstedeværelse—alt med AI.',
     emailPlaceholder: 'Skriv inn e-posten din',
     joinButton: 'Bli med på ventelisten',
     joining: 'Registrerer...',
@@ -112,7 +112,7 @@ export default {
     error: 'Noe gikk galt. Prøv igjen.',
     loginLink: 'Har du allerede en konto?',
     loginLinkText: 'Logg inn',
-    socialProof: 'Bli med {count}+ restauranter på ventelisten',
+    socialProof: 'Bli med {count}+ businesser på ventelisten',
     finalCta: {
       title: 'Vær først ute',
       subtitle: 'Bli med på ventelisten og få tidlig tilgang når vi lanserer.'
@@ -123,10 +123,10 @@ export default {
   landing: {
     // Hero Section
     hero: {
-      tagline: 'AI-drevet sosiale medier for restauranter',
+      tagline: 'AI-drevet sosiale medier for businesser',
       headlinePart1: 'Den kraftigste og',
       headlinePart2: 'enkleste AI-innholds',
-      headlinePart3: 'generator for restauranter',
+      headlinePart3: 'generator for businesser',
       subheadline: 'Få flotte innlegg på sosiale medier som publiserer seg selv. Ingen fotograf, ingen designer, ingen tekniske ferdigheter nødvendig.',
       cta: 'Kom i gang nå',
       ctaSecondary: 'Se hvordan det fungerer',
@@ -194,7 +194,7 @@ export default {
 
     // Benefits
     benefits: {
-      title: 'Hvorfor restauranteiere elsker SocialChef',
+      title: 'Hvorfor businesseiere elsker SocialChef',
       time: {
         title: 'Spar timesvis per uke',
         description: 'Slutt å slite med innholdsproduksjon. Bruk tiden på det som betyr noe - maten og kundene dine.'
@@ -224,7 +224,7 @@ export default {
     // Final CTA
     finalCta: {
       title: 'Klar til å si opp sosiale medier-bekymringene?',
-      subtitle: 'Bli med hundrevis av restauranteiere som sluttet å stresse over sosiale medier.'
+      subtitle: 'Bli med hundrevis av businesseiere som sluttet å stresse over sosiale medier.'
     },
 
     // Login Modal
@@ -242,7 +242,7 @@ export default {
 
     // Footer
     footer: {
-      madeWith: 'Laget med kjærlighet for restauranteiere',
+      madeWith: 'Laget med kjærlighet for businesseiere',
       copyright: '© 2025 SocialChef. Alle rettigheter reservert.'
     }
   },
@@ -253,14 +253,14 @@ export default {
 
     // Welcome Modal
     welcomeModalTitle: 'Velkommen til SocialChef!',
-    welcomeModalMessage: 'Det ser ut som du ikke har lagt til en restaurant ennå. La oss komme i gang med å legge til din første restaurant og lage fantastisk innhold!',
+    welcomeModalMessage: 'Det ser ut som du ikke har lagt til en business ennå. La oss komme i gang med å legge til din første business og lage fantastisk innhold!',
     welcomeModalButton: 'La oss starte',
 
     // Stats
     postsCreated: 'Innlegg opprettet',
     postsSaved: 'Innlegg lagret',
     scheduledPosts: 'Planlagte innlegg',
-    restaurants: 'Restauranter',
+    businesses: 'Businesser',
 
     // Quick actions
 
@@ -317,7 +317,7 @@ export default {
     instagramPublishing: 'Instagram-publisering',
     included: 'Inkludert',
     postScheduling: 'Innleggsplanlegging',
-    unlimitedRestaurants: 'Ubegrensede restauranter',
+    unlimitedBusinesses: 'Ubegrensede businesser',
     noExpiration: 'Poeng utløper aldri',
     subscriptionRequired: 'Et abonnement kreves for å bruke SocialChef. Velg en plan nedenfor for å komme i gang.',
     // Processing states
@@ -335,15 +335,15 @@ export default {
     contactSupport: 'Hvis dette fortsetter, vennligst kontakt support på support@socialchef.ai'
   },
 
-  // Restaurant Search View
-  restaurantSearch: {
-    searchPlaceholder: 'Søk restauranter etter navn eller sted...',
-    noResults: 'Ingen restauranter funnet',
+  // Business Search View
+  businessSearch: {
+    searchPlaceholder: 'Søk businesser etter navn eller sted...',
+    noResults: 'Ingen businesser funnet',
 
     // Autocomplete
-    searchLabel: 'Søk restauranter',
+    searchLabel: 'Søk businesser',
     searching: 'Søker...',
-    searchError: 'Kunne ikke søke etter restauranter. Vennligst prøv igjen.',
+    searchError: 'Kunne ikke søke etter businesser. Vennligst prøv igjen.',
     alreadyAdded: 'Allerede lagt til',
 
     // Quick Overview
@@ -385,9 +385,9 @@ export default {
       ],
 
       searchDetails: [
-        'Søk etter restauranter ved hjelp av Google Places',
+        'Søk etter businesser ved hjelp av Google Places',
         'Importer automatisk menyer, bilder og merkevaredetaljer',
-        'Bygg din restaurantdatabase',
+        'Bygg din businessdatabase',
         'Få tilgang til omfattende forretningsinformasjon',
       ],
 
@@ -401,7 +401,7 @@ export default {
       scheduleDetails: [
         'Planlegg innlegg på forhånd',
         'Publiser direkte til Facebook',
-        'Administrer flere restauranter',
+        'Administrer flere businesser',
         'Spor innholdets ytelse',
       ],
 
@@ -413,7 +413,7 @@ export default {
       ],
 
       readyDetails: [
-        'Start med å søke etter restauranten din',
+        'Start med å søke etter businessen din',
         'Generer ditt første innlegg på minutter',
         'Alt innhold lagres i biblioteket ditt',
         'Planlegg innhold for å opprettholde konsistens',
@@ -426,7 +426,7 @@ export default {
     quiz: {
 
       // Questions
-      q1Options: ['Koble til sosiale mediekontoer', 'Søk og lagre en restaurant', 'Generer AI-innhold', 'Planlegg innlegg'],
+      q1Options: ['Koble til sosiale mediekontoer', 'Søk og lagre en business', 'Generer AI-innhold', 'Planlegg innlegg'],
 
       q2Options: ['Kun bildegenerering', 'Kun bildetekstskriving', 'Bilder, videoer og bildetekster', 'Kun menydesign'],
 
@@ -447,15 +447,15 @@ export default {
 
   // Playground View
   playground: {
-    chooseRestaurant: 'Velg en restaurant',
-    addNewRestaurant: '+ Legg til ny restaurant',
+    chooseBusiness: 'Velg en business',
+    addNewBusiness: '+ Legg til ny business',
     menuItems: 'menyelementer',
     saved: 'Lagret',
     livePreview: 'Forhåndsvisning',
     yourGeneratedImage: 'Ditt genererte bilde',
     previewDescription: 'Forhåndsvis hvordan klistremerket og logoen vil se ut',
     itemsSelected: '{count} element valgt | {count} elementer valgt',
-    selectRestaurant: 'Velg restaurant',
+    selectBusiness: 'Velg business',
 
     // Tabs
 
@@ -472,7 +472,7 @@ export default {
 
     // Video Generation
 
-    // Restaurant Details Modal
+    // Business Details Modal
 
     // Style Templates (Easy Mode)
     styleTemplates: {
@@ -557,7 +557,7 @@ export default {
       includeAudio: 'Inkluder AI-generert lyd',
       promoLabel: 'Spesialtilbud (valgfritt)',
       promoPlaceholder: 'f.eks. 20% RABATT, KOMBOTILBUD, NY RETT...',
-      logoLabel: 'Restaurant logo',
+      logoLabel: 'Business logo',
       currentLogo: 'Nåværende logo',
       newLogo: 'Ny logo',
       uploadLogo: 'Last opp logo',
@@ -661,8 +661,8 @@ export default {
     step2: {
       title: 'Tilpass designet ditt',
       subtitle: 'Skreddersy utseendet til innlegget ditt',
-      logoPositionLabel: 'Restaurant logoposisjon',
-      logoPositionHint: 'Hvor restaurantlogoen skal plasseres',
+      logoPositionLabel: 'Business logoposisjon',
+      logoPositionHint: 'Hvor businesslogoen skal plasseres',
       previewLabel: 'Forhåndsvisning'
     },
     logoPositions: {
@@ -843,7 +843,7 @@ export default {
     publishedAt: 'Publisert',
     viewPost: 'Se innlegg',
     viewOn: 'Se på',
-    restaurant: 'Restaurant',
+    business: 'Business',
     caption: 'Bildetekst',
     edit: 'Rediger',
     cancelPost: 'Avbryt innlegg',
@@ -924,18 +924,18 @@ export default {
     sortOldest: 'Eldste først',
     // Welcome state for new users
     welcomeTitle: 'Velkommen!',
-    welcomeSubtitle: 'La oss starte med å legge til din første restaurant.',
-    addFirstRestaurant: 'Legg til din første restaurant',
-    addFirstRestaurantDescription: 'Søk etter restauranten din, så importerer vi automatisk menyen og merkevaren.',
-    noRestaurantPrompt: 'Legg til en restaurant for å begynne å lage innlegg.',
+    welcomeSubtitle: 'La oss starte med å legge til din første business.',
+    addFirstBusiness: 'Legg til din første business',
+    addFirstBusinessDescription: 'Søk etter businessen din, så importerer vi automatisk menyen og merkevaren.',
+    noBusinessPrompt: 'Legg til en business for å begynne å lage innlegg.',
     createPost: 'Lag innlegg'
   },
 
   // Content Create View
   contentCreate: {
     loading: 'Laster...',
-    loadError: 'Kunne ikke laste restaurant',
-    switchRestaurant: 'Bytt',
+    loadError: 'Kunne ikke laste business',
+    switchBusiness: 'Bytt',
     imageError: 'Kunne ikke generere bilde. Prøv igjen.',
     videoError: 'Kunne ikke generere video. Prøv igjen.',
     videoTimeout: 'Videogenerering tok for lang tid. Prøv igjen.',
@@ -967,16 +967,16 @@ export default {
     uploadFeatureComingSoon: 'Direkte opplasting kommer snart. Bruk bibliotek-fanen for å velge fra eksisterende innlegg.'
   },
 
-  // Restaurant Selector Modal
-  restaurantSelector: {
-    title: 'Velg restaurant',
-    addNew: '+ Legg til ny restaurant',
+  // Business Selector Modal
+  businessSelector: {
+    title: 'Velg business',
+    addNew: '+ Legg til ny business',
     menuItems: '{count} menyelementer',
-    delete: 'Fjern restaurant',
-    deleteTitle: 'Fjern restaurant',
-    confirmDelete: 'Er du sikker på at du vil fjerne "{name}" fra dine lagrede restauranter?',
-    restaurantAdded: 'Restaurant lagt til!',
-    cantFindAddManually: 'Finner du ikke restauranten din? Legg til manuelt'
+    delete: 'Fjern business',
+    deleteTitle: 'Fjern business',
+    confirmDelete: 'Er du sikker på at du vil fjerne "{name}" fra dine lagrede businesser?',
+    businessAdded: 'Business lagt til!',
+    cantFindAddManually: 'Finner du ikke businessen din? Legg til manuelt'
   },
 
   // Image Source Selector
@@ -987,7 +987,7 @@ export default {
     noImagesAvailable: 'Ingen bilder tilgjengelig',
     folderEmpty: 'Denne mappen er tom',
     searchPlaceholder: 'Søk bilder...',
-    selectFromStorage: 'Velg fra dine restaurantbilder',
+    selectFromStorage: 'Velg fra dine businessbilder',
     uploadOrSelect: 'Last opp et nytt bilde eller velg fra dine eksisterende bilder'
   },
 
@@ -996,7 +996,7 @@ export default {
     title: 'Profilinnstillinger',
     subtitleExtended: 'Administrer kontoinformasjonen og abonnementet ditt',
     personalInfo: 'Personlig informasjon',
-    manageRestaurants: 'Administrer restauranter',
+    manageBusinesses: 'Administrer businesser',
     email: 'E-post',
     emailAddress: 'E-postadresse',
     userId: 'Bruker-ID',
@@ -1087,41 +1087,41 @@ export default {
     }
   },
 
-  // Restaurant Management
-  restaurantManagement: {
-    addRestaurant: 'Legg til restaurant',
-    addFirstRestaurant: 'Legg til din første restaurant',
-    createRestaurant: 'Opprett restaurant',
+  // Business Management
+  businessManagement: {
+    addBusiness: 'Legg til business',
+    addFirstBusiness: 'Legg til din første business',
+    createBusiness: 'Opprett business',
     uploadImages: 'Last opp bilder',
     yourImages: 'Dine bilder',
 
-    noRestaurants: 'Ingen restauranter ennå',
-    noRestaurantsHint: 'Legg til din første restaurant for å komme i gang',
+    noBusinesses: 'Ingen businesser ennå',
+    noBusinessesHint: 'Legg til din første business for å komme i gang',
 
     basicInfo: 'Grunnleggende informasjon',
     contactInfo: 'Kontaktinformasjon',
     socialMedia: 'Sosiale medier',
     branding: 'Merkevare',
 
-    restaurantName: 'Restaurantnavn',
-    restaurantNamePlaceholder: 'f.eks., Den Gylne Skje',
+    businessName: 'Businessnavn',
+    businessNamePlaceholder: 'f.eks., Den Gylne Skje',
     address: 'Adresse',
     addressPlaceholder: 'Skriv inn full adresse',
     phoneNumber: 'Telefonnummer',
     phoneNumberPlaceholder: '+47 123 45 678',
     website: 'Nettside',
-    websitePlaceholder: 'https://dinrestaurant.no',
+    websitePlaceholder: 'https://dinbusiness.no',
 
     instagram: 'Instagram',
-    instagramPlaceholder: "{'@'}dinrestaurant",
+    instagramPlaceholder: "{'@'}dinbusiness",
     facebook: 'Facebook',
-    facebookPlaceholder: 'facebook.com/dinrestaurant',
+    facebookPlaceholder: 'facebook.com/dinbusiness',
     twitter: 'Twitter/X',
-    twitterPlaceholder: "{'@'}dinrestaurant",
+    twitterPlaceholder: "{'@'}dinbusiness",
 
     logoUrl: 'Logo-URL',
     logoUrlPlaceholder: 'https://...',
-    logoUrlHint: 'Skriv inn en URL til restaurantens logo',
+    logoUrlHint: 'Skriv inn en URL til businessens logo',
     logo: 'Logo',
     dragLogoOrClick: 'Dra og slipp logo her eller klikk for å velge',
     logoMaxSize: 'Maksimum {size}MB (JPEG, PNG, WebP)',
@@ -1228,7 +1228,7 @@ export default {
     selectFolderError: 'Vennligst velg en destinasjonsmappe',
 
     errors: {
-      createFailed: 'Kunne ikke opprette restaurant',
+      createFailed: 'Kunne ikke opprette business',
       uploadFailed: 'Kunne ikke laste opp bilder',
       folderExists: 'En mappe med dette navnet finnes allerede',
       invalidFolderName: 'Ugyldig mappenavn',
@@ -1242,7 +1242,7 @@ export default {
     }
   },
 
-  // Saved Restaurants View
+  // Saved Businesses View
 
   // Test Post View
 
@@ -1284,9 +1284,9 @@ export default {
 
   // Pick Post Modal
   pickPostModal: {
-    showAllRestaurants: 'Vis alle restauranter',
-    showCurrentRestaurant: 'Vis kun valgt restaurant',
-    allRestaurantsLabel: 'Alle restauranter',
+    showAllBusinesses: 'Vis alle businesser',
+    showCurrentBusiness: 'Vis kun valgt business',
+    allBusinessesLabel: 'Alle businesser',
     videoLabel: 'VIDEO'
   },
 
@@ -1381,7 +1381,7 @@ export default {
     caption: 'Bildetekst',
     captionPlaceholder: 'Skriv bildeteksten for karusellen...',
     hashtags: 'Hashtags (en per linje)',
-    hashtagsPlaceholder: '#mat\n#restaurant\n#deilig',
+    hashtagsPlaceholder: '#mat\n#business\n#deilig',
     hashtagsHint: 'Skriv en hashtag per linje',
     regenerate: 'Generer innhold på nytt',
     useContent: 'Bruk dette innholdet'
@@ -1419,8 +1419,8 @@ export default {
     status: 'Status',
     platforms: 'Plattformer',
     activeCount: 'Aktive',
-    allRestaurants: 'Alle restauranter',
-    restaurant: 'Restaurant',
+    allBusinesses: 'Alle businesser',
+    business: 'Business',
     published: 'Publisert',
     scheduled: 'Planlagt',
     failed: 'Mislykket',
@@ -1440,7 +1440,7 @@ export default {
     sections: {
       introduction: {
         title: '1. Introduksjon',
-        content: 'Velkommen til SocialChef ("vi", "vår" eller "oss"). Vi er forpliktet til å beskytte personvernet ditt og sikre sikkerheten til din personlige informasjon. Denne personvernerklæringen forklarer hvordan vi samler inn, bruker, deler og beskytter informasjonen din når du bruker vår AI-drevne plattform for sosiale medier for restauranter.'
+        content: 'Velkommen til SocialChef ("vi", "vår" eller "oss"). Vi er forpliktet til å beskytte personvernet ditt og sikre sikkerheten til din personlige informasjon. Denne personvernerklæringen forklarer hvordan vi samler inn, bruker, deler og beskytter informasjonen din når du bruker vår AI-drevne plattform for sosiale medier for businesser.'
       },
       informationWeCollect: {
         title: '2. Informasjon vi samler inn',
@@ -1458,7 +1458,7 @@ export default {
         intro: 'Vi bruker informasjonen din til å:',
         items: {
           provideService: 'Tilby og drive våre AI-drevne innholdsgenerings- og sosiale medieadministrasjonstjenester.',
-          improveService: 'Forbedre og tilpasse opplevelsen din, inkludert opplæring av våre AI-modeller for å bedre betjene restaurantinnholdsbehov.',
+          improveService: 'Forbedre og tilpasse opplevelsen din, inkludert opplæring av våre AI-modeller for å bedre betjene businessinnholdsbehov.',
           communicate: 'Sende deg tjenesterelatert kommunikasjon, oppdateringer og markedsføringsmateriell (med ditt samtykke).',
           security: 'Sikre sikkerheten til plattformen vår og beskytte mot svindel eller uautorisert tilgang.',
           legal: 'Overholde juridiske forpliktelser og håndheve våre tjenestevilkår.'
@@ -1529,7 +1529,7 @@ export default {
       },
       description: {
         title: '2. Beskrivelse av tjenesten',
-        content: 'SocialChef er en AI-drevet plattform for sosiale medier, spesielt designet for restauranter. Vår tjeneste lar deg generere markedsføringsinnhold, lage bilder og bildetekster, planlegge innlegg og publisere innhold til tilkoblede sosiale medieplattformer. Funksjoner kan variere basert på abonnementsplanen din.'
+        content: 'SocialChef er en AI-drevet plattform for sosiale medier, spesielt designet for businesser. Vår tjeneste lar deg generere markedsføringsinnhold, lage bilder og bildetekster, planlegge innlegg og publisere innhold til tilkoblede sosiale medieplattformer. Funksjoner kan variere basert på abonnementsplanen din.'
       },
       eligibility: {
         title: '3. Kvalifisering',
@@ -1656,7 +1656,7 @@ export default {
     step1Title: 'Er du sikker?',
     step1Description: 'Sletting av kontoen din vil permanent fjerne all din data. Dette inkluderer:',
     dataList: {
-      restaurants: 'Alle lagrede restauranter og deres innstillinger',
+      businesses: 'Alle lagrede businesser og deres innstillinger',
       posts: 'Alle genererte innlegg og bilder',
       favorites: 'Alle lagrede favoritter og planlagte innlegg',
       connections: 'Alle tilkoblede sosiale medier-kontoer',
@@ -1743,7 +1743,7 @@ export default {
     creditsUsed: 'Poeng brukt',
     used: 'brukt',
     subscription: 'Abonnement',
-    restaurants: 'Restauranter',
+    businesses: 'Businesser',
 
     // Recent Activity
     recentActivity: 'Nylig aktivitet',
@@ -1757,7 +1757,7 @@ export default {
     // Table headers
     post: 'Innlegg',
     platforms: 'Plattformer',
-    restaurant: 'Restaurant',
+    business: 'Business',
     status: 'Status',
     date: 'Dato',
     links: 'Lenker',
@@ -1882,7 +1882,7 @@ export default {
     shareVia: 'Del via',
     share: 'Del',
     shareTitle: 'Bli med på Social Chef',
-    shareText: 'Jeg har brukt Social Chef for restauranten min og elsker det! Registrer deg med lenken min for å få din første måned gratis + 50% rabatt i 2 måneder.',
+    shareText: 'Jeg har brukt Social Chef for businessen min og elsker det! Registrer deg med lenken min for å få din første måned gratis + 50% rabatt i 2 måneder.',
     shareEmailSubject: 'Bli med på Social Chef - Få din første måned gratis!',
 
     // Stats

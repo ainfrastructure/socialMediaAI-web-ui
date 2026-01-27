@@ -170,15 +170,15 @@ function getPlatforms(): string[] {
   return []
 }
 
-// Get restaurant name
-function getRestaurantName(): string | null {
+// Get business name
+function getBusinessName(): string | null {
   const p = props.post
   if (!p) return null
 
-  if (p.restaurant_name) return p.restaurant_name
-  if (p.favorite_posts?.restaurant_name) return p.favorite_posts.restaurant_name
-  if (p.favorite_post?.restaurant_name) return p.favorite_post.restaurant_name
-  if (p.saved_restaurants?.name) return p.saved_restaurants.name
+  if (p.business_name) return p.business_name
+  if (p.favorite_posts?.business_name) return p.favorite_posts.business_name
+  if (p.favorite_post?.business_name) return p.favorite_post.business_name
+  if (p.saved_businesses?.name) return p.saved_businesses.name
 
   return null
 }
@@ -579,14 +579,14 @@ function handleRetry() {
               </div>
             </div>
 
-            <!-- Restaurant -->
-            <div v-if="getRestaurantName()" class="info-section">
+            <!-- Business -->
+            <div v-if="getBusinessName()" class="info-section">
               <div class="info-section-inner">
                 <div class="info-label">
-                  <MaterialIcon icon="restaurant" size="sm" />
-                  <span>{{ $t('dashboardNew.restaurant') }}</span>
+                  <MaterialIcon icon="business" size="sm" />
+                  <span>{{ $t('dashboardNew.business') }}</span>
                 </div>
-                <div class="info-value">{{ getRestaurantName() }}</div>
+                <div class="info-value">{{ getBusinessName() }}</div>
               </div>
             </div>
 
