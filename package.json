@@ -24,10 +24,10 @@
     "knip": "knip",
     "i18n:unused": "node scripts/find-unused-i18n-keys.js",
     "prepare": "husky",
-    "test:e2e": "maestro test .maestro/flows/",
-    "test:e2e:landing": "maestro test .maestro/flows/landing-page.yaml",
-    "test:e2e:login": "maestro test .maestro/flows/login.yaml",
-    "test:e2e:studio": "maestro -p web studio"
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "verify": "./scripts/verify.sh",
+    "quick-check": "./scripts/quick-check.sh"
   },
   "dependencies": {
     "@sentry/vue": "^10.27.0",
@@ -44,6 +44,7 @@
     "vue-router": "^4.5.1"
   },
   "devDependencies": {
+    "@playwright/test": "^1.58.0",
     "@sentry/vite-plugin": "^4.6.1",
     "@tsconfig/node22": "^22.0.2",
     "@types/node": "^22.18.6",
