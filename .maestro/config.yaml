@@ -1,0 +1,16 @@
+# Maestro Configuration for SocialChefAI Web UI
+# https://docs.maestro.dev/
+
+# Default URL for web tests
+url: ${APP_URL:-http://localhost:5173}
+
+# Test execution settings
+executionOrder:
+  continueOnFailure: false
+  
+# Environment variables that can be overridden
+env:
+  APP_URL: http://localhost:5173
+  # Test user credentials (use test/staging accounts)
+  TEST_EMAIL: ""
+  TEST_PASSWORD: ""

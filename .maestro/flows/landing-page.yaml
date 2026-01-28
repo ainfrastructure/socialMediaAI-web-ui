@@ -1,0 +1,24 @@
+# Landing Page Tests
+# Verifies the landing page loads correctly and main elements are visible
+
+appId: ${APP_URL:-http://localhost:5173}
+---
+
+# Launch the app
+- launchApp
+
+# Verify main landing page elements
+- assertVisible: "SocialChef"
+- assertVisible:
+    text: ".*AI.*" # Should see AI-related text
+    
+# Check navigation elements exist
+- assertVisible: "Login"
+
+# Test hero section
+- scrollUntilVisible:
+    element: "Get Started"
+    direction: DOWN
+    
+# Verify call-to-action buttons
+- assertVisible: "Get Started"

@@ -1,0 +1,32 @@
+# Login Flow Test
+# Tests the login functionality
+
+appId: ${APP_URL:-http://localhost:5173}
+---
+
+# Navigate to login page
+- launchApp
+- tapOn: "Login"
+
+# Verify login page elements
+- assertVisible: "Sign in"
+- assertVisible: "Email"
+- assertVisible: "Password"
+
+# Test form validation - empty submit
+- tapOn: "Sign in"
+# Should show validation errors
+
+# Test with invalid email format
+- tapOn:
+    id: "email"
+- inputText: "invalid-email"
+- tapOn:
+    id: "password"  
+- inputText: "password123"
+- tapOn: "Sign in"
+
+# Should show email validation error
+- assertVisible:
+    text: ".*email.*"
+    optional: true

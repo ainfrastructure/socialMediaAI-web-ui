@@ -1,0 +1,43 @@
+# Business Management Tests
+# Tests adding and managing businesses
+
+appId: ${APP_URL:-http://localhost:5173}
+env:
+  TEST_EMAIL: ${TEST_EMAIL}
+  TEST_PASSWORD: ${TEST_PASSWORD}
+---
+
+# Assume already logged in (run after login flow)
+- launchApp
+
+# Navigate to businesses section
+- tapOn: "Businesses"
+  optional: true
+
+# Check business list view
+- assertVisible:
+    text: ".*business.*"
+    
+# Test add business flow
+- tapOn: "Add Business"
+  optional: true
+
+# If add button visible, test the form
+- runFlow:
+    when:
+      visible: "Business Name"
+    commands:
+      # Fill in business details
+      - tapOn:
+          id: "businessName"
+          optional: true
+      - inputText: "Test Business"
+      
+      - tapOn:
+          id: "address"
+          optional: true  
+      - inputText: "123 Test Street"
+      
+      # Cancel to avoid creating test data
+      - tapOn: "Cancel"
+        optional: true
