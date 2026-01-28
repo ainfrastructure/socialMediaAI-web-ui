@@ -7,7 +7,7 @@ import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '../stores/auth'
 import { useFacebookStore } from '../stores/facebook'
 import { useInstagramStore } from '../stores/instagram'
-import { useRestaurantsStore } from '../stores/restaurants'
+import { useBusinessesStore } from '../stores/businesses'
 import { usePreferencesStore } from '../stores/preferences'
 import { api } from '../services/api'
 import DashboardLayout from '../components/DashboardLayout.vue'
@@ -23,7 +23,7 @@ const router = useRouter()
 const authStore = useAuthStore()
 const facebookStore = useFacebookStore()
 const instagramStore = useInstagramStore()
-const restaurantsStore = useRestaurantsStore()
+const businessesStore = useBusinessesStore()
 const preferencesStore = usePreferencesStore()
 const { t } = useI18n()
 
@@ -38,12 +38,12 @@ const stats = ref({
   postsCreated: 0,
   postsSaved: 0,
   scheduledPosts: 0,
-  restaurantsAdded: 0
+  businessesAdded: 0
 })
 
-// Restaurants for filter - uses store
-const restaurants = computed(() => restaurantsStore.restaurants)
-const selectedRestaurantFilter = ref<string>('all')
+// Businesses for filter - uses store
+const businesses = computed(() => businessesStore.businesses)
+const selectedBusinessFilter = ref<string>('all')
 
 // Recent posts from API
 const recentPosts = ref<any[]>([])
@@ -218,18 +218,18 @@ function getPostText(post: any): string | null {
   return null
 }
 
-// Get restaurant name from post
-function getPostRestaurantName(post: any): string | null {
-  if (post.restaurant_name) return post.restaurant_name
-  if (post.favorite_posts?.restaurant_name) return post.favorite_posts.restaurant_name
-  if (post.favorite_post?.restaurant_name) return post.favorite_post.restaurant_name
-  if (post.favorite?.restaurant_name) return post.favorite.restaurant_name
+// Get business name from post
+function getPostBusinessName(post: any): string | null {
+  if (post.business_name) return post.business_name
+  if (post.favorite_posts?.business_name) return post.favorite_posts.business_name
+  if (post.favorite_post?.business_name) return post.favorite_post.business_name
+  if (post.favorite?.business_name) return post.favorite.business_name
 
-  // Try to find from restaurants list using restaurant_id
-  const restaurantId = post.restaurant_id || post.favorite_posts?.restaurant_id || post.favorite_post?.restaurant_id
-  if (restaurantId) {
-    const restaurant = restaurants.value.find(r => r.id === restaurantId)
-    if (restaurant) return restaurant.name
+  // Try to find from businesses list using business_id
+  const businessId = post.business_id || post.favorite_posts?.business_id || post.favorite_post?.business_id
+  if (businessId) {
+    const business = businesses.value.find(r => r.id === businessId)
+    if (business) return business.name
   }
 
   return null
@@ -334,8 +334,8 @@ function handlePostDelete(_post: any) {
   // TODO: Show delete confirmation modal and handle deletion
 }
 
-// Computed to check if showing all restaurants
-const showRestaurantColumn = computed(() => selectedRestaurantFilter.value === 'all')
+// Computed to check if showing all businesses
+const showBusinessColumn = computed(() => selectedBusinessFilter.value === 'all')
 
 
 // User subscription tier display (no hardcoded prices - prices are on Plans page)
@@ -359,12 +359,12 @@ const creditsRemaining = computed(() => {
   return authStore.usageStats?.remaining_credits ?? 0
 })
 
-// Load recent posts (scheduled/published + drafts) with optional restaurant filter
+// Load recent posts (scheduled/published + drafts) with optional business filter
 async function loadRecentPosts() {
   loadingPosts.value = true
   try {
-    const restaurantFilter = selectedRestaurantFilter.value !== 'all'
-      ? selectedRestaurantFilter.value
+    const businessFilter = selectedBusinessFilter.value !== 'all'
+      ? selectedBusinessFilter.value
       : undefined
 
     const now = new Date()
@@ -394,13 +394,13 @@ async function loadRecentPosts() {
           api.getScheduledPosts({
             month,
             year,
-            restaurant_ids: restaurantFilter ? [restaurantFilter] : undefined
+            business_ids: businessFilter ? [businessFilter] : undefined
           })
         )
       ),
       // Fetch favorites (drafts) - these are saved but not scheduled
       api.getFavorites({
-        restaurant_id: restaurantFilter,
+        business_id: businessFilter,
         limit: 10,
         sort: 'newest'
       })
@@ -433,7 +433,7 @@ async function loadRecentPosts() {
             // Map favorite fields to match scheduled post structure
             post_text: fav.post_text,
             media_url: fav.media_url,
-            restaurant_name: fav.restaurant_name || restaurants.value.find(r => r.id === fav.restaurant_id)?.name
+            business_name: fav.business_name || businesses.value.find(r => r.id === fav.business_id)?.name
           })
         }
       }
@@ -465,8 +465,8 @@ async function loadRecentPosts() {
   }
 }
 
-// Handle restaurant filter change
-function onRestaurantFilterChange() {
+// Handle business filter change
+function onBusinessFilterChange() {
   loadRecentPosts()
 }
 
@@ -487,18 +487,18 @@ onMounted(async () => {
         postsCreated: statsResponse.data.postsCreated || 0,
         postsSaved: statsResponse.data.favoritesSaved || 0,
         scheduledPosts: statsResponse.data.scheduledPosts || 0,
-        restaurantsAdded: statsResponse.data.restaurantsAdded || 0
+        businessesAdded: statsResponse.data.businessesAdded || 0
       }
     }
 
-    // Load restaurants for filter (uses store)
-    await restaurantsStore.initialize()
+    // Load businesses for filter (uses store)
+    await businessesStore.initialize()
 
     // Load recent posts (favorites)
     await loadRecentPosts()
 
-    // Show welcome modal for first-time users (no restaurants and not dismissed)
-    if (stats.value.restaurantsAdded === 0 && !wasWelcomeDismissed()) {
+    // Show welcome modal for first-time users (no businesses and not dismissed)
+    if (stats.value.businessesAdded === 0 && !wasWelcomeDismissed()) {
       showWelcomeModal.value = true
     }
   } catch (error) {
@@ -556,7 +556,7 @@ onMounted(async () => {
           </div>
         </div>
 
-        <!-- Saved & Restaurants Card -->
+        <!-- Saved & Businesses Card -->
         <div class="dashboard-card" @click="router.push('/posts')">
           <div class="card-header">
             <div class="card-icon-wrapper">
@@ -572,7 +572,7 @@ onMounted(async () => {
               <div class="card-stat-divider"></div>
               <div class="card-stat">
                 <span class="card-stat-value skeleton-box"></span>
-                <span class="card-stat-label">{{ $t('dashboard.restaurants') }}</span>
+                <span class="card-stat-label">{{ $t('dashboard.businesses') }}</span>
               </div>
             </div>
             <div v-else class="card-stats-row">
@@ -582,8 +582,8 @@ onMounted(async () => {
               </div>
               <div class="card-stat-divider"></div>
               <div class="card-stat">
-                <span class="card-stat-value">{{ stats.restaurantsAdded }}</span>
-                <span class="card-stat-label">{{ $t('dashboard.restaurants') }}</span>
+                <span class="card-stat-value">{{ stats.businessesAdded }}</span>
+                <span class="card-stat-label">{{ $t('dashboard.businesses') }}</span>
               </div>
             </div>
           </div>
@@ -624,24 +624,24 @@ onMounted(async () => {
           <div class="section-header">
             <div class="section-header-left">
               <h2 class="section-title">{{ $t('dashboardNew.recentPosts') }}</h2>
-              <!-- Restaurant Filter -->
+              <!-- Business Filter -->
               <select
-                v-model="selectedRestaurantFilter"
-                class="restaurant-filter"
-                @change="onRestaurantFilterChange"
+                v-model="selectedBusinessFilter"
+                class="business-filter"
+                @change="onBusinessFilterChange"
               >
-                <option value="all">{{ $t('dashboardNew.allRestaurants') }}</option>
+                <option value="all">{{ $t('dashboardNew.allBusinesses') }}</option>
                 <option
-                  v-for="restaurant in restaurants"
-                  :key="restaurant.id"
-                  :value="restaurant.id"
+                  v-for="business in businesses"
+                  :key="business.id"
+                  :value="business.id"
                 >
-                  {{ restaurant.name }}
+                  {{ business.name }}
                 </option>
               </select>
             </div>
             <router-link
-              v-if="selectedRestaurantFilter !== 'all'"
+              v-if="selectedBusinessFilter !== 'all'"
               to="/posts"
               class="view-all-link"
             >
@@ -662,13 +662,13 @@ onMounted(async () => {
               </BaseButton>
             </div>
 
-            <table v-else class="posts-table" :class="{ 'hide-restaurant': !showRestaurantColumn }">
+            <table v-else class="posts-table" :class="{ 'hide-business': !showBusinessColumn }">
               <thead>
                 <tr>
                   <th>{{ $t('dashboardNew.post') }}</th>
                   <th>{{ $t('dashboardNew.platforms') }}</th>
                   <th>{{ $t('dashboardNew.status') }}</th>
-                  <th class="restaurant-header">{{ $t('dashboardNew.restaurant') }}</th>
+                  <th class="business-header">{{ $t('dashboardNew.business') }}</th>
                 </tr>
               </thead>
               <tbody>
@@ -711,9 +711,9 @@ onMounted(async () => {
                       {{ getStatusLabel(post.status || 'scheduled') }}
                     </span>
                   </td>
-                  <td data-label="Restaurant" class="restaurant-cell">
-                    <span v-if="getPostRestaurantName(post)" class="restaurant-name">
-                      {{ getPostRestaurantName(post) }}
+                  <td data-label="Business" class="business-cell">
+                    <span v-if="getPostBusinessName(post)" class="business-name">
+                      {{ getPostBusinessName(post) }}
                     </span>
                     <span v-else class="muted">—</span>
                   </td>
@@ -865,7 +865,7 @@ onMounted(async () => {
       <BaseModal v-model="showWelcomeModal" size="sm" @close="dismissWelcome">
         <div class="welcome-modal">
           <div class="welcome-icon">
-            <MaterialIcon icon="restaurant" size="xl" />
+            <MaterialIcon icon="business" size="xl" />
           </div>
           <h2 class="welcome-title">{{ $t('dashboard.welcomeModalTitle') }}</h2>
           <p class="welcome-message">{{ $t('dashboard.welcomeModalMessage') }}</p>
@@ -1092,7 +1092,7 @@ onMounted(async () => {
   color: var(--gold-light);
 }
 
-/* Combined Stats Row (for Saved & Restaurants) */
+/* Combined Stats Row (for Saved & Businesses) */
 .card-stats-row {
   display: flex;
   align-items: center;
@@ -1157,8 +1157,8 @@ onMounted(async () => {
   margin: 0;
 }
 
-/* Restaurant Filter */
-.restaurant-filter {
+/* Business Filter */
+.business-filter {
   appearance: none;
   background: var(--bg-secondary);
   border: 1px solid var(--border-color);
@@ -1175,17 +1175,17 @@ onMounted(async () => {
   min-width: 140px;
 }
 
-.restaurant-filter:hover {
+.business-filter:hover {
   border-color: var(--gold-primary);
 }
 
-.restaurant-filter:focus {
+.business-filter:focus {
   outline: none;
   border-color: var(--gold-primary);
   box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.15);
 }
 
-.restaurant-filter option {
+.business-filter option {
   background: var(--bg-primary);
   color: var(--text-primary);
 }
@@ -1395,23 +1395,23 @@ onMounted(async () => {
   flex-shrink: 0;
 }
 
-/* Restaurant Cell - Animated show/hide */
-.restaurant-header,
-.restaurant-cell {
+/* Business Cell - Animated show/hide */
+.business-header,
+.business-cell {
   max-width: 150px;
   overflow: hidden;
   transition: max-width 0.3s ease, padding 0.3s ease, opacity 0.3s ease;
 }
 
-.posts-table.hide-restaurant .restaurant-header,
-.posts-table.hide-restaurant .restaurant-cell {
+.posts-table.hide-business .business-header,
+.posts-table.hide-business .business-cell {
   max-width: 0;
   padding-left: 0;
   padding-right: 0;
   opacity: 0;
 }
 
-.restaurant-name {
+.business-name {
   font-size: var(--text-sm);
   color: var(--text-secondary);
   white-space: nowrap;
@@ -1577,7 +1577,7 @@ onMounted(async () => {
     align-items: flex-start;
   }
 
-  .restaurant-filter {
+  .business-filter {
     width: 100%;
     min-height: var(--touch-target-min);
   }

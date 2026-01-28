@@ -41,7 +41,7 @@ const emit = defineEmits<{
         class="menu-item-image"
       />
       <div v-else class="menu-item-placeholder">
-        <MaterialIcon icon="restaurant" size="xl" :color="'var(--text-muted)'" />
+        <MaterialIcon icon="business" size="xl" :color="'var(--text-muted)'" />
       </div>
     </div>
 

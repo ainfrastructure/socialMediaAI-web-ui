@@ -152,7 +152,7 @@ function updateComboItemArrangement(arrangement: CustomizationOptions['comboItem
       </div>
     </div>
 
-    <!-- Restaurant Logo Position -->
+    <!-- Business Logo Position -->
     <div class="customization-section">
       <label class="section-label">
         {{ t('advancedMode.step2.logoPositionLabel') }}

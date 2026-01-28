@@ -1,18 +1,18 @@
 <script setup lang="ts">
 /**
- * ImageSourceSelector - Allows users to upload new images or select from existing restaurant images
+ * ImageSourceSelector - Allows users to upload new images or select from existing business images
  * Used in EasyModeCreation and AdvancedModeCreation
  */
 import { ref, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useRestaurantImages } from '@/composables/useRestaurantImages'
-import type { SavedRestaurant, UploadedImage } from '@/services/restaurantService'
+import { useBusinessImages } from '@/composables/useBusinessImages'
+import type { SavedBusiness, UploadedImage } from '@/services/businessService'
 import ImageUploadBox from './ImageUploadBox.vue'
 import BaseButton from '../BaseButton.vue'
 import MaterialIcon from '../MaterialIcon.vue'
 
 interface Props {
-  restaurant: SavedRestaurant
+  business: SavedBusiness
   previewUrl?: string | null
   acceptTypes?: string
 }
@@ -32,7 +32,7 @@ const { t } = useI18n()
 type SourceMode = 'upload' | 'existing'
 const sourceMode = ref<SourceMode>('upload')
 
-// Restaurant images composable
+// Business images composable
 const {
   folderStructure,
   currentFolderPath,
@@ -42,14 +42,14 @@ const {
   searchQuery,
   loading,
   error
-} = useRestaurantImages(props.restaurant)
+} = useBusinessImages(props.business)
 
 // Image selection state
 const selectedImageId = ref<string | null>(null)
 const isConverting = ref(false)
 
 // Computed
-const hasImages = computed(() => props.restaurant.uploaded_images && props.restaurant.uploaded_images.length > 0)
+const hasImages = computed(() => props.business.uploaded_images && props.business.uploaded_images.length > 0)
 
 const flatFolders = computed(() => {
   if (!folderStructure.value) return []

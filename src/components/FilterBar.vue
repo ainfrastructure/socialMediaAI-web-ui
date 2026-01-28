@@ -24,11 +24,11 @@
         <span class="btn-arrow">→</span>
       </button>
 
-      <!-- Restaurant Filter (Modal Button) -->
-      <button v-if="showRestaurant" class="filter-btn" @click="showRestaurantModal = true">
+      <!-- Business Filter (Modal Button) -->
+      <button v-if="showBusiness" class="filter-btn" @click="showBusinessModal = true">
         <span class="btn-icon">🏪</span>
         <span class="btn-text">
-          {{ selectedRestaurants.length > 0 ? `Restaurants (${selectedRestaurants.length})` : 'Restaurants' }}
+          {{ selectedBusinesss.length > 0 ? `Businesses (${selectedBusinesss.length})` : 'Businesses' }}
         </span>
         <span class="btn-arrow">→</span>
       </button>
@@ -71,14 +71,14 @@
           {{ getPlatformName(platform) }}
           <span class="tag-close">×</span>
         </span>
-        <!-- Restaurant tags -->
+        <!-- Business tags -->
         <span
-          v-for="restaurantId in selectedRestaurants"
-          :key="restaurantId"
+          v-for="businessId in selectedBusinesss"
+          :key="businessId"
           class="filter-tag"
-          @click="toggleCheckbox('restaurant_ids', restaurantId)"
+          @click="toggleCheckbox('business_ids', businessId)"
         >
-          {{ getRestaurantName(restaurantId) }}
+          {{ getBusinessName(businessId) }}
           <span class="tag-close">×</span>
         </span>
         <!-- Content type tags -->
@@ -101,11 +101,11 @@
       @update:selected-platforms="updatePlatforms"
     />
 
-    <RestaurantFilterModal
-      v-model="showRestaurantModal"
-      :restaurants="restaurants"
-      :selected-restaurant-ids="selectedRestaurants"
-      @update:selected-restaurant-ids="updateRestaurants"
+    <BusinessFilterModal
+      v-model="showBusinessModal"
+      :businesses="businesses"
+      :selected-business-ids="selectedBusinesss"
+      @update:selected-business-ids="updateBusinesss"
     />
 
     <ContentTypeFilterModal
@@ -120,30 +120,30 @@
 import { ref, computed } from 'vue'
 import BaseCard from './BaseCard.vue'
 import BaseButton from './BaseButton.vue'
-import RestaurantFilterModal from './RestaurantFilterModal.vue'
+import BusinessFilterModal from './BusinessFilterModal.vue'
 import PlatformFilterModal from './PlatformFilterModal.vue'
 import ContentTypeFilterModal from './ContentTypeFilterModal.vue'
 
 interface Filters {
   platforms?: string[]
-  restaurant_ids?: string[]
+  business_ids?: string[]
   content_types?: string[]
   sort?: string
 }
 
 interface Props {
   modelValue: Filters
-  restaurants?: any[]
+  businesses?: any[]
   showPlatform?: boolean
-  showRestaurant?: boolean
+  showBusiness?: boolean
   showContentType?: boolean
   showSort?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  restaurants: () => [],
+  businesses: () => [],
   showPlatform: true,
-  showRestaurant: true,
+  showBusiness: true,
   showContentType: false,
   showSort: false,
 })
@@ -162,24 +162,24 @@ const platforms = [
   { value: 'linkedin', label: 'LinkedIn' },
 ]
 
-const showRestaurantModal = ref(false)
+const showBusinessModal = ref(false)
 const showPlatformModal = ref(false)
 const showContentTypeModal = ref(false)
 
 const selectedPlatforms = computed(() => props.modelValue.platforms || [])
-const selectedRestaurants = computed(() => props.modelValue.restaurant_ids || [])
+const selectedBusinesss = computed(() => props.modelValue.business_ids || [])
 const selectedContentTypes = computed(() => props.modelValue.content_types || [])
 
 const hasActiveFilters = computed(() => {
   return !!(
     (props.modelValue.platforms && props.modelValue.platforms.length > 0) ||
-    (props.modelValue.restaurant_ids && props.modelValue.restaurant_ids.length > 0) ||
+    (props.modelValue.business_ids && props.modelValue.business_ids.length > 0) ||
     (props.modelValue.content_types && props.modelValue.content_types.length > 0)
   )
 })
 
-const updateRestaurants = (restaurantIds: string[]) => {
-  const newFilters = { ...props.modelValue, restaurant_ids: restaurantIds }
+const updateBusinesss = (businessIds: string[]) => {
+  const newFilters = { ...props.modelValue, business_ids: businessIds }
   emit('update:modelValue', newFilters)
   emit('change')
 }
@@ -222,9 +222,9 @@ const getPlatformName = (platform: string) => {
   return found?.label || platform
 }
 
-const getRestaurantName = (id: string) => {
-  const restaurant = props.restaurants.find((r) => r.id === id)
-  return restaurant?.name || 'Restaurant'
+const getBusinessName = (id: string) => {
+  const business = props.businesses.find((r) => r.id === id)
+  return business?.name || 'Business'
 }
 
 </script>

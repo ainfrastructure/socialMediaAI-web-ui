@@ -178,7 +178,7 @@ onUnmounted(() => {
               class="menu-item-image"
             />
             <div v-else class="menu-item-placeholder">
-              <MaterialIcon icon="restaurant_menu" size="xl" class="placeholder-icon" />
+              <MaterialIcon icon="business_menu" size="xl" class="placeholder-icon" />
             </div>
           </div>
 
@@ -207,7 +207,7 @@ onUnmounted(() => {
 
     <!-- Empty State -->
     <div v-else class="empty-state">
-      <MaterialIcon icon="restaurant_menu" size="3xl" class="empty-icon" />
+      <MaterialIcon icon="business_menu" size="3xl" class="empty-icon" />
       <p class="empty-text">{{ t('advancedMode.step1.noItems') }}</p>
     </div>
   </div>

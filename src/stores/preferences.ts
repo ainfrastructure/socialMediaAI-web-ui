@@ -9,9 +9,9 @@ export const usePreferencesStore = defineStore('preferences', () => {
     (localStorage.getItem('creationMode') as CreationMode) || 'easy'
   )
 
-  // Selected restaurant ID with localStorage persistence
-  const selectedRestaurantId = ref<string | null>(
-    localStorage.getItem('selectedRestaurantId')
+  // Selected business ID with localStorage persistence
+  const selectedBusinessId = ref<string | null>(
+    localStorage.getItem('selectedBusinessId')
   )
 
   // Track if user has started working on content (to prevent mode switching)
@@ -54,38 +54,38 @@ export const usePreferencesStore = defineStore('preferences', () => {
   // Reset all user-specific preferences (called on logout)
   function resetPreferences() {
     creationMode.value = 'easy'
-    selectedRestaurantId.value = null
+    selectedBusinessId.value = null
     hasStartedFlow.value = false
     localStorage.removeItem('creationMode')
-    localStorage.removeItem('selectedRestaurantId')
+    localStorage.removeItem('selectedBusinessId')
   }
 
-  // Set selected restaurant
-  function setSelectedRestaurant(restaurantId: string | null) {
-    selectedRestaurantId.value = restaurantId
-    if (restaurantId) {
-      localStorage.setItem('selectedRestaurantId', restaurantId)
+  // Set selected business
+  function setSelectedBusiness(businessId: string | null) {
+    selectedBusinessId.value = businessId
+    if (businessId) {
+      localStorage.setItem('selectedBusinessId', businessId)
     } else {
-      localStorage.removeItem('selectedRestaurantId')
+      localStorage.removeItem('selectedBusinessId')
     }
   }
 
-  // Clear selected restaurant
-  function clearSelectedRestaurant() {
-    selectedRestaurantId.value = null
-    localStorage.removeItem('selectedRestaurantId')
+  // Clear selected business
+  function clearSelectedBusiness() {
+    selectedBusinessId.value = null
+    localStorage.removeItem('selectedBusinessId')
   }
 
   return {
     creationMode,
-    selectedRestaurantId,
+    selectedBusinessId,
     hasStartedFlow,
     setCreationMode,
     toggleMode,
     markFlowStarted,
     clearFlowState,
     resetPreferences,
-    setSelectedRestaurant,
-    clearSelectedRestaurant
+    setSelectedBusiness,
+    clearSelectedBusiness
   }
 })

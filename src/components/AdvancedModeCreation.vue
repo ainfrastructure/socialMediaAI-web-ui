@@ -29,7 +29,7 @@ import GoldenEditIcon from './icons/GoldenEditIcon.vue'
 import GoldenImageIcon from './icons/GoldenImageIcon.vue'
 import GoldenVideoIcon from './icons/GoldenVideoIcon.vue'
 import { ImageSourceSelector, SectionLabel, ContentDivider } from './creation'
-import { restaurantService, type SavedRestaurant } from '@/services/restaurantService'
+import { businessService, type SavedBusiness } from '@/services/businessService'
 import { api } from '@/services/api'
 import { okamService } from '@/services/okamService'
 import { useFacebookStore } from '@/stores/facebook'
@@ -90,7 +90,7 @@ interface WeeklyCustomizationOptions {
 // Using centralized prompt configuration from src/config/promptModifiers.ts
 
 const props = defineProps<{
-  restaurant: SavedRestaurant
+  business: SavedBusiness
   menuItems: MenuItem[]
   initialScheduleDate?: string // Format: YYYY-MM-DD, pre-fills schedule date
   lockDate?: boolean // When true, date cannot be changed in the schedule step
@@ -600,7 +600,7 @@ async function generateStyleVariations() {
     }
 
     const response = await api.generateStyleVariations(
-      props.restaurant,
+      props.business,
       menuItemsForApi,
       customization.value,
       postTypeOptions
@@ -803,8 +803,8 @@ async function generateImage() {
         selectedVariation.value.prompt,
         customization.value,
         menuItemsForApi,
-        props.restaurant.brand_dna?.logo_url,
-        props.restaurant.place_id,
+        props.business.brand_dna?.logo_url,
+        props.business.place_id,
         postTypeOptions,
         referenceImage
       )
@@ -812,15 +812,15 @@ async function generateImage() {
       if (response.success && response.data?.imageUrl) {
         generatedImageUrl.value = response.data.imageUrl
 
-        // Upload the image to the restaurant's uploaded_images collection
-        if (uploadedImage.value && props.restaurant.place_id) {
+        // Upload the image to the business's uploaded_images collection
+        if (uploadedImage.value && props.business.place_id) {
           try {
-            await restaurantService.uploadRestaurantImages(
-              props.restaurant.place_id,
+            await businessService.uploadBusinessImages(
+              props.business.place_id,
               [uploadedImage.value]
             )
           } catch (uploadError) {
-            errorLog('Failed to save uploaded image to restaurant:', uploadError)
+            errorLog('Failed to save uploaded image to business:', uploadError)
             // Don't fail the entire operation if this fails
           }
         }
@@ -955,11 +955,11 @@ async function pollVideoInBackground(operationId: string, modelId?: string) {
     const videoUrl = await pollVideoUntilComplete(operationId, modelId)
 
     // Apply logo watermark if requested
-    if (customization.value.logoPosition && customization.value.logoPosition !== 'none' && props.restaurant.brand_dna?.logo_url) {
+    if (customization.value.logoPosition && customization.value.logoPosition !== 'none' && props.business.brand_dna?.logo_url) {
       try {
         const watermarkResponse = await api.addVideoWatermark(
           videoUrl,
-          props.restaurant.brand_dna.logo_url,
+          props.business.brand_dna.logo_url,
           {
             position: customization.value.logoPosition,
             opacity: 80,
@@ -1026,11 +1026,11 @@ async function generatePostContent() {
 
     const response = await api.generatePostContent(
       'facebook',
-      props.restaurant.name,
+      props.business.name,
       menuItemsWithDescriptions,
       'image',
       context,
-      props.restaurant.brand_dna,
+      props.business.brand_dna,
       'en'
     )
 
@@ -1299,7 +1299,7 @@ defineExpose({
         <div class="image-upload-section">
           <SectionLabel :label="t('advancedMode.step1.uploadTitle')" />
           <ImageSourceSelector
-            :restaurant="restaurant"
+            :business="business"
             :preview-url="uploadedImagePreview"
             @select="handleImageUploadFile"
             @remove="removeUploadedImage"

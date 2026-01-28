@@ -66,13 +66,13 @@ function handleFileInput(e: Event) {
 
 function processFile(file: File) {
   if (!file.type.startsWith('image/')) {
-    emit('error', t('restaurantManagement.errors.onlyImages'))
+    emit('error', t('businessManagement.errors.onlyImages'))
     return
   }
 
   const maxBytes = props.maxSizeMB * 1024 * 1024
   if (file.size > maxBytes) {
-    emit('error', t('restaurantManagement.errors.logoTooLarge', { size: props.maxSizeMB }))
+    emit('error', t('businessManagement.errors.logoTooLarge', { size: props.maxSizeMB }))
     return
   }
 
@@ -122,15 +122,15 @@ onUnmounted(() => {
     >
       <div class="upload-icon">🖼️</div>
       <p class="upload-text">
-        {{ $t('restaurantManagement.dragLogoOrClick') }}
+        {{ $t('businessManagement.dragLogoOrClick') }}
       </p>
       <p class="upload-hint">
-        {{ $t('restaurantManagement.logoMaxSize', { size: maxSizeMB }) }}
+        {{ $t('businessManagement.logoMaxSize', { size: maxSizeMB }) }}
       </p>
     </div>
 
     <div v-else class="logo-preview">
-      <img :src="previewUrl" :alt="$t('restaurantManagement.logoPreview')" class="logo-image" />
+      <img :src="previewUrl" :alt="$t('businessManagement.logoPreview')" class="logo-image" />
       <div class="logo-actions">
         <BaseButton
           variant="ghost"

@@ -14,7 +14,7 @@ interface Props {
   modelValue: CarouselItem[]
   minItems?: number
   maxItems?: number
-  restaurantId?: string
+  businessId?: string
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -65,7 +65,7 @@ onMounted(async () => {
     // Fetch user's favorite posts
     const response = await api.getFavorites({
       limit: 100,
-      ...(props.restaurantId && { restaurantId: props.restaurantId })
+      ...(props.businessId && { businessId: props.businessId })
     })
 
     if (response.success && response.data?.favorites) {

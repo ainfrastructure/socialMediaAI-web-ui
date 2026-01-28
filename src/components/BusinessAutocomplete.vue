@@ -17,7 +17,7 @@
     <div v-if="showDropdown" class="autocomplete-dropdown" ref="dropdownRef">
       <div v-if="isLoading" class="dropdown-item loading">
         <div class="spinner"></div>
-        <span>{{ $t('restaurantSearch.searching') }}</span>
+        <span>{{ $t('businessSearch.searching') }}</span>
       </div>
 
       <div v-else-if="error" class="dropdown-item error">
@@ -25,24 +25,24 @@
       </div>
 
       <div v-else-if="suggestions.length === 0 && searchQuery.trim()" class="dropdown-item empty">
-        <span>{{ $t('restaurantSearch.noResults') }}</span>
+        <span>{{ $t('businessSearch.noResults') }}</span>
       </div>
 
       <div
         v-else
         v-for="(suggestion, index) in suggestions"
         :key="suggestion.place_id"
-        :class="['dropdown-item', { active: index === activeIndex, saved: isRestaurantSaved(suggestion) }]"
+        :class="['dropdown-item', { active: index === activeIndex, saved: isBusinessSaved(suggestion) }]"
         @mousedown.prevent="selectSuggestion(suggestion)"
         @mouseenter="activeIndex = index"
       >
-        <div class="restaurant-info">
-          <div class="restaurant-name">{{ suggestion.name }}</div>
-          <div class="restaurant-address">{{ suggestion.address }}</div>
+        <div class="business-info">
+          <div class="business-name">{{ suggestion.name }}</div>
+          <div class="business-address">{{ suggestion.address }}</div>
         </div>
-        <div v-if="isRestaurantSaved(suggestion)" class="saved-badge">
+        <div v-if="isBusinessSaved(suggestion)" class="saved-badge">
           <span class="checkmark">✓</span>
-          <span class="saved-text">{{ $t('restaurantSearch.alreadyAdded') }}</span>
+          <span class="saved-text">{{ $t('businessSearch.alreadyAdded') }}</span>
         </div>
       </div>
     </div>
@@ -53,21 +53,21 @@
 import { ref, watch, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import BaseInput from './BaseInput.vue'
-import { placesService, type RestaurantSuggestion } from '../services/placesService'
+import { placesService, type BusinessSuggestion } from '../services/placesService'
 
 interface Props {
-  modelValue?: RestaurantSuggestion | null
+  modelValue?: BusinessSuggestion | null
   label?: string
   placeholder?: string
   disabled?: boolean
   autofocus?: boolean
   debounceMs?: number
-  savedRestaurants?: Array<{ place_id: string; name: string }>
+  savedBusinesses?: Array<{ place_id: string; name: string }>
 }
 
 interface Emits {
-  (e: 'update:modelValue', value: RestaurantSuggestion | null): void
-  (e: 'select', value: RestaurantSuggestion): void
+  (e: 'update:modelValue', value: BusinessSuggestion | null): void
+  (e: 'select', value: BusinessSuggestion): void
   (e: 'dropdownOpen', value: boolean): void
 }
 
@@ -77,18 +77,18 @@ const props = withDefaults(defineProps<Props>(), {
   disabled: false,
   autofocus: false,
   debounceMs: 300,
-  savedRestaurants: () => []
+  savedBusinesses: () => []
 })
 
 const emit = defineEmits<Emits>()
 const { t } = useI18n()
 
 // Computed label and placeholder with i18n fallbacks
-const computedLabel = computed(() => props.label || t('restaurantSearch.searchLabel'))
-const computedPlaceholder = computed(() => props.placeholder || t('restaurantSearch.searchPlaceholder'))
+const computedLabel = computed(() => props.label || t('businessSearch.searchLabel'))
+const computedPlaceholder = computed(() => props.placeholder || t('businessSearch.searchPlaceholder'))
 
 const searchQuery = ref('')
-const suggestions = ref<RestaurantSuggestion[]>([])
+const suggestions = ref<BusinessSuggestion[]>([])
 const isLoading = ref(false)
 const error = ref<string | null>(null)
 const showDropdown = ref(false)
@@ -147,11 +147,11 @@ const performSearch = async (query: string) => {
     isLoading.value = true
     error.value = null
 
-    const results = await placesService.searchRestaurants(query)
+    const results = await placesService.searchBusinesses(query)
     suggestions.value = results
     activeIndex.value = -1
   } catch (err) {
-    error.value = t('restaurantSearch.searchError')
+    error.value = t('businessSearch.searchError')
     suggestions.value = []
 
   } finally {
@@ -159,9 +159,9 @@ const performSearch = async (query: string) => {
   }
 }
 
-const selectSuggestion = (suggestion: RestaurantSuggestion) => {
-  // Prevent selecting already saved restaurants
-  if (isRestaurantSaved(suggestion)) {
+const selectSuggestion = (suggestion: BusinessSuggestion) => {
+  // Prevent selecting already saved businesses
+  if (isBusinessSaved(suggestion)) {
     return
   }
 
@@ -228,8 +228,8 @@ const scrollToActiveItem = () => {
   }
 }
 
-const isRestaurantSaved = (suggestion: RestaurantSuggestion): boolean => {
-  return props.savedRestaurants?.some(saved => saved.place_id === suggestion.place_id) || false
+const isBusinessSaved = (suggestion: BusinessSuggestion): boolean => {
+  return props.savedBusinesses?.some(saved => saved.place_id === suggestion.place_id) || false
 }
 </script>
 
@@ -339,20 +339,20 @@ const isRestaurantSaved = (suggestion: RestaurantSuggestion): boolean => {
   }
 }
 
-.restaurant-info {
+.business-info {
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
   flex: 1;
 }
 
-.restaurant-name {
+.business-name {
   font-size: 1rem;
   font-weight: 500;
   color: var(--text-primary);
 }
 
-.restaurant-address {
+.business-address {
   font-size: 0.875rem;
   color: var(--text-secondary);
 }
@@ -431,11 +431,11 @@ const isRestaurantSaved = (suggestion: RestaurantSuggestion): boolean => {
     gap: var(--space-sm);
   }
 
-  .restaurant-name {
+  .business-name {
     font-size: var(--text-sm);
   }
 
-  .restaurant-address {
+  .business-address {
     font-size: var(--text-xs);
   }
 

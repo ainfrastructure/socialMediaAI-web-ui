@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import BaseModal from '../BaseModal.vue'
 import BaseButton from '../BaseButton.vue'
@@ -8,113 +8,129 @@ import BaseAlert from '../BaseAlert.vue'
 
 interface Props {
   modelValue: boolean
-  currentPath?: string
+  folderPath: string
+  folderName: string
 }
 
-const props = withDefaults(defineProps<Props>(), {
-  currentPath: '/'
-})
+const props = defineProps<Props>()
 
 const emit = defineEmits<{
   (e: 'update:modelValue', value: boolean): void
-  (e: 'create', folderPath: string): void
+  (e: 'rename', oldPath: string, newPath: string): void
 }>()
 
 const { t } = useI18n()
-const folderName = ref('')
-const creating = ref(false)
+const newFolderName = ref('')
+const renaming = ref(false)
 const error = ref('')
+
+watch(
+  () => props.modelValue,
+  (open) => {
+    if (open) {
+      newFolderName.value = props.folderName
+      error.value = ''
+    }
+  }
+)
 
 function handleClose() {
   emit('update:modelValue', false)
-  folderName.value = ''
+  newFolderName.value = ''
   error.value = ''
 }
 
 function validateFolderName(name: string): boolean {
   // Check for empty name
   if (!name.trim()) {
-    error.value = t('restaurantManagement.folderNameRequired')
+    error.value = t('businessManagement.folderNameRequired')
     return false
   }
 
   // Check for invalid characters
   const invalidChars = /[<>:"|?*\\/]/
   if (invalidChars.test(name)) {
-    error.value = t('restaurantManagement.invalidFolderName')
+    error.value = t('businessManagement.invalidFolderName')
+    return false
+  }
+
+  // Check if name is unchanged
+  if (name.trim() === props.folderName) {
+    error.value = t('businessManagement.folderNameUnchanged')
     return false
   }
 
   return true
 }
 
-async function handleCreate() {
+async function handleRename() {
   error.value = ''
 
-  if (!validateFolderName(folderName.value)) {
+  if (!validateFolderName(newFolderName.value)) {
     return
   }
 
-  creating.value = true
+  renaming.value = true
 
   try {
-    // Build full path
-    const fullPath =
-      props.currentPath === '/'
-        ? folderName.value.trim()
-        : `${props.currentPath}/${folderName.value.trim()}`
+    // Build new path by replacing last folder name
+    const pathParts = props.folderPath.split('/')
+    pathParts[pathParts.length - 1] = newFolderName.value.trim()
+    const newPath = pathParts.join('/')
 
-    emit('create', fullPath)
+    emit('rename', props.folderPath, newPath)
     handleClose()
   } catch (err: any) {
-    error.value = err.message || t('restaurantManagement.createFolderError')
+    error.value = err.message || t('businessManagement.renameFolderError')
   } finally {
-    creating.value = false
+    renaming.value = false
   }
 }
 </script>
 
 <template>
   <BaseModal :model-value="modelValue" @update:model-value="handleClose" size="sm">
-    <template #title>{{ $t('restaurantManagement.createFolder') }}</template>
+    <template #title>{{ $t('businessManagement.renameFolder') }}</template>
 
-    <div class="create-folder-content">
+    <div class="rename-folder-content">
       <BaseAlert v-if="error" type="error" class="error-alert">
         {{ error }}
       </BaseAlert>
 
-      <div class="path-info">
-        <span class="path-label">{{ $t('restaurantManagement.createIn') }}:</span>
-        <span class="path-value">{{ currentPath === '/' ? 'Root' : currentPath }}</span>
+      <div class="current-path">
+        <span class="path-label">{{ $t('businessManagement.currentPath') }}:</span>
+        <span class="path-value">{{ folderPath }}</span>
       </div>
 
       <BaseInput
-        v-model="folderName"
-        :label="$t('restaurantManagement.folderName')"
-        :placeholder="$t('restaurantManagement.folderNamePlaceholder')"
-        :disabled="creating"
+        v-model="newFolderName"
+        :label="$t('businessManagement.newFolderName')"
+        :placeholder="$t('businessManagement.folderNamePlaceholder')"
+        :disabled="renaming"
         autofocus
         required
-        @keyup.enter="handleCreate"
+        @keyup.enter="handleRename"
       />
 
       <div class="path-preview">
-        <span class="preview-label">{{ $t('restaurantManagement.fullPath') }}:</span>
+        <span class="preview-label">{{ $t('businessManagement.newPath') }}:</span>
         <span class="preview-value">
-          {{ currentPath === '/' ? folderName || '...' : `${currentPath}/${folderName || '...'}` }}
+          {{
+            folderPath.split('/').slice(0, -1).concat(newFolderName || '...').join('/')
+          }}
         </span>
       </div>
 
       <div class="modal-actions">
-        <BaseButton @click="handleClose" variant="ghost" :disabled="creating">
+        <BaseButton @click="handleClose" variant="ghost" :disabled="renaming">
           {{ $t('common.cancel') }}
         </BaseButton>
         <BaseButton
-          @click="handleCreate"
+          @click="handleRename"
           variant="primary"
-          :disabled="creating || !folderName.trim()"
+          :disabled="renaming || !newFolderName.trim() || newFolderName === folderName"
         >
-          {{ creating ? $t('common.creating') : $t('common.create') }}
+          {{ renaming ? $t('common.renaming') : $t('common.rename') }}
         </BaseButton>
       </div>
     </div>
@@ -122,7 +138,7 @@ async function handleCreate() {
 </template>
 
 <style scoped>
-.create-folder-content {
+.rename-folder-content {
   display: flex;
   flex-direction: column;
   gap: var(--space-lg);
@@ -132,7 +148,7 @@ async function handleCreate() {
   margin-bottom: var(--space-md);
 }
 
-.path-info {
+.current-path {
   display: flex;
   flex-direction: column;
   gap: var(--space-xs);

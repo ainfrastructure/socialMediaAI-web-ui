@@ -3,17 +3,17 @@ import { ref, computed, watch } from 'vue'
 import BaseButton from '../BaseButton.vue'
 import BaseAlert from '../BaseAlert.vue'
 import BaseModal from '../BaseModal.vue'
-import { restaurantService, type SavedRestaurant } from '../../services/restaurantService'
+import { businessService, type SavedBusiness } from '../../services/businessService'
 
 const props = defineProps<{
   modelValue: boolean
-  restaurant: SavedRestaurant | null
+  business: SavedBusiness | null
 }>()
 
 const emit = defineEmits<{
   (e: 'update:modelValue', value: boolean): void
-  (e: 'updated', restaurant: SavedRestaurant): void
-  (e: 'deleted', restaurantId: string): void
+  (e: 'updated', business: SavedBusiness): void
+  (e: 'deleted', businessId: string): void
 }>()
 
 // Edit state
@@ -67,24 +67,24 @@ const resetEditState = () => {
   confirmDelete.value = false
 }
 
-// Delete restaurant
-const deleteRestaurant = async () => {
-  if (!props.restaurant) return
+// Delete business
+const deleteBusiness = async () => {
+  if (!props.business) return
 
   try {
     deleting.value = true
     saveError.value = null
 
-    const success = await restaurantService.deleteRestaurant(props.restaurant.place_id)
+    const success = await businessService.deleteBusiness(props.business.place_id)
 
     if (success) {
-      emit('deleted', props.restaurant.id)
+      emit('deleted', props.business.id)
       close()
     } else {
-      saveError.value = 'Failed to delete restaurant'
+      saveError.value = 'Failed to delete business'
     }
   } catch (err: any) {
-    saveError.value = err.message || 'Failed to delete restaurant'
+    saveError.value = err.message || 'Failed to delete business'
   } finally {
     deleting.value = false
   }
@@ -93,7 +93,7 @@ const deleteRestaurant = async () => {
 // Website editing
 const startEditWebsite = () => {
   editingWebsite.value = true
-  editedWebsite.value = props.restaurant?.website || ''
+  editedWebsite.value = props.business?.website || ''
 }
 
 const cancelEditWebsite = () => {
@@ -103,13 +103,13 @@ const cancelEditWebsite = () => {
 }
 
 const saveWebsite = async () => {
-  if (!props.restaurant) return
+  if (!props.business) return
 
   try {
     saving.value = true
     saveError.value = null
 
-    const response = await restaurantService.updateRestaurant(props.restaurant.place_id, {
+    const response = await businessService.updateBusiness(props.business.place_id, {
       website: editedWebsite.value || null
     })
 
@@ -130,8 +130,8 @@ const saveWebsite = async () => {
 // Opening hours editing
 const startEditHours = () => {
   editingHours.value = true
-  editedHours.value = props.restaurant?.opening_hours?.weekday_text
-    ? [...props.restaurant.opening_hours.weekday_text]
+  editedHours.value = props.business?.opening_hours?.weekday_text
+    ? [...props.business.opening_hours.weekday_text]
     : []
 }
 
@@ -142,13 +142,13 @@ const cancelEditHours = () => {
 }
 
 const saveHours = async () => {
-  if (!props.restaurant) return
+  if (!props.business) return
 
   try {
     saving.value = true
     saveError.value = null
 
-    const response = await restaurantService.updateRestaurant(props.restaurant.place_id, {
+    const response = await businessService.updateBusiness(props.business.place_id, {
       opening_hours: {
         weekday_text: editedHours.value.filter(h => h.trim() !== '')
       }
@@ -172,11 +172,11 @@ const saveHours = async () => {
 const startEditSocial = () => {
   editingSocial.value = true
   editedSocial.value = {
-    facebook: props.restaurant?.social_media?.facebook || '',
-    instagram: props.restaurant?.social_media?.instagram || '',
-    twitter: props.restaurant?.social_media?.twitter || '',
-    youtube: props.restaurant?.social_media?.youtube || '',
-    tiktok: props.restaurant?.social_media?.tiktok || ''
+    facebook: props.business?.social_media?.facebook || '',
+    instagram: props.business?.social_media?.instagram || '',
+    twitter: props.business?.social_media?.twitter || '',
+    youtube: props.business?.social_media?.youtube || '',
+    tiktok: props.business?.social_media?.tiktok || ''
   }
 }
 
@@ -193,13 +193,13 @@ const cancelEditSocial = () => {
 }
 
 const saveSocial = async () => {
-  if (!props.restaurant) return
+  if (!props.business) return
 
   try {
     saving.value = true
     saveError.value = null
 
-    const response = await restaurantService.updateRestaurant(props.restaurant.place_id, {
+    const response = await businessService.updateBusiness(props.business.place_id, {
       social_media: editedSocial.value
     })
 
@@ -230,16 +230,16 @@ const hasSocialMedia = (socialMedia: any): boolean => {
 
 // Menu pagination
 const paginatedMenuItems = computed(() => {
-  if (!props.restaurant?.menu?.items) return []
-  const items = props.restaurant.menu.items
+  if (!props.business?.menu?.items) return []
+  const items = props.business.menu.items
   const start = (menuCurrentPage.value - 1) * menuItemsPerPage
   const end = start + menuItemsPerPage
   return items.slice(start, end)
 })
 
 const totalMenuPages = computed(() => {
-  if (!props.restaurant?.menu?.items) return 0
-  return Math.ceil(props.restaurant.menu.items.length / menuItemsPerPage)
+  if (!props.business?.menu?.items) return 0
+  return Math.ceil(props.business.menu.items.length / menuItemsPerPage)
 })
 
 const goToMenuPage = (page: number) => {
@@ -249,9 +249,9 @@ const goToMenuPage = (page: number) => {
 
 <template>
   <BaseModal :model-value="modelValue" size="lg" @update:model-value="$emit('update:modelValue', $event)">
-    <template v-if="restaurant">
+    <template v-if="business">
       <div class="details-header">
-        <h2 class="details-title">{{ restaurant.name }}</h2>
+        <h2 class="details-title">{{ business.name }}</h2>
       </div>
 
       <BaseAlert v-if="saveError" type="error" class="save-alert">
@@ -267,12 +267,12 @@ const goToMenuPage = (page: number) => {
           <div class="info-grid">
             <div class="info-item">
               <span class="info-label">Address</span>
-              <span class="info-value">{{ restaurant.address }}</span>
+              <span class="info-value">{{ business.address }}</span>
             </div>
 
-            <div v-if="restaurant.phone_number" class="info-item">
+            <div v-if="business.phone_number" class="info-item">
               <span class="info-label">Phone</span>
-              <span class="info-value">{{ restaurant.phone_number }}</span>
+              <span class="info-value">{{ business.phone_number }}</span>
             </div>
 
             <div class="info-item">
@@ -285,8 +285,8 @@ const goToMenuPage = (page: number) => {
                   class="edit-input"
                   placeholder="https://example.com"
                 />
-                <a v-else-if="restaurant.website" :href="restaurant.website" target="_blank" class="info-link">
-                  {{ restaurant.website }}
+                <a v-else-if="business.website" :href="business.website" target="_blank" class="info-link">
+                  {{ business.website }}
                 </a>
                 <span v-else class="info-value empty">Not set</span>
 
@@ -306,12 +306,12 @@ const goToMenuPage = (page: number) => {
               </div>
             </div>
 
-            <div v-if="restaurant.rating" class="info-item">
+            <div v-if="business.rating" class="info-item">
               <span class="info-label">Rating</span>
               <span class="info-value">
-                ⭐ {{ restaurant.rating }} / 5
-                <span v-if="restaurant.user_ratings_total" class="rating-count">
-                  ({{ restaurant.user_ratings_total }} reviews)
+                ⭐ {{ business.rating }} / 5
+                <span v-if="business.user_ratings_total" class="rating-count">
+                  ({{ business.user_ratings_total }} reviews)
                 </span>
               </span>
             </div>
@@ -319,22 +319,22 @@ const goToMenuPage = (page: number) => {
         </section>
 
         <!-- Brand DNA -->
-        <section v-if="restaurant.brand_dna" class="details-section">
+        <section v-if="business.brand_dna" class="details-section">
           <h3 class="section-title">Brand Identity</h3>
 
           <!-- Brand Name -->
-          <div v-if="restaurant.brand_dna.brand_name" class="brand-item">
+          <div v-if="business.brand_dna.brand_name" class="brand-item">
             <span class="brand-label">Brand Name</span>
-            <span class="brand-value brand-name-text">{{ restaurant.brand_dna.brand_name }}</span>
+            <span class="brand-value brand-name-text">{{ business.brand_dna.brand_name }}</span>
           </div>
 
           <!-- Logo -->
-          <div v-if="restaurant.brand_dna.logo_url" class="brand-item logo-item">
+          <div v-if="business.brand_dna.logo_url" class="brand-item logo-item">
             <span class="brand-label">Logo</span>
             <div class="logo-container">
               <img
-                :src="restaurant.brand_dna.logo_url"
-                :alt="restaurant.brand_dna.brand_name || 'Logo'"
+                :src="business.brand_dna.logo_url"
+                :alt="business.brand_dna.brand_name || 'Logo'"
                 class="brand-logo"
               />
             </div>
@@ -344,22 +344,22 @@ const goToMenuPage = (page: number) => {
           <div class="brand-item colors-item">
             <span class="brand-label">Brand Colors</span>
             <div class="colors-display">
-              <div v-if="restaurant.brand_dna.primary_color" class="color-box">
-                <div class="color-swatch-small" :style="{ backgroundColor: restaurant.brand_dna.primary_color }"></div>
+              <div v-if="business.brand_dna.primary_color" class="color-box">
+                <div class="color-swatch-small" :style="{ backgroundColor: business.brand_dna.primary_color }"></div>
                 <div class="color-details">
                   <span class="color-name">Primary</span>
-                  <span class="color-code">{{ restaurant.brand_dna.primary_color }}</span>
+                  <span class="color-code">{{ business.brand_dna.primary_color }}</span>
                 </div>
               </div>
-              <div v-if="restaurant.brand_dna.secondary_color" class="color-box">
-                <div class="color-swatch-small" :style="{ backgroundColor: restaurant.brand_dna.secondary_color }"></div>
+              <div v-if="business.brand_dna.secondary_color" class="color-box">
+                <div class="color-swatch-small" :style="{ backgroundColor: business.brand_dna.secondary_color }"></div>
                 <div class="color-details">
                   <span class="color-name">Secondary</span>
-                  <span class="color-code">{{ restaurant.brand_dna.secondary_color }}</span>
+                  <span class="color-code">{{ business.brand_dna.secondary_color }}</span>
                 </div>
               </div>
               <div
-                v-for="(color, index) in restaurant.brand_dna.additional_colors"
+                v-for="(color, index) in business.brand_dna.additional_colors"
                 :key="index"
                 class="color-box"
               >
@@ -373,14 +373,14 @@ const goToMenuPage = (page: number) => {
           </div>
 
           <!-- Font Style -->
-          <div v-if="restaurant.brand_dna.font_style" class="brand-item">
+          <div v-if="business.brand_dna.font_style" class="brand-item">
             <span class="brand-label">Typography</span>
-            <span class="brand-value font-badge-small">{{ restaurant.brand_dna.font_style }}</span>
+            <span class="brand-value font-badge-small">{{ business.brand_dna.font_style }}</span>
           </div>
         </section>
 
         <!-- Opening Hours -->
-        <section v-if="restaurant.opening_hours || editingHours" class="details-section">
+        <section v-if="business.opening_hours || editingHours" class="details-section">
           <div class="section-header">
             <h3 class="section-title">Opening Hours</h3>
             <button v-if="!editingHours" class="edit-section-btn" @click="startEditHours" title="Edit opening hours">
@@ -396,8 +396,8 @@ const goToMenuPage = (page: number) => {
             </div>
           </div>
 
-          <div v-if="restaurant.opening_hours?.open_now !== undefined && !editingHours" class="status-badge" :class="{ 'open': restaurant.opening_hours.open_now }">
-            {{ restaurant.opening_hours.open_now ? '🟢 Open Now' : '🔴 Closed' }}
+          <div v-if="business.opening_hours?.open_now !== undefined && !editingHours" class="status-badge" :class="{ 'open': business.opening_hours.open_now }">
+            {{ business.opening_hours.open_now ? '🟢 Open Now' : '🔴 Closed' }}
           </div>
 
           <!-- Edit Mode -->
@@ -419,15 +419,15 @@ const goToMenuPage = (page: number) => {
           </div>
 
           <!-- View Mode -->
-          <div v-else-if="restaurant.opening_hours?.weekday_text" class="hours-list">
-            <div v-for="(day, index) in restaurant.opening_hours.weekday_text" :key="index" class="hours-item">
+          <div v-else-if="business.opening_hours?.weekday_text" class="hours-list">
+            <div v-for="(day, index) in business.opening_hours.weekday_text" :key="index" class="hours-item">
               {{ day }}
             </div>
           </div>
         </section>
 
         <!-- Social Media -->
-        <section v-if="(restaurant.social_media && hasSocialMedia(restaurant.social_media)) || editingSocial" class="details-section">
+        <section v-if="(business.social_media && hasSocialMedia(business.social_media)) || editingSocial" class="details-section">
           <div class="section-header">
             <h3 class="section-title">Social Media</h3>
             <button v-if="!editingSocial" class="edit-section-btn" @click="startEditSocial" title="Edit social media">
@@ -513,30 +513,30 @@ const goToMenuPage = (page: number) => {
 
           <!-- View Mode -->
           <div v-else class="social-links">
-            <a v-if="restaurant.social_media?.facebook" :href="restaurant.social_media.facebook" target="_blank" class="social-link facebook">
+            <a v-if="business.social_media?.facebook" :href="business.social_media.facebook" target="_blank" class="social-link facebook">
               Facebook
             </a>
-            <a v-if="restaurant.social_media?.instagram" :href="restaurant.social_media.instagram" target="_blank" class="social-link instagram">
+            <a v-if="business.social_media?.instagram" :href="business.social_media.instagram" target="_blank" class="social-link instagram">
               Instagram
             </a>
-            <a v-if="restaurant.social_media?.twitter" :href="restaurant.social_media.twitter" target="_blank" class="social-link twitter">
+            <a v-if="business.social_media?.twitter" :href="business.social_media.twitter" target="_blank" class="social-link twitter">
               Twitter/X
             </a>
-            <a v-if="restaurant.social_media?.youtube" :href="restaurant.social_media.youtube" target="_blank" class="social-link youtube">
+            <a v-if="business.social_media?.youtube" :href="business.social_media.youtube" target="_blank" class="social-link youtube">
               YouTube
             </a>
-            <a v-if="restaurant.social_media?.tiktok" :href="restaurant.social_media.tiktok" target="_blank" class="social-link tiktok">
+            <a v-if="business.social_media?.tiktok" :href="business.social_media.tiktok" target="_blank" class="social-link tiktok">
               TikTok
             </a>
           </div>
         </section>
 
         <!-- Menu -->
-        <section v-if="restaurant.menu && restaurant.menu.items && restaurant.menu.items.length > 0" class="details-section">
+        <section v-if="business.menu && business.menu.items && business.menu.items.length > 0" class="details-section">
           <h3 class="section-title">
-            Menu ({{ restaurant.menu.items.length }} items)
-            <span v-if="restaurant.menu.platform" class="platform-badge">
-              {{ restaurant.menu.platform.toUpperCase() }}
+            Menu ({{ business.menu.items.length }} items)
+            <span v-if="business.menu.platform" class="platform-badge">
+              {{ business.menu.platform.toUpperCase() }}
             </span>
           </h3>
           <div class="menu-grid">
@@ -582,23 +582,23 @@ const goToMenuPage = (page: number) => {
           </div>
         </section>
 
-        <!-- Delete Restaurant Section -->
+        <!-- Delete Business Section -->
         <section class="details-section delete-section">
-          <h3 class="section-title danger">Delete Restaurant</h3>
+          <h3 class="section-title danger">Delete Business</h3>
           <p class="delete-warning">
-            This will permanently delete this restaurant and all associated data, including images and menu items. This action cannot be undone.
+            This will permanently delete this business and all associated data, including images and menu items. This action cannot be undone.
           </p>
 
           <div v-if="!confirmDelete" class="delete-actions">
             <BaseButton variant="danger" size="medium" @click="confirmDelete = true">
-              Delete Restaurant
+              Delete Business
             </BaseButton>
           </div>
 
           <div v-else class="delete-confirm">
             <p class="confirm-text">Are you sure? This cannot be undone.</p>
             <div class="confirm-actions">
-              <BaseButton variant="danger" size="medium" @click="deleteRestaurant" :disabled="deleting">
+              <BaseButton variant="danger" size="medium" @click="deleteBusiness" :disabled="deleting">
                 {{ deleting ? 'Deleting...' : 'Yes, Delete' }}
               </BaseButton>
               <BaseButton variant="ghost" size="medium" @click="confirmDelete = false" :disabled="deleting">

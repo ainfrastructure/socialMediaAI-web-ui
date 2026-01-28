@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useRestaurantImages } from '@/composables/useRestaurantImages'
-import { restaurantService } from '@/services/restaurantService'
-import type { SavedRestaurant } from '@/services/restaurantService'
-import type { FolderNode } from '@/composables/useRestaurantImages'
+import { useBusinessImages } from '@/composables/useBusinessImages'
+import { businessService } from '@/services/businessService'
+import type { SavedBusiness } from '@/services/businessService'
+import type { FolderNode } from '@/composables/useBusinessImages'
 import CreateFolderModal from './CreateFolderModal.vue'
 import RenameFolderModal from './RenameFolderModal.vue'
 import MoveImagesModal from './MoveImagesModal.vue'
@@ -13,7 +13,7 @@ import ConfirmModal from '../ConfirmModal.vue'
 import BaseButton from '../BaseButton.vue'
 
 interface Props {
-  restaurant: SavedRestaurant
+  business: SavedBusiness
 }
 
 const props = defineProps<Props>()
@@ -44,7 +44,7 @@ const {
   renameFolder,
   deleteFolder,
   moveImagesToFolder
-} = useRestaurantImages(props.restaurant)
+} = useBusinessImages(props.business)
 
 // Modal states
 const showCreateFolderModal = ref(false)
@@ -57,7 +57,7 @@ const isDeleting = ref(false)
 
 // Current folder info
 const currentFolderName = computed(() => {
-  if (currentFolderPath.value === '/') return props.restaurant.name
+  if (currentFolderPath.value === '/') return props.business.name
   const parts = currentFolderPath.value.split('/')
   return parts[parts.length - 1]
 })
@@ -179,7 +179,7 @@ function formatFileSize(bytes: number): string {
     <!-- Sidebar -->
     <aside class="sidebar">
       <div class="sidebar-header">
-        <h3>{{ t('restaurantManagement.folderTree') }}</h3>
+        <h3>{{ t('businessManagement.folderTree') }}</h3>
       </div>
 
       <div class="sidebar-actions">
@@ -189,7 +189,7 @@ function formatFileSize(bytes: number): string {
           size="small"
           full-width
         >
-          + {{ t('restaurantManagement.newFolder') }}
+          + {{ t('businessManagement.newFolder') }}
         </BaseButton>
       </div>
 
@@ -241,10 +241,10 @@ function formatFileSize(bytes: number): string {
 
         <div v-if="!isRootFolder" class="header-actions">
           <button class="action-btn" @click="showRenameFolderModal = true">
-            {{ t('restaurantManagement.rename') }}
+            {{ t('businessManagement.rename') }}
           </button>
           <button class="action-btn delete" @click="promptDeleteFolder">
-            {{ t('restaurantManagement.delete') }}
+            {{ t('businessManagement.delete') }}
           </button>
         </div>
       </div>
@@ -255,7 +255,7 @@ function formatFileSize(bytes: number): string {
           v-model="searchQuery"
           type="text"
           class="search-input"
-          :placeholder="t('restaurantManagement.searchImages')"
+          :placeholder="t('businessManagement.searchImages')"
         />
 
         <div class="toolbar-actions">
@@ -264,13 +264,13 @@ function formatFileSize(bytes: number): string {
             variant="primary"
             size="small"
           >
-            {{ t('restaurantManagement.uploadImages') }}
+            {{ t('businessManagement.uploadImages') }}
           </BaseButton>
 
           <select v-model="sortBy" class="sort-select">
-            <option value="date">{{ t('restaurantManagement.sortByDate') }}</option>
-            <option value="name">{{ t('restaurantManagement.sortByName') }}</option>
-            <option value="size">{{ t('restaurantManagement.sortBySize') }}</option>
+            <option value="date">{{ t('businessManagement.sortByDate') }}</option>
+            <option value="name">{{ t('businessManagement.sortByName') }}</option>
+            <option value="size">{{ t('businessManagement.sortBySize') }}</option>
           </select>
         </div>
       </div>
@@ -278,15 +278,15 @@ function formatFileSize(bytes: number): string {
       <!-- Bulk Actions -->
       <div v-if="hasSelection" class="bulk-actions">
         <span class="selection-count">
-          {{ t('restaurantManagement.selectedCount', { count: selectedImages.length }) }}
+          {{ t('businessManagement.selectedCount', { count: selectedImages.length }) }}
         </span>
 
         <div class="bulk-buttons">
           <button class="bulk-btn move" @click="showMoveImagesModal = true">
-            {{ t('restaurantManagement.moveToFolder') }}
+            {{ t('businessManagement.moveToFolder') }}
           </button>
           <button class="bulk-btn delete" @click="promptDeleteImages">
-            {{ t('restaurantManagement.deleteSelected') }}
+            {{ t('businessManagement.deleteSelected') }}
           </button>
         </div>
       </div>
@@ -305,22 +305,22 @@ function formatFileSize(bytes: number): string {
           </svg>
         </div>
         <p v-if="searchQuery" class="empty-message">
-          {{ t('restaurantManagement.noImagesFound', { query: searchQuery }) }}
+          {{ t('businessManagement.noImagesFound', { query: searchQuery }) }}
         </p>
         <template v-else-if="isRootFolder">
           <p class="empty-message">
-            {{ t('restaurantManagement.noImagesInFolder') }}
+            {{ t('businessManagement.noImagesInFolder') }}
           </p>
           <p class="empty-hint">
-            {{ t('restaurantManagement.createFolderFirst') }}
+            {{ t('businessManagement.createFolderFirst') }}
           </p>
         </template>
         <template v-else>
           <p class="empty-message">
-            {{ t('restaurantManagement.noImagesInFolder') }}
+            {{ t('businessManagement.noImagesInFolder') }}
           </p>
           <BaseButton @click="triggerFileUpload" variant="primary">
-            {{ t('restaurantManagement.uploadImages') }}
+            {{ t('businessManagement.uploadImages') }}
           </BaseButton>
         </template>
       </div>
@@ -375,7 +375,7 @@ function formatFileSize(bytes: number): string {
 
     <UploadImagesModal
       v-model="showUploadModal"
-      :restaurant="restaurant"
+      :business="business"
       :folder-structure="folderStructure"
       :current-folder-path="currentFolderPath"
       @uploaded="handleUploadComplete"
@@ -385,8 +385,8 @@ function formatFileSize(bytes: number): string {
     <ConfirmModal
       v-model="showDeleteConfirm"
       type="danger"
-      :title="t('restaurantManagement.deleteImages')"
-      :message="t('restaurantManagement.bulkDeleteConfirm', { count: selectedImages.length })"
+      :title="t('businessManagement.deleteImages')"
+      :message="t('businessManagement.bulkDeleteConfirm', { count: selectedImages.length })"
       :confirm-text="t('common.delete')"
       :cancel-text="t('common.cancel')"
       :loading-text="t('common.deleting')"
@@ -399,8 +399,8 @@ function formatFileSize(bytes: number): string {
     <ConfirmModal
       v-model="showDeleteFolderConfirm"
       type="danger"
-      :title="t('restaurantManagement.deleteFolder')"
-      :message="t('restaurantManagement.deleteFolderConfirm', { name: currentFolderName })"
+      :title="t('businessManagement.deleteFolder')"
+      :message="t('businessManagement.deleteFolderConfirm', { name: currentFolderName })"
       :confirm-text="t('common.delete')"
       :cancel-text="t('common.cancel')"
       :loading-text="t('common.deleting')"

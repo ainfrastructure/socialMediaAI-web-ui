@@ -7,7 +7,7 @@ class SchedulerService {
     month?: number
     year?: number
     platforms?: string[]
-    restaurant_ids?: string[]
+    business_ids?: string[]
   }): Promise<ApiResponse<{ scheduled_posts: any[] }>> {
     const params = new URLSearchParams()
     if (filters?.status) params.append('status', filters.status)
@@ -18,8 +18,8 @@ class SchedulerService {
     if (filters?.platforms && filters.platforms.length > 0) {
       params.append('platforms', filters.platforms.join(','))
     }
-    if (filters?.restaurant_ids && filters.restaurant_ids.length > 0) {
-      params.append('restaurant_ids', filters.restaurant_ids.join(','))
+    if (filters?.business_ids && filters.business_ids.length > 0) {
+      params.append('business_ids', filters.business_ids.join(','))
     }
 
     const url = params.toString() ? `${API_URL}/api/scheduler?${params}` : `${API_URL}/api/scheduler`

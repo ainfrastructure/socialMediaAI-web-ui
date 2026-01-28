@@ -81,7 +81,7 @@ export default {
 
   // Auth / Login View
   auth: {
-    brandSubtitle: 'AI-Powered Content for Restaurants',
+    brandSubtitle: 'AI-Powered Content for Businesses',
     email: 'Email',
     emailPlaceholder: "your{'@'}email.com",
     signIn: 'Sign In',
@@ -100,9 +100,9 @@ export default {
 
   // Waitlist Landing Page
   waitlist: {
-    headline: "Your restaurant's automated social media manager",
+    headline: "Your business's automated social media manager",
     subheadline:
-      "Create stunning food content, schedule posts, and grow your restaurant's presence—all with AI.",
+      "Create stunning food content, schedule posts, and grow your business's presence—all with AI.",
     emailPlaceholder: 'Enter your email',
     joinButton: 'Join the Waitlist',
     joining: 'Joining...',
@@ -113,7 +113,7 @@ export default {
     error: 'Something went wrong. Please try again.',
     loginLink: 'Already have an account?',
     loginLinkText: 'Sign in',
-    socialProof: 'Join {count}+ restaurants on the waitlist',
+    socialProof: 'Join {count}+ businesses on the waitlist',
     finalCta: {
       title: 'Be the First to Know',
       subtitle: 'Join the waitlist and get early access when we launch.'
@@ -124,10 +124,10 @@ export default {
   landing: {
     // Hero Section
     hero: {
-      tagline: 'AI-Powered Social Media for Restaurants',
+      tagline: 'AI-Powered Social Media for Businesses',
       headlinePart1: 'The most powerful &',
       headlinePart2: 'effortless AI content',
-      headlinePart3: 'generator for restaurants',
+      headlinePart3: 'generator for businesses',
       subheadline: 'Get stunning social media posts that publish themselves. No photographer, no designer, no tech skills needed.',
       cta: 'Get started now',
       ctaSecondary: 'See how it works',
@@ -195,7 +195,7 @@ export default {
 
     // Benefits
     benefits: {
-      title: 'Why Restaurant Owners Love SocialChef',
+      title: 'Why Business Owners Love SocialChef',
       time: {
         title: 'Save Countless Hours Per Week',
         description: 'Stop wrestling with content creation. Spend that time on what matters - your food and customers.'
@@ -228,7 +228,7 @@ export default {
     // Final CTA
     finalCta: {
       title: 'Ready to Fire Your Social Media Worries?',
-      subtitle: 'Join hundreds of restaurant owners who stopped stressing about social media.'
+      subtitle: 'Join hundreds of business owners who stopped stressing about social media.'
     },
 
     // Login Modal
@@ -246,7 +246,7 @@ export default {
 
     // Footer
     footer: {
-      madeWith: 'Made with love for restaurant owners',
+      madeWith: 'Made with love for business owners',
       copyright: '© 2025 SocialChef. All rights reserved.'
     }
   },
@@ -258,14 +258,14 @@ export default {
     // Welcome Modal
     welcomeModalTitle: 'Welcome to SocialChef!',
     welcomeModalMessage:
-      "Looks like you haven't added a restaurant yet. Let's get started by adding your first restaurant and creating some amazing content!",
+      "Looks like you haven't added a business yet. Let's get started by adding your first business and creating some amazing content!",
     welcomeModalButton: "Let's Go",
 
     // Stats
     postsCreated: 'Posts Created',
     postsSaved: 'Posts Saved',
     scheduledPosts: 'Scheduled Posts',
-    restaurants: 'Restaurants',
+    businesses: 'Businesses',
 
     // Quick actions
 
@@ -322,7 +322,7 @@ export default {
     instagramPublishing: 'Instagram posting',
     included: 'Included',
     postScheduling: 'Post scheduling',
-    unlimitedRestaurants: 'Unlimited restaurants',
+    unlimitedBusinesses: 'Unlimited businesses',
     noExpiration: 'Credits never expire',
     subscriptionRequired: 'A subscription is required to access SocialChef. Choose a plan below to get started.',
     // Processing states
@@ -340,15 +340,15 @@ export default {
     contactSupport: 'If this persists, please contact support at support@socialchef.ai'
   },
 
-  // Restaurant Search View
-  restaurantSearch: {
-    searchPlaceholder: 'Search restaurants by name or location...',
-    noResults: 'No restaurants found',
+  // Business Search View
+  businessSearch: {
+    searchPlaceholder: 'Search businesses by name or location...',
+    noResults: 'No businesses found',
 
     // Autocomplete
-    searchLabel: 'Search Restaurants',
+    searchLabel: 'Search Businesses',
     searching: 'Searching...',
-    searchError: 'Failed to search restaurants. Please try again.',
+    searchError: 'Failed to search businesses. Please try again.',
     alreadyAdded: 'Already Added',
 
     // Quick Overview
@@ -390,9 +390,9 @@ export default {
       ],
 
       searchDetails: [
-        'Search restaurants using Google Places',
+        'Search businesses using Google Places',
         'Automatically import menus, photos, and brand details',
-        'Build your restaurant database',
+        'Build your business database',
         'Access comprehensive business information',
       ],
 
@@ -406,7 +406,7 @@ export default {
       scheduleDetails: [
         'Schedule posts in advance',
         'Publish directly to Facebook',
-        'Manage multiple restaurants',
+        'Manage multiple businesses',
         'Track your content performance',
       ],
 
@@ -418,7 +418,7 @@ export default {
       ],
 
       readyDetails: [
-        'Start by searching for your restaurant',
+        'Start by searching for your business',
         'Generate your first post in minutes',
         'All content is saved to your library',
         'Schedule content to maintain consistency',
@@ -433,7 +433,7 @@ export default {
       // Questions
       q1Options: [
         'Connect social media accounts',
-        'Search and save a restaurant',
+        'Search and save a business',
         'Generate AI content',
         'Schedule posts',
       ],
@@ -472,15 +472,15 @@ export default {
 
   // Playground View
   playground: {
-    chooseRestaurant: 'Choose a Restaurant',
-    addNewRestaurant: '+ Add New Restaurant',
+    chooseBusiness: 'Choose a Business',
+    addNewBusiness: '+ Add New Business',
     menuItems: 'menu items',
     saved: 'Saved',
     livePreview: 'Live Preview',
     yourGeneratedImage: 'Your Generated Image',
     previewDescription: 'Preview how your sticker and logo will appear',
     itemsSelected: '{count} item selected | {count} items selected',
-    selectRestaurant: 'Select Restaurant',
+    selectBusiness: 'Select Business',
 
     // Tabs
 
@@ -497,7 +497,7 @@ export default {
 
     // Video Generation
 
-    // Restaurant Details Modal
+    // Business Details Modal
 
     // Style Templates (Easy Mode)
     styleTemplates: {
@@ -583,7 +583,7 @@ export default {
       includeAudio: 'Include AI-generated audio',
       promoLabel: 'Special Offer (Optional)',
       promoPlaceholder: 'e.g., 20% OFF, COMBO DEAL, NEW ITEM...',
-      logoLabel: 'Restaurant Logo',
+      logoLabel: 'Business Logo',
       currentLogo: 'Current logo',
       newLogo: 'New logo',
       uploadLogo: 'Upload logo',
@@ -687,8 +687,8 @@ export default {
     step2: {
       title: 'Customize Your Design',
       subtitle: 'Tailor the look and feel of your post',
-      logoPositionLabel: 'Restaurant Logo Position',
-      logoPositionHint: 'Where to place your restaurant logo',
+      logoPositionLabel: 'Business Logo Position',
+      logoPositionHint: 'Where to place your business logo',
       previewLabel: 'Preview'
     },
     logoPositions: {
@@ -870,7 +870,7 @@ export default {
     publishedAt: 'Published At',
     viewPost: 'View Post',
     viewOn: 'View on',
-    restaurant: 'Restaurant',
+    business: 'Business',
     caption: 'Caption',
     edit: 'Edit',
     cancelPost: 'Cancel Post',
@@ -951,19 +951,19 @@ export default {
     sortOldest: 'Oldest First',
     // Welcome state for new users
     welcomeTitle: 'Welcome!',
-    welcomeSubtitle: "Let's get started by adding your first restaurant.",
-    addFirstRestaurant: 'Add Your First Restaurant',
-    addFirstRestaurantDescription:
-      "Search for your restaurant and we'll automatically import your menu and branding.",
-    noRestaurantPrompt: 'Add a restaurant to start creating posts.',
+    welcomeSubtitle: "Let's get started by adding your first business.",
+    addFirstBusiness: 'Add Your First Business',
+    addFirstBusinessDescription:
+      "Search for your business and we'll automatically import your menu and branding.",
+    noBusinessPrompt: 'Add a business to start creating posts.',
     createPost: 'Create Post'
   },
 
   // Content Create View
   contentCreate: {
     loading: 'Loading...',
-    loadError: 'Failed to load restaurant',
-    switchRestaurant: 'Switch',
+    loadError: 'Failed to load business',
+    switchBusiness: 'Switch',
     imageError: 'Failed to generate image. Please try again.',
     videoError: 'Failed to generate video. Please try again.',
     videoTimeout: 'Video generation timed out. Please try again.',
@@ -996,16 +996,16 @@ export default {
     uploadFeatureComingSoon: 'Direct upload coming soon. For now, please use the Library tab to select from your existing posts.'
   },
 
-  // Restaurant Selector Modal
-  restaurantSelector: {
-    title: 'Select Restaurant',
-    addNew: '+ Add New Restaurant',
+  // Business Selector Modal
+  businessSelector: {
+    title: 'Select Business',
+    addNew: '+ Add New Business',
     menuItems: '{count} menu items',
-    delete: 'Remove restaurant',
-    deleteTitle: 'Remove Restaurant',
-    confirmDelete: 'Are you sure you want to remove "{name}" from your saved restaurants?',
-    restaurantAdded: 'Restaurant added successfully!',
-    cantFindAddManually: "Can't find your restaurant? Add manually"
+    delete: 'Remove business',
+    deleteTitle: 'Remove Business',
+    confirmDelete: 'Are you sure you want to remove "{name}" from your saved businesses?',
+    businessAdded: 'Business added successfully!',
+    cantFindAddManually: "Can't find your business? Add manually"
   },
 
   // Image Source Selector
@@ -1016,7 +1016,7 @@ export default {
     noImagesAvailable: 'No images available',
     folderEmpty: 'This folder is empty',
     searchPlaceholder: 'Search images...',
-    selectFromStorage: 'Select from your restaurant images',
+    selectFromStorage: 'Select from your business images',
     uploadOrSelect: 'Upload a new image or select from your existing images'
   },
 
@@ -1025,7 +1025,7 @@ export default {
     title: 'Profile Settings',
     subtitleExtended: 'Manage your account information and subscription',
     personalInfo: 'Personal Information',
-    manageRestaurants: 'Manage Restaurants',
+    manageBusinesses: 'Manage Businesses',
     email: 'Email',
     emailAddress: 'Email Address',
     userId: 'User ID',
@@ -1118,41 +1118,41 @@ export default {
     }
   },
 
-  // Restaurant Management
-  restaurantManagement: {
-    addRestaurant: 'Add Restaurant',
-    addFirstRestaurant: 'Add Your First Restaurant',
-    createRestaurant: 'Create Restaurant',
+  // Business Management
+  businessManagement: {
+    addBusiness: 'Add Business',
+    addFirstBusiness: 'Add Your First Business',
+    createBusiness: 'Create Business',
     uploadImages: 'Upload Images',
     yourImages: 'Your Images',
 
-    noRestaurants: 'No restaurants yet',
-    noRestaurantsHint: 'Add your first restaurant to get started',
+    noBusinesses: 'No businesses yet',
+    noBusinessesHint: 'Add your first business to get started',
 
     basicInfo: 'Basic Information',
     contactInfo: 'Contact Information',
     socialMedia: 'Social Media',
     branding: 'Branding',
 
-    restaurantName: 'Restaurant Name',
-    restaurantNamePlaceholder: 'e.g., The Golden Spoon',
+    businessName: 'Business Name',
+    businessNamePlaceholder: 'e.g., The Golden Spoon',
     address: 'Address',
     addressPlaceholder: 'Enter full address',
     phoneNumber: 'Phone Number',
     phoneNumberPlaceholder: '+1 (555) 123-4567',
     website: 'Website',
-    websitePlaceholder: 'https://yourrestaurant.com',
+    websitePlaceholder: 'https://yourbusiness.com',
 
     instagram: 'Instagram',
-    instagramPlaceholder: "{'@'}yourrestaurant",
+    instagramPlaceholder: "{'@'}yourbusiness",
     facebook: 'Facebook',
-    facebookPlaceholder: 'facebook.com/yourrestaurant',
+    facebookPlaceholder: 'facebook.com/yourbusiness',
     twitter: 'Twitter/X',
-    twitterPlaceholder: "{'@'}yourrestaurant",
+    twitterPlaceholder: "{'@'}yourbusiness",
 
     logoUrl: 'Logo URL',
     logoUrlPlaceholder: 'https://...',
-    logoUrlHint: 'Enter a URL to your restaurant logo image',
+    logoUrlHint: 'Enter a URL to your business logo image',
     logo: 'Logo',
     dragLogoOrClick: 'Drag & drop logo here or click to browse',
     logoMaxSize: 'Maximum {size}MB (JPEG, PNG, WebP)',
@@ -1258,7 +1258,7 @@ export default {
     selectFolderError: 'Please select a destination folder',
 
     errors: {
-      createFailed: 'Failed to create restaurant',
+      createFailed: 'Failed to create business',
       uploadFailed: 'Failed to upload images',
       folderExists: 'A folder with this name already exists',
       invalidFolderName: 'Invalid folder name',
@@ -1272,7 +1272,7 @@ export default {
     }
   },
 
-  // Saved Restaurants View
+  // Saved Businesses View
 
   // Test Post View
 
@@ -1314,9 +1314,9 @@ export default {
 
   // Pick Post Modal
   pickPostModal: {
-    showAllRestaurants: 'Show all restaurants',
-    showCurrentRestaurant: 'Show current restaurant only',
-    allRestaurantsLabel: 'All Restaurants',
+    showAllBusinesses: 'Show all businesses',
+    showCurrentBusiness: 'Show current business only',
+    allBusinessesLabel: 'All Businesses',
     videoLabel: 'VIDEO'
   },
 
@@ -1411,7 +1411,7 @@ export default {
     caption: 'Caption',
     captionPlaceholder: 'Write your carousel caption...',
     hashtags: 'Hashtags (one per line)',
-    hashtagsPlaceholder: '#food\n#restaurant\n#delicious',
+    hashtagsPlaceholder: '#food\n#business\n#delicious',
     hashtagsHint: 'Enter one hashtag per line',
     regenerate: 'Regenerate Content',
     useContent: 'Use This Content'
@@ -1449,8 +1449,8 @@ export default {
     status: 'Status',
     platforms: 'Platforms',
     activeCount: 'Active',
-    allRestaurants: 'All Restaurants',
-    restaurant: 'Restaurant',
+    allBusinesses: 'All Businesses',
+    business: 'Business',
     published: 'Published',
     scheduled: 'Scheduled',
     failed: 'Failed',
@@ -1471,7 +1471,7 @@ export default {
       introduction: {
         title: '1. Introduction',
         content:
-          'Welcome to SocialChef ("we," "our," or "us"). We are committed to protecting your privacy and ensuring the security of your personal information. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our AI-powered social media management platform for restaurants.'
+          'Welcome to SocialChef ("we," "our," or "us"). We are committed to protecting your privacy and ensuring the security of your personal information. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our AI-powered social media management platform for businesses.'
       },
       informationWeCollect: {
         title: '2. Information We Collect',
@@ -1496,7 +1496,7 @@ export default {
           provideService:
             'Provide and operate our AI-powered content generation and social media management services.',
           improveService:
-            'Improve and personalize your experience, including training our AI models to better serve restaurant content needs.',
+            'Improve and personalize your experience, including training our AI models to better serve business content needs.',
           communicate:
             'Send you service-related communications, updates, and marketing materials (with your consent).',
           security:
@@ -1582,7 +1582,7 @@ export default {
       description: {
         title: '2. Description of Service',
         content:
-          'SocialChef is an AI-powered social media management platform designed specifically for restaurants. Our Service enables you to generate marketing content, create images and captions, schedule posts, and publish content to connected social media platforms. Features may vary based on your subscription plan.'
+          'SocialChef is an AI-powered social media management platform designed specifically for businesses. Our Service enables you to generate marketing content, create images and captions, schedule posts, and publish content to connected social media platforms. Features may vary based on your subscription plan.'
       },
       eligibility: {
         title: '3. Eligibility',
@@ -1725,7 +1725,7 @@ export default {
     step1Title: 'Are you sure?',
     step1Description: 'Deleting your account will permanently remove all your data. This includes:',
     dataList: {
-      restaurants: 'All saved restaurants and their settings',
+      businesses: 'All saved businesses and their settings',
       posts: 'All generated posts and images',
       favorites: 'All saved favorites and scheduled posts',
       connections: 'All connected social media accounts',
@@ -1813,7 +1813,7 @@ export default {
     creditsUsed: 'Credits Used',
     used: 'used',
     subscription: 'Subscription',
-    restaurants: 'Restaurants',
+    businesses: 'Businesses',
 
     // Recent Activity
     recentActivity: 'Recent Activity',
@@ -1827,7 +1827,7 @@ export default {
     // Table headers
     post: 'Post',
     platforms: 'Platforms',
-    restaurant: 'Restaurant',
+    business: 'Business',
     status: 'Status',
     date: 'Date',
     links: 'Links',
@@ -1953,7 +1953,7 @@ export default {
     shareVia: 'Share via',
     share: 'Share',
     shareTitle: 'Join Social Chef',
-    shareText: 'I\'ve been using Social Chef for my restaurant and love it! Sign up with my link to get your first month free + 50% off for 2 months.',
+    shareText: 'I\'ve been using Social Chef for my business and love it! Sign up with my link to get your first month free + 50% off for 2 months.',
     shareEmailSubject: 'Join Social Chef - Get Your First Month Free!',
 
     // Stats

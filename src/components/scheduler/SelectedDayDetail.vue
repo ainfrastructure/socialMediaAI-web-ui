@@ -40,7 +40,7 @@
         <div class="th-post-type">{{ $t('postType.label') || 'Post Type' }}</div>
         <div class="th-platforms">{{ $t('dashboardNew.platforms') || 'Platforms' }}</div>
         <div class="th-status">{{ $t('scheduler.status') || 'Status' }}</div>
-        <div class="th-restaurant">{{ $t('scheduler.restaurant') || 'Restaurant' }}</div>
+        <div class="th-business">{{ $t('scheduler.business') || 'Business' }}</div>
         <div class="th-expand"></div>
       </div>
 
@@ -151,9 +151,9 @@
               </span>
             </div>
 
-            <!-- Restaurant Column -->
-            <div class="td-restaurant">
-              <span class="restaurant-name">{{ getRestaurantName(post) }}</span>
+            <!-- Business Column -->
+            <div class="td-business">
+              <span class="business-name">{{ getBusinessName(post) }}</span>
             </div>
 
             <!-- Expand Toggle -->
@@ -907,13 +907,13 @@ const getStatusLabel = (status: string | undefined) => {
   }
 }
 
-const getRestaurantName = (post: any): string => {
-  // Try multiple paths where restaurant name might be stored
-  if (post.restaurant_name) return post.restaurant_name
-  if (post.favorite_posts?.saved_restaurants?.name) return post.favorite_posts.saved_restaurants.name
-  if (post.favorite_post?.saved_restaurants?.name) return post.favorite_post.saved_restaurants.name
-  if (post.favorite?.saved_restaurants?.name) return post.favorite.saved_restaurants.name
-  if (post.saved_restaurants?.name) return post.saved_restaurants.name
+const getBusinessName = (post: any): string => {
+  // Try multiple paths where business name might be stored
+  if (post.business_name) return post.business_name
+  if (post.favorite_posts?.saved_businesses?.name) return post.favorite_posts.saved_businesses.name
+  if (post.favorite_post?.saved_businesses?.name) return post.favorite_post.saved_businesses.name
+  if (post.favorite?.saved_businesses?.name) return post.favorite.saved_businesses.name
+  if (post.saved_businesses?.name) return post.saved_businesses.name
   return '-'
 }
 
@@ -1396,13 +1396,13 @@ defineExpose({
   background: #ef4444;
 }
 
-/* Restaurant Column */
-.td-restaurant {
+/* Business Column */
+.td-business {
   display: flex;
   align-items: center;
 }
 
-.restaurant-name {
+.business-name {
   font-size: var(--text-sm);
   color: var(--text-muted);
 }
@@ -1758,7 +1758,7 @@ defineExpose({
   .td-date,
   .td-platforms,
   .td-status,
-  .td-restaurant,
+  .td-business,
   .post-info {
     display: none;
   }

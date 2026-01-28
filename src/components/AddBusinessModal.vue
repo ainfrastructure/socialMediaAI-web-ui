@@ -2,61 +2,61 @@
   <BaseModal
     :model-value="modelValue"
     size="md"
-    :title="$t('restaurantSelector.addNew')"
+    :title="$t('businessSelector.addNew')"
     :show-close-button="true"
-    :close-on-overlay-click="!savingRestaurant"
-    :close-on-escape="!savingRestaurant"
+    :close-on-overlay-click="!savingBusiness"
+    :close-on-escape="!savingBusiness"
     :allow-overflow="true"
     @update:model-value="(val: boolean) => !val && closeModal()"
     @close="closeModal"
   >
     <!-- Error Alert -->
-    <BaseAlert v-if="restaurantError" type="error" :dismissible="false">
-      {{ restaurantError }}
+    <BaseAlert v-if="businessError" type="error" :dismissible="false">
+      {{ businessError }}
     </BaseAlert>
 
     <!-- Search Field -->
     <div class="search-section">
-      <label class="search-label">{{ $t('restaurantSearch.searchPlaceholder') }}</label>
-      <RestaurantAutocomplete
-        :placeholder="$t('restaurantSearch.searchPlaceholder')"
-        :saved-restaurants="savedRestaurants"
-        @select="handleRestaurantSelect"
-        :disabled="savingRestaurant"
+      <label class="search-label">{{ $t('businessSearch.searchPlaceholder') }}</label>
+      <BusinessAutocomplete
+        :placeholder="$t('businessSearch.searchPlaceholder')"
+        :saved-businesses="savedBusinesses"
+        @select="handleBusinessSelect"
+        :disabled="savingBusiness"
       />
 
       <!-- Manual Entry Link -->
       <button
-        v-if="!detailsFetched && !savingRestaurant"
+        v-if="!detailsFetched && !savingBusiness"
         class="manual-entry-link"
         @click="handleSwitchToManual"
         type="button"
       >
-        {{ $t('restaurantSelector.cantFindAddManually') }}
+        {{ $t('businessSelector.cantFindAddManually') }}
       </button>
     </div>
 
     <!-- Loading State -->
-    <div v-if="savingRestaurant && !detailsFetched" class="loading-state">
+    <div v-if="savingBusiness && !detailsFetched" class="loading-state">
       <div class="spinner"></div>
       <p class="loading-text">{{ $t('common.loading') }}</p>
     </div>
 
-    <!-- Selected Restaurant Preview -->
-    <div v-if="(detailsFetched || restaurantSaved) && selectedRestaurant" class="selected-restaurant">
-      <div class="restaurant-card">
-        <div class="restaurant-logo" v-if="selectedRestaurant.brand_dna?.logo_url">
-          <img :src="selectedRestaurant.brand_dna.logo_url" :alt="selectedRestaurant.name" />
+    <!-- Selected Business Preview -->
+    <div v-if="(detailsFetched || businessSaved) && selectedBusiness" class="selected-business">
+      <div class="business-card">
+        <div class="business-logo" v-if="selectedBusiness.brand_dna?.logo_url">
+          <img :src="selectedBusiness.brand_dna.logo_url" :alt="selectedBusiness.name" />
         </div>
-        <div class="restaurant-info">
-          <h3>{{ selectedRestaurant.name }}</h3>
-          <p v-if="selectedRestaurant.address" class="address">{{ selectedRestaurant.address }}</p>
-          <div v-if="selectedRestaurant.menu_items?.length > 0" class="menu-badge-container">
-            <span v-if="selectedRestaurant.menu_source === 'okam'" class="menu-badge okam-badge">
-              ✓ Okam Menu - {{ selectedRestaurant.menu_items.length }} items
+        <div class="business-info">
+          <h3>{{ selectedBusiness.name }}</h3>
+          <p v-if="selectedBusiness.address" class="address">{{ selectedBusiness.address }}</p>
+          <div v-if="selectedBusiness.menu_items?.length > 0" class="menu-badge-container">
+            <span v-if="selectedBusiness.menu_source === 'okam'" class="menu-badge okam-badge">
+              ✓ Okam Menu - {{ selectedBusiness.menu_items.length }} items
             </span>
-            <span v-else-if="selectedRestaurant.menu_source" class="menu-badge platform-badge">
-              {{ selectedRestaurant.menu_source }} - {{ selectedRestaurant.menu_items.length }} items
+            <span v-else-if="selectedBusiness.menu_source" class="menu-badge platform-badge">
+              {{ selectedBusiness.menu_source }} - {{ selectedBusiness.menu_items.length }} items
             </span>
           </div>
         </div>
@@ -65,12 +65,12 @@
     </div>
 
     <!-- Success Message -->
-    <div v-if="restaurantSaved" class="success-message">
+    <div v-if="businessSaved" class="success-message">
       <div class="success-icon">✓</div>
-      <p>{{ $t('restaurantSelector.restaurantAdded') }}</p>
+      <p>{{ $t('businessSelector.businessAdded') }}</p>
     </div>
 
-    <template #footer v-if="detailsFetched && !restaurantSaved">
+    <template #footer v-if="detailsFetched && !businessSaved">
       <BaseButton
         variant="ghost"
         @click="closeModal"
@@ -79,10 +79,10 @@
       </BaseButton>
       <BaseButton
         variant="primary"
-        :disabled="savingRestaurant"
+        :disabled="savingBusiness"
         @click="handleSave"
       >
-        {{ savingRestaurant ? $t('common.processing') : $t('common.save') }}
+        {{ savingBusiness ? $t('common.processing') : $t('common.save') }}
       </BaseButton>
     </template>
   </BaseModal>
@@ -93,32 +93,32 @@ import { ref, watch } from 'vue'
 import BaseModal from './BaseModal.vue'
 import BaseButton from './BaseButton.vue'
 import BaseAlert from './BaseAlert.vue'
-import RestaurantAutocomplete from './RestaurantAutocomplete.vue'
+import BusinessAutocomplete from './BusinessAutocomplete.vue'
 import { placesService } from '../services/placesService'
 import { okamService } from '../services/okamService'
-import { restaurantService } from '../services/restaurantService'
+import { businessService } from '../services/businessService'
 import { debugLog, errorLog } from '@/utils/debug'
 
 interface Props {
   modelValue: boolean
-  savedRestaurants?: Array<{ place_id: string; name: string }>
+  savedBusinesses?: Array<{ place_id: string; name: string }>
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  savedRestaurants: () => []
+  savedBusinesses: () => []
 })
 const emit = defineEmits<{
   (e: 'update:modelValue', value: boolean): void
-  (e: 'restaurantAdded', restaurant: any): void
+  (e: 'businessAdded', business: any): void
   (e: 'switch-to-manual'): void
 }>()
 
-const selectedRestaurant = ref<any>(null)
-const savingRestaurant = ref(false)
+const selectedBusiness = ref<any>(null)
+const savingBusiness = ref(false)
 const loadingDetails = ref(false)
 const detailsFetched = ref(false)
-const restaurantSaved = ref(false)
-const restaurantError = ref('')
+const businessSaved = ref(false)
+const businessError = ref('')
 const placeDetails = ref<any>(null)
 const fetchedDetails = ref<any>(null)
 const fetchedMenuData = ref<any>(null)
@@ -132,12 +132,12 @@ watch(() => props.modelValue, (newValue) => {
 })
 
 function resetState() {
-  selectedRestaurant.value = null
-  savingRestaurant.value = false
+  selectedBusiness.value = null
+  savingBusiness.value = false
   loadingDetails.value = false
   detailsFetched.value = false
-  restaurantSaved.value = false
-  restaurantError.value = ''
+  businessSaved.value = false
+  businessError.value = ''
   placeDetails.value = null
   fetchedDetails.value = null
   fetchedMenuData.value = null
@@ -153,25 +153,25 @@ function handleSwitchToManual() {
   emit('switch-to-manual')
 }
 
-async function handleRestaurantSelect(restaurant: any) {
-  selectedRestaurant.value = restaurant
-  restaurantError.value = ''
-  restaurantSaved.value = false
+async function handleBusinessSelect(business: any) {
+  selectedBusiness.value = business
+  businessError.value = ''
+  businessSaved.value = false
 
-  await fetchRestaurantDetails(restaurant)
+  await fetchBusinessDetails(business)
 }
 
-async function fetchRestaurantDetails(restaurant: any) {
+async function fetchBusinessDetails(business: any) {
   try {
-    savingRestaurant.value = true
+    savingBusiness.value = true
     loadingDetails.value = true
-    restaurantError.value = ''
+    businessError.value = ''
 
     // Fetch full place details from Google Places
-    const details = await placesService.getPlaceDetails(restaurant.place_id)
+    const details = await placesService.getPlaceDetails(business.place_id)
 
     if (!details) {
-      throw new Error('Failed to fetch restaurant details')
+      throw new Error('Failed to fetch business details')
     }
 
     placeDetails.value = details
@@ -182,12 +182,12 @@ async function fetchRestaurantDetails(restaurant: any) {
     let brandDNA = null
 
     try {
-      const okamMenu = await okamService.getMenuByPlaceId(restaurant.place_id)
+      const okamMenu = await okamService.getMenuByPlaceId(business.place_id)
 
       if (okamMenu && okamMenu.categories?.length > 0) {
         // Convert Okam format to standard format
         menuData = {
-          restaurantName: okamMenu.storeName,
+          businessName: okamMenu.storeName,
           platform: 'okam' as const,
           url: '',
           items: okamService.convertToMenuItems(okamMenu)
@@ -211,7 +211,7 @@ async function fetchRestaurantDetails(restaurant: any) {
 
     // Store the fetched data (don't save to database yet)
     fetchedDetails.value = {
-      restaurant,
+      business,
       details,
       menuSource
     }
@@ -219,12 +219,12 @@ async function fetchRestaurantDetails(restaurant: any) {
     fetchedBrandDNA.value = brandDNA
     detailsFetched.value = true
 
-    // Set up the selectedRestaurant preview (but not saved yet)
-    selectedRestaurant.value = {
+    // Set up the selectedBusiness preview (but not saved yet)
+    selectedBusiness.value = {
       id: '', // Will be set when saved
-      place_id: restaurant.place_id,
+      place_id: business.place_id,
       name: details.name,
-      address: details.formatted_address || details.vicinity || restaurant.address || '',
+      address: details.formatted_address || details.vicinity || business.address || '',
       city: details.address_components?.find((c: any) => c.types.includes('locality'))?.long_name || '',
       country: details.address_components?.find((c: any) => c.types.includes('country'))?.long_name || '',
       brand_dna: brandDNA,
@@ -233,34 +233,34 @@ async function fetchRestaurantDetails(restaurant: any) {
       google_data: details
     }
   } catch (error: any) {
-    errorLog('Failed to fetch restaurant details:', error)
-    restaurantError.value = error.message || 'Failed to fetch restaurant details. Please try again.'
+    errorLog('Failed to fetch business details:', error)
+    businessError.value = error.message || 'Failed to fetch business details. Please try again.'
     detailsFetched.value = false
   } finally {
-    savingRestaurant.value = false
+    savingBusiness.value = false
     loadingDetails.value = false
   }
 }
 
 async function handleSave() {
   if (!fetchedDetails.value) {
-    restaurantError.value = 'No restaurant details to save'
+    businessError.value = 'No business details to save'
     return
   }
 
   try {
-    savingRestaurant.value = true
-    restaurantError.value = ''
+    savingBusiness.value = true
+    businessError.value = ''
 
-    const { restaurant, details } = fetchedDetails.value
+    const { business, details } = fetchedDetails.value
     const menuData = fetchedMenuData.value
     const brandDNA = fetchedBrandDNA.value
 
-    // Save restaurant to database
-    const restaurantData = {
-      place_id: restaurant.place_id || details.place_id,
-      name: details.name || restaurant.name,
-      address: details.formatted_address || details.vicinity || restaurant.address || '',
+    // Save business to database
+    const businessData = {
+      place_id: business.place_id || details.place_id,
+      name: details.name || business.name,
+      address: details.formatted_address || details.vicinity || business.address || '',
       city: details.address_components?.find((c: any) => c.types.includes('locality'))?.long_name || '',
       country: details.address_components?.find((c: any) => c.types.includes('country'))?.long_name || '',
       google_data: details,
@@ -272,18 +272,18 @@ async function handleSave() {
       } : null,
     }
 
-    if (!restaurantData.place_id || !restaurantData.name || !restaurantData.address) {
+    if (!businessData.place_id || !businessData.name || !businessData.address) {
       throw new Error('Missing required fields')
     }
 
-    const result = await restaurantService.saveRestaurant(restaurantData)
+    const result = await businessService.saveBusiness(businessData)
 
     if (result.success) {
-      restaurantSaved.value = true
-      selectedRestaurant.value.id = result.data?.id || ''
+      businessSaved.value = true
+      selectedBusiness.value.id = result.data?.id || ''
 
-      // Emit the saved restaurant
-      emit('restaurantAdded', selectedRestaurant.value)
+      // Emit the saved business
+      emit('businessAdded', selectedBusiness.value)
 
       // Close modal after a short delay
       setTimeout(() => {
@@ -291,23 +291,23 @@ async function handleSave() {
       }, 1500)
     } else {
       if (result.error && result.error.includes('already saved')) {
-        // Restaurant already exists, that's fine!
-        restaurantSaved.value = true
-        selectedRestaurant.value.id = result.data?.id || ''
-        emit('restaurantAdded', selectedRestaurant.value)
+        // Business already exists, that's fine!
+        businessSaved.value = true
+        selectedBusiness.value.id = result.data?.id || ''
+        emit('businessAdded', selectedBusiness.value)
 
         setTimeout(() => {
           closeModal()
         }, 1500)
       } else {
-        throw new Error(result.error || 'Failed to save restaurant')
+        throw new Error(result.error || 'Failed to save business')
       }
     }
   } catch (error: any) {
-    errorLog('Failed to save restaurant:', error)
-    restaurantError.value = error.message || 'Failed to save restaurant. Please try again.'
+    errorLog('Failed to save business:', error)
+    businessError.value = error.message || 'Failed to save business. Please try again.'
   } finally {
-    savingRestaurant.value = false
+    savingBusiness.value = false
   }
 }
 </script>
@@ -381,7 +381,7 @@ async function handleSave() {
   margin: 0;
 }
 
-.selected-restaurant {
+.selected-business {
   animation: fadeIn 0.3s ease;
 }
 
@@ -390,7 +390,7 @@ async function handleSave() {
   to { opacity: 1; }
 }
 
-.restaurant-card {
+.business-card {
   display: flex;
   align-items: center;
   gap: var(--space-lg);
@@ -400,7 +400,7 @@ async function handleSave() {
   border-radius: var(--radius-lg);
 }
 
-.restaurant-logo {
+.business-logo {
   flex-shrink: 0;
   width: 60px;
   height: 60px;
@@ -412,25 +412,25 @@ async function handleSave() {
   justify-content: center;
 }
 
-.restaurant-logo img {
+.business-logo img {
   width: 100%;
   height: 100%;
   object-fit: contain;
 }
 
-.restaurant-info {
+.business-info {
   flex: 1;
   min-width: 0;
 }
 
-.restaurant-info h3 {
+.business-info h3 {
   font-family: var(--font-heading);
   font-size: var(--text-lg);
   color: var(--text-primary);
   margin: 0 0 var(--space-xs) 0;
 }
 
-.restaurant-info .address {
+.business-info .address {
   font-size: var(--text-sm);
   color: var(--text-secondary);
   margin: 0 0 var(--space-sm) 0;
@@ -509,7 +509,7 @@ async function handleSave() {
 
 /* Responsive */
 @media (max-width: 768px) {
-  .restaurant-card {
+  .business-card {
     flex-direction: column;
     text-align: center;
   }
@@ -521,12 +521,12 @@ async function handleSave() {
   border-top-color: var(--gold-primary);
 }
 
-:root[data-theme="dark"] .restaurant-card {
+:root[data-theme="dark"] .business-card {
   background: var(--accent-alpha-10);
   border-color: var(--border-color);
 }
 
-:root[data-theme="dark"] .restaurant-logo {
+:root[data-theme="dark"] .business-logo {
   background: var(--bg-tertiary);
 }
 </style>

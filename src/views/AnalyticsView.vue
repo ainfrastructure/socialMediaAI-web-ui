@@ -28,7 +28,7 @@ import Toast from '../components/Toast.vue'
 import PostDetailModal from '../components/PostDetailModal.vue'
 import { api } from '../services/api'
 import { useAuthStore } from '../stores/auth'
-import { useRestaurantsStore } from '../stores/restaurants'
+import { useBusinessesStore } from '../stores/businesses'
 import { useThemeStore } from '../stores/theme'
 import { useEngagementStore } from '../stores/engagement'
 
@@ -50,7 +50,7 @@ const { t } = useI18n()
 const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
-const restaurantsStore = useRestaurantsStore()
+const businessesStore = useBusinessesStore()
 const themeStore = useThemeStore()
 const engagementStore = useEngagementStore()
 
@@ -77,7 +77,7 @@ const stats = ref({
   postsCreated: 0,
   favoritesSaved: 0,
   scheduledPosts: 0,
-  restaurantsAdded: 0
+  businessesAdded: 0
 })
 const scheduledPosts = ref<any[]>([])
 const favorites = ref<any[]>([])
@@ -264,7 +264,7 @@ async function fetchAnalyticsData() {
     debugLog('[Analytics] ===== ENGAGEMENT DATA FETCH COMPLETE =====')
     debugLog('')
 
-    await restaurantsStore.fetchRestaurants()
+    await businessesStore.fetchBusinesses()
   } catch (error) {
     errorLog('Failed to fetch analytics:', error)
   } finally {
@@ -746,24 +746,24 @@ function getPostText(post: any): string {
          ''
 }
 
-// Helper to get restaurant name
-function getRestaurantName(post: any): string {
-  // Try direct restaurant name fields
-  if (post.restaurant_name) return post.restaurant_name
-  if (post.favorite_posts?.restaurant_name) return post.favorite_posts.restaurant_name
-  if (post.favorite_post?.restaurant_name) return post.favorite_post.restaurant_name
-  if (post.favorite?.restaurant_name) return post.favorite.restaurant_name
-  if (post.restaurant?.name) return post.restaurant.name
+// Helper to get business name
+function getBusinessName(post: any): string {
+  // Try direct business name fields
+  if (post.business_name) return post.business_name
+  if (post.favorite_posts?.business_name) return post.favorite_posts.business_name
+  if (post.favorite_post?.business_name) return post.favorite_post.business_name
+  if (post.favorite?.business_name) return post.favorite.business_name
+  if (post.business?.name) return post.business.name
 
-  // Try to find from restaurants list using restaurant_id
-  const restaurantId = post.restaurant_id ||
-                       post.favorite_posts?.restaurant_id ||
-                       post.favorite_post?.restaurant_id ||
-                       post.favorite?.restaurant_id
+  // Try to find from businesses list using business_id
+  const businessId = post.business_id ||
+                       post.favorite_posts?.business_id ||
+                       post.favorite_post?.business_id ||
+                       post.favorite?.business_id
 
-  if (restaurantId && restaurantsStore.restaurants.length > 0) {
-    const restaurant = restaurantsStore.restaurants.find((r: any) => r.id === restaurantId)
-    if (restaurant) return restaurant.name
+  if (businessId && businessesStore.businesses.length > 0) {
+    const business = businessesStore.businesses.find((r: any) => r.id === businessId)
+    if (business) return business.name
   }
 
   return '—'
@@ -1276,7 +1276,7 @@ onMounted(async () => {
       <!-- Empty State - No meaningful stats -->
       <div v-else-if="!hasMeaningfulStats" class="empty-analytics-state">
         <div class="empty-illustration">
-          <MaterialIcon icon="restaurant" size="xl" />
+          <MaterialIcon icon="business" size="xl" />
         </div>
         <h2 class="empty-title">{{ t('analytics.emptyStateTitle') }}</h2>
         <p class="empty-description">{{ t('analytics.emptyStateDescription') }}</p>
@@ -1450,7 +1450,7 @@ onMounted(async () => {
                   </div>
                   <div class="post-info">
                     <p class="post-text">{{ getPostText(item.post).substring(0, 60) }}{{ getPostText(item.post).length > 60 ? '...' : '' }}</p>
-                    <span class="post-restaurant">{{ getRestaurantName(item.post) }}</span>
+                    <span class="post-business">{{ getBusinessName(item.post) }}</span>
                   </div>
                 </div>
                 <div class="post-performance">
@@ -1567,8 +1567,8 @@ onMounted(async () => {
                 <div class="sub-item">
                   <MaterialIcon icon="storefront" size="md" color="var(--gold-primary)" />
                   <div class="sub-details">
-                    <span class="sub-label">{{ t('analytics.restaurants') }}</span>
-                    <span class="sub-value">{{ stats.restaurantsAdded }}</span>
+                    <span class="sub-label">{{ t('analytics.businesses') }}</span>
+                    <span class="sub-value">{{ stats.businessesAdded }}</span>
                   </div>
                 </div>
               </div>
@@ -1645,9 +1645,9 @@ onMounted(async () => {
                   <div class="mobile-post-text">
                     {{ getPostText(post).substring(0, 60) }}{{ getPostText(post).length > 60 ? '...' : '' }}
                   </div>
-                  <div class="mobile-restaurant-name">
-                    <MaterialIcon icon="restaurant" size="xs" />
-                    {{ getRestaurantName(post) }}
+                  <div class="mobile-business-name">
+                    <MaterialIcon icon="business" size="xs" />
+                    {{ getBusinessName(post) }}
                   </div>
                 </div>
 
@@ -1711,7 +1711,7 @@ onMounted(async () => {
             <thead>
               <tr>
                 <th>{{ t('analytics.post') }}</th>
-                <th>{{ t('analytics.restaurant') }}</th>
+                <th>{{ t('analytics.business') }}</th>
                 <th>{{ t('analytics.status') }}</th>
                 <th class="sortable" @click="handleSort('date')">
                   {{ t('analytics.date') }}
@@ -1769,9 +1769,9 @@ onMounted(async () => {
                   </div>
                 </td>
 
-                <!-- Restaurant Cell -->
-                <td class="restaurant-cell">
-                  <span class="restaurant-name">{{ getRestaurantName(post) }}</span>
+                <!-- Business Cell -->
+                <td class="business-cell">
+                  <span class="business-name">{{ getBusinessName(post) }}</span>
                 </td>
 
                 <!-- Status Cell -->
@@ -2457,11 +2457,11 @@ onMounted(async () => {
   color: var(--text-muted);
 }
 
-.restaurant-cell {
+.business-cell {
   min-width: 120px;
 }
 
-.restaurant-name {
+.business-name {
   font-size: var(--text-sm);
   color: var(--text-primary);
   font-weight: var(--font-medium);
@@ -2669,7 +2669,7 @@ onMounted(async () => {
   word-break: break-word;
 }
 
-.mobile-restaurant-name {
+.mobile-business-name {
   display: flex;
   align-items: center;
   gap: var(--space-xs);
@@ -3225,7 +3225,7 @@ onMounted(async () => {
   white-space: nowrap;
 }
 
-.post-info .post-restaurant {
+.post-info .post-business {
   font-size: var(--text-xs);
   color: var(--text-secondary);
 }
@@ -3408,8 +3408,8 @@ onMounted(async () => {
     grid-template-columns: 1fr;
   }
 
-  /* Hide restaurant, engagement and links columns on tablet */
-  .activity-table .restaurant-cell,
+  /* Hide business, engagement and links columns on tablet */
+  .activity-table .business-cell,
   .activity-table th:nth-child(2),
   .activity-table .engagement-cell,
   .activity-table th:nth-child(5),
@@ -3494,8 +3494,8 @@ onMounted(async () => {
     font-size: var(--text-xs);
   }
 
-  /* Hide restaurant, date, views, engagement and links columns on mobile - show only post and status */
-  .activity-table .restaurant-cell,
+  /* Hide business, date, views, engagement and links columns on mobile - show only post and status */
+  .activity-table .business-cell,
   .activity-table th:nth-child(2),
   .activity-table .date-cell,
   .activity-table th:nth-child(4),

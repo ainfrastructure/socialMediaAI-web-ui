@@ -20,7 +20,7 @@
         <div class="inline-filter-group" @mouseleave="platformOpen = false">
           <button
             class="inline-filter-btn"
-            @click.stop="platformOpen = !platformOpen; restaurantOpen = false"
+            @click.stop="platformOpen = !platformOpen; businessOpen = false"
           >
             <span class="inline-filter-icon">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -61,11 +61,11 @@
           </div>
         </div>
 
-        <!-- Restaurant Filter -->
-        <div class="inline-filter-group" @mouseleave="restaurantOpen = false">
+        <!-- Business Filter -->
+        <div class="inline-filter-group" @mouseleave="businessOpen = false">
           <button
             class="inline-filter-btn"
-            @click.stop="restaurantOpen = !restaurantOpen; platformOpen = false"
+            @click.stop="businessOpen = !businessOpen; platformOpen = false"
           >
             <span class="inline-filter-icon">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -78,33 +78,33 @@
                 <path d="M9 18v.01"/>
               </svg>
             </span>
-            <span class="inline-filter-label">{{ $t('scheduler.restaurants', 'Restaurants') }}</span>
-            <span v-if="selectedRestaurants.length > 0" class="inline-filter-count">({{ selectedRestaurants.length }})</span>
-            <span :class="['inline-filter-arrow', { open: restaurantOpen }]">▼</span>
+            <span class="inline-filter-label">{{ $t('scheduler.businesses', 'Businesses') }}</span>
+            <span v-if="selectedBusinesss.length > 0" class="inline-filter-count">({{ selectedBusinesss.length }})</span>
+            <span :class="['inline-filter-arrow', { open: businessOpen }]">▼</span>
           </button>
-          <div v-show="restaurantOpen" class="inline-filter-options" @click.stop>
+          <div v-show="businessOpen" class="inline-filter-options" @click.stop>
             <label class="filter-checkbox select-all">
               <input
                 type="checkbox"
-                :checked="selectedRestaurants.length === restaurants.length"
-                :indeterminate="selectedRestaurants.length > 0 && selectedRestaurants.length < restaurants.length"
-                @change="toggleAllRestaurants"
+                :checked="selectedBusinesss.length === businesses.length"
+                :indeterminate="selectedBusinesss.length > 0 && selectedBusinesss.length < businesses.length"
+                @change="toggleAllBusinesses"
               />
               <span class="checkbox-label">{{ $t('common.selectAll', 'Select All') }}</span>
             </label>
             <div class="filter-divider"></div>
             <label
-              v-for="restaurant in restaurants"
-              :key="restaurant.id"
+              v-for="business in businesses"
+              :key="business.id"
               class="filter-checkbox"
             >
               <input
                 type="checkbox"
-                :checked="selectedRestaurants.includes(restaurant.id)"
-                @change="toggleRestaurant(restaurant.id)"
+                :checked="selectedBusinesss.includes(business.id)"
+                @change="toggleBusiness(business.id)"
               />
               <span class="checkbox-label">
-                {{ restaurant.name }}
+                {{ business.name }}
               </span>
             </label>
           </div>
@@ -132,12 +132,12 @@
           <button @click="removePlatform(platformId)">✕</button>
         </span>
         <span
-          v-for="restaurantId in selectedRestaurants"
-          :key="'r-' + restaurantId"
+          v-for="businessId in selectedBusinesss"
+          :key="'r-' + businessId"
           class="active-filter-tag"
         >
-          {{ getRestaurantName(restaurantId) }}
-          <button @click="removeRestaurant(restaurantId)">✕</button>
+          {{ getBusinessName(businessId) }}
+          <button @click="removeBusiness(businessId)">✕</button>
         </span>
       </div>
     </div>
@@ -153,27 +153,27 @@ interface Platform {
   name: string
 }
 
-interface Restaurant {
+interface Business {
   id: string
   name: string
 }
 
 const props = defineProps<{
   platforms: Platform[]
-  restaurants: Restaurant[]
+  businesses: Business[]
   selectedPlatforms: string[]
-  selectedRestaurants: string[]
+  selectedBusinesss: string[]
 }>()
 
 const emit = defineEmits<{
   (e: 'update:selectedPlatforms', value: string[]): void
-  (e: 'update:selectedRestaurants', value: string[]): void
+  (e: 'update:selectedBusinesss', value: string[]): void
   (e: 'apply'): void
 }>()
 
 const expanded = ref(false)
 const platformOpen = ref(false)
-const restaurantOpen = ref(false)
+const businessOpen = ref(false)
 const filterContentRef = ref<HTMLElement | null>(null)
 
 // Toggle with scroll into view
@@ -187,7 +187,7 @@ const toggleExpanded = () => {
 }
 
 const activeFilterCount = computed(() => {
-  return props.selectedPlatforms.length + props.selectedRestaurants.length
+  return props.selectedPlatforms.length + props.selectedBusinesss.length
 })
 
 const togglePlatform = (platformId: string) => {
@@ -211,23 +211,23 @@ const toggleAllPlatforms = () => {
   emit('apply')
 }
 
-const toggleRestaurant = (restaurantId: string) => {
-  const current = [...props.selectedRestaurants]
-  const index = current.indexOf(restaurantId)
+const toggleBusiness = (businessId: string) => {
+  const current = [...props.selectedBusinesss]
+  const index = current.indexOf(businessId)
   if (index === -1) {
-    current.push(restaurantId)
+    current.push(businessId)
   } else {
     current.splice(index, 1)
   }
-  emit('update:selectedRestaurants', current)
+  emit('update:selectedBusinesss', current)
   emit('apply')
 }
 
-const toggleAllRestaurants = () => {
-  if (props.selectedRestaurants.length === props.restaurants.length) {
-    emit('update:selectedRestaurants', [])
+const toggleAllBusinesses = () => {
+  if (props.selectedBusinesss.length === props.businesses.length) {
+    emit('update:selectedBusinesss', [])
   } else {
-    emit('update:selectedRestaurants', props.restaurants.map(r => r.id))
+    emit('update:selectedBusinesss', props.businesses.map(r => r.id))
   }
   emit('apply')
 }
@@ -237,14 +237,14 @@ const removePlatform = (platformId: string) => {
   emit('apply')
 }
 
-const removeRestaurant = (restaurantId: string) => {
-  emit('update:selectedRestaurants', props.selectedRestaurants.filter(id => id !== restaurantId))
+const removeBusiness = (businessId: string) => {
+  emit('update:selectedBusinesss', props.selectedBusinesss.filter(id => id !== businessId))
   emit('apply')
 }
 
 const resetFilters = () => {
   emit('update:selectedPlatforms', [])
-  emit('update:selectedRestaurants', [])
+  emit('update:selectedBusinesss', [])
   emit('apply')
 }
 
@@ -253,9 +253,9 @@ const getPlatformName = (platformId: string): string => {
   return platform ? platform.name : platformId
 }
 
-const getRestaurantName = (restaurantId: string): string => {
-  const restaurant = props.restaurants.find(r => r.id === restaurantId)
-  return restaurant?.name || restaurantId
+const getBusinessName = (businessId: string): string => {
+  const business = props.businesses.find(r => r.id === businessId)
+  return business?.name || businessId
 }
 </script>
 

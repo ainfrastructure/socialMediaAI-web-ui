@@ -18,7 +18,7 @@ export interface MenuCategory {
   display_order: number
 }
 
-export interface SavedRestaurant {
+export interface SavedBusiness {
   id: string
   user_id: string
   place_id: string | null
@@ -61,7 +61,7 @@ export interface SavedRestaurant {
   updated_at: string
 }
 
-export interface CreateManualRestaurantData {
+export interface CreateManualBusinessData {
   name: string
   address: string
   phone_number?: string
@@ -94,7 +94,7 @@ export interface CategorizedImages {
   [categoryName: string]: UploadedImage[]
 }
 
-export interface SaveRestaurantData {
+export interface SaveBusinessData {
   place_id: string
   name: string
   address: string
@@ -114,32 +114,32 @@ export interface SaveRestaurantData {
   selected_photo_indices?: number[] | null
 }
 
-export interface SaveRestaurantResponse {
+export interface SaveBusinessResponse {
   success: boolean
-  data?: SavedRestaurant
+  data?: SavedBusiness
   message?: string
   error?: string
 }
 
-export interface GetRestaurantsResponse {
+export interface GetBusinessesResponse {
   success: boolean
-  data?: SavedRestaurant[]
+  data?: SavedBusiness[]
   error?: string
 }
 
-export interface GetRestaurantResponse {
+export interface GetBusinessResponse {
   success: boolean
-  data?: SavedRestaurant
+  data?: SavedBusiness
   error?: string
 }
 
-export interface DeleteRestaurantResponse {
+export interface DeleteBusinessResponse {
   success: boolean
   message?: string
   error?: string
 }
 
-export interface UpdateRestaurantData {
+export interface UpdateBusinessData {
   name?: string
   address?: string
   phone_number?: string | null
@@ -162,35 +162,35 @@ export interface UpdateRestaurantData {
   } | null
 }
 
-export interface UpdateRestaurantResponse {
+export interface UpdateBusinessResponse {
   success: boolean
-  data?: SavedRestaurant
+  data?: SavedBusiness
   message?: string
   error?: string
 }
 
-class RestaurantService {
+class BusinessService {
   private getAuthHeader(): HeadersInit {
     const token = localStorage.getItem('access_token')
     return token ? { Authorization: `Bearer ${token}` } : {}
   }
 
   /**
-   * Save a restaurant with all gathered data
-   * @param restaurantData - The complete restaurant data to save
-   * @returns Saved restaurant object or error
+   * Save a business with all gathered data
+   * @param businessData - The complete business data to save
+   * @returns Saved business object or error
    */
-  async saveRestaurant(restaurantData: SaveRestaurantData): Promise<SaveRestaurantResponse> {
-    const response = await fetch(`${API_URL}/api/restaurants/save`, {
+  async saveBusiness(businessData: SaveBusinessData): Promise<SaveBusinessResponse> {
+    const response = await fetch(`${API_URL}/api/businesses/save`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         ...this.getAuthHeader(),
       },
-      body: JSON.stringify(restaurantData),
+      body: JSON.stringify(businessData),
     })
 
-    const data: SaveRestaurantResponse = await response.json()
+    const data: SaveBusinessResponse = await response.json()
 
     if (!response.ok) {
       throw new Error(data.error || `HTTP error! status: ${response.status}`)
@@ -200,13 +200,13 @@ class RestaurantService {
   }
 
   /**
-   * Get all saved restaurants for the authenticated user
-   * @param limit - Maximum number of restaurants to return (default: 100)
-   * @returns Array of saved restaurants
+   * Get all saved businesses for the authenticated user
+   * @param limit - Maximum number of businesses to return (default: 100)
+   * @returns Array of saved businesses
    */
-  async getSavedRestaurants(limit: number = 100): Promise<SavedRestaurant[]> {
+  async getSavedBusinesss(limit: number = 100): Promise<SavedBusiness[]> {
     const response = await fetch(
-      `${API_URL}/api/restaurants?limit=${limit}`,
+      `${API_URL}/api/businesses?limit=${limit}`,
       {
         method: 'GET',
         headers: {
@@ -220,27 +220,27 @@ class RestaurantService {
       throw new Error(`HTTP error! status: ${response.status}`)
     }
 
-    const data: GetRestaurantsResponse = await response.json()
+    const data: GetBusinessesResponse = await response.json()
 
     if (!data.success) {
-      throw new Error(data.error || 'Failed to get saved restaurants')
+      throw new Error(data.error || 'Failed to get saved businesses')
     }
 
     return data.data || []
   }
 
   /**
-   * Get a specific saved restaurant by place_id
+   * Get a specific saved business by place_id
    * @param placeId - The Google Place ID
-   * @returns Saved restaurant or null if not found
+   * @returns Saved business or null if not found
    */
-  async getRestaurantByPlaceId(placeId: string): Promise<SavedRestaurant | null> {
+  async getBusinessByPlaceId(placeId: string): Promise<SavedBusiness | null> {
     if (!placeId || placeId.trim().length === 0) {
       return null
     }
 
     const response = await fetch(
-      `${API_URL}/api/restaurants/${encodeURIComponent(placeId)}`,
+      `${API_URL}/api/businesses/${encodeURIComponent(placeId)}`,
       {
         method: 'GET',
         headers: {
@@ -258,7 +258,7 @@ class RestaurantService {
       throw new Error(`HTTP error! status: ${response.status}`)
     }
 
-    const data: GetRestaurantResponse = await response.json()
+    const data: GetBusinessResponse = await response.json()
 
     if (!data.success || !data.data) {
       return null
@@ -268,21 +268,21 @@ class RestaurantService {
   }
 
   /**
-   * Update a saved restaurant's editable fields
+   * Update a saved business's editable fields
    * @param placeId - The Google Place ID
    * @param updateData - The fields to update (website, opening_hours, social_media)
-   * @returns Updated restaurant object or error
+   * @returns Updated business object or error
    */
-  async updateRestaurant(
+  async updateBusiness(
     placeId: string,
-    updateData: UpdateRestaurantData
-  ): Promise<UpdateRestaurantResponse> {
+    updateData: UpdateBusinessData
+  ): Promise<UpdateBusinessResponse> {
     if (!placeId || placeId.trim().length === 0) {
       throw new Error('Place ID is required')
     }
 
     const response = await fetch(
-      `${API_URL}/api/restaurants/${encodeURIComponent(placeId)}`,
+      `${API_URL}/api/businesses/${encodeURIComponent(placeId)}`,
       {
         method: 'PATCH',
         headers: {
@@ -293,7 +293,7 @@ class RestaurantService {
       }
     )
 
-    const data: UpdateRestaurantResponse = await response.json()
+    const data: UpdateBusinessResponse = await response.json()
 
     if (!response.ok) {
       throw new Error(data.error || `HTTP error! status: ${response.status}`)
@@ -303,17 +303,17 @@ class RestaurantService {
   }
 
   /**
-   * Delete a saved restaurant
+   * Delete a saved business
    * @param placeId - The Google Place ID
    * @returns Success status
    */
-  async deleteRestaurant(placeId: string): Promise<boolean> {
+  async deleteBusiness(placeId: string): Promise<boolean> {
     if (!placeId || placeId.trim().length === 0) {
       return false
     }
 
     const response = await fetch(
-      `${API_URL}/api/restaurants/${encodeURIComponent(placeId)}`,
+      `${API_URL}/api/businesses/${encodeURIComponent(placeId)}`,
       {
         method: 'DELETE',
         headers: {
@@ -327,43 +327,43 @@ class RestaurantService {
       throw new Error(`HTTP error! status: ${response.status}`)
     }
 
-    const data: DeleteRestaurantResponse = await response.json()
+    const data: DeleteBusinessResponse = await response.json()
 
     return data.success
   }
 
   /**
-   * Check if a restaurant is already saved
+   * Check if a business is already saved
    * @param placeId - The Google Place ID
    * @returns True if saved, false otherwise
    */
-  async isRestaurantSaved(placeId: string): Promise<boolean> {
+  async isBusinessSaved(placeId: string): Promise<boolean> {
     try {
-      const restaurant = await this.getRestaurantByPlaceId(placeId)
-      return restaurant !== null
+      const business = await this.getBusinessByPlaceId(placeId)
+      return business !== null
     } catch {
       return false
     }
   }
 
   /**
-   * Create a manual restaurant (without Google Places)
-   * @param restaurantData - The restaurant data
-   * @returns Saved restaurant response
+   * Create a manual business (without Google Places)
+   * @param businessData - The business data
+   * @returns Saved business response
    */
-  async createManualRestaurant(
-    restaurantData: CreateManualRestaurantData
-  ): Promise<SaveRestaurantResponse> {
-    const response = await fetch(`${API_URL}/api/restaurants/manual`, {
+  async createManualBusiness(
+    businessData: CreateManualBusinessData
+  ): Promise<SaveBusinessResponse> {
+    const response = await fetch(`${API_URL}/api/businesses/manual`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         ...this.getAuthHeader(),
       },
-      body: JSON.stringify(restaurantData),
+      body: JSON.stringify(businessData),
     })
 
-    const data: SaveRestaurantResponse = await response.json()
+    const data: SaveBusinessResponse = await response.json()
 
     if (!response.ok) {
       throw new Error(data.error || `HTTP error! status: ${response.status}`)
@@ -373,19 +373,19 @@ class RestaurantService {
   }
 
   /**
-   * Upload images for a restaurant
-   * @param restaurantId - The restaurant ID (UUID) or Google Place ID
+   * Upload images for a business
+   * @param businessId - The business ID (UUID) or Google Place ID
    * @param files - Array of image files to upload
    * @param category - Optional category/folder name for organization
    * @returns Uploaded images data
    */
-  async uploadRestaurantImages(
-    restaurantId: string,
+  async uploadBusinessImages(
+    businessId: string,
     files: File[],
     category: string = 'uncategorized'
   ): Promise<{ uploaded: UploadedImage[]; count: number }> {
-    if (!restaurantId || restaurantId.trim().length === 0) {
-      throw new Error('Restaurant ID is required')
+    if (!businessId || businessId.trim().length === 0) {
+      throw new Error('Business ID is required')
     }
 
     if (!files || files.length === 0) {
@@ -403,7 +403,7 @@ class RestaurantService {
     formData.append('category', category)
 
     const response = await fetch(
-      `${API_URL}/api/restaurants/${encodeURIComponent(restaurantId)}/images`,
+      `${API_URL}/api/businesses/${encodeURIComponent(businessId)}/images`,
       {
         method: 'POST',
         headers: {
@@ -429,12 +429,12 @@ class RestaurantService {
   }
 
   /**
-   * Delete a specific uploaded image from a restaurant
+   * Delete a specific uploaded image from a business
    * @param placeId - The Google Place ID
    * @param imageId - The image ID or storage_path
    * @returns Success status
    */
-  async deleteRestaurantImage(placeId: string, imageId: string): Promise<boolean> {
+  async deleteBusinessImage(placeId: string, imageId: string): Promise<boolean> {
     if (!placeId || placeId.trim().length === 0) {
       throw new Error('Place ID is required')
     }
@@ -444,7 +444,7 @@ class RestaurantService {
     }
 
     const response = await fetch(
-      `${API_URL}/api/restaurants/${encodeURIComponent(placeId)}/images/${encodeURIComponent(imageId)}`,
+      `${API_URL}/api/businesses/${encodeURIComponent(placeId)}/images/${encodeURIComponent(imageId)}`,
       {
         method: 'DELETE',
         headers: {
@@ -480,7 +480,7 @@ class RestaurantService {
     }
 
     const response = await fetch(
-      `${API_URL}/api/restaurants/${encodeURIComponent(placeId)}/folders`,
+      `${API_URL}/api/businesses/${encodeURIComponent(placeId)}/folders`,
       {
         method: 'POST',
         headers: {
@@ -505,13 +505,13 @@ class RestaurantService {
    * @param placeId - The Google Place ID
    * @param oldFolderPath - Current folder path
    * @param newFolderPath - New folder path
-   * @returns Updated restaurant object
+   * @returns Updated business object
    */
   async renameFolder(
     placeId: string,
     oldFolderPath: string,
     newFolderPath: string
-  ): Promise<SavedRestaurant | null> {
+  ): Promise<SavedBusiness | null> {
     if (!placeId || placeId.trim().length === 0) {
       throw new Error('Place ID is required')
     }
@@ -521,7 +521,7 @@ class RestaurantService {
     }
 
     const response = await fetch(
-      `${API_URL}/api/restaurants/${encodeURIComponent(placeId)}/folders`,
+      `${API_URL}/api/businesses/${encodeURIComponent(placeId)}/folders`,
       {
         method: 'PATCH',
         headers: {
@@ -545,9 +545,9 @@ class RestaurantService {
    * Delete a folder and all its images
    * @param placeId - The Google Place ID
    * @param folderPath - Folder path to delete
-   * @returns Updated restaurant object
+   * @returns Updated business object
    */
-  async deleteFolder(placeId: string, folderPath: string): Promise<SavedRestaurant | null> {
+  async deleteFolder(placeId: string, folderPath: string): Promise<SavedBusiness | null> {
     if (!placeId || placeId.trim().length === 0) {
       throw new Error('Place ID is required')
     }
@@ -557,7 +557,7 @@ class RestaurantService {
     }
 
     const response = await fetch(
-      `${API_URL}/api/restaurants/${encodeURIComponent(placeId)}/folders?folderPath=${encodeURIComponent(folderPath)}`,
+      `${API_URL}/api/businesses/${encodeURIComponent(placeId)}/folders?folderPath=${encodeURIComponent(folderPath)}`,
       {
         method: 'DELETE',
         headers: {
@@ -581,13 +581,13 @@ class RestaurantService {
    * @param placeId - The Google Place ID
    * @param imageIds - Array of image IDs to move
    * @param targetFolderPath - Target folder path
-   * @returns Updated restaurant object
+   * @returns Updated business object
    */
   async moveImages(
     placeId: string,
     imageIds: string[],
     targetFolderPath: string
-  ): Promise<SavedRestaurant | null> {
+  ): Promise<SavedBusiness | null> {
     if (!placeId || placeId.trim().length === 0) {
       throw new Error('Place ID is required')
     }
@@ -601,7 +601,7 @@ class RestaurantService {
     }
 
     const response = await fetch(
-      `${API_URL}/api/restaurants/${encodeURIComponent(placeId)}/images/move`,
+      `${API_URL}/api/businesses/${encodeURIComponent(placeId)}/images/move`,
       {
         method: 'POST',
         headers: {
@@ -622,21 +622,21 @@ class RestaurantService {
   }
 
   /**
-   * Upload a logo for a restaurant
-   * @param restaurantId - The restaurant ID (UUID) or Google Place ID
+   * Upload a logo for a business
+   * @param businessId - The business ID (UUID) or Google Place ID
    * @param file - Logo image file to upload
    * @returns Logo URL from Supabase storage
    */
-  async uploadLogo(restaurantId: string, file: File): Promise<string> {
-    if (!restaurantId || restaurantId.trim().length === 0) {
-      throw new Error('Restaurant ID is required')
+  async uploadLogo(businessId: string, file: File): Promise<string> {
+    if (!businessId || businessId.trim().length === 0) {
+      throw new Error('Business ID is required')
     }
 
     if (!file) {
       throw new Error('Logo file is required')
     }
 
-    console.log('Uploading logo for restaurant:', restaurantId)
+    console.log('Uploading logo for business:', businessId)
     console.log('Logo file:', file.name, file.size, file.type)
 
     const formData = new FormData()
@@ -644,7 +644,7 @@ class RestaurantService {
     formData.append('category', 'logos')
 
     const response = await fetch(
-      `${API_URL}/api/restaurants/${encodeURIComponent(restaurantId)}/images`,
+      `${API_URL}/api/businesses/${encodeURIComponent(businessId)}/images`,
       {
         method: 'POST',
         headers: {
@@ -674,4 +674,4 @@ class RestaurantService {
   }
 }
 
-export const restaurantService = new RestaurantService()
+export const businessService = new BusinessService()

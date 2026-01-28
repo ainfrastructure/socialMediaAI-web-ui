@@ -26,7 +26,7 @@ import { useInstagramStore } from '@/stores/instagram'
 import { usePreferencesStore } from '@/stores/preferences'
 import { useAuthStore } from '@/stores/auth'
 import { useSocialAccounts } from '@/composables/useSocialAccounts'
-import type { SavedRestaurant } from '@/services/restaurantService'
+import type { SavedBusiness } from '@/services/businessService'
 import { debugLog } from '@/utils/debug'
 
 interface MenuItem {
@@ -57,7 +57,7 @@ interface PublishResults {
 }
 
 const props = defineProps<{
-  restaurant: SavedRestaurant
+  business: SavedBusiness
   menuItems: MenuItem[]
   generating?: boolean
   animating?: boolean // When true, video is being generated from image (brief loading)
@@ -192,7 +192,7 @@ const styleTemplates = computed<StyleTemplate[]>(() => [
     id: 'oneBite',
     name: t('playground.styleTemplates.oneBite.name'),
     description: t('playground.styleTemplates.oneBite.description'),
-    icon: 'restaurant',
+    icon: 'business',
     preview: t('playground.styleTemplates.oneBite.preview')
   },
   {
@@ -264,12 +264,12 @@ const outOfCredits = computed(() => !authStore.canGenerateContent)
 
 // Check if has logo (existing or uploaded)
 const hasLogo = computed(() => {
-  return props.restaurant.brand_dna?.logo_url || uploadedLogoPreview.value
+  return props.business.brand_dna?.logo_url || uploadedLogoPreview.value
 })
 
 // Get current logo URL (uploaded preview takes priority)
 const currentLogoUrl = computed(() => {
-  return uploadedLogoPreview.value || props.restaurant.brand_dna?.logo_url
+  return uploadedLogoPreview.value || props.business.brand_dna?.logo_url
 })
 
 // Step labels for progress indicator
@@ -703,7 +703,7 @@ onUnmounted(() => {
       <!-- Image Source Selection (Upload or Browse Existing) -->
       <div class="image-upload-section">
         <ImageSourceSelector
-          :restaurant="restaurant"
+          :business="business"
           :preview-url="uploadedImagePreview"
           @select="handleImageUploadFile"
           @remove="removeUploadedImage"
@@ -730,7 +730,7 @@ onUnmounted(() => {
                 class="menu-item-image"
               />
               <div v-else class="menu-item-placeholder">
-                <MaterialIcon icon="restaurant" size="xl" :color="'var(--text-muted)'" />
+                <MaterialIcon icon="business" size="xl" :color="'var(--text-muted)'" />
               </div>
             </div>
 
@@ -923,13 +923,13 @@ onUnmounted(() => {
 
       <!-- Logo Section -->
       <div class="customization-section">
-        <SectionLabel icon="label">{{ t('easyMode.step2.logoLabel', 'Restaurant Logo') }}</SectionLabel>
+        <SectionLabel icon="label">{{ t('easyMode.step2.logoLabel', 'Business Logo') }}</SectionLabel>
 
         <div class="logo-management">
           <!-- Current Logo Preview -->
           <div v-if="currentLogoUrl" class="current-logo">
             <div class="logo-preview-container">
-              <img :src="currentLogoUrl" :alt="restaurant.name" class="logo-preview-image" />
+              <img :src="currentLogoUrl" :alt="business.name" class="logo-preview-image" />
               <button
                 v-if="uploadedLogoPreview"
                 class="remove-logo-btn"

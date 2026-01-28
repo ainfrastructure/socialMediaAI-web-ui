@@ -4,7 +4,7 @@ import { useI18n } from 'vue-i18n'
 import BaseModal from '../BaseModal.vue'
 import BaseButton from '../BaseButton.vue'
 import BaseAlert from '../BaseAlert.vue'
-import type { FolderNode } from '@/composables/useRestaurantImages'
+import type { FolderNode } from '@/composables/useBusinessImages'
 
 interface Props {
   modelValue: boolean
@@ -44,7 +44,7 @@ async function handleMove() {
   error.value = ''
 
   if (!selectedFolderPath.value) {
-    error.value = t('restaurantManagement.selectFolderError')
+    error.value = t('businessManagement.selectFolderError')
     return
   }
 
@@ -55,7 +55,7 @@ async function handleMove() {
     emit('move', targetPath)
     handleClose()
   } catch (err: any) {
-    error.value = err.message || t('restaurantManagement.moveImagesError')
+    error.value = err.message || t('businessManagement.moveImagesError')
   } finally {
     moving.value = false
   }
@@ -80,7 +80,7 @@ const flatFolders = computed(() => {
 <template>
   <BaseModal :model-value="modelValue" @update:model-value="handleClose" size="md">
     <template #title>
-      {{ $t('restaurantManagement.moveImages', { count: selectedCount }) }}
+      {{ $t('businessManagement.moveImages', { count: selectedCount }) }}
     </template>
 
     <div class="move-images-content">
@@ -89,12 +89,12 @@ const flatFolders = computed(() => {
       </BaseAlert>
 
       <div class="info-box">
-        <p>{{ $t('restaurantManagement.moveImagesInfo', { count: selectedCount }) }}</p>
+        <p>{{ $t('businessManagement.moveImagesInfo', { count: selectedCount }) }}</p>
       </div>
 
       <div class="folder-tree-container">
         <div class="folder-tree-header">
-          {{ $t('restaurantManagement.selectDestination') }}
+          {{ $t('businessManagement.selectDestination') }}
         </div>
 
         <div class="folder-tree-list">
@@ -113,7 +113,7 @@ const flatFolders = computed(() => {
       </div>
 
       <div class="selected-preview">
-        <span class="preview-label">{{ $t('restaurantManagement.movingTo') }}:</span>
+        <span class="preview-label">{{ $t('businessManagement.movingTo') }}:</span>
         <span class="preview-value">{{ selectedFolderPath }}</span>
       </div>
 
@@ -125,7 +125,7 @@ const flatFolders = computed(() => {
           {{
             moving
               ? $t('common.moving')
-              : $t('restaurantManagement.moveCount', { count: selectedCount })
+              : $t('businessManagement.moveCount', { count: selectedCount })
           }}
         </BaseButton>
       </div>

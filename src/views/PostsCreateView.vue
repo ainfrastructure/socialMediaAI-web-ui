@@ -18,12 +18,12 @@ import EasyModeCreation from '@/components/EasyModeCreation.vue'
 import AdvancedModeCreation from '@/components/AdvancedModeCreation.vue'
 import ModeToggle from '@/components/ModeToggle.vue'
 import ScheduleModal from '@/components/ScheduleModal.vue'
-import AddRestaurantModal from '@/components/AddRestaurantModal.vue'
-import CreateRestaurantModal from '@/components/CreateRestaurantModal.vue'
-import RestaurantSelectorModal from '@/components/RestaurantSelectorModal.vue'
+import AddBusinessModal from '@/components/AddBusinessModal.vue'
+import CreateBusinessModal from '@/components/CreateBusinessModal.vue'
+import BusinessSelectorModal from '@/components/BusinessSelectorModal.vue'
 import PublishingProgressModal from '@/components/PublishingProgressModal.vue'
-import GoldenRestaurantIcon from '@/components/icons/GoldenRestaurantIcon.vue'
-import { restaurantService, type SavedRestaurant } from '@/services/restaurantService'
+import GoldenBusinessIcon from '@/components/icons/GoldenBusinessIcon.vue'
+import { businessService, type SavedBusiness } from '@/services/businessService'
 import { api } from '@/services/api'
 import { okamService } from '@/services/okamService'
 import { API_URL } from '@/services/apiBase'
@@ -43,17 +43,17 @@ const twitterStore = useTwitterStore()
 const notificationStore = useNotificationStore()
 const videoGenerationStore = useVideoGenerationStore()
 
-// Restaurant state
-const restaurant = ref<SavedRestaurant | null>(null)
-const allRestaurants = ref<SavedRestaurant[]>([])
+// Business state
+const business = ref<SavedBusiness | null>(null)
+const allBusinesses = ref<SavedBusiness[]>([])
 const loading = ref(true)
 const error = ref('')
-const showRestaurantSelector = ref(false)
+const showBusinessSelector = ref(false)
 
 // Menu items (filtered for images and deduplicated by name)
 const menuItems = computed(() => {
-  if (!restaurant.value?.menu?.items) return []
-  const itemsWithImages = restaurant.value.menu.items.filter((item: any) => item.imageUrl)
+  if (!business.value?.menu?.items) return []
+  const itemsWithImages = business.value.menu.items.filter((item: any) => item.imageUrl)
   const seen = new Set<string>()
   return itemsWithImages.filter((item: any) => {
     if (seen.has(item.name)) return false
@@ -105,11 +105,11 @@ const advancedModeCreationRef = ref<any>(null)
 
 // Modal state
 const showScheduleModal = ref(false)
-const showAddRestaurantModal = ref(false)
-const showCreateRestaurantModal = ref(false)
+const showAddBusinessModal = ref(false)
+const showCreateBusinessModal = ref(false)
 const showPublishingModal = ref(false)
 const pendingAction = ref<'publish' | 'schedule' | null>(null)
-const noRestaurants = ref(false)
+const noBusinesses = ref(false)
 
 // Publishing state
 const publishing = ref(false)
@@ -151,99 +151,99 @@ const selectedPlatforms = ref<string[]>(['facebook'])
 // These enhance the base prompt with style-specific instructions
 // Using STRICT IMAGE REPLICATION approach from image generation
 
-// Load restaurant and connected accounts on mount
+// Load business and connected accounts on mount
 onMounted(async () => {
   await Promise.all([
-    loadRestaurant(),
+    loadBusiness(),
     facebookStore.loadConnectedPages(),
     instagramStore.loadConnectedAccounts()
   ])
 })
 
-async function loadRestaurant() {
+async function loadBusiness() {
   loading.value = true
   error.value = ''
 
   try {
-    const restaurants = await restaurantService.getSavedRestaurants()
-    allRestaurants.value = restaurants
+    const businesses = await businessService.getSavedBusinesss()
+    allBusinesses.value = businesses
 
-    if (restaurants.length === 0) {
-      // No restaurants, show inline prompt instead of redirecting
-      noRestaurants.value = true
+    if (businesses.length === 0) {
+      // No businesses, show inline prompt instead of redirecting
+      noBusinesses.value = true
       loading.value = false
       return
     }
 
-    noRestaurants.value = false
+    noBusinesses.value = false
 
-    // Priority: 1) URL query param, 2) preferences store, 3) first restaurant
-    const urlRestaurantId = route.query.restaurantId as string | undefined
-    const selectedId = urlRestaurantId || preferencesStore.selectedRestaurantId
+    // Priority: 1) URL query param, 2) preferences store, 3) first business
+    const urlBusinessId = route.query.businessId as string | undefined
+    const selectedId = urlBusinessId || preferencesStore.selectedBusinessId
 
     let selected = selectedId
-      ? restaurants.find(r => r.id === selectedId)
+      ? businesses.find(r => r.id === selectedId)
       : null
 
     if (!selected) {
-      // Use first restaurant and save to preferences
-      selected = restaurants[0]
+      // Use first business and save to preferences
+      selected = businesses[0]
     }
 
-    // Update preferences with the selected restaurant
-    preferencesStore.setSelectedRestaurant(selected.id)
+    // Update preferences with the selected business
+    preferencesStore.setSelectedBusiness(selected.id)
 
-    restaurant.value = selected
+    business.value = selected
   } catch (err: any) {
-    error.value = err.message || t('contentCreate.loadError', 'Failed to load restaurant')
+    error.value = err.message || t('contentCreate.loadError', 'Failed to load business')
   } finally {
     loading.value = false
   }
 }
 
-// Handle restaurant added from inline prompt
-async function handleRestaurantAddedFromPrompt() {
-  showAddRestaurantModal.value = false
-  // Reload the restaurant data
-  await loadRestaurant()
+// Handle business added from inline prompt
+async function handleBusinessAddedFromPrompt() {
+  showAddBusinessModal.value = false
+  // Reload the business data
+  await loadBusiness()
 }
 
 // Handle switch to manual entry
 function handleSwitchToManual() {
-  showAddRestaurantModal.value = false
-  showCreateRestaurantModal.value = true
+  showAddBusinessModal.value = false
+  showCreateBusinessModal.value = true
 }
 
-// Handle restaurant created manually
-async function handleRestaurantCreated() {
-  showCreateRestaurantModal.value = false
-  // Reload the restaurant data
-  await loadRestaurant()
+// Handle business created manually
+async function handleBusinessCreated() {
+  showCreateBusinessModal.value = false
+  // Reload the business data
+  await loadBusiness()
 }
 
-// Handle restaurant selection from selector modal
-function handleRestaurantSelect(selected: SavedRestaurant) {
-  restaurant.value = selected
-  preferencesStore.setSelectedRestaurant(selected.id)
-  showRestaurantSelector.value = false
+// Handle business selection from selector modal
+function handleBusinessSelect(selected: SavedBusiness) {
+  business.value = selected
+  preferencesStore.setSelectedBusiness(selected.id)
+  showBusinessSelector.value = false
 
-  // Reset generation state when switching restaurants
+  // Reset generation state when switching businesses
   handleEasyModeReset()
 }
 
-// Handle restaurant added from selector modal
-async function handleRestaurantAddedFromSelector() {
-  await loadRestaurant()
+// Handle business added from selector modal
+async function handleBusinessAddedFromSelector() {
+  await loadBusiness()
 }
 
-// Handle restaurant deletion from selector modal
-async function handleRestaurantDelete(restaurantToDelete: SavedRestaurant) {
+// Handle business deletion from selector modal
+async function handleBusinessDelete(businessToDelete: SavedBusiness) {
   try {
-    await restaurantService.deleteRestaurant(restaurantToDelete.place_id)
+    await businessService.deleteBusiness(businessToDelete.place_id)
     // Reload the list
-    await loadRestaurant()
+    await loadBusiness()
   } catch (err) {
-    errorLog('Failed to delete restaurant:', err)
+    errorLog('Failed to delete business:', err)
   }
 }
 
@@ -304,9 +304,9 @@ async function handleEasyModePublish(data: {
       return
     }
 
-    // Validate restaurant is selected
-    if (!restaurant.value?.id) {
-      generationError.value = 'Please select a restaurant first'
+    // Validate business is selected
+    if (!business.value?.id) {
+      generationError.value = 'Please select a business first'
       return
     }
 
@@ -349,7 +349,7 @@ async function handleEasyModePublish(data: {
       }
 
       const saveResponse = await api.saveFavorite({
-        restaurant_id: restaurant.value.id,
+        business_id: business.value.id,
         content_type: isVideo ? 'video' : 'image',
         media_url: mediaUrl,
         post_text: finalPostText,
@@ -359,7 +359,7 @@ async function handleEasyModePublish(data: {
         prompt: editablePrompt.value,
         menu_items: selectedMenuItems.value,
         context: promptContext.value,
-        brand_dna: restaurant.value?.brand_dna
+        brand_dna: business.value?.brand_dna
       })
 
       if (!saveResponse.success || !saveResponse.data?.favorite?.id) {
@@ -1049,15 +1049,15 @@ async function handleEasyModeGenerate(data: {
         debugLog('[EasyMode] Image generated successfully:', generatedImageUrl.value)
       }
 
-      // Upload the image to the restaurant's uploaded_images collection
-      if (data.uploadedImage && restaurant.value?.place_id) {
+      // Upload the image to the business's uploaded_images collection
+      if (data.uploadedImage && business.value?.place_id) {
         try {
-          await restaurantService.uploadRestaurantImages(
-            restaurant.value.place_id,
+          await businessService.uploadBusinessImages(
+            business.value.place_id,
             [data.uploadedImage]
           )
         } catch (uploadError) {
-          errorLog('Failed to save uploaded image to restaurant:', uploadError)
+          errorLog('Failed to save uploaded image to business:', uploadError)
           // Don't fail the entire operation if this fails
         }
       }
@@ -1227,23 +1227,23 @@ async function handleEasyModeAnimate(data: {
 }
 
 async function generatePromptsFromSelection() {
-  if (!restaurant.value) {
-    warnLog('[Prompts] No restaurant value')
+  if (!business.value) {
+    warnLog('[Prompts] No business value')
     return
   }
 
   try {
     debugLog('[Prompts] Calling API with:', {
-      restaurant: restaurant.value.name,
+      business: business.value.name,
       menuItems: selectedMenuItems.value,
       context: promptContext.value
     })
 
     const response = await api.generatePrompts(
       {
-        name: restaurant.value.name,
-        type: restaurant.value.types?.[0] || 'restaurant',
-        brandDna: restaurant.value.brand_dna,
+        name: business.value.name,
+        type: business.value.types?.[0] || 'business',
+        brandDna: business.value.brand_dna,
       },
       selectedMenuItems.value,
       promptContext.value
@@ -1269,7 +1269,7 @@ async function generatePromptsFromSelection() {
 async function generateImage(uploadedLogo: File | null = null, uploadedImage: File | null = null, useDishInfo: boolean = false) {
   // Either need a prompt OR dish info (for direct generation without Stage 1)
   if (!useDishInfo && !editablePrompt.value) return
-  if (!restaurant.value) return
+  if (!business.value) return
 
   try {
     generatingImage.value = true
@@ -1281,11 +1281,11 @@ async function generateImage(uploadedLogo: File | null = null, uploadedImage: Fi
       errorLog('Failed to generate post content:', error)
     })
 
-    // Prepare watermark if restaurant has logo and user wants it
+    // Prepare watermark if business has logo and user wants it
     // Use uploaded logo if provided, otherwise use stored logo
     const logoUrl = uploadedLogo
       ? await fileToBase64Url(uploadedLogo)
-      : restaurant.value.brand_dna?.logo_url
+      : business.value.brand_dna?.logo_url
 
     const watermark = (includeLogo.value && logoUrl)
       ? {
@@ -1377,21 +1377,21 @@ async function generateImage(uploadedLogo: File | null = null, uploadedImage: Fi
       ? null // Use dishInfo instead of prompt
       : (editablePrompt.value || 'Create an engaging social media post for this image')
 
-    // Use place_id if available, otherwise use id (for manual restaurants)
-    const restaurantId = restaurant.value.place_id || restaurant.value.id
+    // Use place_id if available, otherwise use id (for manual businesses)
+    const businessId = business.value.place_id || business.value.id
 
     const response = await api.generateImage(
       promptToUse,
       watermark,
       referenceImage,
       promotionalSticker,
-      restaurantId,
+      businessId,
       strictnessMode.value,
       holidayTheme.value !== 'none' ? holidayTheme.value : undefined,
       visualStyle.value,
       visualStyle.value === 'custom' ? customVisualPrompt.value : undefined,
       dishInfo,
-      restaurant.value.name
+      business.value.name
     )
 
     if (!response.success) {
@@ -1574,7 +1574,7 @@ async function generateVideo(
   themeModifier?: string,
   promotionalText?: string
 ) {
-  if (!editablePrompt.value || !restaurant.value) return
+  if (!editablePrompt.value || !business.value) return
 
   try {
     generatingVideo.value = true
@@ -1713,12 +1713,12 @@ async function generateVideo(
 
     // Apply logo watermark if requested
     // NOTE: Requires FFmpeg to be installed on the backend
-    if (uploadedLogo || (includeLogo.value && restaurant.value?.brand_dna?.logo_url)) {
+    if (uploadedLogo || (includeLogo.value && business.value?.brand_dna?.logo_url)) {
       console.log('[Video] Logo watermarking requested...')
 
       const logoUrl = uploadedLogo
         ? await fileToBase64Url(uploadedLogo)
-        : restaurant.value.brand_dna?.logo_url
+        : business.value.brand_dna?.logo_url
 
       if (logoUrl) {
         try {
@@ -1760,7 +1760,7 @@ async function generateVideo(
     // Add Social Chef branding watermark (top-left, always present)
     console.log('[Video] Adding Social Chef branding watermark...')
     try {
-      // Use the current video URL (which may already have restaurant logo)
+      // Use the current video URL (which may already have business logo)
       const currentVideoUrl = generatedVideoUrl.value || videoUrl
       const socialChefLogoUrl = `${window.location.origin}/powered-by-socialchef.svg`
 
@@ -1836,7 +1836,7 @@ async function pollVideoUntilComplete(operationId: string, modelId?: string, max
 }
 
 async function generatePostContent() {
-  if (!restaurant.value) return
+  if (!business.value) return
 
   try {
     generatingPostContent.value = true
@@ -1849,11 +1849,11 @@ async function generatePostContent() {
 
     const response = await api.generatePostContent(
       selectedPlatforms.value[0] || 'facebook',
-      restaurant.value.name,
+      business.value.name,
       menuItemsWithDescriptions,
       currentMediaType.value,
       promptContext.value,
-      restaurant.value.brand_dna,
+      business.value.brand_dna,
       locale.value as 'en' | 'no'
     )
 
@@ -1886,16 +1886,16 @@ async function generatePostContent() {
 }
 
 function getBrandColor(): string {
-  return restaurant.value?.brand_dna?.primary_color || '#D4AF37'
+  return business.value?.brand_dna?.primary_color || '#D4AF37'
 }
 
 async function autoSavePost(): Promise<any | null> {
   // For video background generation, we may need to save with just the image first
   const mediaUrl = generatedImageUrl.value || (currentMediaType.value === 'video' ? generatedVideoUrl.value : '')
-  if (!mediaUrl || !restaurant.value) return null
+  if (!mediaUrl || !business.value) return null
 
-  // Don't auto-save if no restaurant selected
-  if (!restaurant.value?.id) {
+  // Don't auto-save if no business selected
+  if (!business.value?.id) {
     return null
   }
 
@@ -1907,7 +1907,7 @@ async function autoSavePost(): Promise<any | null> {
 
   try {
     const favoriteData = {
-      restaurant_id: restaurant.value.id,
+      business_id: business.value.id,
       content_type: 'image' as 'image' | 'video', // Always save as image initially, video_url added by background task
       media_url: mediaUrl,
       post_text: generatedPostContent.value?.postText || '',
@@ -1920,7 +1920,7 @@ async function autoSavePost(): Promise<any | null> {
         price: item.price,
       })),
       context: promptContext.value,
-      brand_dna: restaurant.value.brand_dna,
+      brand_dna: business.value.brand_dna,
     }
 
     const response = await api.saveFavorite(favoriteData)
@@ -2357,16 +2357,16 @@ async function handleAdvancedModeComplete(data: {
 }
 
 async function autoSaveAdvancedPost() {
-  if (!advancedModeData.value || !restaurant.value) return
+  if (!advancedModeData.value || !business.value) return
 
-  // Don't auto-save if no restaurant selected
-  if (!restaurant.value?.id) {
+  // Don't auto-save if no business selected
+  if (!business.value?.id) {
     return
   }
 
   try {
     const favoriteData = {
-      restaurant_id: restaurant.value.id,
+      business_id: business.value.id,
       content_type: 'image' as const,
       media_url: advancedModeData.value.imageUrl,
       post_text: advancedModeData.value.postText,
@@ -2379,7 +2379,7 @@ async function autoSaveAdvancedPost() {
         price: item.price,
       })),
       context: '',
-      brand_dna: restaurant.value.brand_dna,
+      brand_dna: business.value.brand_dna,
     }
 
     const response = await api.saveFavorite(favoriteData)
@@ -2528,27 +2528,27 @@ function handlePublishingClose() {
       <!-- Error State -->
       <BaseAlert v-else-if="error" type="error" class="error-alert">
         {{ error }}
-        <BaseButton variant="secondary" size="small" @click="loadRestaurant">
+        <BaseButton variant="secondary" size="small" @click="loadBusiness">
           {{ t('common.retry', 'Retry') }}
         </BaseButton>
       </BaseAlert>
 
-      <!-- No Restaurants State -->
-      <div v-else-if="noRestaurants" class="no-restaurant-state">
-        <BaseCard variant="glass-intense" class="no-restaurant-card">
-          <div class="no-restaurant-icon">
-            <GoldenRestaurantIcon :size="64" />
+      <!-- No Businesses State -->
+      <div v-else-if="noBusinesses" class="no-business-state">
+        <BaseCard variant="glass-intense" class="no-business-card">
+          <div class="no-business-icon">
+            <GoldenBusinessIcon :size="64" />
           </div>
-          <h2 class="no-restaurant-title">{{ t('contentHub.noRestaurantPrompt') }}</h2>
-          <p class="no-restaurant-description">{{ t('contentHub.addFirstRestaurantDescription') }}</p>
-          <BaseButton variant="primary" size="large" @click="showAddRestaurantModal = true">
-            {{ t('contentHub.addFirstRestaurant') }}
+          <h2 class="no-business-title">{{ t('contentHub.noBusinessPrompt') }}</h2>
+          <p class="no-business-description">{{ t('contentHub.addFirstBusinessDescription') }}</p>
+          <BaseButton variant="primary" size="large" @click="showAddBusinessModal = true">
+            {{ t('contentHub.addFirstBusiness') }}
           </BaseButton>
         </BaseCard>
       </div>
 
       <!-- Main Content -->
-      <div v-else-if="restaurant" class="create-content">
+      <div v-else-if="business" class="create-content">
         <!-- Header with back button and mode toggle -->
         <div class="page-header">
           <BaseButton variant="ghost" @click="goBack" class="back-button">
@@ -2557,26 +2557,26 @@ function handlePublishingClose() {
           <ModeToggle class="mode-toggle" />
         </div>
 
-        <!-- Restaurant Header (clickable to switch) -->
+        <!-- Business Header (clickable to switch) -->
         <BaseCard
           variant="glass-intense"
-          class="restaurant-header"
-          :class="{ clickable: allRestaurants.length > 1 }"
-          @click="allRestaurants.length > 1 && (showRestaurantSelector = true)"
+          class="business-header"
+          :class="{ clickable: allBusinesses.length > 1 }"
+          @click="allBusinesses.length > 1 && (showBusinessSelector = true)"
         >
-          <div class="restaurant-info">
-            <div v-if="restaurant.brand_dna?.logo_url" class="restaurant-logo">
-              <img :src="restaurant.brand_dna.logo_url" :alt="restaurant.name" />
+          <div class="business-info">
+            <div v-if="business.brand_dna?.logo_url" class="business-logo">
+              <img :src="business.brand_dna.logo_url" :alt="business.name" />
             </div>
-            <div v-else class="restaurant-logo placeholder">
+            <div v-else class="business-logo placeholder">
               <span class="placeholder-icon">🍽️</span>
             </div>
-            <div class="restaurant-details">
-              <h2 class="restaurant-name">{{ restaurant.name }}</h2>
-              <p class="restaurant-address">{{ restaurant.address }}</p>
+            <div class="business-details">
+              <h2 class="business-name">{{ business.name }}</h2>
+              <p class="business-address">{{ business.address }}</p>
             </div>
-            <div v-if="allRestaurants.length > 1" class="switch-indicator">
-              <span class="switch-text">{{ t('contentCreate.switchRestaurant', 'Switch') }}</span>
+            <div v-if="allBusinesses.length > 1" class="switch-indicator">
+              <span class="switch-text">{{ t('contentCreate.switchBusiness', 'Switch') }}</span>
             </div>
           </div>
         </BaseCard>
@@ -2585,7 +2585,7 @@ function handlePublishingClose() {
         <EasyModeCreation
           v-if="preferencesStore.creationMode === 'easy'"
           ref="easyModeCreationRef"
-          :restaurant="restaurant"
+          :business="business"
           :menu-items="menuItems"
           :generating="easyModeGenerating"
           :animating="generatingVideo"
@@ -2610,7 +2610,7 @@ function handlePublishingClose() {
         <AdvancedModeCreation
           v-else
           ref="advancedModeCreationRef"
-          :restaurant="restaurant"
+          :business="business"
           :menu-items="menuItems"
           @back="goBack"
           @feedback="handleInlineFeedback"
@@ -2636,28 +2636,28 @@ function handlePublishingClose() {
       @close="handlePublishingModalClose"
     />
 
-    <!-- Add Restaurant Modal (for no-restaurant state) -->
-    <AddRestaurantModal
-      v-model="showAddRestaurantModal"
-      :saved-restaurants="allRestaurants"
-      @restaurant-added="handleRestaurantAddedFromPrompt"
+    <!-- Add Business Modal (for no-business state) -->
+    <AddBusinessModal
+      v-model="showAddBusinessModal"
+      :saved-businesses="allBusinesses"
+      @business-added="handleBusinessAddedFromPrompt"
       @switch-to-manual="handleSwitchToManual"
     />
 
-    <!-- Create Restaurant Modal -->
-    <CreateRestaurantModal
-      v-model="showCreateRestaurantModal"
-      @created="handleRestaurantCreated"
+    <!-- Create Business Modal -->
+    <CreateBusinessModal
+      v-model="showCreateBusinessModal"
+      @created="handleBusinessCreated"
     />
 
-    <!-- Restaurant Selector Modal -->
-    <RestaurantSelectorModal
-      v-model="showRestaurantSelector"
-      :restaurants="allRestaurants"
-      :current-id="restaurant?.id"
-      @select="handleRestaurantSelect"
-      @restaurant-added="handleRestaurantAddedFromSelector"
-      @delete="handleRestaurantDelete"
+    <!-- Business Selector Modal -->
+    <BusinessSelectorModal
+      v-model="showBusinessSelector"
+      :businesses="allBusinesses"
+      :current-id="business?.id"
+      @select="handleBusinessSelect"
+      @business-added="handleBusinessAddedFromSelector"
+      @delete="handleBusinessDelete"
     />
 
     </div>
@@ -2714,8 +2714,8 @@ function handlePublishingClose() {
   align-items: center;
 }
 
-/* No Restaurant State */
-.no-restaurant-state {
+/* No Business State */
+.no-business-state {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2734,7 +2734,7 @@ function handlePublishingClose() {
   }
 }
 
-.no-restaurant-card {
+.no-business-card {
   max-width: 450px;
   padding: var(--space-3xl);
   display: flex;
@@ -2744,20 +2744,20 @@ function handlePublishingClose() {
   gap: var(--space-lg);
 }
 
-.no-restaurant-icon {
+.no-business-icon {
   display: flex;
   justify-content: center;
   margin-bottom: var(--space-sm);
 }
 
-.no-restaurant-title {
+.no-business-title {
   font-family: var(--font-heading);
   font-size: var(--text-xl);
   color: var(--text-primary);
   margin: 0;
 }
 
-.no-restaurant-description {
+.no-business-description {
   font-size: var(--text-base);
   color: var(--text-secondary);
   margin: 0;
@@ -2776,23 +2776,23 @@ function handlePublishingClose() {
   font-size: var(--text-base);
 }
 
-/* Restaurant Header */
-.restaurant-header {
+/* Business Header */
+.business-header {
   margin-bottom: var(--space-xl);
   animation: fadeInUp 0.5s var(--ease-smooth);
 }
 
-.restaurant-header.clickable {
+.business-header.clickable {
   cursor: pointer;
   transition: all var(--transition-base);
 }
 
-.restaurant-header.clickable:hover {
+.business-header.clickable:hover {
   border-color: rgba(212, 175, 55, 0.4);
   transform: translateY(-2px);
 }
 
-.restaurant-info {
+.business-info {
   display: flex;
   align-items: center;
   gap: var(--space-lg);
@@ -2810,7 +2810,7 @@ function handlePublishingClose() {
   transition: all var(--transition-base);
 }
 
-.restaurant-header.clickable:hover .switch-indicator {
+.business-header.clickable:hover .switch-indicator {
   background: rgba(212, 175, 55, 0.2);
 }
 
@@ -2821,7 +2821,7 @@ function handlePublishingClose() {
   letter-spacing: 0.05em;
 }
 
-.restaurant-logo {
+.business-logo {
   width: 64px;
   height: 64px;
   border-radius: var(--radius-md);
@@ -2833,13 +2833,13 @@ function handlePublishingClose() {
   justify-content: center;
 }
 
-.restaurant-logo img {
+.business-logo img {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
 
-.restaurant-logo.placeholder {
+.business-logo.placeholder {
   background: rgba(212, 175, 55, 0.1);
 }
 
@@ -2847,18 +2847,18 @@ function handlePublishingClose() {
   font-size: var(--text-2xl);
 }
 
-.restaurant-details {
+.business-details {
   flex: 1;
 }
 
-.restaurant-name {
+.business-name {
   font-family: var(--font-heading);
   font-size: var(--text-xl);
   color: var(--text-primary);
   margin: 0 0 var(--space-xs) 0;
 }
 
-.restaurant-address {
+.business-address {
   font-size: var(--text-sm);
   color: var(--text-secondary);
   margin: 0;
@@ -2896,12 +2896,12 @@ function handlePublishingClose() {
     align-self: center;
   }
 
-  .restaurant-info {
+  .business-info {
     flex-direction: column;
     text-align: center;
   }
 
-  .restaurant-logo {
+  .business-logo {
     width: 80px;
     height: 80px;
   }
@@ -2941,16 +2941,16 @@ function handlePublishingClose() {
     padding: var(--space-sm);
   }
 
-  .restaurant-logo {
+  .business-logo {
     width: 64px;
     height: 64px;
   }
 
-  .restaurant-name {
+  .business-name {
     font-size: var(--text-xl);
   }
 
-  .restaurant-address {
+  .business-address {
     font-size: var(--text-xs);
   }
 }
@@ -2960,12 +2960,12 @@ function handlePublishingClose() {
     padding: var(--space-sm);
   }
 
-  .restaurant-logo {
+  .business-logo {
     width: 56px;
     height: 56px;
   }
 
-  .restaurant-name {
+  .business-name {
     font-size: var(--text-lg);
   }
 

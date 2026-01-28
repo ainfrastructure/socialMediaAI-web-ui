@@ -144,12 +144,12 @@ class ApiService {
   refreshEngagement = engagementService.refreshEngagement.bind(engagementService)
   getEngagementAnalytics = engagementService.getAnalytics.bind(engagementService)
 
-  // Restaurants - keep inline as it's minimal (most is in restaurantService.ts)
-  async getRestaurants(limit?: number) {
+  // Businesses - keep inline as it's minimal (most is in businessService.ts)
+  async getBusinesses(limit?: number) {
     const params = new URLSearchParams()
     if (limit) params.append('limit', limit.toString())
 
-    const url = params.toString() ? `${API_URL}/api/restaurants?${params}` : `${API_URL}/api/restaurants`
+    const url = params.toString() ? `${API_URL}/api/businesses?${params}` : `${API_URL}/api/businesses`
     const response = await fetch(url, {
       headers: getAuthHeader(),
     })

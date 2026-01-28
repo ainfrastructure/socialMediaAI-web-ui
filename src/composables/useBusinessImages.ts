@@ -1,6 +1,6 @@
 import { ref, computed, watch } from 'vue'
-import { restaurantService } from '@/services/restaurantService'
-import type { UploadedImage, SavedRestaurant } from '@/services/restaurantService'
+import { businessService } from '@/services/businessService'
+import type { UploadedImage, SavedBusiness } from '@/services/businessService'
 
 export interface FolderNode {
   name: string
@@ -16,9 +16,9 @@ export type ViewMode = 'grid' | 'list' | 'timeline'
 export type SortBy = 'name' | 'date' | 'size'
 export type SortOrder = 'asc' | 'desc'
 
-export function useRestaurantImages(restaurant: SavedRestaurant) {
-  // Use place_id for API calls (fallback to id for manual restaurants)
-  const restaurantId = computed(() => restaurant.place_id || restaurant.id)
+export function useBusinessImages(business: SavedBusiness) {
+  // Use place_id for API calls (fallback to id for manual businesses)
+  const businessId = computed(() => business.place_id || business.id)
 
   // State
   const images = ref<UploadedImage[]>([])
@@ -32,9 +32,9 @@ export function useRestaurantImages(restaurant: SavedRestaurant) {
   const loading = ref<boolean>(false)
   const error = ref<string>('')
 
-  // Watch for restaurant changes
+  // Watch for business changes
   watch(
-    () => restaurant.uploaded_images,
+    () => business.uploaded_images,
     (newImages) => {
       if (newImages) {
         images.value = newImages
@@ -70,7 +70,7 @@ export function useRestaurantImages(restaurant: SavedRestaurant) {
         const filename = extractFilenameFromPath(img.storage_path).toLowerCase()
         const folderPath = extractFolderPathFromStorage(
           img.storage_path,
-          restaurantId.value
+          businessId.value
         ).join('/').toLowerCase()
         return filename.includes(query) || folderPath.includes(query)
       })
@@ -119,7 +119,7 @@ export function useRestaurantImages(restaurant: SavedRestaurant) {
 
   // Computed: Breadcrumb path
   const breadcrumbs = computed<Array<{ name: string; path: string }>>(() => {
-    const rootName = restaurant.name || 'All Images'
+    const rootName = business.name || 'All Images'
 
     if (currentFolderPath.value === '/') {
       return [{ name: rootName, path: '/' }]
@@ -142,7 +142,7 @@ export function useRestaurantImages(restaurant: SavedRestaurant) {
     storagePath: string,
     restId: string
   ): string[] {
-    // Storage path format: "restaurantId/categories/menu/burgers/img.jpg"
+    // Storage path format: "businessId/categories/menu/burgers/img.jpg"
     // We want: ["menu", "burgers"]
     const prefix = `${restId}/categories/`
     if (!storagePath.startsWith(prefix)) {
@@ -217,7 +217,7 @@ export function useRestaurantImages(restaurant: SavedRestaurant) {
       child = {
         name: folderName,
         path: childPath,
-        fullPath: `${restaurantId.value}/categories/${childPath}`,
+        fullPath: `${businessId.value}/categories/${childPath}`,
         children: [],
         images: [],
         imageCount: 0,
@@ -236,9 +236,9 @@ export function useRestaurantImages(restaurant: SavedRestaurant) {
   // Build folder tree from flat image list
   function buildFolderTree(imageList: UploadedImage[]): FolderNode {
     const root: FolderNode = {
-      name: restaurant.name || 'All Images',
+      name: business.name || 'All Images',
       path: '/',
-      fullPath: `${restaurantId.value}/categories/`,
+      fullPath: `${businessId.value}/categories/`,
       children: [],
       images: [],
       imageCount: imageList.length,
@@ -246,7 +246,7 @@ export function useRestaurantImages(restaurant: SavedRestaurant) {
     }
 
     for (const image of imageList) {
-      const pathParts = extractFolderPathFromStorage(image.storage_path, restaurantId.value)
+      const pathParts = extractFolderPathFromStorage(image.storage_path, businessId.value)
 
       if (pathParts.length === 0) {
         // Image at root level
@@ -313,7 +313,7 @@ export function useRestaurantImages(restaurant: SavedRestaurant) {
   // Delete images
   async function deleteImages(imageIds: string[]): Promise<void> {
     for (const imageId of imageIds) {
-      await restaurantService.deleteRestaurantImage(restaurantId.value, imageId)
+      await businessService.deleteBusinessImage(businessId.value, imageId)
     }
     selectedImageIds.value.clear()
   }
@@ -324,7 +324,7 @@ export function useRestaurantImages(restaurant: SavedRestaurant) {
       loading.value = true
       error.value = ''
 
-      const success = await restaurantService.createFolder(restaurantId.value, folderPath)
+      const success = await businessService.createFolder(businessId.value, folderPath)
 
       if (success) {
         // Folder is virtual - no need to update anything
@@ -346,16 +346,16 @@ export function useRestaurantImages(restaurant: SavedRestaurant) {
       loading.value = true
       error.value = ''
 
-      const updatedRestaurant = await restaurantService.renameFolder(
-        restaurantId.value,
+      const updatedBusiness = await businessService.renameFolder(
+        businessId.value,
         oldPath,
         newPath
       )
 
-      if (updatedRestaurant && updatedRestaurant.uploaded_images) {
+      if (updatedBusiness && updatedBusiness.uploaded_images) {
         // Update local state with new paths
-        images.value = updatedRestaurant.uploaded_images
-        folderStructure.value = buildFolderTree(updatedRestaurant.uploaded_images)
+        images.value = updatedBusiness.uploaded_images
+        folderStructure.value = buildFolderTree(updatedBusiness.uploaded_images)
 
         // Update current folder path if we were in the renamed folder
         if (currentFolderPath.value.startsWith(oldPath)) {
@@ -381,15 +381,15 @@ export function useRestaurantImages(restaurant: SavedRestaurant) {
       loading.value = true
       error.value = ''
 
-      const updatedRestaurant = await restaurantService.deleteFolder(
-        restaurantId.value,
+      const updatedBusiness = await businessService.deleteFolder(
+        businessId.value,
         folderPath
       )
 
-      if (updatedRestaurant && updatedRestaurant.uploaded_images !== undefined) {
+      if (updatedBusiness && updatedBusiness.uploaded_images !== undefined) {
         // Update local state
-        images.value = updatedRestaurant.uploaded_images || []
-        folderStructure.value = buildFolderTree(updatedRestaurant.uploaded_images || [])
+        images.value = updatedBusiness.uploaded_images || []
+        folderStructure.value = buildFolderTree(updatedBusiness.uploaded_images || [])
 
         // Navigate to root if we were in the deleted folder
         if (currentFolderPath.value.startsWith(folderPath)) {
@@ -418,16 +418,16 @@ export function useRestaurantImages(restaurant: SavedRestaurant) {
       loading.value = true
       error.value = ''
 
-      const updatedRestaurant = await restaurantService.moveImages(
-        restaurantId.value,
+      const updatedBusiness = await businessService.moveImages(
+        businessId.value,
         imageIds,
         targetFolderPath
       )
 
-      if (updatedRestaurant && updatedRestaurant.uploaded_images) {
+      if (updatedBusiness && updatedBusiness.uploaded_images) {
         // Update local state with new paths
-        images.value = updatedRestaurant.uploaded_images
-        folderStructure.value = buildFolderTree(updatedRestaurant.uploaded_images)
+        images.value = updatedBusiness.uploaded_images
+        folderStructure.value = buildFolderTree(updatedBusiness.uploaded_images)
 
         selectedImageIds.value.clear()
         return true

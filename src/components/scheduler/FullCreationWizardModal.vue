@@ -1,7 +1,7 @@
 <script setup lang="ts">
 /**
  * FullCreationWizardModal - Full wizard flow for creating posts directly from the scheduler
- * Orchestrates the entire flow: Choose Method → Select Restaurant → Create Content → Publish
+ * Orchestrates the entire flow: Choose Method → Select Business → Create Content → Publish
  */
 import { ref, computed, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
@@ -14,7 +14,7 @@ import ModeToggle from '../ModeToggle.vue'
 import { useFacebookStore } from '@/stores/facebook'
 import { useInstagramStore } from '@/stores/instagram'
 import { useNotificationStore } from '@/stores/notifications'
-import { restaurantService, type SavedRestaurant } from '@/services/restaurantService'
+import { businessService, type SavedBusiness } from '@/services/businessService'
 import { api } from '@/services/api'
 import { API_URL } from '@/services/apiBase'
 import { okamService } from '@/services/okamService'
@@ -38,7 +38,7 @@ interface PublishResult {
 interface Props {
   modelValue: boolean
   selectedDate: string | null // YYYY-MM-DD format
-  restaurants: SavedRestaurant[]
+  businesses: SavedBusiness[]
 }
 
 const props = defineProps<Props>()
@@ -55,10 +55,10 @@ const instagramStore = useInstagramStore()
 const notificationStore = useNotificationStore()
 
 // Wizard state
-type WizardStep = 'choose-method' | 'choose-restaurant' | 'create' | 'success'
+type WizardStep = 'choose-method' | 'choose-business' | 'create' | 'success'
 const wizardStep = ref<WizardStep>('choose-method')
 const selectedMethod = ref<'new' | 'saved' | null>(null)
-const selectedRestaurant = ref<SavedRestaurant | null>(null)
+const selectedBusiness = ref<SavedBusiness | null>(null)
 const menuItems = ref<MenuItem[]>([])
 const loadingMenu = ref(false)
 const creationMode = ref<'easy' | 'advanced'>('easy')
@@ -130,7 +130,7 @@ watch(() => props.modelValue, async (newVal) => {
 function resetWizard() {
   wizardStep.value = 'choose-method'
   selectedMethod.value = null
-  selectedRestaurant.value = null
+  selectedBusiness.value = null
   menuItems.value = []
   creationMode.value = 'easy'
   generating.value = false
@@ -163,32 +163,32 @@ function selectMethod(method: 'new' | 'saved') {
   }
 
   // For 'new' method
-  if (props.restaurants.length > 1) {
-    wizardStep.value = 'choose-restaurant'
-  } else if (props.restaurants.length === 1) {
-    selectedRestaurant.value = props.restaurants[0]
+  if (props.businesses.length > 1) {
+    wizardStep.value = 'choose-business'
+  } else if (props.businesses.length === 1) {
+    selectedBusiness.value = props.businesses[0]
     loadMenuItems()
   } else {
-    // No restaurants
-    generationError.value = t('scheduler.noRestaurants', 'No restaurants available. Please add a restaurant first.')
+    // No businesses
+    generationError.value = t('scheduler.noBusinesses', 'No businesses available. Please add a business first.')
   }
 }
 
-function selectRestaurant(restaurant: SavedRestaurant) {
-  selectedRestaurant.value = restaurant
+function selectBusiness(business: SavedBusiness) {
+  selectedBusiness.value = business
   loadMenuItems()
 }
 
 async function loadMenuItems() {
-  if (!selectedRestaurant.value) return
+  if (!selectedBusiness.value) return
 
   loadingMenu.value = true
   generationError.value = null
 
   try {
-    // Menu items are stored in the restaurant object (deduplicated by name)
-    if (selectedRestaurant.value.menu?.items) {
-      const itemsWithImages = selectedRestaurant.value.menu.items.filter((item: any) => item.imageUrl) || []
+    // Menu items are stored in the business object (deduplicated by name)
+    if (selectedBusiness.value.menu?.items) {
+      const itemsWithImages = selectedBusiness.value.menu.items.filter((item: any) => item.imageUrl) || []
       const seen = new Set<string>()
       menuItems.value = itemsWithImages.filter((item: any) => {
         if (seen.has(item.name)) return false
@@ -207,7 +207,7 @@ async function loadMenuItems() {
 }
 
 function goBack() {
-  if (wizardStep.value === 'choose-restaurant') {
+  if (wizardStep.value === 'choose-business') {
     wizardStep.value = 'choose-method'
     selectedMethod.value = null
   } else if (wizardStep.value === 'create') {
@@ -220,12 +220,12 @@ function goBack() {
       activeRef?.prevStep()
     } else {
       // Child is on step 1, exit to previous wizard step
-      if (props.restaurants.length > 1) {
-        wizardStep.value = 'choose-restaurant'
+      if (props.businesses.length > 1) {
+        wizardStep.value = 'choose-business'
       } else {
         wizardStep.value = 'choose-method'
       }
-      selectedRestaurant.value = null
+      selectedBusiness.value = null
       menuItems.value = []
       // Reset generation state
       generatedImageUrl.value = ''
@@ -249,19 +249,19 @@ async function fileToBase64Url(file: File): Promise<string> {
 
 // Helper to get brand color
 function getBrandColor(): string {
-  return selectedRestaurant.value?.brand_dna?.primary_color || '#D4AF37'
+  return selectedBusiness.value?.brand_dna?.primary_color || '#D4AF37'
 }
 
 // Generate prompts from selection
 async function generatePromptsFromSelection() {
-  if (!selectedRestaurant.value) return
+  if (!selectedBusiness.value) return
 
   try {
     const response = await api.generatePrompts(
       {
-        name: selectedRestaurant.value.name,
-        type: selectedRestaurant.value.types?.[0] || 'restaurant',
-        brandDna: selectedRestaurant.value.brand_dna,
+        name: selectedBusiness.value.name,
+        type: selectedBusiness.value.types?.[0] || 'business',
+        brandDna: selectedBusiness.value.brand_dna,
       },
       selectedMenuItems.value,
       promptContext.value
@@ -281,7 +281,7 @@ async function generatePromptsFromSelection() {
 
 // Generate post content (text + hashtags)
 async function generatePostContent() {
-  if (!selectedRestaurant.value) return
+  if (!selectedBusiness.value) return
 
   try {
     // Send name and description for better captions (description is optional, from Okam menu)
@@ -292,11 +292,11 @@ async function generatePostContent() {
 
     const response = await api.generatePostContent(
       'facebook', // platform
-      selectedRestaurant.value.name,
+      selectedBusiness.value.name,
       menuItemsWithDescriptions,
       'image', // content type
       promptContext.value,
-      selectedRestaurant.value.brand_dna,
+      selectedBusiness.value.brand_dna,
       locale.value as 'en' | 'no'
     )
 
@@ -325,17 +325,17 @@ async function generatePostContent() {
 
 // Generate image
 async function generateImage(uploadedLogo: File | null = null, uploadedImage: File | null = null) {
-  if (!editablePrompt.value || !selectedRestaurant.value) return
+  if (!editablePrompt.value || !selectedBusiness.value) return
 
   // Start post content generation in parallel
   const postContentPromise = generatePostContent().catch(error => {
     errorLog('Failed to generate post content:', error)
   })
 
-  // Prepare watermark if restaurant has logo and user wants it
+  // Prepare watermark if business has logo and user wants it
   const logoUrl = uploadedLogo
     ? await fileToBase64Url(uploadedLogo)
-    : selectedRestaurant.value.brand_dna?.logo_url
+    : selectedBusiness.value.brand_dna?.logo_url
 
   const watermark = (includeLogo.value && logoUrl)
     ? {
@@ -419,7 +419,7 @@ async function generateImage(uploadedLogo: File | null = null, uploadedImage: Fi
     watermark,
     referenceImage,
     promotionalSticker,
-    selectedRestaurant.value.place_id,
+    selectedBusiness.value.place_id,
     strictnessMode.value
   )
 
@@ -487,15 +487,15 @@ async function handleEasyModeGenerate(data: {
       // Generate the image (pass both uploaded logo and uploaded image for reference)
       await generateImage(data.uploadedLogo, data.uploadedImage)
 
-      // Upload the image to the restaurant's uploaded_images collection
-      if (data.uploadedImage && selectedRestaurant.value?.place_id) {
+      // Upload the image to the business's uploaded_images collection
+      if (data.uploadedImage && selectedBusiness.value?.place_id) {
         try {
-          await restaurantService.uploadRestaurantImages(
-            selectedRestaurant.value.place_id,
+          await businessService.uploadBusinessImages(
+            selectedBusiness.value.place_id,
             [data.uploadedImage]
           )
         } catch (uploadError) {
-          errorLog('Failed to save uploaded image to restaurant:', uploadError)
+          errorLog('Failed to save uploaded image to business:', uploadError)
           // Don't fail the entire operation if this fails
         }
       }
@@ -551,9 +551,9 @@ async function handleEasyModePublish(data: {
       return
     }
 
-    // Validate restaurant is selected
-    if (!selectedRestaurant.value?.id) {
-      generationError.value = 'Please select a restaurant first'
+    // Validate business is selected
+    if (!selectedBusiness.value?.id) {
+      generationError.value = 'Please select a business first'
       return
     }
 
@@ -567,7 +567,7 @@ async function handleEasyModePublish(data: {
     let favoritePostId: string | null = null
     try {
       const saveResponse = await api.saveFavorite({
-        restaurant_id: selectedRestaurant.value.id,
+        business_id: selectedBusiness.value.id,
         content_type: 'image',
         media_url: generatedImageUrl.value,
         post_text: finalPostText,
@@ -577,7 +577,7 @@ async function handleEasyModePublish(data: {
         prompt: editablePrompt.value,
         menu_items: selectedMenuItems.value,
         context: promptContext.value,
-        brand_dna: selectedRestaurant.value?.brand_dna
+        brand_dna: selectedBusiness.value?.brand_dna
       })
 
       if (!saveResponse.success || !saveResponse.data?.favorite?.id) {
@@ -883,8 +883,8 @@ async function handleInlineFeedback(feedbackText: string) {
                 <template v-if="wizardStep === 'choose-method'">
                   {{ $t('scheduler.createPostFor', 'Create Post for') }} {{ formattedDate }}
                 </template>
-                <template v-else-if="wizardStep === 'choose-restaurant'">
-                  {{ $t('scheduler.selectRestaurant', 'Select Restaurant') }}
+                <template v-else-if="wizardStep === 'choose-business'">
+                  {{ $t('scheduler.selectBusiness', 'Select Business') }}
                 </template>
                 <template v-else-if="wizardStep === 'create'">
                   {{ $t('scheduler.createContent', 'Create Content') }}
@@ -893,8 +893,8 @@ async function handleInlineFeedback(feedbackText: string) {
                   {{ $t('scheduler.success', 'Success!') }}
                 </template>
               </h2>
-              <p v-if="selectedRestaurant && wizardStep === 'create'" class="wizard-subtitle">
-                {{ selectedRestaurant.name }}
+              <p v-if="selectedBusiness && wizardStep === 'create'" class="wizard-subtitle">
+                {{ selectedBusiness.name }}
               </p>
             </div>
           </div>
@@ -948,29 +948,29 @@ async function handleInlineFeedback(feedbackText: string) {
           </div>
         </div>
 
-        <!-- Step 2: Choose Restaurant -->
-        <div v-else-if="wizardStep === 'choose-restaurant'" class="wizard-body">
-          <p class="wizard-description">{{ $t('scheduler.whichRestaurant', 'Which restaurant is this post for?') }}</p>
+        <!-- Step 2: Choose Business -->
+        <div v-else-if="wizardStep === 'choose-business'" class="wizard-body">
+          <p class="wizard-description">{{ $t('scheduler.whichBusiness', 'Which business is this post for?') }}</p>
 
-          <div class="restaurants-list">
+          <div class="businesses-list">
             <div
-              v-for="restaurant in restaurants"
-              :key="restaurant.id"
-              class="restaurant-item"
-              @click="selectRestaurant(restaurant)"
+              v-for="business in businesses"
+              :key="business.id"
+              class="business-item"
+              @click="selectBusiness(business)"
             >
-              <div v-if="restaurant.brand_dna?.logo_url" class="item-logo">
-                <img :src="restaurant.brand_dna.logo_url" :alt="restaurant.name" />
+              <div v-if="business.brand_dna?.logo_url" class="item-logo">
+                <img :src="business.brand_dna.logo_url" :alt="business.name" />
               </div>
               <div v-else class="item-logo placeholder">
                 <span class="placeholder-icon">🏪</span>
               </div>
 
               <div class="item-info">
-                <h4 class="item-name">{{ restaurant.name }}</h4>
-                <p class="item-address">{{ restaurant.address }}</p>
-                <p v-if="restaurant.menu?.items?.length" class="item-menu-count">
-                  {{ restaurant.menu.items.length }} {{ $t('scheduler.menuItems', 'menu items') }}
+                <h4 class="item-name">{{ business.name }}</h4>
+                <p class="item-address">{{ business.address }}</p>
+                <p v-if="business.menu?.items?.length" class="item-menu-count">
+                  {{ business.menu.items.length }} {{ $t('scheduler.menuItems', 'menu items') }}
                 </p>
               </div>
             </div>
@@ -987,9 +987,9 @@ async function handleInlineFeedback(feedbackText: string) {
 
           <!-- Easy Mode -->
           <EasyModeCreation
-            v-else-if="creationMode === 'easy' && selectedRestaurant"
+            v-else-if="creationMode === 'easy' && selectedBusiness"
             ref="easyModeCreationRef"
-            :restaurant="selectedRestaurant"
+            :business="selectedBusiness"
             :menu-items="menuItems"
             :generating="generating"
             :generated-image-url="generatedImageUrl"
@@ -1009,9 +1009,9 @@ async function handleInlineFeedback(feedbackText: string) {
 
           <!-- Advanced Mode -->
           <AdvancedModeCreation
-            v-else-if="creationMode === 'advanced' && selectedRestaurant"
+            v-else-if="creationMode === 'advanced' && selectedBusiness"
             ref="advancedModeCreationRef"
-            :restaurant="selectedRestaurant"
+            :business="selectedBusiness"
             :menu-items="menuItems"
             :initial-schedule-date="props.selectedDate || undefined"
             :lock-date="true"
@@ -1219,8 +1219,8 @@ async function handleInlineFeedback(feedbackText: string) {
   margin: 0;
 }
 
-/* Restaurants List */
-.restaurants-list {
+/* Businesses List */
+.businesses-list {
   display: flex;
   flex-direction: column;
   gap: var(--space-md);
@@ -1229,7 +1229,7 @@ async function handleInlineFeedback(feedbackText: string) {
   text-align: left;
 }
 
-.restaurant-item {
+.business-item {
   display: flex;
   align-items: center;
   gap: var(--space-lg);
@@ -1241,7 +1241,7 @@ async function handleInlineFeedback(feedbackText: string) {
   transition: all 0.2s ease;
 }
 
-.restaurant-item:hover {
+.business-item:hover {
   background: rgba(255, 255, 255, 0.8);
   border-color: rgba(15, 61, 46, 0.15);
   transform: translateX(4px);
@@ -1378,23 +1378,23 @@ async function handleInlineFeedback(feedbackText: string) {
 }
 
 /* Scrollbar styling */
-.restaurants-list::-webkit-scrollbar,
+.businesses-list::-webkit-scrollbar,
 .wizard-modal::-webkit-scrollbar {
   width: 6px;
 }
 
-.restaurants-list::-webkit-scrollbar-track,
+.businesses-list::-webkit-scrollbar-track,
 .wizard-modal::-webkit-scrollbar-track {
   background: transparent;
 }
 
-.restaurants-list::-webkit-scrollbar-thumb,
+.businesses-list::-webkit-scrollbar-thumb,
 .wizard-modal::-webkit-scrollbar-thumb {
   background: rgba(212, 175, 55, 0.3);
   border-radius: var(--radius-full);
 }
 
-.restaurants-list::-webkit-scrollbar-thumb:hover,
+.businesses-list::-webkit-scrollbar-thumb:hover,
 .wizard-modal::-webkit-scrollbar-thumb:hover {
   background: rgba(212, 175, 55, 0.5);
 }
@@ -1443,13 +1443,13 @@ async function handleInlineFeedback(feedbackText: string) {
     padding: var(--space-lg) var(--space-md);
   }
 
-  /* Restaurant list compact for mobile */
-  .restaurants-list {
+  /* Business list compact for mobile */
+  .businesses-list {
     gap: var(--space-sm);
     max-height: calc(100vh - 220px);
   }
 
-  .restaurant-item {
+  .business-item {
     padding: var(--space-md);
     gap: var(--space-md);
   }
@@ -1483,12 +1483,12 @@ async function handleInlineFeedback(feedbackText: string) {
   background: var(--bg-elevated);
 }
 
-:root[data-theme="dark"] .restaurant-item {
+:root[data-theme="dark"] .business-item {
   background: var(--bg-tertiary);
   border-color: var(--border-color);
 }
 
-:root[data-theme="dark"] .restaurant-item:hover {
+:root[data-theme="dark"] .business-item:hover {
   background: var(--bg-elevated);
   border-color: var(--accent-alpha-20);
 }
