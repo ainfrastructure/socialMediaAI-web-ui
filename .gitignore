@@ -43,3 +43,7 @@ AuthKey_*.p8
 .env.local
 .env.production
 .env.staging
+
+# Test artifacts
+test-results/
+playwright-report/
