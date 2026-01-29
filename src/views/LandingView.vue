@@ -22,6 +22,96 @@ import ThemeToggle from '../components/ThemeToggle.vue'
 // Set to true to enable signup/payment flow, false for waitlist mode
 const ENABLE_SIGNUP = true
 
+// ===== MULTI-INDUSTRY SUPPORT =====
+interface Industry {
+  id: string
+  name: string
+  icon: string
+  backgroundImage: string
+  headlinePart3Key: string // Translation key for the dynamic headline part
+}
+
+const industries: Industry[] = [
+  {
+    id: 'restaurants',
+    name: 'Restaurants',
+    icon: 'restaurant',
+    backgroundImage: '/background.jpeg',
+    headlinePart3Key: 'landing.hero.headlinePart3' // "generator for restaurants"
+  },
+  {
+    id: 'bars',
+    name: 'Bars',
+    icon: 'local_bar',
+    backgroundImage: '/backgrounds/bars.jpeg',
+    headlinePart3Key: 'landing.hero.headlinePart3Bars' // "generator for bars"
+  },
+  {
+    id: 'yachts',
+    name: 'Yachts',
+    icon: 'sailing',
+    backgroundImage: '/backgrounds/yachts.jpeg',
+    headlinePart3Key: 'landing.hero.headlinePart3Yachts' // "generator for yachts"
+  },
+  {
+    id: 'hotels',
+    name: 'Hotels',
+    icon: 'hotel',
+    backgroundImage: '/backgrounds/hotels.jpeg',
+    headlinePart3Key: 'landing.hero.headlinePart3Hotels' // "generator for hotels"
+  }
+]
+
+// Industry selector state
+const selectedIndustryIndex = ref(0)
+const isIndustryTransitioning = ref(false)
+let industryRotationInterval: ReturnType<typeof setInterval> | null = null
+const INDUSTRY_ROTATION_DURATION = 5000 // 5 seconds
+
+const selectedIndustry = computed(() => industries[selectedIndustryIndex.value])
+
+function selectIndustry(index: number) {
+  if (index === selectedIndustryIndex.value) return
+  
+  isIndustryTransitioning.value = true
+  
+  // Brief delay for transition effect
+  setTimeout(() => {
+    selectedIndustryIndex.value = index
+    setTimeout(() => {
+      isIndustryTransitioning.value = false
+    }, 50)
+  }, 150)
+  
+  // Reset rotation timer when manually selecting
+  restartIndustryRotation()
+}
+
+function startIndustryRotation() {
+  if (industryRotationInterval) return
+  industryRotationInterval = setInterval(() => {
+    isIndustryTransitioning.value = true
+    setTimeout(() => {
+      selectedIndustryIndex.value = (selectedIndustryIndex.value + 1) % industries.length
+      setTimeout(() => {
+        isIndustryTransitioning.value = false
+      }, 50)
+    }, 150)
+  }, INDUSTRY_ROTATION_DURATION)
+}
+
+function stopIndustryRotation() {
+  if (industryRotationInterval) {
+    clearInterval(industryRotationInterval)
+    industryRotationInterval = null
+  }
+}
+
+function restartIndustryRotation() {
+  stopIndustryRotation()
+  startIndustryRotation()
+}
+
 const router = useRouter()
 const authStore = useAuthStore()
 const localeStore = useLocaleStore()
@@ -644,6 +734,8 @@ onMounted(async () => {
   startCarouselRotation()
   // Start before/after comparison carousel
   startComparisonCarousel()
+  // Start industry rotation
+  startIndustryRotation()
   // Add scroll listener for header
   window.addEventListener('scroll', handleScroll)
   handleScroll() // Check initial scroll position
@@ -657,6 +749,7 @@ onUnmounted(() => {
   clearComparisonResumeTimeout()
   clearCarouselResumeTimeout()
   stopHintAnimation()
+  stopIndustryRotation()
 })
 
 // Benefits data
@@ -805,7 +898,11 @@ const benefits = [
     </header>
 
     <!-- Hero Section -->
-    <section class="hero-section">
+    <section 
+      class="hero-section"
+      :class="{ 'is-transitioning': isIndustryTransitioning }"
+      :style="{ '--hero-bg-image': `url('${selectedIndustry.backgroundImage}')` }"
+    >
       <div class="hero-content">
         <div class="hero-text">
           <!-- Tagline pill -->
@@ -817,7 +914,7 @@ const benefits = [
           <h1 class="hero-headline">
             <span class="headline-regular">{{ $t('landing.hero.headlinePart1') }}</span>
             <span class="headline-gold">{{ $t('landing.hero.headlinePart2') }}</span>
-            <span class="headline-regular">{{ $t('landing.hero.headlinePart3') }}</span>
+            <span class="headline-regular headline-industry" :class="{ 'fade-transition': isIndustryTransitioning }">{{ $t(selectedIndustry.headlinePart3Key) }}</span>
           </h1>
           <p class="hero-subheadline">{{ $t('landing.hero.subheadline') }}</p>
 
@@ -965,6 +1062,25 @@ const benefits = [
               </button>
             </div>
           </div>
+        </div>
+      </div>
+
+      <!-- Industry Selector Tabs -->
+      <div class="industry-selector">
+        <div class="industry-tabs">
+          <button
+            v-for="(industry, index) in industries"
+            :key="industry.id"
+            :class="['industry-tab', { active: selectedIndustryIndex === index }]"
+            @click="selectIndustry(index)"
+          >
+            <MaterialIcon :icon="industry.icon" size="sm" />
+            <span class="industry-tab-name">{{ industry.name }}</span>
+            <!-- Progress indicator for active tab -->
+            <div v-if="selectedIndustryIndex === index" class="industry-progress-bar">
+              <div class="industry-progress-fill" />
+            </div>
+          </button>
         </div>
       </div>
     </section>
@@ -1633,14 +1749,30 @@ const benefits = [
 .hero-section {
   min-height: 100vh;
   display: flex;
+  flex-direction: column;
   align-items: center;
   padding: var(--space-2xl);
   padding-top: calc(80px + var(--space-3xl)); /* Account for fixed header */
+  padding-bottom: var(--space-xl);
   position: relative;
   overflow: hidden;
-  background-image: url('/background.jpeg');
+  background-image: var(--hero-bg-image, url('/background.jpeg'));
   background-size: cover;
   background-position: center;
+  transition: background-image 0.5s ease-in-out;
+}
+
+.hero-section.is-transitioning {
+  /* Subtle fade effect during transition */
+}
+
+/* Industry headline transition */
+.headline-industry {
+  transition: opacity 0.15s ease-in-out;
+}
+
+.headline-industry.fade-transition {
+  opacity: 0.3;
 }
 
 .hero-section::before {
@@ -1896,6 +2028,87 @@ const benefits = [
 
 .seen-on-logo .li-logo {
   color: #0077b5;
+}
+
+/* Industry Selector */
+.industry-selector {
+  width: 100%;
+  max-width: var(--max-width-2xl);
+  margin: var(--space-xl) auto 0;
+  display: flex;
+  justify-content: center;
+  position: relative;
+  z-index: 1;
+}
+
+.industry-tabs {
+  display: flex;
+  gap: var(--space-sm);
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--blur-lg));
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-full);
+  padding: var(--space-xs);
+}
+
+.industry-tab {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: var(--space-sm) var(--space-lg);
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-full);
+  color: var(--text-secondary);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  cursor: pointer;
+  transition: var(--transition-base);
+  position: relative;
+  overflow: hidden;
+}
+
+.industry-tab:hover {
+  color: var(--text-primary);
+  background: var(--bg-tertiary);
+}
+
+.industry-tab.active {
+  color: var(--text-on-gold);
+  background: var(--gold-primary);
+}
+
+.industry-tab-name {
+  white-space: nowrap;
+}
+
+/* Progress indicator on active tab */
+.industry-progress-bar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 0 0 var(--radius-full) var(--radius-full);
+  overflow: hidden;
+}
+
+.industry-progress-fill {
+  height: 100%;
+  background: var(--text-on-gold);
+  opacity: 0.5;
+  animation: industry-progress 5s linear;
+}
+
+@keyframes industry-progress {
+  from {
+    width: 0%;
+  }
+  to {
+    width: 100%;
+  }
 }
 
 /* Hero Slider */
@@ -3346,6 +3559,28 @@ const benefits = [
 
   .hero-subheadline {
     font-size: var(--text-lg);
+  }
+
+  /* Industry selector mobile styles */
+  .industry-selector {
+    margin-top: var(--space-lg);
+    padding: 0 var(--space-sm);
+  }
+
+  .industry-tabs {
+    flex-wrap: wrap;
+    justify-content: center;
+    border-radius: var(--radius-xl);
+    gap: var(--space-xs);
+  }
+
+  .industry-tab {
+    padding: var(--space-xs) var(--space-md);
+    font-size: var(--text-xs);
+  }
+
+  .industry-tab-name {
+    display: none;
   }
 
   .section-container {
