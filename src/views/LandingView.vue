@@ -64,93 +64,6 @@ const waitlistError = ref('')
 const waitlistCount = ref(0)
 const WAITLIST_BASE_COUNT = 110
 
-// ===== INDUSTRY SELECTOR STATE =====
-interface Industry {
-  id: string
-  icon: string
-  label: string
-  headline: string
-  description: string
-  bgImage: string
-}
-
-const industries: Industry[] = [
-  {
-    id: 'yacht',
-    icon: '🛥️',
-    label: 'Yachts',
-    headline: 'Luxury Yachts',
-    description: 'Transform your brand\'s social presence with AI-generated content that captures the essence of luxury and drives engagement.',
-    bgImage: 'https://images.unsplash.com/photo-1567899378494-47b22a2ae96a?w=1920'
-  },
-  {
-    id: 'resort',
-    icon: '🏨',
-    label: 'Resorts',
-    headline: 'Premium Resorts',
-    description: 'Showcase your properties with stunning AI-crafted content that inspires wanderlust and drives bookings.',
-    bgImage: 'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=1920'
-  },
-  {
-    id: 'liquor',
-    icon: '🍷',
-    label: 'Spirits',
-    headline: 'Fine Spirits',
-    description: 'Craft sophisticated marketing campaigns that elevate your brand and connect with discerning audiences.',
-    bgImage: 'https://images.unsplash.com/photo-1470337458703-46ad1756a187?w=1920'
-  },
-  {
-    id: 'restaurant',
-    icon: '🍽️',
-    label: 'Dining',
-    headline: 'Fine Dining',
-    description: 'Create mouthwatering content that fills tables and builds a loyal following of food enthusiasts.',
-    bgImage: 'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=1920'
-  }
-]
-
-const currentIndustryIndex = ref(0)
-const isIndustryTransitioning = ref(false)
-let industryRotateInterval: ReturnType<typeof setInterval> | null = null
-
-const currentIndustry = computed(() => industries[currentIndustryIndex.value])
-
-function selectIndustry(index: number) {
-  if (index === currentIndustryIndex.value) return
-  isIndustryTransitioning.value = true
-  setTimeout(() => {
-    currentIndustryIndex.value = index
-    setTimeout(() => {
-      isIndustryTransitioning.value = false
-    }, 50)
-  }, 300)
-  resetIndustryRotation()
-}
-
-function startIndustryRotation() {
-  industryRotateInterval = setInterval(() => {
-    isIndustryTransitioning.value = true
-    setTimeout(() => {
-      currentIndustryIndex.value = (currentIndustryIndex.value + 1) % industries.length
-      setTimeout(() => {
-        isIndustryTransitioning.value = false
-      }, 50)
-    }, 300)
-  }, 5000)
-}
-
-function stopIndustryRotation() {
-  if (industryRotateInterval) {
-    clearInterval(industryRotateInterval)
-    industryRotateInterval = null
-  }
-}
-
-function resetIndustryRotation() {
-  stopIndustryRotation()
-  startIndustryRotation()
-}
-
 async function loadWaitlistCount() {
   try {
     const response = await api.getWaitlistCount()
@@ -731,8 +644,6 @@ onMounted(async () => {
   startCarouselRotation()
   // Start before/after comparison carousel
   startComparisonCarousel()
-  // Start industry background rotation
-  startIndustryRotation()
   // Add scroll listener for header
   window.addEventListener('scroll', handleScroll)
   handleScroll() // Check initial scroll position
@@ -746,7 +657,6 @@ onUnmounted(() => {
   clearComparisonResumeTimeout()
   clearCarouselResumeTimeout()
   stopHintAnimation()
-  stopIndustryRotation()
 })
 
 // Benefits data
@@ -896,41 +806,20 @@ const benefits = [
 
     <!-- Hero Section -->
     <section class="hero-section">
-      <!-- Industry Background Images -->
-      <div class="hero-industry-backgrounds">
-        <div 
-          v-for="(industry, index) in industries" 
-          :key="industry.id"
-          class="industry-bg-slide"
-          :class="{ active: index === currentIndustryIndex }"
-          :style="{ backgroundImage: `url(${industry.bgImage})` }"
-        ></div>
-      </div>
-      
       <div class="hero-content">
         <div class="hero-text">
-          <!-- Industry Selector -->
-          <div class="industry-selector">
-            <button
-              v-for="(industry, index) in industries"
-              :key="industry.id"
-              class="industry-btn"
-              :class="{ active: index === currentIndustryIndex }"
-              @click="selectIndustry(index)"
-            >
-              <span class="industry-icon">{{ industry.icon }}</span>
-              <span class="industry-label">{{ industry.label }}</span>
-            </button>
+          <!-- Tagline pill -->
+          <div class="hero-tagline-pill">
+            <MaterialIcon icon="auto_awesome" size="sm" color="var(--gold-primary)" />
+            <span>{{ $t('landing.hero.tagline') }}</span>
           </div>
 
-          <h1 class="hero-headline" :class="{ transitioning: isIndustryTransitioning }">
-            <span class="headline-regular">AI-Powered Marketing</span><br>
-            <span class="headline-regular">for </span>
-            <span class="headline-gold">{{ currentIndustry.headline }}</span>
+          <h1 class="hero-headline">
+            <span class="headline-regular">{{ $t('landing.hero.headlinePart1') }}</span>
+            <span class="headline-gold">{{ $t('landing.hero.headlinePart2') }}</span>
+            <span class="headline-regular">{{ $t('landing.hero.headlinePart3') }}</span>
           </h1>
-          <p class="hero-subheadline" :class="{ transitioning: isIndustryTransitioning }">
-            {{ currentIndustry.description }}
-          </p>
+          <p class="hero-subheadline">{{ $t('landing.hero.subheadline') }}</p>
 
           <!-- Feature points -->
           <div class="hero-features">
@@ -1749,35 +1638,12 @@ const benefits = [
   padding-top: calc(80px + var(--space-3xl)); /* Account for fixed header */
   position: relative;
   overflow: hidden;
-}
-
-/* Industry Background Images */
-.hero-industry-backgrounds {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 0;
-}
-
-.industry-bg-slide {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  background-image: url('/background.jpeg');
   background-size: cover;
   background-position: center;
-  opacity: 0;
-  transition: opacity 1.5s ease-in-out;
 }
 
-.industry-bg-slide.active {
-  opacity: 1;
-}
-
-.industry-bg-slide::after {
+.hero-section::before {
   content: '';
   position: absolute;
   top: 0;
@@ -1790,65 +1656,7 @@ const benefits = [
     var(--hero-overlay-mid) 50%,
     var(--hero-overlay-end) 100%
   );
-}
-
-/* Industry Selector */
-.industry-selector {
-  display: flex;
-  gap: var(--space-xs);
-  margin-bottom: var(--space-xl);
-  background: var(--bg-elevated);
-  padding: var(--space-xs);
-  border-radius: var(--radius-full);
-  backdrop-filter: blur(10px);
-  border: 1px solid var(--border-subtle);
-  width: fit-content;
-}
-
-.industry-btn {
-  display: flex;
-  align-items: center;
-  gap: var(--space-xs);
-  padding: var(--space-sm) var(--space-lg);
-  border: none;
-  background: transparent;
-  color: var(--text-muted);
-  font-size: var(--text-sm);
-  font-weight: var(--font-medium);
-  cursor: pointer;
-  border-radius: var(--radius-full);
-  transition: all 0.3s ease;
-}
-
-.industry-btn.active {
-  background: var(--gold-primary);
-  color: var(--text-on-gold);
-}
-
-.industry-btn:hover:not(.active) {
-  color: var(--text-primary);
-  background: var(--bg-hover);
-}
-
-.industry-icon {
-  font-size: 1.1rem;
-}
-
-/* Headline transitions */
-.hero-headline.transitioning,
-.hero-subheadline.transitioning {
-  opacity: 0;
-  transform: translateY(10px);
-}
-
-.hero-headline,
-.hero-subheadline {
-  transition: opacity 0.3s ease, transform 0.3s ease;
-}
-
-/* Legacy overlay - now handled by industry slides */
-.hero-section::before {
-  display: none;
+  pointer-events: none;
 }
 
 .hero-content {
