@@ -1,0 +1,188 @@
+#!/bin/bash
+
+# Create and Run Ralph Loop
+# Takes a goal, generates tasks with Claude, and starts implementation
+
+set -e
+
+# Colors
+GREEN='\033[0;32m'
+BLUE='\033[0;34m'
+YELLOW='\033[1;33m'
+RED='\033[0;31m'
+NC='\033[0m'
+
+# Banner
+echo -e "${GREEN}╔════════════════════════════════════════════╗${NC}"
+echo -e "${GREEN}║   🎯 Create & Run Ralph Loop              ║${NC}"
+echo -e "${GREEN}╚════════════════════════════════════════════╝${NC}"
+echo ""
+
+# Get project root (current directory or specified)
+PROJECT_ROOT="${1:-/home/ubuntu/socialMediaAI-web-ui}"
+cd "$PROJECT_ROOT"
+
+# Check if ralph is set up
+if [ ! -f ".ralph/ralph-config.json" ]; then
+  echo -e "${RED}❌ Error: Ralph not initialized in this directory${NC}"
+  echo "Run './ralph-init' first to set up Ralph Loop"
+  exit 1
+fi
+
+# Load config
+PROJECT_NAME=$(jq -r '.project.name' .ralph/ralph-config.json)
+TASK_SOURCE=$(jq -r '.tasks.source' .ralph/ralph-config.json)
+TASK_FILE=$(jq -r '.tasks.file // ".ralph/tasks.md"' .ralph/ralph-config.json)
+
+echo -e "${BLUE}📁 Project:${NC} $PROJECT_NAME"
+echo -e "${BLUE}📋 Task Source:${NC} $TASK_SOURCE"
+echo ""
+
+# Get goal from user
+echo -e "${YELLOW}What do you want to accomplish?${NC}"
+echo "Example: Build a user dashboard with analytics and charts"
+echo ""
+read -p "> " GOAL
+
+if [ -z "$GOAL" ]; then
+  echo -e "${RED}❌ Goal cannot be empty${NC}"
+  exit 1
+fi
+
+echo ""
+echo -e "${GREEN}✨ Generating tasks for: $GOAL${NC}"
+echo ""
+
+# Create temporary prompt file
+TEMP_PROMPT=$(mktemp)
+cat > "$TEMP_PROMPT" << EOF
+You are a task breakdown specialist for the project: $PROJECT_NAME
+
+## Your Mission
+
+The user wants to accomplish this goal:
+"$GOAL"
+
+## Your Job
+
+1. **Ask clarifying questions** to fully understand the requirements:
+   - What's the scope? (MVP vs full-featured)
+   - Any specific technologies/patterns to use?
+   - Any reference implementations?
+   - Performance/quality requirements?
+   - Timeline/priority?
+
+2. **Break down the goal** into concrete, actionable tasks:
+   - Each task should be 5-21 story points
+   - Each task should be completable in 30-90 minutes
+   - Order tasks by dependencies (foundational first)
+   - Include all necessary subtasks
+
+3. **Generate task list** in this format:
+   - Use the project's task format from .ralph/ralph-config.json
+   - Include task ID, title, story points
+   - List all subtasks
+   - Define clear success criteria
+
+4. **Show the task list** to the user for approval
+
+5. **Write tasks to the task source**:
+   - If markdown: Append to $TASK_FILE
+   - If Linear: Create issues via API
+   - If GitHub: Create issues via gh CLI
+
+## Project Context
+
+Read .ralph/ralph-config.json for:
+- Project structure
+- Reference repositories
+- Quality standards
+- Commit conventions
+
+Read .ralph/WORKER_PROMPT.md for:
+- Tech stack (Vue 3, TypeScript, Vite)
+- Code conventions
+- Development patterns
+
+## Example Task Format (Markdown)
+
+\`\`\`markdown
+### 🔴 [UI-001] Implement User Dashboard 13pts
+
+Build main dashboard with analytics widgets
+
+**Tasks:**
+- Create Dashboard component
+- Add analytics widgets (users, revenue, activity)
+- Implement data fetching with error handling
+- Add responsive layout
+- Write unit tests
+
+**Success Criteria:**
+- Dashboard renders on /dashboard route
+- All widgets show real data
+- Responsive on mobile (375px+)
+- Tests have >80% coverage
+- Loading and error states work
+
+**Notes:**
+Reference: Backend API at /home/ubuntu/socialMediaAI
+\`\`\`
+
+## After Tasks Are Created
+
+Output a summary:
+\`\`\`
+✅ Created N tasks:
+- [UI-001] Title (Xpts)
+- [UI-002] Title (Xpts)
+...
+
+Ready to launch Ralph Loop!
+\`\`\`
+
+Then wait for user confirmation to proceed.
+
+## Start Now
+
+Begin by asking clarifying questions about: "$GOAL"
+EOF
+
+# Launch Claude Code with task generator prompt
+echo -e "${BLUE}🤖 Launching Claude Code task generator...${NC}"
+echo ""
+
+claude --prompt "$(cat $TEMP_PROMPT)"
+
+CLAUDE_EXIT=$?
+rm "$TEMP_PROMPT"
+
+if [ $CLAUDE_EXIT -ne 0 ]; then
+  echo ""
+  echo -e "${RED}❌ Task generation failed or was cancelled${NC}"
+  exit 1
+fi
+
+echo ""
+echo -e "${GREEN}╔════════════════════════════════════════════╗${NC}"
+echo -e "${GREEN}║      ✅ Tasks Generated Successfully       ║${NC}"
+echo -e "${GREEN}╚════════════════════════════════════════════╝${NC}"
+echo ""
+
+# Ask if user wants to start Ralph Loop
+echo -e "${YELLOW}Start Ralph Loop now? (y/n)${NC}"
+read -p "> " START_LOOP
+
+if [[ "$START_LOOP" =~ ^[Yy]$ ]]; then
+  echo ""
+  echo -e "${GREEN}🚀 Launching Ralph Loop...${NC}"
+  echo ""
+  sleep 1
+
+  # Launch Ralph Loop
+  ./.ralph/ralph-loop
+else
+  echo ""
+  echo -e "${BLUE}ℹ️  Tasks created but not started${NC}"
+  echo "Run './.ralph/ralph-loop' when ready to begin"
+fi

@@ -1,0 +1,180 @@
+#!/bin/bash
+
+# Quick Start - One command to rule them all
+# Detects project type, sets up Ralph if needed, generates tasks, and runs
+
+set -e
+
+GREEN='\033[0;32m'
+BLUE='\033[0;34m'
+YELLOW='\033[1;33m'
+NC='\033[0m'
+
+echo -e "${GREEN}╔════════════════════════════════════════════╗${NC}"
+echo -e "${GREEN}║        🚀 Ralph Loop Quick Start          ║${NC}"
+echo -e "${GREEN}╚════════════════════════════════════════════╝${NC}"
+echo ""
+
+PROJECT_ROOT="${1:-/home/ubuntu/socialMediaAI-web-ui}"
+cd "$PROJECT_ROOT"
+
+# Check if Ralph is initialized
+if [ ! -f ".ralph/ralph-config.json" ]; then
+  echo -e "${YELLOW}⚙️  Ralph not initialized. Setting up...${NC}"
+  echo ""
+
+  # Auto-detect project type
+  if [ -f "package.json" ]; then
+    LANG="JavaScript/TypeScript"
+
+    # Detect framework
+    if grep -q "\"react\"" package.json; then
+      FRAMEWORK="React"
+      CHECKS="npm run type-check,npm run lint,npm test -- --passWithNoTests,npm run build"
+    elif grep -q "\"vue\"" package.json; then
+      FRAMEWORK="Vue"
+      CHECKS="npm run type-check,npm run lint,npm run build"
+    elif grep -q "nativescript" package.json; then
+      FRAMEWORK="NativeScript"
+      CHECKS="npm run type-check,npm run lint,npm run build"
+    elif grep -q "\"next\"" package.json; then
+      FRAMEWORK="Next.js"
+      CHECKS="npm run type-check,npm run lint,npm run build"
+    else
+      FRAMEWORK="Node.js"
+      CHECKS="npm test,npm run lint"
+    fi
+
+  elif [ -f "requirements.txt" ] || [ -f "pyproject.toml" ]; then
+    LANG="Python"
+    CHECKS="pytest,black --check .,mypy ."
+
+    if [ -f "manage.py" ]; then
+      FRAMEWORK="Django"
+    elif grep -q "fastapi" requirements.txt 2>/dev/null; then
+      FRAMEWORK="FastAPI"
+    else
+      FRAMEWORK="Python"
+    fi
+
+  elif [ -f "Cargo.toml" ]; then
+    LANG="Rust"
+    FRAMEWORK="Rust"
+    CHECKS="cargo test,cargo clippy,cargo build"
+
+  elif [ -f "go.mod" ]; then
+    LANG="Go"
+    FRAMEWORK="Go"
+    CHECKS="go test ./...,go vet ./...,go build"
+
+  else
+    LANG="Unknown"
+    FRAMEWORK="Unknown"
+    CHECKS="echo 'No checks configured'"
+  fi
+
+  echo -e "${BLUE}📦 Detected:${NC} $LANG ($FRAMEWORK)"
+  echo ""
+
+  # Get project name from directory
+  PROJECT_NAME=$(basename "$PWD")
+
+  echo -e "${YELLOW}Project name:${NC} (press Enter to use: $PROJECT_NAME)"
+  read -p "> " INPUT_NAME
+  PROJECT_NAME="${INPUT_NAME:-$PROJECT_NAME}"
+
+  # Create .ralph directory and config
+  mkdir -p .ralph/logs .ralph/specs
+
+  # Create config
+  cat > .ralph/ralph-config.json << EOF
+{
+  "project": {
+    "name": "$PROJECT_NAME",
+    "root": "$PWD",
+    "references": ["/home/ubuntu/socialMediaAI"]
+  },
+  "tasks": {
+    "source": "markdown",
+    "file": ".ralph/tasks.md",
+    "todoSection": "## 📋 Todo",
+    "completedSection": "## ✅ Completed",
+    "backlogSection": "## 📦 Backlog",
+    "backlogBatchSize": 3,
+    "enableAutoPromotion": true,
+    "taskPattern": "^### .* \\\\[([A-Z]+-\\\\d+)\\\\] (.+?) (\\\\d+)pts$"
+  },
+  "quality": {
+    "checks": [$(echo "$CHECKS" | sed 's/,/", "/g' | sed 's/^/"/' | sed 's/$/"/')],
+    "commitPrefix": "feat"
+  },
+  "notifications": {
+    "discord": {
+      "enabled": true,
+      "webhookEnv": "DISCORD_WEBHOOK_SOCIALMEDIAAI_WEB_UI"
+    }
+  },
+  "limits": {
+    "maxConsecutiveFailures": 3,
+    "maxTotalFailures": 5,
+    "maxRuntime": 28800
+  }
+}
+EOF
+
+  # Create worker prompt template
+  cat > .ralph/WORKER_PROMPT.md << EOF
+# $PROJECT_NAME - Development Guidelines
+
+## Tech Stack
+- **Language:** $LANG
+- **Framework:** $FRAMEWORK
+
+## Development Workflow
+
+For each task:
+1. Read the task from .ralph/tasks.md
+2. Implement following project conventions
+3. Run quality gates
+4. Commit with clear message
+
+## Quality Gates
+$(echo "$CHECKS" | tr ',' '\n' | sed 's/^/- /')
+
+## Code Standards
+- Write clean, maintainable code
+- Add tests for new functionality
+- Follow existing patterns in codebase
+- Handle errors gracefully
+
+## Success Criteria
+Each task is complete when:
+1. Implementation matches requirements
+2. Tests pass
+3. Quality gates pass
+4. Code is committed
+EOF
+
+  # Create initial task file
+  cat > .ralph/tasks.md << EOF
+# $PROJECT_NAME - Tasks
+
+## 📋 Todo
+
+[Tasks will be added here]
+
+## ✅ Completed
+
+[Completed tasks will be moved here]
+
+## 📦 Backlog
+
+[Backlog tasks here]
+EOF
+
+  echo -e "${GREEN}✅ Ralph initialized!${NC}"
+  echo ""
+fi
+
+# Now run create-and-run
+exec "$(dirname "$0")/create-and-run" "$PROJECT_ROOT"

@@ -1,0 +1,38 @@
+{
+  "project": {
+    "name": "SocialChef Web UI",
+    "root": "/home/ubuntu/socialMediaAI-web-ui",
+    "references": [
+      "/home/ubuntu/socialMediaAI"
+    ]
+  },
+  "tasks": {
+    "source": "markdown",
+    "file": ".ralph/tasks.md",
+    "todoSection": "## 📋 Todo",
+    "completedSection": "## ✅ Completed",
+    "backlogSection": "## 📦 Backlog",
+    "backlogBatchSize": 3,
+    "enableAutoPromotion": true,
+    "taskPattern": "^### .* \\[([A-Z]+-\\d+)\\] (.+?) (\\d+)pts$"
+  },
+  "quality": {
+    "checks": [
+      "npm run type-check",
+      "npm run lint",
+      "npm run build"
+    ],
+    "commitPrefix": "feat"
+  },
+  "notifications": {
+    "discord": {
+      "enabled": true,
+      "webhookEnv": "DISCORD_WEBHOOK_SOCIALMEDIAAI_WEB_UI"
+    }
+  },
+  "limits": {
+    "maxConsecutiveFailures": 3,
+    "maxTotalFailures": 5,
+    "maxRuntime": 28800
+  }
+}

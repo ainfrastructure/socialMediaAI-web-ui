@@ -1,0 +1,249 @@
+#!/bin/bash
+
+# Ralph Loop Initialization Script
+# Sets up a new project for Ralph Loop orchestration
+
+set -e
+
+# Colors
+GREEN='\033[0;32m'
+BLUE='\033[0;34m'
+YELLOW='\033[1;33m'
+NC='\033[0m'
+
+echo -e "${GREEN}╔════════════════════════════════════════════╗${NC}"
+echo -e "${GREEN}║    🎯 Ralph Loop Project Initialization   ║${NC}"
+echo -e "${GREEN}╚════════════════════════════════════════════╝${NC}"
+echo ""
+
+# Get project root
+if [ -z "$1" ]; then
+  PROJECT_ROOT=$(pwd)
+else
+  PROJECT_ROOT="$1"
+fi
+
+cd "$PROJECT_ROOT"
+
+# Get project name
+echo -e "${BLUE}📋 Project name:${NC}"
+read -p "> " PROJECT_NAME
+
+# Get task source
+echo -e "${BLUE}📝 Task source (markdown/linear/github):${NC}"
+read -p "> " TASK_SOURCE
+
+# Task file/config based on source
+if [ "$TASK_SOURCE" = "markdown" ]; then
+  echo -e "${BLUE}📄 Task file path (e.g., .ralph/tasks.md):${NC}"
+  read -p "> " TASK_FILE
+
+  echo -e "${BLUE}📋 Todo section header (e.g., ## 📋 Todo):${NC}"
+  read -p "> " TODO_SECTION
+
+  echo -e "${BLUE}✅ Completed section header (e.g., ## ✅ Completed):${NC}"
+  read -p "> " COMPLETED_SECTION
+fi
+
+# Quality checks
+echo -e "${BLUE}🔍 Quality check commands (comma-separated, e.g., npm test,npm run lint):${NC}"
+read -p "> " QUALITY_CHECKS
+
+# Commit prefix
+echo -e "${BLUE}📝 Commit prefix (e.g., feat, fix, chore):${NC}"
+read -p "> " COMMIT_PREFIX
+
+# Reference repos
+echo -e "${BLUE}📚 Reference repository paths (comma-separated, optional):${NC}"
+read -p "> " REFERENCES
+
+# Create .ralph directory
+mkdir -p .ralph/logs
+mkdir -p .ralph/specs
+
+# Create config file
+echo -e "${GREEN}✨ Creating configuration...${NC}"
+
+IFS=',' read -ra CHECKS_ARRAY <<< "$QUALITY_CHECKS"
+CHECKS_JSON=$(printf ',"%s"' "${CHECKS_ARRAY[@]}")
+CHECKS_JSON="[${CHECKS_JSON:1}]"
+
+if [ -n "$REFERENCES" ]; then
+  IFS=',' read -ra REFS_ARRAY <<< "$REFERENCES"
+  REFS_JSON=$(printf ',"%s"' "${REFS_ARRAY[@]}")
+  REFS_JSON="[${REFS_JSON:1}]"
+else
+  REFS_JSON="[]"
+fi
+
+cat > .ralph/ralph-config.json << EOF
+{
+  "project": {
+    "name": "$PROJECT_NAME",
+    "root": "$PROJECT_ROOT",
+    "references": $REFS_JSON
+  },
+  "tasks": {
+    "source": "$TASK_SOURCE",
+    "file": "${TASK_FILE:-.ralph/tasks.md}",
+    "todoSection": "${TODO_SECTION:-## 📋 Todo}",
+    "completedSection": "${COMPLETED_SECTION:-## ✅ Completed}",
+    "taskPattern": "^### .* \\\\[([A-Z]+-\\\\d+)\\\\] (.+?) (\\\\d+)pts$"
+  },
+  "quality": {
+    "checks": $CHECKS_JSON,
+    "commitPrefix": "$COMMIT_PREFIX"
+  },
+  "notifications": {
+    "discord": {
+      "enabled": true,
+      "webhookEnv": "DISCORD_WEBHOOK_SOCIALMEDIAAI_WEB_UI"
+    }
+  },
+  "limits": {
+    "maxConsecutiveFailures": 3,
+    "maxTotalFailures": 5,
+    "maxRuntime": 28800
+  }
+}
+EOF
+
+# Create worker prompt template
+echo -e "${GREEN}✨ Creating worker prompt template...${NC}"
+
+cat > .ralph/WORKER_PROMPT.md << EOF
+# $PROJECT_NAME - Development Guidelines
+
+## Project Overview
+
+[Describe your project here]
+
+## Technology Stack
+
+- **Language:** [e.g., TypeScript, Python, Rust]
+- **Framework:** [e.g., React, Vue, Django]
+- **Testing:** [e.g., Jest, pytest]
+- **Other tools:** [List important tools]
+
+## Development Workflow
+
+### For Each Task:
+
+1. **Read the task** from the task source
+2. **Review relevant code** and documentation
+3. **Plan your approach** - what needs to be done?
+4. **Implement** following project conventions
+5. **Test** - run tests and manual verification
+6. **Quality gates:**
+$(printf '   - %s\n' "${CHECKS_ARRAY[@]}")
+7. **Commit** with message: \`$COMMIT_PREFIX: [description]\`
+
+## Code Standards
+
+### Must Have:
+- ✅ Type safety (if applicable)
+- ✅ Error handling
+- ✅ Tests for new functionality
+- ✅ Documentation for complex logic
+
+### Must NOT:
+- ❌ Hardcoded values (use config/constants)
+- ❌ Unhandled errors
+- ❌ Code without tests
+- ❌ Breaking existing functionality
+
+## Project Structure
+
+\`\`\`
+[Describe your project structure here]
+\`\`\`
+
+## Common Patterns
+
+[Document common patterns, utilities, and conventions]
+
+## Reference Repositories
+
+$(if [ -n "$REFERENCES" ]; then
+  for ref in "${REFS_ARRAY[@]}"; do
+    echo "- $ref"
+  done
+else
+  echo "[No reference repositories configured]"
+fi)
+
+## Success Criteria
+
+Each task is complete when:
+1. All subtasks are implemented
+2. Tests pass
+3. Quality gates pass
+4. Code is committed with clear message
+5. Task marked as done in source
+
+---
+
+**Remember:** Focus on quality and maintainability!
+EOF
+
+# Copy orchestrator files if they exist
+if [ -f ".ralph/ORCHESTRATOR_GENERIC.md" ]; then
+  echo -e "${GREEN}✅ Orchestrator already exists${NC}"
+else
+  echo -e "${YELLOW}⚠️  ORCHESTRATOR_GENERIC.md not found${NC}"
+  echo "   Copy it from another Ralph-enabled project"
+fi
+
+# Create task file if markdown source
+if [ "$TASK_SOURCE" = "markdown" ] && [ ! -f "$TASK_FILE" ]; then
+  echo -e "${GREEN}✨ Creating task file...${NC}"
+
+  cat > "$TASK_FILE" << EOF
+# $PROJECT_NAME - Tasks
+
+## 📋 Todo
+
+### 🔴 [TASK-1] Example Task 5pts
+
+Example task description
+
+**Tasks:**
+- Subtask 1
+- Subtask 2
+
+**Success Criteria:**
+- Criteria 1
+- Criteria 2
+
+---
+
+## ✅ Completed
+
+[Completed tasks will be moved here]
+EOF
+fi
+
+# Make ralph-loop executable
+chmod +x .ralph/ralph-loop
+
+echo ""
+echo -e "${GREEN}╔════════════════════════════════════════════╗${NC}"
+echo -e "${GREEN}║              ✅ Setup Complete!            ║${NC}"
+echo -e "${GREEN}╚════════════════════════════════════════════╝${NC}"
+echo ""
+echo -e "${BLUE}📁 Created files:${NC}"
+echo "   .ralph/ralph-config.json"
+echo "   .ralph/WORKER_PROMPT.md"
+if [ "$TASK_SOURCE" = "markdown" ]; then
+  echo "   $TASK_FILE"
+fi
+echo ""
+echo -e "${BLUE}🚀 Next steps:${NC}"
+echo "   1. Edit .ralph/WORKER_PROMPT.md with your project guidelines"
+if [ "$TASK_SOURCE" = "markdown" ]; then
+  echo "   2. Add tasks to $TASK_FILE"
+fi
+echo "   3. Set up Discord webhook (optional):"
+echo "      export DISCORD_WEBHOOK_SOCIALMEDIAAI_WEB_UI='your_webhook'"
+echo "   4. Run: .ralph/ralph-loop"
+echo ""

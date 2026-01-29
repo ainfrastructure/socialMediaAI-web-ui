@@ -1,0 +1,169 @@
+#!/bin/bash
+
+# Generic Ralph Loop Launcher
+# Works with any project that has a .ralph/ralph-config.json
+
+set -e
+
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
+
+# Navigate to script directory and capture project root
+cd "$(dirname "$0")/.."
+PROJECT_ROOT="$(pwd)"
+
+# Check for config file
+if [ ! -f ".ralph/ralph-config.json" ]; then
+  echo -e "${RED}❌ Error: .ralph/ralph-config.json not found${NC}"
+  echo "Run 'ralph-init' to set up a new project"
+  exit 1
+fi
+
+# Read config using jq (install if not available)
+if ! command -v jq &> /dev/null; then
+  echo -e "${YELLOW}⚠️  jq not found. Installing...${NC}"
+  sudo apt-get install -y jq
+fi
+
+# Detect timeout command
+if ! command -v timeout &> /dev/null; then
+  echo -e "${RED}❌ timeout command not found${NC}"
+  exit 1
+fi
+TIMEOUT_CMD="timeout"
+
+# Parse config
+PROJECT_NAME=$(jq -r '.project.name' .ralph/ralph-config.json)
+WEBHOOK_ENV=$(jq -r '.notifications.discord.webhookEnv // "DISCORD_WEBHOOK_URL"' .ralph/ralph-config.json)
+MAX_RUNTIME=$(jq -r '.limits.maxRuntime // 28800' .ralph/ralph-config.json)
+
+# Load webhook from environment
+export DISCORD_WEBHOOK_URL="${!WEBHOOK_ENV}"
+
+if [ -z "$DISCORD_WEBHOOK_URL" ]; then
+  echo -e "${YELLOW}⚠️  Warning: $WEBHOOK_ENV not set${NC}"
+  echo "   Notifications will be disabled"
+  echo "   Set with: export $WEBHOOK_ENV='your_webhook_url'"
+fi
+
+# Environment for token efficiency
+export MAX_THINKING_TOKENS=5000
+export CLAUDE_AUTOCOMPACT_PCT_OVERRIDE=50
+
+# Create logs directory
+mkdir -p .ralph/logs
+
+# Log file
+TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+LOG_FILE=".ralph/logs/ralph_${TIMESTAMP}.log"
+
+# Print banner
+echo -e "${GREEN}╔════════════════════════════════════════════╗${NC}"
+echo -e "${GREEN}║     🚀 SocialChef Web UI Ralph Loop       ║${NC}"
+echo -e "${GREEN}╔════════════════════════════════════════════╗${NC}"
+echo ""
+echo -e "${BLUE}📋 Project:${NC} $PROJECT_NAME"
+echo -e "${BLUE}📁 Root:${NC} $PROJECT_ROOT"
+echo -e "${BLUE}📝 Log:${NC} $LOG_FILE"
+echo -e "${BLUE}⏰ Start:${NC} $(date)"
+echo -e "${BLUE}⏱️  Max Runtime:${NC} ${MAX_RUNTIME}s ($(($MAX_RUNTIME / 3600))h)"
+echo ""
+
+# Function to send notification
+send_notification() {
+  local title="$1"
+  local message="$2"
+  local color="$3"
+
+  if [ -n "$DISCORD_WEBHOOK_URL" ]; then
+    curl -s -X POST "$DISCORD_WEBHOOK_URL" \
+      -H "Content-Type: application/json" \
+      -d "{
+        \"content\": \"$title\",
+        \"embeds\": [{
+          \"description\": \"$message\",
+          \"color\": $color,
+          \"timestamp\": \"$(date -u +%Y-%m-%dT%H:%M:%SZ)\"
+        }]
+      }" > /dev/null 2>&1
+  fi
+}
+
+# Send start notification
+send_notification "🚀 **Ralph Loop Started**" "Project: $PROJECT_NAME" 3447003
+
+# Launch Claude Code with generic orchestrator
+echo -e "${GREEN}🤖 Launching orchestrator...${NC}"
+echo ""
+
+# Run with timeout
+cd "$PROJECT_ROOT"
+
+# Read the prompt from the orchestrator file
+PROMPT="$(cat .ralph/ORCHESTRATOR_GENERIC.md)"
+
+# Run Claude in non-interactive print mode
+set +e  # Don't exit on error, we want to capture the exit code
+(
+  $TIMEOUT_CMD ${MAX_RUNTIME}s claude \
+    --print \
+    --dangerously-skip-permissions \
+    --no-session-persistence \
+    "$PROMPT" 2>&1
+) | tee "$LOG_FILE"
+
+# Capture the exit code from the subshell
+EXIT_CODE=${PIPESTATUS[0]}
+set -e
+
+echo ""
+echo -e "${GREEN}╔════════════════════════════════════════════╗${NC}"
+echo -e "${GREEN}║          🏁 Ralph Loop Finished           ║${NC}"
+echo -e "${GREEN}╚════════════════════════════════════════════╝${NC}"
+echo ""
+echo -e "${BLUE}⏰ End:${NC} $(date)"
+echo -e "${BLUE}📊 Exit Code:${NC} $EXIT_CODE"
+
+# Parse results based on task source
+TASK_SOURCE=$(jq -r '.tasks.source' .ralph/ralph-config.json)
+
+if [ "$TASK_SOURCE" = "markdown" ]; then
+  TASK_FILE=$(jq -r '.tasks.file' .ralph/ralph-config.json)
+  COMPLETED_SECTION=$(jq -r '.tasks.completedSection // "## ✅ Completed"' .ralph/ralph-config.json)
+
+  # Count completed and failed tasks
+  COMPLETED_COUNT=$(grep -c "$COMPLETED_SECTION" "$TASK_FILE" 2>/dev/null || echo "0")
+  FAILED_COUNT=$(grep -c "❌ FAILED" "$TASK_FILE" 2>/dev/null || echo "0")
+
+  echo -e "${GREEN}✅ Completed:${NC} $COMPLETED_COUNT tasks"
+  echo -e "${RED}❌ Failed:${NC} $FAILED_COUNT tasks"
+
+  # Send completion notification
+  if [ -n "$DISCORD_WEBHOOK_URL" ]; then
+    curl -s -X POST "$DISCORD_WEBHOOK_URL" \
+      -H "Content-Type: application/json" \
+      -d "{
+        \"content\": \"🌅 **Ralph Loop Finished**\",
+        \"embeds\": [{
+          \"title\": \"$PROJECT_NAME\",
+          \"color\": 5763719,
+          \"fields\": [
+            {\"name\": \"✅ Completed\", \"value\": \"$COMPLETED_COUNT\", \"inline\": true},
+            {\"name\": \"❌ Failed\", \"value\": \"$FAILED_COUNT\", \"inline\": true},
+            {\"name\": \"📝 Log\", \"value\": \"\`$LOG_FILE\`\", \"inline\": false}
+          ],
+          \"timestamp\": \"$(date -u +%Y-%m-%dT%H:%M:%SZ)\"
+        }]
+      }" > /dev/null 2>&1
+  fi
+fi
+
+echo ""
+echo -e "${BLUE}📖 Full log:${NC} $LOG_FILE"
+echo ""
+
+exit $EXIT_CODE
