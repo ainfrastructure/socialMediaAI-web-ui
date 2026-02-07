@@ -1,5 +1,5 @@
 <template>
-  <div class="restaurant-selection-view">
+  <div class="brand-selection-view">
     <div class="selection-header">
       <h2 class="selection-title">{{ $t('playground.chooseRestaurant', 'Choose a Restaurant') }}</h2>
       <p class="selection-subtitle">{{ $t('playground.selectRestaurant', 'Select which restaurant to create content for') }}</p>
@@ -8,13 +8,13 @@
       </BaseButton>
     </div>
 
-    <div class="restaurants-grid">
+    <div class="brands-grid">
       <BaseCard
         v-for="restaurant in restaurants"
         :key="restaurant.id"
         variant="glass"
         hoverable
-        class="restaurant-card"
+        class="brand-card"
         @click="$emit('select', restaurant.id)"
       >
         <div class="card-header">
@@ -26,7 +26,7 @@
                 class="card-logo"
               />
             </div>
-            <h3 class="restaurant-name">{{ restaurant.name }}</h3>
+            <h3 class="brand-name">{{ restaurant.name }}</h3>
           </div>
           <button class="edit-btn" @click.stop="$emit('edit', restaurant)" title="Edit Restaurant">
             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -36,9 +36,9 @@
           </button>
         </div>
 
-        <p class="restaurant-address">{{ restaurant.address }}</p>
+        <p class="brand-address">{{ restaurant.address }}</p>
 
-        <div class="restaurant-meta">
+        <div class="brand-meta">
           <div v-if="restaurant.rating" class="meta-item">
             <span class="meta-icon">⭐</span>
             <span>{{ restaurant.rating }} / 5</span>
@@ -107,7 +107,7 @@ const formatDate = (dateString: string): string => {
 </script>
 
 <style scoped>
-.restaurant-selection-view {
+.brand-selection-view {
   animation: fadeIn 0.5s ease;
 }
 
@@ -139,18 +139,18 @@ const formatDate = (dateString: string): string => {
   margin-bottom: var(--space-lg);
 }
 
-.restaurants-grid {
+.brands-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: var(--space-xl);
 }
 
-.restaurant-card {
+.brand-card {
   cursor: pointer;
   transition: all var(--transition-base);
 }
 
-.restaurant-card:hover {
+.brand-card:hover {
   transform: translateY(-4px);
   border-color: rgba(212, 175, 55, 0.5);
 }
@@ -182,7 +182,7 @@ const formatDate = (dateString: string): string => {
   object-fit: cover;
 }
 
-.restaurant-name {
+.brand-name {
   font-family: var(--font-heading);
   font-size: var(--text-lg);
   color: var(--text-primary);
@@ -204,13 +204,13 @@ const formatDate = (dateString: string): string => {
   color: var(--gold-primary);
 }
 
-.restaurant-address {
+.brand-address {
   font-size: var(--text-sm);
   color: var(--text-muted);
   margin-bottom: var(--space-md);
 }
 
-.restaurant-meta {
+.brand-meta {
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-md);
@@ -229,7 +229,7 @@ const formatDate = (dateString: string): string => {
 }
 
 @media (max-width: 768px) {
-  .restaurants-grid {
+  .brands-grid {
     grid-template-columns: 1fr;
   }
 }

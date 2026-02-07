@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { ref, reactive } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useRestaurantsStore } from '@/stores/restaurants'
-import { restaurantService } from '@/services/restaurantService'
+import { useBrandsStore } from '@/stores/brands'
+import { brandService } from '@/services/brandService'
 import BaseModal from './BaseModal.vue'
 import BaseInput from './BaseInput.vue'
 import BaseButton from './BaseButton.vue'
@@ -17,7 +17,7 @@ const emit = defineEmits<{
 }>()
 
 const { t } = useI18n()
-const restaurantsStore = useRestaurantsStore()
+const brandsStore = useBrandsStore()
 const creating = ref(false)
 const uploadingLogo = ref(false)
 const error = ref('')
@@ -53,10 +53,10 @@ async function handleSubmit() {
   error.value = ''
 
   try {
-    // First create the restaurant
-    const restaurant = await restaurantsStore.createManualRestaurant(form)
-    if (!restaurant) {
-      error.value = restaurantsStore.error || t('restaurantManagement.errors.createFailed')
+    // First create the brand
+    const brand = await brandsStore.createManualBrand(form)
+    if (!brand) {
+      error.value = brandsStore.error || t('restaurantManagement.errors.createFailed')
       creating.value = false
       return
     }
@@ -65,10 +65,17 @@ async function handleSubmit() {
     if (logoFile.value) {
       uploadingLogo.value = true
       try {
-        const logoUrl = await restaurantService.uploadLogo(restaurant.id, logoFile.value)
+        const base64 = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader()
+          reader.onload = () => resolve(reader.result as string)
+          reader.onerror = reject
+          reader.readAsDataURL(logoFile.value!)
+        })
+        const logoResult = await brandService.uploadLogo(brand.id, { base64, mimeType: logoFile.value.type, type: 'logo' })
+        const logoUrl = logoResult.data?.url || ''
 
-        // Update the restaurant with the logo URL
-        await restaurantService.updateRestaurant(restaurant.id, {
+        // Update the brand with the logo URL
+        await brandService.updateBrand(brand.id, {
           brand_dna: {
             logo_url: logoUrl,
             primary_color: form.brand_dna.primary_color,
@@ -77,7 +84,7 @@ async function handleSubmit() {
         })
 
         // Refresh restaurants list to get updated data
-        await restaurantsStore.fetchRestaurants()
+        await brandsStore.fetchBrands()
       } catch (err: any) {
         console.error('Failed to upload logo:', err)
         error.value = t('restaurantManagement.errors.logoUploadFailed')
@@ -89,7 +96,7 @@ async function handleSubmit() {
       }
     }
 
-    emit('created', restaurant)
+    emit('created', brand)
     emit('update:modelValue', false)
 
     // Reset form
@@ -124,8 +131,8 @@ function handleCancel() {
         <h3>{{ $t('restaurantManagement.basicInfo') }}</h3>
         <BaseInput
           v-model="form.name"
-          :label="$t('restaurantManagement.restaurantName')"
-          :placeholder="$t('restaurantManagement.restaurantNamePlaceholder')"
+          :label="$t('restaurantManagement.brandName')"
+          :placeholder="$t('restaurantManagement.brandNamePlaceholder')"
           required
         />
         <BaseInput

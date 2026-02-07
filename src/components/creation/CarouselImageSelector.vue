@@ -14,7 +14,7 @@ interface Props {
   minImages?: number
   maxImages?: number
   acceptTypes?: string
-  restaurantId?: string
+  brandId?: string
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -65,7 +65,7 @@ function handleUpdate(items: CarouselItem[]) {
         :model-value="modelValue"
         :min-items="minImages"
         :max-items="maxImages"
-        :restaurant-id="restaurantId"
+        :brand-id="brandId"
         @update:model-value="handleUpdate"
       />
 

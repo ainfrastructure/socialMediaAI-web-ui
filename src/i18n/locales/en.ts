@@ -396,7 +396,7 @@ export default {
         'Search restaurants using Google Places',
         'Automatically import menus, photos, and brand details',
         'Build your restaurant database',
-        'Access comprehensive business information',
+        'Access comprehensive brand information',
       ],
 
       createDetails: [
@@ -1626,7 +1626,7 @@ export default {
         ownership:
           'You retain ownership of any content you create or upload to SocialChef. However, by using our Service, you grant us a limited license to use, store, and process your content solely for the purpose of providing the Service.',
         license:
-          'For AI-generated content created through our platform, you receive a license to use such content for your business purposes, subject to any restrictions in your subscription plan.',
+          'For AI-generated content created through our platform, you receive a license to use such content for your brand purposes, subject to any restrictions in your subscription plan.',
         responsibility:
           'You are solely responsible for ensuring that your content complies with applicable laws and does not infringe on third-party rights.'
       },

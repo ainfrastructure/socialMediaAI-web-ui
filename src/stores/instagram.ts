@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { api } from '../services/api'
+import { usePreferencesStore } from '@/stores/preferences'
 import { debugLog } from '@/utils/debug'
 
 export interface InstagramAccount {
@@ -18,21 +19,21 @@ export const useInstagramStore = defineStore('instagram', () => {
   const loading = ref(false)
   const error = ref<string | null>(null)
 
-  /**
-   * Initialize Instagram OAuth flow with redirect
-   * @param returnUrl - Optional URL to return to after OAuth completes
-   */
+  function getBrandId(): string | undefined {
+    const preferencesStore = usePreferencesStore()
+    return preferencesStore.selectedBrandId || undefined
+  }
+
   async function connectInstagram(returnUrl?: string): Promise<void> {
     loading.value = true
     error.value = null
 
     try {
-      // Step 1: Get authorization URL from backend
-      const initResponse = await api.initInstagramAuth()
+      const brandId = getBrandId()
+      const initResponse = await api.initInstagramAuth(brandId)
 
       if (!initResponse.success) {
-        const errorMsg = initResponse.error || 'Failed to initialize Instagram authentication'
-        throw new Error(errorMsg)
+        throw new Error(initResponse.error || 'Failed to initialize Instagram authentication')
       }
 
       if (!initResponse.data) {
@@ -41,10 +42,8 @@ export const useInstagramStore = defineStore('instagram', () => {
 
       const { authUrl, state } = initResponse.data
 
-      // Step 2: Store state in localStorage for verification after redirect
       localStorage.setItem('instagram_oauth_state', state)
 
-      // Step 2b: Store return URL if provided
       if (returnUrl) {
         debugLog('[InstagramStore] Storing return URL:', returnUrl)
         localStorage.setItem('oauth_return_url', returnUrl)
@@ -52,25 +51,25 @@ export const useInstagramStore = defineStore('instagram', () => {
         localStorage.removeItem('oauth_return_url')
       }
 
-      // Step 3: Redirect to Facebook OAuth (Instagram uses Facebook OAuth)
       window.location.href = authUrl
     } catch (err: any) {
       error.value = err.message || 'Failed to connect Instagram account'
       loading.value = false
       throw err
     }
-    // Note: loading.value stays true because we're redirecting away
   }
 
-  /**
-   * Load user's connected Instagram accounts
-   */
-  async function loadConnectedAccounts(): Promise<void> {
+  async function fetchAccounts(brandId?: string): Promise<void> {
+    return loadConnectedAccounts(brandId)
+  }
+
+  async function loadConnectedAccounts(overrideBrandId?: string): Promise<void> {
     loading.value = true
     error.value = null
 
     try {
-      const response = await api.getInstagramAccounts()
+      const brandId = overrideBrandId || getBrandId()
+      const response = await api.getInstagramAccounts(brandId)
 
       if (!response.success) {
         throw new Error(response.error || 'Failed to load connected accounts')
@@ -84,21 +83,18 @@ export const useInstagramStore = defineStore('instagram', () => {
     }
   }
 
-  /**
-   * Disconnect an Instagram account
-   */
-  async function disconnectAccount(accountId: string): Promise<void> {
+  async function disconnectAccount(accountId: string, overrideBrandId?: string): Promise<void> {
     loading.value = true
     error.value = null
 
     try {
-      const response = await api.disconnectInstagramAccount(accountId)
+      const brandId = overrideBrandId || getBrandId()
+      const response = await api.disconnectInstagramAccount(accountId, brandId)
 
       if (!response.success) {
         throw new Error(response.error || 'Failed to disconnect account')
       }
 
-      // Remove from local state
       connectedAccounts.value = connectedAccounts.value.filter(
         (account) => account.instagramAccountId !== accountId
       )
@@ -110,32 +106,24 @@ export const useInstagramStore = defineStore('instagram', () => {
     }
   }
 
-  /**
-   * Complete Instagram OAuth callback after redirect
-   * Called by the callback page/component
-   */
   async function handleOAuthCallback(code: string, state: string): Promise<void> {
     loading.value = true
     error.value = null
 
     try {
-      // Verify state matches what we stored
       const storedState = localStorage.getItem('instagram_oauth_state')
       if (state !== storedState) {
         throw new Error('Invalid state parameter - possible CSRF attack')
       }
 
-      // Clear stored state
       localStorage.removeItem('instagram_oauth_state')
 
-      // Send code to backend to complete OAuth
       const callbackResponse = await api.completeInstagramAuth(code, state)
 
       if (!callbackResponse.success) {
         throw new Error(callbackResponse.error || 'Failed to complete Instagram authentication')
       }
 
-      // Update connected accounts
       connectedAccounts.value = callbackResponse.data?.accounts || []
       error.value = null
     } catch (err: any) {
@@ -146,6 +134,10 @@ export const useInstagramStore = defineStore('instagram', () => {
     }
   }
 
+  // Legacy compat
+  async function ensureBusinessCache(_brandId?: string): Promise<void> { return loadConnectedAccounts(_brandId) }
+  function resetConnectionState(): void { connectedAccounts.value = []; error.value = null }
+
   return {
     connectedAccounts,
     loading,
@@ -153,6 +145,9 @@ export const useInstagramStore = defineStore('instagram', () => {
     connectInstagram,
     handleOAuthCallback,
     loadConnectedAccounts,
+    fetchAccounts,
     disconnectAccount,
+    ensureBusinessCache,
+    resetConnectionState,
   }
 })

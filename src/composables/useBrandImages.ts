@@ -1,6 +1,6 @@
 import { ref, computed, watch } from 'vue'
-import { restaurantService } from '@/services/restaurantService'
-import type { UploadedImage, SavedRestaurant } from '@/services/restaurantService'
+import { brandService } from '@/services/brandService'
+import type { UploadedImage, Brand } from '@/services/brandService'
 
 export interface FolderNode {
   name: string
@@ -16,9 +16,9 @@ export type ViewMode = 'grid' | 'list' | 'timeline'
 export type SortBy = 'name' | 'date' | 'size'
 export type SortOrder = 'asc' | 'desc'
 
-export function useRestaurantImages(restaurant: SavedRestaurant) {
-  // Use place_id for API calls (fallback to id for manual restaurants)
-  const restaurantId = computed(() => restaurant.place_id || restaurant.id)
+export function useBrandImages(brand: Brand) {
+  // Use place_id for API calls (fallback to id for manual brands)
+  const brandId = computed(() => brand.place_id || brand.id)
 
   // State
   const images = ref<UploadedImage[]>([])
@@ -32,9 +32,9 @@ export function useRestaurantImages(restaurant: SavedRestaurant) {
   const loading = ref<boolean>(false)
   const error = ref<string>('')
 
-  // Watch for restaurant changes
+  // Watch for brand changes
   watch(
-    () => restaurant.uploaded_images,
+    () => brand.uploaded_images,
     (newImages) => {
       if (newImages) {
         images.value = newImages
@@ -70,7 +70,7 @@ export function useRestaurantImages(restaurant: SavedRestaurant) {
         const filename = extractFilenameFromPath(img.storage_path).toLowerCase()
         const folderPath = extractFolderPathFromStorage(
           img.storage_path,
-          restaurantId.value
+          brandId.value
         ).join('/').toLowerCase()
         return filename.includes(query) || folderPath.includes(query)
       })
@@ -88,8 +88,8 @@ export function useRestaurantImages(restaurant: SavedRestaurant) {
           break
         }
         case 'date': {
-          const dateA = new Date(a.uploaded_at).getTime()
-          const dateB = new Date(b.uploaded_at).getTime()
+          const dateA = new Date(a.created_at).getTime()
+          const dateB = new Date(b.created_at).getTime()
           comparison = dateA - dateB
           break
         }
@@ -119,7 +119,7 @@ export function useRestaurantImages(restaurant: SavedRestaurant) {
 
   // Computed: Breadcrumb path
   const breadcrumbs = computed<Array<{ name: string; path: string }>>(() => {
-    const rootName = restaurant.name || 'All Images'
+    const rootName = brand.name || 'All Images'
 
     if (currentFolderPath.value === '/') {
       return [{ name: rootName, path: '/' }]
@@ -140,11 +140,11 @@ export function useRestaurantImages(restaurant: SavedRestaurant) {
   // Helper: Extract folder path array from storage_path
   function extractFolderPathFromStorage(
     storagePath: string,
-    restId: string
+    brandId: string
   ): string[] {
-    // Storage path format: "restaurantId/categories/menu/burgers/img.jpg"
+    // Storage path format: "brandId/categories/menu/burgers/img.jpg"
     // We want: ["menu", "burgers"]
-    const prefix = `${restId}/categories/`
+    const prefix = `${brandId}/categories/`
     if (!storagePath.startsWith(prefix)) {
       // Handle legacy category field
       return []
@@ -217,7 +217,7 @@ export function useRestaurantImages(restaurant: SavedRestaurant) {
       child = {
         name: folderName,
         path: childPath,
-        fullPath: `${restaurantId.value}/categories/${childPath}`,
+        fullPath: `${brandId.value}/categories/${childPath}`,
         children: [],
         images: [],
         imageCount: 0,
@@ -236,9 +236,9 @@ export function useRestaurantImages(restaurant: SavedRestaurant) {
   // Build folder tree from flat image list
   function buildFolderTree(imageList: UploadedImage[]): FolderNode {
     const root: FolderNode = {
-      name: restaurant.name || 'All Images',
+      name: brand.name || 'All Images',
       path: '/',
-      fullPath: `${restaurantId.value}/categories/`,
+      fullPath: `${brandId.value}/categories/`,
       children: [],
       images: [],
       imageCount: imageList.length,
@@ -246,7 +246,7 @@ export function useRestaurantImages(restaurant: SavedRestaurant) {
     }
 
     for (const image of imageList) {
-      const pathParts = extractFolderPathFromStorage(image.storage_path, restaurantId.value)
+      const pathParts = extractFolderPathFromStorage(image.storage_path, brandId.value)
 
       if (pathParts.length === 0) {
         // Image at root level
@@ -313,7 +313,7 @@ export function useRestaurantImages(restaurant: SavedRestaurant) {
   // Delete images
   async function deleteImages(imageIds: string[]): Promise<void> {
     for (const imageId of imageIds) {
-      await restaurantService.deleteRestaurantImage(restaurantId.value, imageId)
+      await brandService.deleteBrandImage(brandId.value, imageId)
     }
     selectedImageIds.value.clear()
   }
@@ -324,14 +324,8 @@ export function useRestaurantImages(restaurant: SavedRestaurant) {
       loading.value = true
       error.value = ''
 
-      const success = await restaurantService.createFolder(restaurantId.value, folderPath)
-
-      if (success) {
-        // Folder is virtual - no need to update anything
-        // It will appear when images are uploaded to it
-      }
-
-      return success
+      const result = await brandService.createFolder(brandId.value, folderPath)
+      return result.success
     } catch (err: any) {
       error.value = err.message || 'Failed to create folder'
       return false
@@ -346,27 +340,21 @@ export function useRestaurantImages(restaurant: SavedRestaurant) {
       loading.value = true
       error.value = ''
 
-      const updatedRestaurant = await restaurantService.renameFolder(
-        restaurantId.value,
+      const result = await brandService.renameFolder(
+        brandId.value,
         oldPath,
         newPath
       )
 
-      if (updatedRestaurant && updatedRestaurant.uploaded_images) {
-        // Update local state with new paths
-        images.value = updatedRestaurant.uploaded_images
-        folderStructure.value = buildFolderTree(updatedRestaurant.uploaded_images)
-
+      if (result.success) {
         // Update current folder path if we were in the renamed folder
         if (currentFolderPath.value.startsWith(oldPath)) {
           const relativePath = currentFolderPath.value.substring(oldPath.length)
           currentFolderPath.value = newPath + relativePath
         }
-
-        return true
       }
 
-      return false
+      return result.success
     } catch (err: any) {
       error.value = err.message || 'Failed to rename folder'
       return false
@@ -381,26 +369,20 @@ export function useRestaurantImages(restaurant: SavedRestaurant) {
       loading.value = true
       error.value = ''
 
-      const updatedRestaurant = await restaurantService.deleteFolder(
-        restaurantId.value,
+      const result = await brandService.deleteFolder(
+        brandId.value,
         folderPath
       )
 
-      if (updatedRestaurant && updatedRestaurant.uploaded_images !== undefined) {
-        // Update local state
-        images.value = updatedRestaurant.uploaded_images || []
-        folderStructure.value = buildFolderTree(updatedRestaurant.uploaded_images || [])
-
+      if (result.success) {
         // Navigate to root if we were in the deleted folder
         if (currentFolderPath.value.startsWith(folderPath)) {
           currentFolderPath.value = '/'
         }
-
         selectedImageIds.value.clear()
-        return true
       }
 
-      return false
+      return result.success
     } catch (err: any) {
       error.value = err.message || 'Failed to delete folder'
       return false
@@ -418,22 +400,17 @@ export function useRestaurantImages(restaurant: SavedRestaurant) {
       loading.value = true
       error.value = ''
 
-      const updatedRestaurant = await restaurantService.moveImages(
-        restaurantId.value,
+      const result = await brandService.moveImages(
+        brandId.value,
         imageIds,
         targetFolderPath
       )
 
-      if (updatedRestaurant && updatedRestaurant.uploaded_images) {
-        // Update local state with new paths
-        images.value = updatedRestaurant.uploaded_images
-        folderStructure.value = buildFolderTree(updatedRestaurant.uploaded_images)
-
+      if (result.success) {
         selectedImageIds.value.clear()
-        return true
       }
 
-      return false
+      return result.success
     } catch (err: any) {
       error.value = err.message || 'Failed to move images'
       return false

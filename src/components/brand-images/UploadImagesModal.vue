@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { restaurantService } from '@/services/restaurantService'
-import type { SavedRestaurant } from '@/services/restaurantService'
-import type { FolderNode } from '@/composables/useRestaurantImages'
+import { brandService } from '@/services/brandService'
+import type { Brand } from '@/services/brandService'
+import type { FolderNode } from '@/composables/useBrandImages'
 import BaseModal from '../BaseModal.vue'
 import BaseButton from '../BaseButton.vue'
 import BaseInput from '../BaseInput.vue'
@@ -11,7 +11,7 @@ import BaseAlert from '../BaseAlert.vue'
 
 interface Props {
   modelValue: boolean
-  restaurant: SavedRestaurant
+  restaurant: Brand
   folderStructure: FolderNode | null
   currentFolderPath?: string
 }
@@ -182,14 +182,24 @@ async function handleUpload() {
   uploadSuccess.value = ''
 
   try {
-    const restaurantId = props.restaurant.place_id || props.restaurant.id
+    const brandId = props.restaurant.place_id || props.restaurant.id
     const category = targetFolder.value
 
-    await restaurantService.uploadRestaurantImages(
-      restaurantId,
-      selectedFiles.value,
-      category
-    )
+    // Convert each file to base64 and upload as individual assets
+    const uploadPromises = selectedFiles.value.map(async (file) => {
+      const base64 = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader()
+        reader.onload = () => resolve((reader.result as string).split(',')[1])
+        reader.onerror = reject
+        reader.readAsDataURL(file)
+      })
+      return brandService.uploadAsset(brandId, {
+        base64,
+        mimeType: file.type,
+        folder: category,
+      })
+    })
+    await Promise.all(uploadPromises)
 
     uploadSuccess.value = t('restaurantManagement.uploadSuccess', {
       count: selectedFiles.value.length

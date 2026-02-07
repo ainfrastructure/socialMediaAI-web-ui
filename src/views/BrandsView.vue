@@ -1,37 +1,37 @@
 <script setup lang="ts">
 import { onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useRestaurantsStore } from '@/stores/restaurants'
+import { useBrandsStore } from '@/stores/brands'
 import DashboardLayout from '../components/DashboardLayout.vue'
-import RestaurantManagementSection from '../components/RestaurantManagementSection.vue'
+import BrandManagementSection from '../components/BrandManagementSection.vue'
 
 const { t } = useI18n()
-const restaurantsStore = useRestaurantsStore()
+const brandsStore = useBrandsStore()
 
 onMounted(async () => {
-  if (!restaurantsStore.restaurants.length) {
-    await restaurantsStore.fetchRestaurants()
+  if (!brandsStore.brands.length) {
+    await brandsStore.fetchBrands()
   }
 })
 </script>
 
 <template>
   <DashboardLayout>
-    <div class="restaurants-view">
+    <div class="brands-view">
       <div class="page-header">
         <h1 class="page-title">{{ $t('profile.manageRestaurants') }}</h1>
         <p class="page-subtitle">
-          {{ $t('restaurantManagement.noRestaurantsHint') }}
+          {{ $t('restaurantManagement.noBrandsHint') }}
         </p>
       </div>
 
-      <RestaurantManagementSection />
+      <BrandManagementSection />
     </div>
   </DashboardLayout>
 </template>
 
 <style scoped>
-.restaurants-view {
+.brands-view {
   max-width: 1400px;
   margin: 0 auto;
   padding: var(--space-2xl);
@@ -66,7 +66,7 @@ onMounted(async () => {
 }
 
 @media (max-width: 768px) {
-  .restaurants-view {
+  .brands-view {
     padding: var(--space-xl) var(--space-md);
   }
 
@@ -80,7 +80,7 @@ onMounted(async () => {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .restaurants-view {
+  .brands-view {
     animation: none;
   }
 }

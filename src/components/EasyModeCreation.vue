@@ -26,12 +26,12 @@ import { useInstagramStore } from '@/stores/instagram'
 import { usePreferencesStore } from '@/stores/preferences'
 import { useAuthStore } from '@/stores/auth'
 import { useSocialAccounts } from '@/composables/useSocialAccounts'
-import type { SavedRestaurant } from '@/services/restaurantService'
+import type { Brand } from '@/services/brandService'
 import { debugLog } from '@/utils/debug'
 
 interface MenuItem {
   name: string
-  price?: string
+  price?: string | number
   imageUrl?: string
   [key: string]: any
 }
@@ -57,8 +57,9 @@ interface PublishResults {
 }
 
 const props = defineProps<{
-  restaurant: SavedRestaurant
+  brand: Brand
   menuItems: MenuItem[]
+  businessType?: string
   generating?: boolean
   animating?: boolean // When true, video is being generated from image (brief loading)
   videoGeneratingInBackground?: boolean // When true, video is generating in background (user can continue)
@@ -103,6 +104,7 @@ const emit = defineEmits<{
     timezone?: string
     postText?: string
     hashtags?: string[]
+    accountSelections?: Record<string, any>
   }): void
   (e: 'feedback', feedbackText: string): void
   (e: 'reset'): void
@@ -165,65 +167,118 @@ const step1NavigationRef = ref<HTMLElement | null>(null)
 const generatingOverlayRef = ref<HTMLElement | null>(null)
 const componentRoot = ref<HTMLElement | null>(null)
 
+const templateKeyPrefix = computed(() => {
+  if (props.businessType === 'resort') return 'playground.styleTemplatesResort'
+  if (props.businessType === 'general') return 'playground.styleTemplatesGeneral'
+  return 'playground.styleTemplates'
+})
+
 // Style templates (7 options) - Behind the Scenes is default
-const styleTemplates = computed<StyleTemplate[]>(() => [
-  {
-    id: 'behindTheScenes',
-    name: t('playground.styleTemplates.behindTheScenes.name'),
-    description: t('playground.styleTemplates.behindTheScenes.description'),
-    icon: 'videocam',
-    preview: t('playground.styleTemplates.behindTheScenes.preview')
-  },
-  {
-    id: 'cleanStrict',
-    name: t('playground.styleTemplates.cleanStrict.name'),
-    description: t('playground.styleTemplates.cleanStrict.description'),
-    icon: 'photo_camera',
-    preview: t('playground.styleTemplates.cleanStrict.preview')
-  },
-  {
-    id: 'zoomIn',
-    name: t('playground.styleTemplates.zoomIn.name'),
-    description: t('playground.styleTemplates.zoomIn.description'),
-    icon: 'zoom_in',
-    preview: t('playground.styleTemplates.zoomIn.preview')
-  },
-  {
-    id: 'oneBite',
-    name: t('playground.styleTemplates.oneBite.name'),
-    description: t('playground.styleTemplates.oneBite.description'),
-    icon: 'restaurant',
-    preview: t('playground.styleTemplates.oneBite.preview')
-  },
-  {
-    id: 'studioShot',
-    name: t('playground.styleTemplates.studioShot.name'),
-    description: t('playground.styleTemplates.studioShot.description'),
-    icon: 'light',
-    preview: t('playground.styleTemplates.studioShot.preview')
-  },
-  {
-    id: 'infographic',
-    name: t('playground.styleTemplates.infographic.name'),
-    description: t('playground.styleTemplates.infographic.description'),
-    icon: 'schema',
-    preview: t('playground.styleTemplates.infographic.preview')
-  },
-  {
-    id: 'placeOnTable',
-    name: t('playground.styleTemplates.placeOnTable.name'),
-    description: t('playground.styleTemplates.placeOnTable.description'),
-    icon: 'dining',
-    preview: t('playground.styleTemplates.placeOnTable.preview')
-  },
-  {
-    id: 'custom',
-    name: t('playground.styleTemplates.custom.name'),
-    description: t('playground.styleTemplates.custom.description'),
-    icon: 'edit',
-    preview: t('playground.styleTemplates.custom.preview')
+const styleTemplates = computed<StyleTemplate[]>(() => {
+  const keyPrefix = templateKeyPrefix.value
+  if (props.businessType === 'resort') {
+    return [
+      {
+        id: 'resortSunset',
+        name: t(`${keyPrefix}.resortSunset.name`),
+        description: t(`${keyPrefix}.resortSunset.description`),
+        icon: 'sunny',
+        preview: t(`${keyPrefix}.resortSunset.preview`)
+      },
+      {
+        id: 'resortPool',
+        name: t(`${keyPrefix}.resortPool.name`),
+        description: t(`${keyPrefix}.resortPool.description`),
+        icon: 'pool',
+        preview: t(`${keyPrefix}.resortPool.preview`)
+      },
+      {
+        id: 'resortSuite',
+        name: t(`${keyPrefix}.resortSuite.name`),
+        description: t(`${keyPrefix}.resortSuite.description`),
+        icon: 'hotel',
+        preview: t(`${keyPrefix}.resortSuite.preview`)
+      }
+    ]
   }
-])
+
+  return [
+    {
+      id: 'behindTheScenes',
+      name: t(`${keyPrefix}.behindTheScenes.name`),
+      description: t(`${keyPrefix}.behindTheScenes.description`),
+      icon: 'videocam',
+      preview: t(`${keyPrefix}.behindTheScenes.preview`)
+    },
+    {
+      id: 'cleanStrict',
+      name: t(`${keyPrefix}.cleanStrict.name`),
+      description: t(`${keyPrefix}.cleanStrict.description`),
+      icon: 'photo_camera',
+      preview: t(`${keyPrefix}.cleanStrict.preview`)
+    },
+    {
+      id: 'zoomIn',
+      name: t(`${keyPrefix}.zoomIn.name`),
+      description: t(`${keyPrefix}.zoomIn.description`),
+      icon: 'zoom_in',
+      preview: t(`${keyPrefix}.zoomIn.preview`)
+    },
+    {
+      id: 'oneBite',
+      name: t(`${keyPrefix}.oneBite.name`),
+      description: t(`${keyPrefix}.oneBite.description`),
+      icon: 'restaurant',
+      preview: t(`${keyPrefix}.oneBite.preview`)
+    },
+    {
+      id: 'studioShot',
+      name: t(`${keyPrefix}.studioShot.name`),
+      description: t(`${keyPrefix}.studioShot.description`),
+      icon: 'light',
+      preview: t(`${keyPrefix}.studioShot.preview`)
+    },
+    {
+      id: 'infographic',
+      name: t(`${keyPrefix}.infographic.name`),
+      description: t(`${keyPrefix}.infographic.description`),
+      icon: 'schema',
+      preview: t(`${keyPrefix}.infographic.preview`)
+    },
+    {
+      id: 'placeOnTable',
+      name: t(`${keyPrefix}.placeOnTable.name`),
+      description: t(`${keyPrefix}.placeOnTable.description`),
+      icon: 'dining',
+      preview: t(`${keyPrefix}.placeOnTable.preview`)
+    },
+    {
+      id: 'custom',
+      name: t(`${keyPrefix}.custom.name`),
+      description: t(`${keyPrefix}.custom.description`),
+      icon: 'edit',
+      preview: t(`${keyPrefix}.custom.preview`)
+    }
+  ]
+})
+
+const customPromptPlaceholder = computed(() => {
+  if (props.businessType && props.businessType !== 'restaurant') {
+    return t('easyMode.step2.customPromptGenericPlaceholder', 'Describe how you want the scene captured...')
+  }
+  return t('easyMode.step2.customPromptPlaceholder', 'Describe how you want your dish photographed...')
+})
+
+watch(
+  () => props.businessType,
+  () => {
+    const availableIds = styleTemplates.value.map(template => template.id)
+    if (!availableIds.includes(selectedStyleTemplate.value)) {
+      selectedStyleTemplate.value = availableIds[0] || 'behindTheScenes'
+    }
+  },
+  { immediate: true }
+)
 
 // Gold SVG icons for style templates
 function _getStyleIcon(styleId: string): string {
@@ -264,12 +319,12 @@ const outOfCredits = computed(() => !authStore.canGenerateContent)
 
 // Check if has logo (existing or uploaded)
 const hasLogo = computed(() => {
-  return props.restaurant.brand_dna?.logo_url || uploadedLogoPreview.value
+  return props.brand.brand_dna?.logo_url || uploadedLogoPreview.value
 })
 
 // Get current logo URL (uploaded preview takes priority)
 const currentLogoUrl = computed(() => {
-  return uploadedLogoPreview.value || props.restaurant.brand_dna?.logo_url
+  return uploadedLogoPreview.value || props.brand.brand_dna?.logo_url
 })
 
 // Step labels for progress indicator
@@ -478,6 +533,7 @@ function handlePublish(data: {
   scheduledDate?: string
   scheduledTime?: string
   timezone?: string
+  accountSelections?: Record<string, any>
 }) {
   emit('publish', {
     platforms: data.platforms,
@@ -486,7 +542,8 @@ function handlePublish(data: {
     scheduleTime: data.scheduledTime,
     timezone: data.timezone,
     postText: editedPostText.value,
-    hashtags: editedHashtags.value
+    hashtags: editedHashtags.value,
+    accountSelections: data.accountSelections
   })
 }
 
@@ -703,7 +760,7 @@ onUnmounted(() => {
       <!-- Image Source Selection (Upload or Browse Existing) -->
       <div class="image-upload-section">
         <ImageSourceSelector
-          :restaurant="restaurant"
+          :entity="props.brand"
           :preview-url="uploadedImagePreview"
           @select="handleImageUploadFile"
           @remove="removeUploadedImage"
@@ -811,7 +868,7 @@ onUnmounted(() => {
         <div v-if="selectedStyleTemplate === 'custom'" class="custom-prompt-section">
           <textarea
             v-model="customPrompt"
-            :placeholder="t('easyMode.step2.customPromptPlaceholder', 'Describe how you want your dish photographed...')"
+            :placeholder="customPromptPlaceholder"
             class="custom-prompt-input"
             rows="4"
           ></textarea>
@@ -929,7 +986,7 @@ onUnmounted(() => {
           <!-- Current Logo Preview -->
           <div v-if="currentLogoUrl" class="current-logo">
             <div class="logo-preview-container">
-              <img :src="currentLogoUrl" :alt="restaurant.name" class="logo-preview-image" />
+              <img :src="currentLogoUrl" :alt="brand.name" class="logo-preview-image" />
               <button
                 v-if="uploadedLogoPreview"
                 class="remove-logo-btn"
@@ -1345,6 +1402,7 @@ onUnmounted(() => {
           :hashtags="editedHashtags"
           :initial-schedule-date="props.initialScheduleDate"
           :lock-date="props.lockDate"
+          :brand-id="props.brand?.id"
           @publish="handlePublish"
           @cancel="prevStep"
         />

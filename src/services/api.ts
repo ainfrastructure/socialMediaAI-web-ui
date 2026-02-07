@@ -144,18 +144,6 @@ class ApiService {
   refreshEngagement = engagementService.refreshEngagement.bind(engagementService)
   getEngagementAnalytics = engagementService.getAnalytics.bind(engagementService)
 
-  // Restaurants - keep inline as it's minimal (most is in restaurantService.ts)
-  async getRestaurants(limit?: number) {
-    const params = new URLSearchParams()
-    if (limit) params.append('limit', limit.toString())
-
-    const url = params.toString() ? `${API_URL}/api/restaurants?${params}` : `${API_URL}/api/restaurants`
-    const response = await fetch(url, {
-      headers: getAuthHeader(),
-    })
-    return response.json()
-  }
-
   // Image upload for carousel (uploads to Supabase storage)
   async uploadCarouselImage(formData: FormData) {
     const response = await fetch(`${API_URL}/api/upload/image`, {

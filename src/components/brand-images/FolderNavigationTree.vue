@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import type { FolderNode } from '@/composables/useRestaurantImages'
+import type { FolderNode } from '@/composables/useBrandImages'
 
 interface Props {
   node: FolderNode

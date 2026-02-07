@@ -16,7 +16,7 @@ const LinkedInCallbackView = () => import('../views/LinkedInCallbackView.vue')
 const TestPostView = () => import('../views/TestPostView.vue')
 const SchedulerView = () => import('../views/SchedulerView.vue')
 const ProfileView = () => import('../views/ProfileView.vue')
-const RestaurantsView = () => import('../views/RestaurantsView.vue')
+const BrandsView = () => import('../views/BrandsView.vue')
 const PostsView = () => import('../views/PostsView.vue')
 const PostsCreateView = () => import('../views/PostsCreateView.vue')
 const PrivacyPolicyView = () => import('../views/PrivacyPolicyView.vue')
@@ -174,9 +174,9 @@ const router = createRouter({
       meta: { requiresAuth: true },
     },
     {
-      path: '/restaurants',
-      name: 'restaurants',
-      component: RestaurantsView,
+      path: '/brands',
+      name: 'brands',
+      component: BrandsView,
       meta: { requiresAuth: true, requiresSubscription: true },
     },
     {

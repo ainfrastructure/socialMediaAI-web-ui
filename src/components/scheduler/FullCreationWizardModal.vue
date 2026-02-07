@@ -14,7 +14,7 @@ import ModeToggle from '../ModeToggle.vue'
 import { useFacebookStore } from '@/stores/facebook'
 import { useInstagramStore } from '@/stores/instagram'
 import { useNotificationStore } from '@/stores/notifications'
-import { restaurantService, type SavedRestaurant } from '@/services/restaurantService'
+import { brandService, type Brand } from '@/services/brandService'
 import { api } from '@/services/api'
 import { API_URL } from '@/services/apiBase'
 import { okamService } from '@/services/okamService'
@@ -22,7 +22,7 @@ import { debugLog, errorLog, warnLog } from '@/utils/debug'
 
 interface MenuItem {
   name: string
-  price?: string
+  price?: string | number
   imageUrl?: string
   [key: string]: any
 }
@@ -38,7 +38,7 @@ interface PublishResult {
 interface Props {
   modelValue: boolean
   selectedDate: string | null // YYYY-MM-DD format
-  restaurants: SavedRestaurant[]
+  restaurants: Brand[]
 }
 
 const props = defineProps<Props>()
@@ -58,7 +58,7 @@ const notificationStore = useNotificationStore()
 type WizardStep = 'choose-method' | 'choose-restaurant' | 'create' | 'success'
 const wizardStep = ref<WizardStep>('choose-method')
 const selectedMethod = ref<'new' | 'saved' | null>(null)
-const selectedRestaurant = ref<SavedRestaurant | null>(null)
+const selectedBrand = ref<Brand | null>(null)
 const menuItems = ref<MenuItem[]>([])
 const loadingMenu = ref(false)
 const creationMode = ref<'easy' | 'advanced'>('easy')
@@ -130,7 +130,7 @@ watch(() => props.modelValue, async (newVal) => {
 function resetWizard() {
   wizardStep.value = 'choose-method'
   selectedMethod.value = null
-  selectedRestaurant.value = null
+  selectedBrand.value = null
   menuItems.value = []
   creationMode.value = 'easy'
   generating.value = false
@@ -166,7 +166,7 @@ function selectMethod(method: 'new' | 'saved') {
   if (props.restaurants.length > 1) {
     wizardStep.value = 'choose-restaurant'
   } else if (props.restaurants.length === 1) {
-    selectedRestaurant.value = props.restaurants[0]
+    selectedBrand.value = props.restaurants[0]
     loadMenuItems()
   } else {
     // No restaurants
@@ -174,21 +174,21 @@ function selectMethod(method: 'new' | 'saved') {
   }
 }
 
-function selectRestaurant(restaurant: SavedRestaurant) {
-  selectedRestaurant.value = restaurant
+function selectBrand(brand: Brand) {
+  selectedBrand.value = brand
   loadMenuItems()
 }
 
 async function loadMenuItems() {
-  if (!selectedRestaurant.value) return
+  if (!selectedBrand.value) return
 
   loadingMenu.value = true
   generationError.value = null
 
   try {
     // Menu items are stored in the restaurant object (deduplicated by name)
-    if (selectedRestaurant.value.menu?.items) {
-      const itemsWithImages = selectedRestaurant.value.menu.items.filter((item: any) => item.imageUrl) || []
+    if (selectedBrand.value.menu?.items) {
+      const itemsWithImages = selectedBrand.value.menu.items.filter((item: any) => item.imageUrl) || []
       const seen = new Set<string>()
       menuItems.value = itemsWithImages.filter((item: any) => {
         if (seen.has(item.name)) return false
@@ -225,7 +225,7 @@ function goBack() {
       } else {
         wizardStep.value = 'choose-method'
       }
-      selectedRestaurant.value = null
+      selectedBrand.value = null
       menuItems.value = []
       // Reset generation state
       generatedImageUrl.value = ''
@@ -249,19 +249,19 @@ async function fileToBase64Url(file: File): Promise<string> {
 
 // Helper to get brand color
 function getBrandColor(): string {
-  return selectedRestaurant.value?.brand_dna?.primary_color || '#D4AF37'
+  return (selectedBrand.value?.brand_dna?.primary_color as string) || '#D4AF37'
 }
 
 // Generate prompts from selection
 async function generatePromptsFromSelection() {
-  if (!selectedRestaurant.value) return
+  if (!selectedBrand.value) return
 
   try {
     const response = await api.generatePrompts(
       {
-        name: selectedRestaurant.value.name,
-        type: selectedRestaurant.value.types?.[0] || 'restaurant',
-        brandDna: selectedRestaurant.value.brand_dna,
+        name: selectedBrand.value.name,
+        type: selectedBrand.value.types?.[0] || 'restaurant',
+        brandDna: selectedBrand.value.brand_dna,
       },
       selectedMenuItems.value,
       promptContext.value
@@ -281,7 +281,7 @@ async function generatePromptsFromSelection() {
 
 // Generate post content (text + hashtags)
 async function generatePostContent() {
-  if (!selectedRestaurant.value) return
+  if (!selectedBrand.value) return
 
   try {
     // Send name and description for better captions (description is optional, from Okam menu)
@@ -292,11 +292,11 @@ async function generatePostContent() {
 
     const response = await api.generatePostContent(
       'facebook', // platform
-      selectedRestaurant.value.name,
+      selectedBrand.value.name,
       menuItemsWithDescriptions,
       'image', // content type
       promptContext.value,
-      selectedRestaurant.value.brand_dna,
+      selectedBrand.value.brand_dna,
       locale.value as 'en' | 'no'
     )
 
@@ -325,7 +325,7 @@ async function generatePostContent() {
 
 // Generate image
 async function generateImage(uploadedLogo: File | null = null, uploadedImage: File | null = null) {
-  if (!editablePrompt.value || !selectedRestaurant.value) return
+  if (!editablePrompt.value || !selectedBrand.value) return
 
   // Start post content generation in parallel
   const postContentPromise = generatePostContent().catch(error => {
@@ -335,7 +335,7 @@ async function generateImage(uploadedLogo: File | null = null, uploadedImage: Fi
   // Prepare watermark if restaurant has logo and user wants it
   const logoUrl = uploadedLogo
     ? await fileToBase64Url(uploadedLogo)
-    : selectedRestaurant.value.brand_dna?.logo_url
+    : selectedBrand.value.brand_dna?.logo_url
 
   const watermark = (includeLogo.value && logoUrl)
     ? {
@@ -419,7 +419,7 @@ async function generateImage(uploadedLogo: File | null = null, uploadedImage: Fi
     watermark,
     referenceImage,
     promotionalSticker,
-    selectedRestaurant.value.place_id,
+    selectedBrand.value.place_id,
     strictnessMode.value
   )
 
@@ -488,14 +488,14 @@ async function handleEasyModeGenerate(data: {
       await generateImage(data.uploadedLogo, data.uploadedImage)
 
       // Upload the image to the restaurant's uploaded_images collection
-      if (data.uploadedImage && selectedRestaurant.value?.place_id) {
+      if (data.uploadedImage && selectedBrand.value?.id) {
         try {
-          await restaurantService.uploadRestaurantImages(
-            selectedRestaurant.value.place_id,
-            [data.uploadedImage]
+          await brandService.uploadRestaurantImages(
+            selectedBrand.value.id,
+            [data.uploadedImage as any]
           )
         } catch (uploadError) {
-          errorLog('Failed to save uploaded image to restaurant:', uploadError)
+          errorLog('Failed to save uploaded image to brand:', uploadError)
           // Don't fail the entire operation if this fails
         }
       }
@@ -552,7 +552,7 @@ async function handleEasyModePublish(data: {
     }
 
     // Validate restaurant is selected
-    if (!selectedRestaurant.value?.id) {
+    if (!selectedBrand.value?.id) {
       generationError.value = 'Please select a restaurant first'
       return
     }
@@ -567,7 +567,8 @@ async function handleEasyModePublish(data: {
     let favoritePostId: string | null = null
     try {
       const saveResponse = await api.saveFavorite({
-        restaurant_id: selectedRestaurant.value.id,
+        restaurant_id: selectedBrand.value.id,
+        brand_id: selectedBrand.value.brand_id || undefined,
         content_type: 'image',
         media_url: generatedImageUrl.value,
         post_text: finalPostText,
@@ -577,7 +578,7 @@ async function handleEasyModePublish(data: {
         prompt: editablePrompt.value,
         menu_items: selectedMenuItems.value,
         context: promptContext.value,
-        brand_dna: selectedRestaurant.value?.brand_dna
+        brand_dna: selectedBrand.value?.brand_dna
       })
 
       if (!saveResponse.success || !saveResponse.data?.favorite?.id) {
@@ -643,8 +644,8 @@ async function publishToSocialMedia(
   finalPostText: string,
   finalHashtags: string[],
   accountSelections?: {
-    facebook?: string[]
-    instagram?: string[]
+    facebook?: Array<string | { accountId: string; postType?: string; carouselItems?: any[] }>
+    instagram?: Array<string | { accountId: string; postType?: string; carouselItems?: any[] }>
   }
 ) {
   const results: PublishResult[] = []
@@ -656,16 +657,20 @@ async function publishToSocialMedia(
 
   for (const platform of platforms) {
     if (platform === 'facebook') {
-      const selectedPageIds = accountSelections?.facebook || []
+      const selectedPages = accountSelections?.facebook || []
 
       // If no accounts selected, show error
-      if (selectedPageIds.length === 0) {
+      if (selectedPages.length === 0) {
         results.push({ platform: 'facebook', success: false, error: 'No Facebook pages selected' })
         continue
       }
 
       // Loop through all selected Facebook pages
-      for (const pageId of selectedPageIds) {
+      for (const selection of selectedPages) {
+        const pageId = typeof selection === 'string' ? selection : selection.accountId
+        const postType = (typeof selection === 'object' ? selection.postType : undefined) || 'feed'
+        const carouselItems = typeof selection === 'object' ? selection.carouselItems : undefined
+
         const page = facebookStore.connectedPages.find(p => p.pageId === pageId)
         if (!page) {
           results.push({ platform: 'facebook', success: false, error: `Facebook page ${pageId} not found` })
@@ -676,7 +681,11 @@ async function publishToSocialMedia(
           const response = await api.postToFacebook(
             page.pageId,
             message,
-            generatedImageUrl.value
+            generatedImageUrl.value,
+            undefined,
+            'image',
+            postType as 'feed' | 'story' | 'reel' | 'carousel',
+            carouselItems
           )
 
           const postUrl = (response as any).postUrl || response.data?.postUrl
@@ -713,16 +722,20 @@ async function publishToSocialMedia(
         }
       }
     } else if (platform === 'instagram') {
-      const selectedAccountIds = accountSelections?.instagram || []
+      const selectedAccounts = accountSelections?.instagram || []
 
       // If no accounts selected, show error
-      if (selectedAccountIds.length === 0) {
+      if (selectedAccounts.length === 0) {
         results.push({ platform: 'instagram', success: false, error: 'No Instagram accounts selected' })
         continue
       }
 
       // Loop through all selected Instagram accounts
-      for (const accountId of selectedAccountIds) {
+      for (const selection of selectedAccounts) {
+        const accountId = typeof selection === 'string' ? selection : selection.accountId
+        const postType = (typeof selection === 'object' ? selection.postType : undefined) || 'feed'
+        const carouselItems = typeof selection === 'object' ? selection.carouselItems : undefined
+
         const account = instagramStore.connectedAccounts.find(a => a.instagramAccountId === accountId)
         if (!account) {
           results.push({ platform: 'instagram', success: false, error: `Instagram account ${accountId} not found` })
@@ -733,7 +746,11 @@ async function publishToSocialMedia(
           const response = await api.postToInstagram(
             account.instagramAccountId,
             message,
-            generatedImageUrl.value
+            generatedImageUrl.value,
+            undefined,
+            'image',
+            postType as 'feed' | 'story' | 'reel' | 'carousel',
+            carouselItems
           )
 
           const postUrl = (response as any).postUrl || response.data?.postUrl
@@ -884,7 +901,7 @@ async function handleInlineFeedback(feedbackText: string) {
                   {{ $t('scheduler.createPostFor', 'Create Post for') }} {{ formattedDate }}
                 </template>
                 <template v-else-if="wizardStep === 'choose-restaurant'">
-                  {{ $t('scheduler.selectRestaurant', 'Select Restaurant') }}
+                  {{ $t('scheduler.selectBrand', 'Select Restaurant') }}
                 </template>
                 <template v-else-if="wizardStep === 'create'">
                   {{ $t('scheduler.createContent', 'Create Content') }}
@@ -893,8 +910,8 @@ async function handleInlineFeedback(feedbackText: string) {
                   {{ $t('scheduler.success', 'Success!') }}
                 </template>
               </h2>
-              <p v-if="selectedRestaurant && wizardStep === 'create'" class="wizard-subtitle">
-                {{ selectedRestaurant.name }}
+              <p v-if="selectedBrand && wizardStep === 'create'" class="wizard-subtitle">
+                {{ selectedBrand.name }}
               </p>
             </div>
           </div>
@@ -957,7 +974,7 @@ async function handleInlineFeedback(feedbackText: string) {
               v-for="restaurant in restaurants"
               :key="restaurant.id"
               class="restaurant-item"
-              @click="selectRestaurant(restaurant)"
+              @click="selectBrand(restaurant)"
             >
               <div v-if="restaurant.brand_dna?.logo_url" class="item-logo">
                 <img :src="restaurant.brand_dna.logo_url" :alt="restaurant.name" />
@@ -987,9 +1004,9 @@ async function handleInlineFeedback(feedbackText: string) {
 
           <!-- Easy Mode -->
           <EasyModeCreation
-            v-else-if="creationMode === 'easy' && selectedRestaurant"
+            v-else-if="creationMode === 'easy' && selectedBrand"
             ref="easyModeCreationRef"
-            :restaurant="selectedRestaurant"
+            :brand="selectedBrand"
             :menu-items="menuItems"
             :generating="generating"
             :generated-image-url="generatedImageUrl"
@@ -1009,9 +1026,9 @@ async function handleInlineFeedback(feedbackText: string) {
 
           <!-- Advanced Mode -->
           <AdvancedModeCreation
-            v-else-if="creationMode === 'advanced' && selectedRestaurant"
+            v-else-if="creationMode === 'advanced' && selectedBrand"
             ref="advancedModeCreationRef"
-            :restaurant="selectedRestaurant"
+            :brand="selectedBrand"
             :menu-items="menuItems"
             :initial-schedule-date="props.selectedDate || undefined"
             :lock-date="true"
