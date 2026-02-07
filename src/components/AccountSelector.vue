@@ -12,8 +12,7 @@ import BaseCard from './BaseCard.vue'
 import BaseButton from './BaseButton.vue'
 import BaseModal from './BaseModal.vue'
 import MaterialIcon from './MaterialIcon.vue'
-import CarouselImageSelector from './creation/CarouselImageSelector.vue'
-import CarouselContentModal from './CarouselContentModal.vue'
+import CarouselWizardModal from './creation/CarouselWizardModal.vue'
 
 interface Props {
   platform: 'facebook' | 'instagram' | 'twitter' | 'tiktok' | 'linkedin'
@@ -26,6 +25,7 @@ interface Props {
   hasMultipleImages?: boolean
   restaurantName?: string
   brandDNA?: any
+  brandId?: string
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -48,16 +48,10 @@ const instagramStore = useInstagramStore()
 const twitterStore = useTwitterStore()
 const tiktokStore = useTikTokStore()
 
-// Carousel modal state
-const showCarouselModal = ref(false)
+// Carousel wizard modal state
+const showCarouselWizard = ref(false)
 const currentAccountForCarousel = ref<string | null>(null)
 const carouselItems = ref<Record<string, CarouselItem[]>>({})
-const tempCarouselItems = ref<CarouselItem[]>([])
-
-// Carousel content modal state
-const showCarouselContentModal = ref(false)
-const carouselContentAccountId = ref<string | null>(null)
-const carouselContentItems = ref<CarouselItem[]>([])
 
 // Post type options (only for FB/IG)
 const postTypeOptions = computed(() => {
@@ -239,60 +233,10 @@ const handleChipClick = (event: Event, accountId: string, postType: 'feed' | 'st
   updatePostType(accountId, postType)
 }
 
-// Open carousel selector for specific account
+// Open carousel wizard for specific account
 const openCarouselSelector = (accountId: string) => {
   currentAccountForCarousel.value = accountId
-  // Initialize temp items with current selection
-  tempCarouselItems.value = [...(carouselItems.value[accountId] || [])]
-  showCarouselModal.value = true
-}
-
-// Update temp carousel items (called when user selects items in modal)
-const updateTempCarouselItems = (items: CarouselItem[]) => {
-  tempCarouselItems.value = items
-}
-
-// Save carousel items and update post type
-const saveCarouselSelection = () => {
-  if (currentAccountForCarousel.value && tempCarouselItems.value.length >= 2) {
-    // Store carousel items for this account
-    carouselItems.value[currentAccountForCarousel.value] = [...tempCarouselItems.value]
-
-    console.log('[AccountSelector] Saving carousel selection:', {
-      accountId: currentAccountForCarousel.value,
-      itemCount: tempCarouselItems.value.length,
-      items: tempCarouselItems.value
-    })
-
-    // Update post type to carousel and include carousel items
-    if (isAccountSelectionArray(props.modelValue)) {
-      const updated = props.modelValue.map(sel =>
-        sel.accountId === currentAccountForCarousel.value
-          ? { ...sel, postType: 'carousel' as const, carouselItems: [...tempCarouselItems.value] }
-          : sel
-      )
-      console.log('[AccountSelector] Updated modelValue:', updated)
-      emit('update:modelValue', updated)
-    }
-
-    // Close carousel selector and open content generation modal
-    closeCarouselModal()
-
-    // Open carousel content modal for AI-generated caption/hashtags
-    carouselContentAccountId.value = currentAccountForCarousel.value
-    carouselContentItems.value = [...tempCarouselItems.value]
-    showCarouselContentModal.value = true
-  } else {
-    console.warn('[AccountSelector] Cannot save carousel - insufficient items:', tempCarouselItems.value.length)
-    closeCarouselModal()
-  }
-}
-
-// Close carousel modal
-const closeCarouselModal = () => {
-  showCarouselModal.value = false
-  currentAccountForCarousel.value = null
-  tempCarouselItems.value = []
+  showCarouselWizard.value = true
 }
 
 // Get carousel items for a specific account
@@ -305,37 +249,37 @@ const getCarouselItemCount = (accountId: string): number => {
   return getCarouselItems(accountId).length
 }
 
-// Handle carousel content confirmation (caption & hashtags from AI)
-const handleCarouselContentConfirm = (data: { caption: string; hashtags: string[] }) => {
-  if (carouselContentAccountId.value && isAccountSelectionArray(props.modelValue)) {
-    console.log('[AccountSelector] Carousel content confirmed:', data)
+// Handle carousel wizard confirmation (images, caption & hashtags)
+const handleCarouselWizardConfirm = (data: {
+  images: CarouselItem[]
+  caption: string
+  hashtags: string[]
+}) => {
+  if (currentAccountForCarousel.value && isAccountSelectionArray(props.modelValue)) {
+    console.log('[AccountSelector] Carousel wizard confirmed:', data)
 
-    // Update the account selection with carousel-specific caption and hashtags
+    // Store carousel items for this account
+    carouselItems.value[currentAccountForCarousel.value] = data.images
+
+    // Update the account selection with carousel data
     const updated = props.modelValue.map(sel =>
-      sel.accountId === carouselContentAccountId.value
+      sel.accountId === currentAccountForCarousel.value
         ? {
             ...sel,
+            postType: 'carousel' as const,
+            carouselItems: data.images,
             carouselCaption: data.caption,
             carouselHashtags: data.hashtags
           }
         : sel
     )
 
-    console.log('[AccountSelector] Updated with carousel content:', updated)
+    console.log('[AccountSelector] Updated with carousel data:', updated)
     emit('update:modelValue', updated)
   }
 
-  // Close modal
-  showCarouselContentModal.value = false
-  carouselContentAccountId.value = null
-  carouselContentItems.value = []
-}
-
-// Handle carousel content modal cancel
-const handleCarouselContentCancel = () => {
-  showCarouselContentModal.value = false
-  carouselContentAccountId.value = null
-  carouselContentItems.value = []
+  showCarouselWizard.value = false
+  currentAccountForCarousel.value = null
 }
 </script>
 
@@ -452,53 +396,14 @@ const handleCarouselContentCancel = () => {
       {{ t('accountSelector.singleAccountInfo') }}
     </p>
 
-    <!-- Carousel Selector Modal -->
-    <Teleport to="body">
-      <BaseModal
-        v-model="showCarouselModal"
-        size="xl"
-        :title="t('accountSelector.carouselModalTitle')"
-      >
-        <template #default>
-          <div class="carousel-modal-content">
-            <p class="carousel-modal-subtitle">
-              {{ t('accountSelector.carouselModalSubtitle') }}
-            </p>
-            <CarouselImageSelector
-              v-if="currentAccountForCarousel"
-              :model-value="tempCarouselItems"
-              :min-images="2"
-              :max-images="10"
-              @update:model-value="updateTempCarouselItems"
-            />
-          </div>
-        </template>
-        <template #footer>
-          <div class="modal-footer-actions">
-            <BaseButton variant="secondary" @click="closeCarouselModal">
-              {{ t('common.cancel') }}
-            </BaseButton>
-            <BaseButton
-              variant="primary"
-              :disabled="tempCarouselItems.length < 2"
-              @click="saveCarouselSelection"
-            >
-              {{ t('common.save') }}
-            </BaseButton>
-          </div>
-        </template>
-      </BaseModal>
-    </Teleport>
-
-    <!-- Carousel Content Modal (AI-generated caption & hashtags) -->
-    <CarouselContentModal
-      v-model="showCarouselContentModal"
-      :carousel-images="carouselContentItems"
+    <!-- Carousel Wizard Modal -->
+    <CarouselWizardModal
+      v-model="showCarouselWizard"
       :platform="platform as 'facebook' | 'instagram'"
       :restaurant-name="restaurantName"
       :brand-d-n-a="brandDNA"
-      @confirm="handleCarouselContentConfirm"
-      @cancel="handleCarouselContentCancel"
+      :brand-id="brandId"
+      @confirm="handleCarouselWizardConfirm"
     />
   </div>
 </template>
@@ -892,28 +797,6 @@ const handleCarouselContentCancel = () => {
     transform: translateX(-50%);
     max-width: 200px;
   }
-}
-
-/* Carousel Modal */
-.carousel-modal-content {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-lg);
-  padding: var(--space-md);
-}
-
-.carousel-modal-subtitle {
-  font-size: var(--text-sm);
-  color: var(--text-secondary);
-  margin: 0;
-  text-align: center;
-}
-
-.modal-footer-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: var(--space-md);
-  padding: var(--space-md);
 }
 
 /* Reduced Motion */

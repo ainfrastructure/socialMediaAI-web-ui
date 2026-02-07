@@ -2,8 +2,8 @@ import type { ApiResponse } from './apiBase'
 import { API_URL, getAuthHeader, getAuthHeaders } from './apiBase'
 
 class InstagramService {
-  async initAuth(): Promise<ApiResponse<{ authUrl: string; state: string }>> {
-    const response = await fetch(`${API_URL}/api/instagram/auth/init`, {
+  async initAuth(brandId?: string): Promise<ApiResponse<{ authUrl: string; state: string }>> {
+    const response = await fetch(`${API_URL}/api/instagram/auth/init${brandId ? `?brand_id=${brandId}` : ''}`, {
       headers: getAuthHeader(),
     })
 
@@ -47,8 +47,8 @@ class InstagramService {
     return response.json()
   }
 
-  async getAccounts(): Promise<ApiResponse<{ accounts: any[] }>> {
-    const response = await fetch(`${API_URL}/api/instagram/accounts`, {
+  async getAccounts(brandId?: string): Promise<ApiResponse<{ accounts: any[] }>> {
+    const response = await fetch(`${API_URL}/api/instagram/accounts${brandId ? `?brand_id=${brandId}` : ''}`, {
       headers: getAuthHeader(),
     })
 
@@ -67,8 +67,8 @@ class InstagramService {
     return response.json()
   }
 
-  async disconnectAccount(accountId: string): Promise<ApiResponse> {
-    const response = await fetch(`${API_URL}/api/instagram/accounts/${accountId}`, {
+  async disconnectAccount(accountId: string, brandId?: string): Promise<ApiResponse> {
+    const response = await fetch(`${API_URL}/api/instagram/accounts/${accountId}${brandId ? `?brand_id=${brandId}` : ''}`, {
       method: 'DELETE',
       headers: getAuthHeader(),
     })

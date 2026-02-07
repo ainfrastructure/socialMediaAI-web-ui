@@ -3,17 +3,17 @@ import { ref, computed, watch } from 'vue'
 import BaseButton from '../BaseButton.vue'
 import BaseAlert from '../BaseAlert.vue'
 import BaseModal from '../BaseModal.vue'
-import { restaurantService, type SavedRestaurant } from '../../services/restaurantService'
+import { brandService, type Brand } from '../../services/brandService'
 
 const props = defineProps<{
   modelValue: boolean
-  restaurant: SavedRestaurant | null
+  restaurant: Brand | null
 }>()
 
 const emit = defineEmits<{
   (e: 'update:modelValue', value: boolean): void
-  (e: 'updated', restaurant: SavedRestaurant): void
-  (e: 'deleted', restaurantId: string): void
+  (e: 'updated', brand: Brand): void
+  (e: 'deleted', brandId: string): void
 }>()
 
 // Edit state
@@ -33,6 +33,9 @@ const saving = ref(false)
 const saveError = ref<string | null>(null)
 const deleting = ref(false)
 const confirmDelete = ref(false)
+
+// Opening hours helper (opening_hours is typed as `unknown` on Brand)
+const openingHours = computed(() => props.restaurant?.opening_hours as any)
 
 // Menu pagination
 const menuCurrentPage = ref(1)
@@ -68,14 +71,14 @@ const resetEditState = () => {
 }
 
 // Delete restaurant
-const deleteRestaurant = async () => {
+const deleteBrand = async () => {
   if (!props.restaurant) return
 
   try {
     deleting.value = true
     saveError.value = null
 
-    const success = await restaurantService.deleteRestaurant(props.restaurant.place_id)
+    const success = await brandService.deleteBrand(props.restaurant.id)
 
     if (success) {
       emit('deleted', props.restaurant.id)
@@ -109,7 +112,7 @@ const saveWebsite = async () => {
     saving.value = true
     saveError.value = null
 
-    const response = await restaurantService.updateRestaurant(props.restaurant.place_id, {
+    const response = await brandService.updateBrand(props.restaurant.id, {
       website: editedWebsite.value || null
     })
 
@@ -130,8 +133,9 @@ const saveWebsite = async () => {
 // Opening hours editing
 const startEditHours = () => {
   editingHours.value = true
-  editedHours.value = props.restaurant?.opening_hours?.weekday_text
-    ? [...props.restaurant.opening_hours.weekday_text]
+  const hours = props.restaurant?.opening_hours as any
+  editedHours.value = hours?.weekday_text
+    ? [...hours.weekday_text]
     : []
 }
 
@@ -148,7 +152,7 @@ const saveHours = async () => {
     saving.value = true
     saveError.value = null
 
-    const response = await restaurantService.updateRestaurant(props.restaurant.place_id, {
+    const response = await brandService.updateBrand(props.restaurant.id, {
       opening_hours: {
         weekday_text: editedHours.value.filter(h => h.trim() !== '')
       }
@@ -199,7 +203,7 @@ const saveSocial = async () => {
     saving.value = true
     saveError.value = null
 
-    const response = await restaurantService.updateRestaurant(props.restaurant.place_id, {
+    const response = await brandService.updateBrand(props.restaurant.id, {
       social_media: editedSocial.value
     })
 
@@ -334,7 +338,7 @@ const goToMenuPage = (page: number) => {
             <div class="logo-container">
               <img
                 :src="restaurant.brand_dna.logo_url"
-                :alt="restaurant.brand_dna.brand_name || 'Logo'"
+                :alt="(restaurant.brand_dna.brand_name as string) || 'Logo'"
                 class="brand-logo"
               />
             </div>
@@ -345,14 +349,14 @@ const goToMenuPage = (page: number) => {
             <span class="brand-label">Brand Colors</span>
             <div class="colors-display">
               <div v-if="restaurant.brand_dna.primary_color" class="color-box">
-                <div class="color-swatch-small" :style="{ backgroundColor: restaurant.brand_dna.primary_color }"></div>
+                <div class="color-swatch-small" :style="{ backgroundColor: restaurant.brand_dna.primary_color as string }"></div>
                 <div class="color-details">
                   <span class="color-name">Primary</span>
                   <span class="color-code">{{ restaurant.brand_dna.primary_color }}</span>
                 </div>
               </div>
               <div v-if="restaurant.brand_dna.secondary_color" class="color-box">
-                <div class="color-swatch-small" :style="{ backgroundColor: restaurant.brand_dna.secondary_color }"></div>
+                <div class="color-swatch-small" :style="{ backgroundColor: restaurant.brand_dna.secondary_color as string }"></div>
                 <div class="color-details">
                   <span class="color-name">Secondary</span>
                   <span class="color-code">{{ restaurant.brand_dna.secondary_color }}</span>
@@ -380,7 +384,7 @@ const goToMenuPage = (page: number) => {
         </section>
 
         <!-- Opening Hours -->
-        <section v-if="restaurant.opening_hours || editingHours" class="details-section">
+        <section v-if="openingHours || editingHours" class="details-section">
           <div class="section-header">
             <h3 class="section-title">Opening Hours</h3>
             <button v-if="!editingHours" class="edit-section-btn" @click="startEditHours" title="Edit opening hours">
@@ -396,8 +400,8 @@ const goToMenuPage = (page: number) => {
             </div>
           </div>
 
-          <div v-if="restaurant.opening_hours?.open_now !== undefined && !editingHours" class="status-badge" :class="{ 'open': restaurant.opening_hours.open_now }">
-            {{ restaurant.opening_hours.open_now ? '🟢 Open Now' : '🔴 Closed' }}
+          <div v-if="openingHours?.open_now !== undefined && !editingHours" class="status-badge" :class="{ 'open': openingHours.open_now }">
+            {{ openingHours.open_now ? '🟢 Open Now' : '🔴 Closed' }}
           </div>
 
           <!-- Edit Mode -->
@@ -419,8 +423,8 @@ const goToMenuPage = (page: number) => {
           </div>
 
           <!-- View Mode -->
-          <div v-else-if="restaurant.opening_hours?.weekday_text" class="hours-list">
-            <div v-for="(day, index) in restaurant.opening_hours.weekday_text" :key="index" class="hours-item">
+          <div v-else-if="openingHours?.weekday_text" class="hours-list">
+            <div v-for="(day, index) in openingHours.weekday_text" :key="index" class="hours-item">
               {{ day }}
             </div>
           </div>
@@ -535,8 +539,8 @@ const goToMenuPage = (page: number) => {
         <section v-if="restaurant.menu && restaurant.menu.items && restaurant.menu.items.length > 0" class="details-section">
           <h3 class="section-title">
             Menu ({{ restaurant.menu.items.length }} items)
-            <span v-if="restaurant.menu.platform" class="platform-badge">
-              {{ restaurant.menu.platform.toUpperCase() }}
+            <span v-if="restaurant.menu.source" class="platform-badge">
+              {{ restaurant.menu.source.toUpperCase() }}
             </span>
           </h3>
           <div class="menu-grid">
@@ -598,7 +602,7 @@ const goToMenuPage = (page: number) => {
           <div v-else class="delete-confirm">
             <p class="confirm-text">Are you sure? This cannot be undone.</p>
             <div class="confirm-actions">
-              <BaseButton variant="danger" size="medium" @click="deleteRestaurant" :disabled="deleting">
+              <BaseButton variant="danger" size="medium" @click="deleteBrand" :disabled="deleting">
                 {{ deleting ? 'Deleting...' : 'Yes, Delete' }}
               </BaseButton>
               <BaseButton variant="ghost" size="medium" @click="confirmDelete = false" :disabled="deleting">

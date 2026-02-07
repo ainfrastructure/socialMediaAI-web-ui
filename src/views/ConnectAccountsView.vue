@@ -1,19 +1,27 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useFacebookStore } from '../stores/facebook'
 import { useInstagramStore } from '../stores/instagram'
+import { useBrandsStore } from '@/stores/brands'
+import { usePreferencesStore } from '@/stores/preferences'
+import { getBrandTypeLabel } from '@/utils/businessTypes'
 import DashboardLayout from '../components/DashboardLayout.vue'
 import BaseCard from '../components/BaseCard.vue'
 import BaseButton from '../components/BaseButton.vue'
 import Toast from '../components/Toast.vue'
 import ConfirmModal from '../components/ConfirmModal.vue'
+import BrandSelectorModal from '@/components/BrandSelectorModal.vue'
+import MaterialIcon from '@/components/MaterialIcon.vue'
+import PlatformLogo from '@/components/PlatformLogo.vue'
 
 const router = useRouter()
 const route = useRoute()
 const facebookStore = useFacebookStore()
 const instagramStore = useInstagramStore()
+const brandsStore = useBrandsStore()
+const preferencesStore = usePreferencesStore()
 const { t } = useI18n()
 
 const showSuccessToast = ref(false)
@@ -23,6 +31,12 @@ const errorMessage = ref('')
 
 // Collapsible state
 const expandedPlatforms = ref<Set<string>>(new Set())
+
+// Business selector modal
+const showBusinessSelector = ref(false)
+
+// Track which platform is actively connecting (local, not store-based)
+const activelyConnecting = ref<string | null>(null)
 
 // Confirm modal state
 const showConfirmModal = ref(false)
@@ -40,11 +54,86 @@ const isConnected = computed(() => facebookStore.connectedPages.length > 0)
 // Computed property to check if Instagram is connected
 const isInstagramConnected = computed(() => instagramStore.connectedAccounts.length > 0)
 
+const selectedBrandId = computed({
+  get: () => preferencesStore.selectedBrandId,
+  set: (value: string | null) => preferencesStore.setSelectedBrand(value),
+})
+
+const selectedBrand = computed(() =>
+  brandsStore.brands.find(brand => brand.id === selectedBrandId.value) || null
+)
+
+const facebookCount = computed(() => facebookStore.connectedPages.length)
+const instagramCount = computed(() => instagramStore.connectedAccounts.length)
+const totalConnections = computed(() => facebookCount.value + instagramCount.value)
+const facebookPreview = computed(() => facebookStore.connectedPages.slice(0, 3))
+const instagramPreview = computed(() => instagramStore.connectedAccounts.slice(0, 3))
+const facebookExtra = computed(() => Math.max(0, facebookCount.value - facebookPreview.value.length))
+const instagramExtra = computed(() => Math.max(0, instagramCount.value - instagramPreview.value.length))
+
+// Platform cards data-driven rendering
+const platformCards = computed(() => [
+  {
+    key: 'facebook' as const,
+    name: t('connectAccounts.facebookPages'),
+    platform: 'facebook' as const,
+    connected: isConnected.value,
+    count: facebookCount.value,
+    accounts: facebookStore.connectedPages,
+    connecting: activelyConnecting.value === 'facebook',
+    preview: facebookPreview.value,
+    extra: facebookExtra.value,
+    onConnect: handleConnectFacebook,
+    onDisconnectAll: () => requestDisconnectAll('facebook'),
+    onDisconnect: (id: string, name: string) => requestDisconnectPage(id, name),
+    getId: (a: any) => a.pageId,
+    getName: (a: any) => a.pageName,
+    getAvatar: (a: any) => a.profilePictureUrl,
+  },
+  {
+    key: 'instagram' as const,
+    name: t('connectAccounts.instagramBusiness'),
+    platform: 'instagram' as const,
+    connected: isInstagramConnected.value,
+    count: instagramCount.value,
+    accounts: instagramStore.connectedAccounts,
+    connecting: activelyConnecting.value === 'instagram',
+    preview: instagramPreview.value,
+    extra: instagramExtra.value,
+    onConnect: handleConnectInstagram,
+    onDisconnectAll: () => requestDisconnectAll('instagram'),
+    onDisconnect: (id: string, name: string) => requestDisconnectInstagramAccount(id, name),
+    getId: (a: any) => a.instagramAccountId,
+    getName: (a: any) => `@${a.username}`,
+    getAvatar: (a: any) => a.profilePictureUrl,
+  },
+])
+
+const comingSoonPlatforms = [
+  { key: 'tiktok', name: 'TikTok', platform: 'tiktok' as const },
+  { key: 'twitter', name: 'X (Twitter)', platform: 'twitter' as const },
+  { key: 'linkedin', name: 'LinkedIn', platform: 'linkedin' as const },
+  { key: 'pinterest', name: 'Pinterest', platform: 'pinterest' as const },
+  { key: 'youtube', name: 'YouTube', platform: 'youtube' as const },
+]
+
+function handleBusinessSelected(brand: { id: string }) {
+  selectedBrandId.value = brand.id
+}
+
 onMounted(async () => {
+  if (!brandsStore.brands.length) {
+    await brandsStore.fetchBrands()
+  }
+
+  if (!selectedBrandId.value && brandsStore.brands.length > 0) {
+    preferencesStore.setSelectedBrand(brandsStore.brands[0].id)
+  }
+
   // Load connected Facebook pages and Instagram accounts on mount
   await Promise.all([
-    facebookStore.loadConnectedPages(),
-    instagramStore.loadConnectedAccounts(),
+    facebookStore.loadConnectedPages(selectedBrandId.value || undefined),
+    instagramStore.loadConnectedAccounts(selectedBrandId.value || undefined),
   ])
 
   // Check if we just came back from a successful connection
@@ -86,11 +175,45 @@ onMounted(async () => {
   }
 })
 
+watch(selectedBrandId, async (newBusinessId, oldBusinessId) => {
+  if (newBusinessId === oldBusinessId) return
+  if (newBusinessId) {
+    facebookStore.ensureBusinessCache(newBusinessId)
+    instagramStore.ensureBusinessCache(newBusinessId)
+  }
+  activelyConnecting.value = null
+  facebookStore.resetConnectionState()
+  instagramStore.resetConnectionState()
+  localStorage.removeItem('oauth_platform')
+  localStorage.removeItem('oauth_return_to')
+  localStorage.removeItem('oauth_return_url')
+  expandedPlatforms.value = new Set()
+  await Promise.all([
+    facebookStore.loadConnectedPages(newBusinessId || undefined),
+    instagramStore.loadConnectedAccounts(newBusinessId || undefined),
+  ])
+})
+
+function ensureBusinessSelected(): string | null {
+  if (!selectedBrandId.value) {
+    errorMessage.value = t('connectAccounts.selectBusinessFirst')
+    showErrorToast.value = true
+    return null
+  }
+
+  return selectedBrandId.value
+}
+
 async function handleConnectFacebook() {
   showSuccessToast.value = false
   showErrorToast.value = false
 
   try {
+    const brandId = ensureBusinessSelected()
+    if (!brandId) return
+
+    activelyConnecting.value = 'facebook'
+
     // Store returnTo URL before OAuth redirect if present
     const returnTo = route.query.returnTo as string
     if (returnTo) {
@@ -104,6 +227,7 @@ async function handleConnectFacebook() {
     // Success message will be shown after OAuth callback when returning to this page
     await facebookStore.connectFacebook()
   } catch (error: any) {
+    activelyConnecting.value = null
     errorMessage.value = facebookStore.error || t('connectAccounts.errorOccurred')
     showErrorToast.value = true
   }
@@ -121,7 +245,10 @@ async function executeDisconnectPage(pageId: string, pageName: string) {
   showErrorToast.value = false
 
   try {
-    await facebookStore.disconnectPage(pageId)
+    const brandId = ensureBusinessSelected()
+    if (!brandId) return
+
+    await facebookStore.disconnectPage(pageId, brandId)
     toastMessage.value = t('connectAccounts.successfullyDisconnected', { name: pageName })
     showSuccessToast.value = true
   } catch (error: any) {
@@ -135,6 +262,11 @@ async function handleConnectInstagram() {
   showErrorToast.value = false
 
   try {
+    const brandId = ensureBusinessSelected()
+    if (!brandId) return
+
+    activelyConnecting.value = 'instagram'
+
     // Store returnTo URL before OAuth redirect if present
     const returnTo = route.query.returnTo as string
     if (returnTo) {
@@ -146,6 +278,7 @@ async function handleConnectInstagram() {
 
     await instagramStore.connectInstagram()
   } catch (error: any) {
+    activelyConnecting.value = null
     errorMessage.value = instagramStore.error || t('connectAccounts.errorOccurred')
     showErrorToast.value = true
   }
@@ -163,7 +296,10 @@ async function executeDisconnectInstagramAccount(accountId: string, username: st
   showErrorToast.value = false
 
   try {
-    await instagramStore.disconnectAccount(accountId)
+    const brandId = ensureBusinessSelected()
+    if (!brandId) return
+
+    await instagramStore.disconnectAccount(accountId, brandId)
     toastMessage.value = t('connectAccounts.successfullyDisconnected', { name: `@${username}` })
     showSuccessToast.value = true
   } catch (error: any) {
@@ -217,7 +353,7 @@ function requestDisconnectAll(type: 'facebook' | 'instagram') {
     platformName = t('connectAccounts.facebookPages')
   } else if (type === 'instagram') {
     count = instagramStore.connectedAccounts.length
-    platformName = 'Instagram Business'
+    platformName = t('connectAccounts.instagramBusiness')
   }
 
   pendingDisconnect.value = { type: `all-${type}` as any, name: platformName }
@@ -232,16 +368,19 @@ async function executeDisconnectAll(type: 'facebook' | 'instagram') {
   showErrorToast.value = false
 
   try {
+    const brandId = ensureBusinessSelected()
+    if (!brandId) return
+
     if (type === 'facebook') {
       const pages = [...facebookStore.connectedPages]
       for (const page of pages) {
-        await facebookStore.disconnectPage(page.pageId)
+        await facebookStore.disconnectPage(page.pageId, brandId)
       }
       toastMessage.value = t('connectAccounts.successfullyDisconnectedAll', { count: pages.length })
     } else if (type === 'instagram') {
       const accounts = [...instagramStore.connectedAccounts]
       for (const account of accounts) {
-        await instagramStore.disconnectAccount(account.instagramAccountId)
+        await instagramStore.disconnectAccount(account.instagramAccountId, brandId)
       }
       toastMessage.value = t('connectAccounts.successfullyDisconnectedAll', { count: accounts.length })
     }
@@ -256,433 +395,299 @@ async function executeDisconnectAll(type: 'facebook' | 'instagram') {
 <template>
   <DashboardLayout>
     <div class="connect-accounts-view">
-    <div class="container">
+      <div class="container">
+        <!-- Section 1: Hero Header -->
+        <header class="page-header section-animate" style="--stagger: 0">
+          <h1>{{ $t('connectAccounts.pageTitle') }}</h1>
+          <p class="subtitle">{{ $t('connectAccounts.pageSubtitle') }}</p>
+          <div class="header-divider" />
+        </header>
 
-      <header class="page-header">
-        <h1>{{ $t('connectAccounts.pageTitle') }}</h1>
-        <p class="subtitle">
-          {{ $t('connectAccounts.pageSubtitle') }}
-        </p>
-      </header>
-
-      <!-- Toast Notifications -->
-      <Toast
-        v-model="showSuccessToast"
-        :message="toastMessage"
-        type="success"
-        :duration="4000"
-      />
-      <Toast
-        v-model="showErrorToast"
-        :message="errorMessage"
-        type="error"
-        :duration="5000"
-      />
-
-      <!-- Connected Platforms List -->
-      <section class="platforms-section">
-        <BaseCard variant="glass" class="platforms-list">
-          <!-- Facebook Section -->
-          <div class="platform-section" :class="{ expanded: expandedPlatforms.has('facebook') }">
-            <div class="platform-header" :class="{ clickable: isConnected }" @click="isConnected ? togglePlatform('facebook') : null">
-              <div class="platform-icon facebook-icon">
-                <svg
-                  width="20"
-                  height="20"
-                  viewBox="0 0 24 24"
-                  fill="white"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    d="M9.101 23.691v-7.98H6.627v-3.667h2.474v-1.58c0-4.085 1.848-5.978 5.858-5.978.401 0 .955.042 1.468.103a8.68 8.68 0 0 1 1.141.195v3.325a8.623 8.623 0 0 0-.653-.036 26.805 26.805 0 0 0-.733-.009c-.707 0-1.259.096-1.675.309a1.686 1.686 0 0 0-.679.622c-.258.42-.374.995-.374 1.752v1.297h3.919l-.386 2.103-.287 1.564h-3.246v8.245C19.396 23.238 24 18.179 24 12.044c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.628 3.874 10.35 9.101 11.647Z"
+        <!-- Section 2: Brand Showcase -->
+        <BaseCard variant="glass" class="brand-showcase section-animate" style="--stagger: 1">
+          <div class="showcase-layout">
+            <div class="showcase-identity">
+              <div class="active-indicator">
+                <span class="active-dot" />
+                <span class="eyebrow">{{ $t('connectAccounts.activeBusiness') }}</span>
+              </div>
+              <div class="identity-row">
+                <div class="brand-avatar-large">
+                  <img
+                    v-if="selectedBrand?.logo_url || selectedBrand?.brand_dna?.logo_url"
+                    :src="selectedBrand?.logo_url || selectedBrand?.brand_dna?.logo_url"
+                    :alt="selectedBrand?.name"
                   />
-                </svg>
-              </div>
-              <div class="platform-info">
-                <h3>{{ $t('connectAccounts.facebookPages') }}</h3>
-                <span v-if="isConnected" class="connection-count">
-                  {{ $t('connectAccounts.accountsConnected', { count: facebookStore.connectedPages.length }) }}
-                </span>
-              </div>
-              <div v-if="isConnected" class="expand-icon">
-                <svg
-                  width="20"
-                  height="20"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path d="M6 9l6 6 6-6" />
-                </svg>
-              </div>
-              <div class="platform-actions" @click.stop>
-                <BaseButton
-                  v-if="isConnected"
-                  @click="requestDisconnectAll('facebook')"
-                  variant="danger"
-                  size="small"
-                  :disabled="facebookStore.loading"
-                >
-                  {{ $t('connectAccounts.disconnect') }}
-                </BaseButton>
-                <BaseButton
-                  v-if="!isConnected"
-                  @click="handleConnectFacebook"
-                  variant="primary"
-                  size="small"
-                  :disabled="facebookStore.loading"
-                >
-                  {{
-                    facebookStore.loading
-                      ? $t('connectAccounts.connecting')
-                      : $t('connectAccounts.connect')
-                  }}
-                </BaseButton>
+                  <span v-else class="avatar-fallback">
+                    {{ selectedBrand?.name?.charAt(0)?.toUpperCase() || 'B' }}
+                  </span>
+                </div>
+                <div class="identity-text">
+                  <h2>{{ selectedBrand?.name || $t('connectAccounts.selectABusiness') }}</h2>
+                  <div class="brand-meta">
+                    <span v-if="selectedBrand" class="type-pill">
+                      {{ getBrandTypeLabel(selectedBrand.business_type) }}
+                    </span>
+                    <span v-else class="type-pill muted">{{ $t('connectAccounts.noBusinessSelected') }}</span>
+                    <template v-if="selectedBrand?.address">
+                      <span class="meta-divider">
+                        <MaterialIcon icon="location_on" size="xs" />
+                      </span>
+                      <span class="meta-text">{{ selectedBrand.address }}</span>
+                    </template>
+                  </div>
+                </div>
               </div>
             </div>
 
-            <!-- Connected Facebook Pages -->
-            <div v-if="isConnected && expandedPlatforms.has('facebook')" class="connected-accounts-list">
-              <div
-                v-for="page in facebookStore.connectedPages"
-                :key="page.pageId"
-                class="connected-account-item"
+            <div class="showcase-actions">
+              <span v-if="brandsStore.brands.length > 1" class="brand-counter">
+                {{ $t('connectAccounts.businessCount', {
+                  current: (brandsStore.brands.findIndex(b => b.id === selectedBrandId) + 1) || 1,
+                  total: brandsStore.brands.length
+                }) }}
+              </span>
+              <BaseButton
+                variant="secondary"
+                size="small"
+                :disabled="!brandsStore.brands.length"
+                @click="showBusinessSelector = true"
               >
-                <img
-                  v-if="page.profilePictureUrl"
-                  :src="page.profilePictureUrl"
-                  :alt="page.pageName"
-                  class="profile-picture"
-                />
-                <div v-else class="profile-picture-placeholder">
-                  <svg
-                    width="20"
-                    height="20"
-                    viewBox="0 0 24 24"
-                    fill="currentColor"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path
-                      d="M9.101 23.691v-7.98H6.627v-3.667h2.474v-1.58c0-4.085 1.848-5.978 5.858-5.978.401 0 .955.042 1.468.103a8.68 8.68 0 0 1 1.141.195v3.325a8.623 8.623 0 0 0-.653-.036 26.805 26.805 0 0 0-.733-.009c-.707 0-1.259.096-1.675.309a1.686 1.686 0 0 0-.679.622c-.258.42-.374.995-.374 1.752v1.297h3.919l-.386 2.103-.287 1.564h-3.246v8.245C19.396 23.238 24 18.179 24 12.044c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.628 3.874 10.35 9.101 11.647Z"
-                    />
-                  </svg>
-                </div>
-                <div class="account-details">
-                  <span class="account-name">{{ page.pageName }}</span>
-                  <span class="account-id">ID: {{ page.pageId }}</span>
-                </div>
-                <BaseButton
-                  @click="requestDisconnectPage(page.pageId, page.pageName)"
-                  variant="danger"
-                  size="small"
-                  :disabled="facebookStore.loading"
-                  class="disconnect-btn"
-                >
-                  {{ $t('connectAccounts.disconnect') }}
-                </BaseButton>
-              </div>
-
-              <!-- Connect More Button -->
-              <div class="connect-more-item">
-                <BaseButton
-                  @click="handleConnectFacebook"
-                  variant="ghost"
-                  size="small"
-                  :disabled="facebookStore.loading"
-                  class="connect-more-btn"
-                >
-                  <svg
-                    width="16"
-                    height="16"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path d="M12 5v14M5 12h14" />
-                  </svg>
-                  {{
-                    facebookStore.loading
-                      ? $t('connectAccounts.connecting')
-                      : $t('connectAccounts.connectMore')
-                  }}
-                </BaseButton>
-              </div>
-            </div>
-          </div>
-
-          <!-- Instagram Section -->
-          <div class="platform-section" :class="{ expanded: expandedPlatforms.has('instagram') }">
-            <div class="platform-header" :class="{ clickable: isInstagramConnected }" @click="isInstagramConnected ? togglePlatform('instagram') : null">
-              <div class="platform-icon platform-icon-instagram">
-                <svg
-                  width="20"
-                  height="20"
-                  viewBox="0 0 24 24"
-                  fill="white"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    d="M7.0301.084c-1.2768.0602-2.1487.264-2.911.5634-.7888.3075-1.4575.72-2.1228 1.3877-.6652.6677-1.075 1.3368-1.3802 2.127-.2954.7638-.4956 1.6365-.552 2.914-.0564 1.2775-.0689 1.6882-.0626 4.947.0062 3.2586.0206 3.6671.0825 4.9473.061 1.2765.264 2.1482.5635 2.9107.308.7889.72 1.4573 1.388 2.1228.6679.6655 1.3365 1.0743 2.1285 1.38.7632.295 1.6361.4961 2.9134.552 1.2773.056 1.6884.069 4.9462.0627 3.2578-.0062 3.668-.0207 4.9478-.0814 1.28-.0607 2.147-.2652 2.9098-.5633.7889-.3086 1.4578-.72 2.1228-1.3881.665-.6682 1.0745-1.3378 1.3795-2.1284.2957-.7632.4966-1.636.552-2.9124.056-1.2809.0692-1.6898.063-4.948-.0063-3.2583-.021-3.6668-.0817-4.9465-.0607-1.2797-.264-2.1487-.5633-2.9117-.3084-.7889-.72-1.4568-1.3876-2.1228C21.2982 1.33 20.628.9208 19.8378.6165 19.074.321 18.2017.1197 16.9244.0645 15.6471.0093 15.236-.005 11.977.0014 8.718.0076 8.31.0215 7.0301.0839m.1402 21.6932c-1.17-.0509-1.8053-.2453-2.2287-.408-.5606-.216-.96-.4771-1.3819-.895-.422-.4178-.6811-.8186-.9-1.378-.1644-.4234-.3624-1.058-.4171-2.228-.0595-1.2645-.072-1.6442-.079-4.848-.007-3.2037.0053-3.583.0607-4.848.05-1.169.2456-1.805.408-2.2282.216-.5613.4762-.96.895-1.3816.4188-.4217.8184-.6814 1.3783-.9003.423-.1651 1.0575-.3614 2.227-.4171 1.2655-.06 1.6447-.072 4.848-.079 3.2033-.007 3.5835.005 4.8495.0608 1.169.0508 1.8053.2445 2.228.408.5608.216.96.4754 1.3816.895.4217.4194.6816.8176.9005 1.3787.1653.4217.3617 1.056.4169 2.2263.0602 1.2655.0739 1.645.0796 4.848.0058 3.203-.0055 3.5834-.061 4.848-.051 1.17-.245 1.8055-.408 2.2294-.216.5604-.4763.96-.8954 1.3814-.419.4215-.8181.6811-1.3783.9-.4224.1649-1.0577.3617-2.2262.4174-1.2656.0595-1.6448.072-4.8493.079-3.2045.007-3.5825-.006-4.848-.0608M16.953 5.5864A1.44 1.44 0 1 0 18.39 4.144a1.44 1.44 0 0 0-1.437 1.4424M5.8385 12.012c.0067 3.4032 2.7706 6.1557 6.173 6.1493 3.4026-.0065 6.157-2.7701 6.1506-6.1733-.0065-3.4032-2.771-6.1565-6.174-6.1498-3.403.0067-6.156 2.771-6.1496 6.1738M8 12.0077a4 4 0 1 1 4.008 3.9921A3.9996 3.9996 0 0 1 8 12.0077"
-                  />
-                </svg>
-              </div>
-              <div class="platform-info">
-                <h3>Instagram Business</h3>
-                <span v-if="isInstagramConnected" class="connection-count">
-                  {{ $t('connectAccounts.accountsConnected', { count: instagramStore.connectedAccounts.length }) }}
-                </span>
-              </div>
-              <div v-if="isInstagramConnected" class="expand-icon">
-                <svg
-                  width="20"
-                  height="20"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path d="M6 9l6 6 6-6" />
-                </svg>
-              </div>
-              <div class="platform-actions" @click.stop>
-                <BaseButton
-                  v-if="isInstagramConnected"
-                  @click="requestDisconnectAll('instagram')"
-                  variant="danger"
-                  size="small"
-                  :disabled="instagramStore.loading"
-                >
-                  {{ $t('connectAccounts.disconnect') }}
-                </BaseButton>
-                <BaseButton
-                  v-if="!isInstagramConnected"
-                  @click="handleConnectInstagram"
-                  variant="primary"
-                  size="small"
-                  :disabled="instagramStore.loading"
-                >
-                  {{ instagramStore.loading ? $t('connectAccounts.connecting') : $t('connectAccounts.connect') }}
-                </BaseButton>
-              </div>
-            </div>
-
-            <!-- Connected Instagram Accounts -->
-            <div v-if="isInstagramConnected && expandedPlatforms.has('instagram')" class="connected-accounts-list">
-              <div
-                v-for="account in instagramStore.connectedAccounts"
-                :key="account.instagramAccountId"
-                class="connected-account-item"
+                <MaterialIcon icon="swap_horiz" size="sm" />
+                {{ $t('connectAccounts.switchBusiness') }}
+              </BaseButton>
+              <BaseButton
+                variant="ghost"
+                size="small"
+                @click="router.push('/brands')"
               >
-                <img
-                  v-if="account.profilePictureUrl"
-                  :src="account.profilePictureUrl"
-                  :alt="account.username"
-                  class="profile-picture"
-                />
-                <div v-else class="profile-picture-placeholder">
-                  <svg
-                    width="20"
-                    height="20"
-                    viewBox="0 0 24 24"
-                    fill="currentColor"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path
-                      d="M7.0301.084c-1.2768.0602-2.1487.264-2.911.5634-.7888.3075-1.4575.72-2.1228 1.3877-.6652.6677-1.075 1.3368-1.3802 2.127-.2954.7638-.4956 1.6365-.552 2.914-.0564 1.2775-.0689 1.6882-.0626 4.947.0062 3.2586.0206 3.6671.0825 4.9473.061 1.2765.264 2.1482.5635 2.9107.308.7889.72 1.4573 1.388 2.1228.6679.6655 1.3365 1.0743 2.1285 1.38.7632.295 1.6361.4961 2.9134.552 1.2773.056 1.6884.069 4.9462.0627 3.2578-.0062 3.668-.0207 4.9478-.0814 1.28-.0607 2.147-.2652 2.9098-.5633.7889-.3086 1.4578-.72 2.1228-1.3881.665-.6682 1.0745-1.3378 1.3795-2.1284.2957-.7632.4966-1.636.552-2.9124.056-1.2809.0692-1.6898.063-4.948-.0063-3.2583-.021-3.6668-.0817-4.9465-.0607-1.2797-.264-2.1487-.5633-2.9117-.3084-.7889-.72-1.4568-1.3876-2.1228C21.2982 1.33 20.628.9208 19.8378.6165 19.074.321 18.2017.1197 16.9244.0645 15.6471.0093 15.236-.005 11.977.0014 8.718.0076 8.31.0215 7.0301.0839m.1402 21.6932c-1.17-.0509-1.8053-.2453-2.2287-.408-.5606-.216-.96-.4771-1.3819-.895-.422-.4178-.6811-.8186-.9-1.378-.1644-.4234-.3624-1.058-.4171-2.228-.0595-1.2645-.072-1.6442-.079-4.848-.007-3.2037.0053-3.583.0607-4.848.05-1.169.2456-1.805.408-2.2282.216-.5613.4762-.96.895-1.3816.4188-.4217.8184-.6814 1.3783-.9003.423-.1651 1.0575-.3614 2.227-.4171 1.2655-.06 1.6447-.072 4.848-.079 3.2033-.007 3.5835.005 4.8495.0608 1.169.0508 1.8053.2445 2.228.408.5608.216.96.4754 1.3816.895.4217.4194.6816.8176.9005 1.3787.1653.4217.3617 1.056.4169 2.2263.0602 1.2655.0739 1.645.0796 4.848.0058 3.203-.0055 3.5834-.061 4.848-.051 1.17-.245 1.8055-.408 2.2294-.216.5604-.4763.96-.8954 1.3814-.419.4215-.8181.6811-1.3783.9-.4224.1649-1.0577.3617-2.2262.4174-1.2656.0595-1.6448.072-4.8493.079-3.2045.007-3.5825-.006-4.848-.0608M16.953 5.5864A1.44 1.44 0 1 0 18.39 4.144a1.44 1.44 0 0 0-1.437 1.4424M5.8385 12.012c.0067 3.4032 2.7706 6.1557 6.173 6.1493 3.4026-.0065 6.157-2.7701 6.1506-6.1733-.0065-3.4032-2.771-6.1565-6.174-6.1498-3.403.0067-6.156 2.771-6.1496 6.1738M8 12.0077a4 4 0 1 1 4.008 3.9921A3.9996 3.9996 0 0 1 8 12.0077"
-                    />
-                  </svg>
-                </div>
-                <div class="account-details">
-                  <span class="account-name">@{{ account.username }}</span>
-                  <span class="account-id">ID: {{ account.instagramAccountId }}</span>
-                </div>
-                <BaseButton
-                  @click="requestDisconnectInstagramAccount(account.instagramAccountId, account.username)"
-                  variant="danger"
-                  size="small"
-                  :disabled="instagramStore.loading"
-                  class="disconnect-btn"
-                >
-                  {{ $t('connectAccounts.disconnect') }}
-                </BaseButton>
-              </div>
-
-              <!-- Connect More Button -->
-              <div class="connect-more-item">
-                <BaseButton
-                  @click="handleConnectInstagram"
-                  variant="ghost"
-                  size="small"
-                  :disabled="instagramStore.loading"
-                  class="connect-more-btn"
-                >
-                  <svg
-                    width="16"
-                    height="16"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path d="M12 5v14M5 12h14" />
-                  </svg>
-                  {{ instagramStore.loading ? $t('connectAccounts.connecting') : $t('connectAccounts.connectMore') }}
-                </BaseButton>
-              </div>
-            </div>
-          </div>
-
-          <!-- TikTok - Coming Soon -->
-          <div class="platform-section disabled">
-            <div class="platform-header">
-              <div class="platform-icon platform-icon-tiktok">
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="white"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"
-                  />
-                </svg>
-              </div>
-              <div class="platform-info">
-                <h3>TikTok</h3>
-              </div>
-              <div class="platform-actions">
-                <span class="coming-soon-badge">{{ $t('connectAccounts.comingSoon') }}</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- X (Twitter) - Coming Soon -->
-          <div class="platform-section disabled">
-            <div class="platform-header">
-              <div class="platform-icon platform-icon-x">
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="white"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    d="M18.901 1.153h3.68l-8.04 9.19L24 22.846h-7.406l-5.8-7.584-6.638 7.584H.474l8.6-9.83L0 1.154h7.594l5.243 6.932ZM17.61 20.644h2.039L6.486 3.24H4.298Z"
-                  />
-                </svg>
-              </div>
-              <div class="platform-info">
-                <h3>X (Twitter)</h3>
-              </div>
-              <div class="platform-actions">
-                <span class="coming-soon-badge">{{ $t('connectAccounts.comingSoon') }}</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- LinkedIn - Coming Soon -->
-          <div class="platform-section disabled">
-            <div class="platform-header">
-              <div class="platform-icon platform-icon-linkedin">
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="white"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"
-                  />
-                </svg>
-              </div>
-              <div class="platform-info">
-                <h3>LinkedIn</h3>
-              </div>
-              <div class="platform-actions">
-                <span class="coming-soon-badge">{{ $t('connectAccounts.comingSoon') }}</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Pinterest - Coming Soon -->
-          <div class="platform-section disabled">
-            <div class="platform-header">
-              <div class="platform-icon platform-icon-pinterest">
-                <svg
-                  width="18"
-                  height="18"
-                  viewBox="0 0 24 24"
-                  fill="white"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    d="M12.017 0C5.396 0 .029 5.367.029 11.987c0 5.079 3.158 9.417 7.618 11.162-.105-.949-.199-2.403.041-3.439.219-.937 1.406-5.957 1.406-5.957s-.359-.72-.359-1.781c0-1.663.967-2.911 2.168-2.911 1.024 0 1.518.769 1.518 1.688 0 1.029-.653 2.567-.992 3.992-.285 1.193.6 2.165 1.775 2.165 2.128 0 3.768-2.245 3.768-5.487 0-2.861-2.063-4.869-5.008-4.869-3.41 0-5.409 2.562-5.409 5.199 0 1.033.394 2.143.889 2.741.099.12.112.225.085.345-.09.375-.293 1.199-.334 1.363-.053.225-.172.271-.401.165-1.495-.69-2.433-2.878-2.433-4.646 0-3.776 2.748-7.252 7.92-7.252 4.158 0 7.392 2.967 7.392 6.923 0 4.135-2.607 7.462-6.233 7.462-1.214 0-2.354-.629-2.758-1.379l-.749 2.848c-.269 1.045-1.004 2.352-1.498 3.146 1.123.345 2.306.535 3.55.535 6.607 0 11.985-5.365 11.985-11.987C23.97 5.39 18.592.026 11.985.026L12.017 0z"
-                  />
-                </svg>
-              </div>
-              <div class="platform-info">
-                <h3>Pinterest</h3>
-              </div>
-              <div class="platform-actions">
-                <span class="coming-soon-badge">{{ $t('connectAccounts.comingSoon') }}</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- YouTube - Coming Soon -->
-          <div class="platform-section disabled">
-            <div class="platform-header">
-              <div class="platform-icon platform-icon-youtube">
-                <svg
-                  width="18"
-                  height="18"
-                  viewBox="0 0 24 24"
-                  fill="white"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"
-                  />
-                </svg>
-              </div>
-              <div class="platform-info">
-                <h3>YouTube</h3>
-              </div>
-              <div class="platform-actions">
-                <span class="coming-soon-badge">{{ $t('connectAccounts.comingSoon') }}</span>
-              </div>
+                <MaterialIcon icon="settings" size="sm" />
+                {{ $t('connectAccounts.manageAll') }}
+              </BaseButton>
             </div>
           </div>
         </BaseCard>
-      </section>
-    </div>
 
-    <!-- Confirm Disconnect Modal -->
-    <ConfirmModal
-      v-model="showConfirmModal"
-      :title="confirmModalTitle"
-      :message="confirmModalMessage"
-      type="danger"
-      :confirm-text="$t('connectAccounts.disconnect')"
-      :cancel-text="$t('common.cancel')"
-      :auto-close-seconds="0"
-      @confirm="handleConfirmDisconnect"
-      @cancel="handleCancelDisconnect"
-    />
+        <!-- Section 3: Quick Stats Bar -->
+        <div class="stats-grid section-animate" style="--stagger: 2">
+          <BaseCard variant="glass" class="stat-card" style="--card-stagger: 0">
+            <div class="stat-icon">
+              <MaterialIcon icon="link" size="lg" />
+            </div>
+            <div class="stat-content">
+              <span class="stat-value">{{ totalConnections }}</span>
+              <span class="stat-label">{{ $t('connectAccounts.totalConnections') }}</span>
+            </div>
+          </BaseCard>
+          <BaseCard variant="glass" class="stat-card" style="--card-stagger: 1">
+            <div class="stat-icon">
+              <PlatformLogo platform="facebook" :size="32" />
+            </div>
+            <div class="stat-content">
+              <span class="stat-value">{{ facebookCount }}</span>
+              <span class="stat-label">{{ $t('connectAccounts.facebookPagesCount') }}</span>
+            </div>
+          </BaseCard>
+          <BaseCard variant="glass" class="stat-card" style="--card-stagger: 2">
+            <div class="stat-icon">
+              <PlatformLogo platform="instagram" :size="32" />
+            </div>
+            <div class="stat-content">
+              <span class="stat-value">{{ instagramCount }}</span>
+              <span class="stat-label">{{ $t('connectAccounts.instagramAccountsCount') }}</span>
+            </div>
+          </BaseCard>
+        </div>
+
+        <!-- Section 4: Connected Platforms List -->
+        <section class="platforms-section section-animate" style="--stagger: 3">
+          <div class="platforms-header">
+            <h2>{{ $t('connectAccounts.connectedPlatforms') }}</h2>
+            <p v-if="selectedBrand">{{ $t('connectAccounts.platformsFor', { name: selectedBrand.name }) }}</p>
+            <p v-else>{{ $t('connectAccounts.chooseBusiness') }}</p>
+          </div>
+
+          <div class="platforms-list">
+            <!-- Active Platforms (Facebook, Instagram) -->
+            <div
+              v-for="pc in platformCards"
+              :key="pc.key"
+              class="platform-section"
+              :class="{ expanded: expandedPlatforms.has(pc.key), connected: pc.connected }"
+            >
+              <div
+                class="platform-header"
+                :class="{ clickable: pc.connected }"
+                @click="pc.connected ? togglePlatform(pc.key) : null"
+              >
+                <div class="platform-icon-wrap">
+                  <PlatformLogo :platform="pc.platform" :size="48" />
+                  <span v-if="pc.connected" class="connected-indicator" />
+                </div>
+                <div class="platform-info">
+                  <h3>{{ pc.name }}</h3>
+                  <span v-if="pc.connected" class="connection-count connected">
+                    <MaterialIcon icon="check_circle" size="xs" />
+                    {{ $t('connectAccounts.accountsConnected', { count: pc.count }) }}
+                  </span>
+                  <span v-else class="connection-count">{{ $t('connectAccounts.notConnected') }}</span>
+                </div>
+                <div v-if="pc.connected" class="expand-chevron" :class="{ rotated: expandedPlatforms.has(pc.key) }">
+                  <MaterialIcon icon="expand_more" size="md" />
+                </div>
+                <div class="platform-actions" @click.stop>
+                  <BaseButton
+                    variant="primary"
+                    size="small"
+                    :disabled="pc.connecting"
+                    @click="pc.onConnect"
+                  >
+                    {{ pc.connecting ? $t('connectAccounts.connecting') : $t('connectAccounts.connect') }}
+                  </BaseButton>
+                </div>
+              </div>
+
+              <!-- Connected accounts list (expanded) -->
+              <div v-if="pc.connected && expandedPlatforms.has(pc.key)" class="connected-accounts-list">
+                <div
+                  v-for="account in pc.accounts"
+                  :key="pc.getId(account)"
+                  class="connected-account-item"
+                >
+                  <img
+                    v-if="pc.getAvatar(account)"
+                    :src="pc.getAvatar(account)"
+                    :alt="pc.getName(account)"
+                    class="profile-picture"
+                  />
+                  <div v-else class="profile-picture-placeholder">
+                    {{ pc.getName(account)?.charAt(0)?.toUpperCase() || '?' }}
+                  </div>
+                  <div class="account-details">
+                    <span class="account-name">{{ pc.getName(account) }}</span>
+                    <span class="account-id">ID: {{ pc.getId(account) }}</span>
+                  </div>
+                  <BaseButton
+                    variant="danger"
+                    size="small"
+                    :disabled="pc.connecting"
+                    class="disconnect-btn"
+                    @click="pc.onDisconnect(pc.getId(account), pc.getName(account))"
+                  >
+                    {{ $t('connectAccounts.disconnect') }}
+                  </BaseButton>
+                </div>
+
+                <!-- Connect More + Disconnect All -->
+                <div class="expanded-footer">
+                  <BaseButton
+                    variant="ghost"
+                    size="small"
+                    :disabled="pc.connecting"
+                    class="connect-more-btn"
+                    @click="pc.onConnect"
+                  >
+                    <MaterialIcon icon="add" size="sm" />
+                    {{ pc.connecting ? $t('connectAccounts.connecting') : $t('connectAccounts.connectMore') }}
+                  </BaseButton>
+                  <BaseButton
+                    v-if="pc.count > 1"
+                    variant="ghost"
+                    size="small"
+                    :disabled="pc.connecting"
+                    class="disconnect-all-btn"
+                    @click="pc.onDisconnectAll"
+                  >
+                    {{ $t('connectAccounts.disconnectAll') }}
+                  </BaseButton>
+                </div>
+              </div>
+            </div>
+
+            <!-- Coming Soon Platforms -->
+            <div
+              v-for="cs in comingSoonPlatforms"
+              :key="cs.key"
+              class="platform-section disabled"
+            >
+              <div class="platform-header">
+                <div class="platform-icon-wrap">
+                  <PlatformLogo :platform="cs.platform" :size="48" />
+                </div>
+                <div class="platform-info">
+                  <h3>{{ cs.name }}</h3>
+                </div>
+                <div class="platform-actions">
+                  <span class="coming-soon-badge">{{ $t('connectAccounts.comingSoon') }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Business Selector Modal -->
+        <BrandSelectorModal
+          v-model="showBusinessSelector"
+          :brands="brandsStore.brands"
+          :current-id="selectedBrandId || undefined"
+          @select="handleBusinessSelected"
+        />
+
+        <!-- Toast Notifications -->
+        <Toast
+          v-model="showSuccessToast"
+          :message="toastMessage"
+          type="success"
+          :duration="4000"
+        />
+        <Toast
+          v-model="showErrorToast"
+          :message="errorMessage"
+          type="error"
+          :duration="5000"
+        />
+
+        <!-- Confirm Disconnect Modal -->
+        <ConfirmModal
+          v-model="showConfirmModal"
+          :title="confirmModalTitle"
+          :message="confirmModalMessage"
+          type="danger"
+          :confirm-text="$t('connectAccounts.disconnect')"
+          :cancel-text="$t('common.cancel')"
+          :auto-close-seconds="0"
+          @confirm="handleConfirmDisconnect"
+          @cancel="handleCancelDisconnect"
+        />
+      </div>
     </div>
   </DashboardLayout>
 </template>
 
 <style scoped>
+/* Animations */
+@keyframes fadeSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+.section-animate {
+  animation: fadeSlideUp 0.5s ease both;
+  animation-delay: calc(var(--stagger, 0) * 80ms);
+}
+
+/* Layout */
 .connect-accounts-view {
   min-height: 100vh;
   min-height: 100dvh;
@@ -697,49 +702,286 @@ async function executeDisconnectAll(type: 'facebook' | 'instagram') {
   margin: 0 auto;
 }
 
-.back-nav {
-  margin-bottom: var(--space-xl);
-}
-
+/* Section 1: Hero Header */
 .page-header {
   margin-bottom: var(--space-2xl);
-  text-align: center;
+  text-align: left;
 }
 
 .page-header h1 {
   font-family: var(--font-heading);
-  font-size: var(--font-size-3xl);
-  color: var(--text-primary);
+  font-size: var(--text-3xl);
   margin-bottom: var(--space-sm);
-  background: linear-gradient(135deg, var(--gold-primary), var(--gold-light));
+  background: var(--gradient-gold);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
 .subtitle {
-  font-size: var(--font-size-lg);
+  font-size: var(--text-lg);
   color: var(--text-secondary);
-  max-width: 600px;
-  margin: 0 auto;
+  max-width: 620px;
+  margin: 0 0 var(--space-lg);
 }
 
-/* Unified Platforms List */
+.header-divider {
+  height: 2px;
+  width: 80px;
+  background: var(--gradient-gold);
+  border-radius: var(--radius-full);
+}
+
+/* Section 2: Brand Showcase */
+.brand-showcase {
+  padding: var(--space-xl);
+  margin-bottom: var(--space-xl);
+}
+
+.showcase-layout {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-xl);
+}
+
+.showcase-identity {
+  flex: 1;
+  min-width: 0;
+}
+
+.active-indicator {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-md);
+}
+
+.active-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: var(--radius-full);
+  background: var(--gold-primary);
+  animation: pulse 2s ease-in-out infinite;
+  box-shadow: 0 0 0 3px rgba(15, 61, 46, 0.2);
+}
+
+.eyebrow {
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+  font-weight: var(--font-medium);
+}
+
+.identity-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-lg);
+}
+
+.brand-avatar-large {
+  width: 80px;
+  height: 80px;
+  border-radius: var(--radius-xl);
+  background: var(--bg-tertiary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  flex-shrink: 0;
+  border: 2px solid var(--glass-border);
+  box-shadow: 0 4px 12px rgba(15, 61, 46, 0.08);
+}
+
+.brand-avatar-large img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.avatar-fallback {
+  font-size: var(--text-2xl);
+  font-weight: var(--font-semibold);
+  color: var(--text-secondary);
+}
+
+.identity-text h2 {
+  font-family: var(--font-heading);
+  font-size: var(--text-2xl);
+  color: var(--text-primary);
+  margin: 0 0 var(--space-xs);
+}
+
+.brand-meta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+}
+
+.type-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--space-2xs) var(--space-sm);
+  border-radius: var(--radius-full);
+  background: rgba(15, 61, 46, 0.08);
+  color: var(--text-primary);
+  font-size: var(--text-xs);
+  font-weight: var(--font-medium);
+}
+
+.type-pill.muted {
+  background: rgba(15, 61, 46, 0.05);
+  color: var(--text-muted);
+}
+
+.meta-divider {
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+}
+
+.meta-text {
+  color: var(--text-secondary);
+}
+
+.showcase-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--space-sm);
+  flex-shrink: 0;
+}
+
+.brand-counter {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  font-weight: var(--font-medium);
+}
+
+.showcase-actions :deep(.base-button) {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+/* Section 3: Quick Stats Bar */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-lg);
+  margin-bottom: var(--space-xl);
+}
+
+.stat-card {
+  padding: var(--space-lg);
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  animation: fadeSlideUp 0.5s ease both;
+  animation-delay: calc((var(--stagger, 2) * 80ms) + (var(--card-stagger, 0) * 60ms));
+}
+
+.stat-icon {
+  color: var(--gold-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.stat-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2xs);
+}
+
+.stat-value {
+  font-size: var(--text-2xl);
+  font-weight: var(--font-bold);
+  background: var(--gradient-gold);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.stat-label {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+}
+
+/* Section 4: Platforms Grid */
 .platforms-section {
   margin-bottom: var(--space-2xl);
 }
 
+.platforms-header {
+  margin-bottom: var(--space-lg);
+}
+
+.platforms-header h2 {
+  font-family: var(--font-heading);
+  font-size: var(--text-2xl);
+  color: var(--text-primary);
+  margin-bottom: var(--space-xs);
+}
+
+.platforms-header p {
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  margin: 0;
+}
+
+/* Platforms List (vertical accordion — modern) */
 .platforms-list {
-  padding: 0;
-  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
 }
 
 .platform-section {
-  border-bottom: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  transition: border-color var(--transition-base), box-shadow var(--transition-base);
 }
 
-.platform-section:last-child {
-  border-bottom: none;
+.platform-section:hover {
+  border-color: rgba(15, 61, 46, 0.18);
+}
+
+.platform-section.connected {
+  border-color: rgba(15, 61, 46, 0.2);
+  box-shadow: 0 2px 12px rgba(15, 61, 46, 0.06);
+}
+
+.platform-section.expanded {
+  box-shadow: 0 4px 20px rgba(15, 61, 46, 0.08);
+}
+
+/* Platform icon wrapper with connected dot */
+.platform-icon-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.platform-icon-wrap :deep(.platform-logo.with-background) {
+  border-radius: var(--radius-lg);
+}
+
+.connected-indicator {
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  width: 14px;
+  height: 14px;
+  border-radius: var(--radius-full);
+  background: var(--gold-primary);
+  border: 2.5px solid var(--bg-secondary);
+  box-shadow: 0 0 0 1px rgba(15, 61, 46, 0.1);
 }
 
 .platform-header {
@@ -747,7 +989,7 @@ async function executeDisconnectAll(type: 'facebook' | 'instagram') {
   align-items: center;
   padding: var(--space-lg) var(--space-xl);
   gap: var(--space-lg);
-  transition: var(--transition-base);
+  transition: background var(--transition-base);
 }
 
 .platform-header.clickable {
@@ -755,32 +997,104 @@ async function executeDisconnectAll(type: 'facebook' | 'instagram') {
 }
 
 .platform-header.clickable:hover {
-  background: rgba(15, 61, 46, 0.05);
+  background: rgba(15, 61, 46, 0.03);
 }
 
-.expand-icon {
-  width: 40px;
-  height: 40px;
+.platform-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.platform-info h3 {
+  font-size: var(--text-base);
+  font-weight: var(--font-semibold);
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.connection-count {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  font-weight: var(--font-normal);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.connection-count.connected {
+  color: var(--gold-primary);
+}
+
+.connection-count.connected :deep(.material-symbols-outlined) {
+  font-size: 14px;
+}
+
+/* Expand Chevron */
+.expand-chevron {
+  width: 36px;
+  height: 36px;
   flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--text-secondary);
-  transition: var(--transition-base);
-  margin-left: auto;
+  color: var(--text-muted);
+  border-radius: var(--radius-full);
+  transition: background var(--transition-base);
 }
 
-.expand-icon svg {
+.platform-header.clickable:hover .expand-chevron {
+  background: rgba(15, 61, 46, 0.06);
+  color: var(--text-secondary);
+}
+
+.expand-chevron :deep(.material-symbols-outlined) {
   transition: transform var(--transition-base);
 }
 
-.platform-section.expanded .expand-icon svg {
+.expand-chevron.rotated :deep(.material-symbols-outlined) {
   transform: rotate(180deg);
 }
 
+/* Platform Actions (connect/disconnect buttons) */
+.platform-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  flex-shrink: 0;
+}
+
+.platform-actions :deep(.base-button) {
+  min-width: auto;
+  height: auto;
+  padding: var(--space-xs) var(--space-lg);
+  font-size: var(--text-sm);
+  border-radius: var(--radius-full);
+}
+
+.platform-actions :deep(.base-button.button-primary) {
+  min-width: 110px;
+  height: 36px;
+}
+
+.platform-actions :deep(.base-button.button-danger) {
+  min-width: 110px;
+  height: 36px;
+  background: transparent !important;
+  border: 1px solid var(--error-border) !important;
+  color: var(--error-text) !important;
+}
+
+.platform-actions :deep(.base-button.button-danger:hover) {
+  background: var(--error-bg) !important;
+}
+
+/* Connected Accounts List (expanded) */
 .connected-accounts-list {
-  border-top: 1px solid var(--border-color);
-  background: rgba(15, 61, 46, 0.03);
+  border-top: 1px solid var(--glass-border);
+  padding: var(--space-sm) 0;
 }
 
 .connected-account-item {
@@ -788,16 +1102,11 @@ async function executeDisconnectAll(type: 'facebook' | 'instagram') {
   align-items: center;
   padding: var(--space-md) var(--space-xl);
   gap: var(--space-md);
-  transition: var(--transition-base);
-  border-bottom: 1px solid rgba(15, 61, 46, 0.06);
-}
-
-.connected-account-item:last-child {
-  border-bottom: none;
+  transition: background var(--transition-base);
 }
 
 .connected-account-item:hover {
-  background: rgba(15, 61, 46, 0.05);
+  background: rgba(15, 61, 46, 0.03);
 }
 
 .profile-picture {
@@ -805,7 +1114,7 @@ async function executeDisconnectAll(type: 'facebook' | 'instagram') {
   height: 40px;
   border-radius: var(--radius-full);
   object-fit: cover;
-  border: 2px solid var(--gold-primary);
+  border: 2px solid var(--glass-border);
   flex-shrink: 0;
 }
 
@@ -813,21 +1122,28 @@ async function executeDisconnectAll(type: 'facebook' | 'instagram') {
   width: 40px;
   height: 40px;
   border-radius: var(--radius-full);
-  background: var(--bg-elevated);
+  background: var(--bg-tertiary);
   display: flex;
   align-items: center;
   justify-content: center;
   color: var(--text-muted);
   flex-shrink: 0;
-  border: 2px solid var(--border-color);
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
 }
 
 .account-details {
   display: flex;
   flex-direction: column;
-  gap: var(--space-xs);
+  gap: 1px;
   flex: 1;
   min-width: 0;
+}
+
+.account-name {
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  color: var(--text-primary);
 }
 
 .account-id {
@@ -841,178 +1157,95 @@ async function executeDisconnectAll(type: 'facebook' | 'instagram') {
   margin-left: auto;
 }
 
-.connect-more-item {
-  padding: var(--space-md) var(--space-xl);
-  border-bottom: 1px solid rgba(15, 61, 46, 0.06);
+.disconnect-btn :deep(.base-button) {
+  border-radius: var(--radius-full);
+}
+
+/* Expanded footer (connect more + disconnect all) */
+.expanded-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-sm) var(--space-xl) var(--space-md);
+  border-top: 1px solid var(--glass-border);
 }
 
 .connect-more-btn {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: var(--space-sm);
-  width: 100%;
-  justify-content: flex-start;
+  gap: var(--space-xs);
   color: var(--gold-primary);
   font-weight: var(--font-medium);
-}
-
-.connect-more-btn:hover {
-  background: rgba(15, 61, 46, 0.05);
-}
-
-.connect-more-btn svg {
-  flex-shrink: 0;
-}
-
-.platform-icon {
-  width: 44px;
-  height: 44px;
-  border-radius: var(--radius-md);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: var(--font-size-xl);
-  font-weight: 700;
-  color: white;
-  flex-shrink: 0;
-}
-
-.facebook-icon {
-  background: linear-gradient(135deg, #1877f2, #0d5dbf);
-}
-
-.platform-icon-instagram {
-  background: linear-gradient(135deg, #f58529, #dd2a7b, #8134af, #515bd4);
-}
-
-.platform-icon-x,
-.platform-icon-tiktok {
-  background: #000000;
-}
-
-.platform-icon-linkedin {
-  background: #0a66c2;
-}
-
-.platform-icon-youtube {
-  background: #ff0000;
-}
-
-.platform-icon-pinterest {
-  background: #E60023;
-}
-
-.platform-info {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-xs);
-}
-
-.platform-info h3 {
-  font-size: var(--font-size-base);
-  font-weight: var(--font-medium);
-  color: var(--text-primary);
-  margin: 0;
-}
-
-.connection-count {
-  font-size: var(--text-xs);
-  color: var(--text-muted);
-  font-weight: var(--font-normal);
-}
-
-.account-name {
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-medium);
-  color: var(--text-primary);
-}
-
-.platform-actions {
-  display: flex;
-  align-items: center;
-  gap: var(--space-sm);
-  flex-shrink: 0;
-}
-
-.platform-actions :deep(.base-button) {
-  min-width: auto;
-  height: auto;
-  padding: var(--space-xs) var(--space-md);
   font-size: var(--text-sm);
 }
 
-.platform-actions :deep(.base-button.button-primary),
-.platform-actions :deep(.base-button.button-danger) {
-  width: 100px !important;
-  min-width: 100px !important;
-  max-width: 100px !important;
-  height: 32px !important;
-  padding: 0 !important;
-  font-size: var(--text-sm) !important;
-  box-shadow: none !important;
+.disconnect-all-btn {
+  color: var(--error-text);
+  font-size: var(--text-xs);
 }
 
-.platform-actions :deep(.base-button.button-primary) {
-  background: var(--gradient-gold) !important;
-  border: none !important;
-  color: var(--text-on-gold) !important;
-}
-
-.platform-actions :deep(.base-button.button-primary:hover) {
-  background: var(--gradient-gold-hover) !important;
-  border: none !important;
-  color: var(--text-on-gold) !important;
-  transform: translateY(-1px) !important;
-}
-
-.platform-actions :deep(.base-button.button-danger) {
-  background: var(--error-bg) !important;
-  border: 1px solid var(--error-border) !important;
-  color: var(--error-text) !important;
-}
-
-.platform-actions :deep(.base-button.button-danger:hover) {
-  background: rgba(220, 53, 69, 0.25) !important;
-  border-color: var(--error-text) !important;
-}
-
+/* Coming Soon / Disabled */
 .platform-section.disabled {
-  opacity: 0.6;
+  opacity: 0.5;
+  background: var(--bg-tertiary);
+  border-color: transparent;
 }
 
-.platform-section.disabled .platform-icon {
-  filter: grayscale(30%);
+.platform-section.disabled:hover {
+  border-color: transparent;
+}
+
+.platform-section.disabled :deep(.platform-logo) {
+  filter: grayscale(40%);
 }
 
 .coming-soon-badge {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 100px;
-  height: 32px;
-  padding: 0 var(--space-md);
-  background: transparent;
-  border: 1px solid var(--border-color);
+  padding: var(--space-xs) var(--space-md);
+  background: rgba(15, 61, 46, 0.04);
+  border: none;
   color: var(--text-muted);
-  font-size: var(--text-sm);
-  font-weight: 500;
-  border-radius: var(--radius-md);
+  font-size: var(--text-xs);
+  font-weight: var(--font-medium);
+  border-radius: var(--radius-full);
   white-space: nowrap;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
 }
 
 /* Responsive */
 @media (max-width: 768px) {
-  .platform-header {
+  .showcase-layout {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .showcase-actions {
+    align-items: flex-start;
+    flex-direction: row;
     flex-wrap: wrap;
-    padding: var(--space-lg);
+    width: 100%;
+  }
+
+  .identity-row {
     gap: var(--space-md);
   }
 
-  .expand-toggle {
-    width: 36px;
-    height: 36px;
+  .brand-avatar-large {
+    width: 64px;
+    height: 64px;
+  }
+
+  .identity-text h2 {
+    font-size: var(--text-xl);
+  }
+
+  .platform-header {
+    padding: var(--space-lg);
+    flex-wrap: wrap;
+    gap: var(--space-md);
   }
 
   .platform-info {
@@ -1025,20 +1258,36 @@ async function executeDisconnectAll(type: 'facebook' | 'instagram') {
     width: 100%;
     margin-left: 0;
     justify-content: flex-end;
-    margin-top: var(--space-sm);
-  }
-
-  .platform-actions :deep(.base-button) {
-    flex: 0 1 auto;
+    margin-top: var(--space-xs);
   }
 
   .connected-account-item {
     padding: var(--space-md) var(--space-lg);
-    gap: var(--space-sm);
+    flex-wrap: wrap;
   }
 
-  .connect-more-item {
-    padding: var(--space-md) var(--space-lg);
+  .disconnect-btn {
+    width: 100%;
+    margin-top: var(--space-sm);
+  }
+
+  .expanded-footer {
+    padding: var(--space-sm) var(--space-lg) var(--space-md);
+  }
+}
+
+@media (max-width: 540px) {
+  .connect-accounts-view {
+    padding: var(--space-xl) var(--space-md);
+  }
+
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .brand-avatar-large {
+    width: 56px;
+    height: 56px;
   }
 
   .profile-picture,
@@ -1047,17 +1296,18 @@ async function executeDisconnectAll(type: 'facebook' | 'instagram') {
     height: 36px;
   }
 
-  .account-details {
-    flex: 1;
+  .expand-chevron {
+    display: none;
   }
+}
 
-  .disconnect-btn {
-    width: 100%;
-    margin-top: var(--space-sm);
-  }
-
-  .connected-account-item {
-    flex-wrap: wrap;
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
   }
 }
 </style>

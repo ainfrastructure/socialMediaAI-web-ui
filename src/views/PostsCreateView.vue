@@ -5,6 +5,7 @@ import { ref, computed, onMounted, nextTick } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { usePreferencesStore } from '@/stores/preferences'
+import { useBrandsStore } from '@/stores/brands'
 import { useFacebookStore } from '@/stores/facebook'
 import { useInstagramStore } from '@/stores/instagram'
 import { useTwitterStore } from '@/stores/twitter'
@@ -18,12 +19,11 @@ import EasyModeCreation from '@/components/EasyModeCreation.vue'
 import AdvancedModeCreation from '@/components/AdvancedModeCreation.vue'
 import ModeToggle from '@/components/ModeToggle.vue'
 import ScheduleModal from '@/components/ScheduleModal.vue'
-import AddRestaurantModal from '@/components/AddRestaurantModal.vue'
-import CreateRestaurantModal from '@/components/CreateRestaurantModal.vue'
-import RestaurantSelectorModal from '@/components/RestaurantSelectorModal.vue'
+import AddBrandModal from '@/components/AddBrandModal.vue'
+import CreateBrandModal from '@/components/CreateBrandModal.vue'
+import BrandSelectorModal from '@/components/BrandSelectorModal.vue'
 import PublishingProgressModal from '@/components/PublishingProgressModal.vue'
-import GoldenRestaurantIcon from '@/components/icons/GoldenRestaurantIcon.vue'
-import { restaurantService, type SavedRestaurant } from '@/services/restaurantService'
+import { brandService, type Brand, type UploadAssetData } from '@/services/brandService'
 import { api } from '@/services/api'
 import { okamService } from '@/services/okamService'
 import { API_URL } from '@/services/apiBase'
@@ -37,6 +37,7 @@ const router = useRouter()
 const route = useRoute()
 const { t, locale } = useI18n()
 const preferencesStore = usePreferencesStore()
+const brandsStore = useBrandsStore()
 const facebookStore = useFacebookStore()
 const instagramStore = useInstagramStore()
 const twitterStore = useTwitterStore()
@@ -44,8 +45,23 @@ const notificationStore = useNotificationStore()
 const videoGenerationStore = useVideoGenerationStore()
 
 // Restaurant state
-const restaurant = ref<SavedRestaurant | null>(null)
-const allRestaurants = ref<SavedRestaurant[]>([])
+const selectedBrand = computed(() => brandsStore.selectedBrand)
+const nonRestaurantBusiness = ref(false)
+const isRestaurantBusiness = computed(() =>
+  !selectedBrand.value || selectedBrand.value.business_type === 'restaurant'
+)
+const activeBrandType = computed(() => selectedBrand.value?.business_type || 'restaurant')
+const activeBusinessId = computed(() =>
+  selectedBrand.value?.id || preferencesStore.selectedBrandId || restaurant.value?.brand_id
+)
+const activeBrandDna = computed(() =>
+  activeBrandDna.value || selectedBrand.value?.brand_dna || null
+)
+const activeProfileName = computed(() =>
+  restaurant.value?.name || selectedBrand.value?.name || ''
+)
+const restaurant = ref<Brand | null>(null)
+const allRestaurants = ref<Brand[]>([])
 const loading = ref(true)
 const error = ref('')
 const showRestaurantSelector = ref(false)
@@ -105,8 +121,8 @@ const advancedModeCreationRef = ref<any>(null)
 
 // Modal state
 const showScheduleModal = ref(false)
-const showAddRestaurantModal = ref(false)
-const showCreateRestaurantModal = ref(false)
+const showAddBrandModal = ref(false)
+const showCreateBrandModal = ref(false)
 const showPublishingModal = ref(false)
 const pendingAction = ref<'publish' | 'schedule' | null>(null)
 const noRestaurants = ref(false)
@@ -118,6 +134,7 @@ const publishingProgress = ref<Array<{
   status: 'pending' | 'publishing' | 'success' | 'error'
   url?: string
   error?: string
+  postType?: 'feed' | 'story' | 'reel' | 'carousel'
 }>>([])
 const publishingComplete = ref(false)
 const publishResults = ref<{
@@ -147,12 +164,19 @@ const promptContext = ref('')
 const selectedMenuItems = ref<any[]>([])
 const selectedPlatforms = ref<string[]>(['facebook'])
 
+const resortTemplatePrompts: Record<string, string> = {
+  resortSunset: `Use the reference image composition exactly. Elevate it into a luxury resort golden-hour scene with warm sunset glow, soft reflections, and serene coastal ambience. Keep layout, objects, and framing identical to the reference.`,
+  resortPool: `Use the reference image composition exactly. Upgrade it to a premium poolside resort atmosphere with crystal-clear water reflections, clean cabanas, and airy tropical light. Preserve the exact layout and elements.`,
+  resortSuite: `Use the reference image composition exactly. Present it as a high-end resort suite with soft natural light, refined textures, and a calm, polished mood. Keep the same framing and objects as the reference.`
+}
+
 // Visual style prompt modifiers for video generation
 // These enhance the base prompt with style-specific instructions
 // Using STRICT IMAGE REPLICATION approach from image generation
 
 // Load restaurant and connected accounts on mount
 onMounted(async () => {
+  await brandsStore.initialize()
   await Promise.all([
     loadRestaurant(),
     facebookStore.loadConnectedPages(),
@@ -160,16 +184,55 @@ onMounted(async () => {
   ])
 })
 
+function buildProfileFromBusiness(
+  brand: Brand,
+  options?: { uploadedImages?: Brand['uploaded_images']; placeId?: string | null }
+): Brand {
+  return {
+    ...brand,
+    brand_id: brand.id,
+    place_id: options?.placeId ?? null,
+    is_manual: true,
+    address: brand.address || '',
+    rating: null,
+    user_ratings_total: null,
+    types: brand.business_type ? [brand.business_type] : null,
+    social_media: brand.social_media || null,
+    brand_dna: brand.brand_dna || (brand.logo_url ? { logo_url: brand.logo_url } : null),
+    uploaded_images: options?.uploadedImages || null,
+  }
+}
+
 async function loadRestaurant() {
   loading.value = true
   error.value = ''
+  nonRestaurantBusiness.value = false
 
   try {
-    const restaurants = await restaurantService.getSavedRestaurants()
-    allRestaurants.value = restaurants
+    const brand = selectedBrand.value
 
-    if (restaurants.length === 0) {
+    if (brand && brand.business_type !== 'restaurant') {
+      nonRestaurantBusiness.value = true
+      restaurant.value = buildProfileFromBusiness(brand, {
+        uploadedImages: brand.uploaded_images || null,
+        placeId: brand.id
+      })
+      allRestaurants.value = []
+      noRestaurants.value = false
+      loading.value = false
+      return
+    }
+
+    const restaurants = await brandService.getBrands()
+    const scopedRestaurants = brand?.id
+      ? restaurants.filter(r => r.brand_id === brand.id)
+      : restaurants
+
+    allRestaurants.value = scopedRestaurants
+
+    if (scopedRestaurants.length === 0) {
       // No restaurants, show inline prompt instead of redirecting
+      restaurant.value = null
       noRestaurants.value = true
       loading.value = false
       return
@@ -179,23 +242,23 @@ async function loadRestaurant() {
 
     // Priority: 1) URL query param, 2) preferences store, 3) first restaurant
     const urlRestaurantId = route.query.restaurantId as string | undefined
-    const selectedId = urlRestaurantId || preferencesStore.selectedRestaurantId
+    const selectedId = urlRestaurantId || preferencesStore.selectedBrandId
 
     let selected = selectedId
-      ? restaurants.find(r => r.id === selectedId)
+      ? scopedRestaurants.find(r => r.id === selectedId)
       : null
 
     if (!selected) {
       // Use first restaurant and save to preferences
-      selected = restaurants[0]
+      selected = scopedRestaurants[0]
     }
 
     // Update preferences with the selected restaurant
-    preferencesStore.setSelectedRestaurant(selected.id)
+    preferencesStore.setSelectedBrand(selected.id)
 
     restaurant.value = selected
   } catch (err: any) {
-    error.value = err.message || t('contentCreate.loadError', 'Failed to load restaurant')
+    error.value = err.message || t('contentCreate.loadError', 'Failed to load brand')
   } finally {
     loading.value = false
   }
@@ -203,28 +266,28 @@ async function loadRestaurant() {
 
 // Handle restaurant added from inline prompt
 async function handleRestaurantAddedFromPrompt() {
-  showAddRestaurantModal.value = false
+  showAddBrandModal.value = false
   // Reload the restaurant data
   await loadRestaurant()
 }
 
 // Handle switch to manual entry
 function handleSwitchToManual() {
-  showAddRestaurantModal.value = false
-  showCreateRestaurantModal.value = true
+  showAddBrandModal.value = false
+  showCreateBrandModal.value = true
 }
 
 // Handle restaurant created manually
 async function handleRestaurantCreated() {
-  showCreateRestaurantModal.value = false
+  showCreateBrandModal.value = false
   // Reload the restaurant data
   await loadRestaurant()
 }
 
 // Handle restaurant selection from selector modal
-function handleRestaurantSelect(selected: SavedRestaurant) {
+function handleRestaurantSelect(selected: Brand) {
   restaurant.value = selected
-  preferencesStore.setSelectedRestaurant(selected.id)
+  preferencesStore.setSelectedBrand(selected.id)
   showRestaurantSelector.value = false
 
   // Reset generation state when switching restaurants
@@ -237,13 +300,13 @@ async function handleRestaurantAddedFromSelector() {
 }
 
 // Handle restaurant deletion from selector modal
-async function handleRestaurantDelete(restaurantToDelete: SavedRestaurant) {
+async function handleRestaurantDelete(restaurantToDelete: Brand) {
   try {
-    await restaurantService.deleteRestaurant(restaurantToDelete.place_id)
+    await brandService.deleteRestaurant(restaurantToDelete.place_id)
     // Reload the list
     await loadRestaurant()
   } catch (err) {
-    errorLog('Failed to delete restaurant:', err)
+    errorLog('Failed to delete brand:', err)
   }
 }
 
@@ -261,6 +324,14 @@ function goBack() {
     // Child is on step 1, navigate back to posts hub
     router.push('/posts')
   }
+}
+
+function goToPosts() {
+  router.push('/posts')
+}
+
+function goToBrands() {
+  router.push('/brands')
 }
 
 // Easy Mode Publish/Schedule Handler
@@ -305,8 +376,8 @@ async function handleEasyModePublish(data: {
     }
 
     // Validate restaurant is selected
-    if (!restaurant.value?.id) {
-      generationError.value = 'Please select a restaurant first'
+    if (!restaurant.value?.id && !activeBusinessId.value) {
+      generationError.value = 'Please select a brand first'
       return
     }
 
@@ -349,7 +420,8 @@ async function handleEasyModePublish(data: {
       }
 
       const saveResponse = await api.saveFavorite({
-        restaurant_id: restaurant.value.id,
+        restaurant_id: isRestaurantBusiness.value ? restaurant.value.id : undefined,
+        brand_id: activeBusinessId.value || undefined,
         content_type: isVideo ? 'video' : 'image',
         media_url: mediaUrl,
         post_text: finalPostText,
@@ -359,7 +431,7 @@ async function handleEasyModePublish(data: {
         prompt: editablePrompt.value,
         menu_items: selectedMenuItems.value,
         context: promptContext.value,
-        brand_dna: restaurant.value?.brand_dna
+        brand_dna: activeBrandDna.value
       })
 
       if (!saveResponse.success || !saveResponse.data?.favorite?.id) {
@@ -492,224 +564,263 @@ async function continueEasyModePublish() {
         }
 
         if (platform === 'facebook') {
-          // Get the first connected Facebook page
+          // Get selected pages from accountSelections, falling back to first connected page
           debugLog('Connected Facebook pages:', facebookStore.connectedPages)
-          const selectedPage = facebookStore.connectedPages[0]
-          if (!selectedPage) {
+          const accountSelections = pendingPublishData.value?.accountSelections
+          const facebookSelections = accountSelections?.facebook || []
+
+          // Determine which pages to publish to
+          const pagesToPublish: Array<{ pageId: string; pageName?: string }> = []
+          if (facebookSelections.length > 0) {
+            // Use pages from accountSelections
+            for (const sel of facebookSelections) {
+              const page = facebookStore.connectedPages.find(p => p.pageId === sel.accountId)
+              if (page) {
+                pagesToPublish.push(page)
+              }
+            }
+          }
+          // Fall back to first connected page if no accountSelections
+          if (pagesToPublish.length === 0) {
+            const firstPage = facebookStore.connectedPages[0]
+            if (firstPage) {
+              pagesToPublish.push(firstPage)
+            }
+          }
+
+          if (pagesToPublish.length === 0) {
             errorLog('No Facebook page connected')
             results.push({ platform: 'facebook', success: false, error: 'No Facebook page connected' })
             continue
           }
 
-          debugLog('Publishing to page:', selectedPage.pageId, selectedPage.pageName)
+          for (const selectedPage of pagesToPublish) {
+            debugLog('Publishing to page:', selectedPage.pageId, selectedPage.pageName)
 
-          // Get post type and carousel items from account selections
-          const accountSelections = pendingPublishData.value?.accountSelections
-          const facebookSelections = accountSelections?.facebook || []
-          const accountSelection = facebookSelections.find((sel: AccountSelection) =>
-            sel.accountId === selectedPage.pageId
-          )
-          const postType = accountSelection?.postType || 'feed'
-          const carouselItems = accountSelection?.carouselItems
+            // Get post type and carousel items from account selections
+            const accountSelection = facebookSelections.find((sel: AccountSelection) =>
+              sel.accountId === selectedPage.pageId
+            )
+            const postType = accountSelection?.postType || 'feed'
+            const carouselItems = accountSelection?.carouselItems
 
-          if (carouselItems) {
-            debugLog('Facebook carousel items:', carouselItems.length)
-          }
-
-          // Build the message with post text and hashtags
-          // Use carousel-specific content if available
-          const carouselCaption = accountSelection?.carouselCaption
-          const carouselHashtags = accountSelection?.carouselHashtags
-
-          let message: string
-          if (carouselCaption && postType === 'carousel') {
-            // Use carousel-specific caption and hashtags
-            message = carouselHashtags && carouselHashtags.length > 0
-              ? `${carouselCaption}\n\n${carouselHashtags.join(' ')}`
-              : carouselCaption
-            debugLog('Using carousel-specific caption')
-          } else {
-            // Use default generated content
-            const hashtags = generatedPostContent.value?.hashtags || []
-            const postText = generatedPostContent.value?.postText || ''
-            message = hashtags.length > 0
-              ? `${postText}\n\n${hashtags.join(' ')}`
-              : postText
-          }
-
-          debugLog('Calling API to post to Facebook...')
-          const isVideo = currentMediaType.value === 'video'
-
-          // For carousel posts, only send carouselItems, not individual image/video
-          const isCarousel = postType === 'carousel'
-          const imageUrl = isCarousel ? undefined : (isVideo ? undefined : generatedImageUrl.value)
-          const videoUrl = isCarousel ? undefined : (isVideo ? generatedVideoUrl.value : undefined)
-          const contentType = isCarousel ? 'image' : currentMediaType.value
-
-          console.log('[PostsCreateView] Facebook API call params:', {
-            postType,
-            isCarousel,
-            carouselItemsCount: carouselItems?.length || 0,
-            hasImageUrl: !!imageUrl,
-            hasVideoUrl: !!videoUrl
-          })
-
-          const response = await api.postToFacebook(
-            selectedPage.pageId,
-            message,
-            imageUrl,
-            videoUrl,
-            contentType,
-            postType,
-            carouselItems
-          )
-          debugLog('Facebook API response:', response)
-
-          // API returns postUrl directly on response, not inside data
-          const postUrl = (response as any).postUrl || response.data?.postUrl
-          if (response.success && postUrl) {
-            results.push({ platform: 'facebook', success: true, url: postUrl })
-            debugLog('Published to Facebook successfully:', postUrl)
-            // Add notification for successful Facebook publish
-            notificationStore.addPublishSuccess('facebook', postUrl)
-            // Update progress
+            // Update progress item with actual post type
             if (progressItem) {
-              progressItem.status = 'success'
-              progressItem.url = postUrl
+              progressItem.postType = postType
             }
-          } else if ((response as any).code === 'FACEBOOK_RECONNECT_REQUIRED') {
-            facebookReconnectRequired.value = true
-            results.push({ platform: 'facebook', success: false, error: 'Facebook connection expired' })
-            // Update progress
-            if (progressItem) {
-              progressItem.status = 'error'
-              progressItem.error = 'Facebook connection expired'
+
+            if (carouselItems) {
+              debugLog('Facebook carousel items:', carouselItems.length)
             }
-          } else {
-            const errorMsg = response.error || 'Unknown error'
-            results.push({ platform: 'facebook', success: false, error: errorMsg })
-            // Update progress
-            if (progressItem) {
-              progressItem.status = 'error'
-              progressItem.error = errorMsg
+
+            // Build the message with post text and hashtags
+            // Use carousel-specific content if available
+            const carouselCaption = accountSelection?.carouselCaption
+            const carouselHashtags = accountSelection?.carouselHashtags
+
+            let message: string
+            if (carouselCaption && postType === 'carousel') {
+              // Use carousel-specific caption and hashtags
+              message = carouselHashtags && carouselHashtags.length > 0
+                ? `${carouselCaption}\n\n${carouselHashtags.join(' ')}`
+                : carouselCaption
+              debugLog('Using carousel-specific caption')
+            } else {
+              // Use default generated content
+              const hashtags = generatedPostContent.value?.hashtags || []
+              const postText = generatedPostContent.value?.postText || ''
+              message = hashtags.length > 0
+                ? `${postText}\n\n${hashtags.join(' ')}`
+                : postText
+            }
+
+            debugLog('Calling API to post to Facebook...')
+            const isVideo = currentMediaType.value === 'video'
+
+            // For carousel posts, only send carouselItems, not individual image/video
+            const isCarousel = postType === 'carousel'
+            const imageUrl = isCarousel ? undefined : (isVideo ? undefined : generatedImageUrl.value)
+            const videoUrl = isCarousel ? undefined : (isVideo ? generatedVideoUrl.value : undefined)
+            const contentType = isCarousel ? 'image' : currentMediaType.value
+
+            console.log('[PostsCreateView] Facebook API call params:', {
+              postType,
+              isCarousel,
+              carouselItemsCount: carouselItems?.length || 0,
+              hasImageUrl: !!imageUrl,
+              hasVideoUrl: !!videoUrl
+            })
+
+            try {
+              const response = await api.postToFacebook(
+                selectedPage.pageId,
+                message,
+                imageUrl,
+                videoUrl,
+                contentType,
+                postType,
+                carouselItems
+              )
+              debugLog('Facebook API response:', response)
+
+              // API returns postUrl directly on response, not inside data
+              const postUrl = (response as any).postUrl || response.data?.postUrl
+              if (response.success && postUrl) {
+                results.push({ platform: 'facebook', success: true, url: postUrl })
+                debugLog('Published to Facebook successfully:', postUrl)
+                // Add notification for successful Facebook publish
+                notificationStore.addPublishSuccess('facebook', postUrl)
+                // Update progress
+                if (progressItem) {
+                  progressItem.status = 'success'
+                  progressItem.url = postUrl
+                }
+              } else if ((response as any).code === 'FACEBOOK_RECONNECT_REQUIRED') {
+                facebookReconnectRequired.value = true
+                results.push({ platform: 'facebook', success: false, error: 'Facebook connection expired' })
+                // Update progress
+                if (progressItem) {
+                  progressItem.status = 'error'
+                  progressItem.error = 'Facebook connection expired'
+                }
+              } else {
+                const errorMsg = response.error || 'Unknown error'
+                results.push({ platform: 'facebook', success: false, error: errorMsg })
+                // Update progress
+                if (progressItem) {
+                  progressItem.status = 'error'
+                  progressItem.error = errorMsg
+                }
+              }
+            } catch (err: any) {
+              const errorMsg = err.message || 'Failed to publish'
+              results.push({ platform: 'facebook', success: false, error: errorMsg })
+              if (progressItem) {
+                progressItem.status = 'error'
+                progressItem.error = errorMsg
+              }
             }
           }
         } else if (platform === 'instagram') {
           // Instagram publishing via Facebook Graph API
           debugLog('Connected Instagram accounts:', instagramStore.connectedAccounts)
-          const instagramAccount = instagramStore.connectedAccounts[0]
-          if (!instagramAccount) {
+          const accountSelections = pendingPublishData.value?.accountSelections
+          const instagramSelections = accountSelections?.instagram || []
+
+          // Determine which accounts to publish to
+          const accountsToPublish: Array<{ instagramAccountId: string; username?: string }> = []
+          if (instagramSelections.length > 0) {
+            for (const sel of instagramSelections) {
+              const account = instagramStore.connectedAccounts.find(a => a.instagramAccountId === sel.accountId)
+              if (account) {
+                accountsToPublish.push(account)
+              }
+            }
+          }
+          // Fall back to first connected account if no accountSelections
+          if (accountsToPublish.length === 0) {
+            const firstAccount = instagramStore.connectedAccounts[0]
+            if (firstAccount) {
+              accountsToPublish.push(firstAccount)
+            }
+          }
+
+          if (accountsToPublish.length === 0) {
             errorLog('No Instagram account connected')
             results.push({ platform: 'instagram', success: false, error: 'No Instagram account connected' })
             continue
           }
 
-          debugLog('Publishing to Instagram account:', instagramAccount.username)
+          for (const instagramAccount of accountsToPublish) {
+            debugLog('Publishing to Instagram account:', instagramAccount.username)
 
-          // Get post type from account selections (default to reel for video, feed for image)
-          const accountSelections = pendingPublishData.value?.accountSelections
-          const instagramSelections = accountSelections?.instagram || []
-
-          console.log('🔴 [Instagram] accountSelections:', accountSelections)
-          console.log('🔴 [Instagram] instagramSelections:', instagramSelections)
-
-          const accountSelection = instagramSelections.find((sel: AccountSelection) =>
-            sel.accountId === instagramAccount.instagramAccountId
-          )
-
-          console.log('🔴 [Instagram] accountSelection found:', accountSelection)
-
-          const isVideo = currentMediaType.value === 'video'
-          const postType = accountSelection?.postType || (isVideo ? 'reel' : 'feed')
-          const carouselItems = accountSelection?.carouselItems
-
-          console.log('🔴 [Instagram] Final values:', {
-            postType,
-            carouselItemsCount: carouselItems?.length || 0,
-            carouselItems: carouselItems
-          })
-
-          debugLog('Instagram post type:', postType)
-          if (carouselItems) {
-            debugLog('Instagram carousel items:', carouselItems.length)
-          }
-
-          // Build the message with post text and hashtags
-          // Use carousel-specific content if available
-          const carouselCaption = accountSelection?.carouselCaption
-          const carouselHashtags = accountSelection?.carouselHashtags
-
-          let caption: string
-          if (carouselCaption && postType === 'carousel') {
-            // Use carousel-specific caption and hashtags
-            caption = carouselHashtags && carouselHashtags.length > 0
-              ? `${carouselCaption}\n\n${carouselHashtags.join(' ')}`
-              : carouselCaption
-            debugLog('Using carousel-specific caption')
-          } else {
-            // Use default generated content
-            const hashtags = generatedPostContent.value?.hashtags || []
-            const postText = generatedPostContent.value?.postText || ''
-            caption = hashtags.length > 0
-              ? `${postText}\n\n${hashtags.join(' ')}`
-              : postText
-          }
-
-          // For carousel posts, only send carouselItems, not individual image/video
-          const isCarousel = postType === 'carousel'
-          const imageUrl = isCarousel ? undefined : (isVideo ? undefined : generatedImageUrl.value)
-          const videoUrl = isCarousel ? undefined : (isVideo ? generatedVideoUrl.value : undefined)
-          const contentType = isCarousel ? 'image' : currentMediaType.value
-
-          console.log('[PostsCreateView] Instagram API call params:', {
-            postType,
-            isCarousel,
-            carouselItemsCount: carouselItems?.length || 0,
-            hasImageUrl: !!imageUrl,
-            hasVideoUrl: !!videoUrl
-          })
-
-          try {
-            const response = await api.postToInstagram(
-              instagramAccount.instagramAccountId,
-              caption,
-              imageUrl,
-              videoUrl,
-              contentType,
-              postType,
-              carouselItems
+            const accountSelection = instagramSelections.find((sel: AccountSelection) =>
+              sel.accountId === instagramAccount.instagramAccountId
             )
-            debugLog('Instagram API response:', response)
 
-            // API returns postUrl directly on response or inside data
-            const postUrl = (response as any).postUrl || response.data?.postUrl
-            if (response.success && postUrl) {
-              results.push({ platform: 'instagram', success: true, url: postUrl })
-              debugLog('Published to Instagram successfully:', postUrl)
-              // Add notification for successful Instagram publish
-              notificationStore.addPublishSuccess('instagram', postUrl)
-              // Update progress
-              if (progressItem) {
-                progressItem.status = 'success'
-                progressItem.url = postUrl
-              }
+            const isVideo = currentMediaType.value === 'video'
+            const postType = accountSelection?.postType || (isVideo ? 'reel' : 'feed')
+            const carouselItems = accountSelection?.carouselItems
+
+            // Update progress item with actual post type
+            if (progressItem) {
+              progressItem.postType = postType
+            }
+
+            debugLog('Instagram post type:', postType)
+            if (carouselItems) {
+              debugLog('Instagram carousel items:', carouselItems.length)
+            }
+
+            // Build the message with post text and hashtags
+            // Use carousel-specific content if available
+            const carouselCaption = accountSelection?.carouselCaption
+            const carouselHashtags = accountSelection?.carouselHashtags
+
+            let caption: string
+            if (carouselCaption && postType === 'carousel') {
+              // Use carousel-specific caption and hashtags
+              caption = carouselHashtags && carouselHashtags.length > 0
+                ? `${carouselCaption}\n\n${carouselHashtags.join(' ')}`
+                : carouselCaption
+              debugLog('Using carousel-specific caption')
             } else {
-              const errorMsg = response.error || 'Failed to publish to Instagram'
+              // Use default generated content
+              const hashtags = generatedPostContent.value?.hashtags || []
+              const postText = generatedPostContent.value?.postText || ''
+              caption = hashtags.length > 0
+                ? `${postText}\n\n${hashtags.join(' ')}`
+                : postText
+            }
+
+            // For carousel posts, only send carouselItems, not individual image/video
+            const isCarousel = postType === 'carousel'
+            const imageUrl = isCarousel ? undefined : (isVideo ? undefined : generatedImageUrl.value)
+            const videoUrl = isCarousel ? undefined : (isVideo ? generatedVideoUrl.value : undefined)
+            const contentType = isCarousel ? 'image' : currentMediaType.value
+
+            try {
+              const response = await api.postToInstagram(
+                instagramAccount.instagramAccountId,
+                caption,
+                imageUrl,
+                videoUrl,
+                contentType,
+                postType,
+                carouselItems
+              )
+              debugLog('Instagram API response:', response)
+
+              // API returns postUrl directly on response or inside data
+              const postUrl = (response as any).postUrl || response.data?.postUrl
+              if (response.success && postUrl) {
+                results.push({ platform: 'instagram', success: true, url: postUrl })
+                debugLog('Published to Instagram successfully:', postUrl)
+                // Add notification for successful Instagram publish
+                notificationStore.addPublishSuccess('instagram', postUrl)
+                // Update progress
+                if (progressItem) {
+                  progressItem.status = 'success'
+                  progressItem.url = postUrl
+                }
+              } else {
+                const errorMsg = response.error || 'Failed to publish to Instagram'
+                results.push({ platform: 'instagram', success: false, error: errorMsg })
+                // Update progress
+                if (progressItem) {
+                  progressItem.status = 'error'
+                  progressItem.error = errorMsg
+                }
+              }
+            } catch (instagramErr: any) {
+              errorLog('Instagram publishing error:', instagramErr)
+              const errorMsg = instagramErr.message || 'Failed to publish to Instagram'
               results.push({ platform: 'instagram', success: false, error: errorMsg })
               // Update progress
               if (progressItem) {
                 progressItem.status = 'error'
                 progressItem.error = errorMsg
               }
-            }
-          } catch (instagramErr: any) {
-            errorLog('Instagram publishing error:', instagramErr)
-            const errorMsg = instagramErr.message || 'Failed to publish to Instagram'
-            results.push({ platform: 'instagram', success: false, error: errorMsg })
-            // Update progress
-            if (progressItem) {
-              progressItem.status = 'error'
-              progressItem.error = errorMsg
             }
           }
         } else {
@@ -995,7 +1106,10 @@ async function handleEasyModeGenerate(data: {
       studioShot: { stickerStyle: 'badge' as const, stickerPosition: 'top-right' as const },
       infographic: { stickerStyle: 'outlined' as const, stickerPosition: 'top-left' as const },
       placeOnTable: { stickerStyle: 'bold' as const, stickerPosition: 'top-left' as const },
-      custom: { stickerStyle: 'bold' as const, stickerPosition: 'top-right' as const }
+      custom: { stickerStyle: 'bold' as const, stickerPosition: 'top-right' as const },
+      resortSunset: { stickerStyle: 'badge' as const, stickerPosition: 'top-right' as const },
+      resortPool: { stickerStyle: 'bold' as const, stickerPosition: 'top-left' as const },
+      resortSuite: { stickerStyle: 'outlined' as const, stickerPosition: 'bottom-right' as const }
     }
 
     const selectedStyle = styleMapping[data.styleTemplate as keyof typeof styleMapping] || styleMapping.behindTheScenes
@@ -1008,10 +1122,20 @@ async function handleEasyModeGenerate(data: {
     holidayTheme.value = data.holidayTheme === 'custom' && data.customHolidayText
       ? data.customHolidayText
       : data.holidayTheme
-    // Set visual style for image generation
-    visualStyle.value = data.styleTemplate as 'behindTheScenes' | 'cleanStrict' | 'zoomIn' | 'oneBite' | 'studioShot' | 'infographic' | 'placeOnTable' | 'custom'
-    // Store custom prompt if using custom style
-    customVisualPrompt.value = data.customPrompt || ''
+    const resortPrompt = activeBrandType.value === 'resort'
+      ? resortTemplatePrompts[data.styleTemplate]
+      : undefined
+
+    if (resortPrompt) {
+      // Resort templates use a predefined custom prompt while keeping the reference image
+      visualStyle.value = 'custom'
+      customVisualPrompt.value = resortPrompt
+    } else {
+      // Set visual style for image generation
+      visualStyle.value = data.styleTemplate as 'behindTheScenes' | 'cleanStrict' | 'zoomIn' | 'oneBite' | 'studioShot' | 'infographic' | 'placeOnTable' | 'custom'
+      // Store custom prompt if using custom style
+      customVisualPrompt.value = data.customPrompt || ''
+    }
     logoPosition.value = 'bottom-right'
 
     // Skip Stage 1 prompt generation - we now pass dish info directly to image generation
@@ -1049,15 +1173,43 @@ async function handleEasyModeGenerate(data: {
         debugLog('[EasyMode] Image generated successfully:', generatedImageUrl.value)
       }
 
-      // Upload the image to the restaurant's uploaded_images collection
-      if (data.uploadedImage && restaurant.value?.place_id) {
+      // Upload the image to the appropriate brand/restaurant collection
+      if (data.uploadedImage) {
         try {
-          await restaurantService.uploadRestaurantImages(
-            restaurant.value.place_id,
-            [data.uploadedImage]
-          )
+          // Convert File to UploadAssetData (base64 + mimeType)
+          const base64 = await new Promise<string>((resolve) => {
+            const reader = new FileReader()
+            reader.onloadend = () => {
+              const base64String = reader.result as string
+              resolve(base64String.split(',')[1])
+            }
+            reader.readAsDataURL(data.uploadedImage!)
+          })
+          const assetData: UploadAssetData = {
+            base64,
+            mimeType: data.uploadedImage.type,
+          }
+
+          if (selectedBrand.value && selectedBrand.value.business_type !== 'restaurant') {
+            const uploadResult = await brandService.uploadAsset(
+              selectedBrand.value.id,
+              assetData
+            )
+            if (restaurant.value) {
+              restaurant.value.uploaded_images = [
+                ...(uploadResult.data ? [uploadResult.data] : []),
+                ...(restaurant.value.uploaded_images || [])
+              ]
+            }
+            await brandsStore.refreshBusinesses()
+          } else if (restaurant.value?.place_id) {
+            await brandService.uploadRestaurantImages(
+              restaurant.value.place_id,
+              [assetData]
+            )
+          }
         } catch (uploadError) {
-          errorLog('Failed to save uploaded image to restaurant:', uploadError)
+          errorLog('Failed to save uploaded image:', uploadError)
           // Don't fail the entire operation if this fails
         }
       }
@@ -1234,16 +1386,16 @@ async function generatePromptsFromSelection() {
 
   try {
     debugLog('[Prompts] Calling API with:', {
-      restaurant: restaurant.value.name,
+      brand: activeProfileName.value,
       menuItems: selectedMenuItems.value,
       context: promptContext.value
     })
 
     const response = await api.generatePrompts(
       {
-        name: restaurant.value.name,
+        name: activeProfileName.value,
         type: restaurant.value.types?.[0] || 'restaurant',
-        brandDna: restaurant.value.brand_dna,
+        brandDna: activeBrandDna.value,
       },
       selectedMenuItems.value,
       promptContext.value
@@ -1285,7 +1437,7 @@ async function generateImage(uploadedLogo: File | null = null, uploadedImage: Fi
     // Use uploaded logo if provided, otherwise use stored logo
     const logoUrl = uploadedLogo
       ? await fileToBase64Url(uploadedLogo)
-      : restaurant.value.brand_dna?.logo_url
+      : activeBrandDna.value?.logo_url
 
     const watermark = (includeLogo.value && logoUrl)
       ? {
@@ -1391,7 +1543,7 @@ async function generateImage(uploadedLogo: File | null = null, uploadedImage: Fi
       visualStyle.value,
       visualStyle.value === 'custom' ? customVisualPrompt.value : undefined,
       dishInfo,
-      restaurant.value.name
+      activeProfileName.value
     )
 
     if (!response.success) {
@@ -1713,12 +1865,12 @@ async function generateVideo(
 
     // Apply logo watermark if requested
     // NOTE: Requires FFmpeg to be installed on the backend
-    if (uploadedLogo || (includeLogo.value && restaurant.value?.brand_dna?.logo_url)) {
+    if (uploadedLogo || (includeLogo.value && activeBrandDna.value?.logo_url)) {
       console.log('[Video] Logo watermarking requested...')
 
       const logoUrl = uploadedLogo
         ? await fileToBase64Url(uploadedLogo)
-        : restaurant.value.brand_dna?.logo_url
+        : activeBrandDna.value?.logo_url
 
       if (logoUrl) {
         try {
@@ -1849,11 +2001,11 @@ async function generatePostContent() {
 
     const response = await api.generatePostContent(
       selectedPlatforms.value[0] || 'facebook',
-      restaurant.value.name,
+      activeProfileName.value,
       menuItemsWithDescriptions,
       currentMediaType.value,
       promptContext.value,
-      restaurant.value.brand_dna,
+      activeBrandDna.value,
       locale.value as 'en' | 'no'
     )
 
@@ -1886,7 +2038,7 @@ async function generatePostContent() {
 }
 
 function getBrandColor(): string {
-  return restaurant.value?.brand_dna?.primary_color || '#D4AF37'
+  return activeBrandDna.value?.primary_color || '#D4AF37'
 }
 
 async function autoSavePost(): Promise<any | null> {
@@ -1907,7 +2059,8 @@ async function autoSavePost(): Promise<any | null> {
 
   try {
     const favoriteData = {
-      restaurant_id: restaurant.value.id,
+      restaurant_id: isRestaurantBusiness.value ? restaurant.value.id : undefined,
+      brand_id: activeBusinessId.value || undefined,
       content_type: 'image' as 'image' | 'video', // Always save as image initially, video_url added by background task
       media_url: mediaUrl,
       post_text: generatedPostContent.value?.postText || '',
@@ -1920,7 +2073,7 @@ async function autoSavePost(): Promise<any | null> {
         price: item.price,
       })),
       context: promptContext.value,
-      brand_dna: restaurant.value.brand_dna,
+      brand_dna: activeBrandDna.value,
     }
 
     const response = await api.saveFavorite(favoriteData)
@@ -2083,6 +2236,11 @@ async function handleAdvancedModeComplete(data: {
               const postType = accountSelection?.postType || 'feed'
               const carouselItems = accountSelection?.carouselItems
 
+              // Update progress item with actual post type
+              if (progressItem) {
+                progressItem.postType = postType
+              }
+
               // Use carousel-specific content if available
               const carouselCaption = accountSelection?.carouselCaption
               const carouselHashtags = accountSelection?.carouselHashtags
@@ -2168,6 +2326,11 @@ async function handleAdvancedModeComplete(data: {
               )
               const postType = accountSelection?.postType || (contentType === 'video' ? 'reel' : 'feed')
               const carouselItems = accountSelection?.carouselItems
+
+              // Update progress item with actual post type
+              if (progressItem) {
+                progressItem.postType = postType
+              }
 
               // Use carousel-specific content if available
               const carouselCaption = accountSelection?.carouselCaption
@@ -2366,7 +2529,8 @@ async function autoSaveAdvancedPost() {
 
   try {
     const favoriteData = {
-      restaurant_id: restaurant.value.id,
+      restaurant_id: isRestaurantBusiness.value ? restaurant.value.id : undefined,
+      brand_id: activeBusinessId.value || undefined,
       content_type: 'image' as const,
       media_url: advancedModeData.value.imageUrl,
       post_text: advancedModeData.value.postText,
@@ -2379,7 +2543,7 @@ async function autoSaveAdvancedPost() {
         price: item.price,
       })),
       context: '',
-      brand_dna: restaurant.value.brand_dna,
+      brand_dna: activeBrandDna.value,
     }
 
     const response = await api.saveFavorite(favoriteData)
@@ -2412,59 +2576,6 @@ async function handleInlineFeedback(feedbackText: string) {
   } catch (error) {
     errorLog('Failed to submit inline feedback:', error)
     // Don't block the flow if feedback fails
-  }
-}
-
-async function publishToFacebook() {
-  if (!generatedImageUrl.value || !lastSavedPost.value) return
-
-  // Get the first connected Facebook page
-  const selectedPage = facebookStore.connectedPages[0]
-  if (!selectedPage) {
-    generationError.value = t('contentCreate.noFacebookPage', 'No Facebook page connected')
-    return
-  }
-
-  try {
-    publishing.value = true
-    facebookReconnectRequired.value = false
-
-    // Build the message with post text and hashtags
-    const hashtags = generatedPostContent.value?.hashtags || []
-    const postText = generatedPostContent.value?.postText || ''
-    const message = hashtags.length > 0
-      ? `${postText}\n\n${hashtags.join(' ')}`
-      : postText
-
-    const isVideo = currentMediaType.value === 'video'
-    const response = await api.postToFacebook(
-      selectedPage.pageId,
-      message,
-      isVideo ? undefined : generatedImageUrl.value,
-      isVideo ? generatedVideoUrl.value : undefined,
-      currentMediaType.value
-    )
-
-    const postUrl = (response as any).postUrl || response.data?.postUrl
-    if (response.success && postUrl) {
-      publishResults.value = {
-        success: true,
-        platforms: [{ platform: 'facebook', success: true, url: postUrl }]
-      }
-      // Add notification for successful Facebook publish
-      notificationStore.addPublishSuccess('facebook', postUrl)
-    } else if ((response as any).code === 'FACEBOOK_RECONNECT_REQUIRED') {
-      // Facebook connection expired, need to reconnect
-      facebookReconnectRequired.value = true
-      generationError.value = t('contentCreate.facebookReconnectRequired', 'Your Facebook connection has expired. Please reconnect to continue.')
-    } else {
-      generationError.value = response.error || t('contentCreate.publishError', 'Failed to publish to Facebook')
-    }
-  } catch (err: any) {
-    errorLog('Failed to publish to Facebook:', err)
-    generationError.value = err.message || t('contentCreate.publishError', 'Failed to publish to Facebook')
-  } finally {
-    publishing.value = false
   }
 }
 
@@ -2537,11 +2648,11 @@ function handlePublishingClose() {
       <div v-else-if="noRestaurants" class="no-restaurant-state">
         <BaseCard variant="glass-intense" class="no-restaurant-card">
           <div class="no-restaurant-icon">
-            <GoldenRestaurantIcon :size="64" />
+            <GoldenBrandIcon :size="64" />
           </div>
           <h2 class="no-restaurant-title">{{ t('contentHub.noRestaurantPrompt') }}</h2>
           <p class="no-restaurant-description">{{ t('contentHub.addFirstRestaurantDescription') }}</p>
-          <BaseButton variant="primary" size="large" @click="showAddRestaurantModal = true">
+          <BaseButton variant="primary" size="large" @click="showAddBrandModal = true">
             {{ t('contentHub.addFirstRestaurant') }}
           </BaseButton>
         </BaseCard>
@@ -2585,7 +2696,9 @@ function handlePublishingClose() {
         <EasyModeCreation
           v-if="preferencesStore.creationMode === 'easy'"
           ref="easyModeCreationRef"
+          :brand="selectedBrand || undefined"
           :restaurant="restaurant"
+          :brand-type="activeBrandType"
           :menu-items="menuItems"
           :generating="easyModeGenerating"
           :animating="generatingVideo"
@@ -2610,6 +2723,7 @@ function handlePublishingClose() {
         <AdvancedModeCreation
           v-else
           ref="advancedModeCreationRef"
+          :brand="selectedBrand || undefined"
           :restaurant="restaurant"
           :menu-items="menuItems"
           @back="goBack"
@@ -2637,24 +2751,27 @@ function handlePublishingClose() {
     />
 
     <!-- Add Restaurant Modal (for no-restaurant state) -->
-    <AddRestaurantModal
-      v-model="showAddRestaurantModal"
+    <AddBrandModal
+      v-model="showAddBrandModal"
+      :brand-id="selectedBrand?.id"
       :saved-restaurants="allRestaurants"
       @restaurant-added="handleRestaurantAddedFromPrompt"
       @switch-to-manual="handleSwitchToManual"
     />
 
     <!-- Create Restaurant Modal -->
-    <CreateRestaurantModal
-      v-model="showCreateRestaurantModal"
+    <CreateBrandModal
+      v-model="showCreateBrandModal"
+      :brand-id="selectedBrand?.id"
       @created="handleRestaurantCreated"
     />
 
     <!-- Restaurant Selector Modal -->
-    <RestaurantSelectorModal
+    <BrandSelectorModal
       v-model="showRestaurantSelector"
-      :restaurants="allRestaurants"
+      :brands="allRestaurants"
       :current-id="restaurant?.id"
+      :brand-id="selectedBrand?.id"
       @select="handleRestaurantSelect"
       @restaurant-added="handleRestaurantAddedFromSelector"
       @delete="handleRestaurantDelete"
@@ -2762,6 +2879,13 @@ function handlePublishingClose() {
   color: var(--text-secondary);
   margin: 0;
   line-height: 1.5;
+}
+
+.no-restaurant-actions {
+  display: flex;
+  gap: var(--space-md);
+  flex-wrap: wrap;
+  justify-content: center;
 }
 
 /* Header */

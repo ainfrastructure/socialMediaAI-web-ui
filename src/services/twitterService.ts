@@ -3,9 +3,9 @@ import { API_URL, getAuthHeader, getAuthHeaders } from './apiBase'
 import { fetchWithTimeout, TIMEOUTS } from '@/utils/fetchWithTimeout'
 
 class TwitterService {
-  async initAuth(): Promise<ApiResponse<{ authUrl: string; state: string }>> {
+  async initAuth(brandId?: string): Promise<ApiResponse<{ authUrl: string; state: string }>> {
     const response = await fetchWithTimeout(
-      `${API_URL}/api/twitter/auth/init`,
+      `${API_URL}/api/twitter/auth/init${brandId ? `?brand_id=${brandId}` : ''}`,
       {
         headers: getAuthHeader(),
       },
@@ -56,9 +56,9 @@ class TwitterService {
     return response.json()
   }
 
-  async getAccounts(): Promise<ApiResponse<{ accounts: any[] }>> {
+  async getAccounts(brandId?: string): Promise<ApiResponse<{ accounts: any[] }>> {
     const response = await fetchWithTimeout(
-      `${API_URL}/api/twitter/accounts`,
+      `${API_URL}/api/twitter/accounts${brandId ? `?brand_id=${brandId}` : ''}`,
       {
         headers: getAuthHeader(),
       },
@@ -80,9 +80,9 @@ class TwitterService {
     return response.json()
   }
 
-  async disconnectAccount(accountId: string): Promise<ApiResponse> {
+  async disconnectAccount(accountId: string, brandId?: string): Promise<ApiResponse> {
     const response = await fetchWithTimeout(
-      `${API_URL}/api/twitter/accounts/${accountId}`,
+      `${API_URL}/api/twitter/accounts/${accountId}${brandId ? `?brand_id=${brandId}` : ''}`,
       {
         method: 'DELETE',
         headers: getAuthHeader(),

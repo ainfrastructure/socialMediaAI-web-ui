@@ -28,7 +28,7 @@
       <button v-if="showRestaurant" class="filter-btn" @click="showRestaurantModal = true">
         <span class="btn-icon">🏪</span>
         <span class="btn-text">
-          {{ selectedRestaurants.length > 0 ? `Restaurants (${selectedRestaurants.length})` : 'Restaurants' }}
+          {{ selectedBrands.length > 0 ? `Restaurants (${selectedBrands.length})` : 'Restaurants' }}
         </span>
         <span class="btn-arrow">→</span>
       </button>
@@ -73,7 +73,7 @@
         </span>
         <!-- Restaurant tags -->
         <span
-          v-for="restaurantId in selectedRestaurants"
+          v-for="restaurantId in selectedBrands"
           :key="restaurantId"
           class="filter-tag"
           @click="toggleCheckbox('restaurant_ids', restaurantId)"
@@ -101,11 +101,11 @@
       @update:selected-platforms="updatePlatforms"
     />
 
-    <RestaurantFilterModal
+    <BrandFilterModal
       v-model="showRestaurantModal"
       :restaurants="restaurants"
-      :selected-restaurant-ids="selectedRestaurants"
-      @update:selected-restaurant-ids="updateRestaurants"
+      :selected-brand-ids="selectedBrands"
+      @update:selected-brand-ids="updateRestaurants"
     />
 
     <ContentTypeFilterModal
@@ -120,7 +120,7 @@
 import { ref, computed } from 'vue'
 import BaseCard from './BaseCard.vue'
 import BaseButton from './BaseButton.vue'
-import RestaurantFilterModal from './RestaurantFilterModal.vue'
+import BrandFilterModal from './BrandFilterModal.vue'
 import PlatformFilterModal from './PlatformFilterModal.vue'
 import ContentTypeFilterModal from './ContentTypeFilterModal.vue'
 
@@ -167,7 +167,7 @@ const showPlatformModal = ref(false)
 const showContentTypeModal = ref(false)
 
 const selectedPlatforms = computed(() => props.modelValue.platforms || [])
-const selectedRestaurants = computed(() => props.modelValue.restaurant_ids || [])
+const selectedBrands = computed(() => props.modelValue.restaurant_ids || [])
 const selectedContentTypes = computed(() => props.modelValue.content_types || [])
 
 const hasActiveFilters = computed(() => {

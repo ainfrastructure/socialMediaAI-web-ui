@@ -5,14 +5,14 @@
  */
 import { ref, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useRestaurantImages } from '@/composables/useRestaurantImages'
-import type { SavedRestaurant, UploadedImage } from '@/services/restaurantService'
+import { useBrandImages } from '@/composables/useBrandImages'
+import type { Brand, UploadedImage } from '@/services/brandService'
 import ImageUploadBox from './ImageUploadBox.vue'
 import BaseButton from '../BaseButton.vue'
 import MaterialIcon from '../MaterialIcon.vue'
 
 interface Props {
-  restaurant: SavedRestaurant
+  entity?: Brand
   previewUrl?: string | null
   acceptTypes?: string
 }
@@ -32,27 +32,29 @@ const { t } = useI18n()
 type SourceMode = 'upload' | 'existing'
 const sourceMode = ref<SourceMode>('upload')
 
-// Restaurant images composable
-const {
-  folderStructure,
-  currentFolderPath,
-  filteredImages,
-  navigateToFolder,
-  toggleFolderExpansion,
-  searchQuery,
-  loading,
-  error
-} = useRestaurantImages(props.restaurant)
+// Unified composable - only initialize if entity is provided
+const imageState = props.entity ? useBrandImages(props.entity!) : null
+
+const folderStructure = imageState?.folderStructure
+const currentFolderPath = imageState?.currentFolderPath
+const filteredImages = imageState?.filteredImages
+const navigateToFolder = imageState?.navigateToFolder
+const toggleFolderExpansion = imageState?.toggleFolderExpansion
+const searchQuery = imageState?.searchQuery
+const loading = imageState?.loading
+const error = imageState?.error
 
 // Image selection state
 const selectedImageId = ref<string | null>(null)
 const isConverting = ref(false)
 
-// Computed
-const hasImages = computed(() => props.restaurant.uploaded_images && props.restaurant.uploaded_images.length > 0)
+// Computed - check total images across all folders, not just current folder
+const hasImages = computed(() => {
+  return (imageState?.images?.value?.length || 0) > 0
+})
 
 const flatFolders = computed(() => {
-  if (!folderStructure.value) return []
+  if (!folderStructure?.value) return []
   return getFlatFolderList(folderStructure.value)
 })
 
@@ -104,7 +106,7 @@ async function handleImageSelect(image: UploadedImage) {
     // 3. Create File object (same interface as uploaded files)
     const file = new File([blob], filename, {
       type: blob.type || 'image/jpeg',
-      lastModified: new Date(image.uploaded_at).getTime()
+      lastModified: new Date(image.created_at).getTime()
     })
 
     // 4. Emit to parent (parent creates preview same as upload)

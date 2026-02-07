@@ -3,8 +3,8 @@ import { API_URL, getAuthHeader, getAuthHeaders } from './apiBase'
 import { debugLog, debugError } from '@/utils/debug'
 
 class FacebookService {
-  async initAuth(): Promise<ApiResponse<{ authUrl: string; state: string }>> {
-    const response = await fetch(`${API_URL}/api/facebook/auth/init`, {
+  async initAuth(brandId?: string): Promise<ApiResponse<{ authUrl: string; state: string }>> {
+    const response = await fetch(`${API_URL}/api/facebook/auth/init${brandId ? `?brand_id=${brandId}` : ''}`, {
       headers: getAuthHeader(),
     })
 
@@ -35,15 +35,15 @@ class FacebookService {
     return response.json()
   }
 
-  async getPages(): Promise<ApiResponse<{ pages: any[] }>> {
-    const response = await fetch(`${API_URL}/api/facebook/pages`, {
+  async getPages(brandId?: string): Promise<ApiResponse<{ pages: any[] }>> {
+    const response = await fetch(`${API_URL}/api/facebook/pages${brandId ? `?brand_id=${brandId}` : ''}`, {
       headers: getAuthHeader(),
     })
     return response.json()
   }
 
-  async disconnectPage(pageId: string): Promise<ApiResponse> {
-    const response = await fetch(`${API_URL}/api/facebook/pages/${pageId}`, {
+  async disconnectPage(pageId: string, brandId?: string): Promise<ApiResponse> {
+    const response = await fetch(`${API_URL}/api/facebook/pages/${pageId}${brandId ? `?brand_id=${brandId}` : ''}`, {
       method: 'DELETE',
       headers: getAuthHeader(),
     })

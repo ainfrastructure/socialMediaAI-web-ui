@@ -4,30 +4,30 @@
     size="md"
     :title="$t('restaurantSelector.addNew')"
     :show-close-button="true"
-    :close-on-overlay-click="!savingRestaurant"
-    :close-on-escape="!savingRestaurant"
+    :close-on-overlay-click="!savingBrand"
+    :close-on-escape="!savingBrand"
     :allow-overflow="true"
     @update:model-value="(val: boolean) => !val && closeModal()"
     @close="closeModal"
   >
     <!-- Error Alert -->
-    <BaseAlert v-if="restaurantError" type="error" :dismissible="false">
-      {{ restaurantError }}
+    <BaseAlert v-if="brandError" type="error" :dismissible="false">
+      {{ brandError }}
     </BaseAlert>
 
     <!-- Search Field -->
     <div class="search-section">
       <label class="search-label">{{ $t('restaurantSearch.searchPlaceholder') }}</label>
-      <RestaurantAutocomplete
+      <BrandAutocomplete
         :placeholder="$t('restaurantSearch.searchPlaceholder')"
-        :saved-restaurants="savedRestaurants"
-        @select="handleRestaurantSelect"
-        :disabled="savingRestaurant"
+        :saved-brands="savedBrands"
+        @select="handleBrandSelect"
+        :disabled="savingBrand"
       />
 
       <!-- Manual Entry Link -->
       <button
-        v-if="!detailsFetched && !savingRestaurant"
+        v-if="!detailsFetched && !savingBrand"
         class="manual-entry-link"
         @click="handleSwitchToManual"
         type="button"
@@ -37,26 +37,26 @@
     </div>
 
     <!-- Loading State -->
-    <div v-if="savingRestaurant && !detailsFetched" class="loading-state">
+    <div v-if="savingBrand && !detailsFetched" class="loading-state">
       <div class="spinner"></div>
       <p class="loading-text">{{ $t('common.loading') }}</p>
     </div>
 
     <!-- Selected Restaurant Preview -->
-    <div v-if="(detailsFetched || restaurantSaved) && selectedRestaurant" class="selected-restaurant">
-      <div class="restaurant-card">
-        <div class="restaurant-logo" v-if="selectedRestaurant.brand_dna?.logo_url">
-          <img :src="selectedRestaurant.brand_dna.logo_url" :alt="selectedRestaurant.name" />
+    <div v-if="(detailsFetched || brandSaved) && selectedBrand" class="selected-brand">
+      <div class="brand-card">
+        <div class="brand-logo" v-if="selectedBrand.brand_dna?.logo_url">
+          <img :src="selectedBrand.brand_dna.logo_url" :alt="selectedBrand.name" />
         </div>
-        <div class="restaurant-info">
-          <h3>{{ selectedRestaurant.name }}</h3>
-          <p v-if="selectedRestaurant.address" class="address">{{ selectedRestaurant.address }}</p>
-          <div v-if="selectedRestaurant.menu_items?.length > 0" class="menu-badge-container">
-            <span v-if="selectedRestaurant.menu_source === 'okam'" class="menu-badge okam-badge">
-              ✓ Okam Menu - {{ selectedRestaurant.menu_items.length }} items
+        <div class="brand-info">
+          <h3>{{ selectedBrand.name }}</h3>
+          <p v-if="selectedBrand.address" class="address">{{ selectedBrand.address }}</p>
+          <div v-if="selectedBrand.menu_items?.length > 0" class="menu-badge-container">
+            <span v-if="selectedBrand.menu_source === 'okam'" class="menu-badge okam-badge">
+              ✓ Okam Menu - {{ selectedBrand.menu_items.length }} items
             </span>
-            <span v-else-if="selectedRestaurant.menu_source" class="menu-badge platform-badge">
-              {{ selectedRestaurant.menu_source }} - {{ selectedRestaurant.menu_items.length }} items
+            <span v-else-if="selectedBrand.menu_source" class="menu-badge platform-badge">
+              {{ selectedBrand.menu_source }} - {{ selectedBrand.menu_items.length }} items
             </span>
           </div>
         </div>
@@ -65,12 +65,12 @@
     </div>
 
     <!-- Success Message -->
-    <div v-if="restaurantSaved" class="success-message">
+    <div v-if="brandSaved" class="success-message">
       <div class="success-icon">✓</div>
-      <p>{{ $t('restaurantSelector.restaurantAdded') }}</p>
+      <p>{{ $t('restaurantSelector.brandAdded') }}</p>
     </div>
 
-    <template #footer v-if="detailsFetched && !restaurantSaved">
+    <template #footer v-if="detailsFetched && !brandSaved">
       <BaseButton
         variant="ghost"
         @click="closeModal"
@@ -79,10 +79,10 @@
       </BaseButton>
       <BaseButton
         variant="primary"
-        :disabled="savingRestaurant"
+        :disabled="savingBrand"
         @click="handleSave"
       >
-        {{ savingRestaurant ? $t('common.processing') : $t('common.save') }}
+        {{ savingBrand ? $t('common.processing') : $t('common.save') }}
       </BaseButton>
     </template>
   </BaseModal>
@@ -93,32 +93,32 @@ import { ref, watch } from 'vue'
 import BaseModal from './BaseModal.vue'
 import BaseButton from './BaseButton.vue'
 import BaseAlert from './BaseAlert.vue'
-import RestaurantAutocomplete from './RestaurantAutocomplete.vue'
+import BrandAutocomplete from './BrandAutocomplete.vue'
 import { placesService } from '../services/placesService'
 import { okamService } from '../services/okamService'
-import { restaurantService } from '../services/restaurantService'
+import { brandService } from '../services/brandService'
 import { debugLog, errorLog } from '@/utils/debug'
 
 interface Props {
   modelValue: boolean
-  savedRestaurants?: Array<{ place_id: string; name: string }>
+  savedBrands?: Array<{ place_id: string; name: string }>
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  savedRestaurants: () => []
+  savedBrands: () => []
 })
 const emit = defineEmits<{
   (e: 'update:modelValue', value: boolean): void
-  (e: 'restaurantAdded', restaurant: any): void
+  (e: 'brandAdded', restaurant: any): void
   (e: 'switch-to-manual'): void
 }>()
 
-const selectedRestaurant = ref<any>(null)
-const savingRestaurant = ref(false)
+const selectedBrand = ref<any>(null)
+const savingBrand = ref(false)
 const loadingDetails = ref(false)
 const detailsFetched = ref(false)
-const restaurantSaved = ref(false)
-const restaurantError = ref('')
+const brandSaved = ref(false)
+const brandError = ref('')
 const placeDetails = ref<any>(null)
 const fetchedDetails = ref<any>(null)
 const fetchedMenuData = ref<any>(null)
@@ -132,12 +132,12 @@ watch(() => props.modelValue, (newValue) => {
 })
 
 function resetState() {
-  selectedRestaurant.value = null
-  savingRestaurant.value = false
+  selectedBrand.value = null
+  savingBrand.value = false
   loadingDetails.value = false
   detailsFetched.value = false
-  restaurantSaved.value = false
-  restaurantError.value = ''
+  brandSaved.value = false
+  brandError.value = ''
   placeDetails.value = null
   fetchedDetails.value = null
   fetchedMenuData.value = null
@@ -153,19 +153,19 @@ function handleSwitchToManual() {
   emit('switch-to-manual')
 }
 
-async function handleRestaurantSelect(restaurant: any) {
-  selectedRestaurant.value = restaurant
-  restaurantError.value = ''
-  restaurantSaved.value = false
+async function handleBrandSelect(restaurant: any) {
+  selectedBrand.value = restaurant
+  brandError.value = ''
+  brandSaved.value = false
 
-  await fetchRestaurantDetails(restaurant)
+  await fetchBrandDetails(restaurant)
 }
 
-async function fetchRestaurantDetails(restaurant: any) {
+async function fetchBrandDetails(restaurant: any) {
   try {
-    savingRestaurant.value = true
+    savingBrand.value = true
     loadingDetails.value = true
-    restaurantError.value = ''
+    brandError.value = ''
 
     // Fetch full place details from Google Places
     const details = await placesService.getPlaceDetails(restaurant.place_id)
@@ -187,7 +187,7 @@ async function fetchRestaurantDetails(restaurant: any) {
       if (okamMenu && okamMenu.categories?.length > 0) {
         // Convert Okam format to standard format
         menuData = {
-          restaurantName: okamMenu.storeName,
+          brandName: okamMenu.storeName,
           platform: 'okam' as const,
           url: '',
           items: okamService.convertToMenuItems(okamMenu)
@@ -219,8 +219,8 @@ async function fetchRestaurantDetails(restaurant: any) {
     fetchedBrandDNA.value = brandDNA
     detailsFetched.value = true
 
-    // Set up the selectedRestaurant preview (but not saved yet)
-    selectedRestaurant.value = {
+    // Set up the selectedBrand preview (but not saved yet)
+    selectedBrand.value = {
       id: '', // Will be set when saved
       place_id: restaurant.place_id,
       name: details.name,
@@ -234,30 +234,30 @@ async function fetchRestaurantDetails(restaurant: any) {
     }
   } catch (error: any) {
     errorLog('Failed to fetch restaurant details:', error)
-    restaurantError.value = error.message || 'Failed to fetch restaurant details. Please try again.'
+    brandError.value = error.message || 'Failed to fetch restaurant details. Please try again.'
     detailsFetched.value = false
   } finally {
-    savingRestaurant.value = false
+    savingBrand.value = false
     loadingDetails.value = false
   }
 }
 
 async function handleSave() {
   if (!fetchedDetails.value) {
-    restaurantError.value = 'No restaurant details to save'
+    brandError.value = 'No restaurant details to save'
     return
   }
 
   try {
-    savingRestaurant.value = true
-    restaurantError.value = ''
+    savingBrand.value = true
+    brandError.value = ''
 
     const { restaurant, details } = fetchedDetails.value
     const menuData = fetchedMenuData.value
     const brandDNA = fetchedBrandDNA.value
 
     // Save restaurant to database
-    const restaurantData = {
+    const brandData = {
       place_id: restaurant.place_id || details.place_id,
       name: details.name || restaurant.name,
       address: details.formatted_address || details.vicinity || restaurant.address || '',
@@ -272,18 +272,18 @@ async function handleSave() {
       } : null,
     }
 
-    if (!restaurantData.place_id || !restaurantData.name || !restaurantData.address) {
+    if (!brandData.place_id || !brandData.name || !brandData.address) {
       throw new Error('Missing required fields')
     }
 
-    const result = await restaurantService.saveRestaurant(restaurantData)
+    const result = await brandService.createBrand(brandData)
 
     if (result.success) {
-      restaurantSaved.value = true
-      selectedRestaurant.value.id = result.data?.id || ''
+      brandSaved.value = true
+      selectedBrand.value.id = result.data?.id || ''
 
       // Emit the saved restaurant
-      emit('restaurantAdded', selectedRestaurant.value)
+      emit('brandAdded', selectedBrand.value)
 
       // Close modal after a short delay
       setTimeout(() => {
@@ -292,9 +292,9 @@ async function handleSave() {
     } else {
       if (result.error && result.error.includes('already saved')) {
         // Restaurant already exists, that's fine!
-        restaurantSaved.value = true
-        selectedRestaurant.value.id = result.data?.id || ''
-        emit('restaurantAdded', selectedRestaurant.value)
+        brandSaved.value = true
+        selectedBrand.value.id = result.data?.id || ''
+        emit('brandAdded', selectedBrand.value)
 
         setTimeout(() => {
           closeModal()
@@ -305,9 +305,9 @@ async function handleSave() {
     }
   } catch (error: any) {
     errorLog('Failed to save restaurant:', error)
-    restaurantError.value = error.message || 'Failed to save restaurant. Please try again.'
+    brandError.value = error.message || 'Failed to save restaurant. Please try again.'
   } finally {
-    savingRestaurant.value = false
+    savingBrand.value = false
   }
 }
 </script>
@@ -381,7 +381,7 @@ async function handleSave() {
   margin: 0;
 }
 
-.selected-restaurant {
+.selected-brand {
   animation: fadeIn 0.3s ease;
 }
 
@@ -390,7 +390,7 @@ async function handleSave() {
   to { opacity: 1; }
 }
 
-.restaurant-card {
+.brand-card {
   display: flex;
   align-items: center;
   gap: var(--space-lg);
@@ -400,7 +400,7 @@ async function handleSave() {
   border-radius: var(--radius-lg);
 }
 
-.restaurant-logo {
+.brand-logo {
   flex-shrink: 0;
   width: 60px;
   height: 60px;
@@ -412,25 +412,25 @@ async function handleSave() {
   justify-content: center;
 }
 
-.restaurant-logo img {
+.brand-logo img {
   width: 100%;
   height: 100%;
   object-fit: contain;
 }
 
-.restaurant-info {
+.brand-info {
   flex: 1;
   min-width: 0;
 }
 
-.restaurant-info h3 {
+.brand-info h3 {
   font-family: var(--font-heading);
   font-size: var(--text-lg);
   color: var(--text-primary);
   margin: 0 0 var(--space-xs) 0;
 }
 
-.restaurant-info .address {
+.brand-info .address {
   font-size: var(--text-sm);
   color: var(--text-secondary);
   margin: 0 0 var(--space-sm) 0;
@@ -509,7 +509,7 @@ async function handleSave() {
 
 /* Responsive */
 @media (max-width: 768px) {
-  .restaurant-card {
+  .brand-card {
     flex-direction: column;
     text-align: center;
   }
@@ -521,12 +521,12 @@ async function handleSave() {
   border-top-color: var(--gold-primary);
 }
 
-:root[data-theme="dark"] .restaurant-card {
+:root[data-theme="dark"] .brand-card {
   background: var(--accent-alpha-10);
   border-color: var(--border-color);
 }
 
-:root[data-theme="dark"] .restaurant-logo {
+:root[data-theme="dark"] .brand-logo {
   background: var(--bg-tertiary);
 }
 </style>

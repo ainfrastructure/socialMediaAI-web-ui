@@ -1,19 +1,19 @@
 <script setup lang="ts">
 import { ref, computed, reactive } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { restaurantService } from '@/services/restaurantService'
-import type { SavedRestaurant, UpdateRestaurantData } from '@/services/restaurantService'
+import { brandService } from '@/services/brandService'
+import type { Brand, UpdateBrandData } from '@/services/brandService'
 import BaseModal from './BaseModal.vue'
 import BaseButton from './BaseButton.vue'
 import BaseInput from './BaseInput.vue'
 import BaseAlert from './BaseAlert.vue'
 import LogoUpload from './LogoUpload.vue'
 import ColorPicker from './ColorPicker.vue'
-import RestaurantImageManager from './restaurant-images/RestaurantImageManager.vue'
+import BrandImageManager from './brand-images/BrandImageManager.vue'
 
 const props = defineProps<{
   modelValue: boolean
-  restaurant: SavedRestaurant
+  brand: Brand
 }>()
 
 const emit = defineEmits<{
@@ -46,7 +46,7 @@ const editForm = reactive({
   }
 })
 
-const totalImageCount = computed(() => props.restaurant.uploaded_images?.length || 0)
+const totalImageCount = computed(() => props.brand.uploaded_images?.length || 0)
 
 function handleClose() {
   emit('update:modelValue', false)
@@ -56,17 +56,17 @@ function handleClose() {
 }
 
 function startEditing() {
-  // Populate form with current restaurant data
-  editForm.name = props.restaurant.name || ''
-  editForm.address = props.restaurant.address || ''
-  editForm.phone_number = props.restaurant.phone_number || ''
-  editForm.website = props.restaurant.website || ''
-  editForm.social_media.instagram = props.restaurant.social_media?.instagram || ''
-  editForm.social_media.facebook = props.restaurant.social_media?.facebook || ''
-  editForm.social_media.twitter = props.restaurant.social_media?.twitter || ''
-  editForm.brand_dna.logo_url = props.restaurant.brand_dna?.logo_url || ''
-  editForm.brand_dna.primary_color = props.restaurant.brand_dna?.primary_color || '#0f3d2e'
-  editForm.brand_dna.secondary_color = props.restaurant.brand_dna?.secondary_color || '#1a5a45'
+  // Populate form with current brand data
+  editForm.name = props.brand.name || ''
+  editForm.address = props.brand.address || ''
+  editForm.phone_number = props.brand.phone_number || ''
+  editForm.website = props.brand.website || ''
+  editForm.social_media.instagram = props.brand.social_media?.instagram || ''
+  editForm.social_media.facebook = props.brand.social_media?.facebook || ''
+  editForm.social_media.twitter = props.brand.social_media?.twitter || ''
+  editForm.brand_dna.logo_url = (props.brand.brand_dna?.logo_url as string) || ''
+  editForm.brand_dna.primary_color = (props.brand.brand_dna?.primary_color as string) || '#0f3d2e'
+  editForm.brand_dna.secondary_color = (props.brand.brand_dna?.secondary_color as string) || '#1a5a45'
 
   isEditing.value = true
   saveError.value = ''
@@ -86,13 +86,27 @@ function handleLogoError(message: string) {
   saveError.value = message
 }
 
+function fileToBase64(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => {
+      const result = reader.result as string
+      // Strip the data URL prefix (e.g. "data:image/png;base64,")
+      const base64 = result.split(',')[1] || result
+      resolve(base64)
+    }
+    reader.onerror = reject
+    reader.readAsDataURL(file)
+  })
+}
+
 async function saveChanges() {
   saveError.value = ''
   saving.value = true
 
   try {
-    const restaurantId = props.restaurant.place_id || props.restaurant.id
-    console.log('Saving restaurant changes for:', restaurantId)
+    const brandId = props.brand.place_id || props.brand.id
+    console.log('Saving brand changes for:', brandId)
 
     // Upload logo first if there's a new one
     let logoUrl = editForm.brand_dna.logo_url
@@ -100,7 +114,15 @@ async function saveChanges() {
       console.log('New logo file detected, uploading...')
       uploadingLogo.value = true
       try {
-        logoUrl = await restaurantService.uploadLogo(restaurantId, logoFile.value)
+        const base64 = await fileToBase64(logoFile.value)
+        const response = await brandService.uploadLogo(brandId, {
+          base64,
+          mimeType: logoFile.value.type,
+        })
+        if (!response.success || !response.data) {
+          throw new Error(response.error || 'Upload failed')
+        }
+        logoUrl = response.data.url
         console.log('Logo uploaded, URL:', logoUrl)
       } catch (err: any) {
         console.error('Failed to upload logo:', err)
@@ -113,9 +135,9 @@ async function saveChanges() {
       }
     }
 
-    // For manual restaurants, we can update more fields
-    // For Google Places restaurants, only certain fields are editable
-    const updateData: UpdateRestaurantData = {
+    // For manual brands, we can update more fields
+    // For Google Places brands, only certain fields are editable
+    const updateData: UpdateBrandData = {
       website: editForm.website || null,
       social_media: {
         instagram: editForm.social_media.instagram || null,
@@ -124,8 +146,8 @@ async function saveChanges() {
       }
     }
 
-    // If it's a manual restaurant, we can also update name, address, phone, and branding
-    if (props.restaurant.is_manual) {
+    // If it's a manual brand, we can also update name, address, phone, and branding
+    if (props.brand.is_manual) {
       updateData.name = editForm.name
       updateData.address = editForm.address
       updateData.phone_number = editForm.phone_number || null
@@ -136,9 +158,9 @@ async function saveChanges() {
       }
     }
 
-    console.log('Updating restaurant with data:', updateData)
-    const updateResponse = await restaurantService.updateRestaurant(restaurantId, updateData)
-    console.log('Restaurant updated successfully, response:', updateResponse)
+    console.log('Updating brand with data:', updateData)
+    const updateResponse = await brandService.updateBrand(brandId, updateData)
+    console.log('Brand updated successfully, response:', updateResponse)
 
     // Emit updated event and wait for parent to refresh
     emit('updated')
@@ -160,7 +182,7 @@ async function saveChanges() {
 
 <template>
   <BaseModal :model-value="modelValue" @update:model-value="handleClose" size="xl">
-    <template #title>{{ restaurant.name }}</template>
+    <template #title>{{ brand.name }}</template>
 
     <!-- Tabs -->
     <div class="tabs">
@@ -205,44 +227,44 @@ async function saveChanges() {
           <h3>{{ $t('restaurantManagement.basicInfo') }}</h3>
           <div v-if="!isEditing" class="detail-grid">
             <div class="detail-item">
-              <span class="detail-label">{{ $t('restaurantManagement.restaurantName') }}</span>
-              <span class="detail-value">{{ restaurant.name }}</span>
+              <span class="detail-label">{{ $t('restaurantManagement.brandName') }}</span>
+              <span class="detail-value">{{ brand.name }}</span>
             </div>
             <div class="detail-item">
               <span class="detail-label">{{ $t('restaurantManagement.address') }}</span>
-              <span class="detail-value">{{ restaurant.address }}</span>
+              <span class="detail-value">{{ brand.address }}</span>
             </div>
           </div>
           <div v-else class="edit-grid">
             <BaseInput
               v-model="editForm.name"
-              :label="$t('restaurantManagement.restaurantName')"
-              :disabled="!restaurant.is_manual"
-              :hint="!restaurant.is_manual ? 'Cannot edit Google Places restaurant name' : ''"
+              :label="$t('restaurantManagement.brandName')"
+              :disabled="!brand.is_manual"
+              :hint="!brand.is_manual ? 'Cannot edit Google Places brand name' : ''"
               required
             />
             <BaseInput
               v-model="editForm.address"
               :label="$t('restaurantManagement.address')"
-              :disabled="!restaurant.is_manual"
-              :hint="!restaurant.is_manual ? 'Cannot edit Google Places restaurant address' : ''"
+              :disabled="!brand.is_manual"
+              :hint="!brand.is_manual ? 'Cannot edit Google Places brand address' : ''"
               type="textarea"
               required
             />
           </div>
         </div>
 
-        <div v-if="restaurant.phone_number || restaurant.website || isEditing" class="detail-section">
+        <div v-if="brand.phone_number || brand.website || isEditing" class="detail-section">
           <h3>{{ $t('restaurantManagement.contactInfo') }}</h3>
           <div v-if="!isEditing" class="detail-grid">
-            <div v-if="restaurant.phone_number" class="detail-item">
+            <div v-if="brand.phone_number" class="detail-item">
               <span class="detail-label">{{ $t('restaurantManagement.phoneNumber') }}</span>
-              <span class="detail-value">{{ restaurant.phone_number }}</span>
+              <span class="detail-value">{{ brand.phone_number }}</span>
             </div>
-            <div v-if="restaurant.website" class="detail-item">
+            <div v-if="brand.website" class="detail-item">
               <span class="detail-label">{{ $t('restaurantManagement.website') }}</span>
-              <a :href="restaurant.website" target="_blank" class="detail-link">
-                {{ restaurant.website }}
+              <a :href="brand.website" target="_blank" class="detail-link">
+                {{ brand.website }}
               </a>
             </div>
           </div>
@@ -252,8 +274,8 @@ async function saveChanges() {
               type="tel"
               :label="$t('restaurantManagement.phoneNumber')"
               :placeholder="$t('restaurantManagement.phoneNumberPlaceholder')"
-              :disabled="!restaurant.is_manual"
-              :hint="!restaurant.is_manual ? 'Cannot edit Google Places restaurant phone' : ''"
+              :disabled="!brand.is_manual"
+              :hint="!brand.is_manual ? 'Cannot edit Google Places brand phone' : ''"
             />
             <BaseInput
               v-model="editForm.website"
@@ -264,20 +286,20 @@ async function saveChanges() {
           </div>
         </div>
 
-        <div v-if="restaurant.social_media?.instagram || restaurant.social_media?.facebook || restaurant.social_media?.twitter || isEditing" class="detail-section">
+        <div v-if="brand.social_media?.instagram || brand.social_media?.facebook || brand.social_media?.twitter || isEditing" class="detail-section">
           <h3>{{ $t('restaurantManagement.socialMedia') }}</h3>
           <div v-if="!isEditing" class="detail-grid">
-            <div v-if="restaurant.social_media?.instagram" class="detail-item">
+            <div v-if="brand.social_media?.instagram" class="detail-item">
               <span class="detail-label">{{ $t('restaurantManagement.instagram') }}</span>
-              <span class="detail-value">{{ restaurant.social_media.instagram }}</span>
+              <span class="detail-value">{{ brand.social_media.instagram }}</span>
             </div>
-            <div v-if="restaurant.social_media?.facebook" class="detail-item">
+            <div v-if="brand.social_media?.facebook" class="detail-item">
               <span class="detail-label">{{ $t('restaurantManagement.facebook') }}</span>
-              <span class="detail-value">{{ restaurant.social_media.facebook }}</span>
+              <span class="detail-value">{{ brand.social_media.facebook }}</span>
             </div>
-            <div v-if="restaurant.social_media?.twitter" class="detail-item">
+            <div v-if="brand.social_media?.twitter" class="detail-item">
               <span class="detail-label">{{ $t('restaurantManagement.twitter') }}</span>
-              <span class="detail-value">{{ restaurant.social_media.twitter }}</span>
+              <span class="detail-value">{{ brand.social_media.twitter }}</span>
             </div>
           </div>
           <div v-else class="edit-grid">
@@ -299,25 +321,25 @@ async function saveChanges() {
           </div>
         </div>
 
-        <div v-if="restaurant.brand_dna?.logo_url || restaurant.brand_dna?.primary_color || isEditing" class="detail-section">
+        <div v-if="brand.brand_dna?.logo_url || brand.brand_dna?.primary_color || isEditing" class="detail-section">
           <h3>{{ $t('restaurantManagement.branding') }}</h3>
           <div v-if="!isEditing" class="detail-grid">
-            <div v-if="restaurant.brand_dna?.logo_url" class="detail-item">
+            <div v-if="brand.brand_dna?.logo_url" class="detail-item">
               <span class="detail-label">{{ $t('restaurantManagement.logo') }}</span>
-              <img :src="restaurant.brand_dna.logo_url" alt="Logo" class="brand-logo" />
+              <img :src="brand.brand_dna.logo_url" alt="Logo" class="brand-logo" />
             </div>
-            <div v-if="restaurant.brand_dna?.primary_color" class="detail-item">
+            <div v-if="brand.brand_dna?.primary_color" class="detail-item">
               <span class="detail-label">{{ $t('restaurantManagement.primaryColor') }}</span>
               <div class="color-preview">
-                <div class="color-swatch" :style="{ backgroundColor: restaurant.brand_dna.primary_color }"></div>
-                <span>{{ restaurant.brand_dna.primary_color }}</span>
+                <div class="color-swatch" :style="{ backgroundColor: brand.brand_dna.primary_color as string }"></div>
+                <span>{{ brand.brand_dna.primary_color }}</span>
               </div>
             </div>
-            <div v-if="restaurant.brand_dna?.secondary_color" class="detail-item">
+            <div v-if="brand.brand_dna?.secondary_color" class="detail-item">
               <span class="detail-label">{{ $t('restaurantManagement.secondaryColor') }}</span>
               <div class="color-preview">
-                <div class="color-swatch" :style="{ backgroundColor: restaurant.brand_dna.secondary_color }"></div>
-                <span>{{ restaurant.brand_dna.secondary_color }}</span>
+                <div class="color-swatch" :style="{ backgroundColor: brand.brand_dna.secondary_color as string }"></div>
+                <span>{{ brand.brand_dna.secondary_color }}</span>
               </div>
             </div>
           </div>
@@ -327,7 +349,7 @@ async function saveChanges() {
               <LogoUpload
                 v-model="editForm.brand_dna.logo_url"
                 :uploading="uploadingLogo"
-                :disabled="!restaurant.is_manual"
+                :disabled="!brand.is_manual"
                 @upload="handleLogoUpload"
                 @error="handleLogoError"
               />
@@ -336,12 +358,12 @@ async function saveChanges() {
               <ColorPicker
                 v-model="editForm.brand_dna.primary_color"
                 :label="$t('restaurantManagement.primaryColor')"
-                :disabled="!restaurant.is_manual"
+                :disabled="!brand.is_manual"
               />
               <ColorPicker
                 v-model="editForm.brand_dna.secondary_color"
                 :label="$t('restaurantManagement.secondaryColor')"
-                :disabled="!restaurant.is_manual"
+                :disabled="!brand.is_manual"
               />
             </div>
           </div>
@@ -351,7 +373,7 @@ async function saveChanges() {
 
     <!-- Images Tab -->
     <div v-if="activeTab === 'images'" class="tab-content images-tab">
-      <RestaurantImageManager :restaurant="restaurant" @updated="emit('updated')" />
+      <BrandImageManager :restaurant="brand" @updated="emit('updated')" />
     </div>
   </BaseModal>
 </template>

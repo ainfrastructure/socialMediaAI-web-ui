@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { api } from '../services/api'
+import { usePreferencesStore } from '@/stores/preferences'
 import { debugLog } from '@/utils/debug'
 
 export interface TwitterAccount {
@@ -17,21 +18,21 @@ export const useTwitterStore = defineStore('twitter', () => {
   const loading = ref(false)
   const error = ref<string | null>(null)
 
-  /**
-   * Initialize Twitter OAuth flow with redirect
-   * @param returnUrl - Optional URL to return to after OAuth completes
-   */
+  function getBrandId(): string | undefined {
+    const preferencesStore = usePreferencesStore()
+    return preferencesStore.selectedBrandId || undefined
+  }
+
   async function connectTwitter(returnUrl?: string): Promise<void> {
     loading.value = true
     error.value = null
 
     try {
-      // Step 1: Get authorization URL from backend
-      const initResponse = await api.initTwitterAuth()
+      const brandId = getBrandId()
+      const initResponse = await api.initTwitterAuth(brandId)
 
       if (!initResponse.success) {
-        const errorMsg = initResponse.error || 'Failed to initialize Twitter authentication'
-        throw new Error(errorMsg)
+        throw new Error(initResponse.error || 'Failed to initialize Twitter authentication')
       }
 
       if (!initResponse.data) {
@@ -40,10 +41,8 @@ export const useTwitterStore = defineStore('twitter', () => {
 
       const { authUrl, state } = initResponse.data
 
-      // Step 2: Store state in localStorage for verification after redirect
       localStorage.setItem('twitter_oauth_state', state)
 
-      // Step 2b: Store return URL if provided
       if (returnUrl) {
         debugLog('[TwitterStore] Storing return URL:', returnUrl)
         localStorage.setItem('oauth_return_url', returnUrl)
@@ -51,25 +50,21 @@ export const useTwitterStore = defineStore('twitter', () => {
         localStorage.removeItem('oauth_return_url')
       }
 
-      // Step 3: Redirect to Twitter OAuth
       window.location.href = authUrl
     } catch (err: any) {
       error.value = err.message || 'Failed to connect Twitter account'
       loading.value = false
       throw err
     }
-    // Note: loading.value stays true because we're redirecting away
   }
 
-  /**
-   * Load user's connected Twitter accounts
-   */
   async function loadConnectedAccounts(): Promise<void> {
     loading.value = true
     error.value = null
 
     try {
-      const response = await api.getTwitterAccounts()
+      const brandId = getBrandId()
+      const response = await api.getTwitterAccounts(brandId)
 
       if (!response.success) {
         throw new Error(response.error || 'Failed to load connected accounts')
@@ -83,21 +78,18 @@ export const useTwitterStore = defineStore('twitter', () => {
     }
   }
 
-  /**
-   * Disconnect a Twitter account
-   */
   async function disconnectAccount(accountId: string): Promise<void> {
     loading.value = true
     error.value = null
 
     try {
-      const response = await api.disconnectTwitterAccount(accountId)
+      const brandId = getBrandId()
+      const response = await api.disconnectTwitterAccount(accountId, brandId)
 
       if (!response.success) {
         throw new Error(response.error || 'Failed to disconnect account')
       }
 
-      // Remove from local state
       connectedAccounts.value = connectedAccounts.value.filter(
         (account) => account.twitterAccountId !== accountId
       )
@@ -109,32 +101,24 @@ export const useTwitterStore = defineStore('twitter', () => {
     }
   }
 
-  /**
-   * Complete Twitter OAuth callback after redirect
-   * Called by the callback page/component
-   */
   async function handleOAuthCallback(code: string, state: string): Promise<void> {
     loading.value = true
     error.value = null
 
     try {
-      // Verify state matches what we stored
       const storedState = localStorage.getItem('twitter_oauth_state')
       if (state !== storedState) {
         throw new Error('Invalid state parameter - possible CSRF attack')
       }
 
-      // Clear stored state
       localStorage.removeItem('twitter_oauth_state')
 
-      // Send code to backend to complete OAuth
       const callbackResponse = await api.completeTwitterAuth(code, state)
 
       if (!callbackResponse.success) {
         throw new Error(callbackResponse.error || 'Failed to complete Twitter authentication')
       }
 
-      // Update connected accounts
       connectedAccounts.value = callbackResponse.data?.accounts || []
       error.value = null
     } catch (err: any) {

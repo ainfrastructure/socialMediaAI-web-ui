@@ -17,9 +17,9 @@
         <!-- Filters Accordion -->
         <CalendarFilters
           :platforms="availablePlatforms"
-          :restaurants="restaurantsForFilter"
+          :brands="businessesForFilter"
           v-model:selectedPlatforms="filters.platforms"
-          v-model:selectedRestaurants="filters.restaurant_ids"
+          v-model:selectedBrandIds="filters.brand_ids"
           @apply="applyFilters"
         />
 
@@ -151,7 +151,7 @@
                   <div class="th-post-type">{{ $t('postType.label') || 'Post Type' }}</div>
                   <div class="th-platforms">{{ $t('dashboardNew.platforms') || 'Platforms' }}</div>
                   <div class="th-status">{{ $t('scheduler.status') || 'Status' }}</div>
-                  <div class="th-restaurant">{{ $t('scheduler.restaurant') || 'Restaurant' }}</div>
+                  <div class="th-restaurant">{{ $t('scheduler.restaurant') || 'Brand' }}</div>
                   <div class="th-expand"></div>
                 </div>
 
@@ -227,9 +227,9 @@
                         </button>
                       </div>
 
-                      <!-- Restaurant Column -->
+                      <!-- Business Column -->
                       <div class="td-restaurant">
-                        <span class="restaurant-name">{{ post.restaurant_name || '-' }}</span>
+                        <span class="restaurant-name">{{ post.business_name || post.restaurant_name || '-' }}</span>
                       </div>
 
                       <!-- Expand Toggle -->
@@ -418,7 +418,7 @@
     <PickPostModal
       v-model="showPickPostModal"
       :selected-date="selectedDateForScheduling"
-      :restaurant-id="selectedRestaurantIdForPosts"
+      :brand-id="selectedBrandIdForPosts"
       @scheduled="handlePostScheduled"
     />
 
@@ -429,21 +429,13 @@
       @select="selectCreationMethod"
     />
 
-    <!-- Restaurant Selector Modal (shown when user has multiple restaurants) -->
-    <RestaurantSelectorModal
-      v-model="showRestaurantSelector"
-      :restaurants="restaurants"
-      :show-add-button="false"
-      @select="handleRestaurantSelected"
-    />
-
-    <!-- Full Creation Wizard Modal -->
-    <FullCreationWizardModal
-      v-model="showFullCreationWizard"
-      :selected-date="selectedDateForScheduling"
-      :restaurants="restaurants"
-      @post-created="handleFullWizardPostCreated"
-      @open-pick-post-modal="handleFullWizardOpenPickPost"
+    <!-- Business Selector Modal (shown when user has multiple brands) -->
+    <BrandSelectorModal
+      v-model="showBusinessSelector"
+      :brands="brands"
+      :current-id="preferencesStore.selectedBrandId || undefined"
+      :show-manage-button="true"
+      @select="handleBusinessSelected"
     />
 
     <!-- Post Detail Modal -->
@@ -507,15 +499,15 @@ import EditScheduledPostModal from '../components/EditScheduledPostModal.vue'
 import Toast from '../components/Toast.vue'
 import ConfirmModal from '../components/ConfirmModal.vue'
 import PostDetailModal from '../components/PostDetailModal.vue'
-import RestaurantSelectorModal from '../components/RestaurantSelectorModal.vue'
+import BrandSelectorModal from '../components/BrandSelectorModal.vue'
 import PublishingProgressModal from '../components/PublishingProgressModal.vue'
-import { CalendarHeader, CalendarLegend, CreatePostWizard, CalendarFilters, SelectedDayDetail, FullCreationWizardModal } from '../components/scheduler'
+import { CalendarHeader, CalendarLegend, CreatePostWizard, CalendarFilters, SelectedDayDetail } from '../components/scheduler'
 import PlatformLogo from '../components/PlatformLogo.vue'
 import PostTypeBadge from '../components/PostTypeBadge.vue'
 import { api } from '../services/api'
 import { schedulerService } from '../services/schedulerService'
 import { API_URL } from '../services/apiBase'
-import { useRestaurantsStore } from '../stores/restaurants'
+import { useBrandsStore } from '../stores/brands'
 import { usePreferencesStore } from '../stores/preferences'
 import { useFacebookStore } from '../stores/facebook'
 import { useInstagramStore } from '../stores/instagram'
@@ -524,7 +516,7 @@ import { useNotificationStore } from '../stores/notifications'
 const router = useRouter()
 const preferencesStore = usePreferencesStore()
 const { t } = useI18n()
-const restaurantsStore = useRestaurantsStore()
+const brandsStore = useBrandsStore()
 
 // Calendar state
 const currentDate = ref(new Date())
@@ -545,12 +537,11 @@ const retryPublishingProgress = ref<Array<{ platform: string; status: 'pending' 
 const retryPublishingComplete = ref(false)
 const postToRetry = ref<any>(null)
 const showCreatePostWizard = ref(false)
-const showFullCreationWizard = ref(false)
 const wizardStep = ref(1) // 1 = Choose Method, 2 = Create/Select Content
 const selectedCreationMethod = ref<'saved' | 'new' | null>(null)
-const showRestaurantSelector = ref(false)
 const pendingCreationMethod = ref<'saved' | 'new' | null>(null)
-const selectedRestaurantIdForPosts = ref<string | undefined>(undefined)
+const selectedBrandIdForPosts = ref<string | undefined>(undefined)
+const showBusinessSelector = ref(false)
 const dayViewPage = ref(1)
 const postsPerPage = 5
 const expandedPostId = ref<string | number | null>(null)
@@ -618,11 +609,15 @@ const viewMode = ref<'month' | 'week' | 'day'>('month')
 // Filters (now using arrays for multi-select)
 const filters = ref({
   platforms: [] as string[],
-  restaurant_ids: [] as string[],
+  brand_ids: [] as string[],
 })
 
-// Use restaurants from store
-const restaurants = computed(() => restaurantsStore.restaurants)
+// Businesses for filters and display
+const brands = computed(() => brandsStore.brands)
+const selectedBrand = computed(() => {
+  if (!preferencesStore.selectedBrandId) return null
+  return brands.value.find(brand => brand.id === preferencesStore.selectedBrandId) || null
+})
 
 const availablePlatforms = [
   { id: 'facebook', name: 'Facebook' },
@@ -630,11 +625,11 @@ const availablePlatforms = [
   { id: 'tiktok', name: 'TikTok' },
 ]
 
-// Transform restaurants for CalendarFilters component
-const restaurantsForFilter = computed(() => {
-  return restaurants.value.map(r => ({
-    id: String(r.id),
-    name: r.name
+// Transform brands for CalendarFilters component
+const businessesForFilter = computed(() => {
+  return brands.value.map(b => ({
+    id: String(b.id),
+    name: b.name
   }))
 })
 
@@ -1070,14 +1065,14 @@ const fetchScheduledPosts = async () => {
     const year = currentDate.value.getFullYear()
 
     // Check if filters are active
-    const hasFilters = filters.value.platforms.length > 0 || filters.value.restaurant_ids.length > 0
+    const hasFilters = filters.value.platforms.length > 0 || filters.value.brand_ids.length > 0
 
     // Fetch current month posts (with filters for calendar)
     const response = await api.getScheduledPosts({
       month,
       year,
       platforms: filters.value.platforms.length > 0 ? filters.value.platforms : undefined,
-      restaurant_ids: filters.value.restaurant_ids.length > 0 ? filters.value.restaurant_ids : undefined,
+      brand_ids: filters.value.brand_ids.length > 0 ? filters.value.brand_ids : undefined,
     })
 
     // Also fetch adjacent months for calendar display (previous and next month days shown in grid)
@@ -1091,13 +1086,13 @@ const fetchScheduledPosts = async () => {
         month: prevMonth,
         year: prevYear,
         platforms: filters.value.platforms.length > 0 ? filters.value.platforms : undefined,
-        restaurant_ids: filters.value.restaurant_ids.length > 0 ? filters.value.restaurant_ids : undefined,
+        brand_ids: filters.value.brand_ids.length > 0 ? filters.value.brand_ids : undefined,
       }),
       api.getScheduledPosts({
         month: nextMonth,
         year: nextYear,
         platforms: filters.value.platforms.length > 0 ? filters.value.platforms : undefined,
-        restaurant_ids: filters.value.restaurant_ids.length > 0 ? filters.value.restaurant_ids : undefined,
+        brand_ids: filters.value.brand_ids.length > 0 ? filters.value.brand_ids : undefined,
       }),
     ])
 
@@ -1142,6 +1137,7 @@ const fetchScheduledPosts = async () => {
         let postText = post.post_text || post.caption
         let contentType = post.content_type
         let platform = post.platform
+        let businessName = post.business_name || post.brands?.name || post.brand?.name
         let restaurantName = post.restaurant_name
 
         // Check if this is a scheduled favorite (has favorite_posts field)
@@ -1153,6 +1149,7 @@ const fetchScheduledPosts = async () => {
           postText = postText || post.favorite_posts.post_text || post.favorite_posts.caption
           contentType = contentType || post.favorite_posts.content_type
           platform = platform || post.favorite_posts.platform
+          businessName = businessName || post.favorite_posts.brands?.name || post.favorite_posts.business_name
           restaurantName = restaurantName || post.favorite_posts.restaurant_name
         }
 
@@ -1162,6 +1159,7 @@ const fetchScheduledPosts = async () => {
           postText = postText || post.favorite.post_text || post.favorite.caption
           contentType = contentType || post.favorite.content_type
           platform = platform || post.favorite.platform
+          businessName = businessName || post.favorite.brands?.name || post.favorite.business_name
           restaurantName = restaurantName || post.favorite.restaurant_name
         }
 
@@ -1173,6 +1171,7 @@ const fetchScheduledPosts = async () => {
           postText = postText || post.favorite_post.post_text || post.favorite_post.caption
           contentType = contentType || post.favorite_post.content_type
           platform = platform || post.favorite_post.platform
+          businessName = businessName || post.favorite_post.brands?.name || post.favorite_post.business_name
           restaurantName = restaurantName || post.favorite_post.restaurant_name
         }
 
@@ -1189,6 +1188,7 @@ const fetchScheduledPosts = async () => {
           post_text: postText,
           content_type: detectedType,
           platform: platform,
+          business_name: businessName || restaurantName,
           restaurant_name: restaurantName,
         }
       })
@@ -1203,6 +1203,7 @@ const fetchScheduledPosts = async () => {
         let postText = post.post_text || post.caption
         let contentType = post.content_type
         let platform = post.platform
+        let businessName = post.business_name || post.brands?.name || post.brand?.name
         let restaurantName = post.restaurant_name
 
         if (!mediaUrl && post.favorite_posts) {
@@ -1210,6 +1211,7 @@ const fetchScheduledPosts = async () => {
           postText = postText || post.favorite_posts.post_text || post.favorite_posts.caption
           contentType = contentType || post.favorite_posts.content_type
           platform = platform || post.favorite_posts.platform
+          businessName = businessName || post.favorite_posts.brands?.name || post.favorite_posts.business_name
           restaurantName = restaurantName || post.favorite_posts.restaurant_name
         }
         if (!mediaUrl && post.favorite) {
@@ -1217,6 +1219,7 @@ const fetchScheduledPosts = async () => {
           postText = postText || post.favorite.post_text || post.favorite.caption
           contentType = contentType || post.favorite.content_type
           platform = platform || post.favorite.platform
+          businessName = businessName || post.favorite.brands?.name || post.favorite.business_name
           restaurantName = restaurantName || post.favorite.restaurant_name
         }
         if (!mediaUrl && post.favorite_post) {
@@ -1224,6 +1227,7 @@ const fetchScheduledPosts = async () => {
           postText = postText || post.favorite_post.post_text || post.favorite_post.caption
           contentType = contentType || post.favorite_post.content_type
           platform = platform || post.favorite_post.platform
+          businessName = businessName || post.favorite_post.brands?.name || post.favorite_post.business_name
           restaurantName = restaurantName || post.favorite_post.restaurant_name
         }
 
@@ -1237,6 +1241,7 @@ const fetchScheduledPosts = async () => {
           post_text: postText,
           content_type: detectedType,
           platform: platform,
+          business_name: businessName || restaurantName,
           restaurant_name: restaurantName,
         }
       })
@@ -1451,40 +1456,50 @@ const selectCreationMethod = (method: 'saved' | 'new') => {
   selectedCreationMethod.value = method
   showCreatePostWizard.value = false
 
-  // If user has more than one restaurant, show restaurant selector first
-  if (restaurants.value.length > 1) {
-    pendingCreationMethod.value = method
-    showRestaurantSelector.value = true
-  } else {
-    // Single restaurant or no restaurants - proceed directly
-    const restaurantId = restaurants.value.length === 1 ? restaurants.value[0].id : undefined
-    proceedWithCreationMethod(method, restaurantId)
+  if (method === 'new') {
+    const preferredBusinessId = filters.value.brand_ids.length === 1
+      ? filters.value.brand_ids[0]
+      : (preferencesStore.selectedBrandId || undefined)
+
+    if (preferredBusinessId) {
+      proceedWithCreationMethod(method, preferredBusinessId)
+    } else if (brands.value.length === 1) {
+      proceedWithCreationMethod(method, brands.value[0].id)
+    } else {
+      pendingCreationMethod.value = method
+      showBusinessSelector.value = true
+    }
+    return
   }
+
+  // Saved post flow uses brand selection
+  if (filters.value.brand_ids.length === 1) {
+    selectedBrandIdForPosts.value = filters.value.brand_ids[0]
+  } else {
+    selectedBrandIdForPosts.value = preferencesStore.selectedBrandId || undefined
+  }
+  showPickPostModal.value = true
 }
 
 // Proceed with the creation method after restaurant selection (or if only one restaurant)
-const proceedWithCreationMethod = (method: 'saved' | 'new', restaurantId?: string) => {
+const proceedWithCreationMethod = (method: 'saved' | 'new', brandId?: string) => {
   if (method === 'new') {
     // Always start in easy mode when creating new content
     preferencesStore.setCreationMode('easy', true)
     // Go to posts create page with optional restaurant ID
-    let url = `/posts/create?scheduleDate=${selectedDateForScheduling.value}`
-    if (restaurantId) {
-      url += `&restaurantId=${restaurantId}`
+    const url = `/posts/create?scheduleDate=${selectedDateForScheduling.value}`
+    if (brandId) {
+      preferencesStore.setSelectedBrand(brandId)
     }
     router.push(url)
-  } else if (method === 'saved') {
-    // Set the restaurant filter and open pick post modal
-    selectedRestaurantIdForPosts.value = restaurantId
-    showPickPostModal.value = true
   }
 }
 
-// Handle restaurant selection from modal
-const handleRestaurantSelected = (restaurant: any) => {
-  showRestaurantSelector.value = false
+// Handle brand selection from modal
+const handleBusinessSelected = (brand: any) => {
+  showBusinessSelector.value = false
   if (pendingCreationMethod.value) {
-    proceedWithCreationMethod(pendingCreationMethod.value, restaurant.id)
+    proceedWithCreationMethod(pendingCreationMethod.value, brand.id)
     pendingCreationMethod.value = null
   }
 }
@@ -1517,42 +1532,6 @@ const handlePostScheduled = async () => {
   selectedDateForScheduling.value = null
 }
 
-// Handle post created from full creation wizard
-const handleFullWizardPostCreated = async () => {
-  showFullCreationWizard.value = false
-
-  // Show success toast
-  toastMessage.value = t('scheduler.postCreatedSuccess', 'Post created successfully!')
-  toastType.value = 'success'
-  showToast.value = true
-
-  // Refresh calendar data
-  await fetchScheduledPosts()
-
-  // Re-select the same day if it was selected
-  if (selectedDateForScheduling.value) {
-    const updatedDay = displayedCalendarDays.value.find(
-      (d: any) => {
-        const dYear = d.date.getFullYear()
-        const dMonth = String(d.date.getMonth() + 1).padStart(2, '0')
-        const dDay = String(d.date.getDate()).padStart(2, '0')
-        return `${dYear}-${dMonth}-${dDay}` === selectedDateForScheduling.value
-      }
-    )
-
-    if (updatedDay) {
-      selectedDay.value = updatedDay
-    }
-  }
-
-  selectedDateForScheduling.value = null
-}
-
-// Handle opening pick post modal from full wizard
-const handleFullWizardOpenPickPost = () => {
-  showFullCreationWizard.value = false
-  showPickPostModal.value = true
-}
 
 const viewPostDetail = (post: any) => {
   selectedPostForDetail.value = post
@@ -1644,12 +1623,14 @@ const handleRetryPost = async (post: any) => {
           const hasVideo = !!favoritePost.video_url
           const isVideo = hasVideo || favoritePost.content_type === 'video'
           const videoUrl = favoritePost.video_url || favoritePost.media_url
+          const postType = (post.post_type_settings?.facebook || 'feed') as 'feed' | 'story' | 'reel' | 'carousel'
           const response = await api.postToFacebook(
             selectedPage.pageId,
             message,
             isVideo ? undefined : favoritePost.media_url,
             isVideo ? videoUrl : undefined,
-            isVideo ? 'video' : 'image'
+            isVideo ? 'video' : 'image',
+            postType
           )
 
           const postUrl = (response as any).postUrl || response.data?.postUrl
@@ -1689,12 +1670,14 @@ const handleRetryPost = async (post: any) => {
           const hasVideo = !!favoritePost.video_url
           const isVideo = hasVideo || favoritePost.content_type === 'video'
           const videoUrl = favoritePost.video_url || favoritePost.media_url
+          const igPostType = (post.post_type_settings?.instagram || 'feed') as 'feed' | 'story' | 'reel' | 'carousel'
           const response = await api.postToInstagram(
             selectedAccount.instagramAccountId,
             message,
             isVideo ? undefined : favoritePost.media_url,
             isVideo ? videoUrl : undefined,
-            isVideo ? 'video' : 'image'
+            isVideo ? 'video' : 'image',
+            igPostType
           )
 
           const postUrl = (response as any).postUrl || response.data?.postUrl
@@ -1799,9 +1782,9 @@ const getMediaUrl = (url: string): string => {
   return `${API_URL}${url.startsWith('/') ? '' : '/'}${url}`
 }
 
-// Fetch restaurants for filter dropdown (uses store)
-const fetchRestaurants = async () => {
-  await restaurantsStore.initialize()
+// Fetch brands for filters
+const fetchBrands = async () => {
+  await brandsStore.initialize()
 }
 
 // Apply filters
@@ -1810,7 +1793,7 @@ const applyFilters = () => {
 }
 
 onMounted(async () => {
-  await Promise.all([fetchScheduledPosts(), fetchHolidays(), fetchRestaurants()])
+  await Promise.all([fetchScheduledPosts(), fetchHolidays(), fetchBrands()])
 
   // Auto-select today's date
   const todayDay = calendarDays.value.find((day) => !day.isOtherMonth && day.isToday)
@@ -1880,7 +1863,7 @@ onMounted(async () => {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(246, 241, 231, 0.85);
+  background: var(--surface-alpha-85);
   backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
@@ -1902,7 +1885,7 @@ onMounted(async () => {
 .spinner {
   width: 40px;
   height: 40px;
-  border: 3px solid rgba(15, 61, 46, 0.2);
+  border: 3px solid var(--accent-alpha-20);
   border-top-color: var(--gold-primary);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
@@ -1928,11 +1911,9 @@ onMounted(async () => {
 .calendar-grid {
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));
-  gap: 1px;
-  background: var(--border-color);
+  gap: var(--space-sm);
+  background: transparent;
   border-radius: var(--radius-lg);
-  overflow: hidden;
-  border: 1px solid var(--border-color);
   min-width: 0;
   width: 100%;
   max-width: 100%;
@@ -1968,9 +1949,12 @@ onMounted(async () => {
 
 .day-view-header {
   padding: var(--space-2xl);
-  background: rgba(255, 255, 255, 0.3);
-  border-bottom: 2px solid rgba(15, 61, 46, 0.2);
+  background: var(--glass-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--glass-border);
   margin-bottom: var(--space-xl);
+  border-radius: var(--radius-xl);
 }
 
 .day-view-title {
@@ -2014,8 +1998,8 @@ onMounted(async () => {
 }
 
 .create-btn {
-  background: rgba(15, 61, 46, 0.1);
-  border-color: rgba(15, 61, 46, 0.4);
+  background: var(--accent-alpha-10);
+  border-color: var(--accent-alpha-40);
   color: var(--gold-primary);
 }
 
@@ -2024,20 +2008,20 @@ onMounted(async () => {
   border-color: transparent;
   color: var(--text-on-gold);
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(15, 61, 46, 0.3);
+  box-shadow: var(--shadow-md);
 }
 
 .favorite-btn {
-  background: rgba(100, 150, 255, 0.1);
-  border-color: rgba(100, 150, 255, 0.4);
-  color: rgba(150, 180, 255, 1);
+  background: var(--info-bg);
+  border-color: var(--info-border);
+  color: var(--info-text);
 }
 
 .favorite-btn:hover {
-  background: rgba(100, 150, 255, 0.2);
-  border-color: rgba(100, 150, 255, 0.6);
+  background: rgba(59, 130, 246, 0.2);
+  border-color: rgba(59, 130, 246, 0.4);
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(100, 150, 255, 0.3);
+  box-shadow: var(--shadow-md);
 }
 
 .btn-icon {
@@ -2058,10 +2042,12 @@ onMounted(async () => {
 
 /* Expandable Table Styles */
 .day-view-table {
-  background: var(--bg-secondary);
-  border-radius: var(--radius-lg);
+  background: var(--glass-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-radius: var(--radius-xl);
   overflow: hidden;
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--glass-border);
   margin: var(--space-lg);
 }
 
@@ -2070,8 +2056,8 @@ onMounted(async () => {
   grid-template-columns: 4fr 1.5fr 2fr 2fr 2fr 40px;
   gap: var(--space-md);
   padding: var(--space-md) var(--space-lg);
-  background: rgba(13, 13, 13, 0.8);
-  border-bottom: 1px solid var(--border-color);
+  background: var(--bg-tertiary);
+  border-bottom: 1px solid var(--glass-border);
 }
 
 .table-header > div {
@@ -2104,11 +2090,11 @@ onMounted(async () => {
 }
 
 .table-row:hover {
-  background: rgba(255, 255, 255, 0.8);
+  background: var(--accent-alpha-04);
 }
 
 .table-row.is-expanded {
-  background: rgba(255, 255, 255, 0.9);
+  background: var(--accent-alpha-05);
 }
 
 /* Post Column */
@@ -2209,7 +2195,7 @@ onMounted(async () => {
 
 .retry-button:hover {
   opacity: 1;
-  background: rgba(15, 61, 46, 0.08);
+  background: var(--accent-alpha-08);
   transform: scale(1.05);
 }
 
@@ -2234,17 +2220,17 @@ onMounted(async () => {
 }
 
 .status-badge.status-published {
-  background: rgba(15, 61, 46, 0.12);
-  color: #0f3d2e;
+  background: var(--success-bg);
+  color: var(--success-text);
 }
 
 .status-badge.status-published .status-dot {
-  background: #0f3d2e;
+  background: var(--success-text);
 }
 
 .status-badge.status-scheduled {
-  background: rgba(245, 158, 11, 0.15);
-  color: #d97706;
+  background: var(--warning-bg);
+  color: var(--warning-text);
 }
 
 .status-badge.status-scheduled .status-dot {
@@ -2252,8 +2238,8 @@ onMounted(async () => {
 }
 
 .status-badge.status-failed {
-  background: rgba(239, 68, 68, 0.15);
-  color: #dc2626;
+  background: var(--error-bg);
+  color: var(--error-text);
 }
 
 .status-badge.status-failed .status-dot {
@@ -2261,8 +2247,8 @@ onMounted(async () => {
 }
 
 .status-badge.status-partial {
-  background: rgba(245, 158, 11, 0.2);
-  color: #d97706;
+  background: var(--warning-bg);
+  color: var(--warning-text);
 }
 
 .status-badge.status-partial .status-dot {
@@ -2299,8 +2285,8 @@ onMounted(async () => {
 
 /* Expanded Details */
 .expanded-details {
-  background: rgba(13, 13, 13, 0.9);
-  border-top: 1px solid var(--border-color);
+  background: var(--bg-tertiary);
+  border-top: 1px solid var(--glass-border);
   padding: var(--space-xl);
 }
 
@@ -2522,13 +2508,13 @@ onMounted(async () => {
   justify-content: center;
   gap: var(--space-lg);
   padding: var(--space-xl);
-  border-top: 1px solid rgba(15, 61, 46, 0.2);
+  border-top: 1px solid var(--accent-alpha-20);
 }
 
 .pagination-btn {
   padding: var(--space-sm) var(--space-lg);
-  background: rgba(15, 61, 46, 0.15);
-  border: 1px solid rgba(15, 61, 46, 0.3);
+  background: var(--accent-alpha-15);
+  border: 1px solid var(--accent-alpha-30);
   border-radius: var(--radius-md);
   color: var(--gold-primary);
   font-family: var(--font-body);
@@ -2539,7 +2525,7 @@ onMounted(async () => {
 }
 
 .pagination-btn:hover:not(:disabled) {
-  background: rgba(15, 61, 46, 0.25);
+  background: var(--accent-alpha-25);
   border-color: var(--gold-primary);
   transform: translateY(-1px);
 }
@@ -2609,15 +2595,14 @@ onMounted(async () => {
 }
 
 .calendar-day-header {
-  background: var(--bg-tertiary);
-  padding: var(--space-lg);
+  background: transparent;
+  padding: var(--space-sm) var(--space-md);
   text-align: center;
   font-weight: var(--font-semibold);
-  color: var(--text-secondary);
-  font-size: var(--text-sm);
+  color: var(--text-muted);
+  font-size: var(--text-xs);
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-  border-bottom: 1px solid var(--border-color);
+  letter-spacing: 0.1em;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -2625,40 +2610,42 @@ onMounted(async () => {
 }
 
 .calendar-day {
-  background: var(--bg-secondary);
+  background: var(--glass-bg);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   min-height: 160px;
   padding: var(--space-md);
   cursor: pointer;
-  transition: var(--transition-base);
+  transition: all var(--transition-base);
   position: relative;
   display: flex;
   flex-direction: column;
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
   min-width: 0;
   overflow: hidden;
 }
 
 .calendar-day:hover {
-  background: var(--bg-elevated);
+  transform: translateY(-2px);
   border-color: var(--gold-primary);
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--shadow-md);
 }
 
-/* Other month days - default styling, specifics handled by past/future */
+/* Other month days */
 .calendar-day.other-month {
-  opacity: 1;
-  background: var(--bg-secondary);
+  opacity: 0.6;
+  background: var(--surface-alpha-05);
 }
 
-/* Future dates from other months - fully selectable like current month */
+/* Future dates from other months - selectable */
 .calendar-day.other-month.future-date {
-  opacity: 1;
-  background: var(--bg-secondary);
+  opacity: 0.7;
   cursor: pointer;
 }
 
 .calendar-day.other-month.future-date:hover {
-  background: var(--bg-elevated);
+  opacity: 1;
   border-color: var(--gold-primary);
 }
 
@@ -2666,43 +2653,34 @@ onMounted(async () => {
   color: var(--text-secondary);
 }
 
-/* Past dates from other months - same disabled gray style */
+/* Past dates from other months */
 .calendar-day.other-month.past-date {
-  opacity: 1;
-  background: var(--bg-elevated);
+  opacity: 0.4;
   cursor: not-allowed;
 }
 
-/* Past dates - clearly disabled with muted gray look */
+/* Past dates - disabled */
 .calendar-day.past-date {
-  opacity: 1;
+  opacity: 0.5;
   cursor: not-allowed;
-  background: var(--bg-elevated);
-  border-color: var(--border-color);
+  background: var(--surface-alpha-05);
 }
 
 .calendar-day.past-date:hover {
   transform: none;
-  border-color: var(--border-color);
-  background: var(--bg-elevated);
+  border-color: var(--glass-border);
+  box-shadow: none;
 }
 
 .calendar-day.past-date .day-number {
-  color: var(--text-disabled);
+  color: var(--text-muted);
   text-decoration: line-through;
-  text-decoration-color: var(--text-disabled);
+  text-decoration-color: var(--text-muted);
 }
 
-/* Future dates - clearly selectable */
+/* Future dates - selectable */
 .calendar-day.future-date {
-  background: var(--bg-secondary);
-  border-color: var(--border-color);
   cursor: pointer;
-}
-
-.calendar-day.future-date:hover {
-  background: var(--bg-elevated);
-  border-color: var(--gold-primary);
 }
 
 .calendar-day.future-date .day-number {
@@ -2713,7 +2691,18 @@ onMounted(async () => {
 .calendar-day.today {
   background: var(--gold-subtle);
   border: 2px solid var(--gold-primary);
-  box-shadow: var(--glow-gold-sm);
+  box-shadow: var(--shadow-md);
+}
+
+.calendar-day.today::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--gold-primary), var(--gold-light));
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
 }
 
 .calendar-day.today .day-number {
@@ -2722,7 +2711,7 @@ onMounted(async () => {
 }
 
 .calendar-day.has-posts {
-  background: var(--bg-tertiary);
+  background: var(--bg-secondary);
 }
 
 .day-number {
@@ -2739,7 +2728,7 @@ onMounted(async () => {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(15, 61, 46, 0.35);
+  background: var(--accent-alpha-35);
   backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
@@ -2793,13 +2782,13 @@ onMounted(async () => {
 }
 
 .hover-action-btn.view-btn {
-  background: rgba(15, 61, 46, 0.15);
+  background: var(--surface-alpha-70);
   color: var(--text-primary);
-  border: 1px solid rgba(15, 61, 46, 0.2);
+  border: 1px solid var(--accent-alpha-20);
 }
 
 .hover-action-btn.view-btn:hover {
-  background: rgba(15, 61, 46, 0.25);
+  background: var(--surface-alpha-80);
   transform: scale(1.05);
 }
 
@@ -2854,9 +2843,9 @@ onMounted(async () => {
   align-items: center;
   gap: 0.375rem;
   padding: 0.25rem 0.375rem;
-  background: var(--bg-secondary);
-  border-radius: 4px;
-  border: 1px solid var(--border-color);
+  background: var(--surface-alpha-60);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--accent-alpha-08);
   font-size: 0.75rem;
   color: var(--text-primary);
   white-space: nowrap;
@@ -2868,9 +2857,10 @@ onMounted(async () => {
 }
 
 .post-indicator:hover {
-  background: var(--bg-elevated);
+  background: var(--surface-alpha-80);
   border-color: var(--gold-primary);
-  box-shadow: 0 2px 4px rgba(15, 61, 46, 0.1);
+  box-shadow: var(--shadow-sm);
+  transform: translateY(-1px);
 }
 
 .post-indicator-thumb {
@@ -2934,13 +2924,13 @@ onMounted(async () => {
 
 .post-indicator.status-published {
   border-left-width: 3px;
-  border-left-color: #0f3d2e;
-  background: rgba(15, 61, 46, 0.08);
+  border-left-color: var(--gold-primary);
+  background: var(--accent-alpha-08);
 }
 
 .post-indicator.status-published:hover {
-  background: rgba(15, 61, 46, 0.12);
-  border-color: #0f3d2e;
+  background: var(--accent-alpha-12);
+  border-color: var(--gold-primary);
 }
 
 .post-indicator.status-failed {
@@ -2960,41 +2950,6 @@ onMounted(async () => {
   font-weight: 600;
 }
 
-.posts-list {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-}
-
-.scheduled-post-card {
-  display: grid;
-  grid-template-columns: 300px 1fr;
-  gap: 1.5rem;
-  background: rgba(255, 255, 255, 0.3);
-  border: 1px solid rgba(15, 61, 46, 0.2);
-  border-radius: var(--radius-lg);
-  padding: 1.5rem;
-  transition: all 0.2s ease;
-  border-left-width: 4px;
-}
-
-.scheduled-post-card:hover {
-  border-color: rgba(15, 61, 46, 0.5);
-  background: rgba(255, 255, 255, 0.4);
-}
-
-/* Status-based border colors for scheduled post cards */
-.scheduled-post-card.status-scheduled {
-  border-left-color: #f59e0b;
-}
-
-.scheduled-post-card.status-published {
-  border-left-color: #0f3d2e;
-}
-
-.scheduled-post-card.status-failed {
-  border-left-color: #ef4444;
-}
 
 .post-media {
   position: relative;
@@ -3019,8 +2974,8 @@ onMounted(async () => {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background: rgba(255, 255, 255, 0.4);
-  border: 2px dashed rgba(15, 61, 46, 0.3);
+  background: var(--surface-alpha-05);
+  border: 2px dashed var(--accent-alpha-30);
   border-radius: var(--radius-md);
   gap: var(--space-md);
 }
@@ -3046,7 +3001,7 @@ onMounted(async () => {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(15, 61, 46, 0.35);
+  background: var(--accent-alpha-35);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -3098,7 +3053,7 @@ onMounted(async () => {
 
 .time-remaining {
   padding: 0.5rem 0.75rem;
-  background: rgba(15, 61, 46, 0.1);
+  background: var(--accent-alpha-10);
   border-left: 3px solid var(--gold-primary);
   border-radius: 4px;
   font-size: 0.875rem;
@@ -3143,8 +3098,8 @@ onMounted(async () => {
 
 .content-type-badge {
   padding: 0.25rem 0.75rem;
-  background: rgba(255, 255, 255, 0.4);
-  border: 1px solid rgba(15, 61, 46, 0.3);
+  background: var(--surface-alpha-05);
+  border: 1px solid var(--accent-alpha-30);
   border-radius: 6px;
   font-size: 0.75rem;
   color: var(--text-secondary);
@@ -3166,15 +3121,15 @@ onMounted(async () => {
 }
 
 .status-badge.status-published {
-  background: rgba(15, 61, 46, 0.12);
-  color: #0f3d2e;
-  border: 1px solid rgba(15, 61, 46, 0.25);
+  background: var(--success-bg);
+  color: var(--success-text);
+  border: 1px solid var(--success-border);
 }
 
 .status-badge.status-failed {
-  background: rgba(239, 68, 68, 0.15);
-  color: #dc2626;
-  border: 1px solid rgba(239, 68, 68, 0.3);
+  background: var(--error-bg);
+  color: var(--error-text);
+  border: 1px solid var(--error-border);
 }
 
 .status-badge.status-partial {
@@ -3192,12 +3147,12 @@ onMounted(async () => {
 /* Published Post Styles */
 .published-badge-compact {
   padding: var(--space-xs) var(--space-md);
-  background: rgba(15, 61, 46, 0.12);
-  border: 1px solid rgba(15, 61, 46, 0.3);
+  background: var(--success-bg);
+  border: 1px solid var(--success-border);
   border-radius: var(--radius-md);
   font-size: var(--text-sm);
   font-weight: var(--font-semibold);
-  color: #0f3d2e;
+  color: var(--success-text);
   white-space: nowrap;
 }
 
@@ -3210,15 +3165,15 @@ onMounted(async () => {
 .post-published {
   margin-top: var(--space-md);
   padding: var(--space-md);
-  background: rgba(15, 61, 46, 0.08);
-  border: 1px solid rgba(15, 61, 46, 0.2);
+  background: var(--accent-alpha-08);
+  border: 1px solid var(--accent-alpha-20);
   border-radius: var(--radius-md);
 }
 
 .published-badge {
   font-size: var(--text-sm);
   font-weight: var(--font-semibold);
-  color: #0f3d2e;
+  color: var(--gold-primary);
   margin-bottom: var(--space-sm);
 }
 
@@ -3235,8 +3190,8 @@ onMounted(async () => {
 }
 
 .published-section {
-  background: rgba(15, 61, 46, 0.08);
-  border: 1px solid rgba(15, 61, 46, 0.2);
+  background: var(--accent-alpha-08);
+  border: 1px solid var(--accent-alpha-20);
   border-radius: var(--radius-md);
   padding: var(--space-lg);
 }
@@ -3762,7 +3717,7 @@ onMounted(async () => {
   left: 260px; /* Account for sidebar width */
   right: 0;
   bottom: 0;
-  background: rgba(15, 61, 46, 0.45);
+  background: var(--accent-alpha-45);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -3782,7 +3737,7 @@ onMounted(async () => {
 
 .modal-content {
   background: var(--bg-secondary);
-  border: 1px solid rgba(15, 61, 46, 0.3);
+  border: 1px solid var(--accent-alpha-30);
   border-radius: var(--radius-xl);
   max-width: min(1000px, calc(100vw - 260px - var(--space-3xl) * 2)); /* Account for sidebar */
   width: 100%;
@@ -3807,8 +3762,8 @@ onMounted(async () => {
   position: absolute;
   top: var(--space-lg);
   right: var(--space-lg);
-  background: rgba(255, 255, 255, 0.6);
-  border: 1px solid rgba(15, 61, 46, 0.3);
+  background: var(--surface-alpha-60);
+  border: 1px solid var(--accent-alpha-30);
   color: var(--text-primary);
   font-size: 2rem;
   width: 48px;
@@ -3842,7 +3797,7 @@ onMounted(async () => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(255, 255, 255, 0.4);
+  background: var(--surface-alpha-05);
   border-radius: var(--radius-lg);
   overflow: hidden;
 }
@@ -3865,8 +3820,8 @@ onMounted(async () => {
   align-items: center;
   justify-content: center;
   gap: var(--space-lg);
-  background: rgba(255, 255, 255, 0.4);
-  border: 2px dashed rgba(15, 61, 46, 0.3);
+  background: var(--surface-alpha-05);
+  border: 2px dashed var(--accent-alpha-30);
   border-radius: var(--radius-lg);
 }
 
@@ -3893,7 +3848,7 @@ onMounted(async () => {
   color: var(--gold-primary);
   margin: 0;
   padding-bottom: var(--space-lg);
-  border-bottom: 2px solid rgba(15, 61, 46, 0.2);
+  border-bottom: 2px solid var(--accent-alpha-20);
 }
 
 .info-section {
@@ -3929,15 +3884,15 @@ onMounted(async () => {
   font-size: var(--text-sm);
   font-weight: 500;
   color: var(--text-secondary);
-  background: rgba(255, 255, 255, 0.4);
+  background: var(--surface-alpha-05);
   padding: 0.25rem 0.75rem;
   border-radius: var(--radius-md);
-  border: 1px solid rgba(15, 61, 46, 0.2);
+  border: 1px solid var(--accent-alpha-20);
 }
 
 .time-remaining-large {
   padding: var(--space-md) var(--space-lg);
-  background: rgba(15, 61, 46, 0.15);
+  background: var(--accent-alpha-15);
   border-left: 4px solid var(--gold-primary);
   border-radius: var(--radius-md);
   font-size: var(--text-base);
@@ -3975,8 +3930,8 @@ onMounted(async () => {
 
 .content-type-badge-large {
   padding: var(--space-sm) var(--space-lg);
-  background: rgba(255, 255, 255, 0.4);
-  border: 1px solid rgba(15, 61, 46, 0.3);
+  background: var(--surface-alpha-05);
+  border: 1px solid var(--accent-alpha-30);
   border-radius: var(--radius-md);
   font-size: var(--text-sm);
   color: var(--text-primary);
@@ -3999,14 +3954,14 @@ onMounted(async () => {
 }
 
 .status-badge-large.status-published {
-  background: rgba(15, 61, 46, 0.12);
-  color: #0f3d2e;
-  border: 1px solid rgba(15, 61, 46, 0.3);
+  background: var(--success-bg);
+  color: var(--success-text);
+  border: 1px solid var(--success-border);
 }
 
 .status-badge-large.status-failed {
-  background: rgba(239, 68, 68, 0.15);
-  color: #dc2626;
+  background: var(--error-bg);
+  color: var(--error-text);
   border: 1px solid rgba(239, 68, 68, 0.4);
 }
 
@@ -4020,7 +3975,7 @@ onMounted(async () => {
   white-space: pre-wrap;
   line-height: 1.8;
   padding: var(--space-lg);
-  background: rgba(255, 255, 255, 0.3);
+  background: var(--surface-alpha-05);
   border-radius: var(--radius-md);
   border-left: 3px solid var(--gold-primary);
 }
@@ -4029,7 +3984,7 @@ onMounted(async () => {
   display: flex;
   gap: var(--space-md);
   padding-top: var(--space-lg);
-  border-top: 1px solid rgba(15, 61, 46, 0.2);
+  border-top: 1px solid var(--accent-alpha-20);
   margin-top: auto;
 }
 
@@ -4197,248 +4152,25 @@ onMounted(async () => {
 
 .error-text {
   color: var(--text-secondary);
-  background: rgba(255, 255, 255, 0.3);
+  background: var(--surface-alpha-05);
   padding: var(--space-md);
   border-radius: var(--radius-sm);
   font-family: var(--font-body);
   line-height: var(--leading-normal);
 }
 
-/* ===== DARK MODE OVERRIDES ===== */
-:root[data-theme="dark"] .calendar-day {
-  background: var(--bg-secondary);
-  border-color: var(--border-color);
-}
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  .calendar-day,
+  .post-indicator,
+  .hover-action-btn {
+    transition: none;
+  }
 
-:root[data-theme="dark"] .calendar-day.other-month {
-  background: var(--bg-primary);
-}
-
-:root[data-theme="dark"] .calendar-day.past-date {
-  background: var(--bg-primary);
-  border-color: rgba(255, 255, 255, 0.05);
-}
-
-:root[data-theme="dark"] .calendar-day.today {
-  border-color: var(--gold-primary);
-  background: var(--accent-alpha-10);
-}
-
-:root[data-theme="dark"] .calendar-day-header {
-  background: var(--bg-tertiary);
-  border-color: var(--border-color);
-}
-
-:root[data-theme="dark"] .day-hover-overlay {
-  background: rgba(0, 0, 0, 0.7);
-}
-
-:root[data-theme="dark"] .hover-action-btn {
-  background: var(--bg-tertiary);
-  border-color: var(--border-color);
-}
-
-:root[data-theme="dark"] .hover-action-btn:hover {
-  background: var(--bg-elevated);
-  border-color: var(--gold-primary);
-}
-
-:root[data-theme="dark"] .post-card,
-:root[data-theme="dark"] .scheduled-post-card {
-  background: var(--bg-tertiary);
-  border-color: var(--border-color);
-}
-
-:root[data-theme="dark"] .post-card:hover,
-:root[data-theme="dark"] .scheduled-post-card:hover {
-  background: var(--bg-elevated);
-  border-color: var(--accent-alpha-30);
-}
-
-:root[data-theme="dark"] .post-thumbnail-placeholder {
-  background: var(--bg-elevated);
-}
-
-:root[data-theme="dark"] .empty-day-message {
-  background: var(--bg-tertiary);
-  border-color: var(--border-color);
-}
-
-:root[data-theme="dark"] .status-badge.scheduled {
-  background: var(--accent-alpha-15);
-  color: var(--gold-primary);
-  border-color: var(--accent-alpha-30);
-}
-
-:root[data-theme="dark"] .status-badge.published {
-  background: rgba(34, 197, 94, 0.15);
-}
-
-:root[data-theme="dark"] .status-badge.failed {
-  background: rgba(239, 68, 68, 0.15);
-}
-
-:root[data-theme="dark"] .calendar-filters {
-  background: var(--bg-tertiary);
-  border-color: var(--border-color);
-}
-
-:root[data-theme="dark"] .filter-section {
-  background: var(--bg-secondary);
-  border-color: var(--border-color);
-}
-
-:root[data-theme="dark"] .filter-checkbox-label {
-  background: var(--bg-tertiary);
-  border-color: var(--border-color);
-}
-
-:root[data-theme="dark"] .filter-checkbox-label:hover {
-  background: var(--bg-elevated);
-  border-color: var(--accent-alpha-30);
-}
-
-:root[data-theme="dark"] .modal-overlay {
-  background: rgba(0, 0, 0, 0.7);
-}
-
-:root[data-theme="dark"] .modal-content {
-  background: var(--bg-secondary);
-  border-color: var(--border-color);
-}
-
-:root[data-theme="dark"] .modal-header {
-  border-bottom-color: var(--border-color);
-}
-
-:root[data-theme="dark"] .modal-close {
-  background: var(--bg-tertiary);
-  border-color: var(--border-color);
-}
-
-:root[data-theme="dark"] .modal-close:hover {
-  background: var(--bg-elevated);
-  border-color: var(--gold-primary);
-}
-
-:root[data-theme="dark"] .detail-row {
-  border-bottom-color: var(--border-color);
-}
-
-:root[data-theme="dark"] .caption-preview,
-:root[data-theme="dark"] .hashtags-preview {
-  background: var(--bg-tertiary);
-  border-color: var(--border-color);
-}
-
-:root[data-theme="dark"] .legend-item {
-  background: var(--bg-tertiary);
-  border-color: var(--border-color);
-}
-
-:root[data-theme="dark"] .view-mode-btn {
-  background: var(--bg-tertiary);
-  border-color: var(--border-color);
-}
-
-:root[data-theme="dark"] .view-mode-btn:hover {
-  background: var(--bg-elevated);
-}
-
-:root[data-theme="dark"] .view-mode-btn.active {
-  background: var(--gold-primary);
-  border-color: var(--gold-primary);
-}
-
-:root[data-theme="dark"] .nav-btn {
-  background: var(--bg-tertiary);
-  border-color: var(--border-color);
-}
-
-:root[data-theme="dark"] .nav-btn:hover {
-  background: var(--bg-elevated);
-  border-color: var(--gold-primary);
-}
-
-:root[data-theme="dark"] .error-text {
-  background: rgba(0, 0, 0, 0.3);
-}
-
-:root[data-theme="dark"] .loading-overlay {
-  background: rgba(12, 12, 12, 0.8);
-}
-
-:root[data-theme="dark"] .spinner {
-  border-color: var(--border-color);
-  border-top-color: var(--gold-primary);
-}
-
-/* Day view header */
-:root[data-theme="dark"] .day-view-header {
-  background: var(--bg-tertiary);
-  border-bottom-color: var(--border-color);
-}
-
-/* Table rows */
-:root[data-theme="dark"] .table-row:hover {
-  background: var(--bg-elevated);
-}
-
-:root[data-theme="dark"] .table-row.is-expanded {
-  background: var(--bg-tertiary);
-}
-
-/* Hover action buttons */
-:root[data-theme="dark"] .hover-action-btn {
-  background: var(--bg-tertiary);
-  border-color: var(--border-color);
-}
-
-:root[data-theme="dark"] .hover-action-btn:hover {
-  background: var(--bg-elevated);
-  border-color: var(--accent-alpha-30);
-}
-
-:root[data-theme="dark"] .hover-action-btn.create-btn {
-  background: var(--accent-alpha-15);
-  border-color: var(--accent-alpha-30);
-}
-
-:root[data-theme="dark"] .hover-action-btn.create-btn:hover {
-  background: var(--gold-primary);
-  color: var(--bg-primary);
-}
-
-/* Action buttons */
-:root[data-theme="dark"] .action-button.create-btn {
-  background: var(--accent-alpha-15);
-  border-color: var(--accent-alpha-40);
-}
-
-:root[data-theme="dark"] .action-button.create-btn:hover {
-  box-shadow: 0 4px 12px rgba(194, 163, 107, 0.3);
-}
-
-/* Select and pickers */
-:root[data-theme="dark"] .time-picker-select {
-  background: var(--bg-tertiary);
-  border-color: var(--border-color);
-}
-
-:root[data-theme="dark"] .time-picker-select:focus {
-  border-color: var(--gold-primary);
-}
-
-/* Expanded panel */
-:root[data-theme="dark"] .expanded-panel {
-  background: var(--bg-tertiary);
-  border-top-color: var(--border-color);
-}
-
-/* Empty state */
-:root[data-theme="dark"] .empty-state-card {
-  background: var(--bg-tertiary);
-  border-color: var(--border-color);
+  .calendar-day:hover,
+  .post-indicator:hover {
+    transform: none;
+  }
 }
 
 /* Landscape: Reduce vertical padding and hide non-essential elements */

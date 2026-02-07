@@ -6,7 +6,7 @@ import MaterialIcon from './MaterialIcon.vue'
 
 interface MenuItem {
   name: string
-  price?: string
+  price?: string | number
   imageUrl?: string
   [key: string]: any
 }

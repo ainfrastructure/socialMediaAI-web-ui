@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useRestaurantImages } from '@/composables/useRestaurantImages'
-import { restaurantService } from '@/services/restaurantService'
-import type { SavedRestaurant } from '@/services/restaurantService'
-import type { FolderNode } from '@/composables/useRestaurantImages'
+import { useBrandImages } from '@/composables/useBrandImages'
+import { brandService } from '@/services/brandService'
+import type { Brand } from '@/services/brandService'
+import type { FolderNode } from '@/composables/useBrandImages'
 import CreateFolderModal from './CreateFolderModal.vue'
 import RenameFolderModal from './RenameFolderModal.vue'
 import MoveImagesModal from './MoveImagesModal.vue'
@@ -13,7 +13,7 @@ import ConfirmModal from '../ConfirmModal.vue'
 import BaseButton from '../BaseButton.vue'
 
 interface Props {
-  restaurant: SavedRestaurant
+  restaurant: Brand
 }
 
 const props = defineProps<Props>()
@@ -44,7 +44,7 @@ const {
   renameFolder,
   deleteFolder,
   moveImagesToFolder
-} = useRestaurantImages(props.restaurant)
+} = useBrandImages(props.restaurant)
 
 // Modal states
 const showCreateFolderModal = ref(false)

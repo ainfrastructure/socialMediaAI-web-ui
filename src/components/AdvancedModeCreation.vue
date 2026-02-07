@@ -29,7 +29,7 @@ import GoldenEditIcon from './icons/GoldenEditIcon.vue'
 import GoldenImageIcon from './icons/GoldenImageIcon.vue'
 import GoldenVideoIcon from './icons/GoldenVideoIcon.vue'
 import { ImageSourceSelector, SectionLabel, ContentDivider } from './creation'
-import { restaurantService, type SavedRestaurant } from '@/services/restaurantService'
+import { brandService, type Brand } from '@/services/brandService'
 import { api } from '@/services/api'
 import { okamService } from '@/services/okamService'
 import { useFacebookStore } from '@/stores/facebook'
@@ -43,7 +43,7 @@ import { getThemeContext } from '@/utils/videoThemes'
 
 interface MenuItem {
   name: string
-  price?: string
+  price?: string | number
   imageUrl?: string
   [key: string]: any
 }
@@ -90,7 +90,7 @@ interface WeeklyCustomizationOptions {
 // Using centralized prompt configuration from src/config/promptModifiers.ts
 
 const props = defineProps<{
-  restaurant: SavedRestaurant
+  brand: Brand
   menuItems: MenuItem[]
   initialScheduleDate?: string // Format: YYYY-MM-DD, pre-fills schedule date
   lockDate?: boolean // When true, date cannot be changed in the schedule step
@@ -124,6 +124,7 @@ const emit = defineEmits<{
     publishNow?: boolean
     scheduledTime?: string
     timezone?: string
+    accountSelections?: Record<string, any>
     onResult?: (result: { success: boolean; postUrls?: Record<string, string>; error?: string }) => void
   }): void
 }>()
@@ -496,7 +497,7 @@ function selectItemForDay(item: MenuItem) {
   if (selectedDayForModal.value) {
     weeklyMenuItems.value[selectedDayForModal.value] = {
       item: item,
-      customPrice: item.price || '' // Default to original price
+      customPrice: String(item.price || '') // Default to original price
     }
   }
   showDaySelectorModal.value = false
@@ -600,7 +601,7 @@ async function generateStyleVariations() {
     }
 
     const response = await api.generateStyleVariations(
-      props.restaurant,
+      props.brand,
       menuItemsForApi,
       customization.value,
       postTypeOptions
@@ -803,8 +804,8 @@ async function generateImage() {
         selectedVariation.value.prompt,
         customization.value,
         menuItemsForApi,
-        props.restaurant.brand_dna?.logo_url,
-        props.restaurant.place_id,
+        props.brand.brand_dna?.logo_url,
+        props.brand.place_id,
         postTypeOptions,
         referenceImage
       )
@@ -812,15 +813,15 @@ async function generateImage() {
       if (response.success && response.data?.imageUrl) {
         generatedImageUrl.value = response.data.imageUrl
 
-        // Upload the image to the restaurant's uploaded_images collection
-        if (uploadedImage.value && props.restaurant.place_id) {
+        // Upload the image to the brand's uploaded_images collection
+        if (uploadedImage.value && props.brand.place_id) {
           try {
-            await restaurantService.uploadRestaurantImages(
-              props.restaurant.place_id,
-              [uploadedImage.value]
+            await brandService.uploadAsset(
+              props.brand.place_id,
+              uploadedImage.value as any
             )
           } catch (uploadError) {
-            errorLog('Failed to save uploaded image to restaurant:', uploadError)
+            errorLog('Failed to save uploaded image to brand:', uploadError)
             // Don't fail the entire operation if this fails
           }
         }
@@ -955,11 +956,11 @@ async function pollVideoInBackground(operationId: string, modelId?: string) {
     const videoUrl = await pollVideoUntilComplete(operationId, modelId)
 
     // Apply logo watermark if requested
-    if (customization.value.logoPosition && customization.value.logoPosition !== 'none' && props.restaurant.brand_dna?.logo_url) {
+    if (customization.value.logoPosition && customization.value.logoPosition !== 'none' && props.brand.brand_dna?.logo_url) {
       try {
         const watermarkResponse = await api.addVideoWatermark(
           videoUrl,
-          props.restaurant.brand_dna.logo_url,
+          props.brand.brand_dna.logo_url,
           {
             position: customization.value.logoPosition,
             opacity: 80,
@@ -1026,11 +1027,11 @@ async function generatePostContent() {
 
     const response = await api.generatePostContent(
       'facebook',
-      props.restaurant.name,
+      props.brand.name,
       menuItemsWithDescriptions,
       'image',
       context,
-      props.restaurant.brand_dna,
+      props.brand.brand_dna,
       'en'
     )
 
@@ -1084,6 +1085,7 @@ async function handleUnifiedPublish(data: {
   scheduledDate?: string
   scheduledTime?: string
   timezone?: string
+  accountSelections?: Record<string, any>
 }) {
   publishing.value = true
   publishError.value = ''
@@ -1127,6 +1129,7 @@ async function handleUnifiedPublish(data: {
         publishNow: data.publishType === 'now',
         scheduledTime: scheduledTime,
         timezone: data.timezone,
+        accountSelections: data.accountSelections,
         onResult: resolve
       })
 
@@ -1299,7 +1302,7 @@ defineExpose({
         <div class="image-upload-section">
           <SectionLabel :label="t('advancedMode.step1.uploadTitle')" />
           <ImageSourceSelector
-            :restaurant="restaurant"
+            :entity="props.brand"
             :preview-url="uploadedImagePreview"
             @select="handleImageUploadFile"
             @remove="removeUploadedImage"
@@ -1343,7 +1346,7 @@ defineExpose({
                       type="text"
                       class="price-input"
                       :value="weeklyMenuItems[day].customPrice"
-                      :placeholder="weeklyMenuItems[day].item?.price || t('advancedMode.postType.enterPrice')"
+                      :placeholder="String(weeklyMenuItems[day].item?.price || '') || t('advancedMode.postType.enterPrice')"
                       @input="updateDayPrice(day, ($event.target as HTMLInputElement).value)"
                     />
                   </div>
@@ -1958,6 +1961,7 @@ defineExpose({
             :show-cancel-button="false"
             :initial-schedule-date="props.initialScheduleDate"
             :lock-date="props.lockDate"
+            :brand-id="props.brand?.id"
             @publish="handleUnifiedPublish"
           />
         </div>

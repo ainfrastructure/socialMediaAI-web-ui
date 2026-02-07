@@ -3,9 +3,9 @@ import { API_URL, getAuthHeader, getAuthHeaders } from './apiBase'
 import { fetchWithTimeout, TIMEOUTS } from '@/utils/fetchWithTimeout'
 
 class LinkedInService {
-  async initAuth(): Promise<ApiResponse<{ authUrl: string; state: string }>> {
+  async initAuth(brandId?: string): Promise<ApiResponse<{ authUrl: string; state: string }>> {
     const response = await fetchWithTimeout(
-      `${API_URL}/api/linkedin/auth/init`,
+      `${API_URL}/api/linkedin/auth/init${brandId ? `?brand_id=${brandId}` : ''}`,
       {
         headers: getAuthHeader(),
       },
@@ -56,9 +56,9 @@ class LinkedInService {
     return response.json()
   }
 
-  async getPages(): Promise<ApiResponse<{ pages: any[] }>> {
+  async getPages(brandId?: string): Promise<ApiResponse<{ pages: any[] }>> {
     const response = await fetchWithTimeout(
-      `${API_URL}/api/linkedin/pages`,
+      `${API_URL}/api/linkedin/pages${brandId ? `?brand_id=${brandId}` : ''}`,
       {
         headers: getAuthHeader(),
       },
@@ -80,9 +80,9 @@ class LinkedInService {
     return response.json()
   }
 
-  async disconnectPage(pageId: string): Promise<ApiResponse> {
+  async disconnectPage(pageId: string, brandId?: string): Promise<ApiResponse> {
     const response = await fetchWithTimeout(
-      `${API_URL}/api/linkedin/pages/${pageId}`,
+      `${API_URL}/api/linkedin/pages/${pageId}${brandId ? `?brand_id=${brandId}` : ''}`,
       {
         method: 'DELETE',
         headers: getAuthHeader(),
