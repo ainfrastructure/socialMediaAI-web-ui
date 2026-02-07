@@ -5,6 +5,7 @@ class FavoritesService {
   async getFavorites(filters?: {
     platform?: string
     restaurant_id?: string
+    business_id?: string
     content_type?: 'image' | 'video'
     limit?: number
     offset?: number
@@ -13,6 +14,7 @@ class FavoritesService {
     const params = new URLSearchParams()
     if (filters?.platform) params.append('platform', filters.platform)
     if (filters?.restaurant_id) params.append('restaurant_id', filters.restaurant_id)
+    if (filters?.business_id) params.append('business_id', filters.business_id)
     if (filters?.content_type) params.append('content_type', filters.content_type)
     if (filters?.limit) params.append('limit', filters.limit.toString())
     if (filters?.offset) params.append('offset', filters.offset.toString())
@@ -60,6 +62,7 @@ class FavoritesService {
 
   async saveFavorite(favoriteData: {
     restaurant_id?: string
+    business_id?: string
     content_type: 'image' | 'video'
     media_url: string
     post_text?: string

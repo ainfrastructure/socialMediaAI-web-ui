@@ -10,7 +10,7 @@ import BaseAlert from './BaseAlert.vue'
 import LogoUpload from './LogoUpload.vue'
 import ColorPicker from './ColorPicker.vue'
 
-const props = defineProps<{ modelValue: boolean }>()
+const props = defineProps<{ modelValue: boolean; businessId?: string | null }>()
 const emit = defineEmits<{
   (e: 'update:modelValue', value: boolean): void
   (e: 'created', restaurant: any): void
@@ -54,7 +54,10 @@ async function handleSubmit() {
 
   try {
     // First create the restaurant
-    const restaurant = await restaurantsStore.createManualRestaurant(form)
+    const restaurant = await restaurantsStore.createManualRestaurant({
+      ...form,
+      business_id: props.businessId || null
+    })
     if (!restaurant) {
       error.value = restaurantsStore.error || t('restaurantManagement.errors.createFailed')
       creating.value = false

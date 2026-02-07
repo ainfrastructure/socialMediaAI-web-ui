@@ -3,9 +3,15 @@ import { API_URL, getAuthHeader, getAuthHeaders } from './apiBase'
 import { fetchWithTimeout, TIMEOUTS } from '@/utils/fetchWithTimeout'
 
 class LinkedInService {
-  async initAuth(): Promise<ApiResponse<{ authUrl: string; state: string }>> {
+  async initAuth(businessId?: string): Promise<ApiResponse<{ authUrl: string; state: string }>> {
+    const params = new URLSearchParams()
+    if (businessId) params.append('business_id', businessId)
+    const url = params.toString()
+      ? `${API_URL}/api/linkedin/auth/init?${params}`
+      : `${API_URL}/api/linkedin/auth/init`
+
     const response = await fetchWithTimeout(
-      `${API_URL}/api/linkedin/auth/init`,
+      url,
       {
         headers: getAuthHeader(),
       },
@@ -56,9 +62,15 @@ class LinkedInService {
     return response.json()
   }
 
-  async getPages(): Promise<ApiResponse<{ pages: any[] }>> {
+  async getPages(businessId?: string): Promise<ApiResponse<{ pages: any[] }>> {
+    const params = new URLSearchParams()
+    if (businessId) params.append('business_id', businessId)
+    const url = params.toString()
+      ? `${API_URL}/api/linkedin/pages?${params}`
+      : `${API_URL}/api/linkedin/pages`
+
     const response = await fetchWithTimeout(
-      `${API_URL}/api/linkedin/pages`,
+      url,
       {
         headers: getAuthHeader(),
       },
@@ -80,9 +92,15 @@ class LinkedInService {
     return response.json()
   }
 
-  async disconnectPage(pageId: string): Promise<ApiResponse> {
+  async disconnectPage(pageId: string, businessId?: string): Promise<ApiResponse> {
+    const params = new URLSearchParams()
+    if (businessId) params.append('business_id', businessId)
+    const url = params.toString()
+      ? `${API_URL}/api/linkedin/pages/${pageId}?${params}`
+      : `${API_URL}/api/linkedin/pages/${pageId}`
+
     const response = await fetchWithTimeout(
-      `${API_URL}/api/linkedin/pages/${pageId}`,
+      url,
       {
         method: 'DELETE',
         headers: getAuthHeader(),

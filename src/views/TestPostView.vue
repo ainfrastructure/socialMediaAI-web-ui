@@ -30,7 +30,7 @@
 
       <!-- Not Connected Warning -->
       <BaseAlert
-        v-if="!isConnected && !facebookStore.loading"
+        v-if="!isConnected && !facebookStore.loadingConnections"
         variant="warning"
       >
         You haven't connected any Facebook pages yet.

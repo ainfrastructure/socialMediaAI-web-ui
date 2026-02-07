@@ -33,18 +33,18 @@
 
             <!-- Posts Grid -->
             <div v-else>
-              <!-- Restaurant Filter Toggle (only show if restaurantId is provided) -->
-              <div v-if="restaurantId" class="filter-toggle-container">
+              <!-- Business Filter Toggle (only show if businessId is provided) -->
+              <div v-if="businessId" class="filter-toggle-container">
                 <button
                   type="button"
                   class="filter-toggle-button"
-                  @click="showAllRestaurants = !showAllRestaurants"
+                  @click="showAllBusinesses = !showAllBusinesses"
                 >
                   <span class="material-symbols-outlined">
-                    {{ showAllRestaurants ? 'filter_list_off' : 'filter_list' }}
+                    {{ showAllBusinesses ? 'filter_list_off' : 'filter_list' }}
                   </span>
                   <span class="filter-toggle-text">
-                    {{ showAllRestaurants ? $t('pickPostModal.showCurrentRestaurant') : $t('pickPostModal.showAllRestaurants') }}
+                    {{ showAllBusinesses ? $t('pickPostModal.showCurrentRestaurant') : $t('pickPostModal.showAllRestaurants') }}
                   </span>
                 </button>
               </div>
@@ -89,8 +89,8 @@
                     <p v-if="post.post_text" class="post-preview">
                       {{ truncateText(post.post_text, 80) }}
                     </p>
-                    <div v-if="post.saved_restaurants?.name" class="restaurant-tag">
-                      🏪 {{ post.saved_restaurants.name }}
+                    <div v-if="post.businesses?.name || post.business?.name || post.business_name || post.saved_restaurants?.name" class="restaurant-tag">
+                      🏢 {{ post.businesses?.name || post.business?.name || post.business_name || post.saved_restaurants?.name }}
                     </div>
                   </div>
                 </div>
@@ -166,7 +166,7 @@ import { errorLog } from '@/utils/debug'
 interface Props {
   modelValue: boolean
   selectedDate: string | null
-  restaurantId?: string
+  businessId?: string
 }
 
 const props = defineProps<Props>()
@@ -195,18 +195,21 @@ const editedPostText = ref('')
 const editedHashtags = ref<string[]>([])
 const newHashtag = ref('')
 
-// Restaurant filter state
-const showAllRestaurants = ref(false)
+// Business filter state
+const showAllBusinesses = ref(false)
 
 // Reset pagination when restaurant filter changes
-watch(showAllRestaurants, () => {
+watch(showAllBusinesses, () => {
   currentPage.value = 1
 })
 
-// Filter posts by restaurant if restaurantId is provided (unless showAllRestaurants is true)
+// Filter posts by business if businessId is provided (unless showAllBusinesses is true)
 const filteredPosts = computed(() => {
-  if (!props.restaurantId || showAllRestaurants.value) return posts.value
-  return posts.value.filter(post => post.restaurant_id === props.restaurantId)
+  if (!props.businessId || showAllBusinesses.value) return posts.value
+  return posts.value.filter(post =>
+    post.business_id === props.businessId ||
+    post.restaurant_id === props.businessId
+  )
 })
 
 // Pagination computed properties
@@ -228,8 +231,8 @@ watch(() => props.modelValue, async (newValue) => {
     selectedPost.value = null
     isEditing.value = false
 
-    // Reset restaurant filter
-    showAllRestaurants.value = false
+    // Reset business filter
+    showAllBusinesses.value = false
 
     // Load connected accounts from all platforms
     await Promise.all([

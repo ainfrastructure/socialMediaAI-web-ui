@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { api } from '../services/api'
+import { usePreferencesStore } from '@/stores/preferences'
 import { debugLog } from '@/utils/debug'
 
 export interface FacebookPage {
@@ -12,25 +13,36 @@ export interface FacebookPage {
 }
 
 export const useFacebookStore = defineStore('facebook', () => {
-  const connectedPages = ref<FacebookPage[]>([])
-  const loading = ref(false)
+  const connectedPagesByBusiness = ref<Record<string, FacebookPage[]>>({})
+  const loadingConnections = ref(false)
+  const connecting = ref(false)
   const error = ref<string | null>(null)
+  const preferencesStore = usePreferencesStore()
 
   // Computed property to check if any pages are connected
+  const connectedPages = computed(() => {
+    const businessId = preferencesStore.selectedBusinessId
+    return businessId ? connectedPagesByBusiness.value[businessId] || [] : []
+  })
+
   const isConnected = computed(() => connectedPages.value.length > 0)
 
   /**
    * Initialize Facebook OAuth flow with redirect (no popup)
    * @param returnUrl - Optional URL to return to after OAuth completes
    */
-  async function connectFacebook(returnUrl?: string): Promise<void> {
-    loading.value = true
+  async function connectFacebook(returnUrl?: string, businessId?: string): Promise<void> {
+    connecting.value = true
     error.value = null
 
     try {
+      const resolvedBusinessId = businessId || preferencesStore.selectedBusinessId || undefined
+      if (!resolvedBusinessId) {
+        throw new Error('Please select a business before connecting Facebook')
+      }
 
       // Step 1: Get authorization URL from backend
-      const initResponse = await api.initFacebookAuth()
+      const initResponse = await api.initFacebookAuth(resolvedBusinessId)
 
       if (!initResponse.success) {
         const errorMsg = initResponse.error || 'Failed to initialize Facebook authentication'
@@ -62,57 +74,70 @@ export const useFacebookStore = defineStore('facebook', () => {
     } catch (err: any) {
 
       error.value = err.message || 'Failed to connect Facebook account'
-      loading.value = false
+      loadingConnections.value = false
       throw err
     }
-    // Note: loading.value stays true because we're redirecting away
+    // Note: connecting stays true because we're redirecting away
   }
 
   /**
    * Load user's connected Facebook pages
    */
-  async function loadConnectedPages(): Promise<void> {
-    loading.value = true
+  async function loadConnectedPages(businessId?: string): Promise<void> {
+    loadingConnections.value = true
     error.value = null
 
     try {
-      const response = await api.getFacebookPages()
+      const resolvedBusinessId = businessId || preferencesStore.selectedBusinessId || undefined
+      const response = await api.getFacebookPages(resolvedBusinessId)
 
       if (!response.success) {
         throw new Error(response.error || 'Failed to load connected pages')
       }
 
-      connectedPages.value = response.data?.pages || []
+      if (resolvedBusinessId) {
+        connectedPagesByBusiness.value = {
+          ...connectedPagesByBusiness.value,
+          [resolvedBusinessId]: response.data?.pages || []
+        }
+      }
     } catch (err: any) {
 
       error.value = err.message || 'Failed to load connected pages'
     } finally {
-      loading.value = false
+      loadingConnections.value = false
     }
   }
 
   /**
    * Disconnect a Facebook page
    */
-  async function disconnectPage(pageId: string): Promise<void> {
-    loading.value = true
+  async function disconnectPage(pageId: string, businessId?: string): Promise<void> {
+    connecting.value = true
     error.value = null
 
     try {
-      const response = await api.disconnectFacebookPage(pageId)
+      const resolvedBusinessId = businessId || preferencesStore.selectedBusinessId || undefined
+      const response = await api.disconnectFacebookPage(pageId, resolvedBusinessId)
 
       if (!response.success) {
         throw new Error(response.error || 'Failed to disconnect page')
       }
 
       // Remove from local state
-      connectedPages.value = connectedPages.value.filter((page) => page.pageId !== pageId)
+      if (resolvedBusinessId) {
+        const current = connectedPagesByBusiness.value[resolvedBusinessId] || []
+        connectedPagesByBusiness.value = {
+          ...connectedPagesByBusiness.value,
+          [resolvedBusinessId]: current.filter((page) => page.pageId !== pageId)
+        }
+      }
     } catch (err: any) {
 
       error.value = err.message || 'Failed to disconnect page'
       throw err
     } finally {
-      loading.value = false
+      loadingConnections.value = false
     }
   }
 
@@ -121,7 +146,7 @@ export const useFacebookStore = defineStore('facebook', () => {
    * Called by the callback page/component
    */
   async function handleOAuthCallback(code: string, state: string): Promise<void> {
-    loading.value = true
+    connecting.value = true
     error.value = null
 
     try {
@@ -141,23 +166,47 @@ export const useFacebookStore = defineStore('facebook', () => {
         throw new Error(callbackResponse.error || 'Failed to complete Facebook authentication')
       }
 
-      // Update connected pages
-      connectedPages.value = callbackResponse.data?.pages || []
+      // Update connected pages for current business
+      const businessId = preferencesStore.selectedBusinessId
+      if (businessId) {
+        connectedPagesByBusiness.value = {
+          ...connectedPagesByBusiness.value,
+          [businessId]: callbackResponse.data?.pages || []
+        }
+      }
       error.value = null
     } catch (err: any) {
 
       error.value = err.message || 'Failed to complete Facebook authentication'
       throw err
     } finally {
-      loading.value = false
+      loadingConnections.value = false
     }
   }
 
+
+  function ensureBusinessCache(businessId: string): void {
+    if (!connectedPagesByBusiness.value[businessId]) {
+      connectedPagesByBusiness.value = {
+        ...connectedPagesByBusiness.value,
+        [businessId]: []
+      }
+    }
+  }
+
+  function resetConnectionState(): void {
+    connecting.value = false
+    error.value = null
+  }
   return {
     connectedPages,
+    connectedPagesByBusiness,
     isConnected,
-    loading,
+    loadingConnections,
+    connecting,
     error,
+    ensureBusinessCache,
+    resetConnectionState,
     connectFacebook,
     handleOAuthCallback,
     loadConnectedPages,

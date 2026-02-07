@@ -46,6 +46,7 @@ class EngagementService {
     end_date?: string
     platforms?: string[]
     restaurant_ids?: string[]
+    business_ids?: string[]
   }): Promise<ApiResponse<any>> {
     const params = new URLSearchParams()
 
@@ -56,6 +57,9 @@ class EngagementService {
     }
     if (filters.restaurant_ids && filters.restaurant_ids.length > 0) {
       params.append('restaurant_ids', filters.restaurant_ids.join(','))
+    }
+    if (filters.business_ids && filters.business_ids.length > 0) {
+      params.append('business_ids', filters.business_ids.join(','))
     }
 
     const url = `${API_URL}/api/engagement/analytics?${params.toString()}`

@@ -102,10 +102,12 @@ import { debugLog, errorLog } from '@/utils/debug'
 interface Props {
   modelValue: boolean
   savedRestaurants?: Array<{ place_id: string; name: string }>
+  businessId?: string | null
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  savedRestaurants: () => []
+  savedRestaurants: () => [],
+  businessId: null
 })
 const emit = defineEmits<{
   (e: 'update:modelValue', value: boolean): void
@@ -258,6 +260,7 @@ async function handleSave() {
 
     // Save restaurant to database
     const restaurantData = {
+      business_id: props.businessId || null,
       place_id: restaurant.place_id || details.place_id,
       name: details.name || restaurant.name,
       address: details.formatted_address || details.vicinity || restaurant.address || '',

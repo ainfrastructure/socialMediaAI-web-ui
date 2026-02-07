@@ -4,7 +4,7 @@ import { useI18n } from 'vue-i18n'
 import BaseModal from '../BaseModal.vue'
 import BaseButton from '../BaseButton.vue'
 import BaseAlert from '../BaseAlert.vue'
-import type { FolderNode } from '@/composables/useRestaurantImages'
+import type { FolderNode } from '@/composables/useBusinessImages'
 
 interface Props {
   modelValue: boolean

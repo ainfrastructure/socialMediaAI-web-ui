@@ -1,0 +1,20 @@
+{
+  "project": {
+    "name": "socialMediaAI-web-ui",
+    "root": "/Users/svendaneel/Desktop/Programming/socialMediaAI-web-ui"
+  },
+  "tasks": {
+    "source": "markdown",
+    "file": ".ralph/tasks.md",
+    "todoSection": "## 📋 TODO",
+    "completedSection": "## ✅ COMPLETED"
+  },
+  "limits": {
+    "maxRuntime": 28800
+  },
+  "notifications": {
+    "discord": {
+      "webhookEnv": "DISCORD_WEBHOOK_URL"
+    }
+  }
+}

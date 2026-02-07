@@ -1,16 +1,16 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useRestaurantImages } from '@/composables/useRestaurantImages'
-import { restaurantService } from '@/services/restaurantService'
+import { useBusinessImages } from '@/composables/useBusinessImages'
 import type { SavedRestaurant } from '@/services/restaurantService'
-import type { FolderNode } from '@/composables/useRestaurantImages'
+import type { FolderNode } from '@/composables/useBusinessImages'
 import CreateFolderModal from './CreateFolderModal.vue'
 import RenameFolderModal from './RenameFolderModal.vue'
 import MoveImagesModal from './MoveImagesModal.vue'
 import UploadImagesModal from './UploadImagesModal.vue'
 import ConfirmModal from '../ConfirmModal.vue'
 import BaseButton from '../BaseButton.vue'
+import MaterialIcon from '../MaterialIcon.vue'
 
 interface Props {
   restaurant: SavedRestaurant
@@ -43,8 +43,10 @@ const {
   createFolder,
   renameFolder,
   deleteFolder,
-  moveImagesToFolder
-} = useRestaurantImages(props.restaurant)
+  moveImagesToFolder,
+  refreshImages,
+  applyNewImages
+} = useBusinessImages(() => props.restaurant)
 
 // Modal states
 const showCreateFolderModal = ref(false)
@@ -131,8 +133,13 @@ function triggerFileUpload() {
   showUploadModal.value = true
 }
 
-function handleUploadComplete() {
+async function handleUploadComplete(uploadedImages: import('@/types/media').UploadedImage[]) {
+  if (uploadedImages?.length) {
+    applyNewImages(uploadedImages)
+  }
   emit('updated')
+  // Background sync for full consistency
+  refreshImages()
 }
 
 // Recursive folder tree renderer
@@ -179,6 +186,7 @@ function formatFileSize(bytes: number): string {
     <!-- Sidebar -->
     <aside class="sidebar">
       <div class="sidebar-header">
+        <MaterialIcon icon="folder_open" size="sm" color="var(--gold-primary)" />
         <h3>{{ t('restaurantManagement.folderTree') }}</h3>
       </div>
 
@@ -189,7 +197,8 @@ function formatFileSize(bytes: number): string {
           size="small"
           full-width
         >
-          + {{ t('restaurantManagement.newFolder') }}
+          <MaterialIcon icon="create_new_folder" size="xs" color="var(--text-on-gold)" />
+          {{ t('restaurantManagement.newFolder') }}
         </BaseButton>
       </div>
 
@@ -206,19 +215,13 @@ function formatFileSize(bytes: number): string {
             class="expand-icon"
             @click.stop="toggleFolderExpansion(item.node.path)"
           >
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path :d="item.isExpanded ? 'M6 9l6 6 6-6' : 'M9 18l6-6-6-6'" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
+            <MaterialIcon :icon="item.isExpanded ? 'expand_more' : 'chevron_right'" size="xs" color="var(--text-muted)" />
           </span>
           <span v-else class="expand-spacer"></span>
 
-          <span class="folder-icon">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-          </span>
+          <MaterialIcon :icon="item.isActive ? 'folder_open' : 'folder'" size="sm" :color="item.isActive ? 'var(--gold-primary)' : 'var(--text-secondary)'" />
           <span class="folder-name">{{ item.node.name }}</span>
-          <span class="folder-count">({{ item.node.imageCount }})</span>
+          <span class="folder-count">{{ item.node.imageCount }}</span>
         </button>
       </div>
     </aside>
@@ -234,16 +237,19 @@ function formatFileSize(bytes: number): string {
             class="breadcrumb"
             @click="navigateToFolder(crumb.path)"
           >
-            {{ crumb.name }}
-            <span v-if="index < breadcrumbs.length - 1" class="separator">/</span>
+            <MaterialIcon v-if="index === 0" icon="home" size="xs" color="currentColor" />
+            <span v-else>{{ crumb.name }}</span>
+            <MaterialIcon v-if="index < breadcrumbs.length - 1" icon="chevron_right" size="xs" color="var(--text-muted)" />
           </button>
         </div>
 
         <div v-if="!isRootFolder" class="header-actions">
           <button class="action-btn" @click="showRenameFolderModal = true">
+            <MaterialIcon icon="edit" size="xs" color="currentColor" />
             {{ t('restaurantManagement.rename') }}
           </button>
           <button class="action-btn delete" @click="promptDeleteFolder">
+            <MaterialIcon icon="delete_outline" size="xs" color="currentColor" />
             {{ t('restaurantManagement.delete') }}
           </button>
         </div>
@@ -251,12 +257,15 @@ function formatFileSize(bytes: number): string {
 
       <!-- Toolbar -->
       <div class="toolbar">
-        <input
-          v-model="searchQuery"
-          type="text"
-          class="search-input"
-          :placeholder="t('restaurantManagement.searchImages')"
-        />
+        <div class="search-wrapper">
+          <MaterialIcon icon="search" size="sm" color="var(--text-muted)" />
+          <input
+            v-model="searchQuery"
+            type="text"
+            class="search-input"
+            :placeholder="t('restaurantManagement.searchImages')"
+          />
+        </div>
 
         <div class="toolbar-actions">
           <BaseButton
@@ -264,28 +273,37 @@ function formatFileSize(bytes: number): string {
             variant="primary"
             size="small"
           >
+            <MaterialIcon icon="cloud_upload" size="xs" color="var(--text-on-gold)" />
             {{ t('restaurantManagement.uploadImages') }}
           </BaseButton>
 
-          <select v-model="sortBy" class="sort-select">
-            <option value="date">{{ t('restaurantManagement.sortByDate') }}</option>
-            <option value="name">{{ t('restaurantManagement.sortByName') }}</option>
-            <option value="size">{{ t('restaurantManagement.sortBySize') }}</option>
-          </select>
+          <div class="sort-wrapper">
+            <MaterialIcon icon="sort" size="xs" color="var(--text-secondary)" />
+            <select v-model="sortBy" class="sort-select">
+              <option value="date">{{ t('restaurantManagement.sortByDate') }}</option>
+              <option value="name">{{ t('restaurantManagement.sortByName') }}</option>
+              <option value="size">{{ t('restaurantManagement.sortBySize') }}</option>
+            </select>
+          </div>
         </div>
       </div>
 
       <!-- Bulk Actions -->
       <div v-if="hasSelection" class="bulk-actions">
-        <span class="selection-count">
-          {{ t('restaurantManagement.selectedCount', { count: selectedImages.length }) }}
-        </span>
+        <div class="selection-info">
+          <MaterialIcon icon="check_circle" size="sm" color="var(--gold-primary)" />
+          <span class="selection-count">
+            {{ t('restaurantManagement.selectedCount', { count: selectedImages.length }) }}
+          </span>
+        </div>
 
         <div class="bulk-buttons">
           <button class="bulk-btn move" @click="showMoveImagesModal = true">
+            <MaterialIcon icon="drive_file_move" size="xs" color="currentColor" />
             {{ t('restaurantManagement.moveToFolder') }}
           </button>
           <button class="bulk-btn delete" @click="promptDeleteImages">
+            <MaterialIcon icon="delete_outline" size="xs" color="currentColor" />
             {{ t('restaurantManagement.deleteSelected') }}
           </button>
         </div>
@@ -293,16 +311,13 @@ function formatFileSize(bytes: number): string {
 
       <!-- Image Grid -->
       <div v-if="loading" class="loading-state">
-        {{ t('common.loading') }}
+        <MaterialIcon icon="hourglass_empty" size="xl" color="var(--text-muted)" />
+        <p>{{ t('common.loading') }}</p>
       </div>
 
       <div v-else-if="!filteredImages.length" class="empty-state">
-        <div class="empty-icon">
-          <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-            <rect x="3" y="4" width="18" height="16" rx="2" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M3 16L8 11L11 14L16 8L21 14" stroke-linecap="round" stroke-linejoin="round"/>
-            <circle cx="17" cy="8" r="2"/>
-          </svg>
+        <div class="empty-icon-wrapper">
+          <MaterialIcon icon="photo_library" size="xl" color="var(--gold-primary)" />
         </div>
         <p v-if="searchQuery" class="empty-message">
           {{ t('restaurantManagement.noImagesFound', { query: searchQuery }) }}
@@ -320,6 +335,7 @@ function formatFileSize(bytes: number): string {
             {{ t('restaurantManagement.noImagesInFolder') }}
           </p>
           <BaseButton @click="triggerFileUpload" variant="primary">
+            <MaterialIcon icon="cloud_upload" size="xs" color="var(--text-on-gold)" />
             {{ t('restaurantManagement.uploadImages') }}
           </BaseButton>
         </template>
@@ -332,20 +348,18 @@ function formatFileSize(bytes: number): string {
           :class="['image-card', { selected: selectedImages.some(img => img.id === image.id) }]"
           @click="toggleImageSelection(image.id)"
         >
-          <div class="image-checkbox">
-            <input
-              type="checkbox"
-              :checked="selectedImages.some(img => img.id === image.id)"
-              @click.stop="toggleImageSelection(image.id)"
-            />
+          <div class="image-select-indicator">
+            <div class="select-circle">
+              <MaterialIcon v-if="selectedImages.some(img => img.id === image.id)" icon="check" size="xs" color="#fff" />
+            </div>
           </div>
 
           <img :src="image.url" :alt="image.storage_path" class="image-thumb" />
 
           <div class="image-overlay">
             <div class="image-info">
-              <p class="image-size">{{ formatFileSize(image.file_size) }}</p>
-              <p class="image-dims">{{ image.width }}×{{ image.height }}</p>
+              <span class="image-size">{{ formatFileSize(image.file_size) }}</span>
+              <span class="image-dims">{{ image.width }}×{{ image.height }}</span>
             </div>
           </div>
         </div>
@@ -419,41 +433,44 @@ function formatFileSize(bytes: number): string {
   background: var(--bg-primary);
   border-radius: var(--radius-xl);
   overflow: hidden;
-  box-shadow: 0 4px 20px rgba(15, 61, 46, 0.08);
+  border: 1px solid var(--border-color);
 }
 
-/* Sidebar */
+/* ===== Sidebar ===== */
 .sidebar {
-  width: 300px;
+  width: 280px;
   flex-shrink: 0;
   background: var(--bg-secondary);
-  border-right: 1px solid rgba(15, 61, 46, 0.12);
+  border-right: 1px solid var(--border-color);
   display: flex;
   flex-direction: column;
 }
 
 .sidebar-header {
-  padding: var(--space-xl);
-  border-bottom: 1px solid rgba(15, 61, 46, 0.1);
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-xl) var(--space-xl) var(--space-lg);
 }
 
 .sidebar-header h3 {
   margin: 0;
-  font-size: var(--text-lg);
+  font-family: var(--font-heading);
+  font-size: var(--text-base);
   font-weight: var(--font-semibold);
   color: var(--text-primary);
-  font-family: var(--font-heading);
+  letter-spacing: -0.01em;
 }
 
 .sidebar-actions {
-  padding: var(--space-lg);
-  border-bottom: 1px solid rgba(15, 61, 46, 0.1);
+  padding: 0 var(--space-lg) var(--space-lg);
 }
 
 .folder-list {
   flex: 1;
   overflow-y: auto;
-  padding: var(--space-sm) 0;
+  padding: var(--space-xs) var(--space-sm);
+  border-top: 1px solid var(--border-color);
 }
 
 .folder-item {
@@ -461,39 +478,44 @@ function formatFileSize(bytes: number): string {
   display: flex;
   align-items: center;
   gap: var(--space-sm);
-  padding: var(--space-md) var(--space-lg);
+  padding: var(--space-sm) var(--space-md);
+  margin: 2px 0;
   background: none;
   border: none;
   cursor: pointer;
-  transition: all var(--transition-base);
+  transition: all 0.2s ease;
   text-align: left;
   font-family: var(--font-body);
   font-size: var(--text-sm);
-  border-left: 3px solid transparent;
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
 }
 
 .folder-item:hover {
-  background: rgba(15, 61, 46, 0.06);
+  background: rgba(15, 61, 46, 0.05);
+  color: var(--text-primary);
 }
 
 .folder-item.active {
-  background: rgba(15, 61, 46, 0.12);
-  border-left-color: var(--gold-primary);
+  background: var(--bg-primary);
+  color: var(--gold-primary);
   font-weight: var(--font-medium);
+  box-shadow: 0 1px 4px rgba(15, 61, 46, 0.06);
 }
 
 .expand-icon {
   width: 18px;
-  color: var(--text-muted);
   flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: transform var(--transition-base);
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  transition: background 0.15s ease;
 }
 
-.expand-icon svg {
-  display: block;
+.expand-icon:hover {
+  background: rgba(15, 61, 46, 0.08);
 }
 
 .expand-spacer {
@@ -501,35 +523,30 @@ function formatFileSize(bytes: number): string {
   flex-shrink: 0;
 }
 
-.folder-icon {
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  color: var(--gold-primary);
-}
-
-.folder-icon svg {
-  display: block;
-}
-
 .folder-name {
   flex: 1;
-  color: var(--text-primary);
-}
-
-.folder-item.active .folder-name {
-  color: var(--gold-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .folder-count {
-  font-size: var(--text-xs);
+  font-size: 0.65rem;
+  font-weight: var(--font-semibold);
   color: var(--text-muted);
-  background: rgba(15, 61, 46, 0.08);
-  padding: 2px 8px;
+  background: rgba(15, 61, 46, 0.06);
+  padding: 1px 7px;
   border-radius: var(--radius-full);
+  min-width: 20px;
+  text-align: center;
 }
 
-/* Main Content */
+.folder-item.active .folder-count {
+  background: rgba(15, 61, 46, 0.12);
+  color: var(--gold-primary);
+}
+
+/* ===== Main Content ===== */
 .content {
   flex: 1;
   display: flex;
@@ -542,31 +559,34 @@ function formatFileSize(bytes: number): string {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: var(--space-xl) var(--space-2xl);
-  border-bottom: 1px solid rgba(15, 61, 46, 0.1);
+  padding: var(--space-lg) var(--space-xl);
+  border-bottom: 1px solid var(--border-color);
 }
 
 .breadcrumbs {
   display: flex;
   align-items: center;
-  gap: var(--space-sm);
+  gap: 2px;
 }
 
 .breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
   background: none;
   border: none;
   padding: var(--space-xs) var(--space-sm);
-  color: var(--text-secondary);
+  color: var(--text-muted);
   font-family: var(--font-body);
-  font-size: var(--text-base);
+  font-size: var(--text-sm);
   cursor: pointer;
-  transition: all var(--transition-base);
+  transition: all 0.2s ease;
   border-radius: var(--radius-md);
 }
 
 .breadcrumb:hover {
   color: var(--text-primary);
-  background: rgba(15, 61, 46, 0.05);
+  background: rgba(15, 61, 46, 0.04);
 }
 
 .breadcrumb:last-child {
@@ -574,156 +594,207 @@ function formatFileSize(bytes: number): string {
   font-weight: var(--font-medium);
 }
 
-.separator {
-  margin: 0 var(--space-xs);
-  color: var(--text-muted);
-}
-
 .header-actions {
   display: flex;
-  gap: var(--space-md);
+  gap: var(--space-sm);
 }
 
 .action-btn {
-  padding: var(--space-sm) var(--space-lg);
-  background: var(--bg-secondary);
-  border: 1px solid rgba(15, 61, 46, 0.15);
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: var(--space-xs) var(--space-md);
+  background: transparent;
+  border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
   font-family: var(--font-body);
-  font-size: var(--text-sm);
+  font-size: var(--text-xs);
   font-weight: var(--font-medium);
-  color: var(--text-primary);
+  color: var(--text-secondary);
   cursor: pointer;
-  transition: all var(--transition-base);
+  transition: all 0.2s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 
 .action-btn:hover {
-  background: rgba(15, 61, 46, 0.08);
-  border-color: rgba(15, 61, 46, 0.25);
+  background: var(--bg-secondary);
+  border-color: rgba(15, 61, 46, 0.2);
   color: var(--gold-primary);
 }
 
 .action-btn.delete {
   color: var(--error-text);
+  border-color: rgba(239, 68, 68, 0.15);
 }
 
 .action-btn.delete:hover {
   background: var(--error-bg);
   border-color: var(--error-border);
-  color: var(--error-text);
 }
 
-/* Toolbar */
+/* ===== Toolbar ===== */
 .toolbar {
   display: flex;
   align-items: center;
   gap: var(--space-lg);
-  padding: var(--space-lg) var(--space-2xl);
-  border-bottom: 1px solid rgba(15, 61, 46, 0.1);
+  padding: var(--space-md) var(--space-xl);
+  border-bottom: 1px solid var(--border-color);
+  background: var(--bg-secondary);
+}
+
+.search-wrapper {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  flex: 1;
+  max-width: 400px;
+  padding: var(--space-sm) var(--space-md);
   background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  transition: all 0.2s ease;
+}
+
+.search-wrapper:focus-within {
+  border-color: var(--gold-primary);
+  box-shadow: 0 0 0 3px rgba(15, 61, 46, 0.08);
 }
 
 .search-input {
   flex: 1;
-  max-width: 450px;
-  padding: var(--space-md) var(--space-lg);
-  background: var(--bg-secondary);
-  border: 1px solid rgba(15, 61, 46, 0.15);
-  border-radius: var(--radius-lg);
+  padding: 0;
+  background: transparent;
+  border: none;
   font-family: var(--font-body);
-  font-size: var(--text-base);
+  font-size: var(--text-sm);
   color: var(--text-primary);
-  transition: all var(--transition-base);
 }
 
 .search-input:focus {
   outline: none;
-  border-color: var(--gold-primary);
-  box-shadow: 0 0 0 3px rgba(15, 61, 46, 0.1);
+}
+
+.search-input::placeholder {
+  color: var(--text-muted);
 }
 
 .toolbar-actions {
   display: flex;
-  gap: var(--space-md);
+  gap: var(--space-sm);
   margin-left: auto;
+  align-items: center;
+}
+
+.sort-wrapper {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: var(--space-sm) var(--space-md);
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  transition: all 0.2s ease;
+}
+
+.sort-wrapper:focus-within {
+  border-color: var(--gold-primary);
 }
 
 .sort-select {
-  padding: var(--space-md) var(--space-lg);
-  background: var(--bg-secondary);
-  border: 1px solid rgba(15, 61, 46, 0.15);
-  border-radius: var(--radius-lg);
+  padding: 0;
+  background: transparent;
+  border: none;
   font-family: var(--font-body);
-  font-size: var(--text-base);
+  font-size: var(--text-sm);
   color: var(--text-primary);
   cursor: pointer;
-  transition: all var(--transition-base);
+  -webkit-appearance: none;
+  appearance: none;
 }
 
 .sort-select:focus {
   outline: none;
-  border-color: var(--gold-primary);
-  box-shadow: 0 0 0 3px rgba(15, 61, 46, 0.1);
 }
 
-/* Bulk Actions */
+/* ===== Bulk Actions ===== */
 .bulk-actions {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: var(--space-lg) var(--space-2xl);
-  background: rgba(15, 61, 46, 0.08);
-  border-bottom: 1px solid rgba(15, 61, 46, 0.15);
+  padding: var(--space-md) var(--space-xl);
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-color);
+  animation: slideDown 0.2s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.selection-info {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
 }
 
 .selection-count {
-  font-size: var(--text-base);
+  font-size: var(--text-sm);
   font-weight: var(--font-semibold);
   color: var(--text-primary);
 }
 
 .bulk-buttons {
   display: flex;
-  gap: var(--space-md);
+  gap: var(--space-sm);
 }
 
 .bulk-btn {
-  padding: var(--space-sm) var(--space-lg);
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: var(--space-xs) var(--space-md);
   border: none;
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-md);
   font-family: var(--font-body);
-  font-size: var(--text-sm);
+  font-size: var(--text-xs);
   font-weight: var(--font-semibold);
   cursor: pointer;
-  transition: all var(--transition-base);
+  transition: all 0.2s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 
 .bulk-btn.move {
-  background: rgba(15, 61, 46, 0.15);
+  background: rgba(15, 61, 46, 0.1);
   color: var(--gold-primary);
 }
 
 .bulk-btn.move:hover {
   background: var(--gold-primary);
-  color: white;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(15, 61, 46, 0.2);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(15, 61, 46, 0.2);
 }
 
 .bulk-btn.delete {
-  background: var(--error-bg);
+  background: rgba(239, 68, 68, 0.08);
   color: var(--error-text);
-  border: 1px solid var(--error-border);
 }
 
 .bulk-btn.delete:hover {
   background: var(--error-text);
-  color: white;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.25);
 }
 
-/* States */
+/* ===== States ===== */
 .loading-state,
 .empty-state {
   flex: 1;
@@ -731,87 +802,110 @@ function formatFileSize(bytes: number): string {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: var(--space-5xl);
-  color: var(--text-secondary);
+  padding: var(--space-5xl) var(--space-2xl);
+  gap: var(--space-md);
 }
 
-.empty-icon {
-  margin-bottom: var(--space-xl);
-  opacity: 0.25;
+.loading-state p {
   color: var(--text-muted);
+  font-size: var(--text-sm);
 }
 
-.empty-icon svg {
-  display: block;
+.empty-icon-wrapper {
+  width: 72px;
+  height: 72px;
+  border-radius: var(--radius-xl);
+  background: rgba(15, 61, 46, 0.06);
+  border: 1px solid rgba(15, 61, 46, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: var(--space-sm);
 }
 
 .empty-message {
+  font-family: var(--font-heading);
   font-size: var(--text-lg);
-  margin-bottom: var(--space-md);
-  color: var(--text-secondary);
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
+  margin: 0;
 }
 
 .empty-hint {
-  font-size: var(--text-base);
-  margin-bottom: var(--space-xl);
+  font-size: var(--text-sm);
   color: var(--text-muted);
-  font-style: italic;
+  margin: 0 0 var(--space-lg);
 }
 
-/* Image Grid */
+/* ===== Image Grid ===== */
 .image-grid {
   flex: 1;
   overflow-y: auto;
-  padding: var(--space-2xl);
+  padding: var(--space-xl);
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: var(--space-xl);
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: var(--space-lg);
   align-content: start;
 }
 
 .image-card {
   position: relative;
   width: 100%;
-  padding-bottom: 100%; /* Creates 1:1 aspect ratio */
-  border-radius: var(--radius-xl);
+  padding-bottom: 100%;
+  border-radius: var(--radius-lg);
   overflow: hidden;
   background: var(--bg-secondary);
-  border: 2px solid rgba(15, 61, 46, 0.12);
+  border: 1px solid var(--border-color);
   cursor: pointer;
-  transition: all var(--transition-base);
-  box-shadow: 0 2px 8px rgba(15, 61, 46, 0.06);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .image-card:hover {
-  border-color: var(--gold-primary);
-  transform: translateY(-4px);
-  box-shadow: 0 12px 32px rgba(15, 61, 46, 0.15);
+  border-color: rgba(15, 61, 46, 0.25);
+  transform: translateY(-3px);
+  box-shadow:
+    0 8px 24px rgba(15, 61, 46, 0.1),
+    0 2px 8px rgba(15, 61, 46, 0.06);
 }
 
 .image-card.selected {
   border-color: var(--gold-primary);
-  box-shadow: 0 0 0 4px rgba(15, 61, 46, 0.15);
+  box-shadow:
+    0 0 0 2px var(--gold-primary),
+    0 4px 16px rgba(15, 61, 46, 0.12);
 }
 
-.image-checkbox {
+/* ===== Selection Indicator ===== */
+.image-select-indicator {
   position: absolute;
-  top: var(--space-md);
-  left: var(--space-md);
+  top: var(--space-sm);
+  left: var(--space-sm);
   z-index: 2;
   opacity: 0;
-  transition: opacity var(--transition-base);
+  transition: opacity 0.2s ease;
 }
 
-.image-card:hover .image-checkbox,
-.image-card.selected .image-checkbox {
+.image-card:hover .image-select-indicator,
+.image-card.selected .image-select-indicator {
   opacity: 1;
 }
 
-.image-checkbox input {
+.select-circle {
   width: 24px;
   height: 24px;
-  cursor: pointer;
-  accent-color: var(--gold-primary);
+  border-radius: var(--radius-full);
+  border: 2px solid rgba(255, 255, 255, 0.8);
+  background: rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.image-card.selected .select-circle {
+  background: var(--gold-primary);
+  border-color: var(--gold-primary);
 }
 
 .image-thumb {
@@ -821,6 +915,11 @@ function formatFileSize(bytes: number): string {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.image-card:hover .image-thumb {
+  transform: scale(1.04);
 }
 
 .image-overlay {
@@ -828,10 +927,10 @@ function formatFileSize(bytes: number): string {
   bottom: 0;
   left: 0;
   right: 0;
-  background: linear-gradient(to top, rgba(0, 0, 0, 0.8), transparent);
-  padding: var(--space-lg);
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.7) 0%, rgba(0, 0, 0, 0.2) 60%, transparent 100%);
+  padding: var(--space-xl) var(--space-md) var(--space-md);
   opacity: 0;
-  transition: opacity var(--transition-base);
+  transition: opacity 0.25s ease;
 }
 
 .image-card:hover .image-overlay {
@@ -840,20 +939,19 @@ function formatFileSize(bytes: number): string {
 
 .image-info {
   display: flex;
-  flex-direction: column;
-  gap: var(--space-xs);
+  justify-content: space-between;
+  align-items: center;
 }
 
 .image-size,
 .image-dims {
-  margin: 0;
-  font-size: var(--text-sm);
-  color: white;
-  line-height: 1.4;
+  font-size: var(--text-xs);
+  color: rgba(255, 255, 255, 0.9);
   font-weight: var(--font-medium);
+  letter-spacing: 0.02em;
 }
 
-/* Responsive */
+/* ===== Responsive ===== */
 @media (max-width: 768px) {
   .image-manager {
     flex-direction: column;
@@ -863,32 +961,34 @@ function formatFileSize(bytes: number): string {
 
   .sidebar {
     width: 100%;
-    max-height: 250px;
+    max-height: 220px;
+    border-right: none;
+    border-bottom: 1px solid var(--border-color);
   }
 
   .content-header {
-    padding: var(--space-lg) var(--space-lg);
+    padding: var(--space-md) var(--space-lg);
     flex-wrap: wrap;
-    gap: var(--space-md);
+    gap: var(--space-sm);
   }
 
   .header-actions {
     width: 100%;
-    justify-content: stretch;
   }
 
   .action-btn {
     flex: 1;
+    justify-content: center;
   }
 
   .toolbar {
     flex-direction: column;
     align-items: stretch;
-    padding: var(--space-lg);
-    gap: var(--space-md);
+    padding: var(--space-md) var(--space-lg);
+    gap: var(--space-sm);
   }
 
-  .search-input {
+  .search-wrapper {
     max-width: none;
   }
 
@@ -898,15 +998,15 @@ function formatFileSize(bytes: number): string {
   }
 
   .image-grid {
-    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
     padding: var(--space-lg);
-    gap: var(--space-lg);
+    gap: var(--space-md);
   }
 
   .bulk-actions {
-    padding: var(--space-lg);
+    padding: var(--space-md) var(--space-lg);
     flex-wrap: wrap;
-    gap: var(--space-md);
+    gap: var(--space-sm);
   }
 
   .bulk-buttons {
@@ -919,11 +1019,17 @@ function formatFileSize(bytes: number): string {
   .image-card,
   .folder-item,
   .breadcrumb,
-  .bulk-btn {
+  .bulk-btn,
+  .bulk-actions {
     transition: none;
+    animation: none;
   }
 
   .image-card:hover {
+    transform: none;
+  }
+
+  .image-card:hover .image-thumb {
     transform: none;
   }
 

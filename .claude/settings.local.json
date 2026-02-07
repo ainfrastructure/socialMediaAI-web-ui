@@ -55,7 +55,16 @@
       "Bash(./verify-init-sql.sh:*)",
       "Bash([ -f .env ])",
       "Bash(git push:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(ns run ios:*)",
+      "Bash(xcodebuild:*)",
+      "Bash(codesign:*)",
+      "Bash(open:*)",
+      "Bash(head:*)",
+      "Bash(npx vue-tsc:*)",
+      "WebFetch(domain:openclaw.ai)",
+      "Bash(npx vite build:*)",
+      "Bash(npx oxlint:*)"
     ],
     "deny": [],
     "ask": []

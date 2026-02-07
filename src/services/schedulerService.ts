@@ -8,6 +8,7 @@ class SchedulerService {
     year?: number
     platforms?: string[]
     restaurant_ids?: string[]
+    business_ids?: string[]
   }): Promise<ApiResponse<{ scheduled_posts: any[] }>> {
     const params = new URLSearchParams()
     if (filters?.status) params.append('status', filters.status)
@@ -20,6 +21,9 @@ class SchedulerService {
     }
     if (filters?.restaurant_ids && filters.restaurant_ids.length > 0) {
       params.append('restaurant_ids', filters.restaurant_ids.join(','))
+    }
+    if (filters?.business_ids && filters.business_ids.length > 0) {
+      params.append('business_ids', filters.business_ids.join(','))
     }
 
     const url = params.toString() ? `${API_URL}/api/scheduler?${params}` : `${API_URL}/api/scheduler`
@@ -42,9 +46,20 @@ class SchedulerService {
     return response.json()
   }
 
-  async getCalendar(month: number, year: number): Promise<ApiResponse<{ calendar: any[] }>> {
+  async getCalendar(
+    month: number,
+    year: number,
+    businessIds?: string[]
+  ): Promise<ApiResponse<{ calendar: any[] }>> {
+    const params = new URLSearchParams()
+    params.append('month', month.toString())
+    params.append('year', year.toString())
+    if (businessIds && businessIds.length > 0) {
+      params.append('business_ids', businessIds.join(','))
+    }
+
     const response = await fetch(
-      `${API_URL}/api/scheduler/calendar?month=${month}&year=${year}`,
+      `${API_URL}/api/scheduler/calendar?${params.toString()}`,
       {
         headers: getAuthHeader(),
       }

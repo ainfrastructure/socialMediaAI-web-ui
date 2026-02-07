@@ -33,6 +33,7 @@ interface Props {
   showCancelButton?: boolean
   lockDate?: boolean // When true, date picker is hidden and date is displayed as read-only
   carouselItems?: Array<{ mediaUrl: string; contentType: 'image' | 'video' }>
+  businessId?: string
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -517,6 +518,7 @@ onMounted(async () => {
     <div v-if="!forceScheduleMode && !lockDate" class="publish-type-section">
       <h4 class="section-label">{{ t('unifiedSchedule.whenToPublish', 'When to Publish') }}</h4>
       <div class="publish-type-toggle">
+        <span class="toggle-slider" :class="{ 'slider-right': publishType === 'schedule' }" />
         <button
           type="button"
           :class="['toggle-btn', { active: publishType === 'now' }]"
@@ -535,32 +537,35 @@ onMounted(async () => {
     </div>
 
     <!-- Schedule Section (always shown in force mode or lockDate mode, otherwise when scheduling) -->
-    <div v-if="publishType === 'schedule' || forceScheduleMode || lockDate" class="schedule-section">
-      <!-- Date Picker (only shown when NOT locked) -->
-      <div v-if="!lockDate" class="form-group">
-        <label class="form-label">{{ t('unifiedSchedule.selectDate', 'Select Date') }}</label>
-        <VueDatePicker
-          v-model="scheduleDateTime"
-          :min-date="today"
-          :enable-time-picker="false"
-          inline
-          auto-apply
-          dark
-          class="date-picker-inline"
-        />
-      </div>
+    <Transition name="schedule-reveal">
+      <div v-if="publishType === 'schedule' || forceScheduleMode || lockDate" class="schedule-section">
+        <div class="schedule-datetime-row">
+          <!-- Date Picker (only shown when NOT locked) -->
+          <div v-if="!lockDate" class="form-group">
+            <label class="form-label">{{ t('unifiedSchedule.selectDate', 'Select Date') }}</label>
+            <VueDatePicker
+              v-model="scheduleDateTime"
+              :min-date="today"
+              :enable-time-picker="false"
+              inline
+              auto-apply
+              class="date-picker-inline"
+            />
+          </div>
 
-      <!-- Time Picker -->
-      <div class="form-group">
-        <label class="form-label">{{ t('unifiedSchedule.selectTime', 'Select Time') }}</label>
-        <div class="time-picker-wrapper">
-          <MobileTimePicker
-            v-model="scheduleTime"
-            :minutes-increment="1"
-          />
+          <!-- Time Picker -->
+          <div class="form-group">
+            <label class="form-label">{{ t('unifiedSchedule.selectTime', 'Select Time') }}</label>
+            <div class="time-picker-wrapper">
+              <MobileTimePicker
+                v-model="scheduleTime"
+                :minutes-increment="1"
+              />
+            </div>
+          </div>
         </div>
       </div>
-    </div>
+    </Transition>
 
     <!-- Platform Selection -->
     <div class="platform-section">
@@ -704,6 +709,7 @@ onMounted(async () => {
             :show-post-type-selector="['facebook', 'instagram'].includes(currentPlatformForSelection)"
             :content-type="props.videoUrl ? 'video' : 'image'"
             :has-multiple-images="(props.carouselItems?.length || 0) >= 2"
+            :business-id="props.businessId"
             v-model="tempAccountSelections"
           />
 
@@ -817,13 +823,32 @@ onMounted(async () => {
 
 .publish-type-toggle {
   display: flex;
+  position: relative;
   background: var(--bg-tertiary);
   border-radius: var(--radius-md);
   padding: var(--space-xs);
 }
 
+.toggle-slider {
+  position: absolute;
+  top: var(--space-xs);
+  left: var(--space-xs);
+  width: calc(50% - var(--space-xs));
+  height: calc(100% - var(--space-xs) * 2);
+  background: var(--gold-primary);
+  border-radius: var(--radius-sm);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 0;
+}
+
+.toggle-slider.slider-right {
+  transform: translateX(100%);
+}
+
 .toggle-btn {
   flex: 1;
+  position: relative;
+  z-index: 1;
   padding: var(--space-md) var(--space-lg);
   background: transparent;
   border: none;
@@ -832,7 +857,7 @@ onMounted(async () => {
   font-size: var(--text-sm);
   font-weight: var(--font-medium);
   cursor: pointer;
-  transition: var(--transition-base);
+  transition: color var(--transition-base);
 }
 
 .toggle-btn:hover {
@@ -840,8 +865,8 @@ onMounted(async () => {
 }
 
 .toggle-btn.active {
-  background: var(--gold-primary);
   color: var(--text-on-gold);
+  background: transparent;
 }
 
 /* Schedule Section */
@@ -856,6 +881,33 @@ onMounted(async () => {
   backdrop-filter: blur(var(--blur-md));
 }
 
+.schedule-datetime-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: var(--space-xl);
+  align-items: start;
+}
+
+/* Schedule Reveal Transition */
+.schedule-reveal-enter-active {
+  transition: all 0.35s ease;
+  overflow: hidden;
+}
+
+.schedule-reveal-leave-active {
+  transition: all 0.25s ease;
+  overflow: hidden;
+}
+
+.schedule-reveal-enter-from {
+  opacity: 0;
+  transform: translateY(-8px);
+}
+
+.schedule-reveal-leave-to {
+  opacity: 0;
+  transform: translateY(-8px);
+}
 
 .form-group {
   display: flex;
@@ -1207,8 +1259,8 @@ onMounted(async () => {
 
 /* Inline Date Picker Container */
 .date-picker-inline {
-  background: rgba(255, 255, 255, 0.8);
-  border: 1px solid rgba(15, 61, 46, 0.1);
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
   border-radius: var(--radius-lg);
   padding: var(--space-lg);
   overflow-x: auto;
@@ -1238,25 +1290,27 @@ onMounted(async () => {
   font-size: 11px !important;
   width: auto !important;
   flex: 1 1 0 !important;
-  min-width: 28px !important;
+  min-width: 36px !important;
 }
 
 .date-picker-inline :deep(.dp__calendar_item) {
   width: auto !important;
   flex: 1 1 0 !important;
-  min-width: 28px !important;
+  min-width: 36px !important;
 }
 
 .date-picker-inline :deep(.dp__cell_inner) {
-  width: 28px !important;
-  height: 28px !important;
-  font-size: 12px !important;
+  width: 36px !important;
+  height: 36px !important;
+  font-size: var(--text-sm) !important;
   padding: 0 !important;
+  border-radius: var(--radius-md) !important;
+  transition: var(--transition-fast);
 }
 
 .date-picker-inline :deep(.dp__cell_offset) {
-  width: 28px !important;
-  height: 28px !important;
+  width: 36px !important;
+  height: 36px !important;
 }
 
 /* Month/year header */
@@ -1280,16 +1334,16 @@ onMounted(async () => {
 
 /* Time Picker Wrapper */
 .time-picker-wrapper {
-  background: rgba(255, 255, 255, 0.8);
-  border: 1px solid rgba(15, 61, 46, 0.1);
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
   border-radius: var(--radius-lg);
   padding: var(--space-lg);
   display: flex;
   justify-content: center;
 }
 
-/* Date/Time Picker Dark Theme Override */
-:deep(.dp__theme_dark) {
+/* Date/Time Picker Theme Override */
+:deep(.dp__theme_light) {
   --dp-background-color: transparent;
   --dp-text-color: var(--text-primary);
   --dp-hover-color: rgba(15, 61, 46, 0.08);
@@ -1363,23 +1417,26 @@ onMounted(async () => {
 
 /* Calendar days */
 :deep(.dp__calendar_item) {
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-md);
 }
 
 :deep(.dp__cell_inner) {
-  border-radius: var(--radius-sm);
-  width: 34px;
-  height: 34px;
+  border-radius: var(--radius-md);
+  width: 36px;
+  height: 36px;
   font-size: var(--text-sm);
+  transition: var(--transition-fast);
 }
 
 :deep(.dp__today) {
   border: 2px solid var(--gold-primary);
+  font-weight: var(--font-semibold);
 }
 
 :deep(.dp__active_date) {
   background: var(--gold-primary);
   color: var(--text-on-gold);
+  box-shadow: var(--shadow-sm);
 }
 
 :deep(.dp__cell_offset) {
@@ -1407,6 +1464,19 @@ onMounted(async () => {
     flex-direction: column;
   }
 
+  .toggle-slider {
+    width: calc(100% - var(--space-xs) * 2);
+    height: calc(50% - var(--space-xs));
+  }
+
+  .toggle-slider.slider-right {
+    transform: translateY(100%);
+  }
+
+  .schedule-datetime-row {
+    grid-template-columns: 1fr;
+  }
+
   .actions {
     flex-direction: column;
   }
@@ -1414,35 +1484,31 @@ onMounted(async () => {
   .actions > * {
     width: 100%;
   }
+
+  .date-picker-inline :deep(.dp__cell_inner) {
+    width: 32px !important;
+    height: 32px !important;
+  }
+
+  .date-picker-inline :deep(.dp__cell_offset) {
+    width: 32px !important;
+    height: 32px !important;
+  }
+
+  .date-picker-inline :deep(.dp__calendar_header_item) {
+    min-width: 32px !important;
+  }
+
+  .date-picker-inline :deep(.dp__calendar_item) {
+    min-width: 32px !important;
+  }
 }
 
-/* ===== DARK MODE OVERRIDES ===== */
-:root[data-theme="dark"] .date-picker-inline {
-  background: var(--bg-tertiary);
-  border-color: var(--border-color);
-}
-
-:root[data-theme="dark"] .time-picker-wrapper {
-  background: var(--bg-tertiary);
-  border-color: var(--border-color);
-}
-
-:root[data-theme="dark"] :deep(.dp__theme_dark) {
-  --dp-hover-color: var(--accent-alpha-10);
-  --dp-secondary-color: var(--accent-alpha-05);
-  --dp-border-color: var(--border-color);
-  --dp-highlight-color: var(--accent-alpha-10);
-}
-
-:root[data-theme="dark"] :deep(.dp__calendar_header_item) {
-  color: var(--gold-primary);
-}
-
-:root[data-theme="dark"] :deep(.dp__month_year_select:hover) {
-  background: var(--accent-alpha-10);
-}
-
-:root[data-theme="dark"] :deep(.dp__inner_nav:hover) {
-  background: var(--accent-alpha-10);
+@media (prefers-reduced-motion: reduce) {
+  .toggle-slider,
+  .schedule-reveal-enter-active,
+  .schedule-reveal-leave-active {
+    transition-duration: 0.01ms !important;
+  }
 }
 </style>

@@ -14,10 +14,14 @@ interface Props {
   restaurants: SavedRestaurant[]
   currentId?: string
   showAddButton?: boolean
+  showManageLink?: boolean
+  businessId?: string | null
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  showAddButton: true
+  showAddButton: true,
+  showManageLink: true,
+  businessId: null
 })
 
 const emit = defineEmits<{
@@ -55,7 +59,7 @@ function handleAddNew() {
 
 function handleManageRestaurants() {
   close()
-  router.push('/restaurants')
+  router.push('/businesses')
 }
 
 function handleRestaurantAdded(_restaurant: any) {
@@ -138,7 +142,7 @@ function cancelDelete() {
 
     <template v-if="props.showAddButton" #footer>
       <div class="modal-footer">
-        <button class="manage-link" @click="handleManageRestaurants">
+        <button v-if="props.showManageLink" class="manage-link" @click="handleManageRestaurants">
           {{ $t('profile.manageRestaurants') }}
         </button>
         <BaseButton variant="secondary" @click="handleAddNew" fullWidth>
@@ -151,6 +155,7 @@ function cancelDelete() {
   <!-- Add Restaurant Modal -->
   <AddRestaurantModal
     v-model="showAddModal"
+    :business-id="props.businessId"
     :saved-restaurants="restaurants"
     @restaurant-added="handleRestaurantAdded"
     @switch-to-manual="handleSwitchToManual"
@@ -159,6 +164,7 @@ function cancelDelete() {
   <!-- Create Restaurant Modal -->
   <CreateRestaurantModal
     v-model="showCreateModal"
+    :business-id="props.businessId"
     @created="handleRestaurantCreated"
   />
 

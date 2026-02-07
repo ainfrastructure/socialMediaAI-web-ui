@@ -568,6 +568,7 @@ async function handleEasyModePublish(data: {
     try {
       const saveResponse = await api.saveFavorite({
         restaurant_id: selectedRestaurant.value.id,
+        business_id: selectedRestaurant.value.business_id || undefined,
         content_type: 'image',
         media_url: generatedImageUrl.value,
         post_text: finalPostText,
@@ -643,8 +644,8 @@ async function publishToSocialMedia(
   finalPostText: string,
   finalHashtags: string[],
   accountSelections?: {
-    facebook?: string[]
-    instagram?: string[]
+    facebook?: Array<string | { accountId: string; postType?: string; carouselItems?: any[] }>
+    instagram?: Array<string | { accountId: string; postType?: string; carouselItems?: any[] }>
   }
 ) {
   const results: PublishResult[] = []
@@ -656,16 +657,20 @@ async function publishToSocialMedia(
 
   for (const platform of platforms) {
     if (platform === 'facebook') {
-      const selectedPageIds = accountSelections?.facebook || []
+      const selectedPages = accountSelections?.facebook || []
 
       // If no accounts selected, show error
-      if (selectedPageIds.length === 0) {
+      if (selectedPages.length === 0) {
         results.push({ platform: 'facebook', success: false, error: 'No Facebook pages selected' })
         continue
       }
 
       // Loop through all selected Facebook pages
-      for (const pageId of selectedPageIds) {
+      for (const selection of selectedPages) {
+        const pageId = typeof selection === 'string' ? selection : selection.accountId
+        const postType = (typeof selection === 'object' ? selection.postType : undefined) || 'feed'
+        const carouselItems = typeof selection === 'object' ? selection.carouselItems : undefined
+
         const page = facebookStore.connectedPages.find(p => p.pageId === pageId)
         if (!page) {
           results.push({ platform: 'facebook', success: false, error: `Facebook page ${pageId} not found` })
@@ -676,7 +681,11 @@ async function publishToSocialMedia(
           const response = await api.postToFacebook(
             page.pageId,
             message,
-            generatedImageUrl.value
+            generatedImageUrl.value,
+            undefined,
+            'image',
+            postType as 'feed' | 'story' | 'reel' | 'carousel',
+            carouselItems
           )
 
           const postUrl = (response as any).postUrl || response.data?.postUrl
@@ -713,16 +722,20 @@ async function publishToSocialMedia(
         }
       }
     } else if (platform === 'instagram') {
-      const selectedAccountIds = accountSelections?.instagram || []
+      const selectedAccounts = accountSelections?.instagram || []
 
       // If no accounts selected, show error
-      if (selectedAccountIds.length === 0) {
+      if (selectedAccounts.length === 0) {
         results.push({ platform: 'instagram', success: false, error: 'No Instagram accounts selected' })
         continue
       }
 
       // Loop through all selected Instagram accounts
-      for (const accountId of selectedAccountIds) {
+      for (const selection of selectedAccounts) {
+        const accountId = typeof selection === 'string' ? selection : selection.accountId
+        const postType = (typeof selection === 'object' ? selection.postType : undefined) || 'feed'
+        const carouselItems = typeof selection === 'object' ? selection.carouselItems : undefined
+
         const account = instagramStore.connectedAccounts.find(a => a.instagramAccountId === accountId)
         if (!account) {
           results.push({ platform: 'instagram', success: false, error: `Instagram account ${accountId} not found` })
@@ -733,7 +746,11 @@ async function publishToSocialMedia(
           const response = await api.postToInstagram(
             account.instagramAccountId,
             message,
-            generatedImageUrl.value
+            generatedImageUrl.value,
+            undefined,
+            'image',
+            postType as 'feed' | 'story' | 'reel' | 'carousel',
+            carouselItems
           )
 
           const postUrl = (response as any).postUrl || response.data?.postUrl

@@ -20,6 +20,7 @@ import { waitlistService } from './waitlistService'
 import { referralService } from './referralService'
 import { notificationPreferencesService } from './notificationPreferencesService'
 import { engagementService } from './engagementService'
+import { businessService } from './businessService'
 import { API_URL, getAuthHeader } from './apiBase'
 
 /**
@@ -143,6 +144,13 @@ class ApiService {
   getBulkEngagement = engagementService.getBulkEngagement.bind(engagementService)
   refreshEngagement = engagementService.refreshEngagement.bind(engagementService)
   getEngagementAnalytics = engagementService.getAnalytics.bind(engagementService)
+
+  // Business methods
+  getBusinesses = businessService.getBusinesses.bind(businessService)
+  getBusiness = businessService.getBusiness.bind(businessService)
+  createBusiness = businessService.createBusiness.bind(businessService)
+  updateBusiness = businessService.updateBusiness.bind(businessService)
+  deleteBusiness = businessService.deleteBusiness.bind(businessService)
 
   // Restaurants - keep inline as it's minimal (most is in restaurantService.ts)
   async getRestaurants(limit?: number) {

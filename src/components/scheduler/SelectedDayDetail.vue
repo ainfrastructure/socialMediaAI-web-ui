@@ -1,21 +1,24 @@
 <template>
   <div v-if="shouldShowPanel" :class="['day-detail-wrapper', { 'no-tab-bar': hideTabBar }]">
-    <!-- Tab Bar (hidden when hideTabBar is true) -->
-    <div v-if="!hideTabBar" class="tab-bar">
-      <button
-        :class="['tab-btn', { active: activeTab === 'day' }]"
-        @click="switchTab('day')"
-      >
-        {{ day ? formatShortDate(day) : 'Selected Day' }}
-        <span v-if="day && day.posts.length > 0" class="tab-count">{{ day.posts.length }}</span>
-      </button>
-      <button
-        :class="['tab-btn', { active: activeTab === 'upcoming' }]"
-        @click="switchTab('upcoming')"
-      >
-        Upcoming
-        <span v-if="upcomingPosts.length > 0" class="tab-count">{{ upcomingPosts.length }}</span>
-      </button>
+    <!-- Segmented Tab Control (hidden when hideTabBar is true) -->
+    <div v-if="!hideTabBar" class="segmented-control">
+      <div class="segmented-track">
+        <div :class="['segmented-indicator', `position-${activeTab}`]"></div>
+        <button
+          :class="['segment-btn', { active: activeTab === 'day' }]"
+          @click="switchTab('day')"
+        >
+          {{ day ? formatShortDate(day) : $t('scheduler.selectedDay', 'Selected Day') }}
+          <span v-if="day && day.posts.length > 0" class="segment-count">{{ day.posts.length }}</span>
+        </button>
+        <button
+          :class="['segment-btn', { active: activeTab === 'upcoming' }]"
+          @click="switchTab('upcoming')"
+        >
+          {{ $t('scheduler.upcoming', 'Upcoming') }}
+          <span v-if="upcomingPosts.length > 0" class="segment-count">{{ upcomingPosts.length }}</span>
+        </button>
+      </div>
     </div>
 
     <!-- Holidays Section (if any) - only show in day view -->
@@ -31,141 +34,106 @@
       </div>
     </div>
 
-    <!-- Posts Table -->
-    <div v-if="displayPosts.length > 0" class="posts-table-container">
-      <!-- Table Header -->
-      <div :class="['table-header', { 'upcoming-view': activeTab === 'upcoming' }]">
-        <div class="th-post">{{ $t('scheduler.post') || 'Post' }}</div>
-        <div v-if="activeTab === 'upcoming'" class="th-date">Date</div>
-        <div class="th-post-type">{{ $t('postType.label') || 'Post Type' }}</div>
-        <div class="th-platforms">{{ $t('dashboardNew.platforms') || 'Platforms' }}</div>
-        <div class="th-status">{{ $t('scheduler.status') || 'Status' }}</div>
-        <div class="th-restaurant">{{ $t('scheduler.restaurant') || 'Restaurant' }}</div>
-        <div class="th-expand"></div>
-      </div>
-
-      <!-- Table Body -->
-      <div class="table-body">
+    <!-- Posts Card Grid -->
+    <div v-if="displayPosts.length > 0" class="posts-card-grid-container">
+      <div class="posts-card-grid">
         <div
-          v-for="post in paginatedPosts"
+          v-for="(post, index) in paginatedPosts"
           :key="post.id"
-          class="table-row-wrapper"
+          :class="['scheduler-post-card', { 'is-expanded': expandedPostId === post.id }]"
           :data-post-id="post.id"
+          :style="{ '--stagger': index }"
+          @click="toggleExpanded(post.id, post)"
         >
-          <!-- Row -->
-          <div
-            :class="['table-row', { 'is-expanded': expandedPostId === post.id, 'upcoming-view': activeTab === 'upcoming' }]"
-            @click="toggleExpanded(post.id, post)"
-          >
-            <!-- Post Column - Always show image thumbnail for reliable display -->
-            <div class="td-post">
-              <div class="post-thumb-wrapper">
-                <img
-                  v-if="post.media_url"
-                  :src="getMediaUrl(post.media_url)"
-                  class="post-thumb"
-                  @error="handleImageError"
-                />
-                <div v-else class="post-thumb post-thumb-placeholder">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
-                    <circle cx="8.5" cy="8.5" r="1.5"/>
-                    <polyline points="21 15 16 10 5 21"/>
-                  </svg>
-                </div>
-                <!-- Video indicator overlay -->
-                <span v-if="post.video_url" class="video-indicator">🎥</span>
-              </div>
-              <div class="post-info">
-                <div class="post-time-row">
-                  <span class="post-time">{{ formatTime(post.scheduled_time) || '--:--' }}</span>
-                  <span class="post-time-sep">•</span>
-                  <span class="post-time-ago">{{ getPostTimeAgo(post) }}</span>
-                </div>
-                <p class="post-caption-preview">{{ truncateText(post.post_text || '', 60) }}</p>
-              </div>
+          <!-- Card Media -->
+          <div class="card-media">
+            <img
+              v-if="post.media_url"
+              :src="getMediaUrl(post.media_url)"
+              alt=""
+              class="card-image"
+              @error="handleImageError"
+            />
+            <div v-else class="card-image-placeholder">
+              <MaterialIcon icon="article" size="lg" />
             </div>
 
-            <!-- Date Column (only for upcoming view) -->
-            <div v-if="activeTab === 'upcoming'" class="td-date">
-              <span class="date-badge">{{ formatPostDate(post.scheduled_date) }}</span>
-            </div>
-
-            <!-- Post Type Column -->
-            <div class="td-post-type">
-              <PostTypeBadge
-                :post-type-settings="post.post_type_settings"
-                :platforms="getPostPlatforms(post)"
-                size="small"
+            <!-- Status badge overlay -->
+            <span :class="['card-status', post.status || 'scheduled']">
+              <MaterialIcon
+                :icon="post.status === 'published' ? 'check_circle' : post.status === 'failed' ? 'error' : 'schedule'"
+                size="xs"
               />
-            </div>
+              {{ getStatusLabel(post.status) }}
+            </span>
 
-            <!-- Platforms Column -->
-            <div class="td-platforms">
+            <!-- Video indicator -->
+            <span v-if="post.video_url" class="card-video-badge">
+              <MaterialIcon icon="play_arrow" size="sm" />
+            </span>
+
+            <!-- Platform badges -->
+            <div v-if="getPostPlatforms(post).length" class="card-platforms">
               <div
-                v-for="platform in getPostPlatforms(post)"
+                v-for="platform in getPostPlatforms(post).slice(0, 3)"
                 :key="platform"
-                class="platform-logo-wrapper"
+                class="card-platform-wrapper"
               >
                 <PlatformLogo
                   :platform="platform as 'facebook' | 'instagram' | 'tiktok'"
-                  :size="24"
+                  :size="22"
+                  class="card-platform-logo"
                 />
-                <!-- Status badge (success = green checkmark, failed = red X) -->
+                <!-- Per-platform status indicator -->
                 <span
                   v-if="post.platform_statuses && post.platform_statuses[platform]"
                   :class="['platform-status-badge', `status-${post.platform_statuses[platform].status}`]"
-                  :title="post.platform_statuses[platform].status === 'failed' ? post.platform_statuses[platform].error : 'Published successfully'"
                 >
-                  <svg v-if="post.platform_statuses[platform].status === 'success'" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                  <svg v-if="post.platform_statuses[platform].status === 'success'" width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
                     <polyline points="20 6 9 17 4 12"/>
                   </svg>
-                  <svg v-else width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                  <svg v-else width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
                     <line x1="18" y1="6" x2="6" y2="18"/>
                     <line x1="6" y1="6" x2="18" y2="18"/>
                   </svg>
                 </span>
               </div>
             </div>
-
-            <!-- Mobile-only compact info row -->
-            <div class="td-mobile-info">
-              <span v-if="activeTab === 'upcoming'" class="mobile-date-badge">{{ formatPostDate(post.scheduled_date) }}</span>
-              <span class="mobile-time">{{ formatTime(post.scheduled_time) || '--:--' }}</span>
-              <span class="mobile-status">{{ getStatusLabel(post.status) }}</span>
-              <div class="mobile-platforms">
-                <PlatformLogo
-                  v-for="platform in getPostPlatforms(post)"
-                  :key="platform"
-                  :platform="platform as 'facebook' | 'instagram' | 'tiktok'"
-                  :size="18"
-                />
-              </div>
-            </div>
-
-            <!-- Status Column -->
-            <div class="td-status">
-              <span :class="['status-badge', `status-${post.status || 'scheduled'}`]">
-                <span class="status-dot"></span>
-                {{ getStatusLabel(post.status) }}
-              </span>
-            </div>
-
-            <!-- Restaurant Column -->
-            <div class="td-restaurant">
-              <span class="restaurant-name">{{ getRestaurantName(post) }}</span>
-            </div>
-
-            <!-- Expand Toggle -->
-            <div class="td-expand">
-              <span :class="['expand-icon', { 'is-expanded': expandedPostId === post.id }]">
-                ▾
-              </span>
-            </div>
           </div>
 
-          <!-- Expanded Details -->
-          <div v-if="expandedPostId === post.id" class="expanded-details" @click.stop>
+          <!-- Card Body -->
+          <div class="card-body">
+            <!-- Post text -->
+            <p class="card-text">{{ truncateText(post.post_text || '', 80) }}</p>
+
+            <!-- Business & Date -->
+            <div class="card-meta">
+              <span class="card-business">
+                <MaterialIcon icon="storefront" size="xs" />
+                {{ getBusinessName(post) }}
+              </span>
+              <span class="card-date">
+                <template v-if="activeTab === 'upcoming'">{{ formatPostDate(post.scheduled_date) }} • </template>
+                {{ formatTime(post.scheduled_time) || '--:--' }}
+              </span>
+            </div>
+
+            <!-- Post type badge -->
+            <PostTypeBadge
+              :post-type-settings="post.post_type_settings"
+              :platforms="getPostPlatforms(post)"
+              size="small"
+            />
+          </div>
+        </div>
+      </div>
+
+      <!-- Expanded Details (shown below the grid) -->
+      <div
+        v-for="post in paginatedPosts"
+        :key="'expanded-' + post.id"
+      >
+        <div v-if="expandedPostId === post.id" class="expanded-details" @click.stop>
             <!-- EDITABLE FORM for scheduled posts (only when editing) -->
             <div v-if="post.status !== 'published' && isEditing" class="edit-expanded">
               <!-- Left: Media Preview - Show video if video_url exists, otherwise image -->
@@ -485,9 +453,8 @@
             </div>
           </div>
         </div>
-      </div>
 
-      <!-- Pagination Controls (inside table) -->
+      <!-- Pagination Controls -->
       <div v-if="totalPages > 1" class="detail-pagination">
         <button
           class="pagination-btn"
@@ -522,6 +489,7 @@ import { ref, computed, watch, nextTick } from 'vue'
 import { useI18n } from 'vue-i18n'
 import PlatformLogo from '../PlatformLogo.vue'
 import PostTypeBadge from '../PostTypeBadge.vue'
+import MaterialIcon from '../MaterialIcon.vue'
 import { API_URL } from '@/services/apiBase'
 import { api } from '@/services/api'
 import { useNotificationStore } from '@/stores/notifications'
@@ -907,8 +875,15 @@ const getStatusLabel = (status: string | undefined) => {
   }
 }
 
-const getRestaurantName = (post: any): string => {
-  // Try multiple paths where restaurant name might be stored
+const getBusinessName = (post: any): string => {
+  if (post.business_name) return post.business_name
+  if (post.businesses?.name) return post.businesses.name
+  if (post.business?.name) return post.business.name
+  if (post.favorite_posts?.businesses?.name) return post.favorite_posts.businesses.name
+  if (post.favorite_post?.businesses?.name) return post.favorite_post.businesses.name
+  if (post.favorite?.businesses?.name) return post.favorite.businesses.name
+
+  // Fallback to restaurant data
   if (post.restaurant_name) return post.restaurant_name
   if (post.favorite_posts?.saved_restaurants?.name) return post.favorite_posts.saved_restaurants.name
   if (post.favorite_post?.saved_restaurants?.name) return post.favorite_post.saved_restaurants.name
@@ -1042,11 +1017,13 @@ defineExpose({
 <style scoped>
 .day-detail-wrapper {
   margin-top: var(--space-lg);
-  animation: fadeInUp 0.3s ease;
-  background: var(--bg-secondary);
-  border-radius: var(--radius-lg);
+  animation: fadeSlideUp 0.4s ease both;
+  background: var(--glass-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-radius: var(--radius-xl);
   overflow: hidden;
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--glass-border);
 }
 
 /* When tab bar is hidden (day view mode) */
@@ -1054,13 +1031,13 @@ defineExpose({
   margin-top: 0;
   border-radius: 0;
   border: none;
-  border-top: 1px solid var(--border-color);
+  border-top: 1px solid var(--glass-border);
 }
 
-@keyframes fadeInUp {
+@keyframes fadeSlideUp {
   from {
     opacity: 0;
-    transform: translateY(10px);
+    transform: translateY(12px);
   }
   to {
     opacity: 1;
@@ -1068,55 +1045,75 @@ defineExpose({
   }
 }
 
-/* Tab Bar */
-.tab-bar {
-  display: flex;
-  gap: var(--space-sm);
+/* Segmented Control */
+.segmented-control {
   padding: var(--space-md) var(--space-lg);
-  background: var(--bg-secondary);
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--glass-border);
 }
 
-.tab-btn {
+.segmented-track {
+  display: inline-flex;
+  position: relative;
+  background: var(--accent-alpha-05);
+  border-radius: var(--radius-full);
+  padding: 3px;
+}
+
+.segmented-indicator {
+  position: absolute;
+  top: 3px;
+  bottom: 3px;
+  width: calc(50% - 3px);
+  background: var(--gold-primary);
+  border-radius: var(--radius-full);
+  transition: transform var(--transition-base);
+  z-index: 0;
+}
+
+.segmented-indicator.position-day {
+  transform: translateX(0);
+}
+
+.segmented-indicator.position-upcoming {
+  transform: translateX(100%);
+}
+
+.segment-btn {
   display: inline-flex;
   align-items: center;
   gap: var(--space-xs);
   padding: var(--space-sm) var(--space-lg);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-full);
   font-size: var(--text-sm);
   font-weight: var(--font-medium);
   cursor: pointer;
-  transition: all var(--transition-fast);
-  border: 1px solid transparent;
+  transition: color var(--transition-fast);
+  border: none;
   background: transparent;
   color: var(--text-secondary);
+  position: relative;
+  z-index: 1;
+  white-space: nowrap;
 }
 
-.tab-btn:hover {
-  background: rgba(15, 61, 46, 0.05);
+.segment-btn.active {
+  color: var(--text-on-gold);
+}
+
+.segment-btn:not(.active):hover {
   color: var(--gold-primary);
 }
 
-.tab-btn.active {
-  background: var(--gold-primary);
-  color: var(--text-on-gold);
-  border-color: var(--gold-primary);
-}
-
-.tab-btn:not(.active) {
-  border-color: rgba(15, 61, 46, 0.15);
-}
-
-.tab-count {
-  background: rgba(15, 61, 46, 0.1);
-  padding: 2px 8px;
+.segment-count {
+  padding: 1px 7px;
   border-radius: var(--radius-full);
   font-size: var(--text-xs);
-  font-weight: var(--font-semibold);
+  font-weight: var(--font-bold);
+  background: var(--surface-alpha-30);
 }
 
-.tab-btn:not(.active) .tab-count {
-  background: rgba(15, 61, 46, 0.1);
+.segment-btn:not(.active) .segment-count {
+  background: var(--accent-alpha-10);
   color: var(--gold-primary);
 }
 
@@ -1137,8 +1134,8 @@ defineExpose({
   align-items: center;
   gap: var(--space-sm);
   padding: var(--space-sm) var(--space-md);
-  background: rgba(100, 150, 255, 0.1);
-  border: 1px solid rgba(100, 150, 255, 0.3);
+  background: var(--info-bg);
+  border: 1px solid var(--info-border);
   border-radius: var(--radius-md);
 }
 
@@ -1170,277 +1167,198 @@ defineExpose({
   margin: 2px 0 0 0;
 }
 
-/* Posts Table */
-.posts-table-container {
-  /* Container is now inside wrapper, no need for extra border/radius */
+/* Posts Card Grid */
+.posts-card-grid-container {
+  padding: var(--space-md);
 }
 
-.table-header {
+.posts-card-grid {
   display: grid;
-  grid-template-columns: 4fr 1.5fr 2fr 2fr 2fr 40px;
-  gap: var(--space-md);
-  padding: var(--space-md) var(--space-lg);
-  background: var(--bg-tertiary);
-  border-bottom: 1px solid var(--border-color);
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: var(--space-lg);
 }
 
-/* Upcoming view - add date column */
-.table-header.upcoming-view {
-  grid-template-columns: 3fr 1.5fr 1.5fr 2fr 2fr 2fr 40px;
-}
-
-.table-header > div {
-  font-size: var(--text-xs);
-  font-weight: var(--font-medium);
-  color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-.table-body {
+/* Individual Post Card */
+.scheduler-post-card {
   background: var(--bg-secondary);
-}
-
-.table-row-wrapper {
-  border-bottom: 1px solid var(--border-color);
-}
-
-.table-row-wrapper:last-child {
-  border-bottom: none;
-}
-
-.table-row {
-  display: grid;
-  grid-template-columns: 4fr 1.5fr 2fr 2fr 2fr 40px;
-  gap: var(--space-md);
-  padding: var(--space-lg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-xl);
+  overflow: hidden;
   cursor: pointer;
-  transition: background var(--transition-fast);
+  transition: var(--transition-base);
+  animation: fadeSlideUp 0.4s ease both;
+  animation-delay: calc(var(--stagger, 0) * 60ms);
 }
 
-/* Upcoming view - add date column */
-.table-row.upcoming-view {
-  grid-template-columns: 3fr 1.5fr 1.5fr 2fr 2fr 2fr 40px;
+.scheduler-post-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
+  border-color: var(--accent-alpha-20);
 }
 
-.table-row:hover {
-  background: var(--bg-elevated);
+.scheduler-post-card.is-expanded {
+  border-color: var(--gold-primary);
+  box-shadow: var(--shadow-lg);
 }
 
-.table-row.is-expanded {
-  background: var(--bg-elevated);
-}
-
-/* Date Column */
-.td-date {
-  display: flex;
-  align-items: center;
-}
-
-.date-badge {
-  padding: 4px 10px;
-  border-radius: var(--radius-md);
-  background: rgba(15, 61, 46, 0.08);
-  color: var(--gold-primary);
-  font-size: var(--text-xs);
-  font-weight: var(--font-semibold);
-}
-
-/* Mobile-only info row - hidden on desktop */
-.td-mobile-info {
-  display: none;
-}
-
-/* Post Column */
-.td-post {
-  display: flex;
-  align-items: center;
-  gap: var(--space-md);
-  min-width: 0;
-}
-
-.post-thumb-wrapper {
+/* Card Media */
+.card-media {
   position: relative;
-  width: 48px;
-  height: 48px;
-  flex-shrink: 0;
-}
-
-.post-thumb {
-  width: 48px;
-  height: 48px;
-  border-radius: var(--radius-md);
-  object-fit: cover;
-  flex-shrink: 0;
+  height: 180px;
+  overflow: hidden;
   background: var(--bg-tertiary);
 }
 
-.video-indicator {
-  position: absolute;
-  top: 2px;
-  right: 2px;
-  font-size: 0.7rem;
-  background: rgba(0, 0, 0, 0.6);
-  padding: 1px 3px;
-  border-radius: var(--radius-sm);
+.card-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.4s ease;
 }
 
-.post-thumb-placeholder {
+.scheduler-post-card:hover .card-image {
+  transform: scale(1.03);
+}
+
+.card-image-placeholder {
+  width: 100%;
+  height: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: var(--text-lg);
   color: var(--text-muted);
+  background: linear-gradient(135deg, var(--bg-tertiary), var(--bg-elevated));
 }
 
-.post-thumb-placeholder svg {
-  stroke: var(--gold-primary);
-}
-
-.post-info {
-  min-width: 0;
-  flex: 1;
-}
-
-.post-time-row {
+/* Status badge on image */
+.card-status {
+  position: absolute;
+  top: var(--space-sm);
+  left: var(--space-sm);
   display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px var(--space-sm);
+  border-radius: var(--radius-full);
+  font-size: 11px;
+  font-weight: var(--font-semibold);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  text-transform: capitalize;
+}
+
+.card-status.published {
+  background: rgba(34, 197, 94, 0.9);
+  color: white;
+}
+
+.card-status.scheduled {
+  background: rgba(245, 158, 11, 0.9);
+  color: white;
+}
+
+.card-status.failed,
+.card-status.partial {
+  background: rgba(239, 68, 68, 0.9);
+  color: white;
+}
+
+/* Video badge */
+.card-video-badge {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-full);
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+}
+
+/* Platform badges on image */
+.card-platforms {
+  position: absolute;
+  bottom: var(--space-sm);
+  right: var(--space-sm);
+  display: flex;
+  gap: 4px;
+}
+
+.card-platform-wrapper {
+  position: relative;
+}
+
+.card-platform-logo {
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: var(--radius-full);
+  padding: 3px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+/* Card Body */
+.card-body {
+  padding: var(--space-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.card-text {
+  font-size: var(--text-sm);
+  color: var(--text-primary);
+  line-height: 1.5;
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.card-meta {
+  display: flex;
+  justify-content: space-between;
   align-items: center;
   gap: var(--space-sm);
-  margin-bottom: 4px;
 }
 
-.post-time {
-  font-size: var(--text-sm);
-  font-weight: var(--font-semibold);
+.card-business {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  font-size: var(--text-xs);
   color: var(--gold-primary);
-}
-
-.post-time-sep {
-  color: var(--text-muted);
-  font-size: var(--text-xs);
-}
-
-.post-time-ago {
-  font-size: var(--text-xs);
-  color: var(--text-muted);
-}
-
-.post-caption-preview {
-  font-size: var(--text-sm);
-  color: var(--text-secondary);
-  margin: 0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-/* Platforms Column */
-/* Post Type Column */
-.td-post-type {
-  display: flex;
-  align-items: center;
-}
-
-.td-platforms {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-/* Status Column */
-.td-status {
-  display: flex;
-  align-items: center;
-}
-
-.status-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 4px 10px;
-  border-radius: var(--radius-full);
-  font-size: var(--text-xs);
   font-weight: var(--font-medium);
 }
 
-.status-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-}
-
-.status-badge.status-published {
-  background: rgba(34, 197, 94, 0.15);
-  color: #22c55e;
-}
-
-.status-badge.status-published .status-dot {
-  background: #22c55e;
-}
-
-.status-badge.status-scheduled {
-  background: rgba(251, 191, 36, 0.15);
-  color: #fbbf24;
-}
-
-.status-badge.status-scheduled .status-dot {
-  background: #fbbf24;
-}
-
-.status-badge.status-failed {
-  background: rgba(239, 68, 68, 0.15);
-  color: #ef4444;
-}
-
-.status-badge.status-failed .status-dot {
-  background: #ef4444;
-}
-
-/* Restaurant Column */
-.td-restaurant {
-  display: flex;
-  align-items: center;
-}
-
-.restaurant-name {
-  font-size: var(--text-sm);
+.card-date {
+  font-size: var(--text-xs);
   color: var(--text-muted);
-}
-
-/* Expand Toggle */
-.td-expand {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.expand-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  border-radius: var(--radius-md);
-  background: rgba(15, 61, 46, 0.08);
-  color: var(--gold-primary);
-  font-size: var(--text-lg);
-  transition: transform 0.2s ease, background 0.2s ease;
-}
-
-.expand-icon:hover {
-  background: rgba(15, 61, 46, 0.12);
-}
-
-.expand-icon.is-expanded {
-  transform: rotate(180deg);
-  background: rgba(15, 61, 46, 0.15);
 }
 
 /* Expanded Details */
 .expanded-details {
-  background: var(--bg-tertiary);
-  border-top: 1px solid var(--border-color);
+  background: var(--accent-alpha-05);
+  border-top: 1px solid var(--glass-border);
   padding: var(--space-xl);
+  margin: 0 var(--space-sm);
+  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+  animation: expandDown 0.3s ease both;
+}
+
+@keyframes expandDown {
+  from {
+    opacity: 0;
+    max-height: 0;
+  }
+  to {
+    opacity: 1;
+    max-height: 2000px;
+  }
 }
 
 .expanded-grid {
@@ -1587,12 +1505,12 @@ defineExpose({
 }
 
 .error-label {
-  color: #ef4444;
+  color: var(--error-text);
 }
 
 .error-message {
   font-size: var(--text-sm);
-  color: #f87171;
+  color: var(--error-text);
   margin: 0;
 }
 
@@ -1652,7 +1570,7 @@ defineExpose({
 }
 
 .edit-btn {
-  background: rgba(15, 61, 46, 0.1);
+  background: var(--accent-alpha-10);
   color: var(--gold-primary);
 }
 
@@ -1661,7 +1579,7 @@ defineExpose({
 }
 
 .edit-btn:hover {
-  background: rgba(15, 61, 46, 0.15);
+  background: var(--accent-alpha-15);
 }
 
 .back-btn {
@@ -1675,16 +1593,16 @@ defineExpose({
 }
 
 .delete-btn {
-  background: rgba(239, 68, 68, 0.2);
-  color: #ef4444;
+  background: var(--error-bg);
+  color: var(--error-text);
 }
 
 .delete-btn svg {
-  stroke: #ef4444;
+  stroke: var(--error-text);
 }
 
 .delete-btn:hover {
-  background: rgba(239, 68, 68, 0.3);
+  background: var(--error-border);
 }
 
 /* Action buttons in read-only view for scheduled posts */
@@ -1703,14 +1621,13 @@ defineExpose({
   justify-content: center;
   gap: var(--space-lg);
   padding: var(--space-md) var(--space-lg);
-  background: var(--bg-secondary);
-  border-top: 1px solid var(--border-color);
+  border-top: 1px solid var(--glass-border);
 }
 
 .pagination-btn {
   padding: var(--space-sm) var(--space-lg);
-  background: rgba(15, 61, 46, 0.08);
-  border: 1px solid rgba(15, 61, 46, 0.15);
+  background: var(--accent-alpha-08);
+  border: 1px solid var(--accent-alpha-15);
   border-radius: var(--radius-md);
   color: var(--gold-primary);
   font-size: var(--text-sm);
@@ -1720,7 +1637,7 @@ defineExpose({
 }
 
 .pagination-btn:hover:not(:disabled) {
-  background: rgba(15, 61, 46, 0.12);
+  background: var(--accent-alpha-12);
   border-color: var(--gold-primary);
 }
 
@@ -1741,80 +1658,17 @@ defineExpose({
 }
 
 @media (max-width: 768px) {
-  /* Hide table header completely on mobile */
-  .table-header {
-    display: none;
+  /* Single column card grid on mobile */
+  .posts-card-grid {
+    grid-template-columns: 1fr;
   }
 
-  .table-row {
-    display: flex;
-    align-items: center;
-    gap: var(--space-sm);
+  .card-media {
+    height: 160px;
+  }
+
+  .card-body {
     padding: var(--space-md);
-    position: relative;
-  }
-
-  /* Hide desktop columns on mobile */
-  .td-date,
-  .td-platforms,
-  .td-status,
-  .td-restaurant,
-  .post-info {
-    display: none;
-  }
-
-  /* Show mobile info row */
-  .td-mobile-info {
-    display: flex;
-    align-items: center;
-    gap: var(--space-sm);
-    flex: 1;
-    min-width: 0;
-    flex-wrap: wrap;
-  }
-
-  .mobile-date-badge {
-    padding: 2px 8px;
-    border-radius: var(--radius-sm);
-    background: rgba(15, 61, 46, 0.08);
-    color: var(--gold-primary);
-    font-size: var(--text-xs);
-    font-weight: var(--font-semibold);
-    white-space: nowrap;
-  }
-
-  .mobile-time {
-    font-size: var(--text-sm);
-    font-weight: var(--font-semibold);
-    color: var(--text-primary);
-    white-space: nowrap;
-  }
-
-  .mobile-status {
-    font-size: var(--text-xs);
-    color: var(--text-muted);
-    white-space: nowrap;
-  }
-
-  .mobile-platforms {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    margin-left: auto;
-  }
-
-  .td-expand {
-    flex-shrink: 0;
-  }
-
-  /* Compact thumbnail on mobile */
-  .td-post {
-    flex-shrink: 0;
-  }
-
-  .post-thumb {
-    width: 48px;
-    height: 48px;
   }
 
   /* Expanded details - stack vertically on mobile */
@@ -1913,6 +1767,12 @@ defineExpose({
     width: 100%;
     justify-content: center;
     order: -1;
+  }
+}
+
+@media (max-width: 480px) {
+  .card-media {
+    height: 140px;
   }
 }
 
@@ -2086,7 +1946,7 @@ defineExpose({
 .platform-toggle.active {
   opacity: 1;
   border-color: var(--gold-primary);
-  box-shadow: 0 0 0 2px rgba(15, 61, 46, 0.1);
+  box-shadow: 0 0 0 2px var(--accent-alpha-10);
 }
 
 .platform-toggle.active.platform-facebook {
@@ -2120,8 +1980,8 @@ defineExpose({
 .hashtag-chip.editable {
   cursor: pointer;
   padding: 4px 10px;
-  background: rgba(15, 61, 46, 0.08);
-  border: 1px solid rgba(15, 61, 46, 0.15);
+  background: var(--accent-alpha-08);
+  border: 1px solid var(--accent-alpha-15);
   color: var(--gold-primary);
   border-radius: var(--radius-md);
   font-size: var(--text-xs);
@@ -2130,9 +1990,9 @@ defineExpose({
 }
 
 .hashtag-chip.editable:hover {
-  background: rgba(239, 68, 68, 0.15);
-  border-color: rgba(239, 68, 68, 0.3);
-  color: #ef4444;
+  background: var(--error-bg);
+  border-color: var(--error-border);
+  color: var(--error-text);
 }
 
 .hashtag-input {
@@ -2200,12 +2060,12 @@ defineExpose({
   align-items: center;
   gap: 4px;
   font-size: var(--text-xs);
-  color: #ef4444;
+  color: var(--error-text);
   font-weight: var(--font-medium);
 }
 
 .past-date-warning svg {
-  stroke: #ef4444;
+  stroke: var(--error-text);
 }
 
 /* Responsive for editable form */
@@ -2300,12 +2160,12 @@ defineExpose({
 }
 
 .platform-status-badge.status-success {
-  background: #22c55e;
+  background: rgba(34, 197, 94, 0.9);
   color: white;
 }
 
 .platform-status-badge.status-failed {
-  background: #ef4444;
+  background: rgba(239, 68, 68, 0.9);
   color: white;
 }
 
@@ -2315,15 +2175,15 @@ defineExpose({
 }
 
 .error-label {
-  color: #ef4444;
+  color: var(--error-text);
 }
 
 .failed-platform-item {
   padding: var(--space-md);
-  background: rgba(239, 68, 68, 0.05);
+  background: var(--error-bg);
   border-radius: var(--radius-md);
   margin-bottom: var(--space-sm);
-  border: 1px solid rgba(239, 68, 68, 0.2);
+  border: 1px solid var(--error-border);
 }
 
 .failed-platform-header {
@@ -2341,7 +2201,7 @@ defineExpose({
 
 .failed-platform-error {
   font-size: var(--text-xs);
-  color: #dc2626;
+  color: var(--error-text);
   line-height: 1.5;
   margin: 0;
   padding-left: calc(16px + var(--space-xs)); /* Align with platform name */
@@ -2349,16 +2209,34 @@ defineExpose({
 
 .retry-btn {
   margin-top: var(--space-md);
-  background: rgba(59, 130, 246, 0.1);
-  color: #3b82f6;
-  border: 1px solid rgba(59, 130, 246, 0.2);
+  background: var(--info-bg);
+  color: var(--info-text);
+  border: 1px solid var(--info-border);
 }
 
 .retry-btn svg {
-  stroke: #3b82f6;
+  stroke: var(--info-text);
 }
 
 .retry-btn:hover {
-  background: rgba(59, 130, 246, 0.15);
+  background: var(--info-border);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .day-detail-wrapper,
+  .scheduler-post-card,
+  .expanded-details,
+  .segmented-indicator {
+    animation: none;
+    transition: none;
+  }
+
+  .scheduler-post-card:hover {
+    transform: none;
+  }
+
+  .scheduler-post-card:hover .card-image {
+    transform: none;
+  }
 }
 </style>

@@ -1,20 +1,27 @@
 <script setup lang="ts">
-import { ref, computed, reactive } from 'vue'
+import { ref, computed, reactive, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { restaurantService } from '@/services/restaurantService'
+import { businessService } from '@/services/businessService'
+import { useBusinessesStore } from '@/stores/businesses'
+import { useRestaurantsStore } from '@/stores/restaurants'
 import type { SavedRestaurant, UpdateRestaurantData } from '@/services/restaurantService'
 import BaseModal from './BaseModal.vue'
 import BaseButton from './BaseButton.vue'
 import BaseInput from './BaseInput.vue'
 import BaseAlert from './BaseAlert.vue'
+import MaterialIcon from './MaterialIcon.vue'
 import LogoUpload from './LogoUpload.vue'
 import ColorPicker from './ColorPicker.vue'
 import RestaurantImageManager from './restaurant-images/RestaurantImageManager.vue'
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
   modelValue: boolean
   restaurant: SavedRestaurant
-}>()
+  initialTab?: 'details' | 'images'
+}>(), {
+  initialTab: 'details'
+})
 
 const emit = defineEmits<{
   (e: 'update:modelValue', value: boolean): void
@@ -22,7 +29,9 @@ const emit = defineEmits<{
 }>()
 
 const { t } = useI18n()
-const activeTab = ref('details')
+const businessesStore = useBusinessesStore()
+const restaurantsStore = useRestaurantsStore()
+const activeTab = ref(props.initialTab)
 const isEditing = ref(false)
 const saving = ref(false)
 const uploadingLogo = ref(false)
@@ -54,6 +63,24 @@ function handleClose() {
   saveError.value = ''
   logoFile.value = null
 }
+
+watch(
+  () => props.modelValue,
+  (isOpen) => {
+    if (isOpen) {
+      activeTab.value = props.initialTab || 'details'
+    }
+  }
+)
+
+watch(
+  () => props.initialTab,
+  (tab) => {
+    if (props.modelValue) {
+      activeTab.value = tab || 'details'
+    }
+  }
+)
 
 function startEditing() {
   // Populate form with current restaurant data
@@ -92,11 +119,13 @@ async function saveChanges() {
 
   try {
     const restaurantId = props.restaurant.place_id || props.restaurant.id
+    const isBusinessLinked = !!props.restaurant.business_id
+    const businessId = props.restaurant.business_id || ''
     console.log('Saving restaurant changes for:', restaurantId)
 
-    // Upload logo first if there's a new one
+    // Upload logo only for standalone restaurants (business-linked branding is managed in Business)
     let logoUrl = editForm.brand_dna.logo_url
-    if (logoFile.value) {
+    if (!isBusinessLinked && logoFile.value) {
       console.log('New logo file detected, uploading...')
       uploadingLogo.value = true
       try {
@@ -113,40 +142,83 @@ async function saveChanges() {
       }
     }
 
-    // For manual restaurants, we can update more fields
-    // For Google Places restaurants, only certain fields are editable
-    const updateData: UpdateRestaurantData = {
-      website: editForm.website || null,
-      social_media: {
-        instagram: editForm.social_media.instagram || null,
-        facebook: editForm.social_media.facebook || null,
-        twitter: editForm.social_media.twitter || null
+    if (isBusinessLinked) {
+      let businessLogoUrl = logoUrl
+      if (logoFile.value) {
+        uploadingLogo.value = true
+        try {
+          const uploadResult = await businessService.uploadBusinessImages(
+            businessId,
+            [logoFile.value],
+            'logos'
+          )
+          businessLogoUrl = uploadResult.uploaded?.[0]?.url || businessLogoUrl
+        } catch (err: any) {
+          console.error('Failed to upload business logo:', err)
+          saveError.value = t('restaurantManagement.errors.logoUploadFailed')
+          saving.value = false
+          uploadingLogo.value = false
+          return
+        } finally {
+          uploadingLogo.value = false
+        }
+      }
+
+      const businessUpdate = {
+        name: editForm.name || props.restaurant.name,
+        address: editForm.address || null,
+        phone_number: editForm.phone_number || null,
+        website: editForm.website || null,
+        social_media: {
+          instagram: editForm.social_media.instagram || null,
+          facebook: editForm.social_media.facebook || null,
+          twitter: editForm.social_media.twitter || null
+        },
+        logo_url: businessLogoUrl || null,
+        brand_dna: {
+          ...(props.restaurant as any).brand_dna,
+          logo_url: businessLogoUrl || null,
+          primary_color: editForm.brand_dna.primary_color,
+          secondary_color: editForm.brand_dna.secondary_color
+        }
+      }
+
+      // Use store method to update in-place (updates both API and local state)
+      const updatedBusiness = await businessesStore.updateBusiness(businessId, businessUpdate)
+      if (!updatedBusiness) {
+        throw new Error(businessesStore.error || 'Failed to update business')
+      }
+    } else {
+      const updateData: UpdateRestaurantData = {
+        website: editForm.website || null,
+        social_media: {
+          instagram: editForm.social_media.instagram || null,
+          facebook: editForm.social_media.facebook || null,
+          twitter: editForm.social_media.twitter || null
+        }
+      }
+
+      if (props.restaurant.is_manual && !props.restaurant.business_id) {
+        updateData.name = editForm.name
+        updateData.address = editForm.address
+        updateData.phone_number = editForm.phone_number || null
+        updateData.brand_dna = {
+          logo_url: logoUrl || null,
+          primary_color: editForm.brand_dna.primary_color,
+          secondary_color: editForm.brand_dna.secondary_color
+        }
+      }
+
+      const updateResponse = await restaurantService.updateRestaurant(restaurantId, updateData)
+      if (!updateResponse.success) {
+        throw new Error(updateResponse.message || 'Failed to update restaurant')
       }
     }
 
-    // If it's a manual restaurant, we can also update name, address, phone, and branding
-    if (props.restaurant.is_manual) {
-      updateData.name = editForm.name
-      updateData.address = editForm.address
-      updateData.phone_number = editForm.phone_number || null
-      updateData.brand_dna = {
-        logo_url: logoUrl || null,
-        primary_color: editForm.brand_dna.primary_color,
-        secondary_color: editForm.brand_dna.secondary_color
-      }
-    }
+    // Refresh restaurants store so parent components get fresh data
+    await restaurantsStore.fetchRestaurants()
 
-    console.log('Updating restaurant with data:', updateData)
-    const updateResponse = await restaurantService.updateRestaurant(restaurantId, updateData)
-    console.log('Restaurant updated successfully, response:', updateResponse)
-
-    // Emit updated event and wait for parent to refresh
     emit('updated')
-
-    // Wait for parent to fetch and update before exiting edit mode
-    await new Promise(resolve => setTimeout(resolve, 500))
-
-    console.log('Exiting edit mode')
     isEditing.value = false
     logoFile.value = null
   } catch (err: any) {
@@ -160,7 +232,9 @@ async function saveChanges() {
 
 <template>
   <BaseModal :model-value="modelValue" @update:model-value="handleClose" size="xl">
-    <template #title>{{ restaurant.name }}</template>
+    <template #title>
+      <span class="modal-title-text">{{ restaurant.name }}</span>
+    </template>
 
     <!-- Tabs -->
     <div class="tabs">
@@ -168,14 +242,16 @@ async function saveChanges() {
         :class="['tab-btn', { active: activeTab === 'details' }]"
         @click="activeTab = 'details'"
       >
+        <MaterialIcon icon="info" size="sm" :color="activeTab === 'details' ? 'var(--gold-primary)' : 'var(--text-muted)'" />
         {{ $t('restaurantManagement.details') }}
       </button>
       <button
         :class="['tab-btn', { active: activeTab === 'images' }]"
         @click="activeTab = 'images'"
       >
+        <MaterialIcon icon="photo_library" size="sm" :color="activeTab === 'images' ? 'var(--gold-primary)' : 'var(--text-muted)'" />
         {{ $t('restaurantManagement.images') }}
-        <span v-if="totalImageCount" class="tab-count">({{ totalImageCount }})</span>
+        <span v-if="totalImageCount" class="tab-count">{{ totalImageCount }}</span>
       </button>
     </div>
 
@@ -183,11 +259,12 @@ async function saveChanges() {
     <div v-if="activeTab === 'details'" class="tab-content">
       <!-- Edit/Save/Cancel Actions -->
       <div v-if="!isEditing" class="details-actions">
-        <BaseButton @click="startEditing" variant="primary" size="small">
+        <BaseButton @click="startEditing" variant="ghost" size="small">
+          <MaterialIcon icon="edit" size="sm" color="var(--text-secondary)" />
           {{ $t('common.edit') }}
         </BaseButton>
       </div>
-      <div v-else class="details-actions">
+      <div v-else class="details-actions editing">
         <BaseButton @click="cancelEditing" variant="ghost" size="small" :disabled="saving || uploadingLogo">
           {{ $t('common.cancel') }}
         </BaseButton>
@@ -202,7 +279,10 @@ async function saveChanges() {
 
       <div class="details-view">
         <div class="detail-section">
-          <h3>{{ $t('restaurantManagement.basicInfo') }}</h3>
+          <div class="section-header">
+            <MaterialIcon icon="apartment" size="sm" color="var(--gold-primary)" />
+            <h3>{{ $t('restaurantManagement.basicInfo') }}</h3>
+          </div>
           <div v-if="!isEditing" class="detail-grid">
             <div class="detail-item">
               <span class="detail-label">{{ $t('restaurantManagement.restaurantName') }}</span>
@@ -210,7 +290,7 @@ async function saveChanges() {
             </div>
             <div class="detail-item">
               <span class="detail-label">{{ $t('restaurantManagement.address') }}</span>
-              <span class="detail-value">{{ restaurant.address }}</span>
+              <span class="detail-value">{{ restaurant.address || '—' }}</span>
             </div>
           </div>
           <div v-else class="edit-grid">
@@ -233,7 +313,10 @@ async function saveChanges() {
         </div>
 
         <div v-if="restaurant.phone_number || restaurant.website || isEditing" class="detail-section">
-          <h3>{{ $t('restaurantManagement.contactInfo') }}</h3>
+          <div class="section-header">
+            <MaterialIcon icon="call" size="sm" color="var(--gold-primary)" />
+            <h3>{{ $t('restaurantManagement.contactInfo') }}</h3>
+          </div>
           <div v-if="!isEditing" class="detail-grid">
             <div v-if="restaurant.phone_number" class="detail-item">
               <span class="detail-label">{{ $t('restaurantManagement.phoneNumber') }}</span>
@@ -265,7 +348,10 @@ async function saveChanges() {
         </div>
 
         <div v-if="restaurant.social_media?.instagram || restaurant.social_media?.facebook || restaurant.social_media?.twitter || isEditing" class="detail-section">
-          <h3>{{ $t('restaurantManagement.socialMedia') }}</h3>
+          <div class="section-header">
+            <MaterialIcon icon="share" size="sm" color="var(--gold-primary)" />
+            <h3>{{ $t('restaurantManagement.socialMedia') }}</h3>
+          </div>
           <div v-if="!isEditing" class="detail-grid">
             <div v-if="restaurant.social_media?.instagram" class="detail-item">
               <span class="detail-label">{{ $t('restaurantManagement.instagram') }}</span>
@@ -299,8 +385,11 @@ async function saveChanges() {
           </div>
         </div>
 
-        <div v-if="restaurant.brand_dna?.logo_url || restaurant.brand_dna?.primary_color || isEditing" class="detail-section">
-          <h3>{{ $t('restaurantManagement.branding') }}</h3>
+        <div class="detail-section">
+          <div class="section-header">
+            <MaterialIcon icon="palette" size="sm" color="var(--gold-primary)" />
+            <h3>{{ $t('restaurantManagement.branding') }}</h3>
+          </div>
           <div v-if="!isEditing" class="detail-grid">
             <div v-if="restaurant.brand_dna?.logo_url" class="detail-item">
               <span class="detail-label">{{ $t('restaurantManagement.logo') }}</span>
@@ -310,15 +399,19 @@ async function saveChanges() {
               <span class="detail-label">{{ $t('restaurantManagement.primaryColor') }}</span>
               <div class="color-preview">
                 <div class="color-swatch" :style="{ backgroundColor: restaurant.brand_dna.primary_color }"></div>
-                <span>{{ restaurant.brand_dna.primary_color }}</span>
+                <span class="detail-value">{{ restaurant.brand_dna.primary_color }}</span>
               </div>
             </div>
             <div v-if="restaurant.brand_dna?.secondary_color" class="detail-item">
               <span class="detail-label">{{ $t('restaurantManagement.secondaryColor') }}</span>
               <div class="color-preview">
                 <div class="color-swatch" :style="{ backgroundColor: restaurant.brand_dna.secondary_color }"></div>
-                <span>{{ restaurant.brand_dna.secondary_color }}</span>
+                <span class="detail-value">{{ restaurant.brand_dna.secondary_color }}</span>
               </div>
+            </div>
+            <div v-if="!restaurant.brand_dna?.logo_url && !restaurant.brand_dna?.primary_color" class="detail-note">
+              <MaterialIcon icon="info" size="xs" color="var(--text-muted)" />
+              {{ $t('restaurantManagement.noBrandingYet', 'No branding configured yet. Click Edit to set up your logo and brand colors.') }}
             </div>
           </div>
           <div v-else class="edit-grid">
@@ -327,7 +420,6 @@ async function saveChanges() {
               <LogoUpload
                 v-model="editForm.brand_dna.logo_url"
                 :uploading="uploadingLogo"
-                :disabled="!restaurant.is_manual"
                 @upload="handleLogoUpload"
                 @error="handleLogoError"
               />
@@ -336,12 +428,10 @@ async function saveChanges() {
               <ColorPicker
                 v-model="editForm.brand_dna.primary_color"
                 :label="$t('restaurantManagement.primaryColor')"
-                :disabled="!restaurant.is_manual"
               />
               <ColorPicker
                 v-model="editForm.brand_dna.secondary_color"
                 :label="$t('restaurantManagement.secondaryColor')"
-                :disabled="!restaurant.is_manual"
               />
             </div>
           </div>
@@ -357,42 +447,64 @@ async function saveChanges() {
 </template>
 
 <style scoped>
+/* ===== Modal Title ===== */
+.modal-title-text {
+  font-family: var(--font-heading);
+  letter-spacing: -0.02em;
+}
+
+/* ===== Tabs ===== */
 .tabs {
   display: flex;
-  gap: var(--space-sm);
+  gap: var(--space-xs);
   margin-bottom: var(--space-xl);
-  border-bottom: 2px solid rgba(15, 61, 46, 0.1);
+  padding: var(--space-xs);
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-lg);
 }
 
 .tab-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-sm);
   padding: var(--space-md) var(--space-xl);
   background: transparent;
   border: none;
-  border-bottom: 2px solid transparent;
-  color: var(--text-secondary);
+  border-radius: var(--radius-md);
+  color: var(--text-muted);
   font-family: var(--font-body);
-  font-size: var(--text-base);
+  font-size: var(--text-sm);
   font-weight: var(--font-medium);
   cursor: pointer;
-  transition: var(--transition-base);
-  margin-bottom: -2px;
+  transition: all 0.25s ease;
 }
 
 .tab-btn:hover {
   color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.5);
 }
 
 .tab-btn.active {
   color: var(--gold-primary);
-  border-bottom-color: var(--gold-primary);
+  background: var(--bg-secondary);
+  box-shadow: var(--shadow-sm);
+  font-weight: var(--font-semibold);
 }
 
 .tab-count {
-  font-size: var(--text-sm);
-  color: var(--text-muted);
-  margin-left: var(--space-xs);
+  font-size: var(--text-xs);
+  font-weight: var(--font-bold);
+  color: var(--text-on-gold);
+  background: var(--gold-primary);
+  padding: 1px 7px;
+  border-radius: var(--radius-full);
+  min-width: 20px;
+  text-align: center;
 }
 
+/* ===== Tab Content ===== */
 .tab-content {
   padding: var(--space-lg);
   max-height: 60vh;
@@ -405,44 +517,68 @@ async function saveChanges() {
   overflow: visible;
 }
 
-/* Details Tab */
+/* ===== Details Actions ===== */
 .details-actions {
   display: flex;
   gap: var(--space-md);
   justify-content: flex-end;
-  margin-bottom: var(--space-lg);
+  margin-bottom: var(--space-xl);
+}
+
+.details-actions.editing {
   padding-bottom: var(--space-lg);
-  border-bottom: 1px solid rgba(15, 61, 46, 0.1);
+  border-bottom: 1px solid var(--border-color);
 }
 
 .save-error {
   margin-bottom: var(--space-lg);
 }
 
+/* ===== Details View ===== */
 .details-view {
   display: flex;
   flex-direction: column;
-  gap: var(--space-2xl);
+  gap: var(--space-xl);
 }
 
-.edit-grid {
+/* ===== Detail Section ===== */
+.detail-section {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-xl);
+  padding: var(--space-xl);
+}
+
+.detail-section .section-header {
   display: flex;
-  flex-direction: column;
-  gap: var(--space-lg);
-}
-
-.detail-section h3 {
-  font-family: var(--font-heading);
-  font-size: var(--text-lg);
-  color: var(--text-primary);
+  align-items: center;
+  gap: var(--space-sm);
   margin-bottom: var(--space-lg);
-  padding-bottom: var(--space-sm);
-  border-bottom: 1px solid rgba(15, 61, 46, 0.1);
+  padding-bottom: var(--space-md);
+  border-bottom: 1px solid var(--border-color);
 }
 
+.detail-section .section-header h3 {
+  font-family: var(--font-heading);
+  font-size: var(--text-base);
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
+  margin: 0;
+}
+
+.detail-note {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+/* ===== Detail Grid ===== */
 .detail-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: var(--space-lg);
 }
 
@@ -453,31 +589,45 @@ async function saveChanges() {
 }
 
 .detail-label {
-  font-size: var(--text-sm);
+  font-size: var(--text-xs);
   font-weight: var(--font-medium);
-  color: var(--text-secondary);
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
 }
 
 .detail-value {
   font-size: var(--text-base);
   color: var(--text-primary);
+  font-weight: var(--font-medium);
 }
 
 .detail-link {
   color: var(--gold-primary);
   text-decoration: none;
+  font-weight: var(--font-medium);
   transition: var(--transition-base);
 }
 
 .detail-link:hover {
   text-decoration: underline;
+  color: var(--gold-light);
 }
 
+/* ===== Edit Grid ===== */
+.edit-grid {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+
+/* ===== Branding ===== */
 .brand-logo {
-  max-width: 120px;
-  max-height: 120px;
-  border-radius: var(--radius-md);
-  border: 1px solid rgba(15, 61, 46, 0.1);
+  max-width: 100px;
+  max-height: 100px;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-color);
+  object-fit: cover;
 }
 
 .color-preview {
@@ -487,10 +637,11 @@ async function saveChanges() {
 }
 
 .color-swatch {
-  width: 40px;
-  height: 40px;
+  width: 36px;
+  height: 36px;
   border-radius: var(--radius-md);
-  border: 1px solid rgba(15, 61, 46, 0.2);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  box-shadow: var(--shadow-sm);
 }
 
 .logo-section {
@@ -502,9 +653,11 @@ async function saveChanges() {
 
 .form-label {
   display: block;
-  font-size: var(--text-sm);
+  font-size: var(--text-xs);
   font-weight: var(--font-medium);
-  color: var(--text-secondary);
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
   font-family: var(--font-body);
 }
 
@@ -514,6 +667,7 @@ async function saveChanges() {
   gap: var(--space-md);
 }
 
+/* ===== Responsive ===== */
 @media (max-width: 768px) {
   .tabs {
     overflow-x: auto;
@@ -545,10 +699,7 @@ async function saveChanges() {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .tab-btn,
-  .image-item,
-  .delete-btn,
-  .image-info {
+  .tab-btn {
     transition: none;
   }
 }

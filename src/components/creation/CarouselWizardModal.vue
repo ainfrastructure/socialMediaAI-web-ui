@@ -14,7 +14,7 @@ interface Props {
   platform: 'facebook' | 'instagram'
   restaurantName?: string
   brandDNA?: any
-  restaurantId?: string
+  businessId?: string
 }
 
 interface Emits {
@@ -176,7 +176,7 @@ function updateSelectedImages(items: CarouselItem[]) {
           :model-value="selectedImages"
           :min-images="2"
           :max-images="10"
-          :restaurant-id="restaurantId"
+          :business-id="businessId"
           @update:model-value="updateSelectedImages"
         />
       </div>

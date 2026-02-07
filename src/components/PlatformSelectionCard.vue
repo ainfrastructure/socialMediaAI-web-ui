@@ -32,7 +32,7 @@ const facebookStore = useFacebookStore()
 
 const isConnecting = computed(() => {
   if (props.platform.value === 'facebook') {
-    return facebookStore.loading
+    return facebookStore.connecting
   }
   return false
 })

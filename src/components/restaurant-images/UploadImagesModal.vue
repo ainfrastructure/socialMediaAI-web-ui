@@ -2,8 +2,9 @@
 import { ref, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { restaurantService } from '@/services/restaurantService'
+import { businessService } from '@/services/businessService'
 import type { SavedRestaurant } from '@/services/restaurantService'
-import type { FolderNode } from '@/composables/useRestaurantImages'
+import type { FolderNode } from '@/composables/useBusinessImages'
 import BaseModal from '../BaseModal.vue'
 import BaseButton from '../BaseButton.vue'
 import BaseInput from '../BaseInput.vue'
@@ -22,10 +23,12 @@ const props = withDefaults(defineProps<Props>(), {
 
 const emit = defineEmits<{
   (e: 'update:modelValue', value: boolean): void
-  (e: 'uploaded'): void
+  (e: 'uploaded', images: import('@/types/media').UploadedImage[]): void
 }>()
 
 const { t } = useI18n()
+const businessMediaId = computed(() => props.restaurant.business_id || props.restaurant.id)
+const useBusinessMedia = computed(() => !!props.restaurant.business_id)
 
 // State
 const selectedFiles = ref<File[]>([])
@@ -185,11 +188,23 @@ async function handleUpload() {
     const restaurantId = props.restaurant.place_id || props.restaurant.id
     const category = targetFolder.value
 
-    await restaurantService.uploadRestaurantImages(
-      restaurantId,
-      selectedFiles.value,
-      category
-    )
+    let uploadedImages: import('@/types/media').UploadedImage[] = []
+
+    if (useBusinessMedia.value) {
+      const result = await businessService.uploadBusinessImages(
+        businessMediaId.value,
+        selectedFiles.value,
+        category
+      )
+      uploadedImages = result.uploaded || []
+    } else {
+      const result = await restaurantService.uploadRestaurantImages(
+        restaurantId,
+        selectedFiles.value,
+        category
+      )
+      uploadedImages = result.uploaded || []
+    }
 
     uploadSuccess.value = t('restaurantManagement.uploadSuccess', {
       count: selectedFiles.value.length
@@ -197,11 +212,8 @@ async function handleUpload() {
 
     selectedFiles.value = []
 
-    // Emit success and close modal after a brief delay
-    setTimeout(() => {
-      emit('uploaded')
-      emit('update:modelValue', false)
-    }, 1500)
+    emit('uploaded', uploadedImages)
+    emit('update:modelValue', false)
   } catch (err: any) {
     console.error('Upload failed:', err)
     uploadError.value = err.message || t('restaurantManagement.errors.uploadFailed')

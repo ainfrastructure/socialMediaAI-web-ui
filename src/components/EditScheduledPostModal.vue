@@ -464,7 +464,6 @@ const saveChanges = async () => {
             :enable-time-picker="false"
             inline
             auto-apply
-            dark
             class="date-picker-inline"
           />
         </div>
@@ -900,25 +899,27 @@ const saveChanges = async () => {
   font-size: 11px !important;
   width: auto !important;
   flex: 1 1 0 !important;
-  min-width: 28px !important;
+  min-width: 36px !important;
 }
 
 .date-picker-inline :deep(.dp__calendar_item) {
   width: auto !important;
   flex: 1 1 0 !important;
-  min-width: 28px !important;
+  min-width: 36px !important;
 }
 
 .date-picker-inline :deep(.dp__cell_inner) {
-  width: 28px !important;
-  height: 28px !important;
-  font-size: 12px !important;
+  width: 36px !important;
+  height: 36px !important;
+  font-size: var(--text-sm) !important;
   padding: 0 !important;
+  border-radius: var(--radius-md) !important;
+  transition: var(--transition-fast);
 }
 
 .date-picker-inline :deep(.dp__cell_offset) {
-  width: 28px !important;
-  height: 28px !important;
+  width: 36px !important;
+  height: 36px !important;
 }
 
 /* Month/year header */
@@ -950,8 +951,8 @@ const saveChanges = async () => {
   justify-content: center;
 }
 
-/* Date/Time Picker Dark Theme Override */
-:deep(.dp__theme_dark) {
+/* Date/Time Picker Theme Override */
+:deep(.dp__theme_light) {
   --dp-background-color: transparent;
   --dp-text-color: var(--text-primary);
   --dp-hover-color: rgba(15, 61, 46, 0.15);
@@ -1025,23 +1026,26 @@ const saveChanges = async () => {
 
 /* Calendar days */
 :deep(.dp__calendar_item) {
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-md);
 }
 
 :deep(.dp__cell_inner) {
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-md);
   width: 36px;
   height: 36px;
   font-size: var(--text-sm);
+  transition: var(--transition-fast);
 }
 
 :deep(.dp__today) {
   border: 2px solid var(--gold-primary);
+  font-weight: var(--font-semibold);
 }
 
 :deep(.dp__active_date) {
   background: var(--gold-primary);
   color: var(--text-on-gold);
+  box-shadow: var(--shadow-sm);
 }
 
 :deep(.dp__cell_offset) {

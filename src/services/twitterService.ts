@@ -3,9 +3,15 @@ import { API_URL, getAuthHeader, getAuthHeaders } from './apiBase'
 import { fetchWithTimeout, TIMEOUTS } from '@/utils/fetchWithTimeout'
 
 class TwitterService {
-  async initAuth(): Promise<ApiResponse<{ authUrl: string; state: string }>> {
+  async initAuth(businessId?: string): Promise<ApiResponse<{ authUrl: string; state: string }>> {
+    const params = new URLSearchParams()
+    if (businessId) params.append('business_id', businessId)
+    const url = params.toString()
+      ? `${API_URL}/api/twitter/auth/init?${params}`
+      : `${API_URL}/api/twitter/auth/init`
+
     const response = await fetchWithTimeout(
-      `${API_URL}/api/twitter/auth/init`,
+      url,
       {
         headers: getAuthHeader(),
       },
@@ -56,9 +62,15 @@ class TwitterService {
     return response.json()
   }
 
-  async getAccounts(): Promise<ApiResponse<{ accounts: any[] }>> {
+  async getAccounts(businessId?: string): Promise<ApiResponse<{ accounts: any[] }>> {
+    const params = new URLSearchParams()
+    if (businessId) params.append('business_id', businessId)
+    const url = params.toString()
+      ? `${API_URL}/api/twitter/accounts?${params}`
+      : `${API_URL}/api/twitter/accounts`
+
     const response = await fetchWithTimeout(
-      `${API_URL}/api/twitter/accounts`,
+      url,
       {
         headers: getAuthHeader(),
       },
@@ -80,9 +92,15 @@ class TwitterService {
     return response.json()
   }
 
-  async disconnectAccount(accountId: string): Promise<ApiResponse> {
+  async disconnectAccount(accountId: string, businessId?: string): Promise<ApiResponse> {
+    const params = new URLSearchParams()
+    if (businessId) params.append('business_id', businessId)
+    const url = params.toString()
+      ? `${API_URL}/api/twitter/accounts/${accountId}?${params}`
+      : `${API_URL}/api/twitter/accounts/${accountId}`
+
     const response = await fetchWithTimeout(
-      `${API_URL}/api/twitter/accounts/${accountId}`,
+      url,
       {
         method: 'DELETE',
         headers: getAuthHeader(),

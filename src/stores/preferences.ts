@@ -14,6 +14,11 @@ export const usePreferencesStore = defineStore('preferences', () => {
     localStorage.getItem('selectedRestaurantId')
   )
 
+  // Selected business ID with localStorage persistence
+  const selectedBusinessId = ref<string | null>(
+    localStorage.getItem('selectedBusinessId')
+  )
+
   // Track if user has started working on content (to prevent mode switching)
   const hasStartedFlow = ref<boolean>(false)
 
@@ -55,9 +60,11 @@ export const usePreferencesStore = defineStore('preferences', () => {
   function resetPreferences() {
     creationMode.value = 'easy'
     selectedRestaurantId.value = null
+    selectedBusinessId.value = null
     hasStartedFlow.value = false
     localStorage.removeItem('creationMode')
     localStorage.removeItem('selectedRestaurantId')
+    localStorage.removeItem('selectedBusinessId')
   }
 
   // Set selected restaurant
@@ -70,15 +77,32 @@ export const usePreferencesStore = defineStore('preferences', () => {
     }
   }
 
+  // Set selected business
+  function setSelectedBusiness(businessId: string | null) {
+    selectedBusinessId.value = businessId
+    if (businessId) {
+      localStorage.setItem('selectedBusinessId', businessId)
+    } else {
+      localStorage.removeItem('selectedBusinessId')
+    }
+  }
+
   // Clear selected restaurant
   function clearSelectedRestaurant() {
     selectedRestaurantId.value = null
     localStorage.removeItem('selectedRestaurantId')
   }
 
+  // Clear selected business
+  function clearSelectedBusiness() {
+    selectedBusinessId.value = null
+    localStorage.removeItem('selectedBusinessId')
+  }
+
   return {
     creationMode,
     selectedRestaurantId,
+    selectedBusinessId,
     hasStartedFlow,
     setCreationMode,
     toggleMode,
@@ -86,6 +110,8 @@ export const usePreferencesStore = defineStore('preferences', () => {
     clearFlowState,
     resetPreferences,
     setSelectedRestaurant,
-    clearSelectedRestaurant
+    setSelectedBusiness,
+    clearSelectedRestaurant,
+    clearSelectedBusiness
   }
 })

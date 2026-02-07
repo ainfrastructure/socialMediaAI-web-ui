@@ -5,6 +5,7 @@ export default {
     getStarted: 'Kom i gang',
     pricing: 'Priser',
     howItWorks: 'Slik fungerer det',
+    features: 'Funksjoner',
     joinWaitlist: 'Bli med på ventelisten'
   },
 
@@ -59,6 +60,7 @@ export default {
     language: 'Språk',
     allRightsReserved: 'Alle rettigheter forbeholdt.',
     dashboard: 'Dashbord',
+    posts: 'Innlegg',
   },
 
   // Platforms
@@ -100,19 +102,19 @@ export default {
 
   // Waitlist Landing Page
   waitlist: {
-    headline: 'Din restaurants automatiserte sosiale medier-ansvarlig',
-    subheadline: 'Lag fantastisk matinnhold, planlegg innlegg og utvid restaurantens tilstedeværelse—alt med AI.',
+    headline: 'La Lazarus håndtere sosiale medier for deg',
+    subheadline: 'AI-drevet innholdsproduksjon, planlegging og publisering — alt på autopilot.',
     emailPlaceholder: 'Skriv inn e-posten din',
     joinButton: 'Bli med på ventelisten',
     joining: 'Registrerer...',
     successTitle: 'Du er på listen!',
-    successMessage: 'Vi gir deg beskjed når Social Chef lanseres.',
+    successMessage: 'Vi gir deg beskjed når SocialChef lanseres.',
     alreadyOnList: 'Denne e-posten er allerede på ventelisten',
     invalidEmail: 'Vennligst skriv inn en gyldig e-postadresse',
     error: 'Noe gikk galt. Prøv igjen.',
     loginLink: 'Har du allerede en konto?',
     loginLinkText: 'Logg inn',
-    socialProof: 'Bli med {count}+ restauranter på ventelisten',
+    socialProof: 'Bli med {count}+ bedrifter på ventelisten',
     finalCta: {
       title: 'Vær først ute',
       subtitle: 'Bli med på ventelisten og få tidlig tilgang når vi lanserer.'
@@ -123,20 +125,19 @@ export default {
   landing: {
     // Hero Section
     hero: {
-      tagline: 'AI-drevet sosiale medier for restauranter',
-      headlinePart1: 'Den kraftigste og',
-      headlinePart2: 'enkleste AI-innholds',
-      headlinePart3: 'generator for restauranter',
-      subheadline: 'Få flotte innlegg på sosiale medier som publiserer seg selv. Ingen fotograf, ingen designer, ingen tekniske ferdigheter nødvendig.',
+      tagline: 'AI-drevet sosiale medier-agent',
+      headlinePart1: 'Din personlige AI',
+      headlinePart2: 'sosiale medier-ansvarlig',
+      headlinePart3: 'som aldri sover',
+      subheadline: 'Møt Lazarus — din utrøttelige AI-agent som lager innhold, planlegger poster og publiserer på tvers av alle plattformene dine automatisk.',
       cta: 'Kom i gang nå',
       ctaSecondary: 'Se hvordan det fungerer',
-      seenOn: 'Omtalt i:',
       features: {
-        images: 'Generer bilder',
-        videos: 'Lag videoer',
-        posts: 'Skriv innlegg',
-        publish: 'Auto-publiser',
-        analytics: 'Spor analyse'
+        aiContent: 'AI-innhold',
+        scheduling: 'Auto-planlegging',
+        multiPlatform: 'Flerplattform',
+        analytics: 'Analyse',
+        mobileApp: 'Mobilapp'
       }
     },
 
@@ -145,86 +146,100 @@ export default {
       goToDashboard: 'Gå til dashboard'
     },
 
-    // How It Works Showcase Section
-    examples: {
-      title: 'Slik fungerer det',
-      subtitle: 'Fra telefonen din til profesjonelle innlegg på sekunder',
-      originalPhoto: 'Ditt bilde',
-      originalLabel: 'Original',
-      aiGenerated: 'SocialChef-forbedret',
-      flow: {
-        step1Title: 'Last opp bildet ditt',
-        step1Description: 'Ta et bilde av retten din med telefonen. Ingen profesjonelt kamera nødvendig.',
-        step2Title: 'SocialChef lager flere versjoner',
-        step2Description: 'SocialChef genererer vakre varianter i forskjellige stiler, hver med engasjerende tekst.',
-        step3Title: 'Godkjenn og publiser',
-        step3Description: 'Velg din favorittversjon og den publiseres automatisk til Facebook og Instagram.'
-      },
-      gallery: {
-        before: 'Før',
-        after: 'Etter'
-      },
-      templates: {
-        behindTheScenes: 'Bak kulissene',
-        studioShot: 'Studioopptak',
-        oneBite: 'En bit',
-        zoomIn: 'Zoom inn',
-        cleanStrict: 'Ren streng',
-        infographic: 'Infografikk',
-        custom: 'Egendefinert',
-        andMore: 'Og mange flere...'
-      }
+    // Lazarus Chat (phone mockup)
+    lazarusChat: {
+      online: 'Online',
+      suggestion: 'Jeg har laget et nytt innlegg for merkevaren din. Her er hva jeg kom opp med:',
+      caption: '"Spennende nyheter! Vår siste kolleksjon er her..."',
+      scheduled: 'Planlagt for i morgen, kl. 09:00',
+      userResponse: 'Ser flott ut! Godkjenn det.',
+      confirmation: 'Ferdig! Publiserer til Facebook, Instagram og LinkedIn kl. 09:00 i morgen.',
+      approve: 'Godkjenn og publiser'
     },
 
-    // How It Works
+    // Meet Lazarus Section
+    meetLazarus: {
+      title: 'Møt Lazarus',
+      subtitle: 'Din utrøttelige sosiale medier-assistent',
+      description: 'Lazarus er din AI-drevne sosiale medier-agent. Den lærer din merkevarestemme, lager engasjerende innhold og publiserer til optimale tider — slik at du kan fokusere på å drive virksomheten din.',
+      nameOrigin: 'Oppkalt etter den hebraiske betydningen «Gud har hjulpet» — fordi sosiale medier ikke burde være en enmannskamp.',
+      feature1Title: 'Lærer alltid',
+      feature1Desc: 'Lazarus studerer merkevaren din, publikum og hva som fungerer — og blir smartere med hvert innlegg.',
+      feature2Title: 'Foreslår og skaper',
+      feature2Desc: 'Fra tekster til bilder, Lazarus lager komplette innlegg klare for din godkjenning.',
+      feature3Title: 'Publiserer automatisk',
+      feature3Desc: 'Godkjent innhold publiseres etter planen på tvers av alle dine tilkoblede plattformer.'
+    },
+
+    // Real Results
+    results: {
+      title: 'Ekte resultater',
+      subtitle: 'Se hva Lazarus kan gjøre med innholdet ditt',
+      before: 'Original',
+      after: 'Forbedret'
+    },
+
+    // How It Works (3 steps)
     howItWorks: {
-      comingSoon: 'Snart'
+      title: 'Slik fungerer det',
+      subtitle: 'Fra oppsett til autopilot i tre enkle steg',
+      step1Title: 'Koble til kontoene dine',
+      step1Desc: 'Koble til sosiale medier-plattformene dine på under 5 minutter. Facebook, Instagram, LinkedIn og flere.',
+      step2Title: 'Lazarus lager innhold',
+      step2Desc: 'Vår AI-agent genererer innlegg skreddersydd for din merkevarestemme, komplett med bilder og tekster.',
+      step3Title: 'Godkjenn og gå',
+      step3Desc: 'Se gjennom forslagene, trykk godkjenn, og Lazarus tar seg av resten. Ett trykk på mobilen er alt som trengs.',
     },
 
-    // Auto-Posting Feature (KEY DIFFERENTIATOR)
-    autoPosting: {
-      badge: 'Nøkkelfunksjon',
-      title: 'Sett det og glem det',
-      headline: 'Innleggene dine publiseres automatisk. Virkelig.',
-      description: 'Slutt å huske på å poste. Slutt å logge inn i apper. SocialChef håndterer alt - fra opprettelse til publisering. Du vil se ut som om du har en dedikert sosiale medier-ansvarlig.',
-      feature1: 'Innlegg går live mens du lager mat',
-      feature2: 'Fungerer med Instagram og Facebook',
-      feature3: 'Planlegg uker i forveien'
-    },
-
-    // Benefits
-    benefits: {
-      title: 'Hvorfor restauranteiere elsker SocialChef',
-      time: {
-        title: 'Spar timesvis per uke',
-        description: 'Slutt å slite med innholdsproduksjon. Bruk tiden på det som betyr noe - maten og kundene dine.'
+    // Features Grid (6 cards)
+    features: {
+      title: 'Alt du trenger',
+      subtitle: 'Kraftige funksjoner for å automatisere din tilstedeværelse på sosiale medier',
+      aiContent: {
+        title: 'AI-innholdsgenerering',
+        desc: 'Lazarus lager engasjerende innlegg, tekster og bilder skreddersydd for din merkevare.'
       },
-      professional: {
-        title: 'Se alltid profesjonell ut',
-        description: 'Hvert innlegg ser ut som det ble laget av en proff designer. Fordi det ble det. En AI-designer.'
+      scheduling: {
+        title: 'Smart planlegging',
+        desc: 'Innlegg publiseres til perfekt tid basert på når publikumet ditt er mest aktivt.'
       },
-      growth: {
-        title: 'Øk følgerskaren',
-        description: 'Konsekvent posting betyr mer engasjement. Mer engasjement betyr flere kunder.'
+      platforms: {
+        title: 'Alle plattformer, ett sted',
+        desc: 'Administrer Facebook, Instagram, LinkedIn, TikTok og X fra ett enkelt dashboard.'
       },
-      easy: {
-        title: 'Ingen tekniske ferdigheter nødvendig',
-        description: 'Hvis du kan ta et bilde av mat, kan du bruke SocialChef. Det er hele ferdighetskravet.'
+      mobile: {
+        title: 'Mobilapp',
+        desc: 'Godkjenn innlegg, se analyser og administrer merkevaren din på farten.'
+      },
+      analyticsCard: {
+        title: 'Ytelsesanalyse',
+        desc: 'Spor engasjement, vekst og innleggsytelse med tydelig, handlingsbar innsikt.'
+      },
+      brandVoice: {
+        title: 'Din merkevarestemme',
+        desc: 'Lazarus lærer tonen og stilen din for å lage innhold som høres autentisk ut.'
       }
     },
 
-    // Social Proof
+    // Mobile App Showcase
+    mobileApp: {
+      title: 'Styr alt fra telefonen',
+      subtitle: 'SocialChef-mobilopplevelsen gir deg kontroll uansett hvor du er.',
+      feature1: 'Ett-trykks godkjenning av foreslåtte innlegg',
+      feature2: 'Sanntidsvarsler når innlegg publiseres',
+      feature3: 'Rask innholdsgjennomgang og redigering'
+    },
 
     // Pricing Preview
     pricing: {
       title: 'Enkel, ærlig prising',
-      subtitle: 'Start i dag. Avslutt når som helst.'
+      subtitle: 'Lås opp Lazarus og automatiser sosiale medier.'
     },
 
     // Final CTA
     finalCta: {
-      title: 'Klar til å si opp sosiale medier-bekymringene?',
-      subtitle: 'Bli med hundrevis av restauranteiere som sluttet å stresse over sosiale medier.'
+      title: 'Klar for å sette sosiale medier på autopilot?',
+      subtitle: 'La Lazarus ta seg av innholdet. Du tar deg av virksomheten.'
     },
 
     // Login Modal
@@ -242,7 +257,7 @@ export default {
 
     // Footer
     footer: {
-      madeWith: 'Laget med kjærlighet for restauranteiere',
+      madeWith: 'Laget med AI for moderne bedrifter',
       copyright: '© 2025 SocialChef. Alle rettigheter reservert.'
     }
   },
@@ -267,9 +282,6 @@ export default {
     // Social platforms
 
     // Platform descriptions
-
-    // Connection status
-    connect: 'Koble til',
 
     // Account overview
   },
@@ -518,6 +530,67 @@ export default {
       }
     },
 
+    styleTemplatesResort: {
+      resortSunset: {
+        name: 'Gylden time',
+        description: 'Solnedgang, havglød, rolig luksus',
+        preview: 'Bruk referansebildets komposisjon med varm solnedgangsstemning'
+      },
+      resortPool: {
+        name: 'Bassengliv',
+        description: 'Krystallklart vann, cabana, avslapning',
+        preview: 'Behold nøyaktig layout; legg til premium basseng-atmosfære'
+      },
+      resortSuite: {
+        name: 'Suite-visning',
+        description: 'Elegant rom, mykt lys, detaljer',
+        preview: 'Match referansebildet og løft suitemiljøet'
+      }
+    },
+    styleTemplatesGeneral: {
+      behindTheScenes: {
+        name: 'Bak merkevaren',
+        description: 'Team, prosess, kultur',
+        preview: 'Autentisk dokumentarstil (fungerer for bilder & videoer)'
+      },
+      cleanStrict: {
+        name: 'Rent produkt',
+        description: 'Studioaktig klarhet',
+        preview: 'Skarpt lys, minimal distraksjon (fungerer for bilder & videoer)'
+      },
+      zoomIn: {
+        name: 'Detaljnærbilde',
+        description: 'Tekstur og håndverk',
+        preview: 'Makrofokus på detaljer (fungerer for bilder & videoer)'
+      },
+      oneBite: {
+        name: 'I bruk',
+        description: 'Virkelig situasjon',
+        preview: 'Produkt eller tjeneste i bruk (fungerer for bilder & videoer)'
+      },
+      studioShot: {
+        name: 'Hovedbilde',
+        description: 'Flaggskip-visual',
+        preview: 'Premium, polert presentasjon (fungerer for bilder & videoer)'
+      },
+      infographic: {
+        name: 'Forklaring',
+        description: 'Trinn eller funksjoner',
+        preview: 'Enkel oversikt eller etiketter (fungerer for bilder & videoer)'
+      },
+      placeOnTable: {
+        name: 'Avsløringsøyeblikk',
+        description: 'Unboxing/ankomst',
+        preview: 'Hender plasserer produkt i scene (KUN VIDEO)'
+      },
+      custom: {
+        name: 'Egendefinert',
+        description: 'Skriv din egen prompt',
+        preview: 'Full kreativ kontroll (fungerer for bilder & videoer)'
+      }
+    },
+
+
     // Additional messages
   },
 
@@ -542,6 +615,7 @@ export default {
       subtitle: 'Velg stil, legg til kampanjer og merkevarebygging',
       styleLabel: 'Visuell stil',
       customPromptPlaceholder: 'Beskriv hvordan du vil at retten skal fotograferes...',
+      customPromptGenericPlaceholder: 'Beskriv hvordan du vil at scenen skal fanges...',
       mediaTypeLabel: 'Medietype',
       imageOption: 'Bilde',
       videoOption: 'Video',
@@ -828,7 +902,24 @@ export default {
     confirmDisconnect: 'Er du sikker på at du vil frakoble "{name}"?',
     confirmDisconnectAll: 'Er du sikker på at du vil frakoble alle {count} {platform} kontoer?',
     disconnectTitle: 'Frakoble konto',
-    disconnectAllTitle: 'Frakoble alle kontoer'
+    disconnectAllTitle: 'Frakoble alle kontoer',
+    activeBusiness: 'Aktiv bedrift',
+    selectABusiness: 'Velg en bedrift',
+    switchBusiness: 'Bytt bedrift',
+    manageAll: 'Administrer alle',
+    businessCount: '{current} av {total} bedrifter',
+    connectedPlatforms: 'Tilkoblede plattformer',
+    platformsFor: 'Kontoer tilkoblet for {name}',
+    chooseBusiness: 'Velg en bedrift for å administrere tilkoblede kontoer.',
+    totalConnections: 'Totalt tilkoblinger',
+    facebookPagesCount: 'Facebook-sider',
+    instagramAccountsCount: 'Instagram-kontoer',
+    instagramBusiness: 'Instagram Business',
+    notConnected: 'Ikke tilkoblet',
+    manage: 'Administrer',
+    manageBusinesses: 'Administrer bedrifter',
+    noBusinessSelected: 'Ingen bedrift valgt',
+    selectBusinessFirst: 'Vennligst velg en bedrift for å administrere tilkoblede kontoer.'
   },
 
   // Scheduler View
@@ -843,7 +934,8 @@ export default {
     publishedAt: 'Publisert',
     viewPost: 'Se innlegg',
     viewOn: 'Se på',
-    restaurant: 'Restaurant',
+    restaurant: 'Bedrift',
+    restaurants: 'Bedrifter',
     caption: 'Bildetekst',
     edit: 'Rediger',
     cancelPost: 'Avbryt innlegg',
@@ -861,7 +953,11 @@ export default {
     retrySuccess: 'Innlegget er satt i kø for nytt forsøk',
     retryError: 'Kunne ikke prøve innlegget på nytt',
     partial: 'Delvis publisert',
-    overdue: 'Forsinket'
+    overdue: 'Forsinket',
+    selectedDay: 'Valgt dag',
+    upcoming: 'Kommende',
+    resetFilters: 'Nullstill',
+    filters: 'Filtre'
   },
 
   // Edit Scheduled Post Modal
@@ -924,10 +1020,13 @@ export default {
     sortOldest: 'Eldste først',
     // Welcome state for new users
     welcomeTitle: 'Velkommen!',
-    welcomeSubtitle: 'La oss starte med å legge til din første restaurant.',
+    welcomeSubtitle: 'La oss starte med å legge til din første bedrift.',
     addFirstRestaurant: 'Legg til din første restaurant',
     addFirstRestaurantDescription: 'Søk etter restauranten din, så importerer vi automatisk menyen og merkevaren.',
-    noRestaurantPrompt: 'Legg til en restaurant for å begynne å lage innlegg.',
+    addFirstBusiness: 'Legg til din første bedrift',
+    addFirstBusinessDescription: 'Opprett en bedrift for å organisere innhold og kontoer.',
+    manageBusinesses: 'Administrer bedrifter',
+    noRestaurantPrompt: 'Legg til en bedrift for å begynne å lage innlegg.',
     createPost: 'Lag innlegg'
   },
 
@@ -1284,9 +1383,9 @@ export default {
 
   // Pick Post Modal
   pickPostModal: {
-    showAllRestaurants: 'Vis alle restauranter',
-    showCurrentRestaurant: 'Vis kun valgt restaurant',
-    allRestaurantsLabel: 'Alle restauranter',
+    showAllRestaurants: 'Vis alle bedrifter',
+    showCurrentRestaurant: 'Vis kun valgt bedrift',
+    allRestaurantsLabel: 'Alle bedrifter',
     videoLabel: 'VIDEO'
   },
 
@@ -1412,19 +1511,15 @@ export default {
 
   // New Dashboard Elements
   dashboardNew: {
-    settings: 'Innstillinger',
     recentPosts: 'Nylige innlegg',
     viewAll: 'Se alle',
     viewCalendar: 'Se kalender',
     manageSaved: 'Administrer lagrede',
-    openSettings: 'Åpne innstillinger',
     noRecentPosts: 'Ingen innlegg ennå',
     createFirstPost: 'Lag ditt første innlegg',
     post: 'Innlegg',
     status: 'Status',
     platforms: 'Plattformer',
-    activeCount: 'Aktive',
-    allRestaurants: 'Alle restauranter',
     restaurant: 'Restaurant',
     published: 'Publisert',
     scheduled: 'Planlagt',
@@ -1432,10 +1527,6 @@ export default {
     partial: 'Delvis publisert',
     cancelled: 'Avbrutt',
     draft: 'Utkast',
-    creditsLeft: 'kreditter igjen',
-    tierLifetimeDesc: 'Ubegrenset tilgang for alltid',
-    tierYearlyDesc: 'Best verdi, fakturert årlig',
-    tierMonthlyDesc: 'Fleksibel månedlig fakturering'
   },
 
   // Privacy Policy
@@ -1748,7 +1839,7 @@ export default {
     creditsUsed: 'Poeng brukt',
     used: 'brukt',
     subscription: 'Abonnement',
-    restaurants: 'Restauranter',
+    restaurants: 'Bedrifter',
 
     // Recent Activity
     recentActivity: 'Nylig aktivitet',
@@ -1762,7 +1853,7 @@ export default {
     // Table headers
     post: 'Innlegg',
     platforms: 'Plattformer',
-    restaurant: 'Restaurant',
+    restaurant: 'Bedrift',
     status: 'Status',
     date: 'Dato',
     links: 'Lenker',
@@ -1843,7 +1934,32 @@ export default {
     // Empty State
     emptyStateTitle: 'På tide å lage noen innlegg!',
     emptyStateDescription: 'Når du begynner å lage og planlegge innhold, vil analysene dine vises her. La oss komme i gang!',
-    createFirstPost: 'Lag ditt første innlegg'
+    createFirstPost: 'Lag ditt første innlegg',
+
+    // Trends
+    trendUp: '↑ {percent}%',
+    trendDown: '↓ {percent}%',
+    trendFlat: '—',
+    vsPreviousPeriod: 'vs forrige periode',
+
+    // Skeleton / Loading
+    loadingAnalytics: 'Laster analyser...',
+
+    // Business selector
+    businessSelectorTitle: 'Bedrift',
+    businessSelectorDesc: 'Analyser er begrenset til valgt bedrift.',
+    selectBusiness: 'Velg en bedrift',
+    manageBusinesses: 'Administrer bedrifter',
+    noBusinessesYet: 'Ingen bedrifter ennå.',
+    createToStart: 'Opprett en for å begynne å spore analyser.',
+    activeBusiness: 'Aktiv:',
+
+    // Engagement sync banner
+    engagementSyncing: 'Engasjementsdata synkroniserer fortsatt fra sosiale plattformer. Dette kan ta noen minutter.',
+
+    // Charts section
+    detailedBreakdown: 'Detaljert Oversikt',
+    chartsAndDistributions: 'Diagrammer, fordelinger og bruksinnsikt',
   },
 
   // Referral Program
@@ -1923,6 +2039,33 @@ export default {
     codeInactive: 'Denne vervekoden er ikke lenger aktiv'
   },
 
+  // Dashboard Redesign
+  dashboardRedesign: {
+    goodMorning: 'God morgen, {name}',
+    goodAfternoon: 'God ettermiddag, {name}',
+    goodEvening: 'God kveld, {name}',
+    heroSubtitle: 'Her er hva som skjer med innholdet ditt i dag.',
+    createContent: 'Lag innhold',
+    totalPosts: 'Totalt innlegg',
+    scheduledLabel: 'Planlagt',
+    savedContent: 'Lagret innhold',
+    creditsLabel: 'Poeng igjen',
+    upcomingPosts: 'Kommende innlegg',
+    viewCalendar: 'Se kalender',
+    noUpcomingTitle: 'Ingen kommende innlegg',
+    noUpcomingDesc: 'Planlegg ditt første innlegg for å se det her.',
+    scheduleFirst: 'Planlegg et innlegg',
+    today: 'I dag',
+    tomorrow: 'I morgen',
+    untitledPost: 'Uten tittel',
+    recentActivity: 'Nylig aktivitet',
+    viewAllPosts: 'Se alle innlegg',
+    noActivityTitle: 'Ingen innlegg ennå',
+    noActivityDesc: 'Lag ditt første innlegg for å komme i gang.',
+    engagementSnapshot: 'Engasjementsoversikt',
+    viewAnalytics: 'Se analyse',
+  },
+
   // Post Type Selection
   postType: {
     label: 'Innleggstype',
@@ -1938,5 +2081,14 @@ export default {
     carouselDesc: '2-10 bilder/videoer',
     notSet: 'Ikke angitt',
     multiple: '{count} typer'
+  },
+  businesses: {
+    title: 'Din portefølje',
+    subtitle: 'Administrer og organiser bedriftene i porteføljen din.',
+    addBusiness: 'Legg til bedrift',
+    noBusiness: 'Ingen bedrifter ennå',
+    addFirst: 'Legg til din første bedrift for å begynne å koble til kontoer.',
+    addFirstBusiness: 'Legg til din første bedrift',
+    photos: 'Bilder'
   }
 }

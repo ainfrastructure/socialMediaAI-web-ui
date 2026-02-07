@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { api } from '../services/api'
+import { usePreferencesStore } from '@/stores/preferences'
 import { debugLog } from '@/utils/debug'
 
 export interface InstagramAccount {
@@ -14,21 +15,32 @@ export interface InstagramAccount {
 }
 
 export const useInstagramStore = defineStore('instagram', () => {
-  const connectedAccounts = ref<InstagramAccount[]>([])
-  const loading = ref(false)
+  const connectedAccountsByBusiness = ref<Record<string, InstagramAccount[]>>({})
+  const loadingConnections = ref(false)
+  const connecting = ref(false)
   const error = ref<string | null>(null)
+  const preferencesStore = usePreferencesStore()
+
+  const connectedAccounts = computed(() => {
+    const businessId = preferencesStore.selectedBusinessId
+    return businessId ? connectedAccountsByBusiness.value[businessId] || [] : []
+  })
 
   /**
    * Initialize Instagram OAuth flow with redirect
    * @param returnUrl - Optional URL to return to after OAuth completes
    */
-  async function connectInstagram(returnUrl?: string): Promise<void> {
-    loading.value = true
+  async function connectInstagram(returnUrl?: string, businessId?: string): Promise<void> {
+    connecting.value = true
     error.value = null
 
     try {
+      const resolvedBusinessId = businessId || preferencesStore.selectedBusinessId || undefined
+      if (!resolvedBusinessId) {
+        throw new Error('Please select a business before connecting Instagram')
+      }
       // Step 1: Get authorization URL from backend
-      const initResponse = await api.initInstagramAuth()
+      const initResponse = await api.initInstagramAuth(resolvedBusinessId)
 
       if (!initResponse.success) {
         const errorMsg = initResponse.error || 'Failed to initialize Instagram authentication'
@@ -56,57 +68,70 @@ export const useInstagramStore = defineStore('instagram', () => {
       window.location.href = authUrl
     } catch (err: any) {
       error.value = err.message || 'Failed to connect Instagram account'
-      loading.value = false
+      connecting.value = false
       throw err
     }
-    // Note: loading.value stays true because we're redirecting away
+    // Note: connecting stays true because we're redirecting away
   }
 
   /**
    * Load user's connected Instagram accounts
    */
-  async function loadConnectedAccounts(): Promise<void> {
-    loading.value = true
+  async function loadConnectedAccounts(businessId?: string): Promise<void> {
+    loadingConnections.value = true
     error.value = null
 
     try {
-      const response = await api.getInstagramAccounts()
+      const resolvedBusinessId = businessId || preferencesStore.selectedBusinessId || undefined
+      const response = await api.getInstagramAccounts(resolvedBusinessId)
 
       if (!response.success) {
         throw new Error(response.error || 'Failed to load connected accounts')
       }
 
-      connectedAccounts.value = response.data?.accounts || []
+      if (resolvedBusinessId) {
+        connectedAccountsByBusiness.value = {
+          ...connectedAccountsByBusiness.value,
+          [resolvedBusinessId]: response.data?.accounts || []
+        }
+      }
     } catch (err: any) {
       error.value = err.message || 'Failed to load connected accounts'
     } finally {
-      loading.value = false
+      connecting.value = false
     }
   }
 
   /**
    * Disconnect an Instagram account
    */
-  async function disconnectAccount(accountId: string): Promise<void> {
-    loading.value = true
+  async function disconnectAccount(accountId: string, businessId?: string): Promise<void> {
+    connecting.value = true
     error.value = null
 
     try {
-      const response = await api.disconnectInstagramAccount(accountId)
+      const resolvedBusinessId = businessId || preferencesStore.selectedBusinessId || undefined
+      const response = await api.disconnectInstagramAccount(accountId, resolvedBusinessId)
 
       if (!response.success) {
         throw new Error(response.error || 'Failed to disconnect account')
       }
 
       // Remove from local state
-      connectedAccounts.value = connectedAccounts.value.filter(
-        (account) => account.instagramAccountId !== accountId
-      )
+      const currentBusinessId = resolvedBusinessId
+      if (currentBusinessId && connectedAccountsByBusiness.value[currentBusinessId]) {
+        connectedAccountsByBusiness.value = {
+          ...connectedAccountsByBusiness.value,
+          [currentBusinessId]: connectedAccountsByBusiness.value[currentBusinessId].filter(
+            (account) => account.instagramAccountId !== accountId
+          )
+        }
+      }
     } catch (err: any) {
       error.value = err.message || 'Failed to disconnect account'
       throw err
     } finally {
-      loading.value = false
+      connecting.value = false
     }
   }
 
@@ -115,7 +140,7 @@ export const useInstagramStore = defineStore('instagram', () => {
    * Called by the callback page/component
    */
   async function handleOAuthCallback(code: string, state: string): Promise<void> {
-    loading.value = true
+    connecting.value = true
     error.value = null
 
     try {
@@ -135,21 +160,45 @@ export const useInstagramStore = defineStore('instagram', () => {
         throw new Error(callbackResponse.error || 'Failed to complete Instagram authentication')
       }
 
-      // Update connected accounts
-      connectedAccounts.value = callbackResponse.data?.accounts || []
+      // Update connected accounts for current business
+      const businessId = preferencesStore.selectedBusinessId
+      if (businessId) {
+        connectedAccountsByBusiness.value = {
+          ...connectedAccountsByBusiness.value,
+          [businessId]: callbackResponse.data?.accounts || []
+        }
+      }
       error.value = null
     } catch (err: any) {
       error.value = err.message || 'Failed to complete Instagram authentication'
       throw err
     } finally {
-      loading.value = false
+      connecting.value = false
     }
   }
 
+
+  function ensureBusinessCache(businessId: string): void {
+    if (!connectedAccountsByBusiness.value[businessId]) {
+      connectedAccountsByBusiness.value = {
+        ...connectedAccountsByBusiness.value,
+        [businessId]: []
+      }
+    }
+  }
+
+  function resetConnectionState(): void {
+    connecting.value = false
+    error.value = null
+  }
   return {
     connectedAccounts,
-    loading,
+    connectedAccountsByBusiness,
+    loadingConnections,
+    connecting,
     error,
+    ensureBusinessCache,
+    resetConnectionState,
     connectInstagram,
     handleOAuthCallback,
     loadConnectedAccounts,

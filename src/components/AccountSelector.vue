@@ -25,7 +25,7 @@ interface Props {
   hasMultipleImages?: boolean
   restaurantName?: string
   brandDNA?: any
-  restaurantId?: string
+  businessId?: string
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -402,7 +402,7 @@ const handleCarouselWizardConfirm = (data: {
       :platform="platform as 'facebook' | 'instagram'"
       :restaurant-name="restaurantName"
       :brand-d-n-a="brandDNA"
-      :restaurant-id="restaurantId"
+      :business-id="businessId"
       @confirm="handleCarouselWizardConfirm"
     />
   </div>

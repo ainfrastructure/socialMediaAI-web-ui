@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { api } from '../services/api'
+import { usePreferencesStore } from '@/stores/preferences'
 import { debugLog } from '@/utils/debug'
 
 export interface LinkedInPage {
@@ -15,6 +16,7 @@ export const useLinkedInStore = defineStore('linkedin', () => {
   const connectedPages = ref<LinkedInPage[]>([])
   const loading = ref(false)
   const error = ref<string | null>(null)
+  const preferencesStore = usePreferencesStore()
 
   const isConnected = computed(() => connectedPages.value.length > 0)
 
@@ -22,13 +24,17 @@ export const useLinkedInStore = defineStore('linkedin', () => {
    * Initialize LinkedIn OAuth flow with redirect
    * @param returnUrl - Optional URL to return to after OAuth completes
    */
-  async function connectLinkedIn(returnUrl?: string): Promise<void> {
+  async function connectLinkedIn(returnUrl?: string, businessId?: string): Promise<void> {
     loading.value = true
     error.value = null
 
     try {
+      const resolvedBusinessId = businessId || preferencesStore.selectedBusinessId || undefined
+      if (!resolvedBusinessId) {
+        throw new Error('Please select a business before connecting LinkedIn')
+      }
       // Step 1: Get authorization URL from backend
-      const initResponse = await api.initLinkedInAuth()
+      const initResponse = await api.initLinkedInAuth(resolvedBusinessId)
 
       if (!initResponse.success) {
         const errorMsg = initResponse.error || 'Failed to initialize LinkedIn authentication'
@@ -65,12 +71,13 @@ export const useLinkedInStore = defineStore('linkedin', () => {
   /**
    * Load user's connected LinkedIn pages
    */
-  async function loadConnectedPages(): Promise<void> {
+  async function loadConnectedPages(businessId?: string): Promise<void> {
     loading.value = true
     error.value = null
 
     try {
-      const response = await api.getLinkedInPages()
+      const resolvedBusinessId = businessId || preferencesStore.selectedBusinessId || undefined
+      const response = await api.getLinkedInPages(resolvedBusinessId)
 
       if (!response.success) {
         throw new Error(response.error || 'Failed to load connected pages')
@@ -87,12 +94,13 @@ export const useLinkedInStore = defineStore('linkedin', () => {
   /**
    * Disconnect a LinkedIn page
    */
-  async function disconnectPage(pageId: string): Promise<void> {
+  async function disconnectPage(pageId: string, businessId?: string): Promise<void> {
     loading.value = true
     error.value = null
 
     try {
-      const response = await api.disconnectLinkedInPage(pageId)
+      const resolvedBusinessId = businessId || preferencesStore.selectedBusinessId || undefined
+      const response = await api.disconnectLinkedInPage(pageId, resolvedBusinessId)
 
       if (!response.success) {
         throw new Error(response.error || 'Failed to disconnect page')

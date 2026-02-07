@@ -70,6 +70,12 @@ const menuItems = computed(() => [
     icon: 'share',
     label: t('sidebar.platforms'),
     active: route.path === '/connect-accounts'
+  },
+  {
+    path: '/businesses',
+    icon: 'storefront',
+    label: 'Businesses',
+    active: route.path === '/businesses'
   }
 ])
 

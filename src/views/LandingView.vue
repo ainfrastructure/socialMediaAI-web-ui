@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { debugLog, errorLog, warnLog } from '@/utils/debug'
-
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
@@ -8,6 +6,7 @@ import { useAuthStore } from '../stores/auth'
 import { useLocaleStore } from '../stores/locale'
 import { useLogin } from '../composables/useLogin'
 import { api } from '../services/api'
+import { errorLog } from '@/utils/debug'
 import BaseCard from '../components/BaseCard.vue'
 import BaseButton from '../components/BaseButton.vue'
 import BaseInput from '../components/BaseInput.vue'
@@ -17,9 +16,12 @@ import LoginModal from '../components/LoginModal.vue'
 import PaywallModal from '../components/PaywallModal.vue'
 import LanguageSelector from '../components/LanguageSelector.vue'
 import ThemeToggle from '../components/ThemeToggle.vue'
+import LazarusLogoNeural from '../components/icons/LazarusLogoNeural.vue'
+import LazarusAnimatedMascot from '../components/icons/LazarusAnimatedMascot.vue'
+import PhoneMockup from '../components/landing/PhoneMockup.vue'
+import LazarusChat from '../components/landing/LazarusChat.vue'
 
 // ===== FEATURE FLAG =====
-// Set to true to enable signup/payment flow, false for waitlist mode
 const ENABLE_SIGNUP = true
 
 const router = useRouter()
@@ -31,12 +33,10 @@ const { t } = useI18n()
 const isMobileMenuOpen = ref(false)
 const isHeaderScrolled = ref(false)
 
-// Handle scroll for header background
 function handleScroll() {
   isHeaderScrolled.value = window.scrollY > 50
 }
 
-// Smooth scroll to section
 function scrollToSection(sectionId: string) {
   const element = document.getElementById(sectionId)
   if (element) {
@@ -45,18 +45,17 @@ function scrollToSection(sectionId: string) {
   }
 }
 
-// Toggle mobile menu
 function toggleMobileMenu() {
   isMobileMenuOpen.value = !isMobileMenuOpen.value
 }
 
-// Login composable - only need resetForm for modal callback
+// Login composable
 const { resetForm } = useLogin()
 
 const showLoginModal = ref(false)
 const showPaywallModal = ref(false)
 
-// ===== WAITLIST STATE (used when ENABLE_SIGNUP = false) =====
+// ===== WAITLIST STATE =====
 const waitlistEmail = ref('')
 const waitlistLoading = ref(false)
 const waitlistSuccess = ref(false)
@@ -111,7 +110,7 @@ async function handleWaitlistSubmit() {
   }
 }
 
-// Pricing data from API
+// ===== PRICING =====
 interface Plan {
   tier: string
   name: string
@@ -148,7 +147,6 @@ const tierIcons: Record<string, string> = {
   lifetime: 'all_inclusive',
 }
 
-// Check if user has an active subscription
 const hasSubscription = computed(() => {
   return (
     authStore.isAuthenticated &&
@@ -160,7 +158,6 @@ const hasSubscription = computed(() => {
 async function loadPlans() {
   plansLoading.value = true
   try {
-    // Pass currency if in devAccess mode
     const currency = localeStore.isDevAccess ? localeStore.currentCurrency : undefined
     const response = (await api.getPlans(currency)) as PlansResponse
     if (response.success) {
@@ -174,7 +171,6 @@ async function loadPlans() {
   }
 }
 
-// Reload plans when currency changes in devAccess mode
 watch(
   () => localeStore.currentCurrency,
   () => {
@@ -205,7 +201,6 @@ function getBadgeText(badge: string): string {
   return key ? t(key) : badge
 }
 
-// Calculate "before" price for yearly and lifetime plans
 const cheapestMonthlyPrice = computed(() => {
   const monthlyPlans = plans.value.filter((p) => p.interval === 'month')
   if (monthlyPlans.length === 0) return 0
@@ -220,11 +215,10 @@ function getBeforePrice(plan: Plan): number | null {
   if (plan.interval === 'lifetime') {
     return cheapestMonthlyPrice.value * 120
   }
-  return null // monthly plans don't show before price
+  return null
 }
 
 function formatBeforePrice(price: number): string {
-  // Format the price with currency symbol (assumes same currency as plan)
   const currency = plans.value[0]?.currency || 'USD'
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
@@ -234,14 +228,12 @@ function formatBeforePrice(price: number): string {
   }).format(price)
 }
 
+// ===== CTA HANDLERS =====
 function handleCTAClick() {
-  // In waitlist mode, scroll to waitlist section
   if (!ENABLE_SIGNUP) {
     scrollToSection('waitlist')
     return
   }
-
-  // Normal signup flow
   if (authStore.isAuthenticated) {
     if (hasSubscription.value) {
       router.push('/posts/create')
@@ -256,7 +248,6 @@ function handleCTAClick() {
 function onLoginSuccess() {
   showLoginModal.value = false
   resetForm()
-  // Only show paywall if user doesn't have an active subscription
   if (hasSubscription.value) {
     router.push('/posts/create')
   } else {
@@ -273,97 +264,74 @@ function goToDashboard() {
   router.push('/posts/create')
 }
 
-// Examples showcase data
-// First example: 1 original → 3 generated versions
-const multiExample = {
-  id: 1,
-  original: '/example/original.jpeg',
-  generated: [
-    { src: '/example/original1-studio.jpeg', templateKey: 'studioShot' },
-    { src: '/example/original1-one-bite.jpeg', templateKey: 'oneBite' },
-    { src: '/example/orignal1-custom.jpeg', templateKey: 'custom' },
-  ],
-  captionKey: 'exampleCaption1',
-}
-
-// Before/After comparison examples
+// ===== BEFORE/AFTER COMPARISON DATA =====
 const comparisonExamples = [
   {
     id: 1,
     original: '/example/example8-original.jpeg',
     generated: '/example/example8-enhanced.jpg',
-    templateKey: 'studioShot',
   },
   {
     id: 2,
     original: '/example/example6-original.jpeg',
     generated: '/example/example6-enhanced.jpg',
-    templateKey: 'studioShot',
   },
   {
     id: 3,
     original: '/example/example5-original.jpeg',
     generated: '/example/example5-enhanced.jpg',
-    templateKey: 'studioShot',
   },
   {
     id: 4,
     original: '/example/kebab-original.jpg',
     generated: '/example/kebab-enhanced.jpg',
-    templateKey: 'studioShot',
   },
   {
     id: 5,
     original: '/example/orignal-3.jpg',
     generated: '/example/orignal-3-studio.jpeg',
-    templateKey: 'studioShot',
   },
   {
     id: 6,
     original: '/example/original-2.jpeg',
     generated: '/example/behind-the-scens-of-original-2.jpeg',
-    templateKey: 'behindTheScenes',
   },
   {
     id: 7,
     original: '/example/example10-original.jpg',
     generated: '/example/example10-enhanced.jpg',
-    templateKey: 'studioShot',
   },
   {
     id: 8,
     original: '/example/example20-original.jpeg',
     generated: '/example/example20-enhanced.jpg',
-    templateKey: 'studioShot',
   },
 ]
 
 // Before/After slider state
 const selectedComparisonIndex = ref(0)
-const sliderPosition = ref(50) // percentage
+const sliderPosition = ref(50)
 const isDragging = ref(false)
-const hasInteracted = ref(false) // Track if user has interacted
+const hasInteracted = ref(false)
 const sliderContainerRef = ref<HTMLElement | null>(null)
 let animationFrame: number | null = null
 
-// Touch handling - track if we're in a touch drag
 let isTouchDragging = false
 let pendingPosition: number | null = null
 let dragAnimationFrame: number | null = null
 let cachedRect: DOMRect | null = null
 
-// Before/After thumbnail carousel state
+// Thumbnail carousel state
 let comparisonCarouselInterval: ReturnType<typeof setInterval> | null = null
-const comparisonCarouselDuration = 5000 // 5 seconds per image
-const comparisonPauseDuration = 8000 // Resume after 8 seconds of inactivity
+const comparisonCarouselDuration = 5000
+const comparisonPauseDuration = 8000
 let comparisonResumeTimeout: ReturnType<typeof setTimeout> | null = null
 const isComparisonPaused = ref(false)
-const comparisonProgressKey = ref(0) // Key to restart animation
+const comparisonProgressKey = ref(0)
 
 const selectedComparison = computed(() => comparisonExamples[selectedComparisonIndex.value])
 
 function selectComparison(index: number) {
-  // If clicking the same thumbnail, toggle play/pause
   if (selectedComparisonIndex.value === index) {
     if (isComparisonPaused.value) {
       resumeComparisonCarousel()
@@ -372,15 +340,12 @@ function selectComparison(index: number) {
     }
     return
   }
-
   selectedComparisonIndex.value = index
-  comparisonProgressKey.value++ // Restart animation
-  sliderPosition.value = 50 // Reset slider position
-  hasInteracted.value = false // Reset to allow animation on new selection
-  // Stop any existing animation before starting a new one
+  comparisonProgressKey.value++
+  sliderPosition.value = 50
+  hasInteracted.value = false
   stopHintAnimation()
   startHintAnimation()
-  // Pause carousel when user interacts, resume after inactivity
   pauseComparisonCarousel()
 }
 
@@ -389,10 +354,9 @@ function startComparisonCarousel() {
   isComparisonPaused.value = false
   comparisonCarouselInterval = setInterval(() => {
     selectedComparisonIndex.value = (selectedComparisonIndex.value + 1) % comparisonExamples.length
-    comparisonProgressKey.value++ // Restart animation
+    comparisonProgressKey.value++
     sliderPosition.value = 50
     hasInteracted.value = false
-    // Stop any existing animation before starting a new one
     stopHintAnimation()
     startHintAnimation()
   }, comparisonCarouselDuration)
@@ -416,7 +380,6 @@ function pauseComparisonCarousel() {
   stopComparisonCarousel()
   clearComparisonResumeTimeout()
   isComparisonPaused.value = true
-  // Schedule resume after inactivity
   comparisonResumeTimeout = setTimeout(() => {
     startComparisonCarousel()
   }, comparisonPauseDuration)
@@ -424,12 +387,11 @@ function pauseComparisonCarousel() {
 
 function resumeComparisonCarousel() {
   clearComparisonResumeTimeout()
-  comparisonProgressKey.value++ // Restart animation from beginning
+  comparisonProgressKey.value++
   isComparisonPaused.value = false
   startComparisonCarousel()
 }
 
-// Mouse events for desktop - can click anywhere on slider
 function onMouseDown(e: MouseEvent) {
   e.preventDefault()
   isDragging.value = true
@@ -449,24 +411,18 @@ function onMouseUp() {
   isDragging.value = false
 }
 
-// Touch events for mobile - only on handle button
 function onHandleTouchStart(e: TouchEvent) {
-  e.preventDefault() // Prevent any default behavior on the handle
-  e.stopPropagation() // Don't let it bubble to container
+  e.preventDefault()
+  e.stopPropagation()
   isTouchDragging = true
   isDragging.value = true
   hasInteracted.value = true
   stopHintAnimation()
   pauseComparisonCarousel()
-
-  // Cache the bounding rect for the duration of the drag (avoid layout thrashing)
   if (sliderContainerRef.value) {
     cachedRect = sliderContainerRef.value.getBoundingClientRect()
   }
-
   updateSliderPositionFromTouch(e.touches[0].clientX)
-
-  // Add global listeners to track touch movement
   window.addEventListener('touchmove', onGlobalTouchMove, { passive: false })
   window.addEventListener('touchend', onGlobalTouchEnd)
   window.addEventListener('touchcancel', onGlobalTouchEnd)
@@ -474,12 +430,9 @@ function onHandleTouchStart(e: TouchEvent) {
 
 function onGlobalTouchMove(e: TouchEvent) {
   if (!isTouchDragging) return
-  e.preventDefault() // Prevent scroll while dragging
-
-  // Store pending position and schedule update via rAF for smooth 60fps
+  e.preventDefault()
   const clientX = e.touches[0].clientX
   pendingPosition = clientX
-
   if (!dragAnimationFrame) {
     dragAnimationFrame = requestAnimationFrame(flushPendingPosition)
   }
@@ -498,19 +451,15 @@ function onGlobalTouchEnd() {
   isDragging.value = false
   cachedRect = null
   pendingPosition = null
-
   if (dragAnimationFrame) {
     cancelAnimationFrame(dragAnimationFrame)
     dragAnimationFrame = null
   }
-
-  // Remove global listeners
   window.removeEventListener('touchmove', onGlobalTouchMove)
   window.removeEventListener('touchend', onGlobalTouchEnd)
   window.removeEventListener('touchcancel', onGlobalTouchEnd)
 }
 
-// Optimized position update using cached rect
 function updateSliderPositionFromTouch(clientX: number) {
   if (!cachedRect) return
   const x = clientX - cachedRect.left
@@ -518,7 +467,6 @@ function updateSliderPositionFromTouch(clientX: number) {
   sliderPosition.value = percentage
 }
 
-// Mouse position update (desktop) - can use fresh rect each time
 function updateSliderPosition(e: MouseEvent | TouchEvent) {
   if (!sliderContainerRef.value) return
   const rect = sliderContainerRef.value.getBoundingClientRect()
@@ -528,28 +476,21 @@ function updateSliderPosition(e: MouseEvent | TouchEvent) {
   sliderPosition.value = percentage
 }
 
-// Hint animation that moves the slider back and forth
 function startHintAnimation() {
   if (hasInteracted.value) return
-
-  const duration = 3000 // 3 seconds per cycle for full width sweep
+  const duration = 3000
   const startTime = Date.now()
-
   function animate() {
     if (hasInteracted.value || isDragging.value) {
       stopHintAnimation()
       return
     }
-
     const elapsed = Date.now() - startTime
     const progress = (elapsed % duration) / duration
-    // Sine wave oscillation between 5% and 95% (full width)
     const position = 50 + Math.sin(progress * Math.PI * 2) * 45
     sliderPosition.value = position
-
     animationFrame = requestAnimationFrame(animate)
   }
-
   animate()
 }
 
@@ -560,150 +501,68 @@ function stopHintAnimation() {
   }
 }
 
-// AI versions carousel state
-const currentTemplateIndex = ref(0)
-let carouselInterval: ReturnType<typeof setInterval> | null = null
-const carouselPauseDuration = 8000 // Resume after 8 seconds of inactivity
-let carouselResumeTimeout: ReturnType<typeof setTimeout> | null = null
-const isCarouselPaused = ref(false)
-const carouselProgressKey = ref(0) // Key to restart animation
+// ===== FEATURES GRID DATA =====
+const featuresData = [
+  { id: 'aiContent', icon: 'auto_awesome' },
+  { id: 'scheduling', icon: 'schedule' },
+  { id: 'platforms', icon: 'hub' },
+  { id: 'mobile', icon: 'smartphone' },
+  { id: 'analyticsCard', icon: 'analytics' },
+  { id: 'brandVoice', icon: 'record_voice_over' },
+]
 
-const currentTemplate = computed(() => multiExample.generated[currentTemplateIndex.value])
+// ===== HOW IT WORKS DATA =====
+const howItWorksSteps = [
+  { step: 1, icon: 'link', titleKey: 'landing.howItWorks.step1Title', descKey: 'landing.howItWorks.step1Desc' },
+  { step: 2, icon: 'smart_toy', titleKey: 'landing.howItWorks.step2Title', descKey: 'landing.howItWorks.step2Desc' },
+  { step: 3, icon: 'touch_app', titleKey: 'landing.howItWorks.step3Title', descKey: 'landing.howItWorks.step3Desc' },
+]
 
-function selectTemplate(index: number) {
-  // If clicking the same badge, toggle play/pause
-  if (currentTemplateIndex.value === index) {
-    if (isCarouselPaused.value) {
-      resumeCarouselRotation()
-    } else {
-      pauseCarouselRotation()
-    }
-    return
-  }
-
-  currentTemplateIndex.value = index
-  carouselProgressKey.value++ // Restart animation
-  // Pause auto-rotation when user interacts, resume after inactivity
-  pauseCarouselRotation()
-}
-
-function startCarouselRotation() {
-  if (carouselInterval) return
-  isCarouselPaused.value = false
-  carouselInterval = setInterval(() => {
-    currentTemplateIndex.value = (currentTemplateIndex.value + 1) % multiExample.generated.length
-    carouselProgressKey.value++ // Restart animation
-  }, 3500)
-}
-
-function stopCarouselRotation() {
-  if (carouselInterval) {
-    clearInterval(carouselInterval)
-    carouselInterval = null
-  }
-}
-
-function clearCarouselResumeTimeout() {
-  if (carouselResumeTimeout) {
-    clearTimeout(carouselResumeTimeout)
-    carouselResumeTimeout = null
-  }
-}
-
-function pauseCarouselRotation() {
-  stopCarouselRotation()
-  clearCarouselResumeTimeout()
-  isCarouselPaused.value = true
-  // Schedule resume after inactivity
-  carouselResumeTimeout = setTimeout(() => {
-    startCarouselRotation()
-  }, carouselPauseDuration)
-}
-
-function resumeCarouselRotation() {
-  clearCarouselResumeTimeout()
-  carouselProgressKey.value++ // Restart animation from beginning
-  isCarouselPaused.value = false
-  startCarouselRotation()
-}
-
-// Start animations on mount
+// ===== LIFECYCLE =====
 onMounted(async () => {
   if (ENABLE_SIGNUP) {
     await loadPlans()
   } else {
     await loadWaitlistCount()
   }
-  // Delay start of hint animation
+  window.addEventListener('scroll', handleScroll)
+  handleScroll()
+  // Start slider hint animation after a short delay
   setTimeout(() => {
     if (!hasInteracted.value) {
       startHintAnimation()
     }
   }, 1000)
-  // Start carousel auto-rotation
-  startCarouselRotation()
-  // Start before/after comparison carousel
+  // Start comparison thumbnail carousel
   startComparisonCarousel()
-  // Add scroll listener for header
-  window.addEventListener('scroll', handleScroll)
-  handleScroll() // Check initial scroll position
 })
 
-// Cleanup on unmount
 onUnmounted(() => {
   window.removeEventListener('scroll', handleScroll)
-  stopCarouselRotation()
   stopComparisonCarousel()
   clearComparisonResumeTimeout()
-  clearCarouselResumeTimeout()
   stopHintAnimation()
 })
-
-// Benefits data
-const benefits = [
-  {
-    id: 'time',
-    icon: 'schedule',
-    title: 'landing.benefits.time.title',
-    description: 'landing.benefits.time.description',
-  },
-  {
-    id: 'professional',
-    icon: 'auto_awesome',
-    title: 'landing.benefits.professional.title',
-    description: 'landing.benefits.professional.description',
-  },
-  {
-    id: 'growth',
-    icon: 'trending_up',
-    title: 'landing.benefits.growth.title',
-    description: 'landing.benefits.growth.description',
-  },
-  {
-    id: 'easy',
-    icon: 'thumb_up',
-    title: 'landing.benefits.easy.title',
-    description: 'landing.benefits.easy.description',
-  },
-]
 </script>
 
 <template>
   <div class="landing-page">
-    <!-- Sticky Header Navigation -->
+    <!-- ===== 1. STICKY HEADER ===== -->
     <header class="site-header" :class="{ scrolled: isHeaderScrolled }">
-      <!-- Desktop Header Container -->
+      <!-- Desktop Header -->
       <div class="header-container desktop-header">
-        <!-- Logo -->
         <div class="header-logo">
           <img src="../assets/socialchef_logo.svg" alt="SocialChef" class="logo-image" />
           <span class="logo-text">SocialChef</span>
+          <LazarusLogoNeural :size="20" />
         </div>
 
-        <!-- Desktop Navigation -->
         <nav class="header-nav desktop-nav">
-          <button class="nav-link" @click="scrollToSection('examples')">
+          <button class="nav-link" @click="scrollToSection('how-it-works')">
             {{ $t('nav.howItWorks') }}
+          </button>
+          <button class="nav-link" @click="scrollToSection('features')">
+            {{ $t('nav.features') }}
           </button>
           <button v-if="ENABLE_SIGNUP" class="nav-link" @click="scrollToSection('pricing')">
             {{ $t('nav.pricing') }}
@@ -713,7 +572,6 @@ const benefits = [
           </button>
         </nav>
 
-        <!-- Header Actions -->
         <div class="header-actions">
           <LanguageSelector />
           <ThemeToggle />
@@ -733,16 +591,13 @@ const benefits = [
         </div>
       </div>
 
-      <!-- Mobile Header - Pill Style -->
+      <!-- Mobile Header Pill -->
       <div class="mobile-header-pill">
         <div class="pill-content">
-          <!-- Logo -->
           <div class="header-logo">
             <img src="../assets/socialchef_logo.svg" alt="SocialChef" class="logo-image" />
             <span class="logo-text">SocialChef</span>
           </div>
-
-          <!-- Right side actions -->
           <div class="pill-actions">
             <ThemeToggle />
             <LanguageSelector />
@@ -763,8 +618,11 @@ const benefits = [
 
       <!-- Mobile Navigation Dropdown -->
       <nav class="mobile-nav" :class="{ open: isMobileMenuOpen }">
-        <button class="mobile-nav-link" @click="scrollToSection('examples')">
+        <button class="mobile-nav-link" @click="scrollToSection('how-it-works')">
           {{ $t('nav.howItWorks') }}
+        </button>
+        <button class="mobile-nav-link" @click="scrollToSection('features')">
+          {{ $t('nav.features') }}
         </button>
         <button v-if="ENABLE_SIGNUP" class="mobile-nav-link" @click="scrollToSection('pricing')">
           {{ $t('nav.pricing') }}
@@ -773,7 +631,6 @@ const benefits = [
           {{ $t('nav.joinWaitlist') }}
         </button>
         <div class="mobile-nav-divider"></div>
-        <!-- Settings row -->
         <div class="mobile-nav-settings-row">
           <div class="mobile-nav-setting">
             <span class="setting-label">{{ $t('common.theme') }}</span>
@@ -785,7 +642,6 @@ const benefits = [
           </div>
         </div>
         <div class="mobile-nav-divider"></div>
-        <!-- Action buttons -->
         <div class="mobile-nav-buttons">
           <template v-if="authStore.isAuthenticated">
             <BaseButton variant="primary" size="medium" full-width @click="goToDashboard">
@@ -804,8 +660,15 @@ const benefits = [
       </nav>
     </header>
 
-    <!-- Hero Section -->
+    <!-- ===== 2. HERO SECTION ===== -->
     <section class="hero-section">
+      <!-- Gradient orbs background -->
+      <div class="hero-bg-orbs" aria-hidden="true">
+        <div class="orb orb-green"></div>
+        <div class="orb orb-bronze"></div>
+        <div class="orb orb-light"></div>
+      </div>
+
       <div class="hero-content">
         <div class="hero-text">
           <!-- Tagline pill -->
@@ -821,27 +684,27 @@ const benefits = [
           </h1>
           <p class="hero-subheadline">{{ $t('landing.hero.subheadline') }}</p>
 
-          <!-- Feature points -->
+          <!-- Feature pills -->
           <div class="hero-features">
             <div class="hero-feature">
-              <MaterialIcon icon="image" size="sm" color="var(--gold-primary)" />
-              <span>{{ $t('landing.hero.features.images') }}</span>
+              <MaterialIcon icon="auto_awesome" size="sm" color="var(--gold-primary)" />
+              <span>{{ $t('landing.hero.features.aiContent') }}</span>
             </div>
             <div class="hero-feature">
-              <MaterialIcon icon="videocam" size="sm" color="var(--gold-primary)" />
-              <span>{{ $t('landing.hero.features.videos') }}</span>
+              <MaterialIcon icon="schedule" size="sm" color="var(--gold-primary)" />
+              <span>{{ $t('landing.hero.features.scheduling') }}</span>
             </div>
             <div class="hero-feature">
-              <MaterialIcon icon="article" size="sm" color="var(--gold-primary)" />
-              <span>{{ $t('landing.hero.features.posts') }}</span>
-            </div>
-            <div class="hero-feature">
-              <MaterialIcon icon="send" size="sm" color="var(--gold-primary)" />
-              <span>{{ $t('landing.hero.features.publish') }}</span>
+              <MaterialIcon icon="hub" size="sm" color="var(--gold-primary)" />
+              <span>{{ $t('landing.hero.features.multiPlatform') }}</span>
             </div>
             <div class="hero-feature">
               <MaterialIcon icon="analytics" size="sm" color="var(--gold-primary)" />
               <span>{{ $t('landing.hero.features.analytics') }}</span>
+            </div>
+            <div class="hero-feature">
+              <MaterialIcon icon="smartphone" size="sm" color="var(--gold-primary)" />
+              <span>{{ $t('landing.hero.features.mobileApp') }}</span>
             </div>
           </div>
 
@@ -849,336 +712,232 @@ const benefits = [
           <div class="hero-cta-group">
             <BaseButton variant="primary" size="large" class="hero-cta-primary" @click="handleCTAClick">
               {{ $t('landing.hero.cta') }}
-              <MaterialIcon icon="auto_awesome" size="sm" color="var(--text-on-gold)" />
+              <MaterialIcon icon="arrow_forward" size="sm" color="var(--text-on-gold)" />
             </BaseButton>
-            <BaseButton variant="secondary" size="large" class="hero-cta-secondary" @click="scrollToSection('examples')">
+            <BaseButton variant="secondary" size="large" class="hero-cta-secondary" @click="scrollToSection('how-it-works')">
               {{ $t('landing.hero.ctaSecondary') }}
               <MaterialIcon icon="play_arrow" size="sm" />
             </BaseButton>
           </div>
-
-          <!-- As seen on -->
-          <div class="hero-seen-on">
-            <span class="seen-on-label">{{ $t('landing.hero.seenOn') }}</span>
-            <div class="seen-on-logos">
-              <a href="https://news.ycombinator.com" target="_blank" rel="noopener noreferrer" class="seen-on-logo" aria-label="Hacker News">
-                <svg class="logo-icon hn-logo" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M0 0v24h24V0H0zm12.5 14.3V19h-1v-4.7L8.1 8h1.1l2.8 5.2 2.8-5.2h1.1l-3.4 6.3z"/>
-                </svg>
-                <span>Hacker News</span>
-              </a>
-              <a href="https://www.producthunt.com" target="_blank" rel="noopener noreferrer" class="seen-on-logo" aria-label="Product Hunt">
-                <svg class="logo-icon ph-logo" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm1.2 14.4H10v3.6H8.4V6h4.8c2.319 0 4.2 1.881 4.2 4.2s-1.881 4.2-4.2 4.2zm-.001-6.6H10v4.8h3.199c1.322 0 2.4-1.078 2.4-2.4s-1.078-2.4-2.4-2.4z"/>
-                </svg>
-                <span>Product Hunt</span>
-              </a>
-              <a href="https://www.linkedin.com" target="_blank" rel="noopener noreferrer" class="seen-on-logo" aria-label="LinkedIn">
-                <svg class="logo-icon li-logo" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
-                </svg>
-                <span>LinkedIn</span>
-              </a>
-            </div>
-          </div>
         </div>
 
-        <!-- Before/After Interactive Slider -->
-        <div class="hero-slider">
-          <div class="before-after-gallery">
-            <!-- Main Slider -->
+        <!-- Phone mockup with Lazarus chat -->
+        <div class="hero-phone">
+          <PhoneMockup>
+            <LazarusChat />
+          </PhoneMockup>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== 3. MEET LAZARUS ===== -->
+    <section class="meet-lazarus-section">
+      <div class="section-container">
+        <!-- Centered mascot hero -->
+        <div class="lazarus-mascot-hero">
+          <LazarusAnimatedMascot :size="240" />
+        </div>
+
+        <h2 class="section-title">{{ $t('landing.meetLazarus.title') }}</h2>
+        <p class="lazarus-subtitle-centered">{{ $t('landing.meetLazarus.subtitle') }}</p>
+        <p class="lazarus-description-centered">{{ $t('landing.meetLazarus.description') }}</p>
+        <p class="lazarus-name-origin-centered">{{ $t('landing.meetLazarus.nameOrigin') }}</p>
+
+        <div class="lazarus-capabilities">
+          <div class="capability-item">
+            <MaterialIcon icon="psychology" size="sm" color="var(--gold-primary)" />
+            <span>{{ $t('landing.meetLazarus.feature1Title') }}</span>
+          </div>
+          <div class="capability-item">
+            <MaterialIcon icon="edit_note" size="sm" color="var(--gold-primary)" />
+            <span>{{ $t('landing.meetLazarus.feature2Title') }}</span>
+          </div>
+          <div class="capability-item">
+            <MaterialIcon icon="send" size="sm" color="var(--gold-primary)" />
+            <span>{{ $t('landing.meetLazarus.feature3Title') }}</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== 4b. REAL RESULTS (Interactive Slider) ===== -->
+    <section class="results-section">
+      <div class="section-container">
+        <h2 class="section-title">{{ $t('landing.results.title') }}</h2>
+        <p class="section-subtitle">{{ $t('landing.results.subtitle') }}</p>
+
+        <div class="before-after-gallery">
+          <!-- Main Slider -->
+          <div
+            ref="sliderContainerRef"
+            class="comparison-slider"
+            @mousedown="onMouseDown"
+            @mousemove="onMouseMove"
+            @mouseup="onMouseUp"
+            @mouseleave="onMouseUp"
+          >
+            <!-- After Image (Background - full) -->
+            <div class="slider-image-container">
+              <img
+                :src="selectedComparison.generated"
+                :alt="$t('landing.results.after')"
+                class="slider-image"
+                draggable="false"
+                loading="lazy"
+              />
+              <div class="image-label after-label">
+                {{ $t('landing.results.after') }}
+              </div>
+            </div>
+
+            <!-- Before Image (Foreground - clipped) -->
             <div
-              ref="sliderContainerRef"
-              class="comparison-slider"
-              @mousedown="onMouseDown"
-              @mousemove="onMouseMove"
-              @mouseup="onMouseUp"
-              @mouseleave="onMouseUp"
+              class="slider-image-container before-container"
+              :style="{ clipPath: `inset(0 ${100 - sliderPosition}% 0 0)` }"
             >
-              <!-- After Image (Background - full) -->
-              <div class="slider-image-container">
-                <img
-                  :src="selectedComparison.generated"
-                  :alt="$t('landing.examples.gallery.after')"
-                  class="slider-image"
-                  draggable="false"
-                  loading="lazy"
-                />
-                <div class="image-label after-label">
-                  {{ $t('landing.examples.gallery.after') }}
-                </div>
-              </div>
-
-              <!-- Before Image (Foreground - clipped) -->
-              <div
-                class="slider-image-container before-container"
-                :style="{ clipPath: `inset(0 ${100 - sliderPosition}% 0 0)` }"
-              >
-                <img
-                  :src="selectedComparison.original"
-                  :alt="$t('landing.examples.gallery.before')"
-                  class="slider-image"
-                  draggable="false"
-                  loading="lazy"
-                />
-                <div class="image-label before-label">
-                  {{ $t('landing.examples.gallery.before') }}
-                </div>
-              </div>
-
-              <!-- Slider Handle -->
-              <div
-                class="slider-handle"
-                :class="{ 'is-dragging': isDragging }"
-                :style="{ left: `${sliderPosition}%` }"
-              >
-                <div class="handle-line"></div>
-                <div class="handle-button" @touchstart="onHandleTouchStart">
-                  <MaterialIcon icon="drag_handle" size="sm" color="var(--text-on-gold)" />
-                </div>
-                <div class="handle-line"></div>
+              <img
+                :src="selectedComparison.original"
+                :alt="$t('landing.results.before')"
+                class="slider-image"
+                draggable="false"
+                loading="lazy"
+              />
+              <div class="image-label before-label">
+                {{ $t('landing.results.before') }}
               </div>
             </div>
 
-            <!-- Thumbnail Selector -->
-            <div class="comparison-thumbnails">
-              <button
-                v-for="(example, index) in comparisonExamples"
-                :key="example.id"
-                :class="['thumbnail-button', { active: selectedComparisonIndex === index }]"
-                @click="selectComparison(index)"
-              >
-                <img
-                  :src="example.original"
-                  :alt="$t(`landing.examples.templates.${example.templateKey}`)"
-                  class="thumbnail-image"
-                  loading="lazy"
-                />
-                <!-- Progress indicator -->
-                <div class="thumbnail-progress-bar">
-                  <div
-                    v-if="selectedComparisonIndex === index"
-                    :key="`comparison-progress-${index}-${comparisonProgressKey}`"
-                    :class="['thumbnail-progress-fill', { paused: isComparisonPaused }]"
-                  />
-                </div>
-              </button>
+            <!-- Slider Handle -->
+            <div
+              class="slider-handle"
+              :class="{ 'is-dragging': isDragging }"
+              :style="{ left: `${sliderPosition}%` }"
+            >
+              <div class="handle-line"></div>
+              <div class="handle-button" @touchstart="onHandleTouchStart">
+                <MaterialIcon icon="drag_handle" size="sm" color="var(--text-on-gold)" />
+              </div>
+              <div class="handle-line"></div>
             </div>
+          </div>
+
+          <!-- Thumbnail Selector -->
+          <div class="comparison-thumbnails">
+            <button
+              v-for="(example, index) in comparisonExamples"
+              :key="example.id"
+              :class="['thumbnail-button', { active: selectedComparisonIndex === index }]"
+              @click="selectComparison(index)"
+            >
+              <img
+                :src="example.original"
+                :alt="$t('landing.results.before')"
+                class="thumbnail-image"
+                loading="lazy"
+              />
+              <!-- Progress indicator -->
+              <div class="thumbnail-progress-bar">
+                <div
+                  v-if="selectedComparisonIndex === index"
+                  :key="`comparison-progress-${index}-${comparisonProgressKey}`"
+                  :class="['thumbnail-progress-fill', { paused: isComparisonPaused }]"
+                />
+              </div>
+            </button>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- Examples Showcase Section -->
-    <section id="examples" class="examples-section">
+    <!-- ===== 5. HOW IT WORKS ===== -->
+    <section id="how-it-works" class="how-it-works-section">
       <div class="section-container">
-        <h2 class="section-title">{{ $t('landing.examples.title') }}</h2>
-        <p class="section-subtitle">{{ $t('landing.examples.subtitle') }}</p>
+        <h2 class="section-title">{{ $t('landing.howItWorks.title') }}</h2>
+        <p class="section-subtitle">{{ $t('landing.howItWorks.subtitle') }}</p>
 
-        <!-- Main Example: Full workflow with detailed explanations -->
-        <div class="main-example-flow">
-          <!-- Step 1: Upload -->
-          <div class="flow-step-card">
-            <div class="step-header">
-              <span class="step-badge">1</span>
-              <h3 class="step-title">{{ $t('landing.examples.flow.step1Title') }}</h3>
+        <div class="steps-grid">
+          <div v-for="step in howItWorksSteps" :key="step.step" class="step-card">
+            <span class="step-badge">{{ step.step }}</span>
+            <div class="step-icon-wrapper">
+              <MaterialIcon :icon="step.icon" size="lg" color="var(--gold-primary)" />
             </div>
-            <p class="step-description">{{ $t('landing.examples.flow.step1Description') }}</p>
-            <div class="step-visual">
-              <div class="example-image-wrapper with-label">
-                <div class="original-label">{{ $t('landing.examples.originalLabel') }}</div>
-                <img
-                  :src="multiExample.original"
-                  :alt="$t('landing.examples.originalPhoto')"
-                  class="example-image"
-                  loading="lazy"
-                />
-              </div>
-            </div>
-          </div>
-
-          <!-- Arrow -->
-          <div class="flow-arrow">
-            <MaterialIcon icon="arrow_forward" size="lg" color="var(--gold-primary)" />
-          </div>
-
-          <!-- Step 2: AI Generates (Carousel) -->
-          <div class="flow-step-card">
-            <div class="step-header">
-              <span class="step-badge">2</span>
-              <h3 class="step-title">{{ $t('landing.examples.flow.step2Title') }}</h3>
-            </div>
-            <p class="step-description">{{ $t('landing.examples.flow.step2Description') }}</p>
-            <div class="step-visual">
-              <!-- Single image carousel -->
-              <div class="carousel-container">
-                <div class="carousel-image-wrapper">
-                  <div class="template-badge">
-                    {{
-                      $t(
-                        `landing.examples.templates.${multiExample.generated[currentTemplateIndex].templateKey}`,
-                      )
-                    }}
-                  </div>
-                  <img
-                    :src="multiExample.generated[currentTemplateIndex].src"
-                    :alt="$t('landing.examples.aiGenerated')"
-                    class="carousel-image"
-                    loading="lazy"
-                  />
-                </div>
-                <!-- Template badge selectors with progress bars -->
-                <div class="carousel-badges">
-                  <button
-                    v-for="(gen, idx) in multiExample.generated"
-                    :key="idx"
-                    :class="['carousel-badge', { active: currentTemplateIndex === idx }]"
-                    @click="selectTemplate(idx)"
-                  >
-                    <span class="badge-text">{{
-                      $t(`landing.examples.templates.${gen.templateKey}`)
-                    }}</span>
-                    <div class="badge-progress-bar">
-                      <div
-                        v-if="currentTemplateIndex === idx"
-                        :key="`progress-${idx}-${carouselProgressKey}`"
-                        :class="['badge-progress-fill', 'animating', { paused: isCarouselPaused }]"
-                      />
-                    </div>
-                  </button>
-                  <!-- And many more badge -->
-                  <span class="carousel-badge more-badge">
-                    {{ $t('landing.examples.templates.andMore') }}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Arrow -->
-          <div class="flow-arrow">
-            <MaterialIcon icon="arrow_forward" size="lg" color="var(--gold-primary)" />
-          </div>
-
-          <!-- Step 3: Approve & Published (merged) -->
-          <div class="flow-step-card">
-            <div class="step-header">
-              <span class="step-badge">3</span>
-              <h3 class="step-title">{{ $t('landing.examples.flow.step3Title') }}</h3>
-            </div>
-            <p class="step-description">{{ $t('landing.examples.flow.step3Description') }}</p>
-            <div class="step-visual">
-              <div class="flow-platforms-grid">
-                <!-- Facebook -->
-                <div class="flow-platform-item">
-                  <div class="flow-platform-logo facebook">
-                    <svg viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
-                    </svg>
-                  </div>
-                  <span class="flow-platform-name">Facebook</span>
-                </div>
-                <!-- Instagram -->
-                <div class="flow-platform-item">
-                  <div class="flow-platform-logo instagram">
-                    <svg viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/>
-                    </svg>
-                  </div>
-                  <span class="flow-platform-name">Instagram</span>
-                </div>
-                <!-- TikTok -->
-                <div class="flow-platform-item coming-soon">
-                  <div class="flow-platform-logo tiktok">
-                    <svg viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/>
-                    </svg>
-                  </div>
-                  <span class="flow-platform-name">TikTok</span>
-                  <span class="flow-coming-soon-badge">{{ $t('landing.howItWorks.comingSoon') }}</span>
-                </div>
-                <!-- X (Twitter) -->
-                <div class="flow-platform-item coming-soon">
-                  <div class="flow-platform-logo x-twitter">
-                    <svg viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
-                    </svg>
-                  </div>
-                  <span class="flow-platform-name">X</span>
-                  <span class="flow-coming-soon-badge">{{ $t('landing.howItWorks.comingSoon') }}</span>
-                </div>
-              </div>
-            </div>
+            <h3 class="step-title">{{ $t(step.titleKey) }}</h3>
+            <p class="step-description">{{ $t(step.descKey) }}</p>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- Auto-Posting Feature Section (KEY DIFFERENTIATOR) -->
-    <section class="auto-posting-section">
+    <!-- ===== 6. FEATURES GRID ===== -->
+    <section id="features" class="features-section">
       <div class="section-container">
-        <div class="auto-posting-content">
-          <div class="auto-posting-text">
-            <span class="feature-badge">{{ $t('landing.autoPosting.badge') }}</span>
-            <h2 class="auto-posting-title">{{ $t('landing.autoPosting.title') }}</h2>
-            <h3 class="auto-posting-headline">{{ $t('landing.autoPosting.headline') }}</h3>
-            <p class="auto-posting-description">{{ $t('landing.autoPosting.description') }}</p>
+        <h2 class="section-title">{{ $t('landing.features.title') }}</h2>
+        <p class="section-subtitle">{{ $t('landing.features.subtitle') }}</p>
 
-            <div class="auto-posting-features">
-              <div class="feature-item">
-                <MaterialIcon icon="check_circle" size="sm" color="var(--gold-primary)" />
-                <span>{{ $t('landing.autoPosting.feature1') }}</span>
-              </div>
-              <div class="feature-item">
-                <MaterialIcon icon="check_circle" size="sm" color="var(--gold-primary)" />
-                <span>{{ $t('landing.autoPosting.feature2') }}</span>
-              </div>
-              <div class="feature-item">
-                <MaterialIcon icon="check_circle" size="sm" color="var(--gold-primary)" />
-                <span>{{ $t('landing.autoPosting.feature3') }}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Benefits Grid Section -->
-    <section class="benefits-section">
-      <div class="section-container">
-        <h2 class="section-title">{{ $t('landing.benefits.title') }}</h2>
-
-        <div class="benefits-grid">
+        <div class="features-grid">
           <BaseCard
-            v-for="benefit in benefits"
-            :key="benefit.id"
+            v-for="feature in featuresData"
+            :key="feature.id"
             variant="glass"
-            class="benefit-card"
+            class="feature-card"
             hoverable
           >
-            <div class="benefit-icon">
-              <MaterialIcon :icon="benefit.icon" size="lg" color="var(--gold-primary)" />
+            <div class="feature-icon">
+              <MaterialIcon :icon="feature.icon" size="lg" color="var(--gold-primary)" />
             </div>
-            <h3 class="benefit-title">{{ $t(benefit.title) }}</h3>
-            <p class="benefit-description">{{ $t(benefit.description) }}</p>
+            <h3 class="feature-title">{{ $t(`landing.features.${feature.id}.title`) }}</h3>
+            <p class="feature-description">{{ $t(`landing.features.${feature.id}.desc`) }}</p>
           </BaseCard>
         </div>
       </div>
     </section>
 
-    <!-- Pricing Section (Dynamic from API) - only when signup enabled -->
+    <!-- ===== 7. MOBILE APP SHOWCASE ===== -->
+    <section class="mobile-app-section">
+      <div class="section-container">
+        <div class="mobile-app-layout">
+          <div class="mobile-app-phone">
+            <PhoneMockup :scale="0.85">
+              <LazarusChat />
+            </PhoneMockup>
+          </div>
+          <div class="mobile-app-text">
+            <h2 class="section-title">{{ $t('landing.mobileApp.title') }}</h2>
+            <p class="section-subtitle">{{ $t('landing.mobileApp.subtitle') }}</p>
+            <ul class="mobile-app-features">
+              <li>
+                <MaterialIcon icon="touch_app" size="sm" color="var(--gold-primary)" />
+                <span>{{ $t('landing.mobileApp.feature1') }}</span>
+              </li>
+              <li>
+                <MaterialIcon icon="notifications_active" size="sm" color="var(--gold-primary)" />
+                <span>{{ $t('landing.mobileApp.feature2') }}</span>
+              </li>
+              <li>
+                <MaterialIcon icon="rate_review" size="sm" color="var(--gold-primary)" />
+                <span>{{ $t('landing.mobileApp.feature3') }}</span>
+              </li>
+            </ul>
+            <BaseButton variant="primary" size="large" class="animated-cta" @click="handleCTAClick">
+              {{ $t('landing.hero.cta') }}
+              <MaterialIcon icon="arrow_forward" size="sm" color="var(--text-on-gold)" />
+            </BaseButton>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== 8. PRICING (dynamic from API) ===== -->
     <section v-if="ENABLE_SIGNUP" id="pricing" class="pricing-section">
       <div class="section-container">
         <h2 class="section-title">{{ $t('landing.pricing.title') }}</h2>
         <p class="section-subtitle">{{ $t('landing.pricing.subtitle') }}</p>
 
-        <!-- Loading State -->
         <div v-if="plansLoading" class="pricing-loading">
           <div class="spinner"></div>
           <p>{{ $t('plans.loading') }}</p>
         </div>
 
-        <!-- Plans Grid -->
         <div v-else class="pricing-preview">
           <BaseCard
             v-for="plan in plans"
@@ -1190,7 +949,6 @@ const benefits = [
             ]"
             hoverable
           >
-            <!-- Badge -->
             <div
               v-if="plan.badge"
               class="pricing-badge"
@@ -1202,7 +960,6 @@ const benefits = [
               {{ $t('plans.limitedTo', { count: plan.limited_to }) }}
             </div>
 
-            <!-- Icon -->
             <div class="tier-icon-wrapper">
               <MaterialIcon
                 :icon="getTierIcon(plan.tier)"
@@ -1219,7 +976,6 @@ const benefits = [
 
             <h3 class="pricing-tier">{{ plan.name }}</h3>
 
-            <!-- Price -->
             <div class="price-wrapper">
               <div v-if="getBeforePrice(plan)" class="original-price">
                 {{ formatBeforePrice(getBeforePrice(plan)!) }}
@@ -1231,24 +987,18 @@ const benefits = [
               </div>
             </div>
 
-            <!-- Credits -->
             <div class="credits-highlight">
               <div class="credit-line">
                 <MaterialIcon icon="image" size="sm" color="var(--gold-primary)" />
-                <span
-                  >{{ Math.floor(plan.credits / creditCosts.image) }} {{ $t('plans.images') }}</span
-                >
+                <span>{{ Math.floor(plan.credits / creditCosts.image) }} {{ $t('plans.images') }}</span>
               </div>
               <span class="or-divider">{{ $t('plans.orEquivalent') }}</span>
               <div class="credit-line">
                 <MaterialIcon icon="videocam" size="sm" color="var(--gold-primary)" />
-                <span
-                  >{{ Math.floor(plan.credits / creditCosts.video) }} {{ $t('plans.videos') }}</span
-                >
+                <span>{{ Math.floor(plan.credits / creditCosts.video) }} {{ $t('plans.videos') }}</span>
               </div>
             </div>
 
-            <!-- Social Media Posting Included -->
             <div class="social-posting-included">
               <div class="posting-line">
                 <span class="platform-icon-small facebook"></span>
@@ -1262,7 +1012,6 @@ const benefits = [
               </div>
             </div>
 
-            <!-- CTA Button -->
             <BaseButton
               :variant="
                 plan.tier === 'yearly' || plan.tier === 'lifetime' ? 'primary' : 'secondary'
@@ -1278,27 +1027,23 @@ const benefits = [
       </div>
     </section>
 
-    <!-- Waitlist Section - only when signup disabled -->
+    <!-- ===== 9. WAITLIST (when signup disabled) ===== -->
     <section v-else id="waitlist" class="waitlist-section">
       <div class="section-container">
         <h2 class="section-title">{{ $t('waitlist.headline') }}</h2>
         <p class="section-subtitle">{{ $t('waitlist.subheadline') }}</p>
 
-        <!-- Social Proof -->
         <p class="waitlist-social-proof">
           {{ $t('waitlist.socialProof', { count: waitlistCount }) }}
         </p>
 
-        <!-- Waitlist Form Card -->
         <BaseCard variant="glass-intense" class="waitlist-card">
-          <!-- Success State -->
           <div v-if="waitlistSuccess" class="waitlist-success">
             <div class="success-icon">✓</div>
             <h3 class="success-title">{{ $t('waitlist.successTitle') }}</h3>
             <p class="success-message">{{ $t('waitlist.successMessage') }}</p>
           </div>
 
-          <!-- Form -->
           <form v-else @submit.prevent="handleWaitlistSubmit" class="waitlist-form">
             <BaseAlert v-if="waitlistError" type="error" :dismissible="true" @close="waitlistError = ''">
               {{ waitlistError }}
@@ -1325,7 +1070,6 @@ const benefits = [
           </form>
         </BaseCard>
 
-        <!-- Login Link -->
         <p class="waitlist-login-link">
           {{ $t('waitlist.loginLink') }}
           <button class="login-text-link" @click="showLoginModal = true">
@@ -1335,7 +1079,7 @@ const benefits = [
       </div>
     </section>
 
-    <!-- Final CTA Section -->
+    <!-- ===== 10. FINAL CTA ===== -->
     <section class="final-cta-section">
       <div class="section-container">
         <template v-if="ENABLE_SIGNUP">
@@ -1355,7 +1099,7 @@ const benefits = [
       </div>
     </section>
 
-    <!-- Footer -->
+    <!-- ===== 11. FOOTER ===== -->
     <footer class="landing-footer">
       <div class="footer-content">
         <p class="footer-made-with">{{ $t('landing.footer.madeWith') }}</p>
@@ -1370,24 +1114,47 @@ const benefits = [
 
     <!-- Modals -->
     <LoginModal v-model="showLoginModal" @login-success="onLoginSuccess" />
-
     <PaywallModal v-model="showPaywallModal" @payment-success="onPaymentSuccess" />
   </div>
 </template>
 
 <style scoped>
+/* ===== BASE ===== */
 .landing-page {
   min-height: 100vh;
   background: var(--bg-primary);
   scroll-behavior: smooth;
 }
 
-/* Scroll offset for fixed header */
 .landing-page :target {
   scroll-margin-top: 80px;
 }
 
-/* Sticky Header Navigation */
+.section-container {
+  max-width: var(--max-width-2xl);
+  margin: 0 auto;
+  padding: 0 var(--space-xl);
+}
+
+.section-title {
+  font-family: var(--font-heading);
+  font-size: clamp(1.75rem, 3vw, 2.5rem);
+  font-weight: var(--font-bold);
+  color: var(--text-primary);
+  text-align: center;
+  margin-bottom: var(--space-sm);
+}
+
+.section-subtitle {
+  font-size: var(--text-lg);
+  color: var(--text-secondary);
+  text-align: center;
+  max-width: 600px;
+  margin: 0 auto var(--space-3xl);
+  line-height: 1.6;
+}
+
+/* ===== HEADER ===== */
 .site-header {
   position: fixed;
   top: 0;
@@ -1400,10 +1167,11 @@ const benefits = [
 }
 
 .site-header.scrolled {
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(var(--blur-lg));
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   border-bottom: 1px solid var(--glass-border);
-  box-shadow: var(--shadow-md);
+  box-shadow: 0 2px 20px rgba(15, 61, 46, 0.08);
 }
 
 .header-container {
@@ -1434,7 +1202,6 @@ const benefits = [
   color: var(--text-primary);
 }
 
-/* Desktop Navigation */
 .desktop-nav {
   display: flex;
   align-items: center;
@@ -1459,7 +1226,6 @@ const benefits = [
   background: var(--glass-bg);
 }
 
-/* Header Actions */
 .header-actions {
   display: flex;
   align-items: center;
@@ -1484,12 +1250,11 @@ const benefits = [
   color: var(--gold-primary);
 }
 
-/* Mobile Header Pill - Hidden on desktop */
+/* Mobile header pill */
 .mobile-header-pill {
   display: none;
 }
 
-/* Hamburger line shared styles */
 .hamburger-line {
   display: block;
   width: 20px;
@@ -1497,6 +1262,34 @@ const benefits = [
   background: var(--text-primary);
   border-radius: var(--radius-full);
   transition: var(--transition-base);
+}
+
+.pill-menu-button {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background: none;
+  border: none;
+  padding: var(--space-sm);
+  cursor: pointer;
+}
+
+.pill-menu-button.active .hamburger-line:nth-child(1) {
+  transform: rotate(45deg) translate(4px, 4px);
+}
+
+.pill-menu-button.active .hamburger-line:nth-child(2) {
+  opacity: 0;
+}
+
+.pill-menu-button.active .hamburger-line:nth-child(3) {
+  transform: rotate(-45deg) translate(4px, -4px);
+}
+
+.pill-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
 }
 
 /* Mobile Navigation */
@@ -1565,7 +1358,6 @@ const benefits = [
   letter-spacing: 0.05em;
 }
 
-/* Larger theme toggle in menu */
 .mobile-nav-setting :deep(.theme-toggle) {
   width: 48px;
   height: 48px;
@@ -1578,7 +1370,6 @@ const benefits = [
   font-size: 24px;
 }
 
-/* Larger language selector in menu */
 .mobile-nav-setting :deep(.language-selector .language-button) {
   width: 48px;
   height: 48px;
@@ -1629,34 +1420,58 @@ const benefits = [
   color: var(--gold-primary);
 }
 
-/* Hero Section */
+/* ===== HERO ===== */
 .hero-section {
   min-height: 100vh;
   display: flex;
   align-items: center;
   padding: var(--space-2xl);
-  padding-top: calc(80px + var(--space-3xl)); /* Account for fixed header */
+  padding-top: calc(80px + var(--space-3xl));
   position: relative;
   overflow: hidden;
-  background-image: url('/background.jpeg');
-  background-size: cover;
-  background-position: center;
 }
 
-.hero-section::before {
-  content: '';
+/* CSS gradient orbs background */
+.hero-bg-orbs {
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(
-    135deg,
-    var(--hero-overlay-start) 0%,
-    var(--hero-overlay-mid) 50%,
-    var(--hero-overlay-end) 100%
-  );
+  inset: 0;
+  overflow: hidden;
   pointer-events: none;
+}
+
+.orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.25;
+}
+
+.orb-green {
+  width: 500px;
+  height: 500px;
+  background: var(--gold-primary);
+  top: -100px;
+  right: -100px;
+  opacity: 0.12;
+}
+
+.orb-bronze {
+  width: 400px;
+  height: 400px;
+  background: #b08a5a;
+  bottom: -50px;
+  left: -50px;
+  opacity: 0.1;
+}
+
+.orb-light {
+  width: 600px;
+  height: 600px;
+  background: var(--bg-secondary);
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  opacity: 0.5;
 }
 
 .hero-content {
@@ -1670,13 +1485,12 @@ const benefits = [
   z-index: 1;
 }
 
-/* Hero Tagline Pill */
 .hero-tagline-pill {
   display: inline-flex;
   align-items: center;
   gap: var(--space-sm);
-  background: var(--gold-subtle);
-  border: 1px solid var(--gold-dark);
+  background: rgba(15, 61, 46, 0.06);
+  border: 1px solid rgba(15, 61, 46, 0.15);
   padding: var(--space-xs) var(--space-md);
   border-radius: var(--radius-full);
   font-size: var(--text-sm);
@@ -1698,683 +1512,133 @@ const benefits = [
 }
 
 .headline-gold {
-  background: var(--gradient-gold);
+  background: linear-gradient(135deg, var(--gold-primary), var(--gold-light));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  font-style: italic;
   display: block;
 }
 
 .hero-subheadline {
-  font-size: var(--text-xl);
+  font-size: var(--text-lg);
   color: var(--text-secondary);
+  line-height: 1.7;
   margin-bottom: var(--space-xl);
-  line-height: var(--leading-relaxed);
-  max-width: 540px;
+  max-width: 520px;
 }
 
-/* Hero Feature Points */
 .hero-features {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-lg) var(--space-xl);
+  gap: var(--space-sm);
   margin-bottom: var(--space-2xl);
 }
 
 .hero-feature {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: var(--space-sm);
-  font-size: var(--text-base);
-  color: var(--text-secondary);
+  gap: var(--space-xs);
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  padding: var(--space-xs) var(--space-md);
+  border-radius: var(--radius-full);
+  font-size: var(--text-sm);
+  color: var(--text-primary);
+  font-weight: var(--font-medium);
 }
 
-/* Hero CTA Group */
 .hero-cta-group {
   display: flex;
-  flex-wrap: wrap;
   gap: var(--space-md);
-  margin-bottom: var(--space-3xl);
+  flex-wrap: wrap;
 }
 
-.hero-cta-primary,
-.hero-cta-secondary {
+.hero-phone {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* ===== MEET LAZARUS ===== */
+.meet-lazarus-section {
+  padding: var(--space-5xl) 0;
+  background: var(--bg-primary);
+  text-align: center;
+}
+
+.lazarus-mascot-hero {
+  display: flex;
+  justify-content: center;
+  margin-bottom: var(--space-2xl);
+}
+
+.lazarus-subtitle-centered {
+  font-family: var(--font-heading);
+  font-size: var(--text-xl);
+  color: var(--gold-primary);
+  margin-bottom: var(--space-lg);
+  text-align: center;
+}
+
+.lazarus-description-centered {
+  font-size: var(--text-base);
+  color: var(--text-secondary);
+  line-height: 1.7;
+  margin-bottom: var(--space-md);
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+  text-align: center;
+}
+
+.lazarus-name-origin-centered {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  font-style: italic;
+  margin-bottom: var(--space-2xl);
+  max-width: 500px;
+  margin-left: auto;
+  margin-right: auto;
+  text-align: center;
+}
+
+.lazarus-capabilities {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: var(--space-md);
+}
+
+.capability-item {
   display: inline-flex;
   align-items: center;
   gap: var(--space-sm);
-  font-size: var(--text-lg);
-  padding: var(--space-lg) var(--space-2xl);
-}
-
-.hero-cta-secondary {
+  padding: var(--space-sm) var(--space-lg);
   background: var(--glass-bg);
   border: 1px solid var(--glass-border);
-  backdrop-filter: blur(var(--blur-md));
-}
-
-.hero-cta-secondary:hover {
-  background: var(--bg-tertiary);
-  border-color: var(--gold-primary);
-}
-
-/* Animated border for primary CTA buttons */
-.hero-cta-primary,
-.animated-cta {
-  position: relative;
-  z-index: 1;
-  overflow: visible;
-}
-
-.hero-cta-primary::before,
-.animated-cta::before {
-  content: '';
-  position: absolute;
-  top: -3px;
-  left: -3px;
-  right: -3px;
-  bottom: -3px;
-  background: linear-gradient(
-    90deg,
-    #2d7a5a,
-    #3d9970,
-    #7dd9a8,
-    #b8f0d8,
-    #7dd9a8,
-    #3d9970,
-    #2d7a5a
-  );
-  background-size: 400% 100%;
-  border-radius: calc(var(--radius-lg) + 3px);
-  z-index: -1;
-  animation: shimmer-border 2.5s linear infinite;
-  opacity: 1;
-  box-shadow: 0 0 12px rgba(90, 191, 138, 0.5);
-}
-
-:root[data-theme="dark"] .hero-cta-primary::before,
-:root[data-theme="dark"] .animated-cta::before {
-  background: linear-gradient(
-    90deg,
-    #c9a227,
-    #e8c56c,
-    #ffd700,
-    #fffacd,
-    #ffd700,
-    #e8c56c,
-    #c9a227
-  );
-  background-size: 400% 100%;
-  box-shadow: 0 0 14px rgba(255, 215, 0, 0.6);
-}
-
-.hero-cta-primary::after,
-.animated-cta::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: var(--gold-primary);
-  border-radius: var(--radius-lg);
-  z-index: -1;
-}
-
-@keyframes shimmer-border {
-  0% {
-    background-position: 0% 0;
-  }
-  100% {
-    background-position: 100% 0;
-  }
-}
-
-.hero-cta-primary:hover::before,
-.animated-cta:hover::before {
-  opacity: 1;
-  animation-duration: 1.5s;
-}
-
-/* Reduce motion for accessibility */
-@media (prefers-reduced-motion: reduce) {
-  .hero-cta-primary::before,
-  .animated-cta::before {
-    animation: none;
-  }
-}
-
-/* As Seen On Section */
-.hero-seen-on {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-md);
-}
-
-.seen-on-label {
+  border-radius: var(--radius-full);
   font-size: var(--text-sm);
-  color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-}
-
-.seen-on-logos {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-xl);
-}
-
-.seen-on-logo {
-  display: flex;
-  align-items: center;
-  gap: var(--space-xs);
-  color: var(--text-muted);
-  text-decoration: none;
-  font-size: var(--text-sm);
-  transition: var(--transition-base);
-  opacity: 0.7;
-}
-
-.seen-on-logo:hover {
   color: var(--text-primary);
-  opacity: 1;
-}
-
-.seen-on-logo .logo-icon {
-  width: 20px;
-  height: 20px;
-}
-
-.seen-on-logo .hn-logo {
-  color: #ff6600;
-}
-
-.seen-on-logo .ph-logo {
-  color: #da552f;
-}
-
-.seen-on-logo .li-logo {
-  color: #0077b5;
-}
-
-/* Hero Slider */
-.hero-slider {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.hero-slider .before-after-gallery {
-  width: 100%;
-  max-width: 500px;
-}
-
-.hero-slider .comparison-slider {
-  max-width: 100%;
-}
-
-/* Image Placeholders */
-.image-placeholder {
-  background: var(--bg-secondary);
-  border: 2px dashed var(--border-color);
-  border-radius: var(--radius-lg);
-  padding: var(--space-3xl);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-md);
-  color: var(--text-muted);
-  text-align: center;
-  min-height: 300px;
-  width: 100%;
-  max-width: 400px;
-}
-
-.image-placeholder.large {
-  min-height: 350px;
-  max-width: 500px;
-}
-
-.image-placeholder span {
-  font-size: var(--text-sm);
-  max-width: 200px;
-}
-
-/* Section Styles */
-.section-container {
-  max-width: var(--max-width-2xl);
-  margin: 0 auto;
-  padding: var(--space-5xl) var(--space-2xl);
-}
-
-.section-title {
-  font-family: var(--font-heading);
-  font-size: var(--text-4xl);
-  font-weight: var(--font-bold);
-  color: var(--text-primary);
-  text-align: center;
-  margin-bottom: var(--space-3xl);
-}
-
-.section-subtitle {
-  font-size: var(--text-lg);
-  color: var(--text-secondary);
-  text-align: center;
-  margin-top: calc(-1 * var(--space-2xl));
-  margin-bottom: var(--space-3xl);
-}
-
-/* Examples Showcase Section */
-.examples-section {
-  background: linear-gradient(180deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
-}
-
-/* Main Example Flow - Horizontal Steps */
-.main-example-flow {
-  display: grid;
-  grid-template-columns: 1fr auto 1fr auto 1fr;
-  align-items: stretch;
-  justify-content: center;
-  gap: var(--space-lg);
-  margin-bottom: var(--space-5xl);
-  max-width: 1200px;
-  margin-left: auto;
-  margin-right: auto;
-}
-
-.flow-step-card {
-  background: var(--glass-bg);
-  border: 1px solid var(--glass-border);
-  border-radius: var(--radius-lg);
-  padding: var(--space-xl);
-  text-align: center;
-  backdrop-filter: blur(var(--blur-md));
-  display: flex;
-  flex-direction: column;
-  min-height: 480px;
-}
-
-.step-header {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-md);
-  margin-bottom: var(--space-md);
-}
-
-.step-badge {
-  width: 36px;
-  height: 36px;
-  background: var(--gradient-gold);
-  color: var(--text-on-gold);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: var(--font-heading);
-  font-size: var(--text-lg);
-  font-weight: var(--font-bold);
-  flex-shrink: 0;
-}
-
-.flow-step-card .step-title {
-  font-family: var(--font-heading);
-  font-size: var(--text-lg);
-  color: var(--text-primary);
-  margin: 0;
-}
-
-.flow-step-card .step-description {
-  font-size: var(--text-sm);
-  color: var(--text-secondary);
-  line-height: var(--leading-relaxed);
-  margin-bottom: var(--space-lg);
-}
-
-.step-visual {
-  display: flex;
-  justify-content: center;
-  align-items: stretch;
-  flex-grow: 1;
-  width: 100%;
-}
-
-.flow-arrow {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-top: 120px;
-}
-
-/* Approve Visual */
-.approve-visual {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--space-md);
-  padding: var(--space-xl);
-  background: var(--success-bg);
-  border: 2px solid var(--success-border);
-  border-radius: var(--radius-lg);
-}
-
-.approve-text {
-  font-weight: var(--font-semibold);
-  color: var(--success-text);
-}
-
-/* Posted Platforms */
-.posted-platforms {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-sm);
-}
-
-.posted-platforms.vertical {
-  gap: var(--space-md);
-}
-
-.platform-icon {
-  display: flex;
-  align-items: center;
-  gap: var(--space-xs);
-  padding: var(--space-sm) var(--space-md);
-  background: var(--success-bg);
-  border: 1px solid var(--success-border);
-  border-radius: var(--radius-md);
-  font-size: var(--text-sm);
-  color: var(--success-text);
-}
-
-.platform-icon.large {
-  padding: var(--space-md) var(--space-lg);
-  font-size: var(--text-base);
-}
-
-/* Flow Platforms Grid (Step 3 in Examples) */
-.flow-platforms-grid {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-sm);
-  width: 100%;
-}
-
-.flow-platform-item {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: var(--space-md);
-  padding: var(--space-sm) var(--space-md);
-  background: var(--bg-tertiary);
-  border-radius: var(--radius-lg);
-  position: relative;
-}
-
-.flow-platform-item.coming-soon {
-  opacity: 0.6;
-}
-
-.flow-platform-logo {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  transition: var(--transition-base);
-  flex-shrink: 0;
-}
-
-.flow-platform-logo svg {
-  width: 20px;
-  height: 20px;
-}
-
-.flow-platform-logo.facebook {
-  background: linear-gradient(135deg, #1877f2 0%, #0d5ecf 100%);
-}
-
-.flow-platform-logo.instagram {
-  background: linear-gradient(135deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
-}
-
-.flow-platform-logo.tiktok {
-  background: linear-gradient(135deg, #010101 0%, #1a1a1a 100%);
-  border: 1px solid var(--glass-border);
-}
-
-.flow-platform-logo.x-twitter {
-  background: linear-gradient(135deg, #000000 0%, #14171a 100%);
-  border: 1px solid var(--glass-border);
-}
-
-.flow-platform-item:not(.coming-soon) .flow-platform-logo:hover {
-  transform: scale(1.1);
-  box-shadow: var(--shadow-lg);
-}
-
-.flow-platform-name {
-  font-size: var(--text-sm);
   font-weight: var(--font-medium);
-  color: var(--text-primary);
-}
-
-.flow-coming-soon-badge {
-  margin-left: auto;
-  background: var(--gold-subtle);
-  color: var(--gold-primary);
-  font-size: 10px;
-  font-weight: var(--font-semibold);
-  padding: 2px 8px;
-  border-radius: var(--radius-full);
-  white-space: nowrap;
-  border: 1px solid var(--gold-dark);
-}
-
-/* Image Wrappers */
-.example-image-wrapper {
-  width: 100%;
-  border-radius: var(--radius-lg);
-  overflow: hidden;
-  border: 2px solid var(--border-color);
-}
-
-.example-image-wrapper.with-label {
-  position: relative;
-}
-
-.original-label {
-  position: absolute;
-  top: var(--space-sm);
-  left: var(--space-sm);
-  background: var(--bg-secondary);
-  color: var(--text-primary);
-  padding: var(--space-xs) var(--space-sm);
-  border-radius: var(--radius-full);
-  font-size: var(--text-xs);
-  font-weight: var(--font-semibold);
-  z-index: 1;
-  border: 1px solid var(--border-color);
-}
-
-.example-image {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-/* Generated Versions Grid */
-.generated-versions {
-  display: flex;
-  gap: var(--space-lg);
-  flex-wrap: wrap;
-  justify-content: center;
-}
-
-.example-post-card {
-  position: relative;
-  width: 280px;
-  background: var(--bg-secondary);
-  border-radius: var(--radius-lg);
-  overflow: hidden;
-  border: 2px solid var(--gold-primary);
-  box-shadow: var(--shadow-lg), var(--glow-gold-sm);
-}
-
-.example-post-card .example-image {
-  width: 100%;
-  height: 200px;
-  object-fit: cover;
-}
-
-.example-post-card.medium {
-  width: 200px;
-}
-
-.example-post-card.medium .example-image {
-  height: 160px;
-}
-
-.template-badge {
-  position: absolute;
-  top: var(--space-sm);
-  left: var(--space-sm);
-  background: var(--gradient-gold);
-  color: var(--text-on-gold);
-  padding: var(--space-xs) var(--space-sm);
-  border-radius: var(--radius-full);
-  font-size: var(--text-xs);
-  font-weight: var(--font-semibold);
-  z-index: 1;
-}
-
-/* AI Versions Carousel */
-.carousel-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--space-lg);
-  width: 100%;
-}
-
-.carousel-image-wrapper {
-  position: relative;
-  width: 100%;
-  max-width: 100%;
-  aspect-ratio: 1;
-  border-radius: var(--radius-lg);
-  overflow: hidden;
-  border: 2px solid var(--gold-primary);
-  box-shadow: var(--shadow-lg), var(--glow-gold-sm);
-}
-
-.carousel-image {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transition: opacity 0.3s ease;
-}
-
-.carousel-badges {
-  display: flex;
-  gap: var(--space-sm);
-  flex-wrap: wrap;
-  justify-content: center;
-  max-width: 100%;
-}
-
-.carousel-badge {
-  position: relative;
-  padding: var(--space-sm) var(--space-md);
-  background: var(--glass-bg);
-  border: 2px solid var(--border-color);
-  border-radius: var(--radius-lg);
-  color: var(--text-secondary);
-  font-size: var(--text-sm);
-  font-weight: var(--font-medium);
-  cursor: pointer;
   transition: var(--transition-base);
-  min-height: 44px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--space-xs);
-  overflow: hidden;
 }
 
-.carousel-badge:hover {
-  border-color: var(--gold-primary);
-  color: var(--text-primary);
+.capability-item:hover {
+  border-color: rgba(15, 61, 46, 0.25);
+  box-shadow: 0 4px 16px rgba(15, 61, 46, 0.08);
 }
 
-.carousel-badge.active {
-  border-color: var(--gold-primary);
-  color: var(--text-primary);
-  box-shadow: var(--glow-gold-sm);
+/* ===== RESULTS / BEFORE-AFTER SLIDER ===== */
+.results-section {
+  padding: var(--space-5xl) 0;
+  background: var(--bg-secondary);
 }
 
-.badge-text {
-  position: relative;
-  z-index: 1;
-}
-
-.badge-progress-bar {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 3px;
-  background: var(--border-color);
-  overflow: hidden;
-}
-
-.badge-progress-fill {
-  height: 100%;
-  width: 0;
-  background: var(--gold-primary);
-}
-
-.badge-progress-fill.animating {
-  animation: progressFill 3.5s linear forwards;
-}
-
-.badge-progress-fill.paused {
-  animation-play-state: paused;
-}
-
-@keyframes progressFill {
-  from {
-    width: 0;
-  }
-  to {
-    width: 100%;
-  }
-}
-
-/* "And many more" transparent badge */
-.carousel-badge.more-badge {
-  background: transparent;
-  border: 2px dashed var(--border-color);
-  color: var(--text-muted);
-  cursor: default;
-  font-style: italic;
-}
-
-.carousel-badge.more-badge:hover {
-  border-color: var(--border-color);
-  color: var(--text-muted);
-}
-
-/* Before/After Interactive Slider */
 .before-after-gallery {
   margin-top: 0;
   padding-top: 0;
 }
 
-/* Comparison Slider */
 .comparison-slider {
   position: relative;
   width: 100%;
@@ -2386,10 +1650,9 @@ const benefits = [
   cursor: ew-resize;
   user-select: none;
   -webkit-user-select: none;
-  /* Allow normal touch behavior (scrolling) - only handle captures touch */
   touch-action: auto;
   -webkit-touch-callout: none;
-  box-shadow: var(--shadow-xl);
+  box-shadow: 0 8px 40px rgba(15, 61, 46, 0.15);
   border: 2px solid var(--glass-border);
 }
 
@@ -2455,31 +1718,28 @@ const benefits = [
   flex: 1;
   width: 3px;
   background: var(--gold-primary);
-  box-shadow: 0 0 10px var(--accent-alpha-50);
+  box-shadow: 0 0 10px rgba(15, 61, 46, 0.5);
 }
 
 .handle-button {
   width: 48px;
   height: 48px;
-  background: var(--gradient-gold);
+  background: var(--gold-primary);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow:
-    var(--shadow-lg),
-    0 0 20px var(--accent-alpha-40);
+  box-shadow: 0 4px 16px rgba(15, 61, 46, 0.3), 0 0 20px rgba(15, 61, 46, 0.2);
   flex-shrink: 0;
   pointer-events: auto;
   cursor: ew-resize;
-  touch-action: none; /* Capture all touch on handle - JS handles drag */
+  touch-action: none;
+  transition: var(--transition-fast);
 }
 
 .slider-handle.is-dragging .handle-button {
   transform: scale(1.1);
-  box-shadow:
-    var(--shadow-xl),
-    0 0 30px var(--accent-alpha-50);
+  box-shadow: 0 4px 24px rgba(15, 61, 46, 0.4), 0 0 30px rgba(15, 61, 46, 0.3);
 }
 
 /* Thumbnail Selector */
@@ -2498,7 +1758,7 @@ const benefits = [
   gap: var(--space-sm);
   padding: var(--space-sm);
   background: var(--glass-bg);
-  border: 2px solid var(--border-color);
+  border: 2px solid var(--glass-border);
   border-radius: var(--radius-lg);
   cursor: pointer;
   transition: var(--transition-base);
@@ -2512,7 +1772,7 @@ const benefits = [
 
 .thumbnail-button.active {
   border-color: var(--gold-primary);
-  box-shadow: var(--glow-gold-sm);
+  box-shadow: 0 4px 16px rgba(15, 61, 46, 0.15);
 }
 
 .thumbnail-image {
@@ -2529,7 +1789,7 @@ const benefits = [
   left: 0;
   right: 0;
   height: 3px;
-  background: var(--accent-alpha-15);
+  background: rgba(15, 61, 46, 0.1);
   border-radius: 0 0 var(--radius-md) var(--radius-md);
   overflow: hidden;
 }
@@ -2546,246 +1806,248 @@ const benefits = [
 }
 
 @keyframes thumbnailProgressFill {
-  from {
-    width: 0;
-  }
-  to {
-    width: 100%;
-  }
+  from { width: 0; }
+  to { width: 100%; }
 }
 
-/* Auto-Posting Section */
-.auto-posting-section {
-  background: linear-gradient(135deg, var(--accent-alpha-05) 0%, transparent 50%);
+/* ===== HOW IT WORKS ===== */
+.how-it-works-section {
+  padding: var(--space-5xl) 0;
+  background: var(--bg-secondary);
 }
 
-.auto-posting-content {
+.steps-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-2xl);
+}
+
+.step-card {
+  text-align: center;
+  padding: var(--space-2xl) var(--space-xl);
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-xl);
+  position: relative;
+  transition: var(--transition-base);
+}
+
+.step-card:hover {
+  border-color: rgba(15, 61, 46, 0.2);
+  box-shadow: 0 8px 32px rgba(15, 61, 46, 0.1);
+  transform: translateY(-2px);
+}
+
+.step-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  background: var(--gold-primary);
+  color: #ffffff;
+  font-family: var(--font-heading);
+  font-size: var(--text-lg);
+  font-weight: var(--font-bold);
+  border-radius: var(--radius-full);
+  margin-bottom: var(--space-lg);
+}
+
+.step-icon-wrapper {
+  margin-bottom: var(--space-lg);
+}
+
+.step-title {
+  font-family: var(--font-heading);
+  font-size: var(--text-xl);
+  font-weight: var(--font-semibold);
+  color: var(--text-primary);
+  margin-bottom: var(--space-sm);
+}
+
+.step-description {
+  font-size: var(--text-base);
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+/* ===== FEATURES GRID ===== */
+.features-section {
+  padding: var(--space-5xl) 0;
+  background: var(--bg-primary);
+}
+
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-xl);
+}
+
+.feature-card {
+  padding: var(--space-xl);
+  text-align: left;
+}
+
+.feature-icon {
+  margin-bottom: var(--space-md);
+}
+
+.feature-title {
+  font-family: var(--font-heading);
+  font-size: var(--text-lg);
+  font-weight: var(--font-semibold);
+  color: var(--text-primary);
+  margin-bottom: var(--space-sm);
+}
+
+.feature-description {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+/* ===== MOBILE APP SHOWCASE ===== */
+.mobile-app-section {
+  padding: var(--space-5xl) 0;
+  background: var(--bg-secondary);
+}
+
+.mobile-app-layout {
+  display: grid;
+  grid-template-columns: auto 1fr;
   gap: var(--space-4xl);
   align-items: center;
 }
 
-.feature-badge {
-  display: inline-block;
-  background: var(--gold-subtle);
-  color: var(--gold-primary);
-  padding: var(--space-xs) var(--space-md);
-  border-radius: var(--radius-full);
-  font-size: var(--text-xs);
-  font-weight: var(--font-semibold);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  margin-bottom: var(--space-lg);
+.mobile-app-phone {
+  display: flex;
+  justify-content: center;
 }
 
-.auto-posting-title {
-  font-family: var(--font-heading);
-  font-size: var(--text-3xl);
-  color: var(--text-primary);
-  margin-bottom: var(--space-sm);
+.mobile-app-text .section-title {
+  text-align: left;
 }
 
-.auto-posting-headline {
-  font-family: var(--font-heading);
-  font-size: var(--text-2xl);
-  background: var(--gradient-gold);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  margin-bottom: var(--space-lg);
-}
-
-.auto-posting-description {
-  font-size: var(--text-lg);
-  color: var(--text-secondary);
-  line-height: var(--leading-relaxed);
+.mobile-app-text .section-subtitle {
+  text-align: left;
+  margin-left: 0;
   margin-bottom: var(--space-xl);
 }
 
-.auto-posting-features {
+.mobile-app-features {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 var(--space-2xl);
   display: flex;
   flex-direction: column;
   gap: var(--space-md);
 }
 
-.feature-item {
+.mobile-app-features li {
   display: flex;
   align-items: center;
-  gap: var(--space-sm);
-  color: var(--text-secondary);
-}
-
-/* Benefits Section */
-.benefits-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: var(--space-xl);
-}
-
-.benefit-card {
-  text-align: center;
-  padding: var(--space-2xl);
-}
-
-.benefit-icon {
-  margin-bottom: var(--space-lg);
-}
-
-.benefit-title {
-  font-family: var(--font-heading);
-  font-size: var(--text-xl);
-  color: var(--text-primary);
-  margin-bottom: var(--space-sm);
-}
-
-.benefit-description {
+  gap: var(--space-md);
   font-size: var(--text-base);
-  color: var(--text-secondary);
-  line-height: var(--leading-relaxed);
+  color: var(--text-primary);
 }
 
-/* Pricing Section */
+/* ===== PRICING ===== */
+.pricing-section {
+  padding: var(--space-5xl) 0;
+  background: var(--bg-primary);
+}
+
 .pricing-loading {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-md);
-  padding: var(--space-4xl);
-  color: var(--text-secondary);
+  text-align: center;
+  padding: var(--space-3xl);
 }
 
 .spinner {
   width: 40px;
   height: 40px;
-  border: 3px solid var(--border-color);
+  border: 3px solid var(--glass-border);
   border-top-color: var(--gold-primary);
   border-radius: 50%;
-  animation: spin 1s linear infinite;
+  animation: spin 0.8s linear infinite;
+  margin: 0 auto var(--space-md);
 }
 
 @keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
+  to { transform: rotate(360deg); }
 }
 
 .pricing-preview {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: var(--space-xl);
-  margin-bottom: var(--space-2xl);
+  max-width: 1000px;
+  margin: 0 auto;
 }
 
 .pricing-card {
-  text-align: center;
   padding: var(--space-2xl);
+  text-align: center;
   position: relative;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-md);
-}
-
-.pricing-card :deep(.base-button) {
-  margin-top: auto;
 }
 
 .pricing-card.featured {
-  border: 2px solid var(--gold-primary);
-  box-shadow: var(--glow-gold-sm);
-}
-
-.pricing-card.lifetime {
-  border: 2px solid var(--gold-dark);
+  border-color: var(--gold-primary);
+  box-shadow: 0 8px 32px rgba(15, 61, 46, 0.12);
 }
 
 .pricing-badge {
   position: absolute;
-  top: var(--space-md);
+  top: -12px;
   left: 50%;
   transform: translateX(-50%);
-  background: var(--gradient-gold);
-  color: var(--text-on-gold);
-  padding: var(--space-xs) var(--space-md);
+  background: var(--gold-primary);
+  color: #ffffff;
+  padding: var(--space-xs) var(--space-lg);
   border-radius: var(--radius-full);
   font-size: var(--text-xs);
-  font-weight: var(--font-semibold);
-  text-transform: uppercase;
+  font-weight: var(--font-bold);
   white-space: nowrap;
 }
 
-.pricing-badge.lifetime-badge {
-  background: var(--gradient-elevated);
-  color: var(--gold-primary);
-  border: 1px solid var(--gold-dark);
+.lifetime-badge {
+  background: linear-gradient(135deg, #b08a5a, #9a7848);
 }
 
 .limited-badge {
-  position: absolute;
-  top: calc(var(--space-md) + 28px);
-  left: 50%;
-  transform: translateX(-50%);
   font-size: var(--text-xs);
-  color: var(--warning-text);
-  background: var(--warning-bg);
-  border: 1px solid var(--warning-border);
-  padding: var(--space-xs) var(--space-sm);
-  border-radius: var(--radius-sm);
-  white-space: nowrap;
+  color: var(--gold-primary);
+  font-weight: var(--font-medium);
+  margin-bottom: var(--space-sm);
 }
 
 .tier-icon-wrapper {
-  margin-top: var(--space-lg);
-}
-
-.pricing-card.lifetime .tier-icon-wrapper {
-  margin-top: var(--space-3xl);
+  margin-bottom: var(--space-md);
 }
 
 .pricing-tier {
   font-family: var(--font-heading);
   font-size: var(--text-xl);
+  font-weight: var(--font-semibold);
   color: var(--text-primary);
-  margin: 0;
+  margin-bottom: var(--space-md);
 }
 
 .price-wrapper {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--space-xs);
+  margin-bottom: var(--space-lg);
 }
 
 .original-price {
-  position: relative;
-  font-size: var(--text-lg);
-  opacity: 0.7;
-  background: var(--gradient-gold);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-.original-price::after {
-  content: '';
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: 50%;
-  height: 2px;
-  background: var(--gradient-gold);
-  transform: translateY(-50%);
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  text-decoration: line-through;
+  margin-bottom: var(--space-xs);
 }
 
 .pricing-price {
   font-family: var(--font-heading);
   font-size: var(--text-4xl);
   font-weight: var(--font-bold);
-  background: var(--gradient-gold);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: var(--text-primary);
 }
 
 .price-period {
@@ -2794,47 +2056,46 @@ const benefits = [
 }
 
 .savings-badge {
-  background: var(--success-bg);
-  color: var(--success-text);
-  border: 1px solid var(--success-border);
-  padding: var(--space-xs) var(--space-sm);
+  display: inline-block;
+  margin-top: var(--space-xs);
+  background: rgba(15, 61, 46, 0.08);
+  color: var(--gold-primary);
+  padding: 2px var(--space-sm);
   border-radius: var(--radius-full);
   font-size: var(--text-xs);
-  font-weight: var(--font-medium);
+  font-weight: var(--font-semibold);
 }
 
 .credits-highlight {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--space-xs);
   padding: var(--space-md);
-  background: var(--bg-tertiary);
-  border-radius: var(--radius-md);
+  background: var(--bg-secondary);
+  border-radius: var(--radius-lg);
+  margin-bottom: var(--space-lg);
 }
 
 .credit-line {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: var(--space-sm);
   font-size: var(--text-sm);
-  color: var(--text-secondary);
+  color: var(--text-primary);
+  font-weight: var(--font-medium);
 }
 
 .or-divider {
   font-size: var(--text-xs);
   color: var(--text-muted);
+  margin: var(--space-xs) 0;
+  display: block;
+  text-align: center;
 }
 
-/* Social Posting Included */
 .social-posting-included {
+  margin-bottom: var(--space-lg);
   display: flex;
   flex-direction: column;
   gap: var(--space-xs);
-  padding: var(--space-md);
-  background: var(--bg-tertiary);
-  border-radius: var(--radius-md);
-  margin-top: var(--space-sm);
 }
 
 .posting-line {
@@ -2846,51 +2107,45 @@ const benefits = [
 }
 
 .platform-icon-small {
-  width: 18px;
-  height: 18px;
+  width: 16px;
+  height: 16px;
   border-radius: var(--radius-sm);
   flex-shrink: 0;
 }
 
 .platform-icon-small.facebook {
-  background: var(--gradient-facebook);
+  background: #1877F2;
 }
 
 .platform-icon-small.instagram {
-  background: var(--gradient-instagram);
+  background: linear-gradient(135deg, #833AB4, #FD1D1D, #F77737);
 }
 
 .included-badge {
   margin-left: auto;
-  color: var(--success-text);
   font-size: var(--text-xs);
-  font-weight: var(--font-medium);
+  color: var(--gold-primary);
+  font-weight: var(--font-semibold);
 }
 
-.pricing-credits {
-  font-size: var(--text-sm);
-  color: var(--text-secondary);
-}
-
-/* ===== WAITLIST SECTION ===== */
+/* ===== WAITLIST ===== */
 .waitlist-section {
-  padding: var(--space-5xl) var(--space-2xl);
-  text-align: center;
-  background: linear-gradient(180deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+  padding: var(--space-5xl) 0;
+  background: var(--bg-secondary);
 }
 
 .waitlist-social-proof {
+  text-align: center;
   font-size: var(--text-sm);
   color: var(--gold-primary);
-  margin-bottom: var(--space-2xl);
   font-weight: var(--font-medium);
-  letter-spacing: 0.5px;
+  margin-bottom: var(--space-2xl);
 }
 
 .waitlist-card {
-  max-width: 650px;
-  margin: 0 auto;
-  padding: var(--space-2xl) var(--space-3xl);
+  max-width: 600px;
+  margin: 0 auto var(--space-xl);
+  padding: var(--space-2xl);
 }
 
 .waitlist-form {
@@ -2902,186 +2157,106 @@ const benefits = [
 .waitlist-input-row {
   display: flex;
   gap: var(--space-md);
-  align-items: flex-start;
 }
 
 .waitlist-email-input {
   flex: 1;
-  min-width: 0;
 }
 
-.waitlist-email-input :deep(.form-group) {
-  margin-bottom: 0;
-}
-
-.waitlist-email-input :deep(input) {
-  font-size: var(--text-lg);
-  padding: var(--space-lg) var(--space-xl);
-  min-height: 56px;
-}
-
-.waitlist-submit-btn {
-  flex-shrink: 0;
-  white-space: nowrap;
-  min-height: 56px;
-  padding: var(--space-lg) var(--space-2xl);
-  font-size: var(--text-lg);
-}
-
-/* Waitlist Success State */
 .waitlist-success {
   text-align: center;
-  padding: var(--space-xl) 0;
+  padding: var(--space-xl);
 }
 
-.waitlist-success .success-icon {
-  width: 64px;
-  height: 64px;
-  border-radius: 50%;
-  background: var(--gradient-gold);
-  color: var(--text-on-gold);
+.success-icon {
+  width: 48px;
+  height: 48px;
+  background: var(--gold-primary);
+  color: #ffffff;
+  border-radius: var(--radius-full);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 32px;
-  font-weight: bold;
-  margin: 0 auto var(--space-xl);
-  animation: scaleIn 0.4s var(--ease-smooth);
+  font-size: var(--text-xl);
+  font-weight: var(--font-bold);
+  margin: 0 auto var(--space-md);
 }
 
-@keyframes scaleIn {
-  from {
-    transform: scale(0);
-    opacity: 0;
-  }
-  to {
-    transform: scale(1);
-    opacity: 1;
-  }
-}
-
-.waitlist-success .success-title {
+.success-title {
   font-family: var(--font-heading);
-  font-size: var(--text-2xl);
+  font-size: var(--text-xl);
   color: var(--text-primary);
-  margin-bottom: var(--space-md);
+  margin-bottom: var(--space-sm);
 }
 
-.waitlist-success .success-message {
-  font-size: var(--text-base);
+.success-message {
   color: var(--text-secondary);
 }
 
-/* Waitlist Login Link */
 .waitlist-login-link {
-  margin-top: var(--space-2xl);
+  text-align: center;
   font-size: var(--text-sm);
-  color: var(--text-muted);
+  color: var(--text-secondary);
 }
 
 .login-text-link {
   background: none;
   border: none;
   color: var(--gold-primary);
-  font-weight: var(--font-medium);
+  font-weight: var(--font-semibold);
   cursor: pointer;
-  transition: var(--transition-fast);
-  padding: 0;
-}
-
-.login-text-link:hover {
-  color: var(--gold-light);
   text-decoration: underline;
 }
 
-/* Waitlist Responsive */
-@media (max-width: 640px) {
-  .waitlist-card {
-    padding: var(--space-xl);
-  }
-
-  .waitlist-input-row {
-    flex-direction: column;
-    width: 100%;
-  }
-
-  .waitlist-email-input {
-    width: 100%;
-  }
-
-  .waitlist-email-input :deep(input) {
-    font-size: var(--text-base);
-    padding: var(--space-md) var(--space-lg);
-    min-height: 48px;
-  }
-
-  .waitlist-submit-btn {
-    width: 100%;
-    min-height: 48px;
-    font-size: var(--text-base);
-  }
-}
-
-/* Final CTA Section */
+/* ===== FINAL CTA ===== */
 .final-cta-section {
-  background: linear-gradient(135deg, var(--accent-alpha-10) 0%, var(--accent-alpha-025) 100%);
+  padding: var(--space-5xl) 0;
+  background: var(--bg-primary);
   text-align: center;
-  padding: var(--space-5xl) var(--space-2xl);
-}
-
-.final-cta-section .section-container {
-  max-width: var(--max-width-2xl);
-  margin: 0 auto;
 }
 
 .final-cta-title {
   font-family: var(--font-heading);
-  font-size: var(--text-4xl);
+  font-size: clamp(1.75rem, 3vw, 2.5rem);
   font-weight: var(--font-bold);
-  background: var(--gradient-gold);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  margin-bottom: var(--space-lg);
+  color: var(--text-primary);
+  margin-bottom: var(--space-md);
 }
 
 .final-cta-subtitle {
-  font-size: var(--text-xl);
+  font-size: var(--text-lg);
   color: var(--text-secondary);
   margin-bottom: var(--space-2xl);
-  max-width: 600px;
+  max-width: 500px;
   margin-left: auto;
   margin-right: auto;
 }
 
-.final-cta-button {
-  font-size: var(--text-lg);
-  padding: var(--space-lg) var(--space-3xl);
-}
-
-/* Footer */
+/* ===== FOOTER ===== */
 .landing-footer {
+  padding: var(--space-2xl) 0;
+  border-top: 1px solid var(--glass-border);
   background: var(--bg-secondary);
-  padding: var(--space-3xl) var(--space-2xl);
-  text-align: center;
 }
 
 .footer-content {
-  max-width: var(--max-width-lg);
+  max-width: var(--max-width-2xl);
   margin: 0 auto;
+  padding: 0 var(--space-xl);
+  text-align: center;
 }
 
 .footer-made-with {
   font-size: var(--text-sm);
   color: var(--text-muted);
-  margin-bottom: var(--space-lg);
+  margin-bottom: var(--space-sm);
 }
 
 .footer-links {
   display: flex;
   justify-content: center;
-  gap: var(--space-sm);
-  margin-bottom: var(--space-lg);
+  gap: var(--space-md);
+  margin-bottom: var(--space-sm);
 }
 
 .footer-links a {
@@ -3104,9 +2279,104 @@ const benefits = [
   color: var(--text-muted);
 }
 
-/* Responsive */
+/* ===== ANIMATED CTA ===== */
+.animated-cta {
+  position: relative;
+  overflow: hidden;
+}
+
+.animated-cta::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -75%;
+  width: 50%;
+  height: 200%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.15),
+    transparent
+  );
+  transform: skewX(-25deg);
+  animation: shimmer 4s infinite;
+}
+
+@keyframes shimmer {
+  0%, 100% { left: -75%; }
+  50% { left: 125%; }
+}
+
+/* ===== RESPONSIVE ===== */
+
+/* Tablet */
 @media (max-width: 1024px) {
-  /* Header responsive - Hide desktop, show mobile pill */
+  .hero-content {
+    grid-template-columns: 1fr;
+    gap: var(--space-2xl);
+    text-align: center;
+  }
+
+  .hero-text {
+    order: 2;
+  }
+
+  .hero-phone {
+    order: 1;
+  }
+
+  .hero-tagline-pill {
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .hero-subheadline {
+    max-width: none;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .hero-features {
+    justify-content: center;
+  }
+
+  .hero-cta-group {
+    justify-content: center;
+  }
+
+  .comparison-slider {
+    max-width: 500px;
+  }
+
+  .steps-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-lg);
+  }
+
+  .features-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .mobile-app-layout {
+    grid-template-columns: 1fr;
+    text-align: center;
+    gap: var(--space-2xl);
+  }
+
+  .mobile-app-text .section-title,
+  .mobile-app-text .section-subtitle {
+    text-align: center;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .mobile-app-features {
+    align-items: center;
+  }
+}
+
+/* Mobile */
+@media (max-width: 768px) {
   .desktop-header {
     display: none;
   }
@@ -3120,210 +2390,51 @@ const benefits = [
     display: flex;
     align-items: center;
     justify-content: space-between;
+    padding: var(--space-xs) var(--space-sm);
     background: var(--glass-bg);
-    backdrop-filter: blur(var(--blur-lg));
-    border: 1px solid var(--glass-border);
+    backdrop-filter: blur(20px);
     border-radius: var(--radius-full);
-    padding: var(--space-xs) var(--space-xs) var(--space-xs) var(--space-md);
-    box-shadow: var(--shadow-lg);
-    max-width: 380px;
-    margin: 0 auto;
-  }
-
-  .pill-content .header-logo .logo-image {
-    height: 24px;
-  }
-
-  .pill-content .header-logo .logo-text {
-    font-size: var(--text-sm);
-  }
-
-  .pill-actions {
-    display: flex;
-    align-items: center;
-    gap: var(--space-xs);
-  }
-
-  /* Style ThemeToggle in header to match hamburger */
-  .pill-actions :deep(.theme-toggle) {
-    width: 36px;
-    height: 36px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: none;
-    border: none;
-    padding: 0;
-  }
-
-  .pill-actions :deep(.theme-toggle .material-symbols-outlined) {
-    font-size: 20px;
-    color: var(--text-primary);
-  }
-
-  /* Style LanguageSelector in header to match other buttons */
-  .pill-actions :deep(.language-selector .language-button) {
-    width: 36px;
-    height: 36px;
-    min-width: 36px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: none;
-    border: none;
-    padding: 0;
-    gap: 0;
-  }
-
-  .pill-actions :deep(.language-selector .language-button .flag) {
-    font-size: 18px;
-  }
-
-  .pill-actions :deep(.language-selector .language-button .flag-icon .material-symbols-outlined) {
-    font-size: 20px;
-    color: var(--text-primary);
-  }
-
-  .pill-actions :deep(.language-selector .language-button .chevron),
-  .pill-actions :deep(.language-selector .language-button .currency-badge) {
-    display: none;
-  }
-
-  .pill-menu-button {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    gap: 4px;
-    width: 36px;
-    height: 36px;
-    background: none;
-    border: none;
-    cursor: pointer;
-    padding: var(--space-xs);
-  }
-
-  .pill-menu-button .hamburger-line {
-    width: 20px;
-    height: 2px;
-    background: var(--text-primary);
-    transition: var(--transition-base);
-    transform-origin: center;
-  }
-
-  .pill-menu-button.active .hamburger-line:nth-child(1) {
-    transform: translateY(6px) rotate(45deg);
-  }
-
-  .pill-menu-button.active .hamburger-line:nth-child(2) {
-    opacity: 0;
-    transform: scaleX(0);
-  }
-
-  .pill-menu-button.active .hamburger-line:nth-child(3) {
-    transform: translateY(-6px) rotate(-45deg);
+    border: 1px solid var(--glass-border);
+    margin: 0 var(--space-md);
   }
 
   .mobile-nav {
     display: flex;
-    margin-top: var(--space-sm);
-    margin-left: var(--space-lg);
-    margin-right: var(--space-lg);
-    border-radius: var(--radius-xl);
-    background: var(--glass-bg);
-    backdrop-filter: blur(var(--blur-lg));
+    border-radius: 0 0 var(--radius-xl) var(--radius-xl);
+    margin: 0 var(--space-md);
     border: 1px solid var(--glass-border);
-  }
-
-  .mobile-nav.open {
-    padding: var(--space-lg);
+    border-top: none;
+    backdrop-filter: blur(20px);
   }
 
   .site-header {
-    background: transparent;
-    backdrop-filter: none;
-    padding: var(--space-xs) var(--space-sm);
+    padding: var(--space-sm) 0;
   }
 
-  .site-header.scrolled {
-    background: transparent;
-    backdrop-filter: none;
-    border-bottom: none;
-    box-shadow: none;
-    padding: var(--space-xs) var(--space-sm);
-  }
-
-  .hero-content {
-    grid-template-columns: 1fr;
-    text-align: center;
-    gap: var(--space-3xl);
-  }
-
-  .hero-tagline-pill {
-    justify-content: center;
-  }
-
-  .hero-subheadline {
-    max-width: 100%;
-    margin-left: auto;
-    margin-right: auto;
-  }
-
-  .hero-features {
-    justify-content: center;
-  }
-
-  .hero-cta-group {
-    justify-content: center;
-  }
-
-  .hero-seen-on {
-    align-items: center;
-  }
-
-  .seen-on-logos {
-    justify-content: center;
-  }
-
-  .hero-slider {
-    order: -1;
-    padding-top: 80px;
-  }
-
-  .hero-slider .before-after-gallery {
-    max-width: 400px;
-  }
-
-  .auto-posting-content {
-    grid-template-columns: 1fr;
-    text-align: center;
-  }
-
-  .auto-posting-features {
-    align-items: center;
-  }
-
-  /* Examples responsive */
-  .main-example-flow {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: var(--space-md);
-  }
-
-  .flow-arrow {
-    transform: rotate(90deg);
-    padding: 0;
-    margin-top: 0;
-  }
-
-  .flow-step-card {
-    width: 100%;
-    max-width: 500px;
+  .hero-section {
+    padding: var(--space-xl);
+    padding-top: calc(80px + var(--space-xl));
     min-height: auto;
   }
 
-  /* Slider responsive */
+  .hero-headline {
+    font-size: clamp(2rem, 8vw, 2.5rem);
+  }
+
+  .hero-features {
+    gap: var(--space-xs);
+  }
+
+  .hero-feature {
+    font-size: var(--text-xs);
+    padding: 3px var(--space-sm);
+  }
+
+  .hero-cta-group {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
   .comparison-slider {
     max-width: 100%;
   }
@@ -3332,135 +2443,41 @@ const benefits = [
     width: 60px;
     height: 60px;
   }
-}
 
-@media (max-width: 768px) {
-  .hero-section {
-    min-height: auto;
-    padding: var(--space-3xl) var(--space-lg);
+  .comparison-thumbnails {
+    gap: var(--space-sm);
   }
 
-  .hero-headline {
-    font-size: var(--text-4xl);
+  .lazarus-mascot-hero :deep(.lazarus-mascot-wrapper) {
+    width: 180px !important;
+    height: 180px !important;
   }
 
-  .hero-subheadline {
-    font-size: var(--text-lg);
-  }
-
-  .section-container {
-    padding: var(--space-3xl) var(--space-lg);
-  }
-
-  .section-title {
-    font-size: var(--text-3xl);
-  }
-
-  .benefits-grid {
+  .steps-grid {
     grid-template-columns: 1fr;
+    gap: var(--space-lg);
+  }
+
+  .features-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .waitlist-input-row {
+    flex-direction: column;
   }
 
   .pricing-preview {
     grid-template-columns: 1fr;
   }
-
-  .final-cta-title {
-    font-size: var(--text-3xl);
-  }
-
-  .final-cta-subtitle {
-    font-size: var(--text-lg);
-  }
 }
 
-@media (max-width: 480px) {
-  .hero-headline {
-    font-size: var(--text-3xl);
-  }
-
-  .image-placeholder {
-    min-height: 200px;
-    padding: var(--space-xl);
-  }
-}
-
-/* Animation */
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(30px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.hero-content,
-.benefit-card,
-.pricing-card {
-  animation: fadeInUp 0.6s var(--ease-smooth);
-  animation-fill-mode: both;
-}
-
-.benefit-card:nth-child(1) {
-  animation-delay: 0.1s;
-}
-.benefit-card:nth-child(2) {
-  animation-delay: 0.15s;
-}
-.benefit-card:nth-child(3) {
-  animation-delay: 0.2s;
-}
-.benefit-card:nth-child(4) {
-  animation-delay: 0.25s;
-}
-
+/* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
-  .hero-content,
-  .benefit-card,
-  .pricing-card,
-  .thumbnail-progress-fill,
-  .badge-progress-fill {
-    animation: none;
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
   }
-}
-
-/* ===== DARK THEME OVERRIDES ===== */
-:root[data-theme="dark"] .site-header.scrolled {
-  background: var(--surface-alpha-95);
-}
-
-
-:root[data-theme="dark"] .flow-step-card {
-  background: var(--bg-secondary);
-}
-
-:root[data-theme="dark"] .pricing-card {
-  background: var(--bg-secondary);
-}
-
-:root[data-theme="dark"] .pricing-card.featured {
-  background: var(--gradient-elevated);
-}
-
-:root[data-theme="dark"] .benefit-card {
-  background: var(--bg-secondary);
-}
-
-:root[data-theme="dark"] .final-cta-section {
-  background: var(--gradient-subtle);
-}
-
-:root[data-theme="dark"] .credit-display {
-  background: var(--accent-alpha-15);
-}
-
-:root[data-theme="dark"] .auto-posting-section {
-  background: linear-gradient(135deg, var(--accent-alpha-10) 0%, var(--accent-alpha-025) 100%);
-}
-
-:root[data-theme="dark"] .hamburger-line {
-  background: var(--text-primary);
 }
 </style>

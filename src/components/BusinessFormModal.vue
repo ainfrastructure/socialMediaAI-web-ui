@@ -1,0 +1,353 @@
+<script setup lang="ts">
+import { reactive, ref, computed, watch } from 'vue'
+import BaseModal from './BaseModal.vue'
+import BaseInput from './BaseInput.vue'
+import BaseButton from './BaseButton.vue'
+import BaseAlert from './BaseAlert.vue'
+import { useBusinessesStore } from '@/stores/businesses'
+import { businessService } from '@/services/businessService'
+import type { Business, BusinessType } from '@/services/businessService'
+import { BUSINESS_TYPE_OPTIONS } from '@/utils/businessTypes'
+
+const props = defineProps<{
+  modelValue: boolean
+  business?: Business | null
+}>()
+
+const emit = defineEmits<{
+  (e: 'update:modelValue', value: boolean): void
+  (e: 'saved'): void
+}>()
+
+const businessesStore = useBusinessesStore()
+const saving = ref(false)
+const error = ref('')
+const logoFile = ref<File | null>(null)
+const logoPreviewUrl = ref<string | null>(null)
+
+const isEdit = computed(() => !!props.business)
+
+const form = reactive({
+  name: '',
+  business_type: 'restaurant' as BusinessType,
+  description: '',
+  address: '',
+  phone_number: '',
+  website: '',
+  logo_url: '',
+  is_default: false,
+})
+
+function resetForm() {
+  form.name = ''
+  form.business_type = 'restaurant'
+  form.description = ''
+  form.address = ''
+  form.phone_number = ''
+  form.website = ''
+  form.logo_url = ''
+  form.is_default = false
+  logoFile.value = null
+  logoPreviewUrl.value = null
+}
+
+watch(
+  () => props.business,
+  (business) => {
+    if (business) {
+      form.name = business.name || ''
+      form.business_type = business.business_type
+      form.description = business.description || ''
+      form.address = business.address || ''
+      form.phone_number = business.phone_number || ''
+      form.website = business.website || ''
+      form.logo_url = business.logo_url || ''
+      logoPreviewUrl.value = business.logo_url || null
+      form.is_default = !!business.is_default
+    } else {
+      resetForm()
+    }
+  },
+  { immediate: true }
+)
+
+function handleLogoFileChange(event: Event) {
+  const input = event.target as HTMLInputElement
+  const file = input.files?.[0] || null
+  logoFile.value = file
+  logoPreviewUrl.value = file ? URL.createObjectURL(file) : null
+}
+
+function removeLogoFile() {
+  logoFile.value = null
+  logoPreviewUrl.value = form.logo_url || null
+}
+
+async function handleSubmit() {
+  error.value = ''
+
+  if (!form.name.trim()) {
+    error.value = 'Business name is required.'
+    return
+  }
+
+  saving.value = true
+
+  const payload = {
+    name: form.name.trim(),
+    business_type: form.business_type,
+    description: form.description?.trim() || null,
+    address: form.address?.trim() || null,
+    phone_number: form.phone_number?.trim() || null,
+    website: form.website?.trim() || null,
+    logo_url: form.logo_url?.trim() || null,
+    is_default: form.is_default,
+  }
+
+  try {
+    if (props.business) {
+      const updated = await businessesStore.updateBusiness(props.business.id, payload)
+      if (!updated) {
+        error.value = businessesStore.error || 'Failed to update business.'
+        return
+      }
+
+      if (logoFile.value) {
+        try {
+          const uploadResult = await businessService.uploadBusinessImages(props.business.id, [logoFile.value], 'logos')
+          const logoUrl = uploadResult.uploaded?.[0]?.url
+          if (logoUrl) {
+            const logoUpdated = await businessesStore.updateBusiness(props.business.id, {
+              logo_url: logoUrl,
+            })
+            if (!logoUpdated) {
+              error.value = 'Business saved but logo URL update failed.'
+              return
+            }
+          }
+        } catch (err: any) {
+          error.value = err.message || 'Business saved but logo upload failed.'
+          return
+        }
+      }
+    } else {
+      const created = await businessesStore.createBusiness(payload)
+      if (!created) {
+        error.value = businessesStore.error || 'Failed to create business.'
+        return
+      }
+
+      if (logoFile.value) {
+        try {
+          const uploadResult = await businessService.uploadBusinessImages(created.id, [logoFile.value], 'logos')
+          const logoUrl = uploadResult.uploaded?.[0]?.url
+          if (logoUrl) {
+            const logoUpdated = await businessesStore.updateBusiness(created.id, {
+              logo_url: logoUrl,
+            })
+            if (!logoUpdated) {
+              error.value = 'Business created but logo URL update failed.'
+              return
+            }
+          }
+        } catch (err: any) {
+          error.value = err.message || 'Business created but logo upload failed.'
+          return
+        }
+      }
+    }
+
+    emit('saved')
+    emit('update:modelValue', false)
+  } catch (err: any) {
+    error.value = err.message || 'Unable to save business.'
+  } finally {
+    saving.value = false
+  }
+}
+
+function handleClose() {
+  emit('update:modelValue', false)
+}
+</script>
+
+<template>
+  <BaseModal :model-value="modelValue" @update:model-value="emit('update:modelValue', $event)" size="lg">
+    <template #title>
+      {{ isEdit ? 'Edit Business' : 'Create Business' }}
+    </template>
+
+    <form @submit.prevent="handleSubmit" class="business-form">
+      <BaseInput
+        v-model="form.name"
+        label="Business name"
+        placeholder="e.g., Sven Group"
+        required
+      />
+
+      <div class="form-group">
+        <label class="form-label">Business type</label>
+        <select v-model="form.business_type" class="form-select">
+          <option
+            v-for="option in BUSINESS_TYPE_OPTIONS"
+            :key="option.value"
+            :value="option.value"
+          >
+            {{ option.label }}
+          </option>
+        </select>
+      </div>
+
+      <BaseInput
+        v-model="form.description"
+        type="textarea"
+        label="Description"
+        placeholder="Short summary about this business"
+      />
+
+      <BaseInput
+        v-model="form.address"
+        label="Address"
+        placeholder="123 Market St, City"
+      />
+
+      <BaseInput
+        v-model="form.phone_number"
+        label="Phone"
+        placeholder="+1 (555) 123-4567"
+      />
+
+      <BaseInput
+        v-model="form.website"
+        label="Website"
+        placeholder="https://yourbusiness.com"
+      />
+
+      <BaseInput
+        v-model="form.logo_url"
+        label="Logo URL"
+        placeholder="https://..."
+      />
+
+      <div class="form-group">
+        <label class="form-label">Logo Upload</label>
+        <div class="logo-upload">
+          <div v-if="logoPreviewUrl" class="logo-preview">
+            <img :src="logoPreviewUrl" alt="Logo preview" />
+          </div>
+          <div class="logo-actions">
+            <input type="file" accept="image/*" @change="handleLogoFileChange" />
+            <BaseButton v-if="logoFile" type="button" variant="ghost" size="small" @click="removeLogoFile">
+              Remove
+            </BaseButton>
+          </div>
+          <p class="logo-hint">Upload a square logo (PNG/JPG). This overrides the Logo URL.</p>
+        </div>
+      </div>
+
+      <label class="checkbox">
+        <input type="checkbox" v-model="form.is_default" />
+        <span>Make this my default business</span>
+      </label>
+
+      <BaseAlert v-if="error" type="error">{{ error }}</BaseAlert>
+
+      <div class="form-actions">
+        <BaseButton type="button" variant="ghost" @click="handleClose" :disabled="saving">
+          Cancel
+        </BaseButton>
+        <BaseButton type="submit" variant="primary" :disabled="saving">
+          {{ saving ? 'Saving...' : (isEdit ? 'Save changes' : 'Create business') }}
+        </BaseButton>
+      </div>
+    </form>
+  </BaseModal>
+</template>
+
+<style scoped>
+.business-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.form-label {
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  color: var(--text-secondary);
+  font-family: var(--font-body);
+}
+
+.form-select {
+  width: 100%;
+  padding: var(--space-md) var(--space-lg);
+  background: var(--bg-tertiary);
+  border: var(--border-width) solid var(--border-color);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-size: var(--text-base);
+  font-family: var(--font-body);
+  transition: var(--transition-base);
+}
+
+.logo-upload {
+  display: flex;
+  gap: var(--space-md);
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.logo-preview {
+  width: 72px;
+  height: 72px;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  border: 1px solid var(--border-color);
+  background: var(--bg-tertiary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.logo-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.logo-actions {
+  display: flex;
+  gap: var(--space-sm);
+  align-items: center;
+}
+
+.logo-hint {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+}
+
+.form-select:focus {
+  outline: none;
+  border-color: var(--gold-primary);
+  box-shadow: 0 0 0 3px var(--accent-alpha-12);
+}
+
+.checkbox {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  color: var(--text-secondary);
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-md);
+}
+</style>

@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { api } from '../services/api'
+import { usePreferencesStore } from '@/stores/preferences'
 import { debugLog } from '@/utils/debug'
 
 export interface TwitterAccount {
@@ -16,18 +17,23 @@ export const useTwitterStore = defineStore('twitter', () => {
   const connectedAccounts = ref<TwitterAccount[]>([])
   const loading = ref(false)
   const error = ref<string | null>(null)
+  const preferencesStore = usePreferencesStore()
 
   /**
    * Initialize Twitter OAuth flow with redirect
    * @param returnUrl - Optional URL to return to after OAuth completes
    */
-  async function connectTwitter(returnUrl?: string): Promise<void> {
+  async function connectTwitter(returnUrl?: string, businessId?: string): Promise<void> {
     loading.value = true
     error.value = null
 
     try {
+      const resolvedBusinessId = businessId || preferencesStore.selectedBusinessId || undefined
+      if (!resolvedBusinessId) {
+        throw new Error('Please select a business before connecting Twitter')
+      }
       // Step 1: Get authorization URL from backend
-      const initResponse = await api.initTwitterAuth()
+      const initResponse = await api.initTwitterAuth(resolvedBusinessId)
 
       if (!initResponse.success) {
         const errorMsg = initResponse.error || 'Failed to initialize Twitter authentication'
@@ -64,12 +70,13 @@ export const useTwitterStore = defineStore('twitter', () => {
   /**
    * Load user's connected Twitter accounts
    */
-  async function loadConnectedAccounts(): Promise<void> {
+  async function loadConnectedAccounts(businessId?: string): Promise<void> {
     loading.value = true
     error.value = null
 
     try {
-      const response = await api.getTwitterAccounts()
+      const resolvedBusinessId = businessId || preferencesStore.selectedBusinessId || undefined
+      const response = await api.getTwitterAccounts(resolvedBusinessId)
 
       if (!response.success) {
         throw new Error(response.error || 'Failed to load connected accounts')
@@ -86,12 +93,13 @@ export const useTwitterStore = defineStore('twitter', () => {
   /**
    * Disconnect a Twitter account
    */
-  async function disconnectAccount(accountId: string): Promise<void> {
+  async function disconnectAccount(accountId: string, businessId?: string): Promise<void> {
     loading.value = true
     error.value = null
 
     try {
-      const response = await api.disconnectTwitterAccount(accountId)
+      const resolvedBusinessId = businessId || preferencesStore.selectedBusinessId || undefined
+      const response = await api.disconnectTwitterAccount(accountId, resolvedBusinessId)
 
       if (!response.success) {
         throw new Error(response.error || 'Failed to disconnect account')

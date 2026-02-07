@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, watch, computed } from 'vue'
+import MaterialIcon from './MaterialIcon.vue'
 
 interface Props {
   modelValue: { hours: number; minutes: number }
@@ -100,9 +101,7 @@ const handleMinutesInput = (event: Event) => {
         @click="incrementHours"
         aria-label="Increase hours"
       >
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <polyline points="18 15 12 9 6 15"></polyline>
-        </svg>
+        <MaterialIcon icon="keyboard_arrow_up" size="sm" />
       </button>
       <input
         type="number"
@@ -121,9 +120,7 @@ const handleMinutesInput = (event: Event) => {
         @click="decrementHours"
         aria-label="Decrease hours"
       >
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <polyline points="6 9 12 15 18 9"></polyline>
-        </svg>
+        <MaterialIcon icon="keyboard_arrow_down" size="sm" />
       </button>
     </div>
 
@@ -138,9 +135,7 @@ const handleMinutesInput = (event: Event) => {
         @click="incrementMinutes"
         aria-label="Increase minutes"
       >
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <polyline points="18 15 12 9 6 15"></polyline>
-        </svg>
+        <MaterialIcon icon="keyboard_arrow_up" size="sm" />
       </button>
       <input
         type="number"
@@ -159,9 +154,7 @@ const handleMinutesInput = (event: Event) => {
         @click="decrementMinutes"
         aria-label="Decrease minutes"
       >
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <polyline points="6 9 12 15 18 9"></polyline>
-        </svg>
+        <MaterialIcon icon="keyboard_arrow_down" size="sm" />
       </button>
     </div>
   </div>
@@ -187,24 +180,19 @@ const handleMinutesInput = (event: Event) => {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 44px;
-  height: 36px;
-  background: rgba(212, 175, 55, 0.1);
-  border: 1px solid rgba(212, 175, 55, 0.3);
-  border-radius: var(--radius-sm);
+  width: 52px;
+  height: 44px;
+  background: var(--gold-subtle, rgba(15, 61, 46, 0.06));
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
   color: var(--gold-primary);
   cursor: pointer;
   transition: var(--transition-fast);
   -webkit-tap-highlight-color: transparent;
 }
 
-.time-btn svg {
-  width: 18px;
-  height: 18px;
-}
-
 .time-btn:hover {
-  background: rgba(212, 175, 55, 0.2);
+  background: rgba(26, 77, 58, 0.12);
   border-color: var(--gold-primary);
 }
 
@@ -215,14 +203,14 @@ const handleMinutesInput = (event: Event) => {
 }
 
 .time-input {
-  width: 56px;
-  height: 52px;
-  background: rgba(212, 175, 55, 0.15);
-  border: 1px solid rgba(212, 175, 55, 0.4);
-  border-radius: var(--radius-md);
+  width: 68px;
+  height: 60px;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
   color: var(--text-primary);
   font-family: var(--font-heading);
-  font-size: var(--text-2xl);
+  font-size: var(--text-3xl);
   font-weight: var(--font-bold);
   text-align: center;
   -moz-appearance: textfield;
@@ -238,8 +226,8 @@ const handleMinutesInput = (event: Event) => {
 .time-input:focus {
   outline: none;
   border-color: var(--gold-primary);
-  background: rgba(212, 175, 55, 0.25);
-  box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.2);
+  background: rgba(26, 77, 58, 0.08);
+  box-shadow: 0 0 0 3px rgba(26, 77, 58, 0.15);
 }
 
 .time-separator {
@@ -248,5 +236,11 @@ const handleMinutesInput = (event: Event) => {
   font-weight: var(--font-bold);
   color: var(--gold-primary);
   padding-bottom: var(--space-sm);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .time-btn {
+    transition-duration: 0.01ms !important;
+  }
 }
 </style>

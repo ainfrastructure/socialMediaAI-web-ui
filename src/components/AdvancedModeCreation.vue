@@ -30,6 +30,7 @@ import GoldenImageIcon from './icons/GoldenImageIcon.vue'
 import GoldenVideoIcon from './icons/GoldenVideoIcon.vue'
 import { ImageSourceSelector, SectionLabel, ContentDivider } from './creation'
 import { restaurantService, type SavedRestaurant } from '@/services/restaurantService'
+import type { Business } from '@/services/businessService'
 import { api } from '@/services/api'
 import { okamService } from '@/services/okamService'
 import { useFacebookStore } from '@/stores/facebook'
@@ -90,6 +91,7 @@ interface WeeklyCustomizationOptions {
 // Using centralized prompt configuration from src/config/promptModifiers.ts
 
 const props = defineProps<{
+  business?: Business
   restaurant: SavedRestaurant
   menuItems: MenuItem[]
   initialScheduleDate?: string // Format: YYYY-MM-DD, pre-fills schedule date
@@ -124,6 +126,7 @@ const emit = defineEmits<{
     publishNow?: boolean
     scheduledTime?: string
     timezone?: string
+    accountSelections?: Record<string, any>
     onResult?: (result: { success: boolean; postUrls?: Record<string, string>; error?: string }) => void
   }): void
 }>()
@@ -1084,6 +1087,7 @@ async function handleUnifiedPublish(data: {
   scheduledDate?: string
   scheduledTime?: string
   timezone?: string
+  accountSelections?: Record<string, any>
 }) {
   publishing.value = true
   publishError.value = ''
@@ -1127,6 +1131,7 @@ async function handleUnifiedPublish(data: {
         publishNow: data.publishType === 'now',
         scheduledTime: scheduledTime,
         timezone: data.timezone,
+        accountSelections: data.accountSelections,
         onResult: resolve
       })
 
@@ -1299,7 +1304,7 @@ defineExpose({
         <div class="image-upload-section">
           <SectionLabel :label="t('advancedMode.step1.uploadTitle')" />
           <ImageSourceSelector
-            :restaurant="restaurant"
+            :entity="props.business || restaurant"
             :preview-url="uploadedImagePreview"
             @select="handleImageUploadFile"
             @remove="removeUploadedImage"
@@ -1958,6 +1963,7 @@ defineExpose({
             :show-cancel-button="false"
             :initial-schedule-date="props.initialScheduleDate"
             :lock-date="props.lockDate"
+            :business-id="props.business?.id"
             @publish="handleUnifiedPublish"
           />
         </div>

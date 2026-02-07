@@ -21,6 +21,7 @@ export interface MenuCategory {
 export interface SavedRestaurant {
   id: string
   user_id: string
+  business_id?: string | null
   place_id: string | null
   is_manual?: boolean
   name: string
@@ -62,6 +63,7 @@ export interface SavedRestaurant {
 }
 
 export interface CreateManualRestaurantData {
+  business_id?: string | null
   name: string
   address: string
   phone_number?: string
@@ -95,6 +97,7 @@ export interface CategorizedImages {
 }
 
 export interface SaveRestaurantData {
+  business_id?: string | null
   place_id: string
   name: string
   address: string

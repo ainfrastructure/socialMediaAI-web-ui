@@ -4,7 +4,8 @@ export default {
     login: 'Login',
     getStarted: 'Get Started',
     pricing: 'Pricing',
-    howItWorks: 'How it works',
+    howItWorks: 'How It Works',
+    features: 'Features',
     joinWaitlist: 'Join Waitlist'
   },
 
@@ -59,6 +60,7 @@ export default {
     language: 'Language',
     allRightsReserved: 'All rights reserved.',
     dashboard: 'Dashboard',
+    posts: 'Posts',
   },
 
   // Platforms
@@ -100,20 +102,20 @@ export default {
 
   // Waitlist Landing Page
   waitlist: {
-    headline: "Your restaurant's automated social media manager",
+    headline: 'Let Lazarus handle your social media',
     subheadline:
-      "Create stunning food content, schedule posts, and grow your restaurant's presence—all with AI.",
+      'AI-powered content creation, scheduling, and publishing—all on autopilot.',
     emailPlaceholder: 'Enter your email',
     joinButton: 'Join the Waitlist',
     joining: 'Joining...',
     successTitle: "You're on the list!",
-    successMessage: "We'll notify you when Social Chef launches.",
+    successMessage: "We'll notify you when SocialChef launches.",
     alreadyOnList: 'This email is already on the waitlist',
     invalidEmail: 'Please enter a valid email address',
     error: 'Something went wrong. Please try again.',
     loginLink: 'Already have an account?',
     loginLinkText: 'Sign in',
-    socialProof: 'Join {count}+ restaurants on the waitlist',
+    socialProof: 'Join {count}+ businesses on the waitlist',
     finalCta: {
       title: 'Be the First to Know',
       subtitle: 'Join the waitlist and get early access when we launch.'
@@ -124,20 +126,19 @@ export default {
   landing: {
     // Hero Section
     hero: {
-      tagline: 'AI-Powered Social Media for Restaurants',
-      headlinePart1: 'The most powerful &',
-      headlinePart2: 'effortless AI content',
-      headlinePart3: 'generator for restaurants',
-      subheadline: 'Get stunning social media posts that publish themselves. No photographer, no designer, no tech skills needed.',
+      tagline: 'AI-Powered Social Media Agent',
+      headlinePart1: 'Your personal AI',
+      headlinePart2: 'social media manager',
+      headlinePart3: 'that never sleeps',
+      subheadline: 'Meet Lazarus — your tireless AI agent that creates content, schedules posts, and publishes across all your platforms automatically.',
       cta: 'Get started now',
       ctaSecondary: 'See how it works',
-      seenOn: 'As seen on:',
       features: {
-        images: 'Generate images',
-        videos: 'Create videos',
-        posts: 'Write posts',
-        publish: 'Auto-publish',
-        analytics: 'Track analytics'
+        aiContent: 'AI Content',
+        scheduling: 'Auto-Scheduling',
+        multiPlatform: 'Multi-Platform',
+        analytics: 'Analytics',
+        mobileApp: 'Mobile App'
       }
     },
 
@@ -146,89 +147,100 @@ export default {
       goToDashboard: 'Go to Dashboard'
     },
 
-    // How It Works Showcase Section
-    examples: {
-      title: 'How It Works',
-      subtitle: 'From your phone to professional posts in seconds',
-      originalPhoto: 'Your Photo',
-      originalLabel: 'Original',
-      aiGenerated: 'SocialChef Enhanced',
-      flow: {
-        step1Title: 'Upload Your Photo',
-        step1Description: 'Take a photo of your dish with your phone. No professional camera needed.',
-        step2Title: 'SocialChef Creates Multiple Versions',
-        step2Description: 'SocialChef generates beautiful variations in different styles, each with engaging captions.',
-        step3Title: 'Approve & Publish',
-        step3Description: 'Choose your favorite version and it gets published automatically to Facebook and Instagram.'
-      },
-      gallery: {
-        before: 'Before',
-        after: 'After'
-      },
-      templates: {
-        behindTheScenes: 'Behind the Scenes',
-        studioShot: 'Studio Shot',
-        oneBite: 'One Bite',
-        zoomIn: 'Zoom In',
-        cleanStrict: 'Clean Strict',
-        infographic: 'Infographic',
-        custom: 'Custom',
-        andMore: 'And many more...'
-      }
+    // Lazarus Chat (phone mockup)
+    lazarusChat: {
+      online: 'Online',
+      suggestion: "I've created a new post for your brand. Here's what I came up with:",
+      caption: '"Exciting news! Our latest collection just dropped..."',
+      scheduled: 'Scheduled for tomorrow, 9:00 AM',
+      userResponse: 'Looks great! Approve it.',
+      confirmation: 'Done! Publishing to Facebook, Instagram, and LinkedIn at 9:00 AM tomorrow.',
+      approve: 'Approve & Publish'
     },
 
-    // How It Works
+    // Meet Lazarus Section
+    meetLazarus: {
+      title: 'Meet Lazarus',
+      subtitle: 'Your tireless social media assistant',
+      description: 'Lazarus is your AI-powered social media agent. It learns your brand voice, creates engaging content, and publishes at the optimal times — so you can focus on running your business.',
+      nameOrigin: 'Named after the Hebrew meaning "God has helped" — because managing social media shouldn\'t be a one-person battle.',
+      feature1Title: 'Always Learning',
+      feature1Desc: 'Lazarus studies your brand, audience, and what works — getting smarter with every post.',
+      feature2Title: 'Suggests & Creates',
+      feature2Desc: 'From captions to images, Lazarus drafts complete posts ready for your approval.',
+      feature3Title: 'Publishes Automatically',
+      feature3Desc: 'Approved content goes live on schedule across all your connected platforms.'
+    },
+
+    // How It Works (3 steps)
     howItWorks: {
-      comingSoon: 'Soon'
+      title: 'How It Works',
+      subtitle: 'From setup to autopilot in three simple steps',
+      step1Title: 'Connect Your Accounts',
+      step1Desc: 'Link your social media platforms in under 5 minutes. Facebook, Instagram, LinkedIn, and more.',
+      step2Title: 'Lazarus Creates Content',
+      step2Desc: 'Our AI agent generates posts tailored to your brand voice, complete with images and captions.',
+      step3Title: 'Approve & Go',
+      step3Desc: 'Review suggestions, tap approve, and Lazarus handles the rest. One tap on mobile is all it takes.',
     },
 
-    // Auto-Posting Feature (KEY DIFFERENTIATOR)
-    autoPosting: {
-      badge: 'Key Feature',
-      title: 'Set It & Forget It',
-      headline: 'Your posts publish automatically. Really.',
-      description: "No more remembering to post. No more logging into apps. SocialChef handles everything - from creation to publishing. You'll look like you have a dedicated social media manager.",
-      feature1: 'Posts go live while you cook',
-      feature2: 'Works with Instagram & Facebook',
-      feature3: 'Schedule weeks in advance'
-    },
-
-    // Benefits
-    benefits: {
-      title: 'Why Restaurant Owners Love SocialChef',
-      time: {
-        title: 'Save Countless Hours Per Week',
-        description: 'Stop wrestling with content creation. Spend that time on what matters - your food and customers.'
+    // Features Grid (6 cards)
+    features: {
+      title: 'Everything You Need',
+      subtitle: 'Powerful features to automate your social media presence',
+      aiContent: {
+        title: 'AI Content Generation',
+        desc: 'Lazarus creates engaging posts, captions, and images tailored to your brand.'
       },
-      professional: {
-        title: 'Always Look Professional',
-        description:
-          'Every post looks like it was made by a pro designer. Because it was. An AI one.'
+      scheduling: {
+        title: 'Smart Scheduling',
+        desc: 'Posts go live at the perfect time based on when your audience is most active.'
       },
-      growth: {
-        title: 'Grow Your Following',
-        description:
-          'Consistent posting means more engagement. More engagement means more customers.'
+      platforms: {
+        title: 'All Platforms, One Place',
+        desc: 'Manage Facebook, Instagram, LinkedIn, TikTok, and X from a single dashboard.'
       },
-      easy: {
-        title: 'No Tech Skills Needed',
-        description:
-          "If you can take a photo of food, you can use SocialChef. That's the whole skill requirement."
+      mobile: {
+        title: 'Mobile App',
+        desc: 'Approve posts, review analytics, and manage your brand on the go.'
+      },
+      analyticsCard: {
+        title: 'Performance Analytics',
+        desc: 'Track engagement, growth, and post performance with clear, actionable insights.'
+      },
+      brandVoice: {
+        title: 'Your Brand Voice',
+        desc: 'Lazarus learns your tone and style to create content that sounds authentically you.'
       }
     },
 
-    // Social Proof
+    // Real Results
+    results: {
+      title: 'Real Results',
+      subtitle: 'See what Lazarus can do with your content',
+      before: 'Original',
+      after: 'Enhanced'
+    },
+
+    // Mobile App Showcase
+    mobileApp: {
+      title: 'Manage Everything From Your Phone',
+      subtitle: 'The SocialChef mobile experience puts you in control wherever you are.',
+      feature1: 'One-tap approval for suggested posts',
+      feature2: 'Real-time notifications when posts go live',
+      feature3: 'Quick content review and editing'
+    },
 
     // Pricing Preview
     pricing: {
       title: 'Simple, Honest Pricing',
-      subtitle: 'Start today. Cancel anytime.'
+      subtitle: 'Unlock Lazarus and automate your social media.'
     },
 
     // Final CTA
     finalCta: {
-      title: 'Ready to Fire Your Social Media Worries?',
-      subtitle: 'Join hundreds of restaurant owners who stopped stressing about social media.'
+      title: 'Ready to Put Your Social Media on Autopilot?',
+      subtitle: 'Let Lazarus handle the content. You handle the business.'
     },
 
     // Login Modal
@@ -246,7 +258,7 @@ export default {
 
     // Footer
     footer: {
-      madeWith: 'Made with love for restaurant owners',
+      madeWith: 'Made with AI for modern businesses',
       copyright: '© 2025 SocialChef. All rights reserved.'
     }
   },
@@ -272,9 +284,6 @@ export default {
     // Social platforms
 
     // Platform descriptions
-
-    // Connection status
-    connect: 'Connect',
 
     // Account overview
   },
@@ -543,6 +552,67 @@ export default {
       }
     },
 
+    styleTemplatesResort: {
+      resortSunset: {
+        name: 'Golden Hour Escape',
+        description: 'Sunset, ocean glow, calm luxury',
+        preview: 'Use the reference photo composition with warm sunset ambience'
+      },
+      resortPool: {
+        name: 'Poolside Paradise',
+        description: 'Crystal water, cabanas, chill',
+        preview: 'Keep the exact layout; add premium poolside atmosphere'
+      },
+      resortSuite: {
+        name: 'Suite Showcase',
+        description: 'Elegant room, soft light, details',
+        preview: 'Match the reference image while elevating the suite mood'
+      }
+    },
+    styleTemplatesGeneral: {
+      behindTheScenes: {
+        name: 'Behind the Brand',
+        description: 'Team, process, culture',
+        preview: 'Authentic documentary vibe (works for images & videos)'
+      },
+      cleanStrict: {
+        name: 'Clean Product',
+        description: 'Studio-style clarity',
+        preview: 'Crisp lighting, minimal distractions (works for images & videos)'
+      },
+      zoomIn: {
+        name: 'Detail Close-up',
+        description: 'Texture & craftsmanship',
+        preview: 'Macro focus on details (works for images & videos)'
+      },
+      oneBite: {
+        name: 'In Use',
+        description: 'Real-world moment',
+        preview: 'Product or service in action (works for images & videos)'
+      },
+      studioShot: {
+        name: 'Hero Shot',
+        description: 'Flagship visual',
+        preview: 'Premium, polished showcase (works for images & videos)'
+      },
+      infographic: {
+        name: 'Explainer',
+        description: 'Steps or features',
+        preview: 'Simple breakdown or labels (works for images & videos)'
+      },
+      placeOnTable: {
+        name: 'Reveal Moment',
+        description: 'Unboxing/arrival',
+        preview: 'Hands place item into scene (VIDEO ONLY)'
+      },
+      custom: {
+        name: 'Custom',
+        description: 'Write your own prompt',
+        preview: 'Full creative control (works for images & videos)'
+      }
+    },
+
+
     // Additional messages
   },
 
@@ -568,6 +638,7 @@ export default {
       subtitle: 'Choose style, add promotions, and branding',
       styleLabel: 'Visual Style',
       customPromptPlaceholder: 'Describe how you want your dish photographed...',
+      customPromptGenericPlaceholder: 'Describe how you want the scene captured...',
       mediaTypeLabel: 'Media Type',
       imageOption: 'Image',
       videoOption: 'Video',
@@ -855,7 +926,24 @@ export default {
     confirmDisconnect: 'Are you sure you want to disconnect "{name}"?',
     confirmDisconnectAll: 'Are you sure you want to disconnect all {count} {platform} accounts?',
     disconnectTitle: 'Disconnect Account',
-    disconnectAllTitle: 'Disconnect All Accounts'
+    disconnectAllTitle: 'Disconnect All Accounts',
+    activeBusiness: 'Active Business',
+    selectABusiness: 'Select a business',
+    switchBusiness: 'Switch Business',
+    manageAll: 'Manage All',
+    businessCount: '{current} of {total} businesses',
+    connectedPlatforms: 'Connected Platforms',
+    platformsFor: 'Accounts connected for {name}',
+    chooseBusiness: 'Choose a business to manage connected accounts.',
+    totalConnections: 'Total Connections',
+    facebookPagesCount: 'Facebook Pages',
+    instagramAccountsCount: 'Instagram Accounts',
+    instagramBusiness: 'Instagram Business',
+    notConnected: 'Not connected',
+    manage: 'Manage',
+    manageBusinesses: 'Manage businesses',
+    noBusinessSelected: 'No business selected',
+    selectBusinessFirst: 'Please select a business to manage connected accounts.'
   },
 
   // Scheduler View
@@ -870,7 +958,8 @@ export default {
     publishedAt: 'Published At',
     viewPost: 'View Post',
     viewOn: 'View on',
-    restaurant: 'Restaurant',
+    restaurant: 'Business',
+    restaurants: 'Businesses',
     caption: 'Caption',
     edit: 'Edit',
     cancelPost: 'Cancel Post',
@@ -888,7 +977,11 @@ export default {
     retrySuccess: 'Post queued for retry',
     retryError: 'Failed to retry post',
     partial: 'Partially Published',
-    overdue: 'Overdue'
+    overdue: 'Overdue',
+    selectedDay: 'Selected Day',
+    upcoming: 'Upcoming',
+    resetFilters: 'Reset',
+    filters: 'Filters'
   },
 
   // Edit Scheduled Post Modal
@@ -951,11 +1044,14 @@ export default {
     sortOldest: 'Oldest First',
     // Welcome state for new users
     welcomeTitle: 'Welcome!',
-    welcomeSubtitle: "Let's get started by adding your first restaurant.",
+    welcomeSubtitle: "Let's get started by adding your first business.",
     addFirstRestaurant: 'Add Your First Restaurant',
     addFirstRestaurantDescription:
       "Search for your restaurant and we'll automatically import your menu and branding.",
-    noRestaurantPrompt: 'Add a restaurant to start creating posts.',
+    addFirstBusiness: 'Add Your First Business',
+    addFirstBusinessDescription: 'Create a business to start organizing your content and accounts.',
+    manageBusinesses: 'Manage Businesses',
+    noRestaurantPrompt: 'Add a business to start creating posts.',
     createPost: 'Create Post'
   },
 
@@ -1314,9 +1410,9 @@ export default {
 
   // Pick Post Modal
   pickPostModal: {
-    showAllRestaurants: 'Show all restaurants',
-    showCurrentRestaurant: 'Show current restaurant only',
-    allRestaurantsLabel: 'All Restaurants',
+    showAllRestaurants: 'Show all businesses',
+    showCurrentRestaurant: 'Show current business only',
+    allRestaurantsLabel: 'All Businesses',
     videoLabel: 'VIDEO'
   },
 
@@ -1442,19 +1538,15 @@ export default {
 
   // New Dashboard Elements
   dashboardNew: {
-    settings: 'Settings',
     recentPosts: 'Recent Posts',
     viewAll: 'View All',
     viewCalendar: 'View Calendar',
     manageSaved: 'Manage Saved',
-    openSettings: 'Open Settings',
     noRecentPosts: 'No posts yet',
     createFirstPost: 'Create Your First Post',
     post: 'Post',
     status: 'Status',
     platforms: 'Platforms',
-    activeCount: 'Active',
-    allRestaurants: 'All Restaurants',
     restaurant: 'Restaurant',
     published: 'Published',
     scheduled: 'Scheduled',
@@ -1462,10 +1554,6 @@ export default {
     partial: 'Partially Published',
     cancelled: 'Cancelled',
     draft: 'Draft',
-    creditsLeft: 'credits left',
-    tierLifetimeDesc: 'Unlimited access forever',
-    tierYearlyDesc: 'Best value, billed annually',
-    tierMonthlyDesc: 'Flexible monthly billing'
   },
 
   // Privacy Policy
@@ -1818,7 +1906,7 @@ export default {
     creditsUsed: 'Credits Used',
     used: 'used',
     subscription: 'Subscription',
-    restaurants: 'Restaurants',
+    restaurants: 'Businesses',
 
     // Recent Activity
     recentActivity: 'Recent Activity',
@@ -1832,7 +1920,7 @@ export default {
     // Table headers
     post: 'Post',
     platforms: 'Platforms',
-    restaurant: 'Restaurant',
+    restaurant: 'Business',
     status: 'Status',
     date: 'Date',
     links: 'Links',
@@ -1914,7 +2002,32 @@ export default {
     engagementError: 'Error loading engagement data. Please check console for details.',
     refreshSuccess: 'Successfully refreshed {count} post',
     refreshFailed: 'Failed to refresh engagement data. The backend may not be syncing from social platforms yet.',
-    refreshError: 'Error refreshing engagement data'
+    refreshError: 'Error refreshing engagement data',
+
+    // Trends
+    trendUp: '↑ {percent}%',
+    trendDown: '↓ {percent}%',
+    trendFlat: '—',
+    vsPreviousPeriod: 'vs previous period',
+
+    // Skeleton / Loading
+    loadingAnalytics: 'Loading analytics...',
+
+    // Business selector
+    businessSelectorTitle: 'Business',
+    businessSelectorDesc: 'Analytics are scoped to the selected business.',
+    selectBusiness: 'Select a business',
+    manageBusinesses: 'Manage businesses',
+    noBusinessesYet: 'No businesses yet.',
+    createToStart: 'Create one to start tracking analytics.',
+    activeBusiness: 'Active:',
+
+    // Engagement sync banner
+    engagementSyncing: 'Engagement data is still syncing from social platforms. This may take a few minutes.',
+
+    // Charts section
+    detailedBreakdown: 'Detailed Breakdown',
+    chartsAndDistributions: 'Charts, distributions, and usage insights',
   },
 
   // Referral Program
@@ -1994,6 +2107,33 @@ export default {
     codeInactive: 'This referral code is no longer active'
   },
 
+  // Dashboard Redesign
+  dashboardRedesign: {
+    goodMorning: 'Good morning, {name}',
+    goodAfternoon: 'Good afternoon, {name}',
+    goodEvening: 'Good evening, {name}',
+    heroSubtitle: "Here's what's happening with your content today.",
+    createContent: 'Create Content',
+    totalPosts: 'Total Posts',
+    scheduledLabel: 'Scheduled',
+    savedContent: 'Saved Content',
+    creditsLabel: 'Credits Left',
+    upcomingPosts: 'Upcoming Posts',
+    viewCalendar: 'View Calendar',
+    noUpcomingTitle: 'No upcoming posts',
+    noUpcomingDesc: 'Schedule your first post to see it here.',
+    scheduleFirst: 'Schedule a Post',
+    today: 'Today',
+    tomorrow: 'Tomorrow',
+    untitledPost: 'Untitled Post',
+    recentActivity: 'Recent Activity',
+    viewAllPosts: 'View All Posts',
+    noActivityTitle: 'No posts yet',
+    noActivityDesc: 'Create your first post to get started.',
+    engagementSnapshot: 'Engagement Snapshot',
+    viewAnalytics: 'View Analytics',
+  },
+
   // Post Type Selection
   postType: {
     label: 'Post Type',
@@ -2009,5 +2149,14 @@ export default {
     carouselDesc: '2-10 images/videos',
     notSet: 'Not Set',
     multiple: '{count} types'
+  },
+  businesses: {
+    title: 'Your Portfolio',
+    subtitle: 'Manage and organize the businesses in your portfolio.',
+    addBusiness: 'Add Business',
+    noBusiness: 'No businesses yet',
+    addFirst: 'Add your first business to start connecting accounts.',
+    addFirstBusiness: 'Add Your First Business',
+    photos: 'Photos'
   }
 }

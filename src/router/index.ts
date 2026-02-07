@@ -17,6 +17,7 @@ const TestPostView = () => import('../views/TestPostView.vue')
 const SchedulerView = () => import('../views/SchedulerView.vue')
 const ProfileView = () => import('../views/ProfileView.vue')
 const RestaurantsView = () => import('../views/RestaurantsView.vue')
+const BusinessesView = () => import('../views/BusinessesView.vue')
 const PostsView = () => import('../views/PostsView.vue')
 const PostsCreateView = () => import('../views/PostsCreateView.vue')
 const PrivacyPolicyView = () => import('../views/PrivacyPolicyView.vue')
@@ -177,6 +178,12 @@ const router = createRouter({
       path: '/restaurants',
       name: 'restaurants',
       component: RestaurantsView,
+      meta: { requiresAuth: true, requiresSubscription: true },
+    },
+    {
+      path: '/businesses',
+      name: 'businesses',
+      component: BusinessesView,
       meta: { requiresAuth: true, requiresSubscription: true },
     },
     {

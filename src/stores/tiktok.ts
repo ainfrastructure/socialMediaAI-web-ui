@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { api } from '../services/api'
+import { usePreferencesStore } from '@/stores/preferences'
 import { debugLog } from '@/utils/debug'
 
 export interface TikTokAccount {
@@ -16,18 +17,23 @@ export const useTikTokStore = defineStore('tiktok', () => {
   const connectedAccounts = ref<TikTokAccount[]>([])
   const loading = ref(false)
   const error = ref<string | null>(null)
+  const preferencesStore = usePreferencesStore()
 
   /**
    * Initialize TikTok OAuth flow with redirect
    * @param returnUrl - Optional URL to return to after OAuth completes
    */
-  async function connectTikTok(returnUrl?: string): Promise<void> {
+  async function connectTikTok(returnUrl?: string, businessId?: string): Promise<void> {
     loading.value = true
     error.value = null
 
     try {
+      const resolvedBusinessId = businessId || preferencesStore.selectedBusinessId || undefined
+      if (!resolvedBusinessId) {
+        throw new Error('Please select a business before connecting TikTok')
+      }
       // Step 1: Get authorization URL from backend
-      const initResponse = await api.initTikTokAuth()
+      const initResponse = await api.initTikTokAuth(resolvedBusinessId)
 
       if (!initResponse.success) {
         const errorMsg = initResponse.error || 'Failed to initialize TikTok authentication'
@@ -64,12 +70,13 @@ export const useTikTokStore = defineStore('tiktok', () => {
   /**
    * Load user's connected TikTok accounts
    */
-  async function loadConnectedAccounts(): Promise<void> {
+  async function loadConnectedAccounts(businessId?: string): Promise<void> {
     loading.value = true
     error.value = null
 
     try {
-      const response = await api.getTikTokAccounts()
+      const resolvedBusinessId = businessId || preferencesStore.selectedBusinessId || undefined
+      const response = await api.getTikTokAccounts(resolvedBusinessId)
 
       if (!response.success) {
         throw new Error(response.error || 'Failed to load connected accounts')
@@ -86,12 +93,13 @@ export const useTikTokStore = defineStore('tiktok', () => {
   /**
    * Disconnect a TikTok account
    */
-  async function disconnectAccount(accountId: string): Promise<void> {
+  async function disconnectAccount(accountId: string, businessId?: string): Promise<void> {
     loading.value = true
     error.value = null
 
     try {
-      const response = await api.disconnectTikTokAccount(accountId)
+      const resolvedBusinessId = businessId || preferencesStore.selectedBusinessId || undefined
+      const response = await api.disconnectTikTokAccount(accountId, resolvedBusinessId)
 
       if (!response.success) {
         throw new Error(response.error || 'Failed to disconnect account')

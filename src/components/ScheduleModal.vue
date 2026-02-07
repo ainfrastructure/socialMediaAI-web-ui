@@ -246,6 +246,8 @@ const handleUnifiedPublish = async (data: {
           // Post to each selected page
           for (const pageSelection of selectedPages) {
             const pageId = typeof pageSelection === 'string' ? pageSelection : pageSelection.accountId
+            const postType = (typeof pageSelection === 'object' ? pageSelection.postType : undefined) || 'feed'
+            const carouselItems = typeof pageSelection === 'object' ? pageSelection.carouselItems : undefined
             const selectedPage = facebookStore.connectedPages.find(p => p.pageId === pageId)
             if (!selectedPage) {
               warnLog(`Facebook page with ID ${pageId} not found in connected pages`)
@@ -257,12 +259,15 @@ const handleUnifiedPublish = async (data: {
               const hasVideo = !!props.favoritePost.video_url
               const isVideo = hasVideo || props.favoritePost.content_type === 'video'
               const videoUrl = props.favoritePost.video_url || props.favoritePost.media_url
+              const isCarousel = postType === 'carousel'
               const response = await api.postToFacebook(
                 selectedPage.pageId,
                 message,
-                isVideo ? undefined : props.favoritePost.media_url,
-                isVideo ? videoUrl : undefined,
-                isVideo ? 'video' : 'image'
+                isCarousel ? undefined : (isVideo ? undefined : props.favoritePost.media_url),
+                isCarousel ? undefined : (isVideo ? videoUrl : undefined),
+                isVideo ? 'video' : 'image',
+                postType as 'feed' | 'story' | 'reel' | 'carousel',
+                carouselItems
               )
 
               const postUrl = (response as any).postUrl || response.data?.postUrl
@@ -311,6 +316,8 @@ const handleUnifiedPublish = async (data: {
           // Post to each selected account
           for (const accountSelection of selectedAccounts) {
             const accountId = typeof accountSelection === 'string' ? accountSelection : accountSelection.accountId
+            const igPostType = (typeof accountSelection === 'object' ? accountSelection.postType : undefined) || 'feed'
+            const igCarouselItems = typeof accountSelection === 'object' ? accountSelection.carouselItems : undefined
             const selectedAccount = instagramStore.connectedAccounts.find(a => a.instagramAccountId === accountId)
             if (!selectedAccount) {
               warnLog(`Instagram account with ID ${accountId} not found in connected accounts`)
@@ -322,12 +329,15 @@ const handleUnifiedPublish = async (data: {
               const hasVideo = !!props.favoritePost.video_url
               const isVideo = hasVideo || props.favoritePost.content_type === 'video'
               const videoUrl = props.favoritePost.video_url || props.favoritePost.media_url
+              const isCarousel = igPostType === 'carousel'
               const response = await api.postToInstagram(
                 selectedAccount.instagramAccountId,
                 message,
-                isVideo ? undefined : props.favoritePost.media_url,
-                isVideo ? videoUrl : undefined,
-                isVideo ? 'video' : 'image'
+                isCarousel ? undefined : (isVideo ? undefined : props.favoritePost.media_url),
+                isCarousel ? undefined : (isVideo ? videoUrl : undefined),
+                isVideo ? 'video' : 'image',
+                igPostType as 'feed' | 'story' | 'reel' | 'carousel',
+                igCarouselItems
               )
 
               const postUrl = (response as any).postUrl || response.data?.postUrl
