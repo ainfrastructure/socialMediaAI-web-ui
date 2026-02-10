@@ -120,7 +120,7 @@ class TwitterService {
           mediaUrls: mediaUrls || []
         }),
       },
-      TIMEOUTS.POST
+      TIMEOUTS.PUBLISH
     )
 
     if (!response.ok) {

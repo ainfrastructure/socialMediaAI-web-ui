@@ -4,6 +4,7 @@ import { useRouter, useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useFacebookStore } from '../stores/facebook'
 import { useInstagramStore } from '../stores/instagram'
+import { useTwitterStore } from '../stores/twitter'
 import { useBrandsStore } from '@/stores/brands'
 import { usePreferencesStore } from '@/stores/preferences'
 import { getBrandTypeLabel } from '@/utils/businessTypes'
@@ -20,6 +21,7 @@ const router = useRouter()
 const route = useRoute()
 const facebookStore = useFacebookStore()
 const instagramStore = useInstagramStore()
+const twitterStore = useTwitterStore()
 const brandsStore = useBrandsStore()
 const preferencesStore = usePreferencesStore()
 const { t } = useI18n()
@@ -43,7 +45,7 @@ const showConfirmModal = ref(false)
 const confirmModalMessage = ref('')
 const confirmModalTitle = ref('')
 const pendingDisconnect = ref<{
-  type: 'facebook' | 'instagram' | 'all-facebook' | 'all-instagram'
+  type: 'facebook' | 'instagram' | 'twitter' | 'all-facebook' | 'all-instagram' | 'all-twitter'
   id?: string
   name: string
 } | null>(null)
@@ -65,11 +67,16 @@ const selectedBrand = computed(() =>
 
 const facebookCount = computed(() => facebookStore.connectedPages.length)
 const instagramCount = computed(() => instagramStore.connectedAccounts.length)
-const totalConnections = computed(() => facebookCount.value + instagramCount.value)
+const twitterCount = computed(() => twitterStore.connectedAccounts.length)
+const totalConnections = computed(() => facebookCount.value + instagramCount.value + twitterCount.value)
 const facebookPreview = computed(() => facebookStore.connectedPages.slice(0, 3))
 const instagramPreview = computed(() => instagramStore.connectedAccounts.slice(0, 3))
+const twitterPreview = computed(() => twitterStore.connectedAccounts.slice(0, 3))
 const facebookExtra = computed(() => Math.max(0, facebookCount.value - facebookPreview.value.length))
 const instagramExtra = computed(() => Math.max(0, instagramCount.value - instagramPreview.value.length))
+const twitterExtra = computed(() => Math.max(0, twitterCount.value - twitterPreview.value.length))
+
+const isTwitterConnected = computed(() => twitterStore.connectedAccounts.length > 0)
 
 // Platform cards data-driven rendering
 const platformCards = computed(() => [
@@ -107,11 +114,27 @@ const platformCards = computed(() => [
     getName: (a: any) => `@${a.username}`,
     getAvatar: (a: any) => a.profilePictureUrl,
   },
+  {
+    key: 'twitter' as const,
+    name: 'X (Twitter)',
+    platform: 'twitter' as const,
+    connected: isTwitterConnected.value,
+    count: twitterCount.value,
+    accounts: twitterStore.connectedAccounts,
+    connecting: activelyConnecting.value === 'twitter',
+    preview: twitterPreview.value,
+    extra: twitterExtra.value,
+    onConnect: handleConnectTwitter,
+    onDisconnectAll: () => requestDisconnectAll('twitter'),
+    onDisconnect: (id: string, name: string) => requestDisconnectTwitterAccount(id, name),
+    getId: (a: any) => a.twitterAccountId,
+    getName: (a: any) => `@${a.username}`,
+    getAvatar: (a: any) => a.profilePictureUrl,
+  },
 ])
 
 const comingSoonPlatforms = [
   { key: 'tiktok', name: 'TikTok', platform: 'tiktok' as const },
-  { key: 'twitter', name: 'X (Twitter)', platform: 'twitter' as const },
   { key: 'linkedin', name: 'LinkedIn', platform: 'linkedin' as const },
   { key: 'pinterest', name: 'Pinterest', platform: 'pinterest' as const },
   { key: 'youtube', name: 'YouTube', platform: 'youtube' as const },
@@ -130,10 +153,11 @@ onMounted(async () => {
     preferencesStore.setSelectedBrand(brandsStore.brands[0].id)
   }
 
-  // Load connected Facebook pages and Instagram accounts on mount
+  // Load connected accounts on mount
   await Promise.all([
     facebookStore.loadConnectedPages(selectedBrandId.value || undefined),
     instagramStore.loadConnectedAccounts(selectedBrandId.value || undefined),
+    twitterStore.loadConnectedAccounts(),
   ])
 
   // Check if we just came back from a successful connection
@@ -152,6 +176,9 @@ onMounted(async () => {
     } else if (connectedPlatform === 'instagram') {
       count = instagramStore.connectedAccounts.length
       messageKey = 'connectAccounts.successfullyConnectedInstagram'
+    } else if (connectedPlatform === 'twitter') {
+      count = twitterStore.connectedAccounts.length
+      messageKey = 'connectAccounts.successfullyConnectedTwitter'
     }
 
     if (count > 0) {
@@ -184,6 +211,7 @@ watch(selectedBrandId, async (newBusinessId, oldBusinessId) => {
   activelyConnecting.value = null
   facebookStore.resetConnectionState()
   instagramStore.resetConnectionState()
+  twitterStore.connectedAccounts = []
   localStorage.removeItem('oauth_platform')
   localStorage.removeItem('oauth_return_to')
   localStorage.removeItem('oauth_return_url')
@@ -191,6 +219,7 @@ watch(selectedBrandId, async (newBusinessId, oldBusinessId) => {
   await Promise.all([
     facebookStore.loadConnectedPages(newBusinessId || undefined),
     instagramStore.loadConnectedAccounts(newBusinessId || undefined),
+    twitterStore.loadConnectedAccounts(),
   ])
 })
 
@@ -284,6 +313,33 @@ async function handleConnectInstagram() {
   }
 }
 
+async function handleConnectTwitter() {
+  showSuccessToast.value = false
+  showErrorToast.value = false
+
+  try {
+    const brandId = ensureBusinessSelected()
+    if (!brandId) return
+
+    activelyConnecting.value = 'twitter'
+
+    // Store returnTo URL before OAuth redirect if present
+    const returnTo = route.query.returnTo as string
+    if (returnTo) {
+      localStorage.setItem('oauth_return_to', returnTo)
+    }
+
+    // Store which platform is being connected
+    localStorage.setItem('oauth_platform', 'twitter')
+
+    await twitterStore.connectTwitter()
+  } catch (error: any) {
+    activelyConnecting.value = null
+    errorMessage.value = twitterStore.error || t('connectAccounts.errorOccurred')
+    showErrorToast.value = true
+  }
+}
+
 function requestDisconnectInstagramAccount(accountId: string, username: string) {
   pendingDisconnect.value = { type: 'instagram', id: accountId, name: `@${username}` }
   confirmModalTitle.value = t('connectAccounts.disconnectTitle')
@@ -308,6 +364,27 @@ async function executeDisconnectInstagramAccount(accountId: string, username: st
   }
 }
 
+function requestDisconnectTwitterAccount(accountId: string, username: string) {
+  pendingDisconnect.value = { type: 'twitter', id: accountId, name: `@${username}` }
+  confirmModalTitle.value = t('connectAccounts.disconnectTitle')
+  confirmModalMessage.value = t('connectAccounts.confirmDisconnect', { name: `@${username}` })
+  showConfirmModal.value = true
+}
+
+async function executeDisconnectTwitterAccount(accountId: string, username: string) {
+  showSuccessToast.value = false
+  showErrorToast.value = false
+
+  try {
+    await twitterStore.disconnectAccount(accountId)
+    toastMessage.value = t('connectAccounts.successfullyDisconnected', { name: `@${username}` })
+    showSuccessToast.value = true
+  } catch (error: any) {
+    errorMessage.value = twitterStore.error || t('connectAccounts.errorOccurred')
+    showErrorToast.value = true
+  }
+}
+
 // Handle confirm from modal
 async function handleConfirmDisconnect() {
   showConfirmModal.value = false
@@ -320,10 +397,14 @@ async function handleConfirmDisconnect() {
     await executeDisconnectAll('facebook')
   } else if (type === 'all-instagram') {
     await executeDisconnectAll('instagram')
+  } else if (type === 'all-twitter') {
+    await executeDisconnectAll('twitter')
   } else if (type === 'facebook' && id) {
     await executeDisconnectPage(id, name)
   } else if (type === 'instagram' && id) {
     await executeDisconnectInstagramAccount(id, name.replace('@', ''))
+  } else if (type === 'twitter' && id) {
+    await executeDisconnectTwitterAccount(id, name.replace('@', ''))
   }
 
   pendingDisconnect.value = null
@@ -344,7 +425,7 @@ function togglePlatform(platform: string) {
 }
 
 // Request disconnect all accounts for a platform
-function requestDisconnectAll(type: 'facebook' | 'instagram') {
+function requestDisconnectAll(type: 'facebook' | 'instagram' | 'twitter') {
   let count = 0
   let platformName = ''
 
@@ -354,6 +435,9 @@ function requestDisconnectAll(type: 'facebook' | 'instagram') {
   } else if (type === 'instagram') {
     count = instagramStore.connectedAccounts.length
     platformName = t('connectAccounts.instagramBusiness')
+  } else if (type === 'twitter') {
+    count = twitterStore.connectedAccounts.length
+    platformName = 'X (Twitter)'
   }
 
   pendingDisconnect.value = { type: `all-${type}` as any, name: platformName }
@@ -363,7 +447,7 @@ function requestDisconnectAll(type: 'facebook' | 'instagram') {
 }
 
 // Execute disconnect all accounts for a platform
-async function executeDisconnectAll(type: 'facebook' | 'instagram') {
+async function executeDisconnectAll(type: 'facebook' | 'instagram' | 'twitter') {
   showSuccessToast.value = false
   showErrorToast.value = false
 
@@ -381,6 +465,12 @@ async function executeDisconnectAll(type: 'facebook' | 'instagram') {
       const accounts = [...instagramStore.connectedAccounts]
       for (const account of accounts) {
         await instagramStore.disconnectAccount(account.instagramAccountId, brandId)
+      }
+      toastMessage.value = t('connectAccounts.successfullyDisconnectedAll', { count: accounts.length })
+    } else if (type === 'twitter') {
+      const accounts = [...twitterStore.connectedAccounts]
+      for (const account of accounts) {
+        await twitterStore.disconnectAccount(account.twitterAccountId)
       }
       toastMessage.value = t('connectAccounts.successfullyDisconnectedAll', { count: accounts.length })
     }
@@ -495,6 +585,15 @@ async function executeDisconnectAll(type: 'facebook' | 'instagram') {
             <div class="stat-content">
               <span class="stat-value">{{ instagramCount }}</span>
               <span class="stat-label">{{ $t('connectAccounts.instagramAccountsCount') }}</span>
+            </div>
+          </BaseCard>
+          <BaseCard variant="glass" class="stat-card" style="--card-stagger: 3">
+            <div class="stat-icon">
+              <PlatformLogo platform="twitter" :size="32" />
+            </div>
+            <div class="stat-content">
+              <span class="stat-value">{{ twitterCount }}</span>
+              <span class="stat-label">X Accounts</span>
             </div>
           </BaseCard>
         </div>
@@ -871,7 +970,7 @@ async function executeDisconnectAll(type: 'facebook' | 'instagram') {
 /* Section 3: Quick Stats Bar */
 .stats-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: var(--space-lg);
   margin-bottom: var(--space-xl);
 }
@@ -1217,6 +1316,10 @@ async function executeDisconnectAll(type: 'facebook' | 'instagram') {
 
 /* Responsive */
 @media (max-width: 768px) {
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
   .showcase-layout {
     flex-direction: column;
     align-items: flex-start;

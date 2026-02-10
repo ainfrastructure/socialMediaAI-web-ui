@@ -149,12 +149,15 @@ export function useSocialAccounts() {
     },
     {
       id: 'twitter',
-      name: 'Twitter',
+      name: 'X (Twitter)',
       icon: '🐦',
-      isConnected: false,
-      connectedAccounts: [],
-      isAvailable: false,
-      comingSoon: true,
+      isConnected: twitterStore.connectedAccounts.length > 0,
+      connectedAccounts: twitterStore.connectedAccounts.map((account) => ({
+        id: account.twitterAccountId,
+        name: account.username,
+      })),
+      isAvailable: true,
+      comingSoon: false,
     },
     {
       id: 'linkedin',

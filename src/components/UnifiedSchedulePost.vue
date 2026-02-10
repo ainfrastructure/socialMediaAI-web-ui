@@ -147,7 +147,7 @@ const availablePlatforms = computed(() => {
       name: 'X (Twitter)',
       isConnected: isConnected('twitter'),
       connectedAccounts: socialPlatforms.value.find(p => p.id === 'twitter')?.connectedAccounts || [],
-      comingSoon: true
+      comingSoon: false
     },
     {
       id: 'linkedin',

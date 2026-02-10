@@ -34,6 +34,7 @@ export const TIMEOUTS = {
   AUTH: 5000,           // Auth operations
   GET: 8000,            // GET requests
   POST: 10000,          // POST/PUT requests
+  PUBLISH: 30000,       // Social media publishing (media upload + post)
   IMAGE_GEN: 60000,     // Image generation (1 minute)
   VIDEO_GEN: 120000,    // Video generation (2 minutes)
 } as const

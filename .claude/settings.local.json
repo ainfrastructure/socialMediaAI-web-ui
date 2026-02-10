@@ -55,7 +55,8 @@
       "Bash(./verify-init-sql.sh:*)",
       "Bash([ -f .env ])",
       "Bash(git push:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(git stash:*)"
     ],
     "deny": [],
     "ask": []

@@ -823,9 +823,105 @@ async function continueEasyModePublish() {
               }
             }
           }
+        } else if (platform === 'twitter') {
+          // Twitter publishing
+          const accountSelections = pendingPublishData.value?.accountSelections
+          const twitterSelections = accountSelections?.twitter || []
+
+          // Determine which accounts to publish to
+          const accountsToPublish: Array<{ twitterAccountId: string; username?: string }> = []
+          if (twitterSelections.length > 0) {
+            for (const accountId of twitterSelections) {
+              const account = twitterStore.connectedAccounts.find(a => a.twitterAccountId === accountId)
+              if (account) {
+                accountsToPublish.push(account)
+              }
+            }
+          }
+          // Fall back to first connected account if no accountSelections
+          if (accountsToPublish.length === 0) {
+            const firstAccount = twitterStore.connectedAccounts[0]
+            if (firstAccount) {
+              accountsToPublish.push(firstAccount)
+            }
+          }
+
+          if (accountsToPublish.length === 0) {
+            errorLog('No Twitter account connected')
+            results.push({ platform: 'twitter', success: false, error: 'No Twitter account connected' })
+            if (progressItem) {
+              progressItem.status = 'error'
+              progressItem.error = 'No Twitter account connected'
+            }
+            continue
+          }
+
+          for (const twitterAccount of accountsToPublish) {
+            debugLog('Publishing to Twitter account:', twitterAccount.username)
+
+            // Build tweet text (post text + hashtags, max 280 chars)
+            const hashtags = generatedPostContent.value?.hashtags || []
+            const postText = generatedPostContent.value?.postText || ''
+            let tweetText = hashtags.length > 0
+              ? `${postText}\n\n${hashtags.join(' ')}`
+              : postText
+
+            // Truncate to 280 chars if needed
+            if (tweetText.length > 280) {
+              tweetText = tweetText.substring(0, 277) + '...'
+            }
+
+            // Prepare media URLs
+            const isVideo = currentMediaType.value === 'video'
+            const mediaUrls: string[] = []
+            if (isVideo && generatedVideoUrl.value) {
+              mediaUrls.push(generatedVideoUrl.value)
+            } else if (!isVideo && generatedImageUrl.value) {
+              mediaUrls.push(generatedImageUrl.value)
+            }
+
+            try {
+              const response = await api.postToTwitter(
+                twitterAccount.twitterAccountId,
+                tweetText,
+                mediaUrls
+              )
+              debugLog('Twitter API response:', response)
+
+              const tweetUrl = (response as any).tweetUrl || response.data?.tweetUrl
+              if (response.success && tweetUrl) {
+                results.push({ platform: 'twitter', success: true, url: tweetUrl })
+                debugLog('Published to Twitter successfully:', tweetUrl)
+                notificationStore.addPublishSuccess('twitter', tweetUrl)
+                if (progressItem) {
+                  progressItem.status = 'success'
+                  progressItem.url = tweetUrl
+                }
+              } else {
+                const errorMsg = response.error || 'Failed to publish to Twitter'
+                results.push({ platform: 'twitter', success: false, error: errorMsg })
+                if (progressItem) {
+                  progressItem.status = 'error'
+                  progressItem.error = errorMsg
+                }
+              }
+            } catch (twitterErr: any) {
+              errorLog('Twitter publishing error:', twitterErr)
+              const errorMsg = twitterErr.message || 'Failed to publish to Twitter'
+              results.push({ platform: 'twitter', success: false, error: errorMsg })
+              if (progressItem) {
+                progressItem.status = 'error'
+                progressItem.error = errorMsg
+              }
+            }
+          }
         } else {
           // For other platforms, show not implemented message
           results.push({ platform, success: false, error: `${platform} publishing not yet supported` })
+          if (progressItem) {
+            progressItem.status = 'error'
+            progressItem.error = `${platform} publishing not yet supported`
+          }
         }
       }
 

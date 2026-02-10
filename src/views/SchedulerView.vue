@@ -1135,7 +1135,7 @@ const fetchScheduledPosts = async () => {
         let contentType = post.content_type
         let platform = post.platform
         let businessName = post.business_name || post.brands?.name || post.brand?.name
-        let brandName = post.brand_name
+        const brandName = post.brand_name
 
         // Check if this is a scheduled post with joined posts data
         if (!mediaUrl && post.posts) {
@@ -1177,7 +1177,7 @@ const fetchScheduledPosts = async () => {
         let contentType = post.content_type
         let platform = post.platform
         let businessName = post.business_name || post.brands?.name || post.brand?.name
-        let brandName = post.brand_name
+        const brandName = post.brand_name
 
         if (!mediaUrl && post.posts) {
           mediaUrl = post.posts.image_url || post.posts.video_url
