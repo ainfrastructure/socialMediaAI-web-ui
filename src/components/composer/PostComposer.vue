@@ -215,7 +215,6 @@ const emit = defineEmits<{
 const {
   post,
   selectedPlatforms,
-  activePlatformConfigs,
   platformPreviews,
   hasOverLimitPlatform,
   strictestCharLimit,
