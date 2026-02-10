@@ -1,16 +1,19 @@
 import { API_URL } from './apiBase'
 
-export interface RestaurantSuggestion {
+export interface PlaceSuggestion {
   place_id: string
   name: string
   address: string
   types?: string[]
 }
 
-export interface SearchRestaurantsResponse {
+/** @deprecated Use PlaceSuggestion instead */
+export type RestaurantSuggestion = PlaceSuggestion
+
+export interface SearchPlacesResponse {
   success: boolean
   data: {
-    suggestions: RestaurantSuggestion[]
+    suggestions: PlaceSuggestion[]
   }
   error?: string
 }
@@ -109,11 +112,11 @@ export interface CompetitorApiResponse {
 
 class PlacesService {
   /**
-   * Search for restaurants using the backend API
+   * Search for places/businesses using the backend API
    * @param query - The search query text (e.g., "pizza", "italian restaurant oslo")
-   * @returns Array of restaurant suggestions
+   * @returns Array of place suggestions
    */
-  async searchRestaurants(query: string): Promise<RestaurantSuggestion[]> {
+  async searchPlaces(query: string): Promise<PlaceSuggestion[]> {
     if (!query || query.trim().length === 0) {
       return []
     }
@@ -132,10 +135,10 @@ class PlacesService {
       throw new Error(`HTTP error! status: ${response.status}`)
     }
 
-    const data: SearchRestaurantsResponse = await response.json()
+    const data: SearchPlacesResponse = await response.json()
 
     if (!data.success) {
-      throw new Error(data.error || 'Failed to search restaurants')
+      throw new Error(data.error || 'Failed to search places')
     }
 
     return data.data.suggestions
@@ -175,10 +178,10 @@ class PlacesService {
   }
 
   /**
-   * Find competitor restaurants within a radius of a given restaurant
-   * @param placeId - The Google Place ID of the restaurant
+   * Find competitor businesses within a radius of a given place
+   * @param placeId - The Google Place ID of the business
    * @param radiusKm - Search radius in kilometers (default: 1)
-   * @returns List of competitor restaurants sorted by distance
+   * @returns List of competitor businesses sorted by distance
    */
   async findCompetitors(
     placeId: string,

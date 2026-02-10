@@ -53,21 +53,21 @@
 import { ref, watch, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import BaseInput from './BaseInput.vue'
-import { placesService, type RestaurantSuggestion } from '../services/placesService'
+import { placesService, type PlaceSuggestion } from '../services/placesService'
 
 interface Props {
-  modelValue?: RestaurantSuggestion | null
+  modelValue?: PlaceSuggestion | null
   label?: string
   placeholder?: string
   disabled?: boolean
   autofocus?: boolean
   debounceMs?: number
-  savedBrands?: Array<{ place_id: string; name: string }>
+  savedBrands?: Array<{ place_id?: string; name: string }>
 }
 
 interface Emits {
-  (e: 'update:modelValue', value: RestaurantSuggestion | null): void
-  (e: 'select', value: RestaurantSuggestion): void
+  (e: 'update:modelValue', value: PlaceSuggestion | null): void
+  (e: 'select', value: PlaceSuggestion): void
   (e: 'dropdownOpen', value: boolean): void
 }
 
@@ -88,7 +88,7 @@ const computedLabel = computed(() => props.label || t('restaurantSearch.searchLa
 const computedPlaceholder = computed(() => props.placeholder || t('restaurantSearch.searchPlaceholder'))
 
 const searchQuery = ref('')
-const suggestions = ref<RestaurantSuggestion[]>([])
+const suggestions = ref<PlaceSuggestion[]>([])
 const isLoading = ref(false)
 const error = ref<string | null>(null)
 const showDropdown = ref(false)
@@ -147,7 +147,7 @@ const performSearch = async (query: string) => {
     isLoading.value = true
     error.value = null
 
-    const results = await placesService.searchRestaurants(query)
+    const results = await placesService.searchPlaces(query)
     suggestions.value = results
     activeIndex.value = -1
   } catch (err) {
@@ -159,7 +159,7 @@ const performSearch = async (query: string) => {
   }
 }
 
-const selectSuggestion = (suggestion: RestaurantSuggestion) => {
+const selectSuggestion = (suggestion: PlaceSuggestion) => {
   // Prevent selecting already saved restaurants
   if (isBrandSaved(suggestion)) {
     return
@@ -228,7 +228,7 @@ const scrollToActiveItem = () => {
   }
 }
 
-const isBrandSaved = (suggestion: RestaurantSuggestion): boolean => {
+const isBrandSaved = (suggestion: PlaceSuggestion): boolean => {
   return props.savedBrands?.some(saved => saved.place_id === suggestion.place_id) || false
 }
 </script>

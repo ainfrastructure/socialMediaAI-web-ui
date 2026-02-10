@@ -54,7 +54,7 @@ async function handleSubmit() {
 
   try {
     // First create the brand
-    const brand = await brandsStore.createManualBrand(form)
+    const brand = await brandsStore.createBrand(form)
     if (!brand) {
       error.value = brandsStore.error || t('restaurantManagement.errors.createFailed')
       creating.value = false

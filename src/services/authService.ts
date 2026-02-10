@@ -84,7 +84,7 @@ class AuthService {
     postsCreated: number
     favoritesSaved: number
     scheduledPosts: number
-    restaurantsAdded: number
+    brandsAdded: number
   }>> {
     const response = await fetch(`${API_URL}/api/auth/stats`, {
       headers: getAuthHeader(),

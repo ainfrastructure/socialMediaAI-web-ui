@@ -34,11 +34,11 @@ const stats = ref({
   postsCreated: 0,
   postsSaved: 0,
   scheduledPosts: 0,
-  restaurantsAdded: 0
+  brandsAdded: 0
 })
 
-// Restaurants for welcome modal check
-const restaurants = computed(() => brandsStore.restaurants)
+// Brands for welcome modal check
+const brands = computed(() => brandsStore.brands)
 
 // Recent posts from API
 const recentPosts = ref<any[]>([])
@@ -152,39 +152,27 @@ function getPostMediaUrl(post: any): string | null {
   if (post.media_url) return post.media_url
   if (post.image_url) return post.image_url
   if (post.video_url) return post.video_url
-  if (post.favorite_posts?.media_url) return post.favorite_posts.media_url
-  if (post.favorite_posts?.image_url) return post.favorite_posts.image_url
-  if (post.favorite_posts?.video_url) return post.favorite_posts.video_url
-  if (post.favorite_post?.media_url) return post.favorite_post.media_url
-  if (post.favorite_post?.image_url) return post.favorite_post.image_url
-  if (post.favorite_post?.video_url) return post.favorite_post.video_url
-  if (post.favorite?.media_url) return post.favorite.media_url
-  if (post.favorite?.image_url) return post.favorite.image_url
-  if (post.favorite?.video_url) return post.favorite.video_url
+  if (post.posts?.image_url) return post.posts.image_url
+  if (post.posts?.video_url) return post.posts.video_url
   return null
 }
 
 function getPostText(post: any): string | null {
   if (post.post_text) return post.post_text
   if (post.caption) return post.caption
-  if (post.favorite_posts?.post_text) return post.favorite_posts.post_text
-  if (post.favorite_posts?.caption) return post.favorite_posts.caption
-  if (post.favorite_post?.post_text) return post.favorite_post.post_text
-  if (post.favorite_post?.caption) return post.favorite_post.caption
-  if (post.favorite?.post_text) return post.favorite.post_text
-  if (post.favorite?.caption) return post.favorite.caption
+  if (post.posts?.caption) return post.posts.caption
   return null
 }
 
-function getPostRestaurantName(post: any): string | null {
-  if (post.restaurant_name) return post.restaurant_name
-  if (post.favorite_posts?.restaurant_name) return post.favorite_posts.restaurant_name
-  if (post.favorite_post?.restaurant_name) return post.favorite_post.restaurant_name
-  if (post.favorite?.restaurant_name) return post.favorite.restaurant_name
-  const restaurantId = post.restaurant_id || post.favorite_posts?.restaurant_id || post.favorite_post?.restaurant_id
-  if (restaurantId) {
-    const restaurant = restaurants.value.find(r => r.id === restaurantId)
-    if (restaurant) return restaurant.name
+function getPostBrandName(post: any): string | null {
+  if (post.brand_name) return post.brand_name
+  if (post.business_name) return post.business_name
+  if (post.brands?.name) return post.brands.name
+  if (post.posts?.brands?.name) return post.posts.brands.name
+  const brandId = post.brand_id || post.posts?.brand_id
+  if (brandId) {
+    const brand = brands.value.find(r => r.id === brandId)
+    if (brand) return brand.name
   }
   return null
 }
@@ -195,8 +183,7 @@ function getPostPlatforms(post: any): string[] {
   if (post.platforms && Array.isArray(post.platforms) && post.platforms.length > 0) return post.platforms
   const platforms: string[] = []
   if (post.platform) platforms.push(post.platform)
-  if (post.favorite_posts?.platform && !platforms.includes(post.favorite_posts.platform)) platforms.push(post.favorite_posts.platform)
-  if (post.favorite_post?.platform && !platforms.includes(post.favorite_post.platform)) platforms.push(post.favorite_post.platform)
+  if (post.posts?.platform_targets) platforms.push(...post.posts.platform_targets)
   return platforms
 }
 
@@ -312,7 +299,7 @@ async function loadRecentPosts() {
     }
 
     const scheduledFavoriteIds = new Set(
-      scheduledPosts.filter(p => p.favorite_post_id).map(p => p.favorite_post_id)
+      scheduledPosts.filter(p => p.post_id).map(p => p.post_id)
     )
 
     const drafts: any[] = []
@@ -324,7 +311,7 @@ async function loadRecentPosts() {
             status: 'draft',
             post_text: fav.post_text,
             media_url: fav.media_url,
-            restaurant_name: fav.restaurant_name || restaurants.value.find(r => r.id === fav.restaurant_id)?.name
+            brand_name: fav.brand_name || brands.value.find(r => r.id === fav.brand_id)?.name
           })
         }
       }
@@ -388,7 +375,7 @@ onMounted(async () => {
         postsCreated: statsResponse.data.postsCreated || 0,
         postsSaved: statsResponse.data.favoritesSaved || 0,
         scheduledPosts: statsResponse.data.scheduledPosts || 0,
-        restaurantsAdded: statsResponse.data.restaurantsAdded || 0
+        brandsAdded: statsResponse.data.brandsAdded || 0
       }
     }
 
@@ -397,7 +384,7 @@ onMounted(async () => {
     // Fire-and-forget engagement
     loadEngagementSnapshot()
 
-    if (stats.value.restaurantsAdded === 0 && !wasWelcomeDismissed()) {
+    if (stats.value.brandsAdded === 0 && !wasWelcomeDismissed()) {
       showWelcomeModal.value = true
     }
   } catch (error) {

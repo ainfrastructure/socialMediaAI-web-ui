@@ -23,6 +23,7 @@ import AddBrandModal from '@/components/AddBrandModal.vue'
 import CreateBrandModal from '@/components/CreateBrandModal.vue'
 import BrandSelectorModal from '@/components/BrandSelectorModal.vue'
 import PublishingProgressModal from '@/components/PublishingProgressModal.vue'
+import GoldenBrandIcon from '@/components/icons/GoldenBrandIcon.vue'
 import { brandService, type Brand, type UploadAssetData } from '@/services/brandService'
 import { api } from '@/services/api'
 import { okamService } from '@/services/okamService'
@@ -44,32 +45,32 @@ const twitterStore = useTwitterStore()
 const notificationStore = useNotificationStore()
 const videoGenerationStore = useVideoGenerationStore()
 
-// Restaurant state
+// Brand state
 const selectedBrand = computed(() => brandsStore.selectedBrand)
-const nonRestaurantBusiness = ref(false)
-const isRestaurantBusiness = computed(() =>
+const nonDefaultBrand = ref(false)
+const isDefaultBusiness = computed(() =>
   !selectedBrand.value || selectedBrand.value.business_type === 'restaurant'
 )
 const activeBrandType = computed(() => selectedBrand.value?.business_type || 'restaurant')
 const activeBusinessId = computed(() =>
-  selectedBrand.value?.id || preferencesStore.selectedBrandId || restaurant.value?.brand_id
+  selectedBrand.value?.id || preferencesStore.selectedBrandId || brand.value?.brand_id
 )
 const activeBrandDna = computed(() =>
-  activeBrandDna.value || selectedBrand.value?.brand_dna || null
+  brand.value?.brand_dna || selectedBrand.value?.brand_dna || null
 )
 const activeProfileName = computed(() =>
-  restaurant.value?.name || selectedBrand.value?.name || ''
+  brand.value?.name || selectedBrand.value?.name || ''
 )
-const restaurant = ref<Brand | null>(null)
-const allRestaurants = ref<Brand[]>([])
+const brand = ref<Brand | null>(null)
+const allBrands = ref<Brand[]>([])
 const loading = ref(true)
 const error = ref('')
-const showRestaurantSelector = ref(false)
+const showBrandSelector = ref(false)
 
 // Menu items (filtered for images and deduplicated by name)
 const menuItems = computed(() => {
-  if (!restaurant.value?.menu?.items) return []
-  const itemsWithImages = restaurant.value.menu.items.filter((item: any) => item.imageUrl)
+  if (!brand.value?.menu?.items) return []
+  const itemsWithImages = brand.value.menu.items.filter((item: any) => item.imageUrl)
   const seen = new Set<string>()
   return itemsWithImages.filter((item: any) => {
     if (seen.has(item.name)) return false
@@ -125,7 +126,7 @@ const showAddBrandModal = ref(false)
 const showCreateBrandModal = ref(false)
 const showPublishingModal = ref(false)
 const pendingAction = ref<'publish' | 'schedule' | null>(null)
-const noRestaurants = ref(false)
+const noBrands = ref(false)
 
 // Publishing state
 const publishing = ref(false)
@@ -174,11 +175,11 @@ const resortTemplatePrompts: Record<string, string> = {
 // These enhance the base prompt with style-specific instructions
 // Using STRICT IMAGE REPLICATION approach from image generation
 
-// Load restaurant and connected accounts on mount
+// Load brand and connected accounts on mount
 onMounted(async () => {
   await brandsStore.initialize()
   await Promise.all([
-    loadRestaurant(),
+    loadBrand(),
     facebookStore.loadConnectedPages(),
     instagramStore.loadConnectedAccounts()
   ])
@@ -203,60 +204,60 @@ function buildProfileFromBusiness(
   }
 }
 
-async function loadRestaurant() {
+async function loadBrand() {
   loading.value = true
   error.value = ''
-  nonRestaurantBusiness.value = false
+  nonDefaultBrand.value = false
 
   try {
-    const brand = selectedBrand.value
+    const currentBrand = selectedBrand.value
 
-    if (brand && brand.business_type !== 'restaurant') {
-      nonRestaurantBusiness.value = true
-      restaurant.value = buildProfileFromBusiness(brand, {
-        uploadedImages: brand.uploaded_images || null,
-        placeId: brand.id
+    if (currentBrand && currentBrand.business_type !== 'restaurant') {
+      nonDefaultBrand.value = true
+      brand.value = buildProfileFromBusiness(currentBrand, {
+        uploadedImages: currentBrand.uploaded_images || null,
+        placeId: currentBrand.id
       })
-      allRestaurants.value = []
-      noRestaurants.value = false
+      allBrands.value = []
+      noBrands.value = false
       loading.value = false
       return
     }
 
-    const restaurants = await brandService.getBrands()
-    const scopedRestaurants = brand?.id
-      ? restaurants.filter(r => r.brand_id === brand.id)
-      : restaurants
+    const fetchedBrands = await brandService.getBrands()
+    const scopedBrands = currentBrand?.id
+      ? fetchedBrands.filter(r => r.brand_id === currentBrand.id)
+      : fetchedBrands
 
-    allRestaurants.value = scopedRestaurants
+    allBrands.value = scopedBrands
 
-    if (scopedRestaurants.length === 0) {
-      // No restaurants, show inline prompt instead of redirecting
-      restaurant.value = null
-      noRestaurants.value = true
+    if (scopedBrands.length === 0) {
+      // No brands, show inline prompt instead of redirecting
+      brand.value = null
+      noBrands.value = true
       loading.value = false
       return
     }
 
-    noRestaurants.value = false
+    noBrands.value = false
 
-    // Priority: 1) URL query param, 2) preferences store, 3) first restaurant
-    const urlRestaurantId = route.query.restaurantId as string | undefined
-    const selectedId = urlRestaurantId || preferencesStore.selectedBrandId
+    // Priority: 1) URL query param, 2) preferences store, 3) first brand
+    const urlBrandId = route.query.brandId as string | undefined
+    const selectedId = urlBrandId || preferencesStore.selectedBrandId
 
     let selected = selectedId
-      ? scopedRestaurants.find(r => r.id === selectedId)
+      ? scopedBrands.find(r => r.id === selectedId)
       : null
 
     if (!selected) {
-      // Use first restaurant and save to preferences
-      selected = scopedRestaurants[0]
+      // Use first brand and save to preferences
+      selected = scopedBrands[0]
     }
 
-    // Update preferences with the selected restaurant
+    // Update preferences with the selected brand
     preferencesStore.setSelectedBrand(selected.id)
 
-    restaurant.value = selected
+    brand.value = selected
   } catch (err: any) {
     error.value = err.message || t('contentCreate.loadError', 'Failed to load brand')
   } finally {
@@ -264,11 +265,11 @@ async function loadRestaurant() {
   }
 }
 
-// Handle restaurant added from inline prompt
-async function handleRestaurantAddedFromPrompt() {
+// Handle brand added from inline prompt
+async function handleBrandAddedFromPrompt() {
   showAddBrandModal.value = false
-  // Reload the restaurant data
-  await loadRestaurant()
+  // Reload the brand data
+  await loadBrand()
 }
 
 // Handle switch to manual entry
@@ -277,34 +278,34 @@ function handleSwitchToManual() {
   showCreateBrandModal.value = true
 }
 
-// Handle restaurant created manually
-async function handleRestaurantCreated() {
+// Handle brand created manually
+async function handleBrandCreated() {
   showCreateBrandModal.value = false
-  // Reload the restaurant data
-  await loadRestaurant()
+  // Reload the brand data
+  await loadBrand()
 }
 
-// Handle restaurant selection from selector modal
-function handleRestaurantSelect(selected: Brand) {
-  restaurant.value = selected
+// Handle brand selection from selector modal
+function handleBrandSelect(selected: Brand) {
+  brand.value = selected
   preferencesStore.setSelectedBrand(selected.id)
-  showRestaurantSelector.value = false
+  showBrandSelector.value = false
 
-  // Reset generation state when switching restaurants
+  // Reset generation state when switching brands
   handleEasyModeReset()
 }
 
-// Handle restaurant added from selector modal
-async function handleRestaurantAddedFromSelector() {
-  await loadRestaurant()
+// Handle brand added from selector modal
+async function handleBrandAddedFromSelector() {
+  await loadBrand()
 }
 
-// Handle restaurant deletion from selector modal
-async function handleRestaurantDelete(restaurantToDelete: Brand) {
+// Handle brand deletion from selector modal
+async function handleBrandDelete(brandToDelete: Brand) {
   try {
-    await brandService.deleteRestaurant(restaurantToDelete.place_id)
+    await brandService.deleteBrand(brandToDelete.id)
     // Reload the list
-    await loadRestaurant()
+    await loadBrand()
   } catch (err) {
     errorLog('Failed to delete brand:', err)
   }
@@ -375,8 +376,8 @@ async function handleEasyModePublish(data: {
       return
     }
 
-    // Validate restaurant is selected
-    if (!restaurant.value?.id && !activeBusinessId.value) {
+    // Validate brand is selected
+    if (!brand.value?.id && !activeBusinessId.value) {
       generationError.value = 'Please select a brand first'
       return
     }
@@ -420,8 +421,7 @@ async function handleEasyModePublish(data: {
       }
 
       const saveResponse = await api.saveFavorite({
-        restaurant_id: isRestaurantBusiness.value ? restaurant.value.id : undefined,
-        brand_id: activeBusinessId.value || undefined,
+        brand_id: activeBusinessId.value || brand.value.id || undefined,
         content_type: isVideo ? 'video' : 'image',
         media_url: mediaUrl,
         post_text: finalPostText,
@@ -472,13 +472,13 @@ async function handleEasyModePublish(data: {
         }
       }
 
+      const scheduledTime = `${data.scheduleDate!}T${data.scheduleTime || '12:00'}:00`
       const scheduleResponse = await api.schedulePost({
-        favorite_post_id: favoritePostId,
-        scheduled_date: data.scheduleDate!,
-        scheduled_time: data.scheduleTime,
+        post_id: favoritePostId,
+        scheduled_time: scheduledTime,
         platforms: platforms,
         timezone: data.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone,
-        platform_settings
+        brand_id: activeBusinessId.value || brand.value?.id,
       })
 
       if (!scheduleResponse.success) {
@@ -848,12 +848,10 @@ async function continueEasyModePublish() {
           try {
             // Create calendar entry with status=published to prevent scheduler from picking it up
             await api.createPublishedPost({
-              favorite_post_id: favoritePostId,
-              published_date: now.toISOString().split('T')[0],
-              published_time: now.toTimeString().slice(0, 5),
+              post_id: favoritePostId,
               platforms: successfulPlatforms.map(r => r.platform),
-              timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-              platform_post_urls: Object.fromEntries(
+              brand_id: activeBusinessId.value || brand.value?.id,
+              platform_urls: Object.fromEntries(
                 successfulPlatforms.filter(r => r.url).map(r => [r.platform, r.url!])
               )
             })
@@ -1033,12 +1031,10 @@ async function _continueAdvancedModePublish() {
       const now = new Date()
       try {
         await api.createPublishedPost({
-          favorite_post_id: lastSavedPost.value.id,
-          published_date: now.toISOString().split('T')[0],
-          published_time: now.toTimeString().slice(0, 5),
+          post_id: lastSavedPost.value.id,
           platforms: successfulPlatforms.map(r => r.platform),
-          timezone: data.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone,
-          platform_post_urls: postUrls
+          brand_id: activeBusinessId.value || brand.value?.id,
+          platform_urls: postUrls
         })
       } catch (calendarErr) {
         warnLog('Failed to save to calendar:', calendarErr)
@@ -1076,6 +1072,7 @@ async function handleEasyModeGenerate(data: {
   includeLogo: boolean
   uploadedImage: File | null
   uploadedLogo: File | null
+  isExistingImage?: boolean
   mediaType: 'image' | 'video'
   videoOptions?: {
     duration: 4 | 6 | 8
@@ -1173,8 +1170,8 @@ async function handleEasyModeGenerate(data: {
         debugLog('[EasyMode] Image generated successfully:', generatedImageUrl.value)
       }
 
-      // Upload the image to the appropriate brand/restaurant collection
-      if (data.uploadedImage) {
+      // Upload the image to the appropriate brand collection (skip if already in library)
+      if (data.uploadedImage && !data.isExistingImage) {
         try {
           // Convert File to UploadAssetData (base64 + mimeType)
           const base64 = await new Promise<string>((resolve) => {
@@ -1195,16 +1192,16 @@ async function handleEasyModeGenerate(data: {
               selectedBrand.value.id,
               assetData
             )
-            if (restaurant.value) {
-              restaurant.value.uploaded_images = [
+            if (brand.value) {
+              brand.value.uploaded_images = [
                 ...(uploadResult.data ? [uploadResult.data] : []),
-                ...(restaurant.value.uploaded_images || [])
+                ...(brand.value.uploaded_images || [])
               ]
             }
-            await brandsStore.refreshBusinesses()
-          } else if (restaurant.value?.place_id) {
-            await brandService.uploadRestaurantImages(
-              restaurant.value.place_id,
+            await brandsStore.refreshBrands()
+          } else if (brand.value?.place_id) {
+            await brandService.uploadBrandImages(
+              brand.value.place_id,
               [assetData]
             )
           }
@@ -1379,8 +1376,8 @@ async function handleEasyModeAnimate(data: {
 }
 
 async function generatePromptsFromSelection() {
-  if (!restaurant.value) {
-    warnLog('[Prompts] No restaurant value')
+  if (!brand.value) {
+    warnLog('[Prompts] No brand value')
     return
   }
 
@@ -1394,7 +1391,7 @@ async function generatePromptsFromSelection() {
     const response = await api.generatePrompts(
       {
         name: activeProfileName.value,
-        type: restaurant.value.types?.[0] || 'restaurant',
+        type: brand.value.types?.[0] || 'restaurant',
         brandDna: activeBrandDna.value,
       },
       selectedMenuItems.value,
@@ -1421,7 +1418,7 @@ async function generatePromptsFromSelection() {
 async function generateImage(uploadedLogo: File | null = null, uploadedImage: File | null = null, useDishInfo: boolean = false) {
   // Either need a prompt OR dish info (for direct generation without Stage 1)
   if (!useDishInfo && !editablePrompt.value) return
-  if (!restaurant.value) return
+  if (!brand.value) return
 
   try {
     generatingImage.value = true
@@ -1433,7 +1430,7 @@ async function generateImage(uploadedLogo: File | null = null, uploadedImage: Fi
       errorLog('Failed to generate post content:', error)
     })
 
-    // Prepare watermark if restaurant has logo and user wants it
+    // Prepare watermark if brand has logo and user wants it
     // Use uploaded logo if provided, otherwise use stored logo
     const logoUrl = uploadedLogo
       ? await fileToBase64Url(uploadedLogo)
@@ -1529,15 +1526,15 @@ async function generateImage(uploadedLogo: File | null = null, uploadedImage: Fi
       ? null // Use dishInfo instead of prompt
       : (editablePrompt.value || 'Create an engaging social media post for this image')
 
-    // Use place_id if available, otherwise use id (for manual restaurants)
-    const restaurantId = restaurant.value.place_id || restaurant.value.id
+    // Use place_id if available, otherwise use id (for manual brands)
+    const placeId = brand.value.place_id || brand.value.id
 
     const response = await api.generateImage(
       promptToUse,
       watermark,
       referenceImage,
       promotionalSticker,
-      restaurantId,
+      placeId,
       strictnessMode.value,
       holidayTheme.value !== 'none' ? holidayTheme.value : undefined,
       visualStyle.value,
@@ -1726,7 +1723,7 @@ async function generateVideo(
   themeModifier?: string,
   promotionalText?: string
 ) {
-  if (!editablePrompt.value || !restaurant.value) return
+  if (!editablePrompt.value || !brand.value) return
 
   try {
     generatingVideo.value = true
@@ -1912,7 +1909,7 @@ async function generateVideo(
     // Add Social Chef branding watermark (top-left, always present)
     console.log('[Video] Adding Social Chef branding watermark...')
     try {
-      // Use the current video URL (which may already have restaurant logo)
+      // Use the current video URL (which may already have brand logo)
       const currentVideoUrl = generatedVideoUrl.value || videoUrl
       const socialChefLogoUrl = `${window.location.origin}/powered-by-socialchef.svg`
 
@@ -1988,7 +1985,7 @@ async function pollVideoUntilComplete(operationId: string, modelId?: string, max
 }
 
 async function generatePostContent() {
-  if (!restaurant.value) return
+  if (!brand.value) return
 
   try {
     generatingPostContent.value = true
@@ -2038,16 +2035,16 @@ async function generatePostContent() {
 }
 
 function getBrandColor(): string {
-  return activeBrandDna.value?.primary_color || '#D4AF37'
+  return (activeBrandDna.value?.primary_color as string) || '#D4AF37'
 }
 
 async function autoSavePost(): Promise<any | null> {
   // For video background generation, we may need to save with just the image first
   const mediaUrl = generatedImageUrl.value || (currentMediaType.value === 'video' ? generatedVideoUrl.value : '')
-  if (!mediaUrl || !restaurant.value) return null
+  if (!mediaUrl || !brand.value) return null
 
-  // Don't auto-save if no restaurant selected
-  if (!restaurant.value?.id) {
+  // Don't auto-save if no brand selected
+  if (!brand.value?.id) {
     return null
   }
 
@@ -2059,8 +2056,7 @@ async function autoSavePost(): Promise<any | null> {
 
   try {
     const favoriteData = {
-      restaurant_id: isRestaurantBusiness.value ? restaurant.value.id : undefined,
-      brand_id: activeBusinessId.value || undefined,
+      brand_id: activeBusinessId.value || brand.value.id || undefined,
       content_type: 'image' as 'image' | 'video', // Always save as image initially, video_url added by background task
       media_url: mediaUrl,
       post_text: generatedPostContent.value?.postText || '',
@@ -2476,12 +2472,10 @@ async function handleAdvancedModeComplete(data: {
           const now = new Date()
           try {
             await api.createPublishedPost({
-              favorite_post_id: lastSavedPost.value.id,
-              published_date: now.toISOString().split('T')[0],
-              published_time: now.toTimeString().slice(0, 5),
+              post_id: lastSavedPost.value.id,
               platforms: successfulPlatforms.map(r => r.platform),
-              timezone: data.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone,
-              platform_post_urls: postUrls
+              brand_id: activeBusinessId.value || brand.value?.id,
+              platform_urls: postUrls
             })
           } catch (calendarErr) {
             warnLog('Failed to save to calendar:', calendarErr)
@@ -2497,13 +2491,12 @@ async function handleAdvancedModeComplete(data: {
         }
       } else if (data.scheduledTime && lastSavedPost.value?.id) {
         // Schedule the post
-        const scheduledDate = new Date(data.scheduledTime)
         const scheduleResponse = await api.schedulePost({
-          favorite_post_id: lastSavedPost.value.id,
-          scheduled_date: scheduledDate.toISOString().split('T')[0],
-          scheduled_time: scheduledDate.toTimeString().slice(0, 5),
+          post_id: lastSavedPost.value.id,
+          scheduled_time: new Date(data.scheduledTime).toISOString(),
           platforms: platforms,
-          timezone: data.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone
+          timezone: data.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone,
+          brand_id: activeBusinessId.value || brand.value?.id,
         })
 
         if (scheduleResponse.success && data.onResult) {
@@ -2520,17 +2513,16 @@ async function handleAdvancedModeComplete(data: {
 }
 
 async function autoSaveAdvancedPost() {
-  if (!advancedModeData.value || !restaurant.value) return
+  if (!advancedModeData.value || !brand.value) return
 
-  // Don't auto-save if no restaurant selected
-  if (!restaurant.value?.id) {
+  // Don't auto-save if no brand selected
+  if (!brand.value?.id) {
     return
   }
 
   try {
     const favoriteData = {
-      restaurant_id: isRestaurantBusiness.value ? restaurant.value.id : undefined,
-      brand_id: activeBusinessId.value || undefined,
+      brand_id: activeBusinessId.value || brand.value.id || undefined,
       content_type: 'image' as const,
       media_url: advancedModeData.value.imageUrl,
       post_text: advancedModeData.value.postText,
@@ -2639,19 +2631,19 @@ function handlePublishingClose() {
       <!-- Error State -->
       <BaseAlert v-else-if="error" type="error" class="error-alert">
         {{ error }}
-        <BaseButton variant="secondary" size="small" @click="loadRestaurant">
+        <BaseButton variant="secondary" size="small" @click="loadBrand">
           {{ t('common.retry', 'Retry') }}
         </BaseButton>
       </BaseAlert>
 
       <!-- No Restaurants State -->
-      <div v-else-if="noRestaurants" class="no-restaurant-state">
-        <BaseCard variant="glass-intense" class="no-restaurant-card">
-          <div class="no-restaurant-icon">
+      <div v-else-if="noBrands" class="no-brand-state">
+        <BaseCard variant="glass-intense" class="no-brand-card">
+          <div class="no-brand-icon">
             <GoldenBrandIcon :size="64" />
           </div>
-          <h2 class="no-restaurant-title">{{ t('contentHub.noRestaurantPrompt') }}</h2>
-          <p class="no-restaurant-description">{{ t('contentHub.addFirstRestaurantDescription') }}</p>
+          <h2 class="no-brand-title">{{ t('contentHub.noRestaurantPrompt') }}</h2>
+          <p class="no-brand-description">{{ t('contentHub.addFirstRestaurantDescription') }}</p>
           <BaseButton variant="primary" size="large" @click="showAddBrandModal = true">
             {{ t('contentHub.addFirstRestaurant') }}
           </BaseButton>
@@ -2659,7 +2651,7 @@ function handlePublishingClose() {
       </div>
 
       <!-- Main Content -->
-      <div v-else-if="restaurant" class="create-content">
+      <div v-else-if="brand" class="create-content">
         <!-- Header with back button and mode toggle -->
         <div class="page-header">
           <BaseButton variant="ghost" @click="goBack" class="back-button">
@@ -2668,25 +2660,25 @@ function handlePublishingClose() {
           <ModeToggle class="mode-toggle" />
         </div>
 
-        <!-- Restaurant Header (clickable to switch) -->
+        <!-- Brand Header (clickable to switch) -->
         <BaseCard
           variant="glass-intense"
-          class="restaurant-header"
-          :class="{ clickable: allRestaurants.length > 1 }"
-          @click="allRestaurants.length > 1 && (showRestaurantSelector = true)"
+          class="brand-header"
+          :class="{ clickable: allBrands.length > 1 }"
+          @click="allBrands.length > 1 && (showBrandSelector = true)"
         >
-          <div class="restaurant-info">
-            <div v-if="restaurant.brand_dna?.logo_url" class="restaurant-logo">
-              <img :src="restaurant.brand_dna.logo_url" :alt="restaurant.name" />
+          <div class="brand-info">
+            <div v-if="brand.brand_dna?.logo_url" class="brand-logo">
+              <img :src="brand.brand_dna.logo_url" :alt="brand.name" />
             </div>
-            <div v-else class="restaurant-logo placeholder">
+            <div v-else class="brand-logo placeholder">
               <span class="placeholder-icon">🍽️</span>
             </div>
-            <div class="restaurant-details">
-              <h2 class="restaurant-name">{{ restaurant.name }}</h2>
-              <p class="restaurant-address">{{ restaurant.address }}</p>
+            <div class="brand-details">
+              <h2 class="brand-name">{{ brand.name }}</h2>
+              <p class="brand-address">{{ brand.address }}</p>
             </div>
-            <div v-if="allRestaurants.length > 1" class="switch-indicator">
+            <div v-if="allBrands.length > 1" class="switch-indicator">
               <span class="switch-text">{{ t('contentCreate.switchRestaurant', 'Switch') }}</span>
             </div>
           </div>
@@ -2696,8 +2688,7 @@ function handlePublishingClose() {
         <EasyModeCreation
           v-if="preferencesStore.creationMode === 'easy'"
           ref="easyModeCreationRef"
-          :brand="selectedBrand || undefined"
-          :restaurant="restaurant"
+          :brand="brand || selectedBrand || undefined"
           :brand-type="activeBrandType"
           :menu-items="menuItems"
           :generating="easyModeGenerating"
@@ -2723,8 +2714,7 @@ function handlePublishingClose() {
         <AdvancedModeCreation
           v-else
           ref="advancedModeCreationRef"
-          :brand="selectedBrand || undefined"
-          :restaurant="restaurant"
+          :brand="brand || selectedBrand || undefined"
           :menu-items="menuItems"
           @back="goBack"
           @feedback="handleInlineFeedback"
@@ -2750,31 +2740,31 @@ function handlePublishingClose() {
       @close="handlePublishingModalClose"
     />
 
-    <!-- Add Restaurant Modal (for no-restaurant state) -->
+    <!-- Add Brand Modal (for no-brand state) -->
     <AddBrandModal
       v-model="showAddBrandModal"
       :brand-id="selectedBrand?.id"
-      :saved-restaurants="allRestaurants"
-      @restaurant-added="handleRestaurantAddedFromPrompt"
+      :saved-brands="allBrands"
+      @brand-added="handleBrandAddedFromPrompt"
       @switch-to-manual="handleSwitchToManual"
     />
 
-    <!-- Create Restaurant Modal -->
+    <!-- Create Brand Modal -->
     <CreateBrandModal
       v-model="showCreateBrandModal"
       :brand-id="selectedBrand?.id"
-      @created="handleRestaurantCreated"
+      @created="handleBrandCreated"
     />
 
-    <!-- Restaurant Selector Modal -->
+    <!-- Brand Selector Modal -->
     <BrandSelectorModal
-      v-model="showRestaurantSelector"
-      :brands="allRestaurants"
-      :current-id="restaurant?.id"
+      v-model="showBrandSelector"
+      :brands="allBrands"
+      :current-id="brand?.id"
       :brand-id="selectedBrand?.id"
-      @select="handleRestaurantSelect"
-      @restaurant-added="handleRestaurantAddedFromSelector"
-      @delete="handleRestaurantDelete"
+      @select="handleBrandSelect"
+      @brand-added="handleBrandAddedFromSelector"
+      @delete="handleBrandDelete"
     />
 
     </div>
@@ -2832,7 +2822,7 @@ function handlePublishingClose() {
 }
 
 /* No Restaurant State */
-.no-restaurant-state {
+.no-brand-state {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2851,7 +2841,7 @@ function handlePublishingClose() {
   }
 }
 
-.no-restaurant-card {
+.no-brand-card {
   max-width: 450px;
   padding: var(--space-3xl);
   display: flex;
@@ -2861,27 +2851,27 @@ function handlePublishingClose() {
   gap: var(--space-lg);
 }
 
-.no-restaurant-icon {
+.no-brand-icon {
   display: flex;
   justify-content: center;
   margin-bottom: var(--space-sm);
 }
 
-.no-restaurant-title {
+.no-brand-title {
   font-family: var(--font-heading);
   font-size: var(--text-xl);
   color: var(--text-primary);
   margin: 0;
 }
 
-.no-restaurant-description {
+.no-brand-description {
   font-size: var(--text-base);
   color: var(--text-secondary);
   margin: 0;
   line-height: 1.5;
 }
 
-.no-restaurant-actions {
+.no-brand-actions {
   display: flex;
   gap: var(--space-md);
   flex-wrap: wrap;
@@ -2901,22 +2891,22 @@ function handlePublishingClose() {
 }
 
 /* Restaurant Header */
-.restaurant-header {
+.brand-header {
   margin-bottom: var(--space-xl);
   animation: fadeInUp 0.5s var(--ease-smooth);
 }
 
-.restaurant-header.clickable {
+.brand-header.clickable {
   cursor: pointer;
   transition: all var(--transition-base);
 }
 
-.restaurant-header.clickable:hover {
+.brand-header.clickable:hover {
   border-color: rgba(212, 175, 55, 0.4);
   transform: translateY(-2px);
 }
 
-.restaurant-info {
+.brand-info {
   display: flex;
   align-items: center;
   gap: var(--space-lg);
@@ -2934,7 +2924,7 @@ function handlePublishingClose() {
   transition: all var(--transition-base);
 }
 
-.restaurant-header.clickable:hover .switch-indicator {
+.brand-header.clickable:hover .switch-indicator {
   background: rgba(212, 175, 55, 0.2);
 }
 
@@ -2945,7 +2935,7 @@ function handlePublishingClose() {
   letter-spacing: 0.05em;
 }
 
-.restaurant-logo {
+.brand-logo {
   width: 64px;
   height: 64px;
   border-radius: var(--radius-md);
@@ -2957,13 +2947,13 @@ function handlePublishingClose() {
   justify-content: center;
 }
 
-.restaurant-logo img {
+.brand-logo img {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
 
-.restaurant-logo.placeholder {
+.brand-logo.placeholder {
   background: rgba(212, 175, 55, 0.1);
 }
 
@@ -2971,18 +2961,18 @@ function handlePublishingClose() {
   font-size: var(--text-2xl);
 }
 
-.restaurant-details {
+.brand-details {
   flex: 1;
 }
 
-.restaurant-name {
+.brand-name {
   font-family: var(--font-heading);
   font-size: var(--text-xl);
   color: var(--text-primary);
   margin: 0 0 var(--space-xs) 0;
 }
 
-.restaurant-address {
+.brand-address {
   font-size: var(--text-sm);
   color: var(--text-secondary);
   margin: 0;
@@ -3020,12 +3010,12 @@ function handlePublishingClose() {
     align-self: center;
   }
 
-  .restaurant-info {
+  .brand-info {
     flex-direction: column;
     text-align: center;
   }
 
-  .restaurant-logo {
+  .brand-logo {
     width: 80px;
     height: 80px;
   }
@@ -3065,16 +3055,16 @@ function handlePublishingClose() {
     padding: var(--space-sm);
   }
 
-  .restaurant-logo {
+  .brand-logo {
     width: 64px;
     height: 64px;
   }
 
-  .restaurant-name {
+  .brand-name {
     font-size: var(--text-xl);
   }
 
-  .restaurant-address {
+  .brand-address {
     font-size: var(--text-xs);
   }
 }
@@ -3084,12 +3074,12 @@ function handlePublishingClose() {
     padding: var(--space-sm);
   }
 
-  .restaurant-logo {
+  .brand-logo {
     width: 56px;
     height: 56px;
   }
 
-  .restaurant-name {
+  .brand-name {
     font-size: var(--text-lg);
   }
 

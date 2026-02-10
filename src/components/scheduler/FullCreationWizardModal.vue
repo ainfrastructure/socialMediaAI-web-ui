@@ -38,7 +38,7 @@ interface PublishResult {
 interface Props {
   modelValue: boolean
   selectedDate: string | null // YYYY-MM-DD format
-  restaurants: Brand[]
+  brands: Brand[]
 }
 
 const props = defineProps<Props>()
@@ -55,7 +55,7 @@ const instagramStore = useInstagramStore()
 const notificationStore = useNotificationStore()
 
 // Wizard state
-type WizardStep = 'choose-method' | 'choose-restaurant' | 'create' | 'success'
+type WizardStep = 'choose-method' | 'choose-brand' | 'create' | 'success'
 const wizardStep = ref<WizardStep>('choose-method')
 const selectedMethod = ref<'new' | 'saved' | null>(null)
 const selectedBrand = ref<Brand | null>(null)
@@ -163,14 +163,14 @@ function selectMethod(method: 'new' | 'saved') {
   }
 
   // For 'new' method
-  if (props.restaurants.length > 1) {
-    wizardStep.value = 'choose-restaurant'
-  } else if (props.restaurants.length === 1) {
-    selectedBrand.value = props.restaurants[0]
+  if (props.brands.length > 1) {
+    wizardStep.value = 'choose-brand'
+  } else if (props.brands.length === 1) {
+    selectedBrand.value = props.brands[0]
     loadMenuItems()
   } else {
-    // No restaurants
-    generationError.value = t('scheduler.noRestaurants', 'No restaurants available. Please add a restaurant first.')
+    // No brands
+    generationError.value = t('scheduler.noRestaurants', 'No brands available. Please add a brand first.')
   }
 }
 
@@ -186,7 +186,7 @@ async function loadMenuItems() {
   generationError.value = null
 
   try {
-    // Menu items are stored in the restaurant object (deduplicated by name)
+    // Menu items are stored in the brand object (deduplicated by name)
     if (selectedBrand.value.menu?.items) {
       const itemsWithImages = selectedBrand.value.menu.items.filter((item: any) => item.imageUrl) || []
       const seen = new Set<string>()
@@ -207,7 +207,7 @@ async function loadMenuItems() {
 }
 
 function goBack() {
-  if (wizardStep.value === 'choose-restaurant') {
+  if (wizardStep.value === 'choose-brand') {
     wizardStep.value = 'choose-method'
     selectedMethod.value = null
   } else if (wizardStep.value === 'create') {
@@ -220,8 +220,8 @@ function goBack() {
       activeRef?.prevStep()
     } else {
       // Child is on step 1, exit to previous wizard step
-      if (props.restaurants.length > 1) {
-        wizardStep.value = 'choose-restaurant'
+      if (props.brands.length > 1) {
+        wizardStep.value = 'choose-brand'
       } else {
         wizardStep.value = 'choose-method'
       }
@@ -332,7 +332,7 @@ async function generateImage(uploadedLogo: File | null = null, uploadedImage: Fi
     errorLog('Failed to generate post content:', error)
   })
 
-  // Prepare watermark if restaurant has logo and user wants it
+  // Prepare watermark if brand has logo and user wants it
   const logoUrl = uploadedLogo
     ? await fileToBase64Url(uploadedLogo)
     : selectedBrand.value.brand_dna?.logo_url
@@ -442,6 +442,7 @@ async function handleEasyModeGenerate(data: {
   includeLogo: boolean
   uploadedImage: File | null
   uploadedLogo: File | null
+  isExistingImage?: boolean
 }) {
   try {
     generating.value = true
@@ -487,10 +488,10 @@ async function handleEasyModeGenerate(data: {
       // Generate the image (pass both uploaded logo and uploaded image for reference)
       await generateImage(data.uploadedLogo, data.uploadedImage)
 
-      // Upload the image to the restaurant's uploaded_images collection
-      if (data.uploadedImage && selectedBrand.value?.id) {
+      // Upload the image to the brand's asset collection (skip if already in library)
+      if (data.uploadedImage && !data.isExistingImage && selectedBrand.value?.id) {
         try {
-          await brandService.uploadRestaurantImages(
+          await brandService.uploadBrandImages(
             selectedBrand.value.id,
             [data.uploadedImage as any]
           )
@@ -551,9 +552,9 @@ async function handleEasyModePublish(data: {
       return
     }
 
-    // Validate restaurant is selected
+    // Validate brand is selected
     if (!selectedBrand.value?.id) {
-      generationError.value = 'Please select a restaurant first'
+      generationError.value = 'Please select a brand first'
       return
     }
 
@@ -567,8 +568,7 @@ async function handleEasyModePublish(data: {
     let favoritePostId: string | null = null
     try {
       const saveResponse = await api.saveFavorite({
-        restaurant_id: selectedBrand.value.id,
-        brand_id: selectedBrand.value.brand_id || undefined,
+        brand_id: selectedBrand.value.id,
         content_type: 'image',
         media_url: generatedImageUrl.value,
         post_text: finalPostText,
@@ -598,13 +598,14 @@ async function handleEasyModePublish(data: {
     try {
       if (data.publishType === 'schedule') {
         // Schedule the post
+        const schedDate = data.scheduleDate || props.selectedDate!
+        const scheduledTime = `${schedDate}T${data.scheduleTime || '12:00'}:00`
         const scheduleResponse = await api.schedulePost({
-          favorite_post_id: favoritePostId,
-          scheduled_date: data.scheduleDate || props.selectedDate!,
-          scheduled_time: data.scheduleTime,
+          post_id: favoritePostId,
+          scheduled_time: scheduledTime,
           platforms: platforms,
-          platform_settings: data.accountSelections,
-          timezone: data.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone
+          timezone: data.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone,
+          brand_id: selectedBrand.value?.id,
         })
 
         if (!scheduleResponse.success) {
@@ -799,12 +800,10 @@ async function publishToSocialMedia(
     try {
       const now = new Date()
       await api.createPublishedPost({
-        favorite_post_id: favoritePostId,
-        published_date: now.toISOString().split('T')[0],
-        published_time: now.toTimeString().slice(0, 5),
+        post_id: favoritePostId,
         platforms: successfulPlatforms.map(r => r.platform),
-        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-        platform_post_urls: Object.fromEntries(
+        brand_id: selectedBrand.value?.id,
+        platform_urls: Object.fromEntries(
           successfulPlatforms.filter(r => r.url).map(r => [r.platform, r.url!])
         )
       })
@@ -900,7 +899,7 @@ async function handleInlineFeedback(feedbackText: string) {
                 <template v-if="wizardStep === 'choose-method'">
                   {{ $t('scheduler.createPostFor', 'Create Post for') }} {{ formattedDate }}
                 </template>
-                <template v-else-if="wizardStep === 'choose-restaurant'">
+                <template v-else-if="wizardStep === 'choose-brand'">
                   {{ $t('scheduler.selectBrand', 'Select Restaurant') }}
                 </template>
                 <template v-else-if="wizardStep === 'create'">
@@ -965,29 +964,29 @@ async function handleInlineFeedback(feedbackText: string) {
           </div>
         </div>
 
-        <!-- Step 2: Choose Restaurant -->
-        <div v-else-if="wizardStep === 'choose-restaurant'" class="wizard-body">
-          <p class="wizard-description">{{ $t('scheduler.whichRestaurant', 'Which restaurant is this post for?') }}</p>
+        <!-- Step 2: Choose Brand -->
+        <div v-else-if="wizardStep === 'choose-brand'" class="wizard-body">
+          <p class="wizard-description">{{ $t('scheduler.whichRestaurant', 'Which brand is this post for?') }}</p>
 
-          <div class="restaurants-list">
+          <div class="brands-list">
             <div
-              v-for="restaurant in restaurants"
-              :key="restaurant.id"
-              class="restaurant-item"
-              @click="selectBrand(restaurant)"
+              v-for="brand in brands"
+              :key="brand.id"
+              class="brand-item"
+              @click="selectBrand(brand)"
             >
-              <div v-if="restaurant.brand_dna?.logo_url" class="item-logo">
-                <img :src="restaurant.brand_dna.logo_url" :alt="restaurant.name" />
+              <div v-if="brand.brand_dna?.logo_url" class="item-logo">
+                <img :src="brand.brand_dna.logo_url" :alt="brand.name" />
               </div>
               <div v-else class="item-logo placeholder">
                 <span class="placeholder-icon">🏪</span>
               </div>
 
               <div class="item-info">
-                <h4 class="item-name">{{ restaurant.name }}</h4>
-                <p class="item-address">{{ restaurant.address }}</p>
-                <p v-if="restaurant.menu?.items?.length" class="item-menu-count">
-                  {{ restaurant.menu.items.length }} {{ $t('scheduler.menuItems', 'menu items') }}
+                <h4 class="item-name">{{ brand.name }}</h4>
+                <p class="item-address">{{ brand.address }}</p>
+                <p v-if="brand.menu?.items?.length" class="item-menu-count">
+                  {{ brand.menu.items.length }} {{ $t('scheduler.menuItems', 'menu items') }}
                 </p>
               </div>
             </div>
@@ -1237,7 +1236,7 @@ async function handleInlineFeedback(feedbackText: string) {
 }
 
 /* Restaurants List */
-.restaurants-list {
+.brands-list {
   display: flex;
   flex-direction: column;
   gap: var(--space-md);
@@ -1246,7 +1245,7 @@ async function handleInlineFeedback(feedbackText: string) {
   text-align: left;
 }
 
-.restaurant-item {
+.brand-item {
   display: flex;
   align-items: center;
   gap: var(--space-lg);
@@ -1258,7 +1257,7 @@ async function handleInlineFeedback(feedbackText: string) {
   transition: all 0.2s ease;
 }
 
-.restaurant-item:hover {
+.brand-item:hover {
   background: rgba(255, 255, 255, 0.8);
   border-color: rgba(15, 61, 46, 0.15);
   transform: translateX(4px);
@@ -1395,23 +1394,23 @@ async function handleInlineFeedback(feedbackText: string) {
 }
 
 /* Scrollbar styling */
-.restaurants-list::-webkit-scrollbar,
+.brands-list::-webkit-scrollbar,
 .wizard-modal::-webkit-scrollbar {
   width: 6px;
 }
 
-.restaurants-list::-webkit-scrollbar-track,
+.brands-list::-webkit-scrollbar-track,
 .wizard-modal::-webkit-scrollbar-track {
   background: transparent;
 }
 
-.restaurants-list::-webkit-scrollbar-thumb,
+.brands-list::-webkit-scrollbar-thumb,
 .wizard-modal::-webkit-scrollbar-thumb {
   background: rgba(212, 175, 55, 0.3);
   border-radius: var(--radius-full);
 }
 
-.restaurants-list::-webkit-scrollbar-thumb:hover,
+.brands-list::-webkit-scrollbar-thumb:hover,
 .wizard-modal::-webkit-scrollbar-thumb:hover {
   background: rgba(212, 175, 55, 0.5);
 }
@@ -1461,12 +1460,12 @@ async function handleInlineFeedback(feedbackText: string) {
   }
 
   /* Restaurant list compact for mobile */
-  .restaurants-list {
+  .brands-list {
     gap: var(--space-sm);
     max-height: calc(100vh - 220px);
   }
 
-  .restaurant-item {
+  .brand-item {
     padding: var(--space-md);
     gap: var(--space-md);
   }
@@ -1500,12 +1499,12 @@ async function handleInlineFeedback(feedbackText: string) {
   background: var(--bg-elevated);
 }
 
-:root[data-theme="dark"] .restaurant-item {
+:root[data-theme="dark"] .brand-item {
   background: var(--bg-tertiary);
   border-color: var(--border-color);
 }
 
-:root[data-theme="dark"] .restaurant-item:hover {
+:root[data-theme="dark"] .brand-item:hover {
   background: var(--bg-elevated);
   border-color: var(--accent-alpha-20);
 }

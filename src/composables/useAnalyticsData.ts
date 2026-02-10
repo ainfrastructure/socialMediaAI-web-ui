@@ -39,7 +39,7 @@ export function useAnalyticsData() {
   // ─── State ───────────────────────────────────────────────
   const loading = ref(true)
   const refreshingEngagement = ref(false)
-  const stats = ref({ postsCreated: 0, favoritesSaved: 0, scheduledPosts: 0, restaurantsAdded: 0 })
+  const stats = ref({ postsCreated: 0, favoritesSaved: 0, scheduledPosts: 0, brandsAdded: 0 })
   const scheduledPosts = ref<any[]>([])
   const favorites = ref<any[]>([])
   const selectedTimeRange = ref<TimeRange>('30d')
@@ -135,11 +135,7 @@ export function useAnalyticsData() {
     return scheduledPosts.value.filter(post =>
       post.brand_id === selectedBrandId.value ||
       post.brands?.id === selectedBrandId.value ||
-      post.brand?.id === selectedBrandId.value ||
-      post.restaurant_id === selectedBrandId.value ||
-      post.favorite_posts?.brand_id === selectedBrandId.value ||
-      post.favorite_post?.brand_id === selectedBrandId.value ||
-      post.favorite?.brand_id === selectedBrandId.value
+      post.posts?.brand_id === selectedBrandId.value
     )
   })
 
@@ -149,7 +145,7 @@ export function useAnalyticsData() {
       fav.brand_id === selectedBrandId.value ||
       fav.brands?.id === selectedBrandId.value ||
       fav.brand?.id === selectedBrandId.value ||
-      fav.restaurant_id === selectedBrandId.value
+      fav.brand_id === selectedBrandId.value
     )
   })
 
@@ -456,37 +452,27 @@ export function useAnalyticsData() {
 
   // ─── Post helpers ────────────────────────────────────────
   function getMediaUrl(post: any): string | null {
-    return post.media_url || post.image_url || post.favorite_posts?.media_url ||
-      post.favorite_post?.media_url || post.favorite?.media_url || null
+    return post.media_url || post.image_url || post.posts?.image_url || null
   }
 
   function getVideoUrl(post: any): string | null {
-    return post.video_url || post.favorite_posts?.video_url ||
-      post.favorite_post?.video_url || post.favorite?.video_url || null
+    return post.video_url || post.posts?.video_url || null
   }
 
   function hasVideo(post: any): boolean { return !!getVideoUrl(post) }
 
   function getPostText(post: any): string {
     return post.post_text || post.caption || post.text ||
-      post.favorite_posts?.post_text || post.favorite_posts?.caption ||
-      post.favorite_post?.post_text || post.favorite_post?.caption || ''
+      post.posts?.caption || ''
   }
 
   function getBrandName(post: any): string {
     if (post.business_name) return post.business_name
     if (post.brands?.name) return post.brands.name
     if (post.brand?.name) return post.brand.name
-    if (post.favorite_posts?.business_name) return post.favorite_posts.business_name
-    if (post.favorite_post?.business_name) return post.favorite_post.business_name
-    if (post.favorite?.business_name) return post.favorite.business_name
-    if (post.restaurant_name) return post.restaurant_name
-    if (post.favorite_posts?.restaurant_name) return post.favorite_posts.restaurant_name
-    if (post.favorite_post?.restaurant_name) return post.favorite_post.restaurant_name
-    if (post.favorite?.restaurant_name) return post.favorite.restaurant_name
-    if (post.restaurant?.name) return post.restaurant.name
-    const brandId = post.brand_id || post.favorite_posts?.brand_id ||
-      post.favorite_post?.brand_id || post.favorite?.brand_id
+    if (post.posts?.brands?.name) return post.posts.brands.name
+    if (post.brand_name) return post.brand_name
+    const brandId = post.brand_id || post.posts?.brand_id
     if (brandId && brandsStore.brands.length > 0) {
       const brand = brandsStore.brands.find((b: any) => b.id === brandId)
       if (brand) return brand.name

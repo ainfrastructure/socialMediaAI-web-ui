@@ -37,7 +37,7 @@ const industries: Industry[] = [
     name: 'Restaurants',
     icon: 'restaurant',
     backgroundImage: '/background.jpeg',
-    headlinePart3Key: 'landing.hero.headlinePart3' // "generator for restaurants"
+    headlinePart3Key: 'landing.hero.headlinePart3' // "generator for your brand"
   },
   {
     id: 'bars',

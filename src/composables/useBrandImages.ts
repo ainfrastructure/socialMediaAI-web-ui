@@ -1,13 +1,13 @@
-import { ref, computed, watch } from 'vue'
+import { ref, computed } from 'vue'
 import { brandService } from '@/services/brandService'
-import type { UploadedImage, Brand } from '@/services/brandService'
+import type { BrandAsset, Brand } from '@/services/brandService'
 
 export interface FolderNode {
   name: string
   path: string
   fullPath: string
   children: FolderNode[]
-  images: UploadedImage[]
+  images: BrandAsset[]
   imageCount: number
   isExpanded: boolean
 }
@@ -21,7 +21,7 @@ export function useBrandImages(brand: Brand) {
   const brandId = computed(() => brand.place_id || brand.id)
 
   // State
-  const images = ref<UploadedImage[]>([])
+  const images = ref<BrandAsset[]>([])
   const folderStructure = ref<FolderNode | null>(null)
   const currentFolderPath = ref<string>('/')
   const selectedImageIds = ref<Set<string>>(new Set())
@@ -32,17 +32,23 @@ export function useBrandImages(brand: Brand) {
   const loading = ref<boolean>(false)
   const error = ref<string>('')
 
-  // Watch for brand changes
-  watch(
-    () => brand.uploaded_images,
-    (newImages) => {
-      if (newImages) {
-        images.value = newImages
-        folderStructure.value = buildFolderTree(newImages)
-      }
-    },
-    { immediate: true }
-  )
+  // Fetch assets from API
+  async function fetchAssets(): Promise<void> {
+    try {
+      loading.value = true
+      error.value = ''
+      const assets = await brandService.getAssets(brandId.value)
+      images.value = assets
+      folderStructure.value = buildFolderTree(assets)
+    } catch (err: any) {
+      error.value = err.message || 'Failed to load images'
+    } finally {
+      loading.value = false
+    }
+  }
+
+  // Fetch immediately on creation
+  fetchAssets()
 
   // Computed: Current folder node
   const currentFolder = computed<FolderNode | null>(() => {
@@ -52,8 +58,8 @@ export function useBrandImages(brand: Brand) {
   })
 
   // Computed: Filtered images based on current folder, search, and sort
-  const filteredImages = computed<UploadedImage[]>(() => {
-    let result: UploadedImage[] = []
+  const filteredImages = computed<BrandAsset[]>(() => {
+    let result: BrandAsset[] = []
 
     if (currentFolder.value) {
       // Get images in current folder (non-recursive)
@@ -67,12 +73,9 @@ export function useBrandImages(brand: Brand) {
     if (searchQuery.value.trim()) {
       const query = searchQuery.value.toLowerCase()
       result = result.filter((img) => {
-        const filename = extractFilenameFromPath(img.storage_path).toLowerCase()
-        const folderPath = extractFolderPathFromStorage(
-          img.storage_path,
-          brandId.value
-        ).join('/').toLowerCase()
-        return filename.includes(query) || folderPath.includes(query)
+        const filename = extractFilenameFromPath(img.storage_path || '').toLowerCase()
+        const folder = (img.folder || '').toLowerCase()
+        return filename.includes(query) || folder.includes(query)
       })
     }
 
@@ -82,8 +85,8 @@ export function useBrandImages(brand: Brand) {
 
       switch (sortBy.value) {
         case 'name': {
-          const nameA = extractFilenameFromPath(a.storage_path)
-          const nameB = extractFilenameFromPath(b.storage_path)
+          const nameA = extractFilenameFromPath(a.storage_path || '')
+          const nameB = extractFilenameFromPath(b.storage_path || '')
           comparison = nameA.localeCompare(nameB)
           break
         }
@@ -94,7 +97,7 @@ export function useBrandImages(brand: Brand) {
           break
         }
         case 'size': {
-          comparison = a.file_size - b.file_size
+          comparison = (a.file_size ?? 0) - (b.file_size ?? 0)
           break
         }
       }
@@ -106,7 +109,7 @@ export function useBrandImages(brand: Brand) {
   })
 
   // Computed: Selection state
-  const selectedImages = computed<UploadedImage[]>(() => {
+  const selectedImages = computed<BrandAsset[]>(() => {
     return filteredImages.value.filter((img) => selectedImageIds.value.has(img.id))
   })
 
@@ -136,28 +139,6 @@ export function useBrandImages(brand: Brand) {
 
     return crumbs
   })
-
-  // Helper: Extract folder path array from storage_path
-  function extractFolderPathFromStorage(
-    storagePath: string,
-    brandId: string
-  ): string[] {
-    // Storage path format: "brandId/categories/menu/burgers/img.jpg"
-    // We want: ["menu", "burgers"]
-    const prefix = `${brandId}/categories/`
-    if (!storagePath.startsWith(prefix)) {
-      // Handle legacy category field
-      return []
-    }
-
-    const withoutPrefix = storagePath.substring(prefix.length)
-    const parts = withoutPrefix.split('/')
-
-    // Remove the filename (last part)
-    parts.pop()
-
-    return parts.filter(Boolean)
-  }
 
   // Helper: Extract filename from storage_path
   function extractFilenameFromPath(storagePath: string): string {
@@ -195,11 +176,11 @@ export function useBrandImages(brand: Brand) {
     return count
   }
 
-  // Helper: Insert image into tree
+  // Helper: Insert image into tree at a given folder path
   function insertImageIntoTree(
     node: FolderNode,
     pathParts: string[],
-    image: UploadedImage,
+    image: BrandAsset,
     depth: number
   ): void {
     if (depth >= pathParts.length) {
@@ -217,7 +198,7 @@ export function useBrandImages(brand: Brand) {
       child = {
         name: folderName,
         path: childPath,
-        fullPath: `${brandId.value}/categories/${childPath}`,
+        fullPath: childPath,
         children: [],
         images: [],
         imageCount: 0,
@@ -233,12 +214,12 @@ export function useBrandImages(brand: Brand) {
     child.imageCount = countImagesRecursive(child)
   }
 
-  // Build folder tree from flat image list
-  function buildFolderTree(imageList: UploadedImage[]): FolderNode {
+  // Build folder tree from flat image list using the `folder` DB column
+  function buildFolderTree(imageList: BrandAsset[]): FolderNode {
     const root: FolderNode = {
       name: brand.name || 'All Images',
       path: '/',
-      fullPath: `${brandId.value}/categories/`,
+      fullPath: '/',
       children: [],
       images: [],
       imageCount: imageList.length,
@@ -246,13 +227,14 @@ export function useBrandImages(brand: Brand) {
     }
 
     for (const image of imageList) {
-      const pathParts = extractFolderPathFromStorage(image.storage_path, brandId.value)
+      const folder = image.folder?.trim()
 
-      if (pathParts.length === 0) {
-        // Image at root level
+      if (!folder) {
+        // Image at root level (no folder assigned)
         root.images.push(image)
       } else {
-        // Image in subfolder
+        // Split folder path (supports nested folders like "menu/burgers")
+        const pathParts = folder.split('/').filter(Boolean)
         insertImageIntoTree(root, pathParts, image, 0)
       }
     }
@@ -441,6 +423,7 @@ export function useBrandImages(brand: Brand) {
     breadcrumbs,
 
     // Methods
+    fetchAssets,
     navigateToFolder,
     toggleFolderExpansion,
     toggleImageSelection,

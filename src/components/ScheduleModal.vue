@@ -532,14 +532,10 @@ const handleUnifiedPublish = async (data: {
         const now = new Date()
         try {
           await api.createPublishedPost({
-            favorite_post_id: props.favoritePost.id,
-            published_date: now.toISOString().split('T')[0],
-            published_time: `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`,
-            platforms: data.platforms,  // ALL platforms (not just successful)
-            timezone: data.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone,
-            platform_post_urls: postUrls,
-            platform_settings: data.accountSelections,
-            platform_results: results  // NEW: Pass all results (success + failed)
+            post_id: props.favoritePost.id,
+            platforms: successfulPlatforms.map(r => r.platform),
+            brand_id: props.favoritePost.brand_id,
+            platform_urls: postUrls,
           })
         } catch (calendarErr) {
           warnLog('Failed to save to calendar:', calendarErr)
@@ -550,14 +546,13 @@ const handleUnifiedPublish = async (data: {
       }
     } else {
       // Schedule for later
+      const scheduledTime = `${data.scheduledDate}T${data.scheduledTime || '12:00'}:00`
       const scheduleData = {
-        favorite_post_id: props.favoritePost.id,
-        scheduled_date: data.scheduledDate,
-        scheduled_time: data.scheduledTime || undefined,
+        post_id: props.favoritePost.id,
+        scheduled_time: scheduledTime,
         timezone: data.timezone,
-        notes: formData.value.notes || undefined,
         platforms: data.platforms,
-        platform_settings: data.accountSelections || {}, // Include selected accounts for each platform
+        brand_id: props.favoritePost.brand_id,
       }
       const response = await api.schedulePost(scheduleData)
 

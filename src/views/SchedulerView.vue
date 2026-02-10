@@ -151,7 +151,7 @@
                   <div class="th-post-type">{{ $t('postType.label') || 'Post Type' }}</div>
                   <div class="th-platforms">{{ $t('dashboardNew.platforms') || 'Platforms' }}</div>
                   <div class="th-status">{{ $t('scheduler.status') || 'Status' }}</div>
-                  <div class="th-restaurant">{{ $t('scheduler.restaurant') || 'Brand' }}</div>
+                  <div class="th-brand">{{ $t('scheduler.restaurant') || 'Brand' }}</div>
                   <div class="th-expand"></div>
                 </div>
 
@@ -228,8 +228,8 @@
                       </div>
 
                       <!-- Business Column -->
-                      <div class="td-restaurant">
-                        <span class="restaurant-name">{{ post.business_name || post.restaurant_name || '-' }}</span>
+                      <div class="td-brand">
+                        <span class="brand-name">{{ post.business_name || post.brand_name || '-' }}</span>
                       </div>
 
                       <!-- Expand Toggle -->
@@ -1018,14 +1018,14 @@ const getPostPlatforms = (post: any): string[] => {
 }
 
 const getPostHashtags = (post: any): string[] => {
-  const hashtags = post.hashtags || post.favorite_posts?.hashtags || post.favorite?.hashtags || post.favorite_post?.hashtags || []
+  const hashtags = post.hashtags || post.posts?.hashtags || post.favorite?.hashtags || []
   if (Array.isArray(hashtags)) return hashtags
   if (typeof hashtags === 'string') return hashtags.split(/\s+/).filter(Boolean)
   return []
 }
 
 const getPostCaption = (post: any): string => {
-  return post.post_text || post.caption || post.favorite_posts?.post_text || ''
+  return post.post_text || post.caption || post.posts?.caption || ''
 }
 
 const truncateCaption = (text: string, maxLength: number = 60): string => {
@@ -1129,57 +1129,30 @@ const fetchScheduledPosts = async () => {
 
     // Fix content_type based on media_url if it's incorrect
     scheduledPosts.value = uniquePosts.map((post: any) => {
-        if (post.favorite_posts) {
-        }
-
         // Try to find the media URL from various possible fields
         let mediaUrl = post.media_url || post.image_url || post.video_url || post.content_url
         let postText = post.post_text || post.caption
         let contentType = post.content_type
         let platform = post.platform
         let businessName = post.business_name || post.brands?.name || post.brand?.name
-        let restaurantName = post.restaurant_name
+        let brandName = post.brand_name
 
-        // Check if this is a scheduled favorite (has favorite_posts field)
-        if (!mediaUrl && post.favorite_posts) {
+        // Check if this is a scheduled post with joined posts data
+        if (!mediaUrl && post.posts) {
           mediaUrl =
-            post.favorite_posts.media_url ||
-            post.favorite_posts.image_url ||
-            post.favorite_posts.video_url
-          postText = postText || post.favorite_posts.post_text || post.favorite_posts.caption
-          contentType = contentType || post.favorite_posts.content_type
-          platform = platform || post.favorite_posts.platform
-          businessName = businessName || post.favorite_posts.brands?.name || post.favorite_posts.business_name
-          restaurantName = restaurantName || post.favorite_posts.restaurant_name
-        }
-
-        // Also check legacy field names
-        if (!mediaUrl && post.favorite) {
-          mediaUrl = post.favorite.media_url || post.favorite.image_url || post.favorite.video_url
-          postText = postText || post.favorite.post_text || post.favorite.caption
-          contentType = contentType || post.favorite.content_type
-          platform = platform || post.favorite.platform
-          businessName = businessName || post.favorite.brands?.name || post.favorite.business_name
-          restaurantName = restaurantName || post.favorite.restaurant_name
-        }
-
-        if (!mediaUrl && post.favorite_post) {
-          mediaUrl =
-            post.favorite_post.media_url ||
-            post.favorite_post.image_url ||
-            post.favorite_post.video_url
-          postText = postText || post.favorite_post.post_text || post.favorite_post.caption
-          contentType = contentType || post.favorite_post.content_type
-          platform = platform || post.favorite_post.platform
-          businessName = businessName || post.favorite_post.brands?.name || post.favorite_post.business_name
-          restaurantName = restaurantName || post.favorite_post.restaurant_name
+            post.posts.image_url ||
+            post.posts.video_url
+          postText = postText || post.posts.caption
+          contentType = contentType || post.posts.content_type
+          platform = platform || post.posts.platform_targets?.[0]
+          businessName = businessName || post.posts.brands?.name
         }
 
         // If content_type is still missing, detect from URL
         const detectedType = contentType || detectContentTypeFromUrl(mediaUrl || '')
 
-        // Ensure scheduled_date is normalized (strip time component if present)
-        const scheduledDate = post.scheduled_date ? post.scheduled_date.split('T')[0] : post.scheduled_date
+        // Derive scheduled_date from scheduled_time (TIMESTAMPTZ)
+        const scheduledDate = post.scheduled_time ? post.scheduled_time.split('T')[0] : post.scheduled_date
 
         return {
           ...post,
@@ -1188,8 +1161,8 @@ const fetchScheduledPosts = async () => {
           post_text: postText,
           content_type: detectedType,
           platform: platform,
-          business_name: businessName || restaurantName,
-          restaurant_name: restaurantName,
+          business_name: businessName || brandName,
+          brand_name: brandName,
         }
       })
 
@@ -1204,35 +1177,18 @@ const fetchScheduledPosts = async () => {
         let contentType = post.content_type
         let platform = post.platform
         let businessName = post.business_name || post.brands?.name || post.brand?.name
-        let restaurantName = post.restaurant_name
+        let brandName = post.brand_name
 
-        if (!mediaUrl && post.favorite_posts) {
-          mediaUrl = post.favorite_posts.media_url || post.favorite_posts.image_url || post.favorite_posts.video_url
-          postText = postText || post.favorite_posts.post_text || post.favorite_posts.caption
-          contentType = contentType || post.favorite_posts.content_type
-          platform = platform || post.favorite_posts.platform
-          businessName = businessName || post.favorite_posts.brands?.name || post.favorite_posts.business_name
-          restaurantName = restaurantName || post.favorite_posts.restaurant_name
-        }
-        if (!mediaUrl && post.favorite) {
-          mediaUrl = post.favorite.media_url || post.favorite.image_url || post.favorite.video_url
-          postText = postText || post.favorite.post_text || post.favorite.caption
-          contentType = contentType || post.favorite.content_type
-          platform = platform || post.favorite.platform
-          businessName = businessName || post.favorite.brands?.name || post.favorite.business_name
-          restaurantName = restaurantName || post.favorite.restaurant_name
-        }
-        if (!mediaUrl && post.favorite_post) {
-          mediaUrl = post.favorite_post.media_url || post.favorite_post.image_url || post.favorite_post.video_url
-          postText = postText || post.favorite_post.post_text || post.favorite_post.caption
-          contentType = contentType || post.favorite_post.content_type
-          platform = platform || post.favorite_post.platform
-          businessName = businessName || post.favorite_post.brands?.name || post.favorite_post.business_name
-          restaurantName = restaurantName || post.favorite_post.restaurant_name
+        if (!mediaUrl && post.posts) {
+          mediaUrl = post.posts.image_url || post.posts.video_url
+          postText = postText || post.posts.caption
+          contentType = contentType || post.posts.content_type
+          platform = platform || post.posts.platform_targets?.[0]
+          businessName = businessName || post.posts.brands?.name
         }
 
         const detectedType = contentType || detectContentTypeFromUrl(mediaUrl || '')
-        const scheduledDate = post.scheduled_date ? post.scheduled_date.split('T')[0] : post.scheduled_date
+        const scheduledDate = post.scheduled_time ? post.scheduled_time.split('T')[0] : post.scheduled_date
 
         return {
           ...post,
@@ -1241,8 +1197,8 @@ const fetchScheduledPosts = async () => {
           post_text: postText,
           content_type: detectedType,
           platform: platform,
-          business_name: businessName || restaurantName,
-          restaurant_name: restaurantName,
+          business_name: businessName || brandName,
+          brand_name: brandName,
         }
       })
     } else {
@@ -1404,16 +1360,12 @@ const cancelPost = showCancelConfirmation
 // Save edited scheduled post (from inline edit in SelectedDayDetail)
 const saveScheduledPost = async (postId: string, data: any) => {
   try {
-    const updatePayload: any = {}
+    const updatePayload: { scheduled_time?: string; timezone?: string; platform_status?: string } = {}
 
-    // Map the edit form data to the API payload
-    if (data.scheduled_date) updatePayload.scheduled_date = data.scheduled_date
-    if (data.scheduled_time !== undefined) updatePayload.scheduled_time = data.scheduled_time
+    // Backend accepts: scheduled_time (TIMESTAMPTZ), timezone, platform_status
+    if (data.scheduled_time) updatePayload.scheduled_time = data.scheduled_time
     if (data.timezone) updatePayload.timezone = data.timezone
-    if (data.platforms && data.platforms.length > 0) updatePayload.platforms = data.platforms
-    if (data.post_text !== undefined) updatePayload.post_text = data.post_text
-    if (data.hashtags !== undefined) updatePayload.hashtags = data.hashtags
-    if (data.notes !== undefined) updatePayload.notes = data.notes
+    if (data.platform_status) updatePayload.platform_status = data.platform_status
 
     const response = await schedulerService.updateScheduledPost(postId, updatePayload)
 
@@ -1481,12 +1433,12 @@ const selectCreationMethod = (method: 'saved' | 'new') => {
   showPickPostModal.value = true
 }
 
-// Proceed with the creation method after restaurant selection (or if only one restaurant)
+// Proceed with the creation method after brand selection (or if only one brand)
 const proceedWithCreationMethod = (method: 'saved' | 'new', brandId?: string) => {
   if (method === 'new') {
     // Always start in easy mode when creating new content
     preferencesStore.setCreationMode('easy', true)
-    // Go to posts create page with optional restaurant ID
+    // Go to posts create page with optional brand ID
     const url = `/posts/create?scheduleDate=${selectedDateForScheduling.value}`
     if (brandId) {
       preferencesStore.setSelectedBrand(brandId)
@@ -1586,16 +1538,16 @@ const handleRetryPost = async (post: any) => {
   retryPublishingComplete.value = false
   showRetryModal.value = true
 
-  // Get the favorite post details
-  const favoritePost = post.favorite_posts
-  if (!favoritePost) {
+  // Get the post content details from joined posts data
+  const postContent = post.posts
+  if (!postContent) {
     toastMessage.value = 'Post content not found'
     toastType.value = 'error'
     showToast.value = true
     return
   }
 
-  const message = favoritePost.post_text || ''
+  const message = postContent.caption || ''
   const results: Array<{ platform: string; success: boolean; url?: string; postId?: string; error?: string }> = []
   const postUrls: Record<string, string> = {}
 
@@ -1620,14 +1572,14 @@ const handleRetryPost = async (post: any) => {
         if (!selectedPage) continue
 
         try {
-          const hasVideo = !!favoritePost.video_url
-          const isVideo = hasVideo || favoritePost.content_type === 'video'
-          const videoUrl = favoritePost.video_url || favoritePost.media_url
+          const hasVideo = !!postContent.video_url
+          const isVideo = hasVideo || postContent.content_type === 'video'
+          const videoUrl = postContent.video_url || postContent.image_url
           const postType = (post.post_type_settings?.facebook || 'feed') as 'feed' | 'story' | 'reel' | 'carousel'
           const response = await api.postToFacebook(
             selectedPage.pageId,
             message,
-            isVideo ? undefined : favoritePost.media_url,
+            isVideo ? undefined : postContent.image_url,
             isVideo ? videoUrl : undefined,
             isVideo ? 'video' : 'image',
             postType
@@ -1667,14 +1619,14 @@ const handleRetryPost = async (post: any) => {
         if (!selectedAccount) continue
 
         try {
-          const hasVideo = !!favoritePost.video_url
-          const isVideo = hasVideo || favoritePost.content_type === 'video'
-          const videoUrl = favoritePost.video_url || favoritePost.media_url
+          const hasVideo = !!postContent.video_url
+          const isVideo = hasVideo || postContent.content_type === 'video'
+          const videoUrl = postContent.video_url || postContent.image_url
           const igPostType = (post.post_type_settings?.instagram || 'feed') as 'feed' | 'story' | 'reel' | 'carousel'
           const response = await api.postToInstagram(
             selectedAccount.instagramAccountId,
             message,
-            isVideo ? undefined : favoritePost.media_url,
+            isVideo ? undefined : postContent.image_url,
             isVideo ? videoUrl : undefined,
             isVideo ? 'video' : 'image',
             igPostType
@@ -2256,12 +2208,12 @@ onMounted(async () => {
 }
 
 /* Restaurant Column */
-.td-restaurant {
+.td-brand {
   display: flex;
   align-items: center;
 }
 
-.restaurant-name {
+.brand-name {
   font-size: var(--text-sm);
   color: var(--text-muted);
 }
@@ -3085,7 +3037,7 @@ onMounted(async () => {
   margin: 0;
 }
 
-.post-restaurant {
+.post-brand {
   font-size: 0.875rem;
   color: var(--text-muted);
 }

@@ -2,7 +2,7 @@
   <BaseModal
     :model-value="modelValue"
     size="xl"
-    title="Select Restaurants"
+    :title="t('brandFilter.selectBrands')"
     :show-close-button="true"
     @update:model-value="(val: boolean) => !val && close()"
     @close="close"
@@ -10,7 +10,7 @@
     <template #header>
       <div class="modal-header-content">
         <div class="header-icon">🏪</div>
-        <h2 class="modal-title">Select Restaurants</h2>
+        <h2 class="modal-title">{{ t('brandFilter.selectBrands') }}</h2>
       </div>
     </template>
 
@@ -22,61 +22,61 @@
           v-model="searchQuery"
           type="text"
           class="search-input"
-          placeholder="Search restaurants..."
+          :placeholder="t('brandFilter.searchBrands')"
         />
       </div>
     </div>
 
     <!-- Selected Count -->
     <div v-if="selectedCount > 0" class="selected-count">
-      {{ selectedCount }} restaurant{{ selectedCount !== 1 ? 's' : '' }} selected
+      {{ t('brandFilter.brandsSelected', { count: selectedCount }, selectedCount) }}
     </div>
 
-    <!-- Restaurant Grid -->
+    <!-- Brand Grid -->
     <div class="brands-grid">
       <div
-        v-for="restaurant in filteredBrands"
-        :key="restaurant.id"
-        :class="['brand-card', { selected: isSelected(restaurant.id) }]"
-        @click="toggleBrand(restaurant.id)"
+        v-for="brand in filteredBrands"
+        :key="brand.id"
+        :class="['brand-card', { selected: isSelected(brand.id) }]"
+        @click="toggleBrand(brand.id)"
       >
         <!-- Checkbox -->
         <div class="checkbox-wrapper">
           <input
             type="checkbox"
-            :checked="isSelected(restaurant.id)"
+            :checked="isSelected(brand.id)"
             class="checkbox-input"
             @click.stop
           />
           <span class="checkbox-custom"></span>
         </div>
 
-        <!-- Restaurant Logo/Image -->
+        <!-- Brand Logo/Image -->
         <div class="brand-logo">
           <img
-            v-if="restaurant.brand_dna?.logo_url"
-            :src="restaurant.brand_dna.logo_url"
-            :alt="restaurant.name"
+            v-if="brand.brand_dna?.logo_url"
+            :src="brand.brand_dna.logo_url"
+            :alt="brand.name"
             class="logo-image"
-            @error="handleImageError($event, restaurant)"
+            @error="handleImageError($event, brand)"
           />
           <div v-else class="logo-placeholder">
-            {{ getInitials(restaurant.name) }}
+            {{ getInitials(brand.name) }}
           </div>
         </div>
 
-        <!-- Restaurant Info -->
+        <!-- Brand Info -->
         <div class="brand-info">
-          <h3 class="brand-name">{{ restaurant.name }}</h3>
-          <p v-if="restaurant.city || restaurant.address" class="brand-location">
-            📍 {{ restaurant.city || restaurant.address }}
+          <h3 class="brand-name">{{ brand.name }}</h3>
+          <p v-if="brand.city || brand.address" class="brand-location">
+            📍 {{ brand.city || brand.address }}
           </p>
         </div>
 
         <!-- Social Media Platforms -->
-        <div v-if="restaurant.platforms && restaurant.platforms.length > 0" class="platforms">
+        <div v-if="brand.platforms && brand.platforms.length > 0" class="platforms">
           <span
-            v-for="platform in restaurant.platforms"
+            v-for="platform in brand.platforms"
             :key="platform"
             :class="['platform-icon', `platform-${platform}`]"
             :title="platform"
@@ -89,17 +89,17 @@
       <!-- Empty State -->
       <div v-if="filteredBrands.length === 0" class="empty-state">
         <div class="empty-icon">🔍</div>
-        <p class="empty-text">No restaurants found</p>
-        <p class="empty-hint">Try a different search term</p>
+        <p class="empty-text">{{ t('brandFilter.noBrandsFound') }}</p>
+        <p class="empty-hint">{{ t('brandFilter.tryDifferentSearch') }}</p>
       </div>
     </div>
 
     <template #footer>
       <BaseButton variant="ghost" @click="clearSelection">
-        Clear All
+        {{ t('brandFilter.clearAll') }}
       </BaseButton>
       <BaseButton variant="primary" @click="close">
-        Apply Filters
+        {{ t('brandFilter.applyFilters') }}
       </BaseButton>
     </template>
   </BaseModal>
@@ -107,11 +107,12 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import BaseModal from './BaseModal.vue'
 import BaseButton from './BaseButton.vue'
 import { warnLog } from '@/utils/debug'
 
-interface Restaurant {
+interface Brand {
   id: string
   name: string
   brand_dna?: {
@@ -126,7 +127,7 @@ interface Restaurant {
 
 interface Props {
   modelValue: boolean
-  restaurants: Restaurant[]
+  brands: Brand[]
   selectedBrandIds: string[]
 }
 
@@ -137,18 +138,19 @@ const emit = defineEmits<{
   (e: 'update:selectedBrandIds', value: string[]): void
 }>()
 
+const { t } = useI18n()
 const searchQuery = ref('')
 
 const filteredBrands = computed(() => {
   if (!searchQuery.value.trim()) {
-    return props.restaurants
+    return props.brands
   }
   const query = searchQuery.value.toLowerCase()
-  return props.restaurants.filter((restaurant) =>
-    restaurant.name.toLowerCase().includes(query) ||
-    restaurant.location?.toLowerCase().includes(query) ||
-    restaurant.city?.toLowerCase().includes(query) ||
-    restaurant.address?.toLowerCase().includes(query)
+  return props.brands.filter((brand) =>
+    brand.name.toLowerCase().includes(query) ||
+    brand.location?.toLowerCase().includes(query) ||
+    brand.city?.toLowerCase().includes(query) ||
+    brand.address?.toLowerCase().includes(query)
   )
 })
 
@@ -199,10 +201,10 @@ const getPlatformEmoji = (platform: string) => {
   return emojis[platform] || '📱'
 }
 
-const handleImageError = (event: Event, restaurant: Restaurant) => {
+const handleImageError = (event: Event, brand: Brand) => {
   const img = event.target as HTMLImageElement
   img.style.display = 'none'
-  warnLog(`Failed to load logo for restaurant: ${restaurant.name}`)
+  warnLog(`Failed to load logo for brand: ${brand.name}`)
 }
 </script>
 
@@ -279,7 +281,7 @@ const handleImageError = (event: Event, restaurant: Restaurant) => {
   margin-bottom: var(--space-lg);
 }
 
-/* Restaurant Grid */
+/* Brand Grid */
 .brands-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -307,7 +309,7 @@ const handleImageError = (event: Event, restaurant: Restaurant) => {
   background: rgba(15, 61, 46, 0.5);
 }
 
-/* Restaurant Card */
+/* Brand Card */
 .brand-card {
   position: relative;
   padding: var(--space-lg);
@@ -373,7 +375,7 @@ const handleImageError = (event: Event, restaurant: Restaurant) => {
   font-weight: bold;
 }
 
-/* Restaurant Logo */
+/* Brand Logo */
 .brand-logo {
   width: 80px;
   height: 80px;
@@ -400,7 +402,7 @@ const handleImageError = (event: Event, restaurant: Restaurant) => {
   text-shadow: 0 2px 4px rgba(15, 61, 46, 0.25);
 }
 
-/* Restaurant Info */
+/* Brand Info */
 .brand-info {
   flex: 1;
 }

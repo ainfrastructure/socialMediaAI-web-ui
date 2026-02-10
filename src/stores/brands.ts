@@ -131,14 +131,8 @@ export const useBrandsStore = defineStore('brands', () => {
     }
   }
 
-  // Legacy compat aliases
-  const restaurants = brands
-  async function refreshBusinesses(): Promise<void> { return fetchBrands() }
-  async function createManualBrand(data: CreateBrandData): Promise<Brand | null> { return createBrand(data) }
-
   return {
     brands,
-    restaurants,
     loading,
     error,
     lastFetchTime,
@@ -146,9 +140,7 @@ export const useBrandsStore = defineStore('brands', () => {
     brandCount,
     fetchBrands,
     refreshBrands,
-    refreshBusinesses,
     createBrand,
-    createManualBrand,
     updateBrand,
     deleteBrand,
     clearError,

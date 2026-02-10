@@ -136,26 +136,26 @@ const populateForm = (post: any) => {
     notes.value = post.notes
   }
 
-  // Get post_text from scheduled post first, then from favorite_posts
+  // Get post_text from scheduled post first, then from joined posts
   if (post.post_text) {
     postText.value = post.post_text
-  } else if (post.favorite_posts?.post_text) {
-    postText.value = post.favorite_posts.post_text
+  } else if (post.posts?.caption) {
+    postText.value = post.posts.caption
   } else {
     postText.value = ''
   }
 
-  // Get hashtags from favorite_posts (that's where they're stored in the database)
+  // Get hashtags from the joined posts relation
   if (post.hashtags && post.hashtags.length > 0) {
     hashtags.value = [...post.hashtags]
-  } else if (post.favorite_posts?.hashtags && post.favorite_posts.hashtags.length > 0) {
-    hashtags.value = [...post.favorite_posts.hashtags]
+  } else if (post.posts?.hashtags && post.posts.hashtags.length > 0) {
+    hashtags.value = [...post.posts.hashtags]
   } else {
     hashtags.value = []
   }
 
-  if (post.favorite_post_id) {
-    selectedFavoriteId.value = post.favorite_post_id
+  if (post.post_id) {
+    selectedFavoriteId.value = post.post_id
   }
 }
 
@@ -344,16 +344,10 @@ const saveChanges = async () => {
   saving.value = true
 
   try {
+    const scheduledTime = `${getDateString()}T${get24HourTime()}:00`
     const updates = {
-      scheduled_date: getDateString(),
-      scheduled_time: get24HourTime(),
+      scheduled_time: scheduledTime,
       timezone: timezone.value,
-      platforms: selectedPlatforms.value,
-      platform_settings: accountSelections.value,
-      notes: notes.value || undefined,
-      post_text: postText.value,
-      hashtags: hashtags.value,
-      favorite_post_id: selectedFavoriteId.value
     }
 
     emit('save', updates)

@@ -221,6 +221,7 @@ const selectedMenuItems = ref<MenuItem[]>([])
 // Image upload state (alternative to menu selection)
 const uploadedImage = ref<File | null>(null)
 const uploadedImagePreview = ref<string | null>(null)
+const isExistingImage = ref(false)
 
 // Step 2: Customization
 const customization = ref<CustomizationOptions>({
@@ -523,28 +524,30 @@ function _handleImageUpload(event: Event) {
   const file = target.files?.[0]
 
   if (file) {
-    handleImageUploadFile(file)
+    handleImageUploadFile({ file, source: 'upload' })
   }
 }
 
-// Handler for ImageUploadBox component
-function handleImageUploadFile(file: File) {
+// Handler for ImageSourceSelector (receives File + source info)
+function handleImageUploadFile(data: { file: File; source: 'upload' | 'library' }) {
   // Clear menu item selection if image is uploaded
   selectedMenuItems.value = []
 
-  uploadedImage.value = file
+  uploadedImage.value = data.file
+  isExistingImage.value = data.source === 'library'
 
   // Create preview
   const reader = new FileReader()
   reader.onload = (e) => {
     uploadedImagePreview.value = e.target?.result as string
   }
-  reader.readAsDataURL(file)
+  reader.readAsDataURL(data.file)
 }
 
 function removeUploadedImage() {
   uploadedImage.value = null
   uploadedImagePreview.value = null
+  isExistingImage.value = false
 }
 
 // Get menu items for API calls (handles both regular and weekly modes)
@@ -813,8 +816,8 @@ async function generateImage() {
       if (response.success && response.data?.imageUrl) {
         generatedImageUrl.value = response.data.imageUrl
 
-        // Upload the image to the brand's uploaded_images collection
-        if (uploadedImage.value && props.brand.place_id) {
+        // Upload the image to the brand's uploaded_images collection (skip if already in library)
+        if (uploadedImage.value && !isExistingImage.value && props.brand.place_id) {
           try {
             await brandService.uploadAsset(
               props.brand.place_id,
@@ -1176,6 +1179,7 @@ function createAnother() {
   selectedMenuItems.value = []
   uploadedImage.value = null
   uploadedImagePreview.value = null
+  isExistingImage.value = false
   styleVariations.value = []
   selectedVariation.value = null
   generatedImageUrl.value = ''

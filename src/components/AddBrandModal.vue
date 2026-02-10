@@ -42,7 +42,7 @@
       <p class="loading-text">{{ $t('common.loading') }}</p>
     </div>
 
-    <!-- Selected Restaurant Preview -->
+    <!-- Selected Brand Preview -->
     <div v-if="(detailsFetched || brandSaved) && selectedBrand" class="selected-brand">
       <div class="brand-card">
         <div class="brand-logo" v-if="selectedBrand.brand_dna?.logo_url">
@@ -101,7 +101,7 @@ import { debugLog, errorLog } from '@/utils/debug'
 
 interface Props {
   modelValue: boolean
-  savedBrands?: Array<{ place_id: string; name: string }>
+  savedBrands?: Array<{ place_id?: string; name: string }>
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -109,7 +109,7 @@ const props = withDefaults(defineProps<Props>(), {
 })
 const emit = defineEmits<{
   (e: 'update:modelValue', value: boolean): void
-  (e: 'brandAdded', restaurant: any): void
+  (e: 'brandAdded', brand: any): void
   (e: 'switch-to-manual'): void
 }>()
 
@@ -153,25 +153,25 @@ function handleSwitchToManual() {
   emit('switch-to-manual')
 }
 
-async function handleBrandSelect(restaurant: any) {
-  selectedBrand.value = restaurant
+async function handleBrandSelect(place: any) {
+  selectedBrand.value = place
   brandError.value = ''
   brandSaved.value = false
 
-  await fetchBrandDetails(restaurant)
+  await fetchBrandDetails(place)
 }
 
-async function fetchBrandDetails(restaurant: any) {
+async function fetchBrandDetails(place: any) {
   try {
     savingBrand.value = true
     loadingDetails.value = true
     brandError.value = ''
 
     // Fetch full place details from Google Places
-    const details = await placesService.getPlaceDetails(restaurant.place_id)
+    const details = await placesService.getPlaceDetails(place.place_id)
 
     if (!details) {
-      throw new Error('Failed to fetch restaurant details')
+      throw new Error('Failed to fetch brand details')
     }
 
     placeDetails.value = details
@@ -182,7 +182,7 @@ async function fetchBrandDetails(restaurant: any) {
     let brandDNA = null
 
     try {
-      const okamMenu = await okamService.getMenuByPlaceId(restaurant.place_id)
+      const okamMenu = await okamService.getMenuByPlaceId(place.place_id)
 
       if (okamMenu && okamMenu.categories?.length > 0) {
         // Convert Okam format to standard format
@@ -211,7 +211,7 @@ async function fetchBrandDetails(restaurant: any) {
 
     // Store the fetched data (don't save to database yet)
     fetchedDetails.value = {
-      restaurant,
+      place,
       details,
       menuSource
     }
@@ -222,9 +222,9 @@ async function fetchBrandDetails(restaurant: any) {
     // Set up the selectedBrand preview (but not saved yet)
     selectedBrand.value = {
       id: '', // Will be set when saved
-      place_id: restaurant.place_id,
+      place_id: place.place_id,
       name: details.name,
-      address: details.formatted_address || details.vicinity || restaurant.address || '',
+      address: details.formatted_address || details.vicinity || place.address || '',
       city: details.address_components?.find((c: any) => c.types.includes('locality'))?.long_name || '',
       country: details.address_components?.find((c: any) => c.types.includes('country'))?.long_name || '',
       brand_dna: brandDNA,
@@ -233,8 +233,8 @@ async function fetchBrandDetails(restaurant: any) {
       google_data: details
     }
   } catch (error: any) {
-    errorLog('Failed to fetch restaurant details:', error)
-    brandError.value = error.message || 'Failed to fetch restaurant details. Please try again.'
+    errorLog('Failed to fetch brand details:', error)
+    brandError.value = error.message || 'Failed to fetch brand details. Please try again.'
     detailsFetched.value = false
   } finally {
     savingBrand.value = false
@@ -244,7 +244,7 @@ async function fetchBrandDetails(restaurant: any) {
 
 async function handleSave() {
   if (!fetchedDetails.value) {
-    brandError.value = 'No restaurant details to save'
+    brandError.value = 'No brand details to save'
     return
   }
 
@@ -252,15 +252,15 @@ async function handleSave() {
     savingBrand.value = true
     brandError.value = ''
 
-    const { restaurant, details } = fetchedDetails.value
+    const { place, details } = fetchedDetails.value
     const menuData = fetchedMenuData.value
     const brandDNA = fetchedBrandDNA.value
 
-    // Save restaurant to database
+    // Save brand to database
     const brandData = {
-      place_id: restaurant.place_id || details.place_id,
-      name: details.name || restaurant.name,
-      address: details.formatted_address || details.vicinity || restaurant.address || '',
+      place_id: place.place_id || details.place_id,
+      name: details.name || place.name,
+      address: details.formatted_address || details.vicinity || place.address || '',
       city: details.address_components?.find((c: any) => c.types.includes('locality'))?.long_name || '',
       country: details.address_components?.find((c: any) => c.types.includes('country'))?.long_name || '',
       google_data: details,
@@ -282,7 +282,7 @@ async function handleSave() {
       brandSaved.value = true
       selectedBrand.value.id = result.data?.id || ''
 
-      // Emit the saved restaurant
+      // Emit the saved brand
       emit('brandAdded', selectedBrand.value)
 
       // Close modal after a short delay
@@ -291,7 +291,7 @@ async function handleSave() {
       }, 1500)
     } else {
       if (result.error && result.error.includes('already saved')) {
-        // Restaurant already exists, that's fine!
+        // Brand already exists, that's fine!
         brandSaved.value = true
         selectedBrand.value.id = result.data?.id || ''
         emit('brandAdded', selectedBrand.value)
@@ -300,12 +300,12 @@ async function handleSave() {
           closeModal()
         }, 1500)
       } else {
-        throw new Error(result.error || 'Failed to save restaurant')
+        throw new Error(result.error || 'Failed to save brand')
       }
     }
   } catch (error: any) {
-    errorLog('Failed to save restaurant:', error)
-    brandError.value = error.message || 'Failed to save restaurant. Please try again.'
+    errorLog('Failed to save brand:', error)
+    brandError.value = error.message || 'Failed to save brand. Please try again.'
   } finally {
     savingBrand.value = false
   }

@@ -861,7 +861,7 @@ const getPostPlatforms = (post: any): string[] => {
 }
 
 const getPostHashtags = (post: any): string[] => {
-  const hashtags = post.hashtags || post.favorite_posts?.hashtags || post.favorite?.hashtags || post.favorite_post?.hashtags || []
+  const hashtags = post.hashtags || post.posts?.hashtags || []
   if (Array.isArray(hashtags)) return hashtags
   if (typeof hashtags === 'string') return hashtags.split(/\s+/).filter(Boolean)
   return []
@@ -879,16 +879,8 @@ const getBusinessName = (post: any): string => {
   if (post.business_name) return post.business_name
   if (post.brands?.name) return post.brands.name
   if (post.brand?.name) return post.brand.name
-  if (post.favorite_posts?.brands?.name) return post.favorite_posts.brands.name
-  if (post.favorite_post?.brands?.name) return post.favorite_post.brands.name
-  if (post.favorite?.brands?.name) return post.favorite.brands.name
-
-  // Fallback to restaurant data
-  if (post.restaurant_name) return post.restaurant_name
-  if (post.favorite_posts?.saved_restaurants?.name) return post.favorite_posts.saved_restaurants.name
-  if (post.favorite_post?.saved_restaurants?.name) return post.favorite_post.saved_restaurants.name
-  if (post.favorite?.saved_restaurants?.name) return post.favorite.saved_restaurants.name
-  if (post.saved_restaurants?.name) return post.saved_restaurants.name
+  if (post.posts?.brands?.name) return post.posts.brands.name
+  if (post.brand_name) return post.brand_name
   return '-'
 }
 

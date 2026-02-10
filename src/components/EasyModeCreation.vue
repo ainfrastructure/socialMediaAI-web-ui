@@ -59,7 +59,7 @@ interface PublishResults {
 const props = defineProps<{
   brand: Brand
   menuItems: MenuItem[]
-  businessType?: string
+  brandType?: string
   generating?: boolean
   animating?: boolean // When true, video is being generated from image (brief loading)
   videoGeneratingInBackground?: boolean // When true, video is generating in background (user can continue)
@@ -87,6 +87,7 @@ const emit = defineEmits<{
     includeLogo: boolean
     uploadedImage: File | null
     uploadedLogo: File | null
+    isExistingImage: boolean
     mediaType: 'image'
   }): void
   (e: 'animate', data: {
@@ -139,6 +140,7 @@ const customHolidayText = ref<string>('')
 const includeLogo = ref(true)
 const uploadedImage = ref<File | null>(null)
 const uploadedImagePreview = ref<string | null>(null)
+const isExistingImage = ref(false)
 
 // Logo upload state
 const uploadedLogo = ref<File | null>(null)
@@ -168,15 +170,15 @@ const generatingOverlayRef = ref<HTMLElement | null>(null)
 const componentRoot = ref<HTMLElement | null>(null)
 
 const templateKeyPrefix = computed(() => {
-  if (props.businessType === 'resort') return 'playground.styleTemplatesResort'
-  if (props.businessType === 'general') return 'playground.styleTemplatesGeneral'
+  if (props.brandType === 'resort') return 'playground.styleTemplatesResort'
+  if (props.brandType === 'general') return 'playground.styleTemplatesGeneral'
   return 'playground.styleTemplates'
 })
 
 // Style templates (7 options) - Behind the Scenes is default
 const styleTemplates = computed<StyleTemplate[]>(() => {
   const keyPrefix = templateKeyPrefix.value
-  if (props.businessType === 'resort') {
+  if (props.brandType === 'resort') {
     return [
       {
         id: 'resortSunset',
@@ -263,14 +265,14 @@ const styleTemplates = computed<StyleTemplate[]>(() => {
 })
 
 const customPromptPlaceholder = computed(() => {
-  if (props.businessType && props.businessType !== 'restaurant') {
+  if (props.brandType && props.brandType !== 'restaurant') {
     return t('easyMode.step2.customPromptGenericPlaceholder', 'Describe how you want the scene captured...')
   }
   return t('easyMode.step2.customPromptPlaceholder', 'Describe how you want your dish photographed...')
 })
 
 watch(
-  () => props.businessType,
+  () => props.brandType,
   () => {
     const availableIds = styleTemplates.value.map(template => template.id)
     if (!availableIds.includes(selectedStyleTemplate.value)) {
@@ -391,6 +393,7 @@ function selectMenuItem(item: MenuItem) {
   // Clear uploaded image if menu item is selected
   uploadedImage.value = null
   uploadedImagePreview.value = null
+  isExistingImage.value = false
   // Scroll to next button for better mobile UX
   nextTick(() => {
     step1NavigationRef.value?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
@@ -401,20 +404,21 @@ function _selectStyleTemplate(templateId: string) {
   selectedStyleTemplate.value = templateId
 }
 
-// Handler for ImageUploadBox component (receives File directly)
-function handleImageUploadFile(file: File) {
+// Handler for ImageSourceSelector (receives File + source info)
+function handleImageUploadFile(data: { file: File; source: 'upload' | 'library' }) {
   // Clear menu item selection if image is uploaded
   selectedMenuItem.value = null
   step1Error.value = '' // Clear error when image is uploaded
 
-  uploadedImage.value = file
+  uploadedImage.value = data.file
+  isExistingImage.value = data.source === 'library'
 
   // Create preview
   const reader = new FileReader()
   reader.onload = (e) => {
     uploadedImagePreview.value = e.target?.result as string
   }
-  reader.readAsDataURL(file)
+  reader.readAsDataURL(data.file)
 }
 
 function _handleImageUpload(event: Event) {
@@ -422,13 +426,14 @@ function _handleImageUpload(event: Event) {
   const file = target.files?.[0]
 
   if (file) {
-    handleImageUploadFile(file)
+    handleImageUploadFile({ file, source: 'upload' })
   }
 }
 
 function removeUploadedImage() {
   uploadedImage.value = null
   uploadedImagePreview.value = null
+  isExistingImage.value = false
 }
 
 // Handle logo upload
@@ -481,6 +486,7 @@ function handleGenerate() {
     includeLogo: includeLogo.value,
     uploadedImage: uploadedImage.value,
     uploadedLogo: uploadedLogo.value,
+    isExistingImage: isExistingImage.value,
     mediaType: 'image' // Always generate image first
   })
 }
@@ -557,6 +563,7 @@ function resetAndCreateNew() {
   includeLogo.value = true
   uploadedImage.value = null
   uploadedImagePreview.value = null
+  isExistingImage.value = false
   uploadedLogo.value = null
   uploadedLogoPreview.value = null
   step1Error.value = ''

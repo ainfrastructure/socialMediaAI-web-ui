@@ -147,7 +147,7 @@ const performSearch = async (query: string) => {
     isLoading.value = true
     error.value = null
 
-    const results = await placesService.searchRestaurants(query)
+    const results = await placesService.searchPlaces(query)
     suggestions.value = results
     activeIndex.value = -1
   } catch (err) {

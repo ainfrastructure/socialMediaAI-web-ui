@@ -11,6 +11,11 @@ import ImageUploadBox from './ImageUploadBox.vue'
 import BaseButton from '../BaseButton.vue'
 import MaterialIcon from '../MaterialIcon.vue'
 
+export interface ImageSelection {
+  file: File
+  source: 'upload' | 'library'
+}
+
 interface Props {
   entity?: Brand
   previewUrl?: string | null
@@ -22,7 +27,7 @@ const props = withDefaults(defineProps<Props>(), {
 })
 
 const emit = defineEmits<{
-  (e: 'select', file: File): void
+  (e: 'select', data: ImageSelection): void
   (e: 'remove'): void
 }>()
 
@@ -86,7 +91,7 @@ function extractFilenameFromPath(storagePath: string): string {
 // Handle file upload from ImageUploadBox
 function handleFileUpload(file: File) {
   selectedImageId.value = null
-  emit('select', file)
+  emit('select', { file, source: 'upload' })
 }
 
 // Handle image selection from grid
@@ -109,8 +114,8 @@ async function handleImageSelect(image: UploadedImage) {
       lastModified: new Date(image.created_at).getTime()
     })
 
-    // 4. Emit to parent (parent creates preview same as upload)
-    emit('select', file)
+    // 4. Emit to parent — mark as library source so it won't be re-uploaded
+    emit('select', { file, source: 'library' })
   } catch (error) {
     console.error('Failed to select image:', error)
     selectedImageId.value = null

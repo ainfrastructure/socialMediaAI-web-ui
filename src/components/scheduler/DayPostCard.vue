@@ -49,9 +49,9 @@
       <p v-if="post.post_text" class="post-card-text">
         {{ truncatedText }}
       </p>
-      <div v-if="post.business_name || post.restaurant_name" class="post-card-restaurant">
+      <div v-if="post.business_name || post.brand_name" class="post-card-brand">
         <MaterialIcon icon="store" size="xs" />
-        {{ post.business_name || post.restaurant_name }}
+        {{ post.business_name || post.brand_name }}
       </div>
       <!-- Error Message (if failed) -->
       <div v-if="post.status === 'failed' && post.error_message" class="post-card-error">
@@ -112,7 +112,7 @@ interface ScheduledPost {
   scheduled_time?: string
   timezone?: string
   business_name?: string
-  restaurant_name?: string
+  brand_name?: string
   error_message?: string
   platform_post_url?: string
   platform_post_urls?: Record<string, string>
@@ -360,7 +360,7 @@ const capitalizeFirst = (str: string): string => {
   margin: 0 0 var(--space-sm) 0;
 }
 
-.post-card-restaurant {
+.post-card-brand {
   display: flex;
   align-items: center;
   gap: 4px;

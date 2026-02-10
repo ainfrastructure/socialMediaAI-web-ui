@@ -11,7 +11,7 @@ import BaseAlert from '../BaseAlert.vue'
 
 interface Props {
   modelValue: boolean
-  restaurant: Brand
+  brand: Brand
   folderStructure: FolderNode | null
   currentFolderPath?: string
 }
@@ -182,7 +182,7 @@ async function handleUpload() {
   uploadSuccess.value = ''
 
   try {
-    const brandId = props.restaurant.place_id || props.restaurant.id
+    const brandId = props.brand.place_id || props.brand.id
     const category = targetFolder.value
 
     // Convert each file to base64 and upload as individual assets

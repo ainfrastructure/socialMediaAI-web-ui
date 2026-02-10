@@ -35,9 +35,9 @@ function handleCloseEdit() {
 
 function getBrandsForBusiness(brandId: string): Brand[] {
   return brandsStore.brands.filter(
-    restaurant =>
-      restaurant.brand_id === brandId ||
-      (!restaurant.brand_id && restaurant.id === brandId)
+    brand =>
+      brand.brand_id === brandId ||
+      (!brand.brand_id && brand.id === brandId)
   )
 }
 
@@ -48,8 +48,8 @@ function openBrandModal(brand: Brand, initialTab: "details" | "images") {
 }
 
 async function ensureBrandForBusiness(brand: Brand): Promise<Brand | null> {
-  const restaurants = getBrandsForBusiness(brand.id)
-  if (restaurants.length) return restaurants[0]
+  const brands = getBrandsForBusiness(brand.id)
+  if (brands.length) return brands[0]
 
   const fallbackAddress = (brand.address || '').trim() || 'Unknown address'
 
@@ -91,10 +91,7 @@ async function openBusinessImages(brand: Brand) {
 }
 
 async function handleBrandUpdated() {
-  await Promise.all([
-    brandsStore.fetchBrands(),
-    brandsStore.fetchBrands()
-  ])
+  await brandsStore.fetchBrands()
   // Sync selectedBrand with fresh store data
   if (selectedBrand.value) {
     const freshBrand = brandsStore.brands.find(
@@ -119,10 +116,7 @@ async function confirmDelete(brand: Brand) {
 async function handleSaved() {
   showCreateModal.value = false
   showEditModal.value = false
-  await Promise.all([
-    brandsStore.fetchBrands(),
-    brandsStore.fetchBrands()
-  ])
+  await brandsStore.fetchBrands()
 }
 </script>
 

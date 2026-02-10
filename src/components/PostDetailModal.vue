@@ -70,7 +70,7 @@ function handleAnimateClick() {
 
 // Handle generate video
 function handleGenerateVideo() {
-  const postId = props.post?.id || props.post?.favorite_post_id
+  const postId = props.post?.id || props.post?.post_id
   if (!postId) return
 
   emit('animate', {
@@ -91,9 +91,7 @@ function getMediaUrl(): string | null {
 
   if (p.media_url) return p.media_url
   if (p.image_url) return p.image_url
-  if (p.favorite_posts?.media_url) return p.favorite_posts.media_url
-  if (p.favorite_post?.media_url) return p.favorite_post.media_url
-  if (p.favorite?.media_url) return p.favorite.media_url
+  if (p.posts?.image_url) return p.posts.image_url
 
   return null
 }
@@ -104,9 +102,7 @@ function getVideoUrl(): string | null {
   if (!p) return null
 
   if (p.video_url) return p.video_url
-  if (p.favorite_posts?.video_url) return p.favorite_posts.video_url
-  if (p.favorite_post?.video_url) return p.favorite_post.video_url
-  if (p.favorite?.video_url) return p.favorite.video_url
+  if (p.posts?.video_url) return p.posts.video_url
 
   return null
 }
@@ -118,9 +114,7 @@ function getPostText(): string | null {
 
   if (p.post_text) return p.post_text
   if (p.caption) return p.caption
-  if (p.favorite_posts?.post_text) return p.favorite_posts.post_text
-  if (p.favorite_post?.post_text) return p.favorite_post.post_text
-  if (p.favorite?.post_text) return p.favorite.post_text
+  if (p.posts?.caption) return p.posts.caption
 
   return null
 }
@@ -131,8 +125,7 @@ function getContentType(): string {
   if (!p) return 'image'
 
   if (p.content_type) return p.content_type
-  if (p.favorite_posts?.content_type) return p.favorite_posts.content_type
-  if (p.favorite_post?.content_type) return p.favorite_post.content_type
+  if (p.posts?.content_type) return p.posts.content_type
 
   const url = getMediaUrl()
   if (url && url.match(/\.(mp4|webm|mov|avi)$/i)) return 'video'
@@ -155,30 +148,25 @@ function getPlatforms(): string[] {
   if (p.platforms && Array.isArray(p.platforms) && p.platforms.length > 0) {
     return p.platforms
   }
-  // Check nested favorite_posts/favorite_post for platforms array
-  if (p.favorite_posts?.platforms && Array.isArray(p.favorite_posts.platforms) && p.favorite_posts.platforms.length > 0) {
-    return p.favorite_posts.platforms
-  }
-  if (p.favorite_post?.platforms && Array.isArray(p.favorite_post.platforms) && p.favorite_post.platforms.length > 0) {
-    return p.favorite_post.platforms
+  // Check nested posts/favorite_post for platforms array
+  if (p.posts?.platform_targets && Array.isArray(p.posts.platform_targets) && p.posts.platform_targets.length > 0) {
+    return p.posts.platform_targets
   }
   // Fall back to single platform
   if (p.platform) return [p.platform]
-  if (p.favorite_posts?.platform) return [p.favorite_posts.platform]
-  if (p.favorite_post?.platform) return [p.favorite_post.platform]
 
   return []
 }
 
-// Get restaurant name
-function getRestaurantName(): string | null {
+// Get brand name
+function getBrandName(): string | null {
   const p = props.post
   if (!p) return null
 
-  if (p.restaurant_name) return p.restaurant_name
-  if (p.favorite_posts?.restaurant_name) return p.favorite_posts.restaurant_name
-  if (p.favorite_post?.restaurant_name) return p.favorite_post.restaurant_name
-  if (p.saved_restaurants?.name) return p.saved_restaurants.name
+  if (p.brand_name) return p.brand_name
+  if (p.business_name) return p.business_name
+  if (p.brands?.name) return p.brands.name
+  if (p.posts?.brands?.name) return p.posts.brands.name
 
   return null
 }
@@ -189,8 +177,7 @@ function getHashtags(): string[] {
   if (!p) return []
 
   if (p.hashtags && Array.isArray(p.hashtags)) return p.hashtags
-  if (p.favorite_posts?.hashtags) return p.favorite_posts.hashtags
-  if (p.favorite_post?.hashtags) return p.favorite_post.hashtags
+  if (p.posts?.hashtags) return p.posts.hashtags
 
   return []
 }
@@ -579,14 +566,14 @@ function handleRetry() {
               </div>
             </div>
 
-            <!-- Restaurant -->
-            <div v-if="getRestaurantName()" class="info-section">
+            <!-- Brand -->
+            <div v-if="getBrandName()" class="info-section">
               <div class="info-section-inner">
                 <div class="info-label">
-                  <MaterialIcon icon="restaurant" size="sm" />
+                  <MaterialIcon icon="store" size="sm" />
                   <span>{{ $t('dashboardNew.restaurant') }}</span>
                 </div>
-                <div class="info-value">{{ getRestaurantName() }}</div>
+                <div class="info-value">{{ getBrandName() }}</div>
               </div>
             </div>
 

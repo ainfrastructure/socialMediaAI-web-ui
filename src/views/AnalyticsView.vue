@@ -176,7 +176,7 @@ onMounted(async () => {
             :monthly-limit="analytics.authStore.user?.usage?.monthly_limit || 0"
             :credits-usage-percent="analytics.creditsUsagePercent.value"
             :subscription-tier="analytics.subscriptionTierDisplay.value"
-            :brand-count="analytics.stats.value.restaurantsAdded"
+            :brand-count="analytics.stats.value.brandsAdded"
           />
         </div>
 

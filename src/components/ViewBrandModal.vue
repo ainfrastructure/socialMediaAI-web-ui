@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, reactive } from 'vue'
+import { ref, reactive } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { brandService } from '@/services/brandService'
 import type { Brand, UpdateBrandData } from '@/services/brandService'
@@ -45,8 +45,6 @@ const editForm = reactive({
     secondary_color: ''
   }
 })
-
-const totalImageCount = computed(() => props.brand.uploaded_images?.length || 0)
 
 function handleClose() {
   emit('update:modelValue', false)
@@ -197,7 +195,6 @@ async function saveChanges() {
         @click="activeTab = 'images'"
       >
         {{ $t('restaurantManagement.images') }}
-        <span v-if="totalImageCount" class="tab-count">({{ totalImageCount }})</span>
       </button>
     </div>
 
@@ -373,7 +370,7 @@ async function saveChanges() {
 
     <!-- Images Tab -->
     <div v-if="activeTab === 'images'" class="tab-content images-tab">
-      <BrandImageManager :restaurant="brand" @updated="emit('updated')" />
+      <BrandImageManager :brand="brand" @updated="emit('updated')" />
     </div>
   </BaseModal>
 </template>

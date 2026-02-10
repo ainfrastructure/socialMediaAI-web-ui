@@ -89,8 +89,8 @@
                     <p v-if="post.post_text" class="post-preview">
                       {{ truncateText(post.post_text, 80) }}
                     </p>
-                    <div v-if="post.brands?.name || post.brand?.name || post.business_name || post.saved_restaurants?.name" class="restaurant-tag">
-                      🏢 {{ post.brands?.name || post.brand?.name || post.business_name || post.saved_restaurants?.name }}
+                    <div v-if="post.brands?.name || post.brand?.name || post.business_name || post.brand_name" class="brand-tag">
+                      🏢 {{ post.brands?.name || post.brand?.name || post.business_name || post.brand_name }}
                     </div>
                   </div>
                 </div>
@@ -207,8 +207,7 @@ watch(showAllBusinesses, () => {
 const filteredPosts = computed(() => {
   if (!props.brandId || showAllBusinesses.value) return posts.value
   return posts.value.filter(post =>
-    post.brand_id === props.brandId ||
-    post.restaurant_id === props.brandId
+    post.brand_id === props.brandId
   )
 })
 
@@ -309,13 +308,13 @@ const handleSchedulePublish = async (data: {
   }
 
   try {
+    const scheduledTime = `${data.scheduledDate}T${data.scheduledTime || '12:00'}:00`
     const response = await api.schedulePost({
-      favorite_post_id: post.id,
-      scheduled_date: data.scheduledDate,
-      scheduled_time: data.scheduledTime,
+      post_id: post.id,
+      scheduled_time: scheduledTime,
       timezone: data.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone,
       platforms: data.platforms,
-      platform_settings: data.accountSelections,
+      brand_id: post.brand_id,
     })
 
     if (response.success) {
@@ -1102,7 +1101,7 @@ const handlePageChange = (page: number) => {
   flex: 1;
 }
 
-.restaurant-tag {
+.brand-tag {
   font-size: 0.75rem;
   color: var(--gold-primary);
   font-weight: 500;

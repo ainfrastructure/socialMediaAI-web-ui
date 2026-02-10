@@ -81,7 +81,7 @@ export default {
 
   // Auth / Login View
   auth: {
-    brandSubtitle: 'AI-Powered Content for Restaurants',
+    brandSubtitle: 'AI-Powered Content for Your Brand',
     email: 'Email',
     emailPlaceholder: "your{'@'}email.com",
     signIn: 'Sign In',
@@ -100,9 +100,9 @@ export default {
 
   // Waitlist Landing Page
   waitlist: {
-    headline: "Your restaurant's automated social media manager",
+    headline: "Your brand's automated social media manager",
     subheadline:
-      "Create stunning food content, schedule posts, and grow your restaurant's presence—all with AI.",
+      "Create stunning content, schedule posts, and grow your brand's presence—all with AI.",
     emailPlaceholder: 'Enter your email',
     joinButton: 'Join the Waitlist',
     joining: 'Joining...',
@@ -113,7 +113,7 @@ export default {
     error: 'Something went wrong. Please try again.',
     loginLink: 'Already have an account?',
     loginLinkText: 'Sign in',
-    socialProof: 'Join {count}+ restaurants on the waitlist',
+    socialProof: 'Join {count}+ brands on the waitlist',
     finalCta: {
       title: 'Be the First to Know',
       subtitle: 'Join the waitlist and get early access when we launch.'
@@ -124,10 +124,10 @@ export default {
   landing: {
     // Hero Section
     hero: {
-      tagline: 'AI-Powered Social Media for Restaurants',
+      tagline: 'AI-Powered Social Media for Your Brand',
       headlinePart1: 'The most powerful &',
       headlinePart2: 'effortless AI content',
-      headlinePart3: 'generator for restaurants',
+      headlinePart3: 'generator for your brand',
       headlinePart3Bars: 'generator for bars',
       headlinePart3Yachts: 'generator for yachts',
       headlinePart3Hotels: 'generator for hotels',
@@ -198,7 +198,7 @@ export default {
 
     // Benefits
     benefits: {
-      title: 'Why Restaurant Owners Love SocialChef',
+      title: 'Why Brand Owners Love SocialChef',
       time: {
         title: 'Save Countless Hours Per Week',
         description: 'Stop wrestling with content creation. Spend that time on what matters - your food and customers.'
@@ -231,7 +231,7 @@ export default {
     // Final CTA
     finalCta: {
       title: 'Ready to Fire Your Social Media Worries?',
-      subtitle: 'Join hundreds of restaurant owners who stopped stressing about social media.'
+      subtitle: 'Join hundreds of brand owners who stopped stressing about social media.'
     },
 
     // Login Modal
@@ -249,7 +249,7 @@ export default {
 
     // Footer
     footer: {
-      madeWith: 'Made with love for restaurant owners',
+      madeWith: 'Made with love for brand owners',
       copyright: '© 2025 SocialChef. All rights reserved.'
     }
   },
@@ -261,14 +261,14 @@ export default {
     // Welcome Modal
     welcomeModalTitle: 'Welcome to SocialChef!',
     welcomeModalMessage:
-      "Looks like you haven't added a restaurant yet. Let's get started by adding your first restaurant and creating some amazing content!",
+      "Looks like you haven't added a brand yet. Let's get started by adding your first brand and creating some amazing content!",
     welcomeModalButton: "Let's Go",
 
     // Stats
     postsCreated: 'Posts Created',
     postsSaved: 'Posts Saved',
     scheduledPosts: 'Scheduled Posts',
-    restaurants: 'Restaurants',
+    restaurants: 'Brands',
 
     // Quick actions
 
@@ -325,7 +325,7 @@ export default {
     instagramPublishing: 'Instagram posting',
     included: 'Included',
     postScheduling: 'Post scheduling',
-    unlimitedRestaurants: 'Unlimited restaurants',
+    unlimitedRestaurants: 'Unlimited brands',
     noExpiration: 'Credits never expire',
     subscriptionRequired: 'A subscription is required to access SocialChef. Choose a plan below to get started.',
     // Processing states
@@ -345,13 +345,13 @@ export default {
 
   // Restaurant Search View
   restaurantSearch: {
-    searchPlaceholder: 'Search restaurants by name or location...',
-    noResults: 'No restaurants found',
+    searchPlaceholder: 'Search brands by name or location...',
+    noResults: 'No brands found',
 
     // Autocomplete
-    searchLabel: 'Search Restaurants',
+    searchLabel: 'Search Brands',
     searching: 'Searching...',
-    searchError: 'Failed to search restaurants. Please try again.',
+    searchError: 'Failed to search brands. Please try again.',
     alreadyAdded: 'Already Added',
 
     // Quick Overview
@@ -393,9 +393,9 @@ export default {
       ],
 
       searchDetails: [
-        'Search restaurants using Google Places',
+        'Search brands using Google Places',
         'Automatically import menus, photos, and brand details',
-        'Build your restaurant database',
+        'Build your brand database',
         'Access comprehensive brand information',
       ],
 
@@ -409,7 +409,7 @@ export default {
       scheduleDetails: [
         'Schedule posts in advance',
         'Publish directly to Facebook',
-        'Manage multiple restaurants',
+        'Manage multiple brands',
         'Track your content performance',
       ],
 
@@ -421,7 +421,7 @@ export default {
       ],
 
       readyDetails: [
-        'Start by searching for your restaurant',
+        'Start by adding your brand',
         'Generate your first post in minutes',
         'All content is saved to your library',
         'Schedule content to maintain consistency',
@@ -436,7 +436,7 @@ export default {
       // Questions
       q1Options: [
         'Connect social media accounts',
-        'Search and save a restaurant',
+        'Search and save a brand',
         'Generate AI content',
         'Schedule posts',
       ],
@@ -475,15 +475,15 @@ export default {
 
   // Playground View
   playground: {
-    chooseRestaurant: 'Choose a Restaurant',
-    addNewRestaurant: '+ Add New Restaurant',
+    chooseRestaurant: 'Choose a Brand',
+    addNewRestaurant: '+ Add New Brand',
     menuItems: 'menu items',
     saved: 'Saved',
     livePreview: 'Live Preview',
     yourGeneratedImage: 'Your Generated Image',
     previewDescription: 'Preview how your sticker and logo will appear',
     itemsSelected: '{count} item selected | {count} items selected',
-    selectRestaurant: 'Select Restaurant',
+    selectRestaurant: 'Select Brand',
 
     // Tabs
 
@@ -586,7 +586,7 @@ export default {
       includeAudio: 'Include AI-generated audio',
       promoLabel: 'Special Offer (Optional)',
       promoPlaceholder: 'e.g., 20% OFF, COMBO DEAL, NEW ITEM...',
-      logoLabel: 'Restaurant Logo',
+      logoLabel: 'Brand Logo',
       currentLogo: 'Current logo',
       newLogo: 'New logo',
       uploadLogo: 'Upload logo',
@@ -690,8 +690,8 @@ export default {
     step2: {
       title: 'Customize Your Design',
       subtitle: 'Tailor the look and feel of your post',
-      logoPositionLabel: 'Restaurant Logo Position',
-      logoPositionHint: 'Where to place your restaurant logo',
+      logoPositionLabel: 'Brand Logo Position',
+      logoPositionHint: 'Where to place your brand logo',
       previewLabel: 'Preview'
     },
     logoPositions: {
@@ -838,7 +838,22 @@ export default {
     pageTitle: 'Connect Social Media Accounts',
     pageSubtitle:
       'Connect your social media accounts to start posting content directly from our platform',
+    activeBusiness: 'Active Brand',
+    switchBusiness: 'Switch Brand',
+    manageAll: 'Manage All',
+    selectABusiness: 'Select a Brand',
+    noBusinessSelected: 'No brand selected',
+    selectBusinessFirst: 'Please select a brand first',
+    businessCount: '{current} of {total}',
+    totalConnections: 'Total Connections',
     facebookPages: 'Facebook Pages',
+    facebookPagesCount: 'Facebook Pages',
+    instagramBusiness: 'Instagram Business',
+    instagramAccountsCount: 'Instagram Accounts',
+    connectedPlatforms: 'Connected Platforms',
+    platformsFor: 'Manage platform connections for {name}',
+    chooseBusiness: 'Select a brand to manage connections',
+    notConnected: 'Not connected',
     connect: 'Connect',
     connectMore: 'Connect More',
     disconnect: 'Disconnect',
@@ -873,7 +888,7 @@ export default {
     publishedAt: 'Published At',
     viewPost: 'View Post',
     viewOn: 'View on',
-    restaurant: 'Restaurant',
+    restaurant: 'Brand',
     caption: 'Caption',
     edit: 'Edit',
     cancelPost: 'Cancel Post',
@@ -954,18 +969,21 @@ export default {
     sortOldest: 'Oldest First',
     // Welcome state for new users
     welcomeTitle: 'Welcome!',
-    welcomeSubtitle: "Let's get started by adding your first restaurant.",
-    addFirstRestaurant: 'Add Your First Restaurant',
+    welcomeSubtitle: "Let's get started by adding your first brand.",
+    addFirstRestaurant: 'Add Your First Brand',
     addFirstRestaurantDescription:
-      "Search for your restaurant and we'll automatically import your menu and branding.",
-    noRestaurantPrompt: 'Add a restaurant to start creating posts.',
+      "Add your brand and we'll help you create amazing social media content.",
+    noRestaurantPrompt: 'Add a brand to start creating posts.',
+    addFirstBusiness: 'Add Your First Brand',
+    addFirstBusinessDescription: 'Add your brand and we\'ll help you create amazing social media content.',
+    manageBusinesses: 'Manage Brands',
     createPost: 'Create Post'
   },
 
   // Content Create View
   contentCreate: {
     loading: 'Loading...',
-    loadError: 'Failed to load restaurant',
+    loadError: 'Failed to load brand',
     switchRestaurant: 'Switch',
     imageError: 'Failed to generate image. Please try again.',
     videoError: 'Failed to generate video. Please try again.',
@@ -1001,14 +1019,14 @@ export default {
 
   // Restaurant Selector Modal
   restaurantSelector: {
-    title: 'Select Restaurant',
-    addNew: '+ Add New Restaurant',
+    title: 'Select Brand',
+    addNew: '+ Add New Brand',
     menuItems: '{count} menu items',
-    delete: 'Remove restaurant',
-    deleteTitle: 'Remove Restaurant',
-    confirmDelete: 'Are you sure you want to remove "{name}" from your saved restaurants?',
-    restaurantAdded: 'Restaurant added successfully!',
-    cantFindAddManually: "Can't find your restaurant? Add manually"
+    delete: 'Remove brand',
+    deleteTitle: 'Remove Brand',
+    confirmDelete: 'Are you sure you want to remove "{name}" from your saved brands?',
+    restaurantAdded: 'Brand added successfully!',
+    cantFindAddManually: "Can't find your brand? Add manually"
   },
 
   // Image Source Selector
@@ -1019,7 +1037,7 @@ export default {
     noImagesAvailable: 'No images available',
     folderEmpty: 'This folder is empty',
     searchPlaceholder: 'Search images...',
-    selectFromStorage: 'Select from your restaurant images',
+    selectFromStorage: 'Select from your brand images',
     uploadOrSelect: 'Upload a new image or select from your existing images'
   },
 
@@ -1028,7 +1046,7 @@ export default {
     title: 'Profile Settings',
     subtitleExtended: 'Manage your account information and subscription',
     personalInfo: 'Personal Information',
-    manageRestaurants: 'Manage Restaurants',
+    manageRestaurants: 'Manage Brands',
     email: 'Email',
     emailAddress: 'Email Address',
     userId: 'User ID',
@@ -1123,39 +1141,40 @@ export default {
 
   // Restaurant Management
   restaurantManagement: {
-    addRestaurant: 'Add Restaurant',
-    addFirstRestaurant: 'Add Your First Restaurant',
-    createRestaurant: 'Create Restaurant',
+    addRestaurant: 'Add Brand',
+    addFirstRestaurant: 'Add Your First Brand',
+    createRestaurant: 'Create Brand',
     uploadImages: 'Upload Images',
     yourImages: 'Your Images',
 
-    noRestaurants: 'No restaurants yet',
-    noRestaurantsHint: 'Add your first restaurant to get started',
+    noRestaurants: 'No brands yet',
+    noRestaurantsHint: 'Add your first brand to get started',
+    noBrandsHint: 'Add your first brand to get started',
 
     basicInfo: 'Basic Information',
     contactInfo: 'Contact Information',
     socialMedia: 'Social Media',
     branding: 'Branding',
 
-    restaurantName: 'Restaurant Name',
-    restaurantNamePlaceholder: 'e.g., The Golden Spoon',
+    restaurantName: 'Brand Name',
+    restaurantNamePlaceholder: 'e.g., My Brand',
     address: 'Address',
     addressPlaceholder: 'Enter full address',
     phoneNumber: 'Phone Number',
     phoneNumberPlaceholder: '+1 (555) 123-4567',
     website: 'Website',
-    websitePlaceholder: 'https://yourrestaurant.com',
+    websitePlaceholder: 'https://yourbrand.com',
 
     instagram: 'Instagram',
-    instagramPlaceholder: "{'@'}yourrestaurant",
+    instagramPlaceholder: "{'@'}yourbrand",
     facebook: 'Facebook',
-    facebookPlaceholder: 'facebook.com/yourrestaurant',
+    facebookPlaceholder: 'facebook.com/yourbrand',
     twitter: 'Twitter/X',
-    twitterPlaceholder: "{'@'}yourrestaurant",
+    twitterPlaceholder: "{'@'}yourbrand",
 
     logoUrl: 'Logo URL',
     logoUrlPlaceholder: 'https://...',
-    logoUrlHint: 'Enter a URL to your restaurant logo image',
+    logoUrlHint: 'Enter a URL to your brand logo image',
     logo: 'Logo',
     dragLogoOrClick: 'Drag & drop logo here or click to browse',
     logoMaxSize: 'Maximum {size}MB (JPEG, PNG, WebP)',
@@ -1261,7 +1280,7 @@ export default {
     selectFolderError: 'Please select a destination folder',
 
     errors: {
-      createFailed: 'Failed to create restaurant',
+      createFailed: 'Failed to create brand',
       uploadFailed: 'Failed to upload images',
       folderExists: 'A folder with this name already exists',
       invalidFolderName: 'Invalid folder name',
@@ -1317,9 +1336,9 @@ export default {
 
   // Pick Post Modal
   pickPostModal: {
-    showAllRestaurants: 'Show all restaurants',
-    showCurrentRestaurant: 'Show current restaurant only',
-    allRestaurantsLabel: 'All Restaurants',
+    showAllRestaurants: 'Show all brands',
+    showCurrentRestaurant: 'Show current brand only',
+    allRestaurantsLabel: 'All Brands',
     videoLabel: 'VIDEO'
   },
 
@@ -1414,7 +1433,7 @@ export default {
     caption: 'Caption',
     captionPlaceholder: 'Write your carousel caption...',
     hashtags: 'Hashtags (one per line)',
-    hashtagsPlaceholder: '#food\n#restaurant\n#delicious',
+    hashtagsPlaceholder: '#food\n#brand\n#delicious',
     hashtagsHint: 'Enter one hashtag per line',
     regenerate: 'Regenerate Content',
     useContent: 'Use This Content',
@@ -1457,8 +1476,8 @@ export default {
     status: 'Status',
     platforms: 'Platforms',
     activeCount: 'Active',
-    allRestaurants: 'All Restaurants',
-    restaurant: 'Restaurant',
+    allRestaurants: 'All Brands',
+    restaurant: 'Brand',
     published: 'Published',
     scheduled: 'Scheduled',
     failed: 'Failed',
@@ -1469,6 +1488,33 @@ export default {
     tierLifetimeDesc: 'Unlimited access forever',
     tierYearlyDesc: 'Best value, billed annually',
     tierMonthlyDesc: 'Flexible monthly billing'
+  },
+
+  // Dashboard Redesign
+  dashboardRedesign: {
+    goodMorning: 'Good morning, {name}',
+    goodAfternoon: 'Good afternoon, {name}',
+    goodEvening: 'Good evening, {name}',
+    heroSubtitle: 'Here\'s what\'s happening with your content today',
+    createContent: 'Create Content',
+    totalPosts: 'Total Posts',
+    scheduledLabel: 'Scheduled',
+    savedContent: 'Saved Content',
+    creditsLabel: 'Credits Left',
+    untitledPost: 'Untitled post',
+    today: 'Today',
+    tomorrow: 'Tomorrow',
+    engagementSnapshot: 'Engagement Snapshot',
+    viewAnalytics: 'View Analytics',
+    upcomingPosts: 'Upcoming Posts',
+    viewCalendar: 'View Calendar',
+    noUpcomingTitle: 'No upcoming posts',
+    noUpcomingDesc: 'Schedule your first post to see it here',
+    scheduleFirst: 'Schedule a Post',
+    recentActivity: 'Recent Activity',
+    viewAllPosts: 'View All Posts',
+    noActivityTitle: 'No recent activity',
+    noActivityDesc: 'Create your first post to get started'
   },
 
   // Privacy Policy
@@ -1733,7 +1779,7 @@ export default {
     step1Title: 'Are you sure?',
     step1Description: 'Deleting your account will permanently remove all your data. This includes:',
     dataList: {
-      restaurants: 'All saved restaurants and their settings',
+      restaurants: 'All saved brands and their settings',
       posts: 'All generated posts and images',
       favorites: 'All saved favorites and scheduled posts',
       connections: 'All connected social media accounts',
@@ -1821,7 +1867,7 @@ export default {
     creditsUsed: 'Credits Used',
     used: 'used',
     subscription: 'Subscription',
-    restaurants: 'Restaurants',
+    restaurants: 'Brands',
 
     // Recent Activity
     recentActivity: 'Recent Activity',
@@ -1835,7 +1881,7 @@ export default {
     // Table headers
     post: 'Post',
     platforms: 'Platforms',
-    restaurant: 'Restaurant',
+    restaurant: 'Brand',
     status: 'Status',
     date: 'Date',
     links: 'Links',
@@ -1887,6 +1933,11 @@ export default {
     instagramViewsLimited: 'Instagram Views Limited',
     instagramViewsInfo: 'Instagram views require Instagram Business account with Insights API permission. Currently showing likes and comments only.',
     learnMore: 'Learn More',
+
+    // Engagement syncing
+    engagementSyncing: 'Syncing engagement data...',
+    detailedBreakdown: 'Detailed Breakdown',
+    chartsAndDistributions: 'Charts and distributions for your content',
 
     // Sync status
     syncStatus: 'Sync Status',
@@ -1961,7 +2012,7 @@ export default {
     shareVia: 'Share via',
     share: 'Share',
     shareTitle: 'Join Social Chef',
-    shareText: 'I\'ve been using Social Chef for my restaurant and love it! Sign up with my link to get your first month free + 50% off for 2 months.',
+    shareText: 'I\'ve been using Social Chef for my brand and love it! Sign up with my link to get your first month free + 50% off for 2 months.',
     shareEmailSubject: 'Join Social Chef - Get Your First Month Free!',
 
     // Stats
@@ -1995,6 +2046,34 @@ export default {
     cannotUsOwnCode: 'You cannot use your own referral code',
     codeNotFound: 'Referral code not found',
     codeInactive: 'This referral code is no longer active'
+  },
+
+  // Brand Filter
+  brandFilter: {
+    selectBrands: 'Select Brands',
+    searchBrands: 'Search brands...',
+    brandsSelected: '{count} brand selected | {count} brands selected',
+    noBrandsFound: 'No brands found',
+    tryDifferentSearch: 'Try a different search term',
+    clearAll: 'Clear All',
+    applyFilters: 'Apply Filters'
+  },
+
+  // Filter Bar
+  filters: {
+    title: 'Filters',
+    clearAll: 'Clear All',
+    platforms: 'Platforms',
+    platformsCount: 'Platforms ({count})',
+    brands: 'Brands',
+    brandsCount: 'Brands ({count})',
+    contentType: 'Content Type',
+    contentTypeCount: 'Content Type ({count})',
+    newestFirst: 'Newest First',
+    oldestFirst: 'Oldest First',
+    active: 'Active:',
+    images: 'Images',
+    videos: 'Videos'
   },
 
   // Post Type Selection

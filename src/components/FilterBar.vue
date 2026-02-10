@@ -2,7 +2,7 @@
   <BaseCard variant="glass-intense" class="filter-bar">
     <div class="filter-bar-header">
       <div class="filter-icon">🔍</div>
-      <h3 class="filter-title">Filters</h3>
+      <h3 class="filter-title">{{ t('filters.title') }}</h3>
       <BaseButton
         v-if="hasActiveFilters"
         variant="ghost"
@@ -10,7 +10,7 @@
         class="clear-all-btn"
         @click="$emit('clear')"
       >
-        Clear All
+        {{ t('filters.clearAll') }}
       </BaseButton>
     </div>
 
@@ -19,16 +19,16 @@
       <button v-if="showPlatform" class="filter-btn" @click="showPlatformModal = true">
         <span class="btn-icon">📱</span>
         <span class="btn-text">
-          {{ selectedPlatforms.length > 0 ? `Platforms (${selectedPlatforms.length})` : 'Platforms' }}
+          {{ selectedPlatforms.length > 0 ? t('filters.platformsCount', { count: selectedPlatforms.length }) : t('filters.platforms') }}
         </span>
         <span class="btn-arrow">→</span>
       </button>
 
-      <!-- Restaurant Filter (Modal Button) -->
-      <button v-if="showRestaurant" class="filter-btn" @click="showRestaurantModal = true">
+      <!-- Brand Filter (Modal Button) -->
+      <button v-if="showBrand" class="filter-btn" @click="showBrandModal = true">
         <span class="btn-icon">🏪</span>
         <span class="btn-text">
-          {{ selectedBrands.length > 0 ? `Restaurants (${selectedBrands.length})` : 'Restaurants' }}
+          {{ selectedBrands.length > 0 ? t('filters.brandsCount', { count: selectedBrands.length }) : t('filters.brands') }}
         </span>
         <span class="btn-arrow">→</span>
       </button>
@@ -37,7 +37,7 @@
       <button v-if="showContentType" class="filter-btn" @click="showContentTypeModal = true">
         <span class="btn-icon">📸</span>
         <span class="btn-text">
-          {{ selectedContentTypes.length > 0 ? `Content Type (${selectedContentTypes.length})` : 'Content Type' }}
+          {{ selectedContentTypes.length > 0 ? t('filters.contentTypeCount', { count: selectedContentTypes.length }) : t('filters.contentType') }}
         </span>
         <span class="btn-arrow">→</span>
       </button>
@@ -50,8 +50,8 @@
           class="filter-select"
           @change="updateFilter('sort', ($event.target as HTMLSelectElement).value)"
         >
-          <option value="newest">Newest First</option>
-          <option value="oldest">Oldest First</option>
+          <option value="newest">{{ t('filters.newestFirst') }}</option>
+          <option value="oldest">{{ t('filters.oldestFirst') }}</option>
         </select>
         <span class="select-arrow">▼</span>
       </div>
@@ -59,7 +59,7 @@
 
     <!-- Active Filters Tags -->
     <div v-if="hasActiveFilters" class="active-filters">
-      <span class="active-filters-label">Active:</span>
+      <span class="active-filters-label">{{ t('filters.active') }}</span>
       <div class="filter-tags">
         <!-- Platform tags -->
         <span
@@ -71,14 +71,14 @@
           {{ getPlatformName(platform) }}
           <span class="tag-close">×</span>
         </span>
-        <!-- Restaurant tags -->
+        <!-- Brand tags -->
         <span
-          v-for="restaurantId in selectedBrands"
-          :key="restaurantId"
+          v-for="brandId in selectedBrands"
+          :key="brandId"
           class="filter-tag"
-          @click="toggleCheckbox('restaurant_ids', restaurantId)"
+          @click="toggleCheckbox('brand_ids', brandId)"
         >
-          {{ getRestaurantName(restaurantId) }}
+          {{ getBrandName(brandId) }}
           <span class="tag-close">×</span>
         </span>
         <!-- Content type tags -->
@@ -88,7 +88,7 @@
           class="filter-tag"
           @click="toggleCheckbox('content_types', type)"
         >
-          {{ type === 'image' ? 'Images' : 'Videos' }}
+          {{ type === 'image' ? t('filters.images') : t('filters.videos') }}
           <span class="tag-close">×</span>
         </span>
       </div>
@@ -102,10 +102,10 @@
     />
 
     <BrandFilterModal
-      v-model="showRestaurantModal"
-      :restaurants="restaurants"
+      v-model="showBrandModal"
+      :brands="brands"
       :selected-brand-ids="selectedBrands"
-      @update:selected-brand-ids="updateRestaurants"
+      @update:selected-brand-ids="updateBrands"
     />
 
     <ContentTypeFilterModal
@@ -118,6 +118,7 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import BaseCard from './BaseCard.vue'
 import BaseButton from './BaseButton.vue'
 import BrandFilterModal from './BrandFilterModal.vue'
@@ -126,24 +127,24 @@ import ContentTypeFilterModal from './ContentTypeFilterModal.vue'
 
 interface Filters {
   platforms?: string[]
-  restaurant_ids?: string[]
+  brand_ids?: string[]
   content_types?: string[]
   sort?: string
 }
 
 interface Props {
   modelValue: Filters
-  restaurants?: any[]
+  brands?: any[]
   showPlatform?: boolean
-  showRestaurant?: boolean
+  showBrand?: boolean
   showContentType?: boolean
   showSort?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  restaurants: () => [],
+  brands: () => [],
   showPlatform: true,
-  showRestaurant: true,
+  showBrand: true,
   showContentType: false,
   showSort: false,
 })
@@ -154,6 +155,8 @@ const emit = defineEmits<{
   (e: 'clear'): void
 }>()
 
+const { t } = useI18n()
+
 const platforms = [
   { value: 'instagram', label: 'Instagram' },
   { value: 'facebook', label: 'Facebook' },
@@ -162,24 +165,24 @@ const platforms = [
   { value: 'linkedin', label: 'LinkedIn' },
 ]
 
-const showRestaurantModal = ref(false)
+const showBrandModal = ref(false)
 const showPlatformModal = ref(false)
 const showContentTypeModal = ref(false)
 
 const selectedPlatforms = computed(() => props.modelValue.platforms || [])
-const selectedBrands = computed(() => props.modelValue.restaurant_ids || [])
+const selectedBrands = computed(() => props.modelValue.brand_ids || [])
 const selectedContentTypes = computed(() => props.modelValue.content_types || [])
 
 const hasActiveFilters = computed(() => {
   return !!(
     (props.modelValue.platforms && props.modelValue.platforms.length > 0) ||
-    (props.modelValue.restaurant_ids && props.modelValue.restaurant_ids.length > 0) ||
+    (props.modelValue.brand_ids && props.modelValue.brand_ids.length > 0) ||
     (props.modelValue.content_types && props.modelValue.content_types.length > 0)
   )
 })
 
-const updateRestaurants = (restaurantIds: string[]) => {
-  const newFilters = { ...props.modelValue, restaurant_ids: restaurantIds }
+const updateBrands = (brandIds: string[]) => {
+  const newFilters = { ...props.modelValue, brand_ids: brandIds }
   emit('update:modelValue', newFilters)
   emit('change')
 }
@@ -222,9 +225,9 @@ const getPlatformName = (platform: string) => {
   return found?.label || platform
 }
 
-const getRestaurantName = (id: string) => {
-  const restaurant = props.restaurants.find((r) => r.id === id)
-  return restaurant?.name || 'Restaurant'
+const getBrandName = (id: string) => {
+  const brand = props.brands.find((r) => r.id === id)
+  return brand?.name || t('filters.brands')
 }
 
 </script>

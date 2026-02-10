@@ -1,34 +1,34 @@
 <template>
   <div class="brand-selection-view">
     <div class="selection-header">
-      <h2 class="selection-title">{{ $t('playground.chooseRestaurant', 'Choose a Restaurant') }}</h2>
-      <p class="selection-subtitle">{{ $t('playground.selectRestaurant', 'Select which restaurant to create content for') }}</p>
+      <h2 class="selection-title">{{ $t('playground.chooseRestaurant', 'Choose a Brand') }}</h2>
+      <p class="selection-subtitle">{{ $t('playground.selectRestaurant', 'Select which brand to create content for') }}</p>
       <BaseButton variant="primary" @click="$emit('addNew')">
-        + {{ $t('playground.addNewRestaurant', 'Add New Restaurant') }}
+        + {{ $t('playground.addNewRestaurant', 'Add New Brand') }}
       </BaseButton>
     </div>
 
     <div class="brands-grid">
       <BaseCard
-        v-for="restaurant in restaurants"
-        :key="restaurant.id"
+        v-for="brand in brands"
+        :key="brand.id"
         variant="glass"
         hoverable
         class="brand-card"
-        @click="$emit('select', restaurant.id)"
+        @click="$emit('select', brand.id)"
       >
         <div class="card-header">
           <div class="card-title-section">
-            <div v-if="restaurant.brand_dna?.logo_url" class="card-logo-container">
+            <div v-if="brand.brand_dna?.logo_url" class="card-logo-container">
               <img
-                :src="restaurant.brand_dna.logo_url"
-                :alt="restaurant.brand_dna.brand_name || restaurant.name"
+                :src="brand.brand_dna.logo_url"
+                :alt="brand.brand_dna.brand_name || brand.name"
                 class="card-logo"
               />
             </div>
-            <h3 class="brand-name">{{ restaurant.name }}</h3>
+            <h3 class="brand-name">{{ brand.name }}</h3>
           </div>
-          <button class="edit-btn" @click.stop="$emit('edit', restaurant)" title="Edit Restaurant">
+          <button class="edit-btn" @click.stop="$emit('edit', brand)" title="Edit Brand">
             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
               <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
@@ -36,22 +36,22 @@
           </button>
         </div>
 
-        <p class="brand-address">{{ restaurant.address }}</p>
+        <p class="brand-address">{{ brand.address }}</p>
 
         <div class="brand-meta">
-          <div v-if="restaurant.rating" class="meta-item">
+          <div v-if="brand.rating" class="meta-item">
             <span class="meta-icon">⭐</span>
-            <span>{{ restaurant.rating }} / 5</span>
+            <span>{{ brand.rating }} / 5</span>
           </div>
 
-          <div v-if="restaurant.menu && restaurant.menu.items && restaurant.menu.items.length > 0" class="meta-item">
+          <div v-if="brand.menu && brand.menu.items && brand.menu.items.length > 0" class="meta-item">
             <span class="meta-icon">📋</span>
-            <span>{{ restaurant.menu.items.length }} {{ $t('playground.menuItems', 'menu items') }}</span>
+            <span>{{ brand.menu.items.length }} {{ $t('playground.menuItems', 'menu items') }}</span>
           </div>
 
-          <div v-if="restaurant.saved_at" class="meta-item">
+          <div v-if="brand.saved_at" class="meta-item">
             <span class="meta-icon">📅</span>
-            <span>{{ $t('playground.saved', 'Saved') }} {{ formatDate(restaurant.saved_at) }}</span>
+            <span>{{ $t('playground.saved', 'Saved') }} {{ formatDate(brand.saved_at) }}</span>
           </div>
         </div>
       </BaseCard>
@@ -74,7 +74,7 @@ interface MenuItem {
   imageUrl?: string
 }
 
-interface Restaurant {
+interface Brand {
   id: string | number
   name: string
   address?: string
@@ -87,12 +87,12 @@ interface Restaurant {
 }
 
 defineProps<{
-  restaurants: Restaurant[]
+  brands: Brand[]
 }>()
 
 defineEmits<{
   (e: 'select', id: string | number): void
-  (e: 'edit', restaurant: Restaurant): void
+  (e: 'edit', brand: Brand): void
   (e: 'addNew'): void
 }>()
 

@@ -303,22 +303,21 @@ export async function publishToSocialMedia(options: PublishOptions): Promise<Pub
 /**
  * Save published post to calendar
  *
- * @param favoritePostId - ID of the favorite post
+ * @param postId - ID of the post (from posts table)
  * @param successfulPlatforms - Array of successful publish results
+ * @param brandId - Optional brand ID
  */
 export async function savePublishedPostToCalendar(
-  favoritePostId: string,
+  postId: string,
   successfulPlatforms: PublishResult[],
+  brandId?: string,
 ): Promise<void> {
   try {
-    const now = new Date()
     await api.createPublishedPost({
-      favorite_post_id: favoritePostId,
-      published_date: now.toISOString().split('T')[0],
-      published_time: now.toTimeString().slice(0, 5),
+      post_id: postId,
       platforms: successfulPlatforms.map((r) => r.platform),
-      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-      platform_post_urls: Object.fromEntries(
+      brand_id: brandId,
+      platform_urls: Object.fromEntries(
         successfulPlatforms.filter((r) => r.url).map((r) => [r.platform, r.url!]),
       ),
     })

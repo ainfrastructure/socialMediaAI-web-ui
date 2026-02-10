@@ -101,7 +101,7 @@ async function handleSubmit() {
   error.value = ''
 
   if (!form.name.trim()) {
-    error.value = 'Business name is required.'
+    error.value = 'Brand name is required.'
     return
   }
 
@@ -142,12 +142,12 @@ async function handleSubmit() {
               logo_url: logoUrl,
             })
             if (!logoUpdated) {
-              error.value = 'Business saved but logo URL update failed.'
+              error.value = 'Brand saved but logo URL update failed.'
               return
             }
           }
         } catch (err: any) {
-          error.value = err.message || 'Business saved but logo upload failed.'
+          error.value = err.message || 'Brand saved but logo upload failed.'
           return
         }
       }
@@ -174,12 +174,12 @@ async function handleSubmit() {
               logo_url: logoUrl,
             })
             if (!logoUpdated) {
-              error.value = 'Business created but logo URL update failed.'
+              error.value = 'Brand created but logo URL update failed.'
               return
             }
           }
         } catch (err: any) {
-          error.value = err.message || 'Business created but logo upload failed.'
+          error.value = err.message || 'Brand created but logo upload failed.'
           return
         }
       }
@@ -202,19 +202,19 @@ function handleClose() {
 <template>
   <BaseModal :model-value="modelValue" @update:model-value="emit('update:modelValue', $event)" size="lg">
     <template #title>
-      {{ isEdit ? 'Edit Business' : 'Create Business' }}
+      {{ isEdit ? 'Edit Brand' : 'Create Brand' }}
     </template>
 
     <form @submit.prevent="handleSubmit" class="brand-form">
       <BaseInput
         v-model="form.name"
-        label="Business name"
+        label="Brand name"
         placeholder="e.g., Sven Group"
         required
       />
 
       <div class="form-group">
-        <label class="form-label">Business type</label>
+        <label class="form-label">Brand type</label>
         <select v-model="form.business_type" class="form-select">
           <option
             v-for="option in BUSINESS_TYPE_OPTIONS"

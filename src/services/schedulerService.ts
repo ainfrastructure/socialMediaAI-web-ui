@@ -7,7 +7,7 @@ class SchedulerService {
     month?: number
     year?: number
     platforms?: string[]
-    restaurant_ids?: string[]
+    brand_ids?: string[]
   }): Promise<ApiResponse<{ scheduled_posts: any[] }>> {
     const params = new URLSearchParams()
     if (filters?.status) params.append('status', filters.status)
@@ -18,8 +18,8 @@ class SchedulerService {
     if (filters?.platforms && filters.platforms.length > 0) {
       params.append('platforms', filters.platforms.join(','))
     }
-    if (filters?.restaurant_ids && filters.restaurant_ids.length > 0) {
-      params.append('restaurant_ids', filters.restaurant_ids.join(','))
+    if (filters?.brand_ids && filters.brand_ids.length > 0) {
+      params.append('brand_id', filters.brand_ids.join(','))
     }
 
     const url = params.toString() ? `${API_URL}/api/scheduler?${params}` : `${API_URL}/api/scheduler`
@@ -86,14 +86,12 @@ class SchedulerService {
   }
 
   async schedulePost(scheduleData: {
-    favorite_post_id: string
-    scheduled_date: string
-    scheduled_time?: string
+    post_id: string
+    scheduled_time: string  // TIMESTAMPTZ string e.g. "2026-02-10T14:00:00Z"
     timezone?: string
     platforms: string[]
-    notes?: string
-    platform_settings?: any
-  }): Promise<ApiResponse<{ scheduled_post: any }>> {
+    brand_id?: string
+  }): Promise<ApiResponse<{ scheduled_posts: any[] }>> {
     const response = await fetch(`${API_URL}/api/scheduler`, {
       method: 'POST',
       headers: getAuthHeaders(),
@@ -118,16 +116,9 @@ class SchedulerService {
   async updateScheduledPost(
     id: string,
     updates: {
-      scheduled_date?: string
       scheduled_time?: string
       timezone?: string
-      notes?: string
-      platform_settings?: any
-      status?: string
-      platforms?: string[]
-      post_text?: string
-      hashtags?: string[]
-      favorite_post_id?: string
+      platform_status?: string
     }
   ): Promise<ApiResponse<{ scheduled_post: any }>> {
     const response = await fetch(`${API_URL}/api/scheduler/${id}`, {
@@ -193,42 +184,40 @@ class SchedulerService {
     return response.json()
   }
 
-  // Create a post entry with status='published' (for posts published immediately)
+  // Record a published post (one entry per platform)
   async createPublishedPost(data: {
-    favorite_post_id: string
-    published_date: string
-    published_time?: string
+    post_id: string
     platforms: string[]
-    timezone?: string
-    platform_post_urls?: Record<string, string>
-    platform_settings?: any
-    platform_results?: Array<{  // NEW
-      platform: string
-      success: boolean
-      url?: string
-      postId?: string
-      error?: string
-    }>
-  }): Promise<ApiResponse<{ scheduled_post: any }>> {
-    const response = await fetch(`${API_URL}/api/scheduler/published`, {
-      method: 'POST',
-      headers: getAuthHeaders(),
-      body: JSON.stringify(data),
-    })
+    brand_id?: string
+    platform_post_ids?: Record<string, string>
+    platform_urls?: Record<string, string>
+  }): Promise<ApiResponse<{ published_posts: any[] }>> {
+    const results: any[] = []
 
-    if (!response.ok) {
-      const text = await response.text()
-      try {
-        return JSON.parse(text)
-      } catch {
-        return {
-          success: false,
-          error: `HTTP ${response.status}: ${text || response.statusText}`
-        }
+    // Backend expects one call per platform
+    for (const platform of data.platforms) {
+      const response = await fetch(`${API_URL}/api/scheduler/published`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({
+          post_id: data.post_id,
+          brand_id: data.brand_id,
+          platform,
+          platform_post_id: data.platform_post_ids?.[platform],
+          platform_url: data.platform_urls?.[platform],
+        }),
+      })
+
+      if (response.ok) {
+        const json = await response.json()
+        results.push(json.data?.published_post)
       }
     }
 
-    return response.json()
+    return {
+      success: results.length > 0,
+      data: { published_posts: results },
+    }
   }
 
   // Holidays

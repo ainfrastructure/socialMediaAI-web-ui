@@ -13,7 +13,7 @@ import ConfirmModal from '../ConfirmModal.vue'
 import BaseButton from '../BaseButton.vue'
 
 interface Props {
-  restaurant: Brand
+  brand: Brand
 }
 
 const props = defineProps<Props>()
@@ -36,6 +36,7 @@ const {
   sortBy,
   loading,
   error,
+  fetchAssets,
   navigateToFolder,
   toggleFolderExpansion,
   toggleImageSelection,
@@ -44,7 +45,7 @@ const {
   renameFolder,
   deleteFolder,
   moveImagesToFolder
-} = useBrandImages(props.restaurant)
+} = useBrandImages(props.brand)
 
 // Modal states
 const showCreateFolderModal = ref(false)
@@ -57,7 +58,7 @@ const isDeleting = ref(false)
 
 // Current folder info
 const currentFolderName = computed(() => {
-  if (currentFolderPath.value === '/') return props.restaurant.name
+  if (currentFolderPath.value === '/') return props.brand.name
   const parts = currentFolderPath.value.split('/')
   return parts[parts.length - 1]
 })
@@ -68,6 +69,7 @@ const isRootFolder = computed(() => currentFolderPath.value === '/')
 async function handleCreateFolder(folderPath: string) {
   const success = await createFolder(folderPath)
   if (success) {
+    await fetchAssets()
     emit('updated')
   }
 }
@@ -75,6 +77,7 @@ async function handleCreateFolder(folderPath: string) {
 async function handleRenameFolder(oldPath: string, newPath: string) {
   const success = await renameFolder(oldPath, newPath)
   if (success) {
+    await fetchAssets()
     emit('updated')
   }
 }
@@ -92,6 +95,7 @@ async function confirmDeleteFolder() {
     const success = await deleteFolder(currentFolderPath.value)
     if (success) {
       showDeleteFolderConfirm.value = false
+      await fetchAssets()
       emit('updated')
     }
   } finally {
@@ -103,6 +107,7 @@ async function handleMoveImages(targetFolderPath: string) {
   const imageIds = selectedImages.value.map((img) => img.id)
   const success = await moveImagesToFolder(imageIds, targetFolderPath)
   if (success) {
+    await fetchAssets()
     emit('updated')
   }
 }
@@ -120,6 +125,7 @@ async function confirmDeleteImages() {
   try {
     await deleteImages(imageIds)
     showDeleteConfirm.value = false
+    await fetchAssets()
     emit('updated')
   } finally {
     isDeleting.value = false
@@ -131,7 +137,8 @@ function triggerFileUpload() {
   showUploadModal.value = true
 }
 
-function handleUploadComplete() {
+async function handleUploadComplete() {
+  await fetchAssets()
   emit('updated')
 }
 
@@ -375,7 +382,7 @@ function formatFileSize(bytes: number): string {
 
     <UploadImagesModal
       v-model="showUploadModal"
-      :restaurant="restaurant"
+      :brand="brand"
       :folder-structure="folderStructure"
       :current-folder-path="currentFolderPath"
       @uploaded="handleUploadComplete"

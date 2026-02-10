@@ -4,7 +4,7 @@ import { API_URL, getAuthHeader, getAuthHeaders } from './apiBase'
 class FavoritesService {
   async getFavorites(filters?: {
     platform?: string
-    restaurant_id?: string
+    brand_id?: string
     content_type?: 'image' | 'video'
     limit?: number
     offset?: number
@@ -12,7 +12,7 @@ class FavoritesService {
   }): Promise<ApiResponse<{ favorites: any[]; pagination: { total: number; limit: number; offset: number; totalPages: number } }>> {
     const params = new URLSearchParams()
     if (filters?.platform) params.append('platform', filters.platform)
-    if (filters?.restaurant_id) params.append('restaurant_id', filters.restaurant_id)
+    if (filters?.brand_id) params.append('brand_id', filters.brand_id)
     if (filters?.content_type) params.append('content_type', filters.content_type)
     if (filters?.limit) params.append('limit', filters.limit.toString())
     if (filters?.offset) params.append('offset', filters.offset.toString())
@@ -60,6 +60,7 @@ class FavoritesService {
 
   async saveFavorite(favoriteData: {
     restaurant_id?: string
+    brand_id?: string
     content_type: 'image' | 'video'
     media_url: string
     post_text?: string
@@ -71,10 +72,22 @@ class FavoritesService {
     context?: string
     brand_dna?: any
   }): Promise<ApiResponse<{ favorite: any }>> {
+    // Map frontend field names to backend field names
+    const payload = {
+      brand_id: favoriteData.brand_id || favoriteData.restaurant_id,
+      content_type: favoriteData.content_type,
+      image_url: favoriteData.media_url,
+      caption: favoriteData.post_text,
+      hashtags: favoriteData.hashtags,
+      platform: favoriteData.platform,
+      platforms: favoriteData.platforms,
+      video_url: favoriteData.content_type === 'video' ? favoriteData.media_url : undefined,
+    }
+
     const response = await fetch(`${API_URL}/api/favorites`, {
       method: 'POST',
       headers: getAuthHeaders(),
-      body: JSON.stringify(favoriteData),
+      body: JSON.stringify(payload),
     })
 
     if (!response.ok) {
@@ -101,12 +114,25 @@ class FavoritesService {
       platforms?: string[]
       video_url?: string
       content_type?: string
+      image_url?: string
+      status?: string
     }
   ): Promise<ApiResponse<{ favorite: any }>> {
+    // Map frontend field names to backend field names
+    const payload: Record<string, unknown> = {}
+    if (updates.post_text !== undefined) payload.caption = updates.post_text
+    if (updates.hashtags !== undefined) payload.hashtags = updates.hashtags
+    if (updates.platform !== undefined) payload.platform = updates.platform
+    if (updates.platforms !== undefined) payload.platform_targets = updates.platforms
+    if (updates.video_url !== undefined) payload.video_url = updates.video_url
+    if (updates.content_type !== undefined) payload.content_type = updates.content_type
+    if (updates.image_url !== undefined) payload.image_url = updates.image_url
+    if (updates.status !== undefined) payload.status = updates.status
+
     const response = await fetch(`${API_URL}/api/favorites/${id}`, {
       method: 'PUT',
       headers: getAuthHeaders(),
-      body: JSON.stringify(updates),
+      body: JSON.stringify(payload),
     })
 
     if (!response.ok) {

@@ -17,9 +17,9 @@
           <h1 class="welcome-title">{{ $t('contentHub.welcomeTitle') }}</h1>
           <p class="welcome-subtitle">{{ $t('contentHub.welcomeSubtitle') }}</p>
 
-          <BaseCard variant="glass" hoverable class="add-restaurant-card" @click="goToBusinesses">
+          <BaseCard variant="glass" hoverable class="add-brand-card" @click="goToBusinesses">
             <div class="card-icon">
-              <MaterialIcon icon="storefront" size="3xl" color="#D4AF37" class="restaurant-material-icon" />
+              <MaterialIcon icon="storefront" size="3xl" color="#D4AF37" class="brand-material-icon" />
             </div>
             <h3 class="card-title">{{ $t('contentHub.addFirstBusiness') }}</h3>
             <p class="card-description">{{ $t('contentHub.addFirstBusinessDescription') }}</p>
@@ -33,19 +33,19 @@
       <!-- Main Content (Has Businesses) -->
       <div v-else class="content-hub">
         <!-- Business Header -->
-        <div class="restaurant-header">
+        <div class="brand-header">
           <div class="header-content clickable-header" @click="showBusinessSelector = true">
             <div class="logo-container">
-              <div v-if="selectedBrand?.logo_url || selectedBrand?.brand_dna?.logo_url" class="restaurant-logo">
+              <div v-if="selectedBrand?.logo_url || selectedBrand?.brand_dna?.logo_url" class="brand-logo">
                 <img :src="selectedBrand.logo_url || selectedBrand.brand_dna?.logo_url" :alt="selectedBrand.name" />
               </div>
-              <div v-else class="restaurant-logo placeholder">
+              <div v-else class="brand-logo placeholder">
                 <span class="placeholder-icon">🏪</span>
               </div>
             </div>
-            <div class="restaurant-info">
-              <h1 class="restaurant-name">{{ selectedBrand?.name }}</h1>
-              <p class="restaurant-address">{{ selectedBrand?.address || '' }}</p>
+            <div class="brand-info">
+              <h1 class="brand-name">{{ selectedBrand?.name }}</h1>
+              <p class="brand-address">{{ selectedBrand?.address || '' }}</p>
             </div>
           </div>
         </div>
@@ -852,7 +852,7 @@ function formatDate(dateString: string): string {
   line-height: 1.5;
 }
 
-.add-restaurant-card {
+.add-brand-card {
   padding: var(--space-3xl);
   display: flex;
   flex-direction: column;
@@ -863,13 +863,13 @@ function formatDate(dateString: string): string {
   width: 100%;
 }
 
-.add-restaurant-card:hover {
+.add-brand-card:hover {
   transform: translateY(-4px);
   border-color: var(--gold-primary);
   box-shadow: 0 0 30px rgba(15, 61, 46, 0.2);
 }
 
-.add-restaurant-card .card-icon {
+.add-brand-card .card-icon {
   width: 64px;
   height: 64px;
   display: flex;
@@ -877,20 +877,20 @@ function formatDate(dateString: string): string {
   justify-content: center;
 }
 
-.add-restaurant-card .restaurant-material-icon {
+.add-brand-card .brand-material-icon {
   color: var(--gold-primary);
   filter: drop-shadow(0 0 12px rgba(15, 61, 46, 0.3));
   font-size: 48px;
 }
 
-.add-restaurant-card .card-title {
+.add-brand-card .card-title {
   font-family: var(--font-heading);
   font-size: var(--text-xl);
   color: var(--text-primary);
   margin: 0;
 }
 
-.add-restaurant-card .card-description {
+.add-brand-card .card-description {
   font-size: var(--text-base);
   color: var(--text-secondary);
   margin: 0;
@@ -898,7 +898,7 @@ function formatDate(dateString: string): string {
 }
 
 /* Restaurant Header */
-.restaurant-header {
+.brand-header {
   margin-bottom: var(--space-3xl);
   padding-bottom: var(--space-2xl);
   border-bottom: 1px solid rgba(15, 61, 46, 0.15);
@@ -925,7 +925,7 @@ function formatDate(dateString: string): string {
   transform: scale(1.01);
 }
 
-.change-restaurant-hint {
+.change-brand-hint {
   position: absolute;
   top: 0;
   right: 0;
@@ -941,7 +941,7 @@ function formatDate(dateString: string): string {
   font-weight: var(--font-semibold);
 }
 
-.clickable-header:hover .change-restaurant-hint {
+.clickable-header:hover .change-brand-hint {
   opacity: 1;
 }
 
@@ -954,7 +954,7 @@ function formatDate(dateString: string): string {
   justify-content: center;
 }
 
-.restaurant-logo {
+.brand-logo {
   width: 100%;
   min-height: 80px;
   max-height: 120px;
@@ -965,7 +965,7 @@ function formatDate(dateString: string): string {
   padding: var(--space-md);
 }
 
-.restaurant-logo img {
+.brand-logo img {
   max-width: 100%;
   max-height: 120px;
   width: auto;
@@ -973,7 +973,7 @@ function formatDate(dateString: string): string {
   object-fit: contain;
 }
 
-.restaurant-logo.placeholder {
+.brand-logo.placeholder {
   background: rgba(15, 61, 46, 0.1);
   border-radius: var(--radius-lg);
   min-height: 120px;
@@ -983,11 +983,11 @@ function formatDate(dateString: string): string {
   font-size: 4rem;
 }
 
-.restaurant-info {
+.brand-info {
   text-align: center;
 }
 
-.restaurant-name {
+.brand-name {
   font-family: var(--font-heading);
   font-size: var(--text-4xl);
   font-weight: var(--font-bold);
@@ -1000,7 +1000,7 @@ function formatDate(dateString: string): string {
   line-height: 1.2;
 }
 
-.restaurant-address {
+.brand-address {
   font-size: var(--text-base);
   color: var(--text-secondary);
   margin: 0;
@@ -1553,25 +1553,25 @@ function formatDate(dateString: string): string {
     width: 80px;
   }
 
-  .add-restaurant-card {
+  .add-brand-card {
     padding: var(--space-2xl);
   }
 
-  .restaurant-header {
+  .brand-header {
     margin-bottom: var(--space-2xl);
     padding-bottom: var(--space-xl);
   }
 
-  .restaurant-logo {
+  .brand-logo {
     width: 100px;
     height: 100px;
   }
 
-  .restaurant-name {
+  .brand-name {
     font-size: var(--text-3xl);
   }
 
-  .restaurant-address {
+  .brand-address {
     font-size: var(--text-sm);
   }
 
@@ -1675,7 +1675,7 @@ function formatDate(dateString: string): string {
     padding: var(--space-lg) var(--space-sm);
   }
 
-  .restaurant-header {
+  .brand-header {
     margin-bottom: var(--space-xl);
     padding-bottom: var(--space-lg);
   }
@@ -1689,16 +1689,16 @@ function formatDate(dateString: string): string {
     max-width: 200px;
   }
 
-  .restaurant-logo {
+  .brand-logo {
     min-height: 60px;
     max-height: 80px;
   }
 
-  .restaurant-logo img {
+  .brand-logo img {
     max-height: 80px;
   }
 
-  .restaurant-logo.placeholder {
+  .brand-logo.placeholder {
     min-height: 80px;
   }
 
@@ -1706,11 +1706,11 @@ function formatDate(dateString: string): string {
     font-size: 2.5rem;
   }
 
-  .restaurant-name {
+  .brand-name {
     font-size: var(--text-2xl);
   }
 
-  .restaurant-address {
+  .brand-address {
     font-size: var(--text-xs);
   }
 
@@ -1796,7 +1796,7 @@ function formatDate(dateString: string): string {
     max-width: 160px;
   }
 
-  .restaurant-name {
+  .brand-name {
     font-size: var(--text-xl);
   }
 
@@ -1902,7 +1902,7 @@ function formatDate(dateString: string): string {
     padding: var(--space-md) var(--space-lg);
   }
 
-  .restaurant-header {
+  .brand-header {
     margin-bottom: var(--space-lg);
     padding-bottom: var(--space-md);
   }

@@ -511,12 +511,8 @@ class BrandService {
     return this.deleteAsset(brandId, assetId)
   }
 
-  async uploadRestaurantImages(brandId: string, assets: UploadAssetData[]): Promise<ApiResponse<BrandAsset>[]> {
+  async uploadBrandImages(brandId: string, assets: UploadAssetData[]): Promise<ApiResponse<BrandAsset>[]> {
     return Promise.all(assets.map(asset => this.uploadAsset(brandId, asset)))
-  }
-
-  async deleteRestaurant(brandId: string): Promise<ApiResponse> {
-    return this.deleteBrand(brandId)
   }
 
   async createFolder(_brandId: string, _folderName: string): Promise<ApiResponse> {
