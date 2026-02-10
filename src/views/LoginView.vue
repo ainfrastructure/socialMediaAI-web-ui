@@ -17,8 +17,10 @@ const authStore = useAuthStore()
 const { t } = useI18n()
 
 const {
+  step,
   showEmailLogin,
   email,
+  otpCode,
   message,
   messageType,
   loggingIn,
@@ -27,7 +29,11 @@ const {
   isDev,
   showMessage,
   toggleEmailLogin,
+  goBackToEmail,
   handleEmailLogin: doEmailLogin,
+  handleCodeSubmit: doCodeSubmit,
+  handleOtpSubmit: doOtpSubmit,
+  handleResendOtp,
   handleAppleSignIn,
   handleGoogleSignIn,
   handleFacebookSignIn,
@@ -69,14 +75,32 @@ onMounted(() => {
   }
 })
 
+function navigateAfterLogin() {
+  if (authStore.hasActiveSubscription) {
+    router.push('/posts')
+  } else {
+    router.push('/plans')
+  }
+}
+
 async function handleEmailLogin() {
   const result = await doEmailLogin()
   if (result.success) {
-    if (authStore.hasActiveSubscription) {
-      router.push('/posts')
-    } else {
-      router.push('/plans')
-    }
+    navigateAfterLogin()
+  }
+}
+
+async function handleCodeSubmit() {
+  const result = await doCodeSubmit()
+  if (result.success) {
+    navigateAfterLogin()
+  }
+}
+
+async function handleOtpSubmit() {
+  const result = await doOtpSubmit()
+  if (result.success) {
+    navigateAfterLogin()
   }
 }
 </script>
@@ -102,7 +126,7 @@ async function handleEmailLogin() {
       <!-- Login Content Wrapper -->
       <div class="login-content-wrapper">
         <!-- Main Login View: Social Sign In -->
-        <div :class="['login-content', { 'is-hidden': showEmailLogin }]">
+        <div :class="['login-content', { 'is-hidden': step !== 'social' }]">
           <!-- Social Sign In Buttons -->
           <div class="social-buttons">
             <div class="social-button-wrapper">
@@ -162,7 +186,7 @@ async function handleEmailLogin() {
         </div>
 
         <!-- Email Login Form -->
-        <div :class="['login-content', 'email-content', { 'is-visible': showEmailLogin }]">
+        <div :class="['login-content', 'email-content', { 'is-visible': step === 'email' }]">
           <form @submit.prevent="handleEmailLogin">
             <BaseInput
               v-model="email"
@@ -179,7 +203,7 @@ async function handleEmailLogin() {
               full-width
               :disabled="loggingIn"
             >
-              {{ loggingIn ? $t('common.loading') : (isDev ? 'Dev Login (bypass)' : $t('auth.signIn')) }}
+              {{ loggingIn ? $t('common.loading') : 'Continue' }}
             </BaseButton>
           </form>
 
@@ -189,15 +213,64 @@ async function handleEmailLogin() {
             class="back-link"
             @click="toggleEmailLogin"
           >
-            ← {{ $t('auth.backToLogin') }}
+            &larr; {{ $t('auth.backToLogin') }}
           </button>
+        </div>
+
+        <!-- OTP / Code Entry -->
+        <div :class="['login-content', 'email-content', { 'is-visible': step === 'otp_entry' || step === 'code_entry' }]">
+          <div class="otp-header">
+            <p class="otp-instruction">Enter the code we sent to</p>
+            <p class="otp-email">{{ email }}</p>
+          </div>
+
+          <form @submit.prevent="step === 'code_entry' ? handleCodeSubmit() : handleOtpSubmit()">
+            <BaseInput
+              v-model="otpCode"
+              type="text"
+              label="Code"
+              placeholder="6-digit code"
+              inputmode="numeric"
+              maxlength="6"
+              autocomplete="one-time-code"
+              required
+            />
+
+            <BaseButton
+              type="submit"
+              variant="primary"
+              size="large"
+              full-width
+              :disabled="loggingIn"
+            >
+              {{ loggingIn ? $t('common.loading') : 'Verify' }}
+            </BaseButton>
+          </form>
+
+          <div class="otp-actions">
+            <button
+              type="button"
+              class="back-link"
+              :disabled="loggingIn"
+              @click="handleResendOtp"
+            >
+              Resend code
+            </button>
+            <button
+              type="button"
+              class="back-link"
+              @click="goBackToEmail"
+            >
+              &larr; Use a different email
+            </button>
+          </div>
         </div>
       </div>
 
       <!-- Legal Links -->
       <div class="legal-links">
         <router-link to="/privacy-policy">{{ $t('auth.privacyPolicy') }}</router-link>
-        <span class="separator">·</span>
+        <span class="separator">&middot;</span>
         <router-link to="/terms">{{ $t('auth.termsOfService') }}</router-link>
       </div>
     </BaseCard>
@@ -384,7 +457,7 @@ form {
   right: 0;
 }
 
-/* Email login - initially hidden */
+/* Email login / OTP entry - initially hidden */
 .login-content.email-content {
   opacity: 0;
   transform: translateY(8px);
@@ -395,12 +468,37 @@ form {
   right: 0;
 }
 
-/* Email login - visible state */
+/* Email login / OTP entry - visible state */
 .login-content.email-content.is-visible {
   opacity: 1;
   transform: translateY(0);
   pointer-events: auto;
   position: relative;
+}
+
+/* OTP Header */
+.otp-header {
+  text-align: center;
+  margin-bottom: var(--space-md);
+}
+
+.otp-instruction {
+  font-size: var(--text-base);
+  color: var(--text-secondary);
+}
+
+.otp-email {
+  font-size: var(--text-base);
+  font-weight: var(--font-semibold);
+  color: var(--text-primary);
+  margin-top: var(--space-xs);
+}
+
+.otp-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-sm);
 }
 
 /* Email Sign In Link */
@@ -436,6 +534,11 @@ form {
 
 .back-link:hover {
   color: var(--gold-primary);
+}
+
+.back-link:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 /* Legal Links */

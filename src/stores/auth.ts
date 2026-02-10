@@ -326,12 +326,12 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
-  async function devLogin(email: string) {
+  async function devLogin(email: string, code?: string) {
     loading.value = true
     error.value = null
 
     try {
-      const response = await api.devLogin(email)
+      const response = await api.devLogin(email, code)
 
       if (!response.success || !response.session) {
         error.value = response.error || 'Dev login failed'
@@ -546,6 +546,12 @@ export const useAuthStore = defineStore('auth', () => {
     markInitialized()
   }
 
+  async function storeSessionAndLoad(session: { access_token: string; refresh_token: string; expires_at?: number; expires_in?: number }) {
+    storeSession(session)
+    await loadProfile()
+    sseService.connect(session.access_token)
+  }
+
   return {
     // State
     user,
@@ -576,6 +582,7 @@ export const useAuthStore = defineStore('auth', () => {
     signInWithGoogle,
     signInWithFacebook,
     loadProfile,
+    storeSessionAndLoad,
     refreshProfile,
     refreshAccessToken,
     waitForInitialization,

@@ -92,6 +92,15 @@ class AuthService {
     return response.json()
   }
 
+  async initEmailLogin(email: string): Promise<ApiResponse<{ method: 'code' | 'otp' }>> {
+    const response = await fetch(`${API_URL}/api/auth/init-email-login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email }),
+    })
+    return response.json()
+  }
+
   async sendMagicLink(email: string, language?: string): Promise<ApiResponse> {
     const response = await fetch(`${API_URL}/api/auth/magic-link`, {
       method: 'POST',
@@ -168,11 +177,11 @@ class AuthService {
     return response.json()
   }
 
-  async devLogin(email: string): Promise<LoginResponse> {
+  async devLogin(email: string, code?: string): Promise<LoginResponse> {
     const response = await fetch(`${API_URL}/api/auth/dev-login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email }),
+      body: JSON.stringify({ email, code }),
     })
     return response.json()
   }

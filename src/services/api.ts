@@ -38,6 +38,7 @@ class ApiService {
   getProfile = authService.getProfile.bind(authService)
   completeOnboarding = authService.completeOnboarding.bind(authService)
   getStats = authService.getStats.bind(authService)
+  initEmailLogin = authService.initEmailLogin.bind(authService)
   sendMagicLink = authService.sendMagicLink.bind(authService)
   requestPasswordReset = authService.requestPasswordReset.bind(authService)
   updatePassword = authService.updatePassword.bind(authService)
