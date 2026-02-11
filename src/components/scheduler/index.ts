@@ -1,3 +1,4 @@
+export { default as ContentCalendar } from './ContentCalendar.vue'
 export { default as CalendarFilters } from './CalendarFilters.vue'
 export { default as CalendarHeader } from './CalendarHeader.vue'
 export { default as CalendarLegend } from './CalendarLegend.vue'
