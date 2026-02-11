@@ -2018,5 +2018,121 @@ export default {
     carouselDesc: '2-10 bilder/videoer',
     notSet: 'Ikke angitt',
     multiple: '{count} typer'
+  },
+
+  // App Landing Page
+  appLanding: {
+    nav: {
+      features: 'Funksjoner',
+      platforms: 'Plattformer',
+      earlyBird: 'Early Bird',
+      getEarlyAccess: 'Få tidlig tilgang'
+    },
+    hero: {
+      badge: 'Kommer snart til iOS og Android',
+      headline: 'Din AI-ansatt for sosiale medier,',
+      headlineAccent: 'i lommen din',
+      subheadline: 'Fra innholdsproduksjon til automatisk publisering — SocialChef håndterer sosiale medier 24/7',
+      ctaPrimary: 'Få 70% rabatt ved lansering',
+      ctaSecondary: 'Se demo'
+    },
+    socialProof: {
+      platforms: 'Fungerer med'
+    },
+    demo: {
+      title: 'Se det i aksjon',
+      step1: 'Chat med AI',
+      step1Desc: 'Fortell SocialChef hva du vil poste',
+      step2: 'Gjennomgå og godkjenn',
+      step2Desc: 'Forhåndsvis og rediger før publisering',
+      step3: 'Publisert overalt',
+      step3Desc: 'Automatisk publisert på alle plattformer'
+    },
+    autonomy: {
+      title: 'Du velger hvor autonom AI-en din skal være',
+      subtitle: 'Fra full kontroll til komplett autopilot — velg nivået som passer din bedrift',
+      manual: 'Manuell',
+      manualDesc: 'Du lager hvert innlegg gjennom chat. Full kreativ kontroll.',
+      manualChat: 'Lag et innlegg om helgetilbudet vårt',
+      assisted: 'Assistert',
+      assistedDesc: 'SocialChef lager innhold som du gjennomgår og godkjenner før publisering.',
+      assistedNotif: 'Nytt innlegg klart for gjennomgang',
+      assistedApprove: 'Godkjenn',
+      assistedEdit: 'Rediger',
+      autopilot: 'Autopilot',
+      autopilotDesc: 'AI lager og publiserer innhold etter din timeplan. Du kan lene deg tilbake.',
+      autopilotStatus: '3 innlegg publisert i dag',
+      autopilotScheduled: 'Neste innlegg om 2 timer'
+    },
+    platformPreviews: {
+      title: 'Perfekt innhold for hver plattform',
+      subtitle: 'AI-optimaliserte innlegg tilpasset hver plattforms beste praksis',
+      facebook: 'Facebook',
+      instagram: 'Instagram',
+      linkedin: 'LinkedIn',
+      twitter: 'X',
+      postPreview: 'Din AI-genererte forhåndsvisning',
+      likeCount: '42 liker',
+      commentCount: '8 kommentarer',
+      shareCount: '12 delinger'
+    },
+    features: {
+      title: 'Ditt AI-team for sosiale medier',
+      subtitle: 'SocialChef håndterer sosiale medier så du kan fokusere på bedriften din',
+      aiChat: {
+        title: 'AI-chat',
+        description: 'Snakk med din AI-ansatt som en ekte person. Beskriv hva du ønsker og få profesjonelt innhold umiddelbart.'
+      },
+      smartContent: {
+        title: 'Smart innhold',
+        description: 'AI genererer plattformoptimaliserte innlegg med bilder og tekster tilpasset din merkevare.'
+      },
+      reviewApprove: {
+        title: 'Gjennomgå og godkjenn',
+        description: 'Se gjennom AI-genererte innlegg, godkjenn det du liker, rediger eller hopp over resten. Gå gjennom flere innlegg i en sveipekø.'
+      },
+      multiPlatform: {
+        title: 'Flere plattformer',
+        description: 'Publiser innlegg optimalisert for Facebook, Instagram, LinkedIn og X — alt fra én app.'
+      },
+      brandVoice: {
+        title: 'Merkevare-stemme',
+        description: 'AI lærer merkevarens tone, farger og stil slik at hvert innlegg føles autentisk ditt.'
+      },
+      assetLibrary: {
+        title: 'Mediebibliotek',
+        description: 'Last opp og organiser merkevarens bilder og media. SocialChef bruker dem til å lage innhold on-brand.'
+      }
+    },
+    earlyBird: {
+      title: 'Få 70% rabatt ved lansering',
+      discount: '70%',
+      discountSuffix: 'rabatt ved lansering',
+      description: 'Bli med på vår early bird-liste og sikre deg en eksklusiv 70% rabatt når appen lanseres. Ingen kredittkort nødvendig.',
+      inputPlaceholder: 'Skriv inn din e-post',
+      cta: 'Sikre min 70% rabatt',
+      successTitle: 'Du er med!',
+      successMessage: 'Vi sender rabattkoden din ved lansering.',
+      noCreditCard: 'Ingen kredittkort nødvendig',
+      alreadyOnList: 'Du er allerede på early bird-listen!',
+      invalidEmail: 'Vennligst skriv inn en gyldig e-postadresse',
+      error: 'Noe gikk galt. Vennligst prøv igjen.'
+    },
+    appStore: {
+      title: 'Kommer snart på',
+      appStore: 'App Store',
+      googlePlay: 'Google Play',
+      comingSoon: 'Kommer snart'
+    },
+    finalCta: {
+      title: 'Ikke gå glipp av dette',
+      subtitle: '70% rabatt er kun for early birds',
+      cta: 'Få min 70% rabatt'
+    },
+    footer: {
+      copyright: '© {year} SocialChef. Alle rettigheter forbeholdt.',
+      privacy: 'Personvernerklæring',
+      terms: 'Vilkår for bruk'
+    }
   }
 }

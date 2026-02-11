@@ -25,6 +25,7 @@ const DeleteAccountView = () => import('../views/DeleteAccountView.vue')
 const GoodbyeView = () => import('../views/GoodbyeView.vue')
 const AnalyticsView = () => import('../views/AnalyticsView.vue')
 const ReferralLandingView = () => import('../views/ReferralLandingView.vue')
+const AppLandingView = () => import('../views/AppLandingView.vue')
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -209,6 +210,12 @@ const router = createRouter({
     {
       path: '/invite',
       redirect: '/join',
+    },
+    {
+      path: '/app',
+      name: 'app-landing',
+      component: AppLandingView,
+      // Public route - no auth required
     },
   ],
 })

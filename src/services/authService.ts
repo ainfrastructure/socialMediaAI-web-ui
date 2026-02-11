@@ -134,7 +134,7 @@ class AuthService {
   async verifyOtp(
     email: string,
     token: string,
-    type: 'email' | 'magiclink' = 'email',
+    type: 'email' | 'magiclink' = 'magiclink',
   ): Promise<LoginResponse> {
     const response = await fetch(`${API_URL}/api/auth/verify-otp`, {
       method: 'POST',

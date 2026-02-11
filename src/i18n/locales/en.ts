@@ -2091,5 +2091,121 @@ export default {
     carouselDesc: '2-10 images/videos',
     notSet: 'Not Set',
     multiple: '{count} types'
+  },
+
+  // App Landing Page
+  appLanding: {
+    nav: {
+      features: 'Features',
+      platforms: 'Platforms',
+      earlyBird: 'Early Bird',
+      getEarlyAccess: 'Get Early Access'
+    },
+    hero: {
+      badge: 'Coming Soon to iOS & Android',
+      headline: 'Your AI Social Media Employee,',
+      headlineAccent: 'in Your Pocket',
+      subheadline: 'From content creation to automatic posting — SocialChef handles your social media 24/7',
+      ctaPrimary: 'Get 70% Off at Launch',
+      ctaSecondary: 'Watch Demo'
+    },
+    socialProof: {
+      platforms: 'Works with'
+    },
+    demo: {
+      title: 'See It In Action',
+      step1: 'Chat with AI',
+      step1Desc: 'Tell SocialChef what you want to post',
+      step2: 'Review & Approve',
+      step2Desc: 'Preview and edit before publishing',
+      step3: 'Published Everywhere',
+      step3Desc: 'Automatically posted across all platforms'
+    },
+    autonomy: {
+      title: 'You Choose How Autonomous Your AI Is',
+      subtitle: 'From full control to complete autopilot — set the level that fits your business',
+      manual: 'Manual',
+      manualDesc: 'You create every post through chat. Full creative control.',
+      manualChat: 'Create a post about our weekend sale',
+      assisted: 'Assisted',
+      assistedDesc: 'SocialChef crafts content for you to review and approve before publishing.',
+      assistedNotif: 'New post ready for review',
+      assistedApprove: 'Approve',
+      assistedEdit: 'Edit',
+      autopilot: 'Autopilot',
+      autopilotDesc: 'AI creates and publishes content on your schedule. You sit back.',
+      autopilotStatus: '3 posts published today',
+      autopilotScheduled: 'Next post in 2 hours'
+    },
+    platformPreviews: {
+      title: 'Perfect Content for Every Platform',
+      subtitle: 'AI-optimized posts tailored to each platform\'s best practices',
+      facebook: 'Facebook',
+      instagram: 'Instagram',
+      linkedin: 'LinkedIn',
+      twitter: 'X',
+      postPreview: 'Your AI-generated post preview',
+      likeCount: '42 likes',
+      commentCount: '8 comments',
+      shareCount: '12 shares'
+    },
+    features: {
+      title: 'Your AI Social Media Team',
+      subtitle: 'SocialChef handles your social media so you can focus on your business',
+      aiChat: {
+        title: 'AI Chat',
+        description: 'Talk to your AI employee like a real person. Describe what you want and get professional content instantly.'
+      },
+      smartContent: {
+        title: 'Smart Content',
+        description: 'AI generates platform-optimized posts with images and captions tailored to your brand.'
+      },
+      reviewApprove: {
+        title: 'Review & Approve',
+        description: 'Review AI-generated posts, approve what you like, edit or skip the rest. Batch-review multiple posts in a swipe deck.'
+      },
+      multiPlatform: {
+        title: 'Multi-Platform',
+        description: 'Publish posts optimized for Facebook, Instagram, LinkedIn, and X — all from one app.'
+      },
+      brandVoice: {
+        title: 'Brand Voice',
+        description: 'AI learns your brand\'s tone, colors, and style so every post feels authentically yours.'
+      },
+      assetLibrary: {
+        title: 'Asset Library',
+        description: 'Upload and manage your brand\'s photos and media. SocialChef uses them to create on-brand content.'
+      }
+    },
+    earlyBird: {
+      title: 'Get 70% Off When We Launch',
+      discount: '70%',
+      discountSuffix: 'off at launch',
+      description: 'Join our early bird list and lock in an exclusive 70% discount when the app launches. No credit card required.',
+      inputPlaceholder: 'Enter your email',
+      cta: 'Claim My 70% Discount',
+      successTitle: "You're in!",
+      successMessage: "We'll send your discount code at launch.",
+      noCreditCard: 'No credit card required',
+      alreadyOnList: "You're already on the early bird list!",
+      invalidEmail: 'Please enter a valid email address',
+      error: 'Something went wrong. Please try again.'
+    },
+    appStore: {
+      title: 'Available Soon On',
+      appStore: 'App Store',
+      googlePlay: 'Google Play',
+      comingSoon: 'Coming Soon'
+    },
+    finalCta: {
+      title: "Don't Miss Out",
+      subtitle: '70% off is only for early birds',
+      cta: 'Get My 70% Discount'
+    },
+    footer: {
+      copyright: '© {year} SocialChef. All rights reserved.',
+      privacy: 'Privacy Policy',
+      terms: 'Terms of Service'
+    }
   }
 }

@@ -46,6 +46,12 @@
   --font-body: 'Nunito Sans', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
+/* ===== NATIVE APP THEME: Playfair Display + DM Sans ===== */
+:root[data-font-theme="native"] {
+  --font-heading: 'Playfair Display', Georgia, serif;
+  --font-body: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
 /* Theme-specific adjustments for optimal readability */
 
 /* Apple theme - slightly tighter spacing */
