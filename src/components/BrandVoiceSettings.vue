@@ -1,36 +1,12 @@
 <script setup lang="ts">
 import { ref, reactive, computed, watch, onMounted } from 'vue'
-import { useI18n } from 'vue-i18n'
 import BaseCard from './BaseCard.vue'
 import BaseButton from './BaseButton.vue'
 import BaseAlert from './BaseAlert.vue'
 import MaterialIcon from './MaterialIcon.vue'
+import type { ToneSettings, BrandVoiceConfig, PlatformOverride } from '@/types/brandVoice'
 
-// ============================================================================
-// Types
-// ============================================================================
-
-export interface ToneSettings {
-  formality: number
-  humor: number
-  technicality: number
-  enthusiasm: number
-}
-
-export interface PlatformOverride {
-  enabled: boolean
-  toneAdjustments: Partial<ToneSettings>
-}
-
-export interface BrandVoiceConfig {
-  toneMatrix: ToneSettings
-  keywords: {
-    include: string[]
-    exclude: string[]
-  }
-  voiceSamples: string[]
-  platformOverrides: Record<string, PlatformOverride>
-}
+export type { ToneSettings, BrandVoiceConfig, PlatformOverride }
 
 // ============================================================================
 // Props & Emits
@@ -40,18 +16,20 @@ interface Props {
   brandId: string
   initialConfig?: BrandVoiceConfig | null
   saving?: boolean
+  savedSuccess?: boolean
+  savedError?: string | null
 }
 
 const props = withDefaults(defineProps<Props>(), {
   initialConfig: null,
   saving: false,
+  savedSuccess: false,
+  savedError: null,
 })
 
 const emit = defineEmits<{
   (e: 'save', config: BrandVoiceConfig): void
 }>()
-
-const { t } = useI18n()
 
 // ============================================================================
 // Default Config
@@ -296,18 +274,30 @@ function handleSave() {
   config.voiceSamples = config.voiceSamples.map((s) => s.trim())
 
   emit('save', JSON.parse(JSON.stringify(config)) as BrandVoiceConfig)
+}
 
-  // Optimistic UI: show success after a tick (parent controls the actual saving)
-  setTimeout(() => {
-    if (!saveError.value) {
+// Watch parent's save state props for feedback
+watch(
+  () => props.savedSuccess,
+  (success) => {
+    if (success) {
       saveSuccess.value = true
       hasChanges.value = false
       setTimeout(() => {
         saveSuccess.value = false
       }, 3000)
     }
-  }, 300)
-}
+  },
+)
+
+watch(
+  () => props.savedError,
+  (error) => {
+    if (error) {
+      saveError.value = error
+    }
+  },
+)
 
 // ============================================================================
 // Helpers
