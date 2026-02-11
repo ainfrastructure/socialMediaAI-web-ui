@@ -4,6 +4,7 @@ import { useI18n } from 'vue-i18n'
 import BaseButton from '../components/BaseButton.vue'
 import BaseInput from '../components/BaseInput.vue'
 import MaterialIcon from '../components/MaterialIcon.vue'
+import PhoneMockup from '../components/PhoneMockup.vue'
 import ThemeToggle from '../components/ThemeToggle.vue'
 import { waitlistService } from '../services/waitlistService'
 
@@ -135,6 +136,31 @@ const features = [
   { key: 'assetLibrary', icon: 'photo_library' }
 ]
 
+// ===== PHONE PARALLAX =====
+const heroPhoneRef = ref<HTMLElement | null>(null)
+let rafId: number | null = null
+
+function handleMouseMove(e: MouseEvent) {
+  if (!heroPhoneRef.value) return
+  if (rafId) return // throttle to one per frame
+  rafId = requestAnimationFrame(() => {
+    rafId = null
+    if (!heroPhoneRef.value) return
+    const rect = heroPhoneRef.value.getBoundingClientRect()
+    const centerX = rect.left + rect.width / 2
+    const centerY = rect.top + rect.height / 2
+    const rotateY = ((e.clientX - centerX) / window.innerWidth) * 8
+    const rotateX = ((centerY - e.clientY) / window.innerHeight) * 6
+    heroPhoneRef.value.style.transform = `perspective(1200px) rotateY(${rotateY}deg) rotateX(${rotateX}deg)`
+  })
+}
+
+function resetPhoneTransform() {
+  if (heroPhoneRef.value) {
+    heroPhoneRef.value.style.transform = ''
+  }
+}
+
 // ===== SCROLL REVEAL =====
 function setupScrollReveal() {
   const observer = new IntersectionObserver(
@@ -168,6 +194,13 @@ onMounted(async () => {
 
   startAutonomyRotation()
 
+  // Parallax only on hover-capable devices
+  const hoverQuery = window.matchMedia('(hover: hover)')
+  if (hoverQuery.matches) {
+    window.addEventListener('mousemove', handleMouseMove)
+    window.addEventListener('mouseleave', resetPhoneTransform)
+  }
+
   // Delay scroll reveal setup to ensure DOM is ready
   requestAnimationFrame(() => {
     scrollObserver = setupScrollReveal()
@@ -179,9 +212,12 @@ onUnmounted(() => {
   document.documentElement.removeAttribute('data-font-theme')
 
   window.removeEventListener('scroll', handleScroll)
+  window.removeEventListener('mousemove', handleMouseMove)
+  window.removeEventListener('mouseleave', resetPhoneTransform)
   stopAutonomyRotation()
   if (autonomyPauseTimeout) clearTimeout(autonomyPauseTimeout)
   if (scrollObserver) scrollObserver.disconnect()
+  if (rafId) cancelAnimationFrame(rafId)
 })
 </script>
 
@@ -290,33 +326,38 @@ onUnmounted(() => {
 
         <div class="al-hero-phone scroll-reveal scroll-reveal-delay-4">
           <div class="al-phone-glow"></div>
-          <div class="al-phone-frame">
-            <div class="al-phone-notch"></div>
-            <div class="al-phone-screen">
+          <div ref="heroPhoneRef" class="al-hero-phone-parallax">
+            <PhoneMockup size="lg" float show-buttons>
               <!-- Chat UI mockup inside phone -->
-              <div class="al-phone-status-bar">
-                <span>9:41</span>
-                <div class="al-phone-status-icons">
-                  <span class="al-signal"></span>
-                  <span class="al-wifi"></span>
-                  <span class="al-battery"></span>
-                </div>
-              </div>
               <div class="al-phone-app-header">
                 <img src="../assets/socialchef_logo.svg" alt="" class="al-phone-app-logo" />
                 <span>SocialChef</span>
               </div>
               <div class="al-phone-chat">
                 <div class="al-chat-bubble al-chat-user">
-                  Create a post about our weekend sale ✨
+                  Create a post about our weekend sale
                 </div>
                 <div class="al-chat-bubble al-chat-ai">
-                  <div class="al-typing-indicator">
-                    <span></span><span></span><span></span>
+                  <div class="al-chat-ai-avatar">SC</div>
+                  <div class="al-chat-ai-content">
+                    <div class="al-typing-indicator">
+                      <span></span><span></span><span></span>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
+
+              <template #badges>
+                <div class="al-floating-badge al-floating-badge-1">
+                  <MaterialIcon icon="check_circle" size="xs" />
+                  {{ $t('appLanding.hero.floatingBadge1') }}
+                </div>
+                <div class="al-floating-badge al-floating-badge-2">
+                  <MaterialIcon icon="schedule" size="xs" />
+                  {{ $t('appLanding.hero.floatingBadge2') }}
+                </div>
+              </template>
+            </PhoneMockup>
           </div>
         </div>
       </div>
@@ -358,20 +399,64 @@ onUnmounted(() => {
             class="al-demo-step scroll-reveal"
             :class="[`scroll-reveal-delay-${i + 1}`, { 'al-demo-center': i === 1 }]"
           >
-            <div class="al-phone-frame al-phone-small">
-              <div class="al-phone-notch"></div>
-              <div class="al-phone-screen">
-                <div class="al-phone-placeholder">
-                  <MaterialIcon
-                    :icon="i === 0 ? 'chat' : i === 1 ? 'touch_app' : 'send'"
-                    size="xl"
-                  />
-                  <button class="al-play-overlay">
-                    <MaterialIcon icon="play_arrow" size="lg" />
+            <PhoneMockup size="sm">
+              <!-- Step 1: Mini chat interface -->
+              <div v-if="i === 0" class="al-mini-chat">
+                <div class="al-mini-header">
+                  <img src="../assets/socialchef_logo.svg" alt="" class="al-mini-logo" />
+                  <span>SocialChef</span>
+                </div>
+                <div class="al-mini-messages">
+                  <div class="al-mini-bubble al-mini-user">Post about our weekend brunch</div>
+                  <div class="al-mini-bubble al-mini-ai">
+                    <div class="al-typing-indicator"><span></span><span></span><span></span></div>
+                  </div>
+                </div>
+              </div>
+              <!-- Step 2: Post preview with approve/edit -->
+              <div v-else-if="i === 1" class="al-mini-preview">
+                <div class="al-mini-header">
+                  <MaterialIcon icon="fact_check" size="xs" />
+                  <span>Review Post</span>
+                </div>
+                <div class="al-mini-post-card">
+                  <div class="al-mini-post-img"></div>
+                  <div class="al-mini-post-text">Weekend brunch is here! Join us for...</div>
+                </div>
+                <div class="al-mini-actions">
+                  <button class="al-mini-btn al-mini-approve">
+                    <MaterialIcon icon="check" size="xs" /> Approve
+                  </button>
+                  <button class="al-mini-btn al-mini-edit">
+                    <MaterialIcon icon="edit" size="xs" /> Edit
                   </button>
                 </div>
               </div>
-            </div>
+              <!-- Step 3: Multi-platform publish confirmation -->
+              <div v-else class="al-mini-publish">
+                <div class="al-mini-header">
+                  <MaterialIcon icon="send" size="xs" />
+                  <span>Published</span>
+                </div>
+                <div class="al-mini-platforms">
+                  <div class="al-mini-platform-row">
+                    <span class="al-mini-platform-dot" style="background: #1877f2"></span>
+                    <span>Facebook</span>
+                    <MaterialIcon icon="check_circle" size="xs" class="al-mini-check" />
+                  </div>
+                  <div class="al-mini-platform-row">
+                    <span class="al-mini-platform-dot" style="background: #E1306C"></span>
+                    <span>Instagram</span>
+                    <MaterialIcon icon="check_circle" size="xs" class="al-mini-check" />
+                  </div>
+                  <div class="al-mini-platform-row">
+                    <span class="al-mini-platform-dot" style="background: #0a66c2"></span>
+                    <span>LinkedIn</span>
+                    <MaterialIcon icon="check_circle" size="xs" class="al-mini-check" />
+                  </div>
+                </div>
+              </div>
+            </PhoneMockup>
             <div class="al-step-badge">{{ i + 1 }}</div>
             <h3 class="al-step-title">{{ $t(`appLanding.demo.${step}`) }}</h3>
             <p class="al-step-desc">{{ $t(`appLanding.demo.${step}Desc`) }}</p>
@@ -503,42 +588,151 @@ onUnmounted(() => {
 
         <!-- Phone Preview -->
         <div class="al-platform-preview scroll-reveal scroll-reveal-delay-3">
-          <div class="al-phone-frame al-phone-large">
-            <div class="al-phone-notch"></div>
-            <div class="al-phone-screen">
-              <Transition name="al-fade" mode="out-in">
-                <div :key="selectedPlatform" class="al-platform-mock">
-                  <!-- Platform Header -->
-                  <div class="al-platform-mock-header" :style="{ background: platformColors[selectedPlatform] }">
-                    <span class="al-platform-mock-name">
-                      {{ $t(`appLanding.platformPreviews.${selectedPlatform}`) }}
-                    </span>
+          <PhoneMockup size="lg">
+            <Transition name="al-fade" mode="out-in">
+              <!-- ===== FACEBOOK ===== -->
+              <div v-if="selectedPlatform === 'facebook'" key="facebook" class="al-plat-feed al-plat-facebook">
+                <div class="al-plat-topbar al-plat-topbar-fb">
+                  <svg viewBox="0 0 24 24" width="20" height="20" fill="#ffffff"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+                  <div class="al-plat-topbar-actions">
+                    <MaterialIcon icon="add_circle" size="sm" />
+                    <MaterialIcon icon="search" size="sm" />
+                    <MaterialIcon icon="chat_bubble" size="sm" />
                   </div>
+                </div>
+                <div class="al-plat-post">
+                  <div class="al-plat-post-header">
+                    <div class="al-plat-avatar">SC</div>
+                    <div class="al-plat-author">
+                      <strong>SocialChef</strong>
+                      <span>2h · <MaterialIcon icon="public" size="xs" /></span>
+                    </div>
+                    <MaterialIcon icon="more_horiz" size="sm" class="al-plat-more" />
+                  </div>
+                  <p class="al-plat-caption">{{ $t('appLanding.platformPreviews.postCaption') }}</p>
+                  <img src="/example/claw-legion-squad.jpg" alt="Post" class="al-plat-image" />
+                  <div class="al-plat-reactions-bar">
+                    <div class="al-plat-reaction-icons">
+                      <span class="al-plat-reaction al-plat-r-like">&#128077;</span>
+                      <span class="al-plat-reaction al-plat-r-love">&#10084;&#65039;</span>
+                      <span class="al-plat-reaction al-plat-r-wow">&#128558;</span>
+                      <span class="al-plat-reaction-count">{{ $t('appLanding.platformPreviews.facebookLikes') }}</span>
+                    </div>
+                    <div class="al-plat-comment-share-count">
+                      <span>{{ $t('appLanding.platformPreviews.facebookComments') }}</span>
+                      <span>{{ $t('appLanding.platformPreviews.facebookShares') }}</span>
+                    </div>
+                  </div>
+                  <div class="al-plat-action-bar">
+                    <button class="al-plat-action"><MaterialIcon icon="thumb_up" size="sm" /> Like</button>
+                    <button class="al-plat-action"><MaterialIcon icon="chat_bubble_outline" size="sm" /> Comment</button>
+                    <button class="al-plat-action"><MaterialIcon icon="share" size="sm" /> Share</button>
+                  </div>
+                </div>
+              </div>
 
-                  <!-- Post Preview -->
-                  <div class="al-post-mock">
-                    <div class="al-post-author">
-                      <div class="al-post-avatar">SC</div>
-                      <div class="al-post-meta">
-                        <strong>SocialChef</strong>
-                        <span>Just now</span>
-                      </div>
+              <!-- ===== INSTAGRAM ===== -->
+              <div v-else-if="selectedPlatform === 'instagram'" key="instagram" class="al-plat-feed al-plat-instagram">
+                <div class="al-plat-topbar al-plat-topbar-ig">
+                  <svg viewBox="0 0 120 35" width="90" height="26" fill="currentColor"><path d="M7.6 27.2c-1.6 0-2.8-.3-3.8-.9-1-.6-1.8-1.4-2.3-2.5-.5-1.1-.8-2.4-.8-3.9V6.3h3.6v13.3c0 1.5.3 2.6 1 3.4.7.7 1.5 1.1 2.6 1.1 1 0 1.9-.4 2.6-1.1.7-.8 1-1.9 1-3.4V6.3h3.5v13.6c0 1.5-.3 2.8-.8 3.9s-1.3 1.9-2.3 2.5c-1 .6-2.2.9-3.8.9h.5zm19.3 0c-1.6 0-3-.3-4.2-.9s-2.1-1.5-2.7-2.6c-.6-1.1-1-2.4-1-3.8s.3-2.7 1-3.8c.6-1.1 1.5-2 2.7-2.6 1.2-.6 2.5-1 4-1 1 0 1.9.2 2.8.5s1.6.8 2.3 1.4l-1.8 2.3c-.9-.8-2-1.2-3.1-1.2-1.3 0-2.3.4-3.1 1.3-.8.8-1.2 2-1.2 3.3 0 1.4.4 2.5 1.2 3.3s1.8 1.3 3.1 1.3c1.2 0 2.2-.4 3.1-1.2l1.8 2.3c-.6.6-1.4 1.1-2.3 1.4s-1.8.5-2.8.5h.2zm-1.5-14.7V9.4h8.2v3.1h-8.2z"/></svg>
+                  <div class="al-plat-topbar-actions">
+                    <MaterialIcon icon="favorite_border" size="sm" />
+                    <MaterialIcon icon="chat_bubble_outline" size="sm" />
+                  </div>
+                </div>
+                <div class="al-plat-post">
+                  <div class="al-plat-post-header">
+                    <div class="al-plat-avatar al-plat-avatar-ig">SC</div>
+                    <div class="al-plat-author">
+                      <strong>socialchef</strong>
                     </div>
-                    <div class="al-post-image">
-                      <div class="al-post-image-placeholder">
-                        <MaterialIcon icon="image" size="2xl" />
-                      </div>
+                    <MaterialIcon icon="more_horiz" size="sm" class="al-plat-more" />
+                  </div>
+                  <img src="/example/claw-legion-trio.jpg" alt="Post" class="al-plat-image al-plat-image-ig" />
+                  <div class="al-plat-ig-actions">
+                    <div class="al-plat-ig-left">
+                      <MaterialIcon icon="favorite" size="md" class="al-plat-ig-heart" />
+                      <MaterialIcon icon="chat_bubble_outline" size="md" />
+                      <MaterialIcon icon="send" size="md" />
                     </div>
-                    <div class="al-post-engagement">
-                      <span><MaterialIcon icon="thumb_up" size="xs" /> {{ $t('appLanding.platformPreviews.likeCount') }}</span>
-                      <span><MaterialIcon icon="comment" size="xs" /> {{ $t('appLanding.platformPreviews.commentCount') }}</span>
-                      <span><MaterialIcon icon="share" size="xs" /> {{ $t('appLanding.platformPreviews.shareCount') }}</span>
+                    <MaterialIcon icon="bookmark_border" size="md" />
+                  </div>
+                  <div class="al-plat-ig-likes">{{ $t('appLanding.platformPreviews.instagramLikes') }}</div>
+                  <p class="al-plat-ig-caption"><strong>socialchef</strong> {{ $t('appLanding.platformPreviews.postCaption') }}</p>
+                  <span class="al-plat-ig-comments">{{ $t('appLanding.platformPreviews.instagramComments') }}</span>
+                </div>
+              </div>
+
+              <!-- ===== LINKEDIN ===== -->
+              <div v-else-if="selectedPlatform === 'linkedin'" key="linkedin" class="al-plat-feed al-plat-linkedin">
+                <div class="al-plat-topbar al-plat-topbar-li">
+                  <svg viewBox="0 0 24 24" width="22" height="22" fill="#ffffff"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+                  <div class="al-plat-topbar-actions">
+                    <MaterialIcon icon="search" size="sm" />
+                    <MaterialIcon icon="chat_bubble_outline" size="sm" />
+                  </div>
+                </div>
+                <div class="al-plat-post">
+                  <div class="al-plat-post-header">
+                    <div class="al-plat-avatar al-plat-avatar-li">SC</div>
+                    <div class="al-plat-author">
+                      <strong>SocialChef</strong>
+                      <span>1,203 followers</span>
+                      <span>3h</span>
+                    </div>
+                    <MaterialIcon icon="more_horiz" size="sm" class="al-plat-more" />
+                  </div>
+                  <p class="al-plat-caption">{{ $t('appLanding.platformPreviews.postCaption') }}</p>
+                  <img src="/example/claw-legion-squad.jpg" alt="Post" class="al-plat-image" />
+                  <div class="al-plat-reactions-bar">
+                    <div class="al-plat-reaction-icons">
+                      <span class="al-plat-reaction al-plat-r-like">&#128077;</span>
+                      <span class="al-plat-reaction al-plat-r-celebrate">&#128079;</span>
+                      <span class="al-plat-reaction al-plat-r-love">&#10084;&#65039;</span>
+                      <span class="al-plat-reaction-count">{{ $t('appLanding.platformPreviews.linkedinReactions') }}</span>
+                    </div>
+                    <div class="al-plat-comment-share-count">
+                      <span>{{ $t('appLanding.platformPreviews.linkedinComments') }}</span>
+                      <span>{{ $t('appLanding.platformPreviews.linkedinReposts') }}</span>
+                    </div>
+                  </div>
+                  <div class="al-plat-action-bar al-plat-action-bar-li">
+                    <button class="al-plat-action"><MaterialIcon icon="thumb_up" size="sm" /> Like</button>
+                    <button class="al-plat-action"><MaterialIcon icon="chat_bubble_outline" size="sm" /> Comment</button>
+                    <button class="al-plat-action"><MaterialIcon icon="repeat" size="sm" /> Repost</button>
+                    <button class="al-plat-action"><MaterialIcon icon="send" size="sm" /> Send</button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- ===== X / TWITTER ===== -->
+              <div v-else key="twitter" class="al-plat-feed al-plat-twitter">
+                <div class="al-plat-topbar al-plat-topbar-tw">
+                  <svg viewBox="0 0 24 24" width="18" height="18" fill="#ffffff"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                  <div class="al-plat-topbar-actions">
+                    <MaterialIcon icon="settings" size="sm" />
+                  </div>
+                </div>
+                <div class="al-plat-post al-plat-post-tw">
+                  <div class="al-plat-avatar al-plat-avatar-tw">SC</div>
+                  <div class="al-plat-tw-content">
+                    <div class="al-plat-tw-header">
+                      <strong>SocialChef</strong>
+                      <span>@socialchef · 1h</span>
+                    </div>
+                    <p class="al-plat-caption">{{ $t('appLanding.platformPreviews.postCaption') }}</p>
+                    <img src="/example/claw-legion-trio.jpg" alt="Post" class="al-plat-image al-plat-image-tw" />
+                    <div class="al-plat-tw-actions">
+                      <span class="al-plat-tw-action"><MaterialIcon icon="chat_bubble_outline" size="xs" /> {{ $t('appLanding.platformPreviews.twitterReplies') }}</span>
+                      <span class="al-plat-tw-action"><MaterialIcon icon="repeat" size="xs" /> {{ $t('appLanding.platformPreviews.twitterReposts') }}</span>
+                      <span class="al-plat-tw-action"><MaterialIcon icon="favorite_border" size="xs" /> {{ $t('appLanding.platformPreviews.twitterLikes') }}</span>
+                      <span class="al-plat-tw-action"><MaterialIcon icon="bar_chart" size="xs" /> {{ $t('appLanding.platformPreviews.twitterViews') }}</span>
                     </div>
                   </div>
                 </div>
-              </Transition>
-            </div>
-          </div>
+              </div>
+            </Transition>
+          </PhoneMockup>
         </div>
       </div>
     </section>
@@ -688,8 +882,6 @@ onUnmounted(() => {
 
 .app-landing {
   --al-max-width: 1200px;
-  --al-phone-radius: 40px;
-  --al-phone-border: 3px;
   min-height: 100vh;
   min-height: 100dvh;
   background: var(--bg-primary);
@@ -716,6 +908,14 @@ onUnmounted(() => {
 
 @media (prefers-reduced-motion: reduce) {
   .scroll-reveal { opacity: 1; transform: none; transition: none; }
+  .al-hero-orb { animation: none; }
+  .al-phone-glow { animation: none; }
+  .al-floating-badge { animation: none; opacity: 1; }
+  .al-chat-bubble { animation: none; opacity: 1; }
+  .al-badge-dot { animation: none; }
+  .al-early-bird-card { animation: none; }
+  .al-feature-card::after { animation: none; }
+  .al-hero-phone-parallax { transform: none !important; transition: none; }
 }
 
 /* ===== TRANSITIONS ===== */
@@ -1078,68 +1278,70 @@ onUnmounted(() => {
   50% { opacity: 0.35; transform: translateX(-50%) scale(1.05); }
 }
 
-.al-phone-frame {
-  width: 280px;
-  height: 580px;
-  border-radius: var(--al-phone-radius);
-  border: var(--al-phone-border) solid var(--text-muted);
-  background: var(--bg-secondary);
-  position: relative;
-  overflow: hidden;
-  box-shadow:
-    var(--shadow-xl),
-    0 0 0 1px rgba(0,0,0,0.03),
-    0 30px 60px -12px rgba(0,0,0,0.15);
+/* Parallax wrapper for hero phone */
+.al-hero-phone-parallax {
+  transition: transform 0.15s ease-out;
+  will-change: transform;
 }
 
-.al-hero-phone .al-phone-frame {
-  transform: rotateY(-6deg) rotateX(3deg);
-  animation: al-float 8s ease-in-out infinite;
+@media (hover: none) {
+  .al-hero-phone-parallax {
+    transform: none !important;
+  }
 }
 
-@keyframes al-float {
-  0%, 100% { transform: rotateY(-6deg) rotateX(3deg) translateY(0); }
-  50% { transform: rotateY(-6deg) rotateX(3deg) translateY(-16px); }
-}
-
-.al-phone-notch {
+/* ===== Floating Badges ===== */
+.al-floating-badge {
   position: absolute;
-  top: 8px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 100px;
-  height: 28px;
-  background: var(--bg-primary);
-  border-radius: 0 0 16px 16px;
-  z-index: 2;
-}
-
-.al-phone-screen {
-  width: 100%;
-  height: 100%;
   display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-
-.al-phone-status-bar {
-  display: flex;
-  justify-content: space-between;
   align-items: center;
-  padding: 14px 24px 4px;
+  gap: 6px;
+  background: var(--glass-bg);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-full);
+  padding: 8px 16px;
   font-size: 12px;
   font-weight: var(--font-semibold);
-  color: var(--text-primary);
-  z-index: 3;
+  color: var(--gold-primary);
+  white-space: nowrap;
+  box-shadow: 0 4px 20px rgba(15, 61, 46, 0.1);
+  z-index: 10;
+  opacity: 0;
+  animation: al-badge-enter 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-.al-phone-status-icons { display: flex; gap: 4px; align-items: center; }
-
-.al-signal, .al-wifi, .al-battery {
-  display: block; width: 16px; height: 10px;
-  background: var(--text-muted); border-radius: 2px;
+.al-floating-badge-1 {
+  top: 15%;
+  right: -20px;
+  animation-delay: 1.8s;
 }
-.al-battery { width: 22px; border-radius: 3px; }
+
+.al-floating-badge-2 {
+  bottom: 20%;
+  left: -30px;
+  animation-delay: 2.6s;
+}
+
+.al-floating-badge-1 { animation-name: al-badge-float-1; }
+.al-floating-badge-2 { animation-name: al-badge-float-2; }
+
+@keyframes al-badge-float-1 {
+  0% { opacity: 0; transform: translateX(20px); }
+  15% { opacity: 1; transform: translateX(0); }
+  100% { opacity: 1; transform: translateX(0) translateY(-6px); }
+}
+
+@keyframes al-badge-float-2 {
+  0% { opacity: 0; transform: translateX(-20px); }
+  15% { opacity: 1; transform: translateX(0); }
+  100% { opacity: 1; transform: translateX(0) translateY(6px); }
+}
+
+@media (max-width: 768px) {
+  .al-floating-badge { display: none; }
+}
 
 .al-phone-app-header {
   display: flex;
@@ -1186,6 +1388,29 @@ onUnmounted(() => {
   align-self: flex-start;
   border-bottom-left-radius: 6px;
   animation-delay: 2.2s;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: var(--space-sm) var(--space-md);
+}
+
+.al-chat-ai-avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--gradient-gold);
+  color: var(--text-on-gold);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 9px;
+  font-weight: var(--font-bold);
+  flex-shrink: 0;
+}
+
+.al-chat-ai-content {
+  flex: 1;
+  padding-top: 2px;
 }
 
 @keyframes al-bubble-in {
@@ -1207,39 +1432,144 @@ onUnmounted(() => {
   50% { opacity: 1; transform: scale(1); }
 }
 
-/* Phone placeholder */
-.al-phone-placeholder {
+/* ===== Mini Screen Mockups (Demo Section) ===== */
+.al-mini-chat,
+.al-mini-preview,
+.al-mini-publish {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: var(--space-sm) var(--space-md);
+}
+
+.al-mini-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding-bottom: var(--space-xs);
+  border-bottom: 1px solid var(--border-color);
+  margin-bottom: var(--space-sm);
+  font-size: 11px;
+  font-weight: var(--font-semibold);
+  color: var(--text-secondary);
+}
+
+.al-mini-logo {
+  width: 14px;
+  height: 14px;
+}
+
+.al-mini-messages {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.al-mini-bubble {
+  padding: 6px 10px;
+  border-radius: 12px;
+  font-size: 10px;
+  line-height: 1.3;
+  max-width: 85%;
+}
+
+.al-mini-user {
+  background: var(--gradient-gold);
+  color: var(--text-on-gold);
+  align-self: flex-end;
+  border-bottom-right-radius: 4px;
+}
+
+.al-mini-ai {
+  background: var(--bg-tertiary);
+  align-self: flex-start;
+  border-bottom-left-radius: 4px;
+}
+
+/* Step 2 - Post preview */
+.al-mini-post-card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  margin-bottom: var(--space-sm);
+}
+
+.al-mini-post-img {
+  width: 100%;
+  height: 60px;
+  background: var(--gradient-subtle, linear-gradient(135deg, var(--bg-tertiary), var(--bg-elevated)));
+}
+
+.al-mini-post-text {
+  padding: 6px 8px;
+  font-size: 9px;
+  color: var(--text-secondary);
+  line-height: 1.3;
+}
+
+.al-mini-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: auto;
+}
+
+.al-mini-btn {
   flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--gradient-subtle);
-  color: var(--text-muted);
-  position: relative;
+  gap: 3px;
+  padding: 5px 0;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-color);
+  background: transparent;
+  font-family: var(--font-body);
+  font-size: 9px;
+  font-weight: var(--font-medium);
+  cursor: default;
 }
 
-.al-play-overlay {
-  position: absolute;
-  width: 56px; height: 56px;
-  border-radius: 50%;
-  background: var(--glass-bg);
-  backdrop-filter: blur(var(--blur-sm));
-  -webkit-backdrop-filter: blur(var(--blur-sm));
-  border: 1px solid var(--glass-border);
+.al-mini-approve {
+  background: var(--gradient-gold);
+  color: var(--text-on-gold);
+  border-color: transparent;
+}
+
+.al-mini-edit {
+  color: var(--text-secondary);
+}
+
+/* Step 3 - Publish confirmation */
+.al-mini-platforms {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+  justify-content: center;
+}
+
+.al-mini-platform-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
   color: var(--text-primary);
-  display: flex; align-items: center; justify-content: center;
-  cursor: pointer;
-  transition: all 0.3s var(--ease-smooth);
-}
-.al-play-overlay:hover {
-  background: var(--glass-intense-bg);
-  transform: scale(1.12);
-  box-shadow: var(--shadow-lg);
 }
 
-/* Phone sizes */
-.al-phone-small { width: 220px; height: 440px; }
-.al-phone-large { width: 300px; height: 620px; margin: 0 auto; }
+.al-mini-platform-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.al-mini-check {
+  margin-left: auto;
+  color: var(--success-text, #0f3d2e);
+}
 
 @media (max-width: 768px) {
   .al-hero {
@@ -1254,28 +1584,33 @@ onUnmounted(() => {
   .al-hero-sub { max-width: none; }
   .al-hero-ctas { justify-content: center; }
   .al-hero-phone { order: -1; }
-  .al-hero-phone .al-phone-frame {
-    width: 240px; height: 480px;
-    transform: none;
-    animation: al-float-mobile 6s ease-in-out infinite;
-  }
+  .al-hero-phone-parallax { transform: none !important; }
   .al-hero-orb-1 { width: 300px; height: 300px; }
   .al-hero-orb-2 { width: 200px; height: 200px; }
   .al-hero-orb-3 { display: none; }
-  @keyframes al-float-mobile {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-10px); }
-  }
 }
 
 /* ===== SOCIAL PROOF ===== */
 .al-social-proof {
-  border-top: 1px solid var(--glass-border);
-  border-bottom: 1px solid var(--glass-border);
+  border-top: none;
+  border-bottom: none;
   background: var(--glass-bg);
   backdrop-filter: blur(var(--blur-sm));
   -webkit-backdrop-filter: blur(var(--blur-sm));
+  position: relative;
 }
+
+.al-social-proof::before,
+.al-social-proof::after {
+  content: '';
+  position: absolute;
+  left: 10%;
+  right: 10%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--glass-border), transparent);
+}
+.al-social-proof::before { top: 0; }
+.al-social-proof::after { bottom: 0; }
 
 .al-social-proof-inner {
   max-width: var(--al-max-width);
@@ -1440,7 +1775,11 @@ onUnmounted(() => {
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border: 1px solid var(--glass-border);
-  box-shadow: var(--shadow-lg), 0 0 0 1px rgba(0,0,0,0.02);
+  box-shadow:
+    var(--shadow-lg),
+    0 0 0 1px rgba(0, 0, 0, 0.02),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4),
+    inset 0 0 20px rgba(255, 255, 255, 0.1);
   overflow: hidden;
 }
 
@@ -1621,43 +1960,316 @@ onUnmounted(() => {
 
 .al-platform-preview { display: flex; justify-content: center; }
 
-.al-platform-mock { height: 100%; display: flex; flex-direction: column; }
-
-.al-platform-mock-header {
-  padding: var(--space-lg) var(--space-lg) var(--space-md);
-  padding-top: 44px;
+/* Platform preview phone centering */
+.al-platform-preview :deep(.phone-mockup) {
+  margin: 0 auto;
 }
 
-.al-platform-mock-name { font-weight: var(--font-bold); font-size: var(--text-base); color: white; }
+/* ===== Authentic Platform Feed Styles ===== */
+.al-plat-feed {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: #ffffff;
+}
 
-.al-post-mock { flex: 1; padding: var(--space-lg); background: var(--bg-secondary); }
+/* Top bars */
+.al-plat-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 12px;
+  min-height: 36px;
+}
 
-.al-post-author { display: flex; align-items: center; gap: var(--space-md); margin-bottom: var(--space-lg); }
+.al-plat-topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: inherit;
+}
 
-.al-post-avatar {
-  width: 40px; height: 40px;
+.al-plat-topbar-fb { background: #1877f2; color: #fff; }
+.al-plat-topbar-ig { background: #fff; color: #262626; border-bottom: 1px solid #efefef; }
+.al-plat-topbar-li { background: #0a66c2; color: #fff; }
+.al-plat-topbar-tw { background: #000; color: #fff; }
+
+/* Post container */
+.al-plat-post {
+  flex: 1;
+  overflow: hidden;
+}
+
+/* Post header */
+.al-plat-post-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+}
+
+/* Avatar */
+.al-plat-avatar {
+  width: 34px;
+  height: 34px;
   border-radius: 50%;
   background: var(--gradient-gold);
   color: var(--text-on-gold);
-  display: flex; align-items: center; justify-content: center;
-  font-weight: var(--font-bold); font-size: var(--text-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 11px;
+  flex-shrink: 0;
 }
 
-.al-post-meta { display: flex; flex-direction: column; }
-.al-post-meta strong { font-size: var(--text-sm); }
-.al-post-meta span { font-size: 11px; color: var(--text-muted); }
-
-.al-post-image { border-radius: var(--radius-md); overflow: hidden; margin-bottom: var(--space-lg); }
-
-.al-post-image-placeholder {
-  width: 100%; aspect-ratio: 1;
-  background: var(--gradient-subtle);
-  display: flex; align-items: center; justify-content: center;
-  color: var(--text-disabled);
+.al-plat-avatar-ig {
+  background: var(--gradient-gold);
+  outline: 2px solid;
+  outline-color: #E1306C;
+  outline-offset: 2px;
 }
 
-.al-post-engagement { display: flex; gap: var(--space-lg); font-size: 12px; color: var(--text-muted); }
-.al-post-engagement span { display: flex; align-items: center; gap: 4px; }
+.al-plat-avatar-li {
+  border-radius: 4px;
+}
+
+.al-plat-avatar-tw {
+  width: 38px;
+  height: 38px;
+}
+
+/* Author info */
+.al-plat-author {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.al-plat-author strong {
+  font-size: 13px;
+  color: #262626;
+  line-height: 1.2;
+}
+
+.al-plat-author span {
+  font-size: 11px;
+  color: #8e8e8e;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.al-plat-more {
+  color: #8e8e8e;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+/* Caption */
+.al-plat-caption {
+  font-size: 12px;
+  line-height: 1.4;
+  color: #262626;
+  padding: 0 12px 8px;
+  margin: 0;
+}
+
+/* Post image */
+.al-plat-image {
+  width: 100%;
+  display: block;
+  object-fit: cover;
+  aspect-ratio: 16/9;
+}
+
+.al-plat-image-ig {
+  aspect-ratio: 1;
+}
+
+.al-plat-image-tw {
+  border-radius: 12px;
+  margin: 8px 0;
+  aspect-ratio: 16/9;
+}
+
+/* === Facebook / LinkedIn reactions bar === */
+.al-plat-reactions-bar {
+  padding: 8px 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #efefef;
+}
+
+.al-plat-reaction-icons {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.al-plat-reaction {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  margin-right: -3px;
+  position: relative;
+}
+
+.al-plat-reaction-count {
+  font-size: 12px;
+  color: #65676b;
+  margin-left: 6px;
+}
+
+.al-plat-comment-share-count {
+  display: flex;
+  gap: 10px;
+  font-size: 12px;
+  color: #65676b;
+}
+
+/* Action bar (Facebook / LinkedIn) */
+.al-plat-action-bar {
+  display: flex;
+  padding: 2px 4px;
+  border-bottom: 1px solid #efefef;
+}
+
+.al-plat-action-bar-li {
+  padding: 2px 2px;
+}
+
+.al-plat-action {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 8px 4px;
+  background: none;
+  border: none;
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 600;
+  color: #65676b;
+  cursor: default;
+  border-radius: 4px;
+}
+
+/* === Instagram specific === */
+.al-plat-ig-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px 4px;
+  color: #262626;
+}
+
+.al-plat-ig-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.al-plat-ig-heart {
+  color: #ed4956;
+}
+
+.al-plat-ig-likes {
+  font-size: 13px;
+  font-weight: 600;
+  color: #262626;
+  padding: 0 12px 4px;
+}
+
+.al-plat-ig-caption {
+  font-size: 12px;
+  color: #262626;
+  padding: 0 12px;
+  margin: 0 0 4px;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.al-plat-ig-comments {
+  font-size: 12px;
+  color: #8e8e8e;
+  padding: 0 12px;
+}
+
+/* === Twitter specific === */
+.al-plat-post-tw {
+  display: flex;
+  gap: 10px;
+  padding: 12px;
+  border-bottom: 1px solid #2f3336;
+}
+
+.al-plat-twitter .al-plat-post {
+  background: #000;
+}
+
+.al-plat-twitter .al-plat-topbar-tw {
+  border-bottom: 1px solid #2f3336;
+}
+
+.al-plat-tw-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.al-plat-tw-header {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 2px;
+}
+
+.al-plat-tw-header strong {
+  font-size: 13px;
+  color: #e7e9ea;
+}
+
+.al-plat-tw-header span {
+  font-size: 12px;
+  color: #71767b;
+}
+
+.al-plat-twitter .al-plat-caption {
+  color: #e7e9ea;
+  padding: 0;
+  margin-bottom: 6px;
+}
+
+.al-plat-tw-actions {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0 0;
+  max-width: 90%;
+}
+
+.al-plat-tw-action {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: #71767b;
+}
+
+/* LinkedIn text colors */
+.al-plat-linkedin .al-plat-author strong { color: #000; }
+.al-plat-linkedin .al-plat-author span { color: #666; }
+.al-plat-linkedin .al-plat-caption { color: #000; }
+.al-plat-linkedin .al-plat-action { color: #666; }
 
 /* ===== FEATURES GRID — Glass cards with hover glow ===== */
 .al-features { background: var(--bg-primary); }
@@ -1678,8 +2290,11 @@ onUnmounted(() => {
   transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
   position: relative;
   overflow: hidden;
+  /* Inner top highlight for glass depth */
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4);
 }
 
+/* Gradient overlay on hover */
 .al-feature-card::before {
   content: '';
   position: absolute;
@@ -1692,14 +2307,46 @@ onUnmounted(() => {
   pointer-events: none;
 }
 
+/* Conic-gradient shimmer on hover */
+.al-feature-card::after {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  background: conic-gradient(
+    from 0deg,
+    transparent,
+    rgba(255, 255, 255, 0.08),
+    transparent,
+    rgba(255, 255, 255, 0.05),
+    transparent
+  );
+  opacity: 0;
+  transition: opacity 0.4s var(--ease-smooth);
+  z-index: 0;
+  pointer-events: none;
+  animation: al-shimmer-rotate 3s linear infinite paused;
+}
+
 .al-feature-card:hover {
   transform: translateY(-6px);
-  box-shadow: var(--shadow-xl);
+  box-shadow:
+    var(--shadow-xl),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
   border-color: transparent;
 }
 
 .al-feature-card:hover::before {
   opacity: 0.06;
+}
+
+.al-feature-card:hover::after {
+  opacity: 1;
+  animation-play-state: running;
+}
+
+@keyframes al-shimmer-rotate {
+  to { transform: rotate(360deg); }
 }
 
 .al-feature-icon {
@@ -1786,6 +2433,7 @@ onUnmounted(() => {
   border-radius: calc(var(--radius-2xl) - 2px);
   padding: var(--space-4xl) var(--space-3xl);
   text-align: center;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4);
 }
 
 .al-discount-hero { margin-bottom: var(--space-xl); }
@@ -1906,8 +2554,19 @@ onUnmounted(() => {
 
 /* ===== FOOTER ===== */
 .al-footer {
-  border-top: 1px solid var(--border-color);
+  border-top: none;
   padding: var(--space-3xl) var(--space-xl);
+  position: relative;
+}
+
+.al-footer::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 10%;
+  right: 10%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--border-color), transparent);
 }
 
 .al-footer-inner {

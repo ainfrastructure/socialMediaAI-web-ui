@@ -2034,7 +2034,9 @@ export default {
       headlineAccent: 'i lommen din',
       subheadline: 'Fra innholdsproduksjon til automatisk publisering — SocialChef håndterer sosiale medier 24/7',
       ctaPrimary: 'Få 70% rabatt ved lansering',
-      ctaSecondary: 'Se demo'
+      ctaSecondary: 'Se demo',
+      floatingBadge1: 'Publisert til Instagram',
+      floatingBadge2: '3 innlegg planlagt'
     },
     socialProof: {
       platforms: 'Fungerer med'
@@ -2071,10 +2073,19 @@ export default {
       instagram: 'Instagram',
       linkedin: 'LinkedIn',
       twitter: 'X',
-      postPreview: 'Din AI-genererte forhåndsvisning',
-      likeCount: '42 liker',
-      commentCount: '8 kommentarer',
-      shareCount: '12 delinger'
+      postCaption: 'Moed gjengen! Vaar nyeste kolleksjon er her. Hvilken er din favoritt? Kommenter under!',
+      facebookLikes: '2,4K',
+      facebookComments: '186 kommentarer',
+      facebookShares: '47 delinger',
+      instagramLikes: '3 847 liker-klikk',
+      instagramComments: 'Se alle 214 kommentarer',
+      linkedinReactions: '1 203',
+      linkedinComments: '89 kommentarer',
+      linkedinReposts: '34 delinger',
+      twitterLikes: '1,2K',
+      twitterReposts: '328',
+      twitterReplies: '94',
+      twitterViews: '24,5K'
     },
     features: {
       title: 'Ditt AI-team for sosiale medier',

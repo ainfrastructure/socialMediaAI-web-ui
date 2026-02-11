@@ -2107,7 +2107,9 @@ export default {
       headlineAccent: 'in Your Pocket',
       subheadline: 'From content creation to automatic posting — SocialChef handles your social media 24/7',
       ctaPrimary: 'Get 70% Off at Launch',
-      ctaSecondary: 'Watch Demo'
+      ctaSecondary: 'Watch Demo',
+      floatingBadge1: 'Published to Instagram',
+      floatingBadge2: '3 posts scheduled'
     },
     socialProof: {
       platforms: 'Works with'
@@ -2144,10 +2146,19 @@ export default {
       instagram: 'Instagram',
       linkedin: 'LinkedIn',
       twitter: 'X',
-      postPreview: 'Your AI-generated post preview',
-      likeCount: '42 likes',
-      commentCount: '8 comments',
-      shareCount: '12 shares'
+      postCaption: 'Meet the squad! Our latest collection just dropped. Which one is your favorite? Drop a comment below!',
+      facebookLikes: '2.4K',
+      facebookComments: '186 comments',
+      facebookShares: '47 shares',
+      instagramLikes: '3,847 likes',
+      instagramComments: 'View all 214 comments',
+      linkedinReactions: '1,203',
+      linkedinComments: '89 comments',
+      linkedinReposts: '34 reposts',
+      twitterLikes: '1.2K',
+      twitterReposts: '328',
+      twitterReplies: '94',
+      twitterViews: '24.5K'
     },
     features: {
       title: 'Your AI Social Media Team',
