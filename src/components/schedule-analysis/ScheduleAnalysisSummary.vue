@@ -12,11 +12,6 @@ function formatRate(rate: number): string {
   return rate > 0 ? `${rate.toFixed(2)}%` : '—'
 }
 
-function formatNumber(n: number): string {
-  if (n === 0) return '—'
-  return n.toLocaleString()
-}
-
 function qualityColor(score: number): string {
   if (score >= 70) return 'var(--success-text)'
   if (score >= 40) return 'var(--warning-text)'
