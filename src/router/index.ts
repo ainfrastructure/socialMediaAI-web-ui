@@ -2,7 +2,6 @@ import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 
 // Lazy load views for better code splitting
-const LandingView = () => import('../views/LandingView.vue')
 const LoginView = () => import('../views/LoginView.vue')
 const DashboardView = () => import('../views/DashboardView.vue')
 const PlansView = () => import('../views/PlansView.vue')
@@ -61,7 +60,7 @@ const router = createRouter({
     {
       path: '/',
       name: 'landing',
-      component: LandingView,
+      component: AppLandingView,
       // No requiresGuest - authenticated users can view landing page
     },
     {
@@ -213,9 +212,7 @@ const router = createRouter({
     },
     {
       path: '/app',
-      name: 'app-landing',
-      component: AppLandingView,
-      // Public route - no auth required
+      redirect: '/',
     },
   ],
 })

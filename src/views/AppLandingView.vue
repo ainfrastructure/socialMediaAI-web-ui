@@ -352,10 +352,6 @@ onUnmounted(() => {
                   <MaterialIcon icon="check_circle" size="xs" />
                   {{ $t('appLanding.hero.floatingBadge1') }}
                 </div>
-                <div class="al-floating-badge al-floating-badge-2">
-                  <MaterialIcon icon="schedule" size="xs" />
-                  {{ $t('appLanding.hero.floatingBadge2') }}
-                </div>
               </template>
             </PhoneMockup>
           </div>
@@ -434,9 +430,11 @@ onUnmounted(() => {
               </div>
               <!-- Step 3: Multi-platform publish confirmation -->
               <div v-else class="al-mini-publish">
-                <div class="al-mini-header">
-                  <MaterialIcon icon="send" size="xs" />
-                  <span>Published</span>
+                <div class="al-publish-success">
+                  <div class="al-publish-check-circle">
+                    <MaterialIcon icon="check" size="sm" />
+                  </div>
+                  <span class="al-publish-label">Published!</span>
                 </div>
                 <div class="al-mini-platforms">
                   <div class="al-mini-platform-row">
@@ -454,6 +452,15 @@ onUnmounted(() => {
                     <span>LinkedIn</span>
                     <MaterialIcon icon="check_circle" size="xs" class="al-mini-check" />
                   </div>
+                  <div class="al-mini-platform-row">
+                    <span class="al-mini-platform-dot" style="background: #000000"></span>
+                    <span>X / Twitter</span>
+                    <MaterialIcon icon="check_circle" size="xs" class="al-mini-check" />
+                  </div>
+                </div>
+                <div class="al-publish-time">
+                  <MaterialIcon icon="schedule" size="xs" />
+                  <span>Just now</span>
                 </div>
               </div>
             </PhoneMockup>
@@ -1306,6 +1313,7 @@ onUnmounted(() => {
   font-weight: var(--font-semibold);
   color: var(--gold-primary);
   white-space: nowrap;
+  max-width: calc(100% - 20px);
   box-shadow: 0 4px 20px rgba(15, 61, 46, 0.1);
   z-index: 10;
   opacity: 0;
@@ -1314,29 +1322,16 @@ onUnmounted(() => {
 
 .al-floating-badge-1 {
   top: 15%;
-  right: -20px;
+  right: 10px;
   animation-delay: 1.8s;
 }
 
-.al-floating-badge-2 {
-  bottom: 20%;
-  left: -30px;
-  animation-delay: 2.6s;
-}
-
 .al-floating-badge-1 { animation-name: al-badge-float-1; }
-.al-floating-badge-2 { animation-name: al-badge-float-2; }
 
 @keyframes al-badge-float-1 {
   0% { opacity: 0; transform: translateX(20px); }
   15% { opacity: 1; transform: translateX(0); }
   100% { opacity: 1; transform: translateX(0) translateY(-6px); }
-}
-
-@keyframes al-badge-float-2 {
-  0% { opacity: 0; transform: translateX(-20px); }
-  15% { opacity: 1; transform: translateX(0); }
-  100% { opacity: 1; transform: translateX(0) translateY(6px); }
 }
 
 @media (max-width: 768px) {
@@ -1439,7 +1434,46 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   height: 100%;
-  padding: var(--space-sm) var(--space-md);
+  padding: var(--space-md) var(--space-md);
+  gap: var(--space-md);
+}
+
+.al-publish-success {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: var(--space-lg) 0 var(--space-sm);
+}
+
+.al-publish-check-circle {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--gold-primary);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 16px rgba(15, 61, 46, 0.25);
+}
+
+.al-publish-label {
+  font-size: 13px;
+  font-weight: var(--font-bold);
+  color: var(--gold-primary);
+  letter-spacing: 0.02em;
+}
+
+.al-publish-time {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  font-size: 10px;
+  color: var(--text-muted);
+  padding-top: var(--space-xs);
+  border-top: 1px solid var(--border-color);
 }
 
 .al-mini-header {
@@ -1546,9 +1580,8 @@ onUnmounted(() => {
 .al-mini-platforms {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
   flex: 1;
-  justify-content: center;
 }
 
 .al-mini-platform-row {
@@ -1557,6 +1590,9 @@ onUnmounted(() => {
   gap: 8px;
   font-size: 11px;
   color: var(--text-primary);
+  background: var(--bg-tertiary);
+  padding: 8px 10px;
+  border-radius: var(--radius-md);
 }
 
 .al-mini-platform-dot {
@@ -1970,7 +2006,7 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   height: 100%;
-  background: #ffffff;
+  background: #1a1a1a;
 }
 
 /* Top bars */
@@ -1990,7 +2026,7 @@ onUnmounted(() => {
 }
 
 .al-plat-topbar-fb { background: #1877f2; color: #fff; }
-.al-plat-topbar-ig { background: #fff; color: #262626; border-bottom: 1px solid #efefef; }
+.al-plat-topbar-ig { background: #1a1a1a; color: #f5f5f5; border-bottom: 1px solid #333; }
 .al-plat-topbar-li { background: #0a66c2; color: #fff; }
 .al-plat-topbar-tw { background: #000; color: #fff; }
 
@@ -2049,20 +2085,20 @@ onUnmounted(() => {
 
 .al-plat-author strong {
   font-size: 13px;
-  color: #262626;
+  color: #e7e9ea;
   line-height: 1.2;
 }
 
 .al-plat-author span {
   font-size: 11px;
-  color: #8e8e8e;
+  color: #a8a8a8;
   display: flex;
   align-items: center;
   gap: 2px;
 }
 
 .al-plat-more {
-  color: #8e8e8e;
+  color: #a8a8a8;
   margin-left: auto;
   flex-shrink: 0;
 }
@@ -2071,7 +2107,7 @@ onUnmounted(() => {
 .al-plat-caption {
   font-size: 12px;
   line-height: 1.4;
-  color: #262626;
+  color: #e7e9ea;
   padding: 0 12px 8px;
   margin: 0;
 }
@@ -2100,7 +2136,7 @@ onUnmounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-bottom: 1px solid #efefef;
+  border-bottom: 1px solid #333;
 }
 
 .al-plat-reaction-icons {
@@ -2123,7 +2159,7 @@ onUnmounted(() => {
 
 .al-plat-reaction-count {
   font-size: 12px;
-  color: #65676b;
+  color: #a8a8a8;
   margin-left: 6px;
 }
 
@@ -2131,14 +2167,14 @@ onUnmounted(() => {
   display: flex;
   gap: 10px;
   font-size: 12px;
-  color: #65676b;
+  color: #a8a8a8;
 }
 
 /* Action bar (Facebook / LinkedIn) */
 .al-plat-action-bar {
   display: flex;
   padding: 2px 4px;
-  border-bottom: 1px solid #efefef;
+  border-bottom: 1px solid #333;
 }
 
 .al-plat-action-bar-li {
@@ -2157,7 +2193,7 @@ onUnmounted(() => {
   font-family: var(--font-body);
   font-size: 12px;
   font-weight: 600;
-  color: #65676b;
+  color: #a8a8a8;
   cursor: default;
   border-radius: 4px;
 }
@@ -2168,7 +2204,7 @@ onUnmounted(() => {
   align-items: center;
   justify-content: space-between;
   padding: 8px 12px 4px;
-  color: #262626;
+  color: #e7e9ea;
 }
 
 .al-plat-ig-left {
@@ -2184,13 +2220,13 @@ onUnmounted(() => {
 .al-plat-ig-likes {
   font-size: 13px;
   font-weight: 600;
-  color: #262626;
+  color: #e7e9ea;
   padding: 0 12px 4px;
 }
 
 .al-plat-ig-caption {
   font-size: 12px;
-  color: #262626;
+  color: #e7e9ea;
   padding: 0 12px;
   margin: 0 0 4px;
   line-height: 1.4;
@@ -2202,7 +2238,7 @@ onUnmounted(() => {
 
 .al-plat-ig-comments {
   font-size: 12px;
-  color: #8e8e8e;
+  color: #a8a8a8;
   padding: 0 12px;
 }
 
@@ -2266,10 +2302,10 @@ onUnmounted(() => {
 }
 
 /* LinkedIn text colors */
-.al-plat-linkedin .al-plat-author strong { color: #000; }
-.al-plat-linkedin .al-plat-author span { color: #666; }
-.al-plat-linkedin .al-plat-caption { color: #000; }
-.al-plat-linkedin .al-plat-action { color: #666; }
+.al-plat-linkedin .al-plat-author strong { color: #e7e9ea; }
+.al-plat-linkedin .al-plat-author span { color: #a8a8a8; }
+.al-plat-linkedin .al-plat-caption { color: #e7e9ea; }
+.al-plat-linkedin .al-plat-action { color: #a8a8a8; }
 
 /* ===== FEATURES GRID — Glass cards with hover glow ===== */
 .al-features { background: var(--bg-primary); }
@@ -2290,7 +2326,6 @@ onUnmounted(() => {
   transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
   position: relative;
   overflow: hidden;
-  /* Inner top highlight for glass depth */
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4);
 }
 
@@ -2307,27 +2342,6 @@ onUnmounted(() => {
   pointer-events: none;
 }
 
-/* Conic-gradient shimmer on hover */
-.al-feature-card::after {
-  content: '';
-  position: absolute;
-  inset: -1px;
-  border-radius: inherit;
-  background: conic-gradient(
-    from 0deg,
-    transparent,
-    rgba(255, 255, 255, 0.08),
-    transparent,
-    rgba(255, 255, 255, 0.05),
-    transparent
-  );
-  opacity: 0;
-  transition: opacity 0.4s var(--ease-smooth);
-  z-index: 0;
-  pointer-events: none;
-  animation: al-shimmer-rotate 3s linear infinite paused;
-}
-
 .al-feature-card:hover {
   transform: translateY(-6px);
   box-shadow:
@@ -2338,15 +2352,6 @@ onUnmounted(() => {
 
 .al-feature-card:hover::before {
   opacity: 0.06;
-}
-
-.al-feature-card:hover::after {
-  opacity: 1;
-  animation-play-state: running;
-}
-
-@keyframes al-shimmer-rotate {
-  to { transform: rotate(360deg); }
 }
 
 .al-feature-icon {
