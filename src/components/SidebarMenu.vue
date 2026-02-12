@@ -66,6 +66,12 @@ const menuItems = computed(() => [
     active: route.path === '/analytics'
   },
   {
+    path: '/schedule-analysis',
+    icon: 'auto_awesome',
+    label: 'Schedule Optimizer',
+    active: route.path === '/schedule-analysis'
+  },
+  {
     path: '/connect-accounts',
     icon: 'share',
     label: t('sidebar.platforms'),
