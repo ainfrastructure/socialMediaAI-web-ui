@@ -66,6 +66,12 @@ const menuItems = computed(() => [
     active: route.path === '/analytics'
   },
   {
+    path: '/seo-briefs',
+    icon: 'trending_up',
+    label: 'SEO Briefs',
+    active: route.path === '/seo-briefs'
+  },
+  {
     path: '/connect-accounts',
     icon: 'share',
     label: t('sidebar.platforms'),

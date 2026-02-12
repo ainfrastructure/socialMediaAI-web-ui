@@ -25,6 +25,7 @@ const GoodbyeView = () => import('../views/GoodbyeView.vue')
 const AnalyticsView = () => import('../views/AnalyticsView.vue')
 const ReferralLandingView = () => import('../views/ReferralLandingView.vue')
 const AppLandingView = () => import('../views/AppLandingView.vue')
+const SEOBriefsView = () => import('../views/SEOBriefsView.vue')
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -165,6 +166,12 @@ const router = createRouter({
       path: '/analytics',
       name: 'analytics',
       component: AnalyticsView,
+      meta: { requiresAuth: true, requiresSubscription: true },
+    },
+    {
+      path: '/seo-briefs',
+      name: 'seo-briefs',
+      component: SEOBriefsView,
       meta: { requiresAuth: true, requiresSubscription: true },
     },
     {
