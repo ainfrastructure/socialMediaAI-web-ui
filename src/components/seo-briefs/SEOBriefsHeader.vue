@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { ref } from 'vue'
 import MaterialIcon from '@/components/MaterialIcon.vue'
 import BaseButton from '@/components/BaseButton.vue'
 
@@ -12,8 +11,6 @@ const emit = defineEmits<{
   (e: 'generate'): void
   (e: 'toggle-schedule'): void
 }>()
-
-const nicheInput = ref('')
 
 function handleGenerate() {
   emit('generate')
