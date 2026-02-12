@@ -66,6 +66,12 @@ const menuItems = computed(() => [
     active: route.path === '/analytics'
   },
   {
+    path: '/sentiment',
+    icon: 'monitoring',
+    label: 'Sentiment',
+    active: route.path === '/sentiment'
+  },
+  {
     path: '/connect-accounts',
     icon: 'share',
     label: t('sidebar.platforms'),
