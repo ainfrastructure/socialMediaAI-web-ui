@@ -403,22 +403,8 @@ onUnmounted(() => {
             :class="[`scroll-reveal-delay-${i + 1}`, { 'al-demo-center': i === 1 }]"
           >
             <PhoneMockup size="sm">
-              <!-- Step 1: Mini chat interface -->
-              <div v-if="i === 0" class="al-mini-chat">
-                <div class="al-mini-header">
-                  <img src="../assets/socialchef_logo.svg" alt="" class="al-mini-logo" />
-                  <span>SocialChef</span>
-                </div>
-                <div class="al-mini-messages">
-                  <div class="al-mini-bubble al-mini-user">Post about our weekend brunch</div>
-                  <div class="al-mini-bubble al-mini-ai">
-                    <div class="al-typing-indicator"><span></span><span></span><span></span></div>
-                  </div>
-                </div>
-              </div>
-              <!-- Step 2: Review & Approve screenshot -->
+              <img v-if="i === 0" src="/example/demo-chat-ai.png" alt="Chat with AI" class="al-demo-screenshot" />
               <img v-else-if="i === 1" src="/example/demo-review-approve.png" alt="Review and approve posts" class="al-demo-screenshot" />
-              <!-- Step 3: Connect Accounts screenshot -->
               <img v-else src="/example/demo-connect-accounts.png" alt="Connect your social accounts" class="al-demo-screenshot" />
             </PhoneMockup>
             <div class="al-step-badge">{{ i + 1 }}</div>
@@ -476,35 +462,7 @@ onUnmounted(() => {
 
               <!-- Autopilot -->
               <div v-else key="autopilot" class="al-autonomy-scene">
-                <div class="al-mock-calendar">
-                  <div class="al-mock-header">
-                    <MaterialIcon icon="event" size="sm" />
-                    <span>Schedule</span>
-                  </div>
-                  <div class="al-calendar-grid">
-                    <div v-for="h in 5" :key="h" class="al-cal-slot" :class="{ filled: h <= 3 }">
-                      <span class="al-cal-time">{{ 8 + h * 2 }}:00</span>
-                      <span v-if="h <= 3" class="al-cal-post">
-                        <MaterialIcon :icon="h === 1 ? 'image' : h === 2 ? 'videocam' : 'article'" size="xs" />
-                      </span>
-                    </div>
-                  </div>
-                  <div class="al-calendar-status">
-                    <MaterialIcon icon="check_circle" size="xs" />
-                    {{ $t('appLanding.autonomy.autopilotStatus') }}
-                  </div>
-                  <div class="al-calendar-next">
-                    <MaterialIcon icon="schedule" size="xs" />
-                    {{ $t('appLanding.autonomy.autopilotScheduled') }}
-                  </div>
-                </div>
-                <img
-                  src="/mascot/socialchef_sleeping.png"
-                  alt=""
-                  aria-hidden="true"
-                  class="al-autopilot-mascot"
-                  loading="lazy"
-                />
+                <img src="/example/demo-autopilot-calendar.png" alt="Autopilot calendar view" class="al-autonomy-screenshot" />
               </div>
             </Transition>
           </div>
@@ -1414,12 +1372,11 @@ onUnmounted(() => {
 }
 
 /* ===== Mini Screen Mockups (Demo Section) ===== */
-.al-mini-chat {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  padding: var(--space-md) var(--space-md);
-  gap: var(--space-md);
+/* Hide PhoneMockup chrome for demo screenshots */
+.al-demo-step :deep(.phone-status-bar),
+.al-demo-step :deep(.phone-dynamic-island),
+.al-demo-step :deep(.phone-home-indicator) {
+  display: none;
 }
 
 .al-demo-screenshot {
@@ -1428,53 +1385,6 @@ onUnmounted(() => {
   object-fit: cover;
   object-position: top;
   display: block;
-}
-
-
-.al-mini-header {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding-bottom: var(--space-xs);
-  border-bottom: 1px solid var(--border-color);
-  margin-bottom: var(--space-sm);
-  font-size: 11px;
-  font-weight: var(--font-semibold);
-  color: var(--text-secondary);
-}
-
-.al-mini-logo {
-  width: 14px;
-  height: 14px;
-}
-
-.al-mini-messages {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  gap: 6px;
-}
-
-.al-mini-bubble {
-  padding: 6px 10px;
-  border-radius: 12px;
-  font-size: 10px;
-  line-height: 1.3;
-  max-width: 85%;
-}
-
-.al-mini-user {
-  background: var(--gradient-gold);
-  color: var(--text-on-gold);
-  align-self: flex-end;
-  border-bottom-right-radius: 4px;
-}
-
-.al-mini-ai {
-  background: var(--bg-tertiary);
-  align-self: flex-start;
-  border-bottom-left-radius: 4px;
 }
 
 
@@ -1762,30 +1672,13 @@ onUnmounted(() => {
 .al-approve { background: var(--gradient-gold); color: var(--text-on-gold); border-color: transparent; }
 .al-edit { background: transparent; color: var(--text-secondary); }
 
-.al-calendar-grid { display: flex; flex-direction: column; gap: var(--space-sm); margin-bottom: var(--space-lg); }
-
-.al-cal-slot {
-  display: flex; align-items: center; gap: var(--space-md);
-  padding: var(--space-sm) var(--space-md);
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--border-color);
-  font-size: var(--text-sm);
-  transition: all 0.2s var(--ease-smooth);
-}
-.al-cal-slot.filled { background: var(--gold-subtle); border-color: var(--glass-border); }
-
-.al-cal-time { font-weight: var(--font-medium); color: var(--text-muted); min-width: 45px; font-size: 12px; }
-.al-cal-post { color: var(--gold-primary); display: flex; align-items: center; }
-
-.al-calendar-status {
-  display: flex; align-items: center; gap: var(--space-sm);
-  font-size: var(--text-sm); font-weight: var(--font-medium);
-  color: var(--success-text); margin-bottom: var(--space-xs);
-}
-
-.al-calendar-next {
-  display: flex; align-items: center; gap: var(--space-sm);
-  font-size: 12px; color: var(--text-muted);
+.al-autonomy-screenshot {
+  width: 100%;
+  max-height: 400px;
+  object-fit: cover;
+  object-position: top;
+  border-radius: var(--radius-lg);
+  display: block;
 }
 
 /* Segmented Control */
@@ -2480,16 +2373,6 @@ onUnmounted(() => {
 }
 
 /* Autopilot sleeping mascot — under calendar */
-.al-autopilot-mascot {
-  display: block;
-  width: 120px;
-  height: auto;
-  object-fit: contain;
-  margin: var(--space-lg) auto 0;
-  opacity: 0.9;
-  filter: drop-shadow(0 4px 12px rgba(15, 61, 46, 0.1));
-}
-
 /* Features pointing mascot — top right accent */
 .al-features-inner {
   position: relative;
