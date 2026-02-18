@@ -2,7 +2,6 @@ import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { api } from '../services/api'
 import { usePreferencesStore } from '@/stores/preferences'
-import { debugLog } from '@/utils/debug'
 
 export interface InstagramAccount {
   id: string
@@ -30,7 +29,7 @@ export const useInstagramStore = defineStore('instagram', () => {
 
     try {
       const brandId = getBrandId()
-      const initResponse = await api.initInstagramAuth(brandId)
+      const initResponse = await api.initInstagramAuth(brandId, 'web')
 
       if (!initResponse.success) {
         throw new Error(initResponse.error || 'Failed to initialize Instagram authentication')
@@ -40,17 +39,9 @@ export const useInstagramStore = defineStore('instagram', () => {
         throw new Error('No data received from server')
       }
 
-      const { authUrl, state } = initResponse.data
+      const { authUrl } = initResponse.data
 
-      localStorage.setItem('instagram_oauth_state', state)
-
-      if (returnUrl) {
-        debugLog('[InstagramStore] Storing return URL:', returnUrl)
-        localStorage.setItem('oauth_return_url', returnUrl)
-      } else {
-        localStorage.removeItem('oauth_return_url')
-      }
-
+      // Backend handles the full OAuth flow and redirects back to /connect-accounts
       window.location.href = authUrl
     } catch (err: any) {
       error.value = err.message || 'Failed to connect Instagram account'
@@ -106,34 +97,6 @@ export const useInstagramStore = defineStore('instagram', () => {
     }
   }
 
-  async function handleOAuthCallback(code: string, state: string): Promise<void> {
-    loading.value = true
-    error.value = null
-
-    try {
-      const storedState = localStorage.getItem('instagram_oauth_state')
-      if (state !== storedState) {
-        throw new Error('Invalid state parameter - possible CSRF attack')
-      }
-
-      localStorage.removeItem('instagram_oauth_state')
-
-      const callbackResponse = await api.completeInstagramAuth(code, state)
-
-      if (!callbackResponse.success) {
-        throw new Error(callbackResponse.error || 'Failed to complete Instagram authentication')
-      }
-
-      connectedAccounts.value = callbackResponse.data?.accounts || []
-      error.value = null
-    } catch (err: any) {
-      error.value = err.message || 'Failed to complete Instagram authentication'
-      throw err
-    } finally {
-      loading.value = false
-    }
-  }
-
   // Legacy compat
   async function ensureBusinessCache(_brandId?: string): Promise<void> { return loadConnectedAccounts(_brandId) }
   function resetConnectionState(): void { connectedAccounts.value = []; error.value = null }
@@ -143,7 +106,6 @@ export const useInstagramStore = defineStore('instagram', () => {
     loading,
     error,
     connectInstagram,
-    handleOAuthCallback,
     loadConnectedAccounts,
     fetchAccounts,
     disconnectAccount,

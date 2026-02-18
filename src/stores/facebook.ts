@@ -2,7 +2,6 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { api } from '../services/api'
 import { usePreferencesStore } from '@/stores/preferences'
-import { debugLog } from '@/utils/debug'
 
 export interface FacebookPage {
   id: string
@@ -30,7 +29,7 @@ export const useFacebookStore = defineStore('facebook', () => {
 
     try {
       const brandId = getBrandId()
-      const initResponse = await api.initFacebookAuth(brandId)
+      const initResponse = await api.initFacebookAuth(brandId, 'web')
 
       if (!initResponse.success) {
         throw new Error(initResponse.error || 'Failed to initialize Facebook authentication')
@@ -40,17 +39,9 @@ export const useFacebookStore = defineStore('facebook', () => {
         throw new Error('No data received from server')
       }
 
-      const { authUrl, state } = initResponse.data
+      const { authUrl } = initResponse.data
 
-      localStorage.setItem('facebook_oauth_state', state)
-
-      if (returnUrl) {
-        debugLog('[FacebookStore] Storing return URL:', returnUrl)
-        localStorage.setItem('oauth_return_url', returnUrl)
-      } else {
-        localStorage.removeItem('oauth_return_url')
-      }
-
+      // Backend handles the full OAuth flow and redirects back to /connect-accounts
       window.location.href = authUrl
     } catch (err: any) {
       error.value = err.message || 'Failed to connect Facebook account'
@@ -104,34 +95,6 @@ export const useFacebookStore = defineStore('facebook', () => {
     }
   }
 
-  async function handleOAuthCallback(code: string, state: string): Promise<void> {
-    loading.value = true
-    error.value = null
-
-    try {
-      const storedState = localStorage.getItem('facebook_oauth_state')
-      if (state !== storedState) {
-        throw new Error('Invalid state parameter - possible CSRF attack')
-      }
-
-      localStorage.removeItem('facebook_oauth_state')
-
-      const callbackResponse = await api.completeFacebookAuth(code, state)
-
-      if (!callbackResponse.success) {
-        throw new Error(callbackResponse.error || 'Failed to complete Facebook authentication')
-      }
-
-      connectedPages.value = callbackResponse.data?.pages || []
-      error.value = null
-    } catch (err: any) {
-      error.value = err.message || 'Failed to complete Facebook authentication'
-      throw err
-    } finally {
-      loading.value = false
-    }
-  }
-
   // Legacy compat
   async function ensureBusinessCache(_brandId?: string): Promise<void> { return loadConnectedPages(_brandId) }
   function resetConnectionState(): void { connectedPages.value = []; error.value = null }
@@ -142,7 +105,6 @@ export const useFacebookStore = defineStore('facebook', () => {
     loading,
     error,
     connectFacebook,
-    handleOAuthCallback,
     loadConnectedPages,
     fetchPages,
     disconnectPage,

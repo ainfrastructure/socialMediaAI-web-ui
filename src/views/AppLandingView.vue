@@ -227,7 +227,7 @@ onUnmounted(() => {
     <header class="al-header" :class="{ scrolled: isHeaderScrolled }">
       <div class="al-header-container desktop-header">
         <div class="al-logo">
-          <img src="../assets/socialchef_logo.svg" alt="SocialChef" class="al-logo-img" />
+          <img src="/mascot/socialchef_wave.png" alt="SocialChef" class="al-logo-img" />
           <span class="al-logo-text">SocialChef</span>
         </div>
 
@@ -255,7 +255,7 @@ onUnmounted(() => {
       <div class="al-mobile-header">
         <div class="al-mobile-pill">
           <div class="al-logo">
-            <img src="../assets/socialchef_logo.svg" alt="SocialChef" class="al-logo-img" />
+            <img src="/mascot/socialchef_wave.png" alt="SocialChef" class="al-logo-img" />
             <span class="al-logo-text">SocialChef</span>
           </div>
           <div class="al-mobile-actions">
@@ -325,6 +325,13 @@ onUnmounted(() => {
         </div>
 
         <div class="al-hero-phone scroll-reveal scroll-reveal-delay-4">
+          <img
+            src="/mascot/socialchef_wave.png"
+            alt=""
+            aria-hidden="true"
+            class="al-hero-mascot"
+            loading="lazy"
+          />
           <div class="al-phone-glow"></div>
           <div ref="heroPhoneRef" class="al-hero-phone-parallax">
             <PhoneMockup size="lg" float show-buttons>
@@ -541,6 +548,13 @@ onUnmounted(() => {
                     {{ $t('appLanding.autonomy.autopilotScheduled') }}
                   </div>
                 </div>
+                <img
+                  src="/mascot/socialchef_sleeping.png"
+                  alt=""
+                  aria-hidden="true"
+                  class="al-autopilot-mascot"
+                  loading="lazy"
+                />
               </div>
             </Transition>
           </div>
@@ -746,7 +760,14 @@ onUnmounted(() => {
 
     <!-- ========== 6. FEATURES GRID ========== -->
     <section id="features" class="al-section al-features">
-      <div class="al-section-inner">
+      <div class="al-section-inner al-features-inner">
+        <img
+          src="/mascot/socialchef_point.png"
+          alt=""
+          aria-hidden="true"
+          class="al-features-mascot"
+          loading="lazy"
+        />
         <span class="al-section-eyebrow scroll-reveal">Capabilities</span>
         <h2 class="al-section-title scroll-reveal">{{ $t('appLanding.features.title') }}</h2>
         <p class="al-section-subtitle scroll-reveal scroll-reveal-delay-1">{{ $t('appLanding.features.subtitle') }}</p>
@@ -774,9 +795,14 @@ onUnmounted(() => {
       <div class="al-section-inner">
         <div class="al-early-bird-card scroll-reveal">
           <div class="al-early-bird-card-inner">
-            <div class="al-discount-hero">
-              <span class="al-discount-number">{{ $t('appLanding.earlyBird.discount') }}</span>
-              <span class="al-discount-suffix">{{ $t('appLanding.earlyBird.discountSuffix') }}</span>
+            <div class="al-discount-mascot-wrapper">
+              <img
+                src="/mascot/socialchef_happy.png"
+                alt=""
+                aria-hidden="true"
+                class="al-earlybird-mascot"
+                loading="lazy"
+              />
             </div>
 
             <h2 class="al-early-bird-title">{{ $t('appLanding.earlyBird.title') }}</h2>
@@ -852,6 +878,13 @@ onUnmounted(() => {
     <section class="al-section al-final-cta">
       <div class="al-final-cta-orb"></div>
       <div class="al-section-inner">
+        <img
+          src="/mascot/socialchef_phone.png"
+          alt=""
+          aria-hidden="true"
+          class="al-cta-mascot scroll-reveal"
+          loading="lazy"
+        />
         <h2 class="al-final-title scroll-reveal">{{ $t('appLanding.finalCta.title') }}</h2>
         <p class="al-final-sub scroll-reveal scroll-reveal-delay-1">{{ $t('appLanding.finalCta.subtitle') }}</p>
         <div class="scroll-reveal scroll-reveal-delay-2">
@@ -866,7 +899,7 @@ onUnmounted(() => {
     <footer class="al-footer">
       <div class="al-footer-inner">
         <div class="al-footer-logo">
-          <img src="../assets/socialchef_logo.svg" alt="SocialChef" class="al-logo-img" />
+          <img src="/mascot/socialchef_wave.png" alt="SocialChef" class="al-logo-img" />
           <span class="al-logo-text">SocialChef</span>
         </div>
         <div class="al-footer-links">
@@ -923,6 +956,9 @@ onUnmounted(() => {
   .al-early-bird-card { animation: none; }
   .al-feature-card::after { animation: none; }
   .al-hero-phone-parallax { transform: none !important; transition: none; }
+  .al-hero-mascot { animation: none; }
+  .al-features-mascot { animation: none; }
+  .al-earlybird-mascot { animation: none; }
 }
 
 /* ===== TRANSITIONS ===== */
@@ -969,7 +1005,7 @@ onUnmounted(() => {
   gap: var(--space-sm);
 }
 
-.al-logo-img { width: 32px; height: 32px; }
+.al-logo-img { width: 36px; height: 36px; object-fit: contain; }
 
 .al-logo-text {
   font-family: var(--font-heading);
@@ -2441,27 +2477,6 @@ onUnmounted(() => {
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4);
 }
 
-.al-discount-hero { margin-bottom: var(--space-xl); }
-
-.al-discount-number {
-  font-family: var(--font-heading);
-  font-size: clamp(5rem, 12vw, 9rem);
-  font-weight: var(--font-bold);
-  background: var(--gradient-gold);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  line-height: 1;
-  display: block;
-  letter-spacing: -0.04em;
-}
-
-.al-discount-suffix {
-  font-size: var(--text-xl);
-  color: var(--text-secondary);
-  font-weight: var(--font-medium);
-  letter-spacing: 0.02em;
-}
 
 .al-early-bird-title {
   font-family: var(--font-heading);
@@ -2599,5 +2614,100 @@ onUnmounted(() => {
 
 @media (max-width: 640px) {
   .al-footer-inner { flex-direction: column; text-align: center; }
+}
+
+/* ===== MASCOT IMAGES ===== */
+
+/* Hero mascot — positioned left of phone */
+.al-hero-mascot {
+  position: absolute;
+  left: -80px;
+  bottom: 10%;
+  width: 160px;
+  height: auto;
+  object-fit: contain;
+  pointer-events: none;
+  z-index: 5;
+  animation: al-mascot-float 4s ease-in-out infinite;
+  filter: drop-shadow(0 8px 24px rgba(15, 61, 46, 0.15));
+}
+
+@keyframes al-mascot-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-12px); }
+}
+
+@media (max-width: 1024px) {
+  .al-hero-mascot { width: 100px; left: -50px; }
+}
+@media (max-width: 480px) {
+  .al-hero-mascot { display: none; }
+}
+
+/* Autopilot sleeping mascot — under calendar */
+.al-autopilot-mascot {
+  display: block;
+  width: 120px;
+  height: auto;
+  object-fit: contain;
+  margin: var(--space-lg) auto 0;
+  opacity: 0.9;
+  filter: drop-shadow(0 4px 12px rgba(15, 61, 46, 0.1));
+}
+
+/* Features pointing mascot — top right accent */
+.al-features-inner {
+  position: relative;
+}
+
+.al-features-mascot {
+  position: absolute;
+  top: -20px;
+  right: -20px;
+  width: 130px;
+  height: auto;
+  object-fit: contain;
+  pointer-events: none;
+  z-index: 2;
+  filter: drop-shadow(0 4px 16px rgba(15, 61, 46, 0.12));
+  animation: al-mascot-float 5s ease-in-out infinite;
+  animation-delay: 1s;
+}
+
+@media (max-width: 768px) {
+  .al-features-mascot { display: none; }
+}
+
+/* Early Bird happy mascot — replaces discount number */
+.al-discount-mascot-wrapper {
+  text-align: center;
+  margin-bottom: var(--space-xl);
+}
+
+.al-earlybird-mascot {
+  width: 140px;
+  height: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 4px 16px rgba(15, 61, 46, 0.12));
+  animation: al-mascot-bounce 3s ease-in-out infinite;
+}
+
+@keyframes al-mascot-bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+@media (max-width: 640px) {
+  .al-earlybird-mascot { width: 110px; }
+}
+
+/* Final CTA phone mascot — centered above title */
+.al-cta-mascot {
+  display: block;
+  width: 140px;
+  height: auto;
+  object-fit: contain;
+  margin: 0 auto var(--space-2xl);
+  filter: drop-shadow(0 8px 24px rgba(15, 61, 46, 0.18));
 }
 </style>

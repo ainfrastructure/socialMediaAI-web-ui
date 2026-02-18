@@ -3,8 +3,13 @@ import { API_URL, getAuthHeader, getAuthHeaders } from './apiBase'
 import { debugLog, debugError } from '@/utils/debug'
 
 class FacebookService {
-  async initAuth(brandId?: string): Promise<ApiResponse<{ authUrl: string; state: string }>> {
-    const response = await fetch(`${API_URL}/api/facebook/auth/init${brandId ? `?brand_id=${brandId}` : ''}`, {
+  async initAuth(brandId?: string, platform?: string): Promise<ApiResponse<{ authUrl: string; state: string }>> {
+    const params = new URLSearchParams()
+    if (brandId) params.set('brand_id', brandId)
+    if (platform) params.set('platform', platform)
+    const qs = params.toString() ? `?${params.toString()}` : ''
+
+    const response = await fetch(`${API_URL}/api/facebook/auth/init${qs}`, {
       headers: getAuthHeader(),
     })
 
@@ -20,18 +25,6 @@ class FacebookService {
       }
     }
 
-    return response.json()
-  }
-
-  async completeAuth(
-    code: string,
-    state: string
-  ): Promise<ApiResponse<{ pages: any[] }>> {
-    const response = await fetch(`${API_URL}/api/facebook/auth/callback`, {
-      method: 'POST',
-      headers: getAuthHeaders(),
-      body: JSON.stringify({ code, state }),
-    })
     return response.json()
   }
 

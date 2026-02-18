@@ -3,42 +3,18 @@ import { API_URL, getAuthHeader, getAuthHeaders } from './apiBase'
 import { fetchWithTimeout, TIMEOUTS } from '@/utils/fetchWithTimeout'
 
 class LinkedInService {
-  async initAuth(brandId?: string): Promise<ApiResponse<{ authUrl: string; state: string }>> {
+  async initAuth(brandId?: string, platform?: string): Promise<ApiResponse<{ authUrl: string; state: string }>> {
+    const params = new URLSearchParams()
+    if (brandId) params.set('brand_id', brandId)
+    if (platform) params.set('platform', platform)
+    const qs = params.toString() ? `?${params.toString()}` : ''
+
     const response = await fetchWithTimeout(
-      `${API_URL}/api/linkedin/auth/init${brandId ? `?brand_id=${brandId}` : ''}`,
+      `${API_URL}/api/linkedin/auth/init${qs}`,
       {
         headers: getAuthHeader(),
       },
       TIMEOUTS.AUTH
-    )
-
-    if (!response.ok) {
-      const text = await response.text()
-      try {
-        return JSON.parse(text)
-      } catch {
-        return {
-          success: false,
-          error: `HTTP ${response.status}: ${text || response.statusText}`
-        }
-      }
-    }
-
-    return response.json()
-  }
-
-  async completeAuth(
-    code: string,
-    state: string
-  ): Promise<ApiResponse<{ pages: any[] }>> {
-    const response = await fetchWithTimeout(
-      `${API_URL}/api/linkedin/auth/callback`,
-      {
-        method: 'POST',
-        headers: getAuthHeaders(),
-        body: JSON.stringify({ code, state }),
-      },
-      TIMEOUTS.POST
     )
 
     if (!response.ok) {

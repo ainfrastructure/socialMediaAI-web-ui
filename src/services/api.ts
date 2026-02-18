@@ -66,7 +66,6 @@ class ApiService {
 
   // Facebook methods
   initFacebookAuth = facebookService.initAuth.bind(facebookService)
-  completeFacebookAuth = facebookService.completeAuth.bind(facebookService)
   getFacebookPages = facebookService.getPages.bind(facebookService)
   disconnectFacebookPage = facebookService.disconnectPage.bind(facebookService)
   postToFacebook = facebookService.post.bind(facebookService)
@@ -75,28 +74,24 @@ class ApiService {
 
   // Instagram methods
   initInstagramAuth = instagramService.initAuth.bind(instagramService)
-  completeInstagramAuth = instagramService.completeAuth.bind(instagramService)
   getInstagramAccounts = instagramService.getAccounts.bind(instagramService)
   disconnectInstagramAccount = instagramService.disconnectAccount.bind(instagramService)
   postToInstagram = instagramService.post.bind(instagramService)
 
   // TikTok methods
   initTikTokAuth = tiktokService.initAuth.bind(tiktokService)
-  completeTikTokAuth = tiktokService.completeAuth.bind(tiktokService)
   getTikTokAccounts = tiktokService.getAccounts.bind(tiktokService)
   disconnectTikTokAccount = tiktokService.disconnectAccount.bind(tiktokService)
   postToTikTok = tiktokService.post.bind(tiktokService)
 
   // Twitter methods
   initTwitterAuth = twitterService.initAuth.bind(twitterService)
-  completeTwitterAuth = twitterService.completeAuth.bind(twitterService)
   getTwitterAccounts = twitterService.getAccounts.bind(twitterService)
   disconnectTwitterAccount = twitterService.disconnectAccount.bind(twitterService)
   postToTwitter = twitterService.post.bind(twitterService)
 
   // LinkedIn methods
   initLinkedInAuth = linkedinService.initAuth.bind(linkedinService)
-  completeLinkedInAuth = linkedinService.completeAuth.bind(linkedinService)
   getLinkedInPages = linkedinService.getPages.bind(linkedinService)
   disconnectLinkedInPage = linkedinService.disconnectPage.bind(linkedinService)
   postToLinkedIn = linkedinService.post.bind(linkedinService)

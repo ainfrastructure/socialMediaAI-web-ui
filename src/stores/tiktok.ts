@@ -2,7 +2,6 @@ import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { api } from '../services/api'
 import { usePreferencesStore } from '@/stores/preferences'
-import { debugLog } from '@/utils/debug'
 
 export interface TikTokAccount {
   id: string
@@ -29,7 +28,7 @@ export const useTikTokStore = defineStore('tiktok', () => {
 
     try {
       const brandId = getBrandId()
-      const initResponse = await api.initTikTokAuth(brandId)
+      const initResponse = await api.initTikTokAuth(brandId, 'web')
 
       if (!initResponse.success) {
         throw new Error(initResponse.error || 'Failed to initialize TikTok authentication')
@@ -39,17 +38,9 @@ export const useTikTokStore = defineStore('tiktok', () => {
         throw new Error('No data received from server')
       }
 
-      const { authUrl, state } = initResponse.data
+      const { authUrl } = initResponse.data
 
-      localStorage.setItem('tiktok_oauth_state', state)
-
-      if (returnUrl) {
-        debugLog('[TikTokStore] Storing return URL:', returnUrl)
-        localStorage.setItem('oauth_return_url', returnUrl)
-      } else {
-        localStorage.removeItem('oauth_return_url')
-      }
-
+      // Backend handles the full OAuth flow and redirects back to /connect-accounts
       window.location.href = authUrl
     } catch (err: any) {
       error.value = err.message || 'Failed to connect TikTok account'
@@ -101,40 +92,11 @@ export const useTikTokStore = defineStore('tiktok', () => {
     }
   }
 
-  async function handleOAuthCallback(code: string, state: string): Promise<void> {
-    loading.value = true
-    error.value = null
-
-    try {
-      const storedState = localStorage.getItem('tiktok_oauth_state')
-      if (state !== storedState) {
-        throw new Error('Invalid state parameter - possible CSRF attack')
-      }
-
-      localStorage.removeItem('tiktok_oauth_state')
-
-      const callbackResponse = await api.completeTikTokAuth(code, state)
-
-      if (!callbackResponse.success) {
-        throw new Error(callbackResponse.error || 'Failed to complete TikTok authentication')
-      }
-
-      connectedAccounts.value = callbackResponse.data?.accounts || []
-      error.value = null
-    } catch (err: any) {
-      error.value = err.message || 'Failed to complete TikTok authentication'
-      throw err
-    } finally {
-      loading.value = false
-    }
-  }
-
   return {
     connectedAccounts,
     loading,
     error,
     connectTikTok,
-    handleOAuthCallback,
     loadConnectedAccounts,
     disconnectAccount,
   }
