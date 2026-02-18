@@ -2033,7 +2033,7 @@ export default {
       headline: 'Din AI-ansatt for sosiale medier,',
       headlineAccent: 'i lommen din',
       subheadline: 'Fra innholdsproduksjon til automatisk publisering — SocialChef håndterer sosiale medier 24/7',
-      ctaPrimary: 'Få 70% rabatt ved lansering',
+      ctaPrimary: 'Få tidlig tilgang',
       ctaSecondary: 'Se demo',
       floatingBadge1: 'Publisert til Instagram',
       floatingBadge2: '3 innlegg planlagt'
@@ -2116,12 +2116,12 @@ export default {
       }
     },
     earlyBird: {
-      title: 'Få 70% rabatt ved lansering',
-      discount: '70%',
-      discountSuffix: 'rabatt ved lansering',
-      description: 'Bli med på vår early bird-liste og sikre deg en eksklusiv 70% rabatt når appen lanseres. Ingen kredittkort nødvendig.',
+      title: 'Få tidlig tilgang ved lansering',
+      discount: 'Tidlig',
+      discountSuffix: 'tilgang ved lansering',
+      description: 'Bli med på vår early bird-liste og vær den første som får tilgang når appen lanseres. Ingen kredittkort nødvendig.',
       inputPlaceholder: 'Skriv inn din e-post',
-      cta: 'Sikre min 70% rabatt',
+      cta: 'Sikre min tidlige tilgang',
       successTitle: 'Du er med!',
       successMessage: 'Vi sender rabattkoden din ved lansering.',
       noCreditCard: 'Ingen kredittkort nødvendig',
@@ -2137,8 +2137,8 @@ export default {
     },
     finalCta: {
       title: 'Ikke gå glipp av dette',
-      subtitle: '70% rabatt er kun for early birds',
-      cta: 'Få min 70% rabatt'
+      subtitle: 'Tidlig tilgang er kun for early birds',
+      cta: 'Få tidlig tilgang'
     },
     footer: {
       copyright: '© {year} SocialChef. Alle rettigheter forbeholdt.',

@@ -2106,7 +2106,7 @@ export default {
       headline: 'Your AI Social Media Employee,',
       headlineAccent: 'in Your Pocket',
       subheadline: 'From content creation to automatic posting — SocialChef handles your social media 24/7',
-      ctaPrimary: 'Get 70% Off at Launch',
+      ctaPrimary: 'Get Early Access',
       ctaSecondary: 'Watch Demo',
       floatingBadge1: 'Published to Instagram',
       floatingBadge2: '3 posts scheduled'
@@ -2189,12 +2189,12 @@ export default {
       }
     },
     earlyBird: {
-      title: 'Get 70% Off When We Launch',
-      discount: '70%',
-      discountSuffix: 'off at launch',
-      description: 'Join our early bird list and lock in an exclusive 70% discount when the app launches. No credit card required.',
+      title: 'Get Early Access When We Launch',
+      discount: 'Early',
+      discountSuffix: 'access at launch',
+      description: 'Join our early bird list and be the first to get access when the app launches. No credit card required.',
       inputPlaceholder: 'Enter your email',
-      cta: 'Claim My 70% Discount',
+      cta: 'Claim My Early Access',
       successTitle: "You're in!",
       successMessage: "We'll send your discount code at launch.",
       noCreditCard: 'No credit card required',
@@ -2210,8 +2210,8 @@ export default {
     },
     finalCta: {
       title: "Don't Miss Out",
-      subtitle: '70% off is only for early birds',
-      cta: 'Get My 70% Discount'
+      subtitle: 'Early access is only for early birds',
+      cta: 'Get Early Access'
     },
     footer: {
       copyright: '© {year} SocialChef. All rights reserved.',
