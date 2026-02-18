@@ -416,60 +416,10 @@ onUnmounted(() => {
                   </div>
                 </div>
               </div>
-              <!-- Step 2: Post preview with approve/edit -->
-              <div v-else-if="i === 1" class="al-mini-preview">
-                <div class="al-mini-header">
-                  <MaterialIcon icon="fact_check" size="xs" />
-                  <span>Review Post</span>
-                </div>
-                <div class="al-mini-post-card">
-                  <div class="al-mini-post-img"></div>
-                  <div class="al-mini-post-text">Weekend brunch is here! Join us for...</div>
-                </div>
-                <div class="al-mini-actions">
-                  <button class="al-mini-btn al-mini-approve">
-                    <MaterialIcon icon="check" size="xs" /> Approve
-                  </button>
-                  <button class="al-mini-btn al-mini-edit">
-                    <MaterialIcon icon="edit" size="xs" /> Edit
-                  </button>
-                </div>
-              </div>
-              <!-- Step 3: Multi-platform publish confirmation -->
-              <div v-else class="al-mini-publish">
-                <div class="al-publish-success">
-                  <div class="al-publish-check-circle">
-                    <MaterialIcon icon="check" size="sm" />
-                  </div>
-                  <span class="al-publish-label">Published!</span>
-                </div>
-                <div class="al-mini-platforms">
-                  <div class="al-mini-platform-row">
-                    <span class="al-mini-platform-dot" style="background: #1877f2"></span>
-                    <span>Facebook</span>
-                    <MaterialIcon icon="check_circle" size="xs" class="al-mini-check" />
-                  </div>
-                  <div class="al-mini-platform-row">
-                    <span class="al-mini-platform-dot" style="background: #E1306C"></span>
-                    <span>Instagram</span>
-                    <MaterialIcon icon="check_circle" size="xs" class="al-mini-check" />
-                  </div>
-                  <div class="al-mini-platform-row">
-                    <span class="al-mini-platform-dot" style="background: #0a66c2"></span>
-                    <span>LinkedIn</span>
-                    <MaterialIcon icon="check_circle" size="xs" class="al-mini-check" />
-                  </div>
-                  <div class="al-mini-platform-row">
-                    <span class="al-mini-platform-dot" style="background: #000000"></span>
-                    <span>X / Twitter</span>
-                    <MaterialIcon icon="check_circle" size="xs" class="al-mini-check" />
-                  </div>
-                </div>
-                <div class="al-publish-time">
-                  <MaterialIcon icon="schedule" size="xs" />
-                  <span>Just now</span>
-                </div>
-              </div>
+              <!-- Step 2: Review & Approve screenshot -->
+              <img v-else-if="i === 1" src="/example/demo-review-approve.png" alt="Review and approve posts" class="al-demo-screenshot" />
+              <!-- Step 3: Connect Accounts screenshot -->
+              <img v-else src="/example/demo-connect-accounts.png" alt="Connect your social accounts" class="al-demo-screenshot" />
             </PhoneMockup>
             <div class="al-step-badge">{{ i + 1 }}</div>
             <h3 class="al-step-title">{{ $t(`appLanding.demo.${step}`) }}</h3>
@@ -1464,9 +1414,7 @@ onUnmounted(() => {
 }
 
 /* ===== Mini Screen Mockups (Demo Section) ===== */
-.al-mini-chat,
-.al-mini-preview,
-.al-mini-publish {
+.al-mini-chat {
   display: flex;
   flex-direction: column;
   height: 100%;
@@ -1474,43 +1422,14 @@ onUnmounted(() => {
   gap: var(--space-md);
 }
 
-.al-publish-success {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  padding: var(--space-lg) 0 var(--space-sm);
+.al-demo-screenshot {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top;
+  display: block;
 }
 
-.al-publish-check-circle {
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  background: var(--gold-primary);
-  color: #fff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 4px 16px rgba(15, 61, 46, 0.25);
-}
-
-.al-publish-label {
-  font-size: 13px;
-  font-weight: var(--font-bold);
-  color: var(--gold-primary);
-  letter-spacing: 0.02em;
-}
-
-.al-publish-time {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-  font-size: 10px;
-  color: var(--text-muted);
-  padding-top: var(--space-xs);
-  border-top: 1px solid var(--border-color);
-}
 
 .al-mini-header {
   display: flex;
@@ -1558,90 +1477,6 @@ onUnmounted(() => {
   border-bottom-left-radius: 4px;
 }
 
-/* Step 2 - Post preview */
-.al-mini-post-card {
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-sm);
-  overflow: hidden;
-  margin-bottom: var(--space-sm);
-}
-
-.al-mini-post-img {
-  width: 100%;
-  height: 60px;
-  background: var(--gradient-subtle, linear-gradient(135deg, var(--bg-tertiary), var(--bg-elevated)));
-}
-
-.al-mini-post-text {
-  padding: 6px 8px;
-  font-size: 9px;
-  color: var(--text-secondary);
-  line-height: 1.3;
-}
-
-.al-mini-actions {
-  display: flex;
-  gap: 6px;
-  margin-top: auto;
-}
-
-.al-mini-btn {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 3px;
-  padding: 5px 0;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--border-color);
-  background: transparent;
-  font-family: var(--font-body);
-  font-size: 9px;
-  font-weight: var(--font-medium);
-  cursor: default;
-}
-
-.al-mini-approve {
-  background: var(--gradient-gold);
-  color: var(--text-on-gold);
-  border-color: transparent;
-}
-
-.al-mini-edit {
-  color: var(--text-secondary);
-}
-
-/* Step 3 - Publish confirmation */
-.al-mini-platforms {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  flex: 1;
-}
-
-.al-mini-platform-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 11px;
-  color: var(--text-primary);
-  background: var(--bg-tertiary);
-  padding: 8px 10px;
-  border-radius: var(--radius-md);
-}
-
-.al-mini-platform-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  flex-shrink: 0;
-}
-
-.al-mini-check {
-  margin-left: auto;
-  color: var(--success-text, #0f3d2e);
-}
 
 @media (max-width: 768px) {
   .al-hero {
