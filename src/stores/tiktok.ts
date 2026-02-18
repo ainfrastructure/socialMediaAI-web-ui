@@ -22,7 +22,7 @@ export const useTikTokStore = defineStore('tiktok', () => {
     return preferencesStore.selectedBrandId || undefined
   }
 
-  async function connectTikTok(returnUrl?: string): Promise<void> {
+  async function connectTikTok(): Promise<void> {
     loading.value = true
     error.value = null
 

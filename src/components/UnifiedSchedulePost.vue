@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import { useRouter, useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import type { AccountSelection } from '@/types/scheduling'
 import BaseButton from './BaseButton.vue'
@@ -64,8 +63,6 @@ const emit = defineEmits<{
 }>()
 
 const { t } = useI18n()
-const router = useRouter()
-const route = useRoute()
 const facebookStore = useFacebookStore()
 const instagramStore = useInstagramStore()
 const tiktokStore = useTikTokStore()
@@ -341,17 +338,15 @@ async function handlePlatformClick(platform: typeof availablePlatforms.value[0])
     }
   } else if (!platform.comingSoon) {
     // Trigger connection directly based on platform
-    // Pass current URL so user returns here after OAuth
-    const returnUrl = route.fullPath
     try {
       if (platform.id === 'facebook') {
-        await facebookStore.connectFacebook(returnUrl)
+        await facebookStore.connectFacebook()
       } else if (platform.id === 'instagram') {
-        await instagramStore.connectInstagram(returnUrl)
+        await instagramStore.connectInstagram()
       } else if (platform.id === 'tiktok') {
-        await tiktokStore.connectTikTok(returnUrl)
+        await tiktokStore.connectTikTok()
       } else if (platform.id === 'twitter') {
-        await twitterStore.connectTwitter(returnUrl)
+        await twitterStore.connectTwitter()
       }
       // The stores are reactive, so UI will update automatically after connection
     } catch (error) {

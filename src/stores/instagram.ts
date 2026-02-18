@@ -23,7 +23,7 @@ export const useInstagramStore = defineStore('instagram', () => {
     return preferencesStore.selectedBrandId || undefined
   }
 
-  async function connectInstagram(returnUrl?: string): Promise<void> {
+  async function connectInstagram(): Promise<void> {
     loading.value = true
     error.value = null
 

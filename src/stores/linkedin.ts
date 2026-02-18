@@ -23,7 +23,7 @@ export const useLinkedInStore = defineStore('linkedin', () => {
     return preferencesStore.selectedBrandId || undefined
   }
 
-  async function connectLinkedIn(returnUrl?: string): Promise<void> {
+  async function connectLinkedIn(): Promise<void> {
     loading.value = true
     error.value = null
 

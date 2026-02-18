@@ -23,7 +23,7 @@ export const useFacebookStore = defineStore('facebook', () => {
     return preferencesStore.selectedBrandId || undefined
   }
 
-  async function connectFacebook(returnUrl?: string): Promise<void> {
+  async function connectFacebook(): Promise<void> {
     loading.value = true
     error.value = null
 

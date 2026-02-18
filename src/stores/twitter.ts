@@ -22,7 +22,7 @@ export const useTwitterStore = defineStore('twitter', () => {
     return preferencesStore.selectedBrandId || undefined
   }
 
-  async function connectTwitter(returnUrl?: string): Promise<void> {
+  async function connectTwitter(): Promise<void> {
     loading.value = true
     error.value = null
 
