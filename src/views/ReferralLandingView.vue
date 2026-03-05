@@ -146,6 +146,7 @@ const howItWorksSteps = computed(() => [
     <header class="landing-header">
       <div class="header-content">
         <router-link to="/" class="logo">
+          <img src="/mascot/socialchef_wave.png" alt="SocialChef" class="logo-img" />
           <span class="logo-text">SocialChef</span>
         </router-link>
         <div class="header-actions">
@@ -324,6 +325,15 @@ const howItWorksSteps = computed(() => [
 
 .logo {
   text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.logo-img {
+  height: 32px;
+  width: auto;
+  object-fit: contain;
 }
 
 .logo-text {

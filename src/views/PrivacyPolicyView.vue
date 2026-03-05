@@ -15,7 +15,10 @@ function goBack() {
 <template>
   <div class="privacy-view">
     <div class="header">
-      <h1 class="brand-title">SocialChef</h1>
+      <div class="al-logo">
+        <img src="/mascot/socialchef_wave.png" alt="SocialChef" class="logo-img" />
+        <span class="brand-title">SocialChef</span>
+      </div>
       <BaseButton variant="ghost" size="small" @click="goBack">
         {{ t('common.back') }}
       </BaseButton>
@@ -134,6 +137,18 @@ function goBack() {
   display: flex;
   justify-content: space-between;
   align-items: center;
+}
+
+.al-logo {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.logo-img {
+  height: 40px;
+  width: auto;
+  object-fit: contain;
 }
 
 .brand-title {

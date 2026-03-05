@@ -1494,7 +1494,7 @@ export default {
     sections: {
       introduction: {
         title: '1. Introduksjon',
-        content: 'Velkommen til SocialChef ("vi", "vår" eller "oss"). Vi er forpliktet til å beskytte personvernet ditt og sikre sikkerheten til din personlige informasjon. Denne personvernerklæringen forklarer hvordan vi samler inn, bruker, deler og beskytter informasjonen din når du bruker vår AI-drevne plattform for sosiale medier for restauranter.'
+        content: 'Velkommen til SocialChef ("vi", "vår" eller "oss"). Vi er forpliktet til å beskytte personvernet ditt og sikre sikkerheten til din personlige informasjon. Denne personvernerklæringen forklarer hvordan vi samler inn, bruker, deler og beskytter informasjonen din når du bruker vår AI-drevne plattform for sosiale medier.'
       },
       informationWeCollect: {
         title: '2. Informasjon vi samler inn',
@@ -1512,7 +1512,7 @@ export default {
         intro: 'Vi bruker informasjonen din til å:',
         items: {
           provideService: 'Tilby og drive våre AI-drevne innholdsgenerings- og sosiale medieadministrasjonstjenester.',
-          improveService: 'Forbedre og tilpasse opplevelsen din, inkludert opplæring av våre AI-modeller for å bedre betjene restaurantinnholdsbehov.',
+          improveService: 'Forbedre og tilpasse opplevelsen din, inkludert opplæring av våre AI-modeller for å bedre betjene dine innholdsbehov.',
           communicate: 'Sende deg tjenesterelatert kommunikasjon, oppdateringer og markedsføringsmateriell (med ditt samtykke).',
           security: 'Sikre sikkerheten til plattformen vår og beskytte mot svindel eller uautorisert tilgang.',
           legal: 'Overholde juridiske forpliktelser og håndheve våre tjenestevilkår.'
@@ -1583,7 +1583,7 @@ export default {
       },
       description: {
         title: '2. Beskrivelse av tjenesten',
-        content: 'SocialChef er en AI-drevet plattform for sosiale medier, spesielt designet for restauranter. Vår tjeneste lar deg generere markedsføringsinnhold, lage bilder og bildetekster, planlegge innlegg og publisere innhold til tilkoblede sosiale medieplattformer. Funksjoner kan variere basert på abonnementsplanen din.'
+        content: 'SocialChef er en AI-drevet plattform for sosiale medier. Vår tjeneste lar deg generere markedsføringsinnhold, lage bilder og bildetekster, planlegge innlegg og publisere innhold til tilkoblede sosiale medieplattformer. Funksjoner kan variere basert på abonnementsplanen din.'
       },
       eligibility: {
         title: '3. Kvalifisering',

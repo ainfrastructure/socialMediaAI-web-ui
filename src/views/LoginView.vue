@@ -109,7 +109,7 @@ async function handleOtpSubmit() {
   <div class="login-container">
     <BaseCard variant="glass-intense" class="login-card">
       <div class="header">
-        <img src="../assets/socialchef_logo.svg" alt="SocialChef Logo" class="brand-logo" />
+        <img src="/mascot/socialchef_wave.png" alt="SocialChef Logo" class="brand-logo" />
         <h1 class="brand-title">SocialChef</h1>
         <p class="brand-subtitle">{{ $t('auth.brandSubtitle') }}</p>
       </div>
@@ -311,6 +311,7 @@ async function handleOtpSubmit() {
 .brand-logo {
   height: 80px;
   width: auto;
+  object-fit: contain;
   margin: 0 auto var(--space-xl);
   display: block;
   filter: drop-shadow(0 4px 12px rgba(176, 138, 90, 0.3));
@@ -318,7 +319,6 @@ async function handleOtpSubmit() {
 }
 
 .brand-logo:hover {
-  filter: drop-shadow(0 6px 16px rgba(176, 138, 90, 0.4));
   transform: scale(1.05);
 }
 

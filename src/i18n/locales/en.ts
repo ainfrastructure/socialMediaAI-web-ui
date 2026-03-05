@@ -1525,7 +1525,7 @@ export default {
       introduction: {
         title: '1. Introduction',
         content:
-          'Welcome to SocialChef ("we," "our," or "us"). We are committed to protecting your privacy and ensuring the security of your personal information. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our AI-powered social media management platform for restaurants.'
+          'Welcome to SocialChef ("we," "our," or "us"). We are committed to protecting your privacy and ensuring the security of your personal information. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our AI-powered social media management platform.'
       },
       informationWeCollect: {
         title: '2. Information We Collect',
@@ -1550,7 +1550,7 @@ export default {
           provideService:
             'Provide and operate our AI-powered content generation and social media management services.',
           improveService:
-            'Improve and personalize your experience, including training our AI models to better serve restaurant content needs.',
+            'Improve and personalize your experience, including training our AI models to better serve your content needs.',
           communicate:
             'Send you service-related communications, updates, and marketing materials (with your consent).',
           security:
@@ -1636,7 +1636,7 @@ export default {
       description: {
         title: '2. Description of Service',
         content:
-          'SocialChef is an AI-powered social media management platform designed specifically for restaurants. Our Service enables you to generate marketing content, create images and captions, schedule posts, and publish content to connected social media platforms. Features may vary based on your subscription plan.'
+          'SocialChef is an AI-powered social media management platform. Our Service enables you to generate marketing content, create images and captions, schedule posts, and publish content to connected social media platforms. Features may vary based on your subscription plan.'
       },
       eligibility: {
         title: '3. Eligibility',

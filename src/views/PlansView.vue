@@ -384,7 +384,7 @@ if (urlParams.get('success') === 'true') {
       <div class="processing-content">
         <!-- Logo with animation -->
         <img
-          src="/socialchef_logo.svg"
+          src="/mascot/socialchef_wave.png"
           alt="Social Chef"
           class="processing-logo"
         />
@@ -625,9 +625,9 @@ if (urlParams.get('success') === 'true') {
 .processing-logo {
   width: 100px;
   height: 100px;
+  object-fit: contain;
   margin-bottom: var(--space-2xl);
   animation: pulse-logo 2s ease-in-out infinite;
-  filter: drop-shadow(0 4px 20px rgba(176, 138, 90, 0.4));
 }
 
 @keyframes pulse-logo {
