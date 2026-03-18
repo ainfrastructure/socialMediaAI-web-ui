@@ -180,11 +180,6 @@ export default {
       }
     },
 
-    // How It Works
-    howItWorks: {
-      comingSoon: 'Soon'
-    },
-
     // Auto-Posting Feature (KEY DIFFERENTIATOR)
     autoPosting: {
       badge: 'Key Feature',
@@ -2097,120 +2092,208 @@ export default {
   appLanding: {
     nav: {
       features: 'Features',
-      platforms: 'Platforms',
-      earlyBird: 'Early Bird',
+      pricing: 'Pricing',
+      howItWorks: 'How It Works',
       getEarlyAccess: 'Get Early Access'
     },
     hero: {
       badge: 'Coming Soon to iOS & Android',
-      headline: 'Your AI Social Media Employee,',
+      headline: 'Your Autonomous Social Media Employee,',
       headlineAccent: 'in Your Pocket',
       subheadline: 'From content creation to automatic posting — SocialChef handles your social media 24/7',
       ctaPrimary: 'Get Early Access',
-      ctaSecondary: 'Watch Demo',
+      ctaSecondary: 'See How It Works',
       floatingBadge1: 'Published to Instagram',
-      floatingBadge2: '3 posts scheduled'
+      trustSignal: 'Join 2,400+ marketers on the waitlist'
     },
     socialProof: {
       platforms: 'Works with'
     },
-    demo: {
-      title: 'See It In Action',
-      step1: 'Chat with AI',
-      step1Desc: 'Tell SocialChef what you want to post',
-      step2: 'Review & Approve',
-      step2Desc: 'Preview and edit before publishing',
-      step3: 'Published Everywhere',
-      step3Desc: 'Automatically posted across all platforms'
+    pricing: {
+      eyebrow: 'Pricing',
+      title: 'Simple, Transparent Pricing',
+      subtitle: 'Start free. Scale when you\'re ready.',
+      monthly: 'Monthly',
+      annual: 'Annual',
+      save: 'Save 25%',
+      month: 'mo',
+      popular: 'Most Popular',
+      cta: 'Get Early Access',
+      starter: 'Starter',
+      pro: 'Pro',
+      business: 'Business',
+      starterF1: '3 social accounts',
+      starterF2: '30 smart posts per month',
+      starterF3: 'Basic analytics',
+      starterF4: 'Email support',
+      proF1: '10 social accounts',
+      proF2: 'Unlimited smart posts',
+      proF3: 'Advanced analytics',
+      proF4: 'Brand voice training',
+      proF5: 'Priority support',
+      businessF1: 'Unlimited accounts',
+      businessF2: 'Unlimited smart posts',
+      businessF3: 'Competitor intelligence',
+      businessF4: 'Multi-brand management',
+      businessF5: 'Dedicated account manager'
     },
-    autonomy: {
-      title: 'You Choose How Autonomous Your AI Is',
-      subtitle: 'From full control to complete autopilot — set the level that fits your business',
-      manual: 'Manual',
-      manualDesc: 'You create every post through chat. Full creative control.',
-      manualChat: 'Create a post about our weekend sale',
-      assisted: 'Assisted',
-      assistedDesc: 'SocialChef crafts content for you to review and approve before publishing.',
-      assistedNotif: 'New post ready for review',
-      assistedApprove: 'Approve',
-      assistedEdit: 'Edit',
-      autopilot: 'Autopilot',
-      autopilotDesc: 'AI creates and publishes content on your schedule. You sit back.',
-      autopilotStatus: '3 posts published today',
-      autopilotScheduled: 'Next post in 2 hours'
+    aiCreation: {
+      eyebrow: 'Smart Content Engine',
+      title: 'Watch Your Content Come to Life',
+      subtitle: 'From a simple prompt to published content — see the smart creation pipeline in action',
+      promptTitle: 'Describe Your Idea',
+      promptDesc: 'Type a prompt or let SocialChef suggest topics based on your brand and trending content.',
+      promptExample: 'Create a post about our new summer collection with a playful tone',
+      generateTitle: 'Smart Content Generation',
+      generateDesc: 'SocialChef writes copy, selects images, and crafts platform-optimized posts.',
+      adaptTitle: 'Multi-Platform Adapt',
+      adaptDesc: 'Content is automatically tailored for each platform\'s format and best practices.',
+      scheduleTitle: 'Schedule & Publish',
+      scheduleDesc: 'Pick the perfect time or let SocialChef choose based on when your audience is most active.'
     },
-    platformPreviews: {
-      title: 'Perfect Content for Every Platform',
-      subtitle: 'AI-optimized posts tailored to each platform\'s best practices',
-      facebook: 'Facebook',
-      instagram: 'Instagram',
-      linkedin: 'LinkedIn',
-      twitter: 'X',
-      postCaption: 'Meet the squad! Our latest collection just dropped. Which one is your favorite? Drop a comment below!',
-      facebookLikes: '2.4K',
-      facebookComments: '186 comments',
-      facebookShares: '47 shares',
-      instagramLikes: '3,847 likes',
-      instagramComments: 'View all 214 comments',
-      linkedinReactions: '1,203',
-      linkedinComments: '89 comments',
-      linkedinReposts: '34 reposts',
-      twitterLikes: '1.2K',
-      twitterReposts: '328',
-      twitterReplies: '94',
-      twitterViews: '24.5K'
+    calendar: {
+      eyebrow: 'Content Calendar',
+      title: 'Your Entire Week, Planned',
+      subtitle: 'Plan your week or month with your goals and brand focus messaging — all in one view.',
+      thisWeek: 'This Week',
+      autoSchedule: 'Auto-Schedule',
+      autoScheduleDesc: 'AI picks the best times for each platform',
+      multiPlatform: 'Multi-Platform',
+      multiPlatformDesc: 'One calendar for all your social accounts',
+      contentGoals: 'Content Goals',
+      contentGoalsDesc: 'Set weekly themes and brand messaging targets',
+      dragDrop: 'Drag & Drop',
+      dragDropDesc: 'Rearrange your week in seconds'
     },
-    features: {
-      title: 'Your AI Social Media Team',
-      subtitle: 'SocialChef handles your social media so you can focus on your business',
-      aiChat: {
-        title: 'AI Chat',
-        description: 'Talk to your AI employee like a real person. Describe what you want and get professional content instantly.'
-      },
-      smartContent: {
-        title: 'Smart Content',
-        description: 'AI generates platform-optimized posts with images and captions tailored to your brand.'
-      },
-      reviewApprove: {
-        title: 'Review & Approve',
-        description: 'Review AI-generated posts, approve what you like, edit or skip the rest. Batch-review multiple posts in a swipe deck.'
-      },
-      multiPlatform: {
-        title: 'Multi-Platform',
-        description: 'Publish posts optimized for Facebook, Instagram, LinkedIn, and X — all from one app.'
-      },
-      brandVoice: {
-        title: 'Brand Voice',
-        description: 'AI learns your brand\'s tone, colors, and style so every post feels authentically yours.'
-      },
-      assetLibrary: {
-        title: 'Asset Library',
-        description: 'Upload and manage your brand\'s photos and media. SocialChef uses them to create on-brand content.'
-      }
+    adsManager: {
+      eyebrow: 'Ads Manager',
+      title: 'Run Ads Like a Pro. No Agency Needed.',
+      subtitle: 'Create and manage Meta, Google, and X ads right from the app. Smart copy writing, targeting optimization, and automated reporting.',
+      roas: 'ROAS',
+      cpc: 'Avg. CPC',
+      conversions: 'Conversions',
+      spend: 'Total Spend',
+      campaignTitle: 'Summer Collection Campaign',
+      active: 'Active',
+      impressions: 'Impressions',
+      clicks: 'Clicks'
+    },
+    cinematic: {
+      pillChat: 'AI Creation',
+      pillCalendar: 'Calendar',
+      pillAds: 'Ads Manager',
+      chatUserMsg: 'Give me a weekly summary and suggest a post',
+      chatAiResponse: 'This week you reached 12.4K people. Engagement is up 18%. Here\'s a post idea:',
+      chatPostCaption: 'Embrace the sunshine with our new Summer Collection...',
+      chatPublish: 'Publish Now',
+      chatSchedule: 'Schedule',
+      chatPublished: 'Published to Instagram',
+      calViewFull: 'View full calendar',
+      calMonthLabel: 'March 2026',
+      calDetailTitle: 'Industry Insights',
+      adsSearchText: 'Summer Collection...',
+      adsCampaignName: 'Summer Collection Campaign',
+      adsActive: 'Active',
+      adsConversions: 'Conversions',
+      adsSpend: 'Spend',
+    },
+    featureShowcase: {
+      tabAnalytics: 'Analytics',
+      tabCalendar: 'Calendar',
+      tabCompetitor: 'Competitor Intel',
+      tabDesignBuilder: 'Design Builder',
+      tabAds: 'Ads Manager',
+      tabBriefing: 'Briefing',
+    },
+    designBuilder: {
+      eyebrow: 'Design Builder',
+      title: 'Create Scroll-Stopping Visuals',
+      subtitle: 'In-app design canvas for social creatives. Templates, brand colors, smart image generation — all in one place.',
+      background: 'Background',
+      backgroundDesc: 'Gradients, colors, or generated scenes',
+      image: 'Image Layer',
+      imageDesc: 'Generated or uploaded media',
+      text: 'Text Overlay',
+      textDesc: 'Headlines, captions, and CTAs',
+      branding: 'Brand Kit',
+      brandingDesc: 'Logo, colors, and fonts auto-applied',
+      tploceanName: 'Ocean',
+      tploceanEyebrow: 'Smart Social Media',
+      tploceanHeadline: 'Your Content, on Autopilot',
+      tploceanSubline: 'Creates, schedules, and publishes — autonomously, 24/7',
+      tplcoastalName: 'Coastal',
+      tplcoastalEyebrow: 'Design Builder',
+      tplcoastalHeadline: 'Scroll-Stopping Visuals',
+      tplcoastalSubline: 'Templates, brand colors, and smart generation in one place',
+      tplpremiumName: 'Premium',
+      tplpremiumEyebrow: 'Brand Identity',
+      tplpremiumHeadline: 'Elevate Your Brand Presence',
+      tplpremiumSubline: 'Luxury templates with your colors, fonts, and logo built in'
+    },
+    analytics: {
+      eyebrow: 'Analytics Dashboard',
+      title: 'Know What\'s Working',
+      subtitle: 'Track performance across all platforms with real-time analytics and smart insights.',
+      followers: 'Followers',
+      engagement: 'Engagement',
+      reach: 'Reach',
+      posts: 'Posts',
+      chartTitle: 'Engagement Rate',
+      chartPeriod: 'Last 7 days'
+    },
+    competitor: {
+      eyebrow: 'Competitor Intelligence',
+      title: 'Stay Ahead of the Competition',
+      subtitle: 'Monitor competitor activity, benchmark your performance, and discover content gaps.',
+      dashTitle: 'Competitor Dashboard',
+      followers: 'Followers',
+      engagement: 'Engagement',
+      postsMonth: 'Posts/mo'
+    },
+    briefing: {
+      eyebrow: 'Morning Briefing',
+      title: 'Start Your Day with Smart Insights',
+      subtitle: 'Every morning, SocialChef delivers a personalized briefing with performance highlights and content suggestions.',
+      time: '8:00 AM',
+      greeting: 'Good morning! Here\'s your social media briefing.',
+      performance: 'Yesterday your posts reached 12.4K people (+18% vs last week). Your Instagram Reel performed best with 847 likes.',
+      suggestion: 'I\'ve prepared 3 posts for today based on trending topics in your industry. Want to review them?',
+      userReply: 'Yes, show me the posts!',
+      confirmation: 'Here they are! I\'ve optimized each one for the best posting time today.'
+    },
+    multiBrand: {
+      eyebrow: 'Multi-Brand',
+      title: 'One Dashboard, All Your Brands',
+      subtitle: 'Manage multiple brands, each with their own voice, accounts, and content strategy.',
+      accounts: '{count} connected accounts',
+      followers: 'Followers',
+      postsMonth: 'Posts/mo',
+      engagement: 'Engagement'
+    },
+    testimonials: {
+      eyebrow: 'Testimonials',
+      title: 'Loved by Marketers Everywhere',
+      subtitle: 'See what early adopters are saying about SocialChef.',
+      testimonial1: 'SocialChef saved me 15 hours a week on content creation. It actually understands my brand voice — it\'s like having a full marketing team.',
+      testimonial2: 'The autopilot feature is incredible. I set it up once and my social accounts have been growing on their own for months.',
+      testimonial3: 'Managing 5 brands used to be a nightmare. Now I do it all from one dashboard in 30 minutes a day.',
+      restaurantOwner: 'Restaurant Owner',
+      fitnessCoach: 'Fitness Coach',
+      ecommerceFounder: 'E-commerce Founder'
     },
     earlyBird: {
-      title: 'Get Early Access When We Launch',
-      discount: 'Early',
-      discountSuffix: 'access at launch',
-      description: 'Join our early bird list and be the first to get access when the app launches. No credit card required.',
       inputPlaceholder: 'Enter your email',
       cta: 'Claim My Early Access',
       successTitle: "You're in!",
-      successMessage: "We'll send your discount code at launch.",
+      successMessage: "We'll notify you at launch.",
       noCreditCard: 'No credit card required',
-      alreadyOnList: "You're already on the early bird list!",
+      alreadyOnList: "You're already on the waitlist!",
       invalidEmail: 'Please enter a valid email address',
       error: 'Something went wrong. Please try again.'
     },
-    appStore: {
-      title: 'Available Soon On',
-      appStore: 'App Store',
-      googlePlay: 'Google Play',
-      comingSoon: 'Coming Soon'
-    },
     finalCta: {
-      title: "Don't Miss Out",
-      subtitle: 'Early access is only for early birds',
+      title: "Ready to Automate Your Social Media?",
+      subtitle: 'Join thousands of marketers who are getting early access to SocialChef.',
       cta: 'Get Early Access'
     },
     footer: {

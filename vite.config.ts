@@ -49,6 +49,7 @@ export default defineConfig({
           'vendor-vue': ['vue', 'vue-router', 'pinia'],
           'vendor-i18n': ['vue-i18n'],
           'vendor-date': ['date-fns', 'date-fns-tz'],
+          'vendor-gsap': ['gsap'],
         },
       },
     },

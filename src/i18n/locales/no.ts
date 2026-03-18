@@ -179,11 +179,6 @@ export default {
       }
     },
 
-    // How It Works
-    howItWorks: {
-      comingSoon: 'Snart'
-    },
-
     // Auto-Posting Feature (KEY DIFFERENTIATOR)
     autoPosting: {
       badge: 'Nøkkelfunksjon',
@@ -2024,120 +2019,208 @@ export default {
   appLanding: {
     nav: {
       features: 'Funksjoner',
-      platforms: 'Plattformer',
-      earlyBird: 'Early Bird',
+      pricing: 'Priser',
+      howItWorks: 'Hvordan det fungerer',
       getEarlyAccess: 'Få tidlig tilgang'
     },
     hero: {
       badge: 'Kommer snart til iOS og Android',
-      headline: 'Din AI-ansatt for sosiale medier,',
+      headline: 'Din autonome ansatt for sosiale medier,',
       headlineAccent: 'i lommen din',
       subheadline: 'Fra innholdsproduksjon til automatisk publisering — SocialChef håndterer sosiale medier 24/7',
       ctaPrimary: 'Få tidlig tilgang',
-      ctaSecondary: 'Se demo',
+      ctaSecondary: 'Se hvordan det fungerer',
       floatingBadge1: 'Publisert til Instagram',
-      floatingBadge2: '3 innlegg planlagt'
+      trustSignal: 'Bli med 2 400+ markedsførere på ventelisten'
     },
     socialProof: {
       platforms: 'Fungerer med'
     },
-    demo: {
-      title: 'Se det i aksjon',
-      step1: 'Chat med AI',
-      step1Desc: 'Fortell SocialChef hva du vil poste',
-      step2: 'Gjennomgå og godkjenn',
-      step2Desc: 'Forhåndsvis og rediger før publisering',
-      step3: 'Publisert overalt',
-      step3Desc: 'Automatisk publisert på alle plattformer'
+    pricing: {
+      eyebrow: 'Priser',
+      title: 'Enkle, transparente priser',
+      subtitle: 'Start gratis. Skaler når du er klar.',
+      monthly: 'Månedlig',
+      annual: 'Årlig',
+      save: 'Spar 25%',
+      month: 'md',
+      popular: 'Mest populær',
+      cta: 'Få tidlig tilgang',
+      starter: 'Starter',
+      pro: 'Pro',
+      business: 'Business',
+      starterF1: '3 sosiale kontoer',
+      starterF2: '30 smarte innlegg per måned',
+      starterF3: 'Grunnleggende analyser',
+      starterF4: 'E-poststøtte',
+      proF1: '10 sosiale kontoer',
+      proF2: 'Ubegrensede smarte innlegg',
+      proF3: 'Avanserte analyser',
+      proF4: 'Merkevare-stemmetrening',
+      proF5: 'Prioritert støtte',
+      businessF1: 'Ubegrensede kontoer',
+      businessF2: 'Ubegrensede smarte innlegg',
+      businessF3: 'Konkurrentintelligens',
+      businessF4: 'Flermerkevare-håndtering',
+      businessF5: 'Dedikert kontaktperson'
     },
-    autonomy: {
-      title: 'Du velger hvor autonom AI-en din skal være',
-      subtitle: 'Fra full kontroll til komplett autopilot — velg nivået som passer din bedrift',
-      manual: 'Manuell',
-      manualDesc: 'Du lager hvert innlegg gjennom chat. Full kreativ kontroll.',
-      manualChat: 'Lag et innlegg om helgetilbudet vårt',
-      assisted: 'Assistert',
-      assistedDesc: 'SocialChef lager innhold som du gjennomgår og godkjenner før publisering.',
-      assistedNotif: 'Nytt innlegg klart for gjennomgang',
-      assistedApprove: 'Godkjenn',
-      assistedEdit: 'Rediger',
-      autopilot: 'Autopilot',
-      autopilotDesc: 'AI lager og publiserer innhold etter din timeplan. Du kan lene deg tilbake.',
-      autopilotStatus: '3 innlegg publisert i dag',
-      autopilotScheduled: 'Neste innlegg om 2 timer'
+    aiCreation: {
+      eyebrow: 'Smart innholdsmotor',
+      title: 'Se innholdet ditt bli til',
+      subtitle: 'Fra en enkel beskrivelse til publisert innhold — se den smarte produksjonslinjen i aksjon',
+      promptTitle: 'Beskriv ideen din',
+      promptDesc: 'Skriv en beskrivelse eller la SocialChef foreslå temaer basert på merkevaren din og trender.',
+      promptExample: 'Lag et innlegg om vår nye sommerkolleksjon med en leken tone',
+      generateTitle: 'Smart innholdsgenerering',
+      generateDesc: 'SocialChef skriver tekst, velger bilder og lager plattformoptimaliserte innlegg.',
+      adaptTitle: 'Flerplattform-tilpasning',
+      adaptDesc: 'Innhold tilpasses automatisk til hver plattforms format og beste praksis.',
+      scheduleTitle: 'Planlegg og publiser',
+      scheduleDesc: 'Velg det perfekte tidspunktet eller la SocialChef velge basert på når publikummet ditt er mest aktivt.'
     },
-    platformPreviews: {
-      title: 'Perfekt innhold for hver plattform',
-      subtitle: 'AI-optimaliserte innlegg tilpasset hver plattforms beste praksis',
-      facebook: 'Facebook',
-      instagram: 'Instagram',
-      linkedin: 'LinkedIn',
-      twitter: 'X',
-      postCaption: 'Moed gjengen! Vaar nyeste kolleksjon er her. Hvilken er din favoritt? Kommenter under!',
-      facebookLikes: '2,4K',
-      facebookComments: '186 kommentarer',
-      facebookShares: '47 delinger',
-      instagramLikes: '3 847 liker-klikk',
-      instagramComments: 'Se alle 214 kommentarer',
-      linkedinReactions: '1 203',
-      linkedinComments: '89 kommentarer',
-      linkedinReposts: '34 delinger',
-      twitterLikes: '1,2K',
-      twitterReposts: '328',
-      twitterReplies: '94',
-      twitterViews: '24,5K'
+    adsManager: {
+      eyebrow: 'Annonseadministrasjon',
+      title: 'Kjør annonser som en proff. Uten byrå.',
+      subtitle: 'Opprett og administrer Meta-, Google- og X-annonser rett fra appen. Smart tekstskriving, målrettingsoptimalisering og automatisert rapportering.',
+      roas: 'ROAS',
+      cpc: 'Gj.sn. CPC',
+      conversions: 'Konverteringer',
+      spend: 'Totalt forbruk',
+      campaignTitle: 'Sommerkolleksjon-kampanje',
+      active: 'Aktiv',
+      impressions: 'Visninger',
+      clicks: 'Klikk'
     },
-    features: {
-      title: 'Ditt AI-team for sosiale medier',
-      subtitle: 'SocialChef håndterer sosiale medier så du kan fokusere på bedriften din',
-      aiChat: {
-        title: 'AI-chat',
-        description: 'Snakk med din AI-ansatt som en ekte person. Beskriv hva du ønsker og få profesjonelt innhold umiddelbart.'
-      },
-      smartContent: {
-        title: 'Smart innhold',
-        description: 'AI genererer plattformoptimaliserte innlegg med bilder og tekster tilpasset din merkevare.'
-      },
-      reviewApprove: {
-        title: 'Gjennomgå og godkjenn',
-        description: 'Se gjennom AI-genererte innlegg, godkjenn det du liker, rediger eller hopp over resten. Gå gjennom flere innlegg i en sveipekø.'
-      },
-      multiPlatform: {
-        title: 'Flere plattformer',
-        description: 'Publiser innlegg optimalisert for Facebook, Instagram, LinkedIn og X — alt fra én app.'
-      },
-      brandVoice: {
-        title: 'Merkevare-stemme',
-        description: 'AI lærer merkevarens tone, farger og stil slik at hvert innlegg føles autentisk ditt.'
-      },
-      assetLibrary: {
-        title: 'Mediebibliotek',
-        description: 'Last opp og organiser merkevarens bilder og media. SocialChef bruker dem til å lage innhold on-brand.'
-      }
+    cinematic: {
+      pillChat: 'AI-innhold',
+      pillCalendar: 'Kalender',
+      pillAds: 'Annonser',
+      chatUserMsg: 'Gi meg en ukentlig oppsummering og foreslå et innlegg',
+      chatAiResponse: 'Denne uken nådde du 12 400 personer. Engasjementet er opp 18%. Her er et innleggsforslag:',
+      chatPostCaption: 'Omfavn solskinnet med vår nye sommerkolleksjon...',
+      chatPublish: 'Publiser nå',
+      chatSchedule: 'Planlegg',
+      chatPublished: 'Publisert til Instagram',
+      calViewFull: 'Se full kalender',
+      calMonthLabel: 'Mars 2026',
+      calDetailTitle: 'Bransjeinnsikt',
+      adsSearchText: 'Sommerkolleksjon...',
+      adsCampaignName: 'Sommerkolleksjon-kampanje',
+      adsActive: 'Aktiv',
+      adsConversions: 'Konverteringer',
+      adsSpend: 'Forbruk',
+    },
+    featureShowcase: {
+      tabAnalytics: 'Analyser',
+      tabCalendar: 'Kalender',
+      tabCompetitor: 'Konkurrentinnsikt',
+      tabDesignBuilder: 'Designverktøy',
+      tabAds: 'Annonser',
+      tabBriefing: 'Briefing',
+    },
+    designBuilder: {
+      eyebrow: 'Designverktøy',
+      title: 'Lag visuelt innhold som stopper scrollingen',
+      subtitle: 'Designverktøy for sosiale medier. Maler, merkevarefarger, smart bildegenerering — alt på ett sted.',
+      background: 'Bakgrunn',
+      backgroundDesc: 'Gradienter, farger eller genererte scener',
+      image: 'Bildelag',
+      imageDesc: 'Genererte eller opplastede medier',
+      text: 'Tekstoverlegg',
+      textDesc: 'Overskrifter, tekster og handlingsknapper',
+      branding: 'Merkevarepakke',
+      brandingDesc: 'Logo, farger og fonter brukes automatisk',
+      tploceanName: 'Hav',
+      tploceanEyebrow: 'Smarte sosiale medier',
+      tploceanHeadline: 'Innholdet ditt, på autopilot',
+      tploceanSubline: 'Skaper, planlegger og publiserer — autonomt, 24/7',
+      tplcoastalName: 'Kyst',
+      tplcoastalEyebrow: 'Designbygger',
+      tplcoastalHeadline: 'Visuelt som stopper scrolling',
+      tplcoastalSubline: 'Maler, merkefarger og smart generering på ett sted',
+      tplpremiumName: 'Premium',
+      tplpremiumEyebrow: 'Merkevareidentitet',
+      tplpremiumHeadline: 'Løft merkevarens tilstedeværelse',
+      tplpremiumSubline: 'Eksklusive maler med dine farger, fonter og logo innebygd'
+    },
+    calendar: {
+      eyebrow: 'Innholdskalender',
+      title: 'Hele uken din, planlagt',
+      subtitle: 'Planlegg uken eller måneden med dine mål og merkevarebudskap — alt på ett sted.',
+      thisWeek: 'Denne uken',
+      autoSchedule: 'Autoplanlegging',
+      autoScheduleDesc: 'AI velger de beste tidspunktene for hver plattform',
+      multiPlatform: 'Flere plattformer',
+      multiPlatformDesc: 'Én kalender for alle sosiale kontoer',
+      contentGoals: 'Innholdsmål',
+      contentGoalsDesc: 'Sett ukentlige temaer og merkevarebudskap',
+      dragDrop: 'Dra og slipp',
+      dragDropDesc: 'Omorganiser uken din på sekunder'
+    },
+    analytics: {
+      eyebrow: 'Analysepanel',
+      title: 'Vet hva som fungerer',
+      subtitle: 'Følg ytelse på tvers av alle plattformer med sanntidsanalyser og smarte innsikter.',
+      followers: 'Følgere',
+      engagement: 'Engasjement',
+      reach: 'Rekkevidde',
+      posts: 'Innlegg',
+      chartTitle: 'Engasjementsrate',
+      chartPeriod: 'Siste 7 dager'
+    },
+    competitor: {
+      eyebrow: 'Konkurrentintelligens',
+      title: 'Hold deg foran konkurrentene',
+      subtitle: 'Overvåk konkurrentaktivitet, sammenlign ytelse og oppdag innholdsgap.',
+      dashTitle: 'Konkurrentpanel',
+      followers: 'Følgere',
+      engagement: 'Engasjement',
+      postsMonth: 'Innlegg/md'
+    },
+    briefing: {
+      eyebrow: 'Morgenbriefing',
+      title: 'Start dagen med smarte innsikter',
+      subtitle: 'Hver morgen leverer SocialChef en personlig briefing med ytelsesoversikt og innholdsforslag.',
+      time: '08:00',
+      greeting: 'God morgen! Her er din sosiale medier-briefing.',
+      performance: 'I går nådde innleggene dine 12 400 personer (+18% vs forrige uke). Instagram-reelen din presterte best med 847 likerklikk.',
+      suggestion: 'Jeg har forberedt 3 innlegg for i dag basert på trender i din bransje. Vil du gjennomgå dem?',
+      userReply: 'Ja, vis meg innleggene!',
+      confirmation: 'Her er de! Jeg har optimalisert hvert innlegg for det beste publiseringstidspunktet i dag.'
+    },
+    multiBrand: {
+      eyebrow: 'Flermerkevare',
+      title: 'Ett dashbord, alle merkevarene dine',
+      subtitle: 'Administrer flere merkevarer, hver med sin egen stemme, kontoer og innholdsstrategi.',
+      accounts: '{count} tilkoblede kontoer',
+      followers: 'Følgere',
+      postsMonth: 'Innlegg/md',
+      engagement: 'Engasjement'
+    },
+    testimonials: {
+      eyebrow: 'Anmeldelser',
+      title: 'Elsket av markedsførere overalt',
+      subtitle: 'Se hva tidlige brukere sier om SocialChef.',
+      testimonial1: 'SocialChef sparte meg 15 timer i uken på innholdsproduksjon. Den forstår faktisk merkevare-stemmen min — det er som å ha et helt markedsføringsteam.',
+      testimonial2: 'Autopilot-funksjonen er utrolig. Jeg satte den opp én gang og sosiale medier-kontoene mine har vokst av seg selv i måneder.',
+      testimonial3: 'Å administrere 5 merkevarer pleide å være et mareritt. Nå gjør jeg alt fra ett dashbord på 30 minutter om dagen.',
+      restaurantOwner: 'Restauranteier',
+      fitnessCoach: 'Fitnesstrener',
+      ecommerceFounder: 'E-handelsgrunnlegger'
     },
     earlyBird: {
-      title: 'Få tidlig tilgang ved lansering',
-      discount: 'Tidlig',
-      discountSuffix: 'tilgang ved lansering',
-      description: 'Bli med på vår early bird-liste og vær den første som får tilgang når appen lanseres. Ingen kredittkort nødvendig.',
       inputPlaceholder: 'Skriv inn din e-post',
       cta: 'Sikre min tidlige tilgang',
       successTitle: 'Du er med!',
-      successMessage: 'Vi sender rabattkoden din ved lansering.',
+      successMessage: 'Vi varsler deg ved lansering.',
       noCreditCard: 'Ingen kredittkort nødvendig',
-      alreadyOnList: 'Du er allerede på early bird-listen!',
+      alreadyOnList: 'Du er allerede på ventelisten!',
       invalidEmail: 'Vennligst skriv inn en gyldig e-postadresse',
       error: 'Noe gikk galt. Vennligst prøv igjen.'
     },
-    appStore: {
-      title: 'Kommer snart på',
-      appStore: 'App Store',
-      googlePlay: 'Google Play',
-      comingSoon: 'Kommer snart'
-    },
     finalCta: {
-      title: 'Ikke gå glipp av dette',
-      subtitle: 'Tidlig tilgang er kun for early birds',
+      title: 'Klar til å automatisere sosiale medier?',
+      subtitle: 'Bli med tusenvis av markedsførere som får tidlig tilgang til SocialChef.',
       cta: 'Få tidlig tilgang'
     },
     footer: {

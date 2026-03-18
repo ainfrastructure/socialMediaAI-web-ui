@@ -52,6 +52,30 @@
   --font-body: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
+/* ===== STARTUP THEME: Space Grotesk + DM Sans ===== */
+:root[data-font-theme="startup"] {
+  --font-heading: 'Space Grotesk', 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-body: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+/* ===== EDITORIAL THEME: Fraunces + Source Sans 3 ===== */
+:root[data-font-theme="editorial"] {
+  --font-heading: 'Fraunces', Georgia, serif;
+  --font-body: 'Source Sans 3', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+/* ===== HUMANIST THEME: Sora + Rubik ===== */
+:root[data-font-theme="humanist"] {
+  --font-heading: 'Sora', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-body: 'Rubik', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+/* ===== SWISS THEME: Instrument Sans + Inter ===== */
+:root[data-font-theme="swiss"] {
+  --font-heading: 'Instrument Sans', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
 /* Theme-specific adjustments for optimal readability */
 
 /* Apple theme - slightly tighter spacing */
