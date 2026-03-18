@@ -8,10 +8,6 @@ const { t } = useI18n()
 const sectionRef = ref<HTMLElement | null>(null)
 const activeStep = ref(0)
 
-function scrollToFinalCta() {
-  document.getElementById('lp-final-cta')?.scrollIntoView({ behavior: 'smooth' })
-}
-
 const steps = [
   { key: 'prompt', icon: 'chat', color: 'var(--lp-accent-orange)', number: '01' },
   { key: 'generate', icon: 'auto_awesome', color: 'var(--lp-accent-violet)', number: '02' },
@@ -19,19 +15,25 @@ const steps = [
   { key: 'schedule', icon: 'schedule', color: 'var(--lp-accent-orange)', number: '04' },
 ]
 
-// 3D entrance configs per step
-const stepEntrance = [
-  { rotateY: -8, z: -50 },
-  { rotateY: 8, z: -50 },
-  { rotateX: 5, z: -80 },
-  { scale: 0.9, z: -60 },
-]
-const stepEntranceTo = [
-  { rotateY: 0, z: 0 },
-  { rotateY: 0, z: 0 },
-  { rotateX: 0, z: 0 },
-  { scale: 1, z: 0 },
-]
+// 3D entrance configs per step — simplified on mobile
+const isMobile = typeof window !== 'undefined' && window.innerWidth < 768
+
+const stepEntrance = isMobile
+  ? [{ y: 30 }, { y: 30 }, { y: 30 }, { y: 30 }]
+  : [
+    { rotateY: -8, z: -50 },
+    { rotateY: 8, z: -50 },
+    { rotateX: 5, z: -80 },
+    { scale: 0.9, z: -60 },
+  ]
+const stepEntranceTo = isMobile
+  ? [{ y: 0 }, { y: 0 }, { y: 0 }, { y: 0 }]
+  : [
+    { rotateY: 0, z: 0 },
+    { rotateY: 0, z: 0 },
+    { rotateX: 0, z: 0 },
+    { scale: 1, z: 0 },
+  ]
 
 useGsapSection(sectionRef, (el, g) => {
   const stageContainers = el.querySelectorAll('.lp-stage-step')
@@ -50,7 +52,7 @@ useGsapSection(sectionRef, (el, g) => {
     scrollTrigger: {
       trigger: el,
       start: 'top 10%',
-      end: '+=200%',
+      end: isMobile ? '+=150%' : '+=200%',
       pin: true,
       scrub: 1,
       onUpdate(self: { progress: number }) {
@@ -87,42 +89,96 @@ useGsapSection(sectionRef, (el, g) => {
 
     // Step-specific animations
     if (i === 0) {
-      const typingText = container.querySelector('.lp-typing-text')
-      const cursor = container.querySelector('.lp-typing-cursor')
-      const sendBtn = container.querySelector('.lp-send-btn')
-      if (typingText) {
-        stepTl.fromTo(typingText,
-          { maxWidth: '0%' },
-          { maxWidth: '100%', duration: 0.6, ease: 'steps(30)' },
+      const aiBubble = container.querySelector('[data-ai-bubble]')
+      const suggestionCard = container.querySelector('[data-suggestion-card]')
+      const toneBadge = container.querySelector('[data-tone-badge]')
+      const chatActions = container.querySelectorAll('[data-chat-actions] .lp-chat-action-btn')
+
+      if (aiBubble) {
+        stepTl.fromTo(aiBubble,
+          { opacity: 0, y: 15 },
+          { opacity: 1, y: 0, duration: 0.3, ease: 'power2.out', immediateRender: false },
           0.1,
         )
       }
-      if (cursor) {
-        stepTl.to(cursor, { opacity: 0, duration: 0.05 }, 0.75)
+      if (suggestionCard) {
+        stepTl.fromTo(suggestionCard,
+          { opacity: 0, scale: 0.92 },
+          { opacity: 1, scale: 1, duration: 0.25, ease: 'power2.out', immediateRender: false },
+          0.35,
+        )
       }
-      if (sendBtn) {
-        stepTl.fromTo(sendBtn,
-          { scale: 0.8, opacity: 0.5 },
-          { scale: 1, opacity: 1, duration: 0.15, ease: 'back.out(2)' },
-          0.7,
+      if (toneBadge) {
+        stepTl.fromTo(toneBadge,
+          { opacity: 0, scale: 0.7 },
+          { opacity: 1, scale: 1, duration: 0.15, ease: 'back.out(3)', immediateRender: false },
+          0.55,
+        )
+      }
+      if (chatActions.length) {
+        stepTl.fromTo(chatActions,
+          { opacity: 0, y: 8 },
+          { opacity: 1, y: 0, duration: 0.12, stagger: 0.05, ease: 'power2.out', immediateRender: false },
+          0.65,
         )
       }
     } else if (i === 1) {
       const shimmers = container.querySelectorAll('.lp-gen-shimmer')
-      const lines = container.querySelectorAll('.lp-gen-line')
-      const imgPlaceholder = container.querySelector('.lp-gen-image')
-      const tags = container.querySelectorAll('.lp-gen-tag')
+      const appHeader = container.querySelector('[data-post-header]')
+      const tabs = container.querySelectorAll('[data-post-tabs] .lp-post-tab')
+      const brandRow = container.querySelector('[data-post-brand]')
+      const imgPlaceholder = container.querySelector('[data-post-image]')
+      const captionArea = container.querySelector('[data-post-caption]')
+      const tags = container.querySelectorAll('[data-post-tags] .lp-gen-tag')
+      const actionBtns = container.querySelectorAll('[data-post-actions] .lp-post-btn')
+      const bottomBar = container.querySelector('[data-post-bottom]')
 
+      // Shimmers fade out
       stepTl.fromTo(shimmers, { opacity: 1 }, { opacity: 0, duration: 0.25, stagger: 0.05, immediateRender: false }, 0.3)
-      stepTl.fromTo(lines, { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.2, stagger: 0.08, immediateRender: false }, 0.4)
+
+      // App header fades in
+      if (appHeader) {
+        stepTl.fromTo(appHeader, { opacity: 0 }, { opacity: 1, duration: 0.2, immediateRender: false }, 0.35)
+      }
+
+      // Post type tabs slide in from right
+      stepTl.fromTo(tabs, { opacity: 0, x: 20 }, { opacity: 1, x: 0, duration: 0.15, stagger: 0.05, immediateRender: false }, 0.4)
+
+      // Brand row fades in
+      if (brandRow) {
+        stepTl.fromTo(brandRow, { opacity: 0 }, { opacity: 1, duration: 0.2, immediateRender: false }, 0.5)
+      }
+
+      // Tone badge pops in
+      const toneBadge = container.querySelector('[data-post-tone]')
+      if (toneBadge) {
+        stepTl.fromTo(toneBadge, { opacity: 0, scale: 0.9 }, { opacity: 1, scale: 1, duration: 0.15, ease: 'back.out(1.5)', immediateRender: false }, 0.52)
+      }
+
+      // Image scales in
       if (imgPlaceholder) {
         stepTl.fromTo(imgPlaceholder,
-          { scale: 0.85, opacity: 0, borderWidth: 0 },
-          { scale: 1, opacity: 1, borderWidth: 2, duration: 0.25, ease: 'power2.out', immediateRender: false },
-          0.5,
+          { scale: 0.85, opacity: 0 },
+          { scale: 1, opacity: 1, duration: 0.25, ease: 'power2.out', immediateRender: false },
+          0.55,
         )
       }
+
+      // Caption reveals
+      if (captionArea) {
+        stepTl.fromTo(captionArea, { opacity: 0, y: 8 }, { opacity: 1, y: 0, duration: 0.2, immediateRender: false }, 0.6)
+      }
+
+      // Tags stagger in
       stepTl.fromTo(tags, { opacity: 0, y: 15 }, { opacity: 1, y: 0, duration: 0.15, stagger: 0.06, immediateRender: false }, 0.65)
+
+      // Action buttons pop in
+      stepTl.fromTo(actionBtns, { opacity: 0, scale: 0.9 }, { opacity: 1, scale: 1, duration: 0.15, stagger: 0.05, ease: 'back.out(1.5)', immediateRender: false }, 0.72)
+
+      // Bottom bar fades in
+      if (bottomBar) {
+        stepTl.fromTo(bottomBar, { opacity: 0 }, { opacity: 1, duration: 0.15, immediateRender: false }, 0.8)
+      }
     } else if (i === 2) {
       const cards = container.querySelectorAll('.lp-platform-card')
       const singleCheck = container.querySelector('.lp-fan-check')
@@ -147,10 +203,20 @@ useGsapSection(sectionRef, (el, g) => {
         )
       }
     } else if (i === 3) {
+      const scheduleHeader = container.querySelector('[data-schedule-header]')
+      const formatPills = container.querySelectorAll('.lp-format-pill')
       const calGrid = container.querySelector('.lp-cal-grid')
       const badgeScheduled = container.querySelector('.lp-badge-scheduled')
       const badgePublished = container.querySelector('.lp-badge-published')
-      const badgeCta = container.querySelector('.lp-badge-cta')
+      // Header fades in
+      if (scheduleHeader) {
+        stepTl.fromTo(scheduleHeader, { opacity: 0, y: -10 }, { opacity: 1, y: 0, duration: 0.2, immediateRender: false }, 0.15)
+      }
+
+      // Format pills stagger in
+      if (formatPills.length) {
+        stepTl.fromTo(formatPills, { opacity: 0, y: 8 }, { opacity: 1, y: 0, duration: 0.1, stagger: 0.04, immediateRender: false }, 0.25)
+      }
 
       if (calGrid) {
         stepTl.fromTo(calGrid, { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.15, immediateRender: false }, 0.3)
@@ -194,14 +260,6 @@ useGsapSection(sectionRef, (el, g) => {
         )
       }
 
-      // Badge 3: "Get Started" CTA — enter from left, stays visible
-      if (badgeCta) {
-        stepTl.fromTo(badgeCta,
-          { x: '-100vw', opacity: 0 },
-          { x: 0, opacity: 1, duration: 0.18, ease: 'power2.out', immediateRender: false },
-          0.76,
-        )
-      }
     }
 
     // Exit: opacity tween then instant visibility hide (except last step)
@@ -257,40 +315,131 @@ useGsapSection(sectionRef, (el, g) => {
           <div class="lp-stage-orb lp-stage-orb-2" />
           <div class="lp-stage-grain" />
 
-          <!-- Step 1: Describe Your Idea -->
+          <!-- Step 1: AI Suggests Ideas -->
           <div class="lp-stage-step lp-stage-prompt">
             <div class="lp-mock-chat">
               <div class="lp-chat-header">
                 <img src="@/assets/socialchef_logo.svg" alt="" class="lp-chat-logo" />
                 <span>SocialChef</span>
               </div>
-              <div class="lp-chat-input-area">
-                <div class="lp-chat-input-row">
-                  <span class="lp-typing-text">{{ t('appLanding.aiCreation.promptExample') }}</span>
-                  <span class="lp-typing-cursor">|</span>
+              <div class="lp-chat-messages">
+                <div class="lp-chat-msg-ai" data-ai-bubble>
+                  <div class="lp-chat-avatar">
+                    <img src="@/assets/socialchef_logo.svg" alt="" />
+                  </div>
+                  <div class="lp-chat-bubble">
+                    <p>{{ t('appLanding.aiCreation.promptGreeting') }}</p>
+                    <div class="lp-chat-suggestion" data-suggestion-card>
+                      <div class="lp-suggestion-img">
+                        <img src="/example/example-pizza.jpg" alt="" />
+                      </div>
+                      <div class="lp-suggestion-body">
+                        <p class="lp-suggestion-caption">{{ t('appLanding.aiCreation.promptSuggestionCaption') }}</p>
+                        <span class="lp-suggestion-tone" data-tone-badge>{{ t('appLanding.aiCreation.promptToneBadge') }}</span>
+                      </div>
+                    </div>
+                    <div class="lp-chat-actions" data-chat-actions>
+                      <button class="lp-chat-action-btn lp-chat-action-primary">{{ t('appLanding.aiCreation.postPublishNow') }}</button>
+                      <button class="lp-chat-action-btn">{{ t('appLanding.aiCreation.postSchedule') }}</button>
+                      <button class="lp-chat-action-btn">{{ t('appLanding.aiCreation.postEdit') }}</button>
+                    </div>
+                  </div>
                 </div>
-                <button class="lp-send-btn">
-                  <MaterialIcon icon="send" size="sm" />
-                </button>
+              </div>
+              <div class="lp-chat-input-bar">
+                <MaterialIcon icon="attach_file" size="xs" />
+                <span class="lp-chat-input-placeholder">{{ t('appLanding.aiCreation.postInputPlaceholder') }}</span>
+                <MaterialIcon icon="send" size="xs" />
               </div>
             </div>
           </div>
 
-          <!-- Step 2: AI Generates -->
+          <!-- Step 2: AI Generates — In-App Post View Mockup -->
           <div class="lp-stage-step lp-stage-generate">
-            <div class="lp-gen-container">
+            <div class="lp-post-mockup">
+              <!-- Shimmers (fade out on reveal) -->
               <div class="lp-gen-shimmer" />
               <div class="lp-gen-shimmer short" />
               <div class="lp-gen-shimmer shorter" />
-              <div class="lp-gen-line">Embrace the sunshine with our new Summer Collection</div>
-              <div class="lp-gen-line">Light fabrics, bold colors, effortless style</div>
-              <div class="lp-gen-image">
-                <img src="/example/example5-enhanced.jpg" alt="" class="lp-gen-real-img" />
+
+              <!-- App header bar -->
+              <div class="lp-post-app-header" data-post-header>
+                <MaterialIcon icon="settings" size="xs" />
+                <div class="lp-post-brand-selector">
+                  <span>Jungel Pizza</span>
+                  <MaterialIcon icon="expand_more" size="xs" />
+                </div>
+                <MaterialIcon icon="tune" size="xs" />
               </div>
-              <div class="lp-gen-tags">
-                <span class="lp-gen-tag">Playful</span>
-                <span class="lp-gen-tag">Summer</span>
-                <span class="lp-gen-tag">Collection</span>
+
+              <!-- Post type tabs -->
+              <div class="lp-post-tabs" data-post-tabs>
+                <span class="lp-post-tab lp-post-tab-active">
+                  <MaterialIcon icon="grid_view" size="xs" />
+                  {{ t('appLanding.aiCreation.postTabFeed') }}
+                </span>
+                <span class="lp-post-tab">
+                  <MaterialIcon icon="slow_motion_video" size="xs" />
+                  {{ t('appLanding.aiCreation.postTabReel') }}
+                </span>
+                <span class="lp-post-tab">
+                  <MaterialIcon icon="amp_stories" size="xs" />
+                  {{ t('appLanding.aiCreation.postTabStory') }}
+                </span>
+                <span class="lp-post-tab">
+                  <MaterialIcon icon="view_carousel" size="xs" />
+                  {{ t('appLanding.aiCreation.postTabCarousel') }}
+                </span>
+                <span class="lp-post-tab">
+                  <MaterialIcon icon="text_fields" size="xs" />
+                  {{ t('appLanding.aiCreation.postTabText') }}
+                </span>
+              </div>
+
+              <!-- Brand row -->
+              <div class="lp-post-brand-row" data-post-brand>
+                <img src="/example/jungelpizza-logo.jpeg" alt="" class="lp-post-avatar-img" />
+                <div class="lp-post-brand-info">
+                  <span class="lp-post-brand-name">Jungel Pizza</span>
+                  <span class="lp-post-timestamp">{{ t('appLanding.aiCreation.postTimestamp') }}</span>
+                </div>
+              </div>
+
+              <!-- Image -->
+              <div class="lp-gen-image" data-post-image>
+                <img src="/example/example-pizza.jpg" alt="" class="lp-gen-real-img" />
+              </div>
+
+              <!-- Tone badge -->
+              <div class="lp-post-tone-row" data-post-tone>
+                <span class="lp-tone-badge">{{ t('appLanding.aiCreation.postToneBadge') }}</span>
+              </div>
+
+              <!-- Caption -->
+              <div class="lp-post-caption-area" data-post-caption>
+                <p class="lp-post-caption-text">{{ t('appLanding.aiCreation.postCaption') }}</p>
+                <p class="lp-post-caption-more">{{ t('appLanding.aiCreation.postCaptionMore') }}</p>
+              </div>
+
+              <!-- Hashtags -->
+              <div class="lp-gen-tags" data-post-tags>
+                <span class="lp-gen-tag">#Pizza</span>
+                <span class="lp-gen-tag">#JungelPizza</span>
+                <span class="lp-gen-tag">#Foodie</span>
+              </div>
+
+              <!-- Action buttons -->
+              <div class="lp-post-actions" data-post-actions>
+                <button class="lp-post-btn lp-post-btn-publish">{{ t('appLanding.aiCreation.postPublishNow') }}</button>
+                <button class="lp-post-btn lp-post-btn-outline">{{ t('appLanding.aiCreation.postSchedule') }}</button>
+                <button class="lp-post-btn lp-post-btn-outline">{{ t('appLanding.aiCreation.postEdit') }}</button>
+              </div>
+
+              <!-- Bottom bar -->
+              <div class="lp-post-bottom-bar" data-post-bottom>
+                <MaterialIcon icon="attach_file" size="xs" />
+                <span class="lp-post-input-placeholder">{{ t('appLanding.aiCreation.postInputPlaceholder') }}</span>
+                <MaterialIcon icon="mic" size="xs" />
               </div>
             </div>
           </div>
@@ -304,7 +453,7 @@ useGsapSection(sectionRef, (el, g) => {
               <div class="lp-platform-card" style="--brand: var(--gradient-instagram, #E4405F)">
                 <span class="lp-platform-label">Instagram</span>
                 <div class="lp-platform-preview">
-                  <img src="/example/example5-enhanced.jpg" alt="" class="lp-preview-img" />
+                  <img src="/example/example-pizza.jpg" alt="" class="lp-preview-img" />
                   <div class="lp-preview-lines">
                     <div /><div class="short" />
                   </div>
@@ -313,7 +462,7 @@ useGsapSection(sectionRef, (el, g) => {
               <div class="lp-platform-card" style="--brand: var(--gradient-linkedin, #0A66C2)">
                 <span class="lp-platform-label">LinkedIn</span>
                 <div class="lp-platform-preview">
-                  <img src="/example/example5-enhanced.jpg" alt="" class="lp-preview-img" />
+                  <img src="/example/example-pizza.jpg" alt="" class="lp-preview-img" />
                   <div class="lp-preview-lines">
                     <div /><div class="short" />
                   </div>
@@ -322,11 +471,19 @@ useGsapSection(sectionRef, (el, g) => {
               <div class="lp-platform-card" style="--brand: var(--gradient-facebook, #1877F2)">
                 <span class="lp-platform-label">Facebook</span>
                 <div class="lp-platform-preview">
-                  <img src="/example/example5-enhanced.jpg" alt="" class="lp-preview-img" />
+                  <img src="/example/example-pizza.jpg" alt="" class="lp-preview-img" />
                   <div class="lp-preview-lines">
                     <div /><div class="short" />
                   </div>
                 </div>
+              </div>
+            </div>
+            <div class="lp-adapt-footer">
+              <h4 class="lp-adapt-footer-title">{{ t('appLanding.aiCreation.adaptPublishAnywhere') }}</h4>
+              <div class="lp-adapt-footer-types">
+                <span v-for="tab in ['postTabFeed','postTabReel','postTabStory','postTabCarousel']" :key="tab" class="lp-adapt-type-pill">
+                  {{ t(`appLanding.aiCreation.${tab}`) }}
+                </span>
               </div>
             </div>
           </div>
@@ -334,24 +491,32 @@ useGsapSection(sectionRef, (el, g) => {
           <!-- Step 4: Schedule & Publish -->
           <div class="lp-stage-step lp-stage-schedule">
             <div class="lp-schedule-container">
+              <div class="lp-schedule-header" data-schedule-header>
+                <h3 class="lp-schedule-stage-title">
+                  <MaterialIcon icon="calendar_month" size="md" />
+                  {{ t('appLanding.aiCreation.scheduleTitle') }}
+                </h3>
+                <p class="lp-schedule-stage-desc">{{ t('appLanding.aiCreation.scheduleStageDesc') }}</p>
+                <div class="lp-schedule-formats">
+                  <span class="lp-format-pill" v-for="tab in ['postTabFeed','postTabReel','postTabStory','postTabCarousel']" :key="tab">
+                    {{ t(`appLanding.aiCreation.${tab}`) }}
+                  </span>
+                </div>
+              </div>
               <div class="lp-cal-grid">
-                <div v-for="d in ['Mon', 'Tue', 'Wed', 'Thu', 'Fri']" :key="d" class="lp-cal-day">
-                  <span class="lp-cal-label">{{ d }}</span>
+                <div v-for="d in ['dayMon', 'dayTue', 'dayWed', 'dayThu', 'dayFri']" :key="d" class="lp-cal-day">
+                  <span class="lp-cal-label">{{ t(`appLanding.aiCreation.${d}`) }}</span>
                   <div class="lp-cal-slot"><div class="lp-cal-dot" /></div>
                 </div>
               </div>
               <div class="lp-badge-stack">
                 <div class="lp-cal-badge lp-badge-scheduled">
                   <MaterialIcon icon="schedule" size="sm" />
-                  Scheduled
+                  {{ t('appLanding.aiCreation.badgeScheduled') }}
                 </div>
                 <div class="lp-cal-badge lp-badge-published">
                   <MaterialIcon icon="check_circle" size="sm" />
-                  Published
-                </div>
-                <div class="lp-cal-badge lp-badge-cta" @click="scrollToFinalCta">
-                  <MaterialIcon icon="arrow_forward" size="sm" />
-                  {{ t('appLanding.hero.ctaPrimary') }}
+                  {{ t('appLanding.aiCreation.badgePublished') }}
                 </div>
               </div>
             </div>
@@ -579,7 +744,7 @@ useGsapSection(sectionRef, (el, g) => {
   opacity: 1;
 }
 
-/* ===== Step 1: Prompt ===== */
+/* ===== Step 1: Prompt — AI Chat ===== */
 .lp-mock-chat {
   width: 100%;
   max-width: 400px;
@@ -592,6 +757,8 @@ useGsapSection(sectionRef, (el, g) => {
   transform: rotateY(-2deg);
   box-shadow: 0 8px 32px rgba(0,0,0,0.3);
   position: relative;
+  display: flex;
+  flex-direction: column;
 }
 
 .lp-mock-chat::before {
@@ -622,83 +789,156 @@ useGsapSection(sectionRef, (el, g) => {
   border-radius: 4px;
 }
 
-.lp-chat-input-area {
-  padding: var(--space-lg);
+.lp-chat-messages {
+  flex: 1;
+  padding: var(--space-md) var(--space-lg);
   display: flex;
-  align-items: flex-end;
+  flex-direction: column;
   gap: var(--space-sm);
-  overflow: hidden;
 }
 
-.lp-chat-input-row {
+.lp-chat-msg-ai {
+  display: flex;
+  gap: var(--space-sm);
+  opacity: 0;
+}
+
+.lp-chat-avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  overflow: hidden;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.lp-chat-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.lp-chat-bubble {
   flex: 1;
   min-width: 0;
-  background: var(--lp-bg-primary);
-  border: 1px solid var(--lp-border-light);
-  border-radius: var(--radius-md);
-  padding: var(--space-sm) var(--space-md);
+}
+
+.lp-chat-bubble > p {
   font-size: var(--text-sm);
   color: var(--lp-text-primary);
   line-height: 1.5;
-  min-height: 44px;
+  margin: 0 0 var(--space-sm);
+}
+
+.lp-chat-suggestion {
   display: flex;
-  align-items: center;
-  overflow: hidden;
-}
-
-.lp-typing-text {
-  display: inline-block;
-  overflow: hidden;
-  white-space: nowrap;
-  max-width: 0;
-}
-
-.lp-typing-cursor {
-  color: var(--lp-accent-orange);
-  animation: blink 0.8s step-end infinite;
-  font-weight: var(--font-bold);
-}
-
-@keyframes blink {
-  50% { opacity: 0; }
-}
-
-.lp-send-btn {
-  width: 40px;
-  height: 40px;
+  gap: var(--space-sm);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--lp-border);
   border-radius: var(--radius-md);
-  background: var(--lp-accent-orange);
-  color: #fff;
-  border: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  flex-shrink: 0;
-  opacity: 0.5;
-  box-shadow: 0 0 0 0 var(--lp-accent-orange-glow);
-  transition: box-shadow 0.3s ease;
+  padding: var(--space-sm);
+  margin-bottom: var(--space-sm);
+  opacity: 0;
 }
 
-/* ===== Step 2: Generate ===== */
-.lp-gen-container {
+.lp-suggestion-img {
+  width: 56px;
+  height: 56px;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.lp-suggestion-img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.lp-suggestion-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.lp-suggestion-caption {
+  font-size: var(--text-xs);
+  color: var(--lp-text-primary);
+  line-height: 1.4;
+  margin: 0;
+}
+
+.lp-suggestion-tone {
+  display: inline-block;
+  align-self: flex-start;
+  font-size: 10px;
+  font-weight: var(--font-semibold);
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  background: color-mix(in srgb, var(--lp-accent-orange) 15%, transparent);
+  color: var(--lp-accent-orange);
+  opacity: 0;
+}
+
+.lp-chat-actions {
+  display: flex;
+  gap: var(--space-xs);
+}
+
+.lp-chat-action-btn {
+  flex: 1;
+  border: 1px solid var(--lp-border-light);
+  background: transparent;
+  color: var(--lp-text-secondary);
+  font-family: var(--font-body);
+  font-size: 10px;
+  font-weight: var(--font-semibold);
+  padding: var(--space-xs) var(--space-sm);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  opacity: 0;
+}
+
+.lp-chat-action-primary {
+  background: var(--lp-accent-orange);
+  border-color: var(--lp-accent-orange);
+  color: #fff;
+}
+
+.lp-chat-input-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+  border-top: 1px solid var(--lp-border);
+  color: var(--lp-text-muted);
+}
+
+.lp-chat-input-placeholder {
+  flex: 1;
+  font-size: var(--text-xs);
+  color: var(--lp-text-muted);
+}
+
+/* ===== Step 2: Generate — In-App Post Mockup ===== */
+.lp-post-mockup {
   width: 100%;
   max-width: 380px;
   display: flex;
   flex-direction: column;
-  gap: var(--space-sm);
   background: rgba(255, 255, 255, 0.06);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border: 1px solid var(--lp-border-light);
   border-radius: var(--radius-lg);
-  padding: var(--space-lg);
-  transform: rotateY(2deg);
+  overflow: hidden;
   position: relative;
   box-shadow: 0 8px 32px rgba(0,0,0,0.3);
 }
 
-.lp-gen-container::before {
+.lp-post-mockup::before {
   content: '';
   position: absolute;
   top: 0;
@@ -707,6 +947,163 @@ useGsapSection(sectionRef, (el, g) => {
   height: 2px;
   background: linear-gradient(90deg, transparent, var(--lp-accent-violet), transparent);
   border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  z-index: 1;
+}
+
+.lp-post-app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-sm) var(--space-md);
+  border-bottom: 1px solid var(--lp-border);
+  color: var(--lp-text-secondary);
+  opacity: 0;
+}
+
+.lp-post-brand-selector {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  color: var(--lp-text-primary);
+}
+
+.lp-post-tabs {
+  display: flex;
+  gap: 2px;
+  padding: var(--space-xs) var(--space-sm);
+  border-bottom: 1px solid var(--lp-border);
+}
+
+.lp-post-tab {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  padding: var(--space-xs);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-xs);
+  font-weight: var(--font-medium);
+  color: var(--lp-text-muted);
+  opacity: 0;
+}
+
+.lp-post-tab-active {
+  background: color-mix(in srgb, var(--lp-accent-orange) 15%, transparent);
+  color: var(--lp-accent-orange);
+}
+
+.lp-post-brand-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+  opacity: 0;
+}
+
+.lp-post-avatar-img {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.lp-post-brand-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.lp-post-brand-name {
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  color: var(--lp-text-primary);
+}
+
+.lp-post-timestamp {
+  font-size: var(--text-xs);
+  color: var(--lp-text-muted);
+}
+
+.lp-post-tone-row {
+  padding: var(--space-xs) var(--space-md);
+  opacity: 0;
+}
+
+.lp-tone-badge {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: var(--font-semibold);
+  padding: 2px 10px;
+  border-radius: var(--radius-full);
+  background: color-mix(in srgb, var(--lp-accent-orange) 15%, transparent);
+  color: var(--lp-accent-orange);
+}
+
+.lp-post-caption-area {
+  padding: var(--space-xs) var(--space-md);
+  opacity: 0;
+}
+
+.lp-post-caption-text {
+  font-size: var(--text-sm);
+  color: var(--lp-text-primary);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.lp-post-caption-more {
+  font-size: var(--text-xs);
+  color: var(--lp-text-secondary);
+  line-height: 1.5;
+  margin: var(--space-xs) 0 0;
+}
+
+.lp-post-actions {
+  display: flex;
+  gap: var(--space-xs);
+  padding: var(--space-sm) var(--space-md);
+}
+
+.lp-post-btn {
+  flex: 1;
+  border: none;
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  font-weight: var(--font-semibold);
+  padding: var(--space-sm);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  opacity: 0;
+}
+
+.lp-post-btn-publish {
+  background: var(--lp-accent-orange);
+  color: #fff;
+}
+
+.lp-post-btn-outline {
+  background: transparent;
+  border: 1px solid var(--lp-border-light);
+  color: var(--lp-text-secondary);
+}
+
+.lp-post-bottom-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+  border-top: 1px solid var(--lp-border);
+  color: var(--lp-text-muted);
+  opacity: 0;
+}
+
+.lp-post-input-placeholder {
+  flex: 1;
+  font-size: var(--text-xs);
+  color: var(--lp-text-muted);
 }
 
 .lp-gen-shimmer {
@@ -720,16 +1117,30 @@ useGsapSection(sectionRef, (el, g) => {
 .lp-gen-shimmer.short { width: 75%; }
 .lp-gen-shimmer.shorter { width: 50%; }
 
+/* Shimmers inside post mockup need padding */
+.lp-post-mockup .lp-gen-shimmer {
+  margin: var(--space-xs) var(--space-md);
+  width: auto;
+}
+
+.lp-post-mockup .lp-gen-shimmer.short { width: 60%; }
+.lp-post-mockup .lp-gen-shimmer.shorter { width: 40%; }
+
+/* Image inside post mockup: no border-radius, full width */
+.lp-post-mockup .lp-gen-image {
+  border-radius: 0;
+  border: none;
+  height: 140px;
+}
+
+/* Tags inside post mockup */
+.lp-post-mockup .lp-gen-tags {
+  padding: 0 var(--space-md) var(--space-xs);
+}
+
 @keyframes shimmer {
   from { background-position: 200% 0; }
   to { background-position: -200% 0; }
-}
-
-.lp-gen-line {
-  font-size: var(--text-sm);
-  color: var(--lp-text-primary);
-  line-height: 1.6;
-  opacity: 0;
 }
 
 .lp-gen-image {
@@ -765,6 +1176,13 @@ useGsapSection(sectionRef, (el, g) => {
 }
 
 /* ===== Step 3: Adapt ===== */
+.lp-stage-adapt {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-md);
+}
+
 .lp-platforms-fan {
   position: relative;
   width: 100%;
@@ -772,6 +1190,40 @@ useGsapSection(sectionRef, (el, g) => {
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.lp-adapt-footer {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.lp-adapt-footer-title {
+  font-family: var(--font-heading);
+  font-size: var(--text-base);
+  color: rgba(255, 255, 255, 0.9);
+  font-weight: var(--font-semibold);
+  margin: 0;
+}
+
+.lp-adapt-footer-types {
+  display: flex;
+  gap: var(--space-xs);
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.lp-adapt-type-pill {
+  font-size: var(--text-xs);
+  padding: 4px 12px;
+  border-radius: var(--radius-full);
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--lp-border-light);
+  color: rgba(255, 255, 255, 0.7);
+  font-weight: var(--font-medium);
+  letter-spacing: 0.02em;
 }
 
 .lp-platform-card {
@@ -789,6 +1241,7 @@ useGsapSection(sectionRef, (el, g) => {
   transition: box-shadow 0.3s ease;
   box-shadow: 0 8px 32px rgba(0,0,0,0.3), 0 0 20px color-mix(in srgb, var(--brand) 15%, transparent);
 }
+
 
 .lp-platform-label {
   font-size: var(--text-xs);
@@ -842,6 +1295,49 @@ img.lp-preview-img {
   gap: var(--space-xl);
   position: relative;
   overflow: visible;
+}
+
+.lp-schedule-header {
+  text-align: center;
+  opacity: 0;
+}
+
+.lp-schedule-stage-title {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-xs);
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  color: var(--lp-text-primary);
+  margin: 0 0 var(--space-xs);
+}
+
+.lp-schedule-stage-title .material-symbols-rounded {
+  color: var(--lp-accent-orange);
+}
+
+.lp-schedule-stage-desc {
+  font-size: var(--text-xs);
+  color: var(--lp-text-muted);
+  margin: 0 0 var(--space-sm);
+}
+
+.lp-schedule-formats {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-xs);
+}
+
+.lp-format-pill {
+  font-size: 10px;
+  font-weight: var(--font-medium);
+  padding: 2px 10px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--lp-border-light);
+  color: var(--lp-text-secondary);
+  opacity: 0;
 }
 
 .lp-cal-grid {
@@ -925,17 +1421,6 @@ img.lp-preview-img {
   box-shadow: 0 0 16px color-mix(in srgb, var(--lp-accent-orange) 20%, transparent);
 }
 
-.lp-badge-cta {
-  cursor: pointer;
-  background: var(--lp-accent-orange);
-  color: #fff;
-  border: 1px solid var(--lp-accent-orange);
-  box-shadow: 0 0 20px var(--lp-accent-orange-glow);
-}
-
-.lp-badge-cta:hover {
-  filter: brightness(1.1);
-}
 
 
 /* ===== Mobile ===== */
@@ -987,6 +1472,32 @@ img.lp-preview-img {
     width: 44px;
     height: 44px;
   }
+
+  .lp-stage {
+    perspective: none;
+  }
+
+  .lp-stage-step {
+    transform-style: flat;
+  }
+
+  .lp-stage-orb {
+    animation: none;
+  }
+
+  .lp-stage-orb-1 {
+    width: 150px;
+    height: 150px;
+  }
+
+  .lp-stage-orb-2 {
+    width: 120px;
+    height: 120px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lp-stage-orb { animation: none; }
 }
 </style>
 

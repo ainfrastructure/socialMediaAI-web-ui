@@ -5,6 +5,7 @@ import { useRouter } from 'vue-router'
 import BaseButton from '../components/BaseButton.vue'
 import MaterialIcon from '../components/MaterialIcon.vue'
 import LandingBackground from '@/components/landing/LandingBackground.vue'
+import { env } from '@/config/environment'
 
 const router = useRouter()
 const { t } = useI18n()
@@ -45,37 +46,25 @@ function goBack() {
 async function handleSubmit() {
   if (!isValid.value) return
 
-  const webhookUrl = import.meta.env.VITE_CONTACT_DISCORD_WEBHOOK
-  if (!webhookUrl) {
-    error.value = t('contact.error')
-    return
-  }
-
   loading.value = true
   error.value = ''
 
   const selectedLabel = subjectOptions.value.find(o => o.value === subject.value)?.label ?? subject.value
 
   try {
-    const response = await fetch(webhookUrl, {
+    const contactUrl = env.isDevelopment ? '/api/contact' : `${env.api.baseUrl}/api/contact`
+    const response = await fetch(contactUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        embeds: [{
-          title: `Contact: ${selectedLabel}`,
-          color: 0x3A9BC0,
-          fields: [
-            { name: 'Name', value: name.value.trim(), inline: true },
-            { name: 'Email', value: email.value.trim(), inline: true },
-            { name: 'Subject', value: selectedLabel, inline: true },
-            { name: 'Message', value: message.value.trim() },
-          ],
-          timestamp: new Date().toISOString(),
-        }],
+        name: name.value.trim(),
+        email: email.value.trim(),
+        subject: selectedLabel,
+        message: message.value.trim(),
       }),
     })
 
-    if (!response.ok) throw new Error('Webhook failed')
+    if (!response.ok) throw new Error('Request failed')
     success.value = true
   } catch {
     error.value = t('contact.error')

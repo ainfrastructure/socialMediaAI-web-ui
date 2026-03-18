@@ -1,39 +1,50 @@
 <script setup lang="ts">
-import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useGsapSection } from '@/composables/useGsapSection'
 import MaterialIcon from '@/components/MaterialIcon.vue'
 
 const { t } = useI18n()
-const sectionRef = ref<HTMLElement | null>(null)
 
 const testimonials = [
-  { key: 'testimonial1', name: 'Taien Chaouch', role: 'ceoVetted', rating: 5, logo: '/example/vetted-logo.png' },
-  { key: 'testimonial2', name: 'Ali Sharghi', role: 'ceoOkam', rating: 5, logo: '/example/okam-logo.jpg' },
-  { key: 'testimonial3', name: 'Shane Le-reux', role: 'ceoBlueocean', rating: 5, logo: '/example/blueocean-logo.png' },
+  { key: 'testimonial1', name: 'Taieb Chaouch', role: 'decentralizedHiringCeo', rating: 5, logo: '/example/vetted-logo.png' },
+  { key: 'testimonial2', name: 'Alireza Sharghi', role: 'orderingPlatformCeo', rating: 5, logo: '/example/okam-logo.jpg' },
+  { key: 'testimonial3', name: 'Shane Le-reux', role: 'resortOwner', rating: 5, logo: '/example/blueocean-logo.png' },
+  { key: 'testimonial4', name: 'Peter', role: 'businessOwner', rating: 5, logo: '/example/jungelpizza-logo.jpeg' },
+  { key: 'testimonial5', name: 'Siamand', role: 'luxCarWashOwner', rating: 5, logo: '/example/luxbilpleie-logo.avif' },
 ]
-
-useGsapSection(sectionRef, (el, gsapInstance) => {
-  gsapInstance.from(el.querySelectorAll('.lp-testimonial-card'), {
-    scrollTrigger: { trigger: el, start: 'top 65%' },
-    opacity: 0,
-    y: 40,
-    stagger: 0.12,
-    duration: 0.7,
-    ease: 'power3.out',
-  })
-})
 </script>
 
 <template>
-  <section ref="sectionRef" class="lp-testimonials">
+  <section class="lp-testimonials">
     <div class="lp-section-inner">
       <span class="lp-eyebrow">{{ t('appLanding.testimonials.eyebrow') }}</span>
       <h2 class="lp-section-title">{{ t('appLanding.testimonials.title') }}</h2>
       <p class="lp-section-sub">{{ t('appLanding.testimonials.subtitle') }}</p>
+    </div>
 
-      <div class="lp-testimonials-grid">
-        <div v-for="test in testimonials" :key="test.key" class="lp-testimonial-card">
+    <div class="lp-testimonials-track">
+      <div class="lp-testimonials-scroll">
+        <div v-for="(test, i) in [...testimonials, ...testimonials]" :key="`a-${test.key}-${i}`" class="lp-testimonial-card">
+          <div class="lp-test-stars">
+            <MaterialIcon v-for="s in test.rating" :key="s" icon="star" size="xs" />
+          </div>
+
+          <blockquote class="lp-test-quote">
+            "{{ t(`appLanding.testimonials.${test.key}`) }}"
+          </blockquote>
+
+          <div class="lp-test-author">
+            <div class="lp-test-avatar">
+              <img :src="test.logo" :alt="test.name" class="lp-test-logo" />
+            </div>
+            <div>
+              <span class="lp-test-name">{{ test.name }}</span>
+              <span class="lp-test-role">{{ t(`appLanding.testimonials.${test.role}`) }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="lp-testimonials-scroll" aria-hidden="true">
+        <div v-for="(test, i) in [...testimonials, ...testimonials]" :key="`b-${test.key}-${i}`" class="lp-testimonial-card">
           <div class="lp-test-stars">
             <MaterialIcon v-for="s in test.rating" :key="s" icon="star" size="xs" />
           </div>
@@ -59,13 +70,15 @@ useGsapSection(sectionRef, (el, gsapInstance) => {
 
 <style scoped>
 .lp-testimonials {
-  padding: var(--lp-section-gap) var(--space-xl);
+  padding: var(--lp-section-gap) 0;
+  overflow: hidden;
 }
 
 .lp-section-inner {
   max-width: var(--lp-max-width);
   margin: 0 auto;
   text-align: center;
+  padding: 0 var(--space-xl);
 }
 
 .lp-eyebrow {
@@ -95,10 +108,32 @@ useGsapSection(sectionRef, (el, gsapInstance) => {
   line-height: 1.6;
 }
 
-.lp-testimonials-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
+.lp-testimonials-track {
+  display: flex;
+  overflow: hidden;
+  mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transparent);
+  -webkit-mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transparent);
+}
+
+.lp-testimonials-scroll {
+  display: flex;
   gap: var(--space-2xl);
+  flex-shrink: 0;
+  animation: testimonial-marquee 50s linear infinite;
+  padding-right: var(--space-2xl);
+}
+
+.lp-testimonials-track:hover .lp-testimonials-scroll {
+  animation-play-state: paused;
+}
+
+@keyframes testimonial-marquee {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0);
+  }
 }
 
 .lp-testimonial-card {
@@ -109,12 +144,17 @@ useGsapSection(sectionRef, (el, gsapInstance) => {
   text-align: left;
   display: flex;
   flex-direction: column;
+  width: 340px;
+  min-height: 240px;
+  flex-shrink: 0;
   transition: border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
-.lp-testimonial-card:hover {
-  border-color: var(--lp-border-light);
-  box-shadow: var(--lp-shadow-card);
+@media (hover: hover) {
+  .lp-testimonial-card:hover {
+    border-color: var(--lp-border-light);
+    box-shadow: var(--lp-shadow-card);
+  }
 }
 
 .lp-test-stars {
@@ -153,7 +193,7 @@ useGsapSection(sectionRef, (el, gsapInstance) => {
 .lp-test-logo {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
 }
 
 .lp-test-name {
@@ -169,10 +209,15 @@ useGsapSection(sectionRef, (el, gsapInstance) => {
 }
 
 @media (max-width: 768px) {
-  .lp-testimonials-grid {
-    grid-template-columns: 1fr;
-    max-width: 400px;
-    margin: 0 auto;
+  .lp-testimonial-card {
+    width: 280px;
+    min-height: 220px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lp-testimonials-scroll {
+    animation: none;
   }
 }
 </style>

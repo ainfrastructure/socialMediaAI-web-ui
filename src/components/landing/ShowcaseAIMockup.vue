@@ -1,49 +1,46 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-import MaterialIcon from '@/components/MaterialIcon.vue'
 
 defineProps<{ visible: boolean }>()
 
 const { t } = useI18n()
 
 const messages = [
-  { key: 'greeting', isAI: true },
-  { key: 'performance', isAI: true },
-  { key: 'suggestion', isAI: true },
+  { key: 'userPrompt', isAI: false },
+  { key: 'aiResponse', isAI: true },
+  { key: 'aiGenerated', isAI: true },
   { key: 'userReply', isAI: false },
-  { key: 'confirmation', isAI: true },
+  { key: 'aiConfirm', isAI: true },
 ]
 </script>
 
 <template>
-  <div class="lp-brief-chat">
-    <div class="lp-brief-header">
-      <div class="lp-brief-avatar">
-        <MaterialIcon icon="auto_awesome" size="sm" />
-      </div>
+  <div class="lp-ai-chat">
+    <div class="lp-ai-header">
+      <img src="@/assets/socialchef_logo.svg" alt="SocialChef" class="lp-ai-avatar" />
       <div>
-        <span class="lp-brief-name">SocialChef</span>
-        <span class="lp-brief-time">{{ t('appLanding.briefing.time') }}</span>
+        <span class="lp-ai-name">SocialChef</span>
+        <span class="lp-ai-status">Online</span>
       </div>
     </div>
 
-    <div class="lp-brief-messages">
+    <div class="lp-ai-messages">
       <div
         v-for="msg in messages"
         :key="msg.key"
-        class="lp-brief-message"
+        class="lp-ai-message"
         :class="{ 'lp-user-msg': !msg.isAI }"
       >
-        <div v-if="msg.isAI" class="lp-brief-msg-avatar">SC</div>
-        <div class="lp-brief-bubble" :class="{ 'lp-bubble-user': !msg.isAI }">
-          {{ t(`appLanding.briefing.${msg.key}`) }}
+        <img v-if="msg.isAI" src="@/assets/socialchef_logo.svg" alt="" class="lp-ai-msg-avatar" />
+        <div class="lp-ai-bubble" :class="{ 'lp-bubble-user': !msg.isAI }">
+          {{ t(`appLanding.aiAssistant.${msg.key}`) }}
         </div>
       </div>
 
       <!-- Typing indicator -->
-      <div v-if="visible" class="lp-brief-message">
-        <div class="lp-brief-msg-avatar">SC</div>
-        <div class="lp-brief-bubble">
+      <div v-if="visible" class="lp-ai-message">
+        <img src="@/assets/socialchef_logo.svg" alt="" class="lp-ai-msg-avatar" />
+        <div class="lp-ai-bubble">
           <div class="lp-typing-dots"><span /><span /><span /></div>
         </div>
       </div>
@@ -52,14 +49,14 @@ const messages = [
 </template>
 
 <style scoped>
-.lp-brief-chat {
+.lp-ai-chat {
   background: var(--lp-bg-surface);
   border: 1px solid var(--lp-border);
   border-radius: var(--radius-xl);
   overflow: hidden;
 }
 
-.lp-brief-header {
+.lp-ai-header {
   display: flex;
   align-items: center;
   gap: var(--space-md);
@@ -67,7 +64,7 @@ const messages = [
   border-bottom: 1px solid var(--lp-border);
 }
 
-.lp-brief-avatar {
+.lp-ai-avatar {
   width: 36px;
   height: 36px;
   border-radius: 50%;
@@ -78,36 +75,36 @@ const messages = [
   color: #fff;
 }
 
-.lp-brief-name {
+.lp-ai-name {
   font-weight: var(--font-semibold);
   color: var(--lp-text-primary);
   font-size: var(--text-sm);
   display: block;
 }
 
-.lp-brief-time {
+.lp-ai-status {
   font-size: var(--text-xs);
-  color: var(--lp-text-muted);
+  color: #22c55e;
 }
 
-.lp-brief-messages {
+.lp-ai-messages {
   padding: var(--space-xl);
   display: flex;
   flex-direction: column;
   gap: var(--space-md);
 }
 
-.lp-brief-message {
+.lp-ai-message {
   display: flex;
   gap: var(--space-sm);
   align-items: flex-start;
 }
 
-.lp-brief-message.lp-user-msg {
+.lp-ai-message.lp-user-msg {
   justify-content: flex-end;
 }
 
-.lp-brief-msg-avatar {
+.lp-ai-msg-avatar {
   width: 24px;
   height: 24px;
   border-radius: 50%;
@@ -115,13 +112,11 @@ const messages = [
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 9px;
-  font-weight: var(--font-bold);
-  color: var(--lp-text-muted);
+  color: var(--lp-accent-orange);
   flex-shrink: 0;
 }
 
-.lp-brief-bubble {
+.lp-ai-bubble {
   font-size: var(--text-sm);
   line-height: 1.5;
   color: var(--lp-text-primary);

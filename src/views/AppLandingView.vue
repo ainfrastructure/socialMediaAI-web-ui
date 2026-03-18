@@ -1,16 +1,14 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
+import { ref, onMounted, onUnmounted, nextTick } from 'vue'
 import { useCursorGlow } from '@/composables/useCursorGlow'
 import { useLandingTheme } from '@/composables/useLandingTheme'
 import LandingBackground from '@/components/landing/LandingBackground.vue'
 import LandingScrollProgress from '@/components/landing/LandingScrollProgress.vue'
-import LandingThemeSwitcher from '@/components/landing/LandingThemeSwitcher.vue'
 import LandingNav from '@/components/landing/LandingNav.vue'
 import LandingPhoneCinematic from '@/components/landing/LandingPhoneCinematic.vue'
 import LandingPlatformMarquee from '@/components/landing/LandingPlatformMarquee.vue'
 import LandingAICreation from '@/components/landing/LandingAICreation.vue'
 import LandingFeatureShowcase from '@/components/landing/LandingFeatureShowcaseD.vue'
-import LandingMultiBrand from '@/components/landing/LandingMultiBrand.vue'
 import LandingTestimonials from '@/components/landing/LandingTestimonials.vue'
 import LandingPricing from '@/components/landing/LandingPricing.vue'
 import LandingFinalCTA from '@/components/landing/LandingFinalCTA.vue'
@@ -20,23 +18,13 @@ const wrapperRef = ref<HTMLElement | null>(null)
 
 useCursorGlow(wrapperRef)
 
-const { activeTheme, isDarkMode, bgMode, bgIntensity, bgParticleCount, bgParticleColorMode, bgParticleStyle, applyTheme } = useLandingTheme()
-
-const hasBgEffect = computed(() => bgMode.value !== 'none')
-
-function applyCurrentTheme() {
-  applyTheme(wrapperRef.value)
-}
-
-watch([activeTheme, isDarkMode], () => {
-  applyCurrentTheme()
-})
+const { activeTheme, bgMode, bgIntensity, bgParticleCount, bgParticleColorMode, bgParticleStyle, bgParticleSpeed, applyTheme } = useLandingTheme()
 
 let originalBg = ''
 
 onMounted(() => {
   originalBg = document.body.style.backgroundColor
-  nextTick(() => applyCurrentTheme())
+  nextTick(() => applyTheme(wrapperRef.value))
 })
 
 onUnmounted(() => {
@@ -45,9 +33,9 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div ref="wrapperRef" class="landing-dark" :class="{ 'bg-active': hasBgEffect }">
+  <div ref="wrapperRef" class="landing-dark bg-active">
     <!-- Interactive canvas background (z-index: 0, behind everything) -->
-    <LandingBackground :mode="bgMode" :accent-color="activeTheme.accent" :intensity="bgIntensity" :particle-density="bgParticleCount" :particle-color-mode="bgParticleColorMode" :particle-style="bgParticleStyle" />
+    <LandingBackground :mode="bgMode" :accent-color="activeTheme.accent" :intensity="bgIntensity" :particle-density="bgParticleCount" :particle-color-mode="bgParticleColorMode" :particle-style="bgParticleStyle" :particle-speed="bgParticleSpeed" />
 
     <!-- Cursor glow -->
     <div class="lp-cursor-glow" />
@@ -58,17 +46,11 @@ onUnmounted(() => {
     <LandingPlatformMarquee />
     <LandingAICreation />
     <LandingFeatureShowcase />
-
-    <LandingMultiBrand />
     <LandingTestimonials />
     <LandingPricing />
     <LandingFinalCTA />
     <LandingFooter />
   </div>
-
-  <Teleport to="body">
-    <LandingThemeSwitcher @theme-changed="applyCurrentTheme" />
-  </Teleport>
 </template>
 
 <style scoped>
@@ -82,8 +64,6 @@ onUnmounted(() => {
   color: var(--lp-text-primary);
   transition: background 0.4s ease, color 0.4s ease;
 }
-
-/* bg-active overrides moved to non-scoped <style> block below */
 
 .lp-cursor-glow {
   position: fixed;
@@ -157,7 +137,6 @@ onUnmounted(() => {
 .bg-active .lp-stage,
 .bg-active .lp-kpi-card,
 .bg-active .lp-testimonial-card,
-.bg-active .lp-brand-card,
 .bg-active .lp-competitor-row,
 .bg-active .lp-spy-dashboard,
 .bg-active .lp-brief-chat,
@@ -166,9 +145,14 @@ onUnmounted(() => {
 .bg-active .lp-chart-mockup,
 .bg-active .lp-canvas,
 .bg-active .lp-template-card,
-.bg-active .lp-cta-card,
 .bg-active .lp-layer-item,
 .bg-active .lp-showcase-tab {
   background-color: var(--lp-bg-surface) !important;
+}
+.bg-active .lp-showcase-tab { border: 1px solid var(--lp-border) !important; }
+.bg-active .lp-showcase-tab.active {
+  border-color: var(--lp-accent-orange) !important;
+  box-shadow: 0 0 12px rgba(249, 115, 22, 0.15) !important;
+  background-color: rgba(249, 115, 22, 0.12) !important;
 }
 </style>

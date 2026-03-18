@@ -6,9 +6,10 @@ import MaterialIcon from '@/components/MaterialIcon.vue'
 import ShowcaseAnalyticsMockup from './ShowcaseAnalyticsMockup.vue'
 import ShowcaseCompetitorMockup from './ShowcaseCompetitorMockup.vue'
 import ShowcaseDesignMockup from './ShowcaseDesignMockup.vue'
-import ShowcaseBriefingMockup from './ShowcaseBriefingMockup.vue'
+import ShowcaseAIMockup from './ShowcaseAIMockup.vue'
 import ShowcaseAdsMockup from './ShowcaseAdsMockup.vue'
 import ShowcaseCalendarMockup from './ShowcaseCalendarMockup.vue'
+import ShowcasePublishingMockup from './ShowcasePublishingMockup.vue'
 
 const { t } = useI18n()
 const sectionRef = ref<HTMLElement | null>(null)
@@ -66,12 +67,20 @@ const features: Feature[] = [
     subtitleKey: 'appLanding.adsManager.subtitle',
   },
   {
-    id: 'briefing',
-    icon: 'auto_awesome',
-    tabKey: 'appLanding.featureShowcase.tabBriefing',
-    eyebrowKey: 'appLanding.briefing.eyebrow',
-    titleKey: 'appLanding.briefing.title',
-    subtitleKey: 'appLanding.briefing.subtitle',
+    id: 'aiAssistant',
+    icon: 'smart_toy',
+    tabKey: 'appLanding.featureShowcase.tabAI',
+    eyebrowKey: 'appLanding.aiAssistant.eyebrow',
+    titleKey: 'appLanding.aiAssistant.title',
+    subtitleKey: 'appLanding.aiAssistant.subtitle',
+  },
+  {
+    id: 'publishing',
+    icon: 'rocket_launch',
+    tabKey: 'appLanding.featureShowcase.tabPublishing',
+    eyebrowKey: 'appLanding.publishing.eyebrow',
+    titleKey: 'appLanding.publishing.title',
+    subtitleKey: 'appLanding.publishing.subtitle',
   },
 ]
 
@@ -82,8 +91,9 @@ const isTransitioning = ref(false)
 // Auto-rotation
 const AUTO_INTERVAL = 6000
 const IDLE_RESUME = 10000
-let autoTimer: ReturnType<typeof setInterval> | null = null
 let idleTimer: ReturnType<typeof setTimeout> | null = null
+let progressTween: gsap.core.Tween | null = null
+let autoActive = false
 // KPI data for analytics sub-content
 const kpis = [
   { key: 'followers', value: '12.4K', change: '+18%', icon: 'group' },
@@ -105,26 +115,43 @@ const scheduleItems = [
   { key: 'autoSchedule', icon: 'schedule', color: 'var(--lp-accent-orange)' },
   { key: 'multiPlatform', icon: 'hub', color: 'var(--lp-accent-blue)' },
   { key: 'contentGoals', icon: 'flag', color: 'var(--lp-accent-cyan)' },
-  { key: 'dragDrop', icon: 'drag_indicator', color: 'var(--lp-accent-violet)' },
+  { key: 'bulkImport', icon: 'upload_file', color: 'var(--lp-accent-violet)' },
 ]
 
 // Layer data for design builder sub-content
 const layers = [
   { key: 'background', icon: 'wallpaper', color: 'var(--lp-accent-blue)' },
   { key: 'image', icon: 'image', color: 'var(--lp-accent-violet)' },
+  { key: 'video', icon: 'videocam', color: 'var(--lp-accent-cyan)' },
   { key: 'text', icon: 'title', color: 'var(--lp-accent-orange)' },
-  { key: 'branding', icon: 'palette', color: 'var(--lp-accent-cyan)' },
+  { key: 'branding', icon: 'palette', color: 'var(--lp-accent-violet)' },
+]
+
+// AI Assistant feature highlights
+const aiFeatures = [
+  { key: 'smartCreation', icon: 'auto_awesome', color: 'var(--lp-accent-orange)' },
+  { key: 'brandVoice', icon: 'record_voice_over', color: 'var(--lp-accent-blue)' },
+  { key: 'multiFormat', icon: 'dashboard', color: 'var(--lp-accent-cyan)' },
+  { key: 'refinement', icon: 'tune', color: 'var(--lp-accent-violet)' },
+]
+
+// Publishing feature highlights
+const publishFeatures = [
+  { key: 'oneClick', icon: 'touch_app', color: 'var(--lp-accent-orange)' },
+  { key: 'platformOptimize', icon: 'tune', color: 'var(--lp-accent-blue)' },
+  { key: 'sixPlatforms', icon: 'hub', color: 'var(--lp-accent-cyan)' },
+  { key: 'smartTiming', icon: 'schedule', color: 'var(--lp-accent-violet)' },
 ]
 
 function startAutoPlay() {
   stopAutoPlay()
-  autoTimer = setInterval(() => {
-    switchTo((activeIndex.value + 1) % features.length, false)
-  }, AUTO_INTERVAL)
+  autoActive = true
+  startProgress()
 }
 
 function stopAutoPlay() {
-  if (autoTimer) { clearInterval(autoTimer); autoTimer = null }
+  autoActive = false
+  killProgress()
 }
 
 function scheduleResume() {
@@ -132,9 +159,36 @@ function scheduleResume() {
   idleTimer = setTimeout(() => startAutoPlay(), IDLE_RESUME)
 }
 
+function startProgress() {
+  killProgress()
+  if (!autoActive) return
+  nextTick(() => {
+    const bar = sectionRef.value?.querySelector('.lp-showcase-tab.active .lp-tab-progress') as HTMLElement | null
+    if (bar) {
+      gsap.set(bar, { scaleX: 0 })
+      progressTween = gsap.to(bar, {
+        scaleX: 1,
+        duration: AUTO_INTERVAL / 1000,
+        ease: 'none',
+        onComplete() {
+          switchTo((activeIndex.value + 1) % features.length, false)
+        },
+      })
+    }
+  })
+}
+
+function killProgress() {
+  if (progressTween) { progressTween.kill(); progressTween = null }
+  sectionRef.value?.querySelectorAll('.lp-tab-progress').forEach(el => {
+    gsap.set(el, { scaleX: 0 })
+  })
+}
+
 async function switchTo(index: number, userInitiated = true) {
   if (index === activeIndex.value || isTransitioning.value) return
   isTransitioning.value = true
+  killProgress()
 
   if (userInitiated) { stopAutoPlay(); scheduleResume() }
 
@@ -142,6 +196,7 @@ async function switchTo(index: number, userInitiated = true) {
   if (prefersReduced) {
     activeIndex.value = index
     isTransitioning.value = false
+    if (autoActive) startProgress()
     return
   }
 
@@ -186,6 +241,7 @@ async function switchTo(index: number, userInitiated = true) {
         onComplete() {
           gsap.set(mockupPanelRef.value, { clearProps: 'all' })
           isTransitioning.value = false
+          if (autoActive) startProgress()
         },
       },
     )
@@ -238,6 +294,7 @@ onUnmounted(() => {
         >
           <MaterialIcon :icon="feature.icon" size="sm" />
           <span class="lp-tab-label">{{ t(feature.tabKey) }}</span>
+          <span class="lp-tab-progress"></span>
         </button>
       </div>
 
@@ -313,6 +370,44 @@ onUnmounted(() => {
               <span class="lp-layer-num">{{ String(i + 1).padStart(2, '0') }}</span>
             </div>
           </div>
+
+          <!-- AI Assistant feature list -->
+          <div v-if="activeFeature.id === 'aiAssistant'" class="lp-layers">
+            <div
+              v-for="(item, i) in aiFeatures"
+              :key="item.key"
+              class="lp-layer-item"
+              :style="{ '--layer-color': item.color }"
+            >
+              <div class="lp-layer-icon">
+                <MaterialIcon :icon="item.icon" size="sm" />
+              </div>
+              <div class="lp-layer-info">
+                <span class="lp-layer-name">{{ t(`appLanding.aiAssistant.${item.key}`) }}</span>
+                <span class="lp-layer-desc">{{ t(`appLanding.aiAssistant.${item.key}Desc`) }}</span>
+              </div>
+              <span class="lp-layer-num">{{ String(i + 1).padStart(2, '0') }}</span>
+            </div>
+          </div>
+
+          <!-- Publishing feature list -->
+          <div v-if="activeFeature.id === 'publishing'" class="lp-layers">
+            <div
+              v-for="(item, i) in publishFeatures"
+              :key="item.key"
+              class="lp-layer-item"
+              :style="{ '--layer-color': item.color }"
+            >
+              <div class="lp-layer-icon">
+                <MaterialIcon :icon="item.icon" size="sm" />
+              </div>
+              <div class="lp-layer-info">
+                <span class="lp-layer-name">{{ t(`appLanding.publishing.${item.key}`) }}</span>
+                <span class="lp-layer-desc">{{ t(`appLanding.publishing.${item.key}Desc`) }}</span>
+              </div>
+              <span class="lp-layer-num">{{ String(i + 1).padStart(2, '0') }}</span>
+            </div>
+          </div>
         </div>
 
         <!-- Mockup panel (right) -->
@@ -322,7 +417,8 @@ onUnmounted(() => {
           <ShowcaseCompetitorMockup v-if="activeFeature.id === 'competitor'" :visible="activeFeature.id === 'competitor'" />
           <ShowcaseDesignMockup v-if="activeFeature.id === 'designBuilder'" :visible="activeFeature.id === 'designBuilder'" />
           <ShowcaseAdsMockup v-if="activeFeature.id === 'ads'" :visible="activeFeature.id === 'ads'" />
-          <ShowcaseBriefingMockup v-if="activeFeature.id === 'briefing'" :visible="activeFeature.id === 'briefing'" />
+          <ShowcaseAIMockup v-if="activeFeature.id === 'aiAssistant'" :visible="activeFeature.id === 'aiAssistant'" />
+          <ShowcasePublishingMockup v-if="activeFeature.id === 'publishing'" :visible="activeFeature.id === 'publishing'" />
         </div>
       </div>
     </div>
@@ -373,11 +469,25 @@ onUnmounted(() => {
 .lp-showcase-tab.active {
   border-color: var(--lp-accent-orange);
   color: var(--lp-accent-orange);
-  background: rgba(249, 115, 22, 0.06);
+  background: rgba(249, 115, 22, 0.12);
+  box-shadow: 0 0 12px rgba(249, 115, 22, 0.15);
 }
 
 .lp-tab-label {
   white-space: nowrap;
+}
+
+.lp-tab-progress {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--lp-accent-orange);
+  transform-origin: left;
+  transform: scaleX(0);
+  pointer-events: none;
+  border-radius: 3px 3px 0 0;
 }
 
 /* Content layout */

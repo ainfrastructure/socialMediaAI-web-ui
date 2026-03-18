@@ -1,49 +1,124 @@
 <script setup lang="ts">
+import { ref, watch, onUnmounted } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { gsap } from 'gsap'
+import PlatformLogo from '@/components/PlatformLogo.vue'
 
-defineProps<{ visible: boolean }>()
-
+const props = defineProps<{ visible: boolean }>()
 const { t } = useI18n()
 
-const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+const containerRef = ref<HTMLElement | null>(null)
+
+const days = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN']
+const dates = [16, 17, 18, 19, 20, 21, 22]
+const todayIndex = 2
 
 const posts = [
-  { day: 0, time: '09:00', title: 'Product Launch', color: '#E1306C' },
-  { day: 1, time: '12:00', title: 'Behind the Scenes', color: '#1877f2' },
-  { day: 2, time: '10:00', title: 'Industry Insights', color: '#0a66c2' },
-  { day: 3, time: '14:00', title: 'Customer Story', color: '#E1306C' },
-  { day: 4, time: '11:00', title: 'Quick Tip', color: '#000' },
-  { day: 5, time: '09:00', title: 'Weekend Sale', color: '#1877f2' },
+  { platform: 'instagram' as const, type: 'reel',     day: 'Mon 10:00', titleKey: 'post1', image: '/example/example-gym.jpg' },
+  { platform: 'facebook' as const,  type: 'feed',     day: 'Mon 14:00', titleKey: 'post2', image: '/example/example-salon.jpg' },
+  { platform: 'instagram' as const, type: 'carousel', day: 'Tue 11:00', titleKey: 'post3', image: '/example/example-retail.jpg' },
+  { platform: 'tiktok' as const,    type: 'reel',     day: 'Tue 18:00', titleKey: 'post4', image: '/example/example-office.jpg' },
+  { platform: 'facebook' as const,  type: 'feed',     day: 'Wed 10:00', titleKey: 'post5', image: '/example/example-car.jpg' },
+  { platform: 'instagram' as const, type: 'story',    day: 'Wed 16:00', titleKey: 'post6', image: '/example/example-cafe.jpg' },
 ]
+
+let tl: gsap.core.Timeline | null = null
+
+function runEntrance() {
+  if (!containerRef.value) return
+  tl?.kill()
+  tl = gsap.timeline()
+
+  tl.fromTo(containerRef.value, { opacity: 0, y: 24, scale: 0.97 }, { opacity: 1, y: 0, scale: 1, duration: 0.5, ease: 'power2.out' })
+
+  const badge = containerRef.value.querySelector('.lp-cal-count')
+  if (badge) {
+    tl.fromTo(badge, { scale: 0 }, { scale: 1, duration: 0.4, ease: 'back.out(2)' }, '-=0.2')
+  }
+
+  const dayEls = containerRef.value.querySelectorAll('.lp-cal-day')
+  if (dayEls.length) {
+    tl.fromTo(dayEls, { opacity: 0, y: -10 }, { opacity: 1, y: 0, duration: 0.3, stagger: 0.04, ease: 'power2.out' }, '-=0.3')
+  }
+
+  const todayEl = containerRef.value.querySelector('.lp-cal-today')
+  if (todayEl) {
+    tl.fromTo(todayEl, { scale: 0.4, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.5, ease: 'back.out(1.7)' }, '-=0.15')
+  }
+
+  const rows = containerRef.value.querySelectorAll('.lp-cal-post')
+  if (rows.length) {
+    tl.fromTo(rows, { opacity: 0, x: -24, scale: 0.96 }, { opacity: 1, x: 0, scale: 1, duration: 0.4, stagger: 0.07, ease: 'power2.out' }, '-=0.15')
+  }
+
+  const thumbs = containerRef.value.querySelectorAll('.lp-cal-thumb')
+  if (thumbs.length) {
+    tl.fromTo(thumbs, { opacity: 0, scale: 0.7, rotate: -4 }, { opacity: 1, scale: 1, rotate: 0, duration: 0.35, stagger: 0.07, ease: 'back.out(1.3)' }, '-=0.9')
+  }
+
+  const footer = containerRef.value.querySelector('.lp-cal-footer')
+  if (footer) {
+    tl.fromTo(footer, { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: 0.4, ease: 'power2.out' }, '-=0.2')
+  }
+}
+
+watch(() => props.visible, (val) => {
+  if (val) setTimeout(runEntrance, 60)
+}, { immediate: true })
+
+onUnmounted(() => { tl?.kill() })
 </script>
 
 <template>
-  <div class="lp-cal-mockup">
+  <div ref="containerRef" class="lp-cal-mockup" style="opacity: 0">
+    <!-- Header -->
     <div class="lp-cal-header">
-      <span class="lp-cal-month">{{ t('appLanding.calendar.thisWeek') }}</span>
-      <div class="lp-cal-nav">
-        <span class="lp-cal-arrow">&lsaquo;</span>
-        <span class="lp-cal-arrow">&rsaquo;</span>
+      <div class="lp-cal-header-left">
+        <svg class="lp-cal-icon" viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+          <path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11z" />
+        </svg>
+        <span class="lp-cal-title">{{ t('appLanding.calendar.weekSchedule') }}</span>
+      </div>
+      <span class="lp-cal-count">{{ posts.length }}</span>
+    </div>
+
+    <!-- Day strip -->
+    <div class="lp-cal-days">
+      <div
+        v-for="(day, i) in days"
+        :key="day"
+        class="lp-cal-day"
+        :class="{ 'lp-cal-day-active': i === todayIndex }"
+      >
+        <span class="lp-cal-day-name">{{ day }}</span>
+        <span v-if="i === todayIndex" class="lp-cal-today">{{ dates[i] }}</span>
+        <span v-else class="lp-cal-date">{{ dates[i] }}</span>
       </div>
     </div>
 
-    <div class="lp-cal-grid">
-      <div v-for="(day, di) in days" :key="day" class="lp-cal-column">
-        <div class="lp-cal-day-label">{{ day.toUpperCase() }}</div>
-        <div class="lp-cal-day-body">
-          <div
-            v-for="post in posts.filter(p => p.day === di)"
-            :key="post.title"
-            class="lp-cal-post"
-            :class="{ 'is-visible': visible }"
-            :style="{ '--post-color': post.color }"
-          >
-            <span class="lp-cal-post-time">{{ post.time }}</span>
-            <span class="lp-cal-post-title">{{ post.title }}</span>
-            <span class="lp-cal-post-dot" />
+    <!-- Post list -->
+    <div class="lp-cal-posts">
+      <div v-for="(post, i) in posts" :key="i" class="lp-cal-post">
+        <div class="lp-cal-thumb">
+          <img :src="post.image" alt="" class="lp-cal-thumb-img" loading="lazy" />
+        </div>
+        <div class="lp-cal-post-info">
+          <div class="lp-cal-post-meta">
+            <PlatformLogo :platform="post.platform" :size="18" />
+            <span class="lp-cal-post-type">{{ t(`appLanding.calendar.types.${post.type}`) }}</span>
+            <span class="lp-cal-post-time">{{ post.day }}</span>
           </div>
+          <span class="lp-cal-post-title">{{ t(`appLanding.calendar.${post.titleKey}`) }}</span>
         </div>
       </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="lp-cal-footer">
+      <span>{{ t('appLanding.calendar.viewFull') }}</span>
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+        <path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6z" />
+      </svg>
     </div>
   </div>
 </template>
@@ -54,114 +129,190 @@ const posts = [
   border: 1px solid var(--lp-border);
   border-radius: var(--radius-xl);
   overflow: hidden;
+  max-width: 460px;
 }
 
+/* Header */
 .lp-cal-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: var(--space-md) var(--space-lg);
+  padding: var(--space-lg) var(--space-xl);
   border-bottom: 1px solid var(--lp-border);
 }
 
-.lp-cal-month {
-  font-size: var(--text-sm);
-  font-weight: var(--font-semibold);
-  color: var(--lp-text-primary);
-}
-
-.lp-cal-nav {
+.lp-cal-header-left {
   display: flex;
+  align-items: center;
   gap: var(--space-sm);
 }
 
-.lp-cal-arrow {
-  font-size: var(--text-lg);
+.lp-cal-icon {
   color: var(--lp-text-muted);
-  line-height: 1;
 }
 
-.lp-cal-grid {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
+.lp-cal-title {
+  font-size: var(--text-sm);
+  font-weight: var(--font-bold);
+  color: var(--lp-text-primary);
 }
 
-.lp-cal-column {
-  border-right: 1px solid var(--lp-border);
+.lp-cal-count {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: rgba(249, 115, 22, 0.15);
+  color: var(--lp-accent-orange);
+  font-size: var(--text-xs);
+  font-weight: var(--font-bold);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.lp-cal-column:last-child {
-  border-right: none;
-}
-
-.lp-cal-day-label {
-  font-size: 9px;
-  font-weight: var(--font-semibold);
-  color: var(--lp-text-muted);
-  letter-spacing: 0.05em;
-  padding: var(--space-sm);
+/* Day strip */
+.lp-cal-days {
+  display: flex;
+  justify-content: space-between;
+  padding: var(--space-lg) var(--space-xl);
   border-bottom: 1px solid var(--lp-border);
-  text-align: center;
 }
 
-.lp-cal-day-body {
-  min-height: 90px;
-  padding: 4px;
+.lp-cal-day {
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  align-items: center;
+  gap: 4px;
+  flex: 1;
+}
+
+.lp-cal-day-name {
+  font-size: 10px;
+  font-weight: var(--font-semibold);
+  color: var(--lp-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.lp-cal-day-active .lp-cal-day-name {
+  color: var(--lp-accent-orange);
+}
+
+.lp-cal-date {
+  font-size: var(--text-sm);
+  color: var(--lp-text-secondary);
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.lp-cal-today {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--lp-accent-orange);
+  color: #fff;
+  font-size: var(--text-sm);
+  font-weight: var(--font-bold);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 12px rgba(249, 115, 22, 0.35);
+}
+
+/* Post list */
+.lp-cal-posts {
+  padding: var(--space-md) var(--space-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
 }
 
 .lp-cal-post {
-  background: color-mix(in srgb, var(--post-color, var(--lp-accent-orange)) 12%, transparent);
-  border-left: 2px solid var(--post-color, var(--lp-accent-orange));
-  border-radius: var(--radius-sm);
-  padding: 4px 6px;
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-sm) var(--space-sm);
+  border-radius: var(--radius-lg);
+  transition: background 0.2s ease;
+}
+
+.lp-cal-post:hover {
+  background: var(--lp-bg-elevated);
+}
+
+.lp-cal-thumb {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.lp-cal-thumb-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.lp-cal-post-info {
+  flex: 1;
+  min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 1px;
-  opacity: 0;
-  transform: translateY(-10px);
-  transition: opacity 0.4s ease, transform 0.4s ease;
+  gap: 2px;
 }
 
-.lp-cal-post.is-visible {
-  opacity: 1;
-  transform: translateY(0);
+.lp-cal-post-meta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
 }
 
-.lp-cal-post:nth-child(1) { transition-delay: 0.1s; }
-.lp-cal-post:nth-child(2) { transition-delay: 0.2s; }
+.lp-cal-post-type {
+  font-size: var(--text-xs);
+  color: var(--lp-text-secondary);
+  font-weight: var(--font-medium);
+}
 
 .lp-cal-post-time {
-  font-size: 8px;
+  font-size: var(--text-xs);
   color: var(--lp-text-muted);
+  margin-left: auto;
 }
 
 .lp-cal-post-title {
-  font-size: 10px;
-  font-weight: var(--font-medium);
-  color: var(--lp-text-primary);
+  font-size: var(--text-xs);
+  color: var(--lp-text-muted);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.lp-cal-post-dot {
-  width: 4px;
-  height: 4px;
-  border-radius: 50%;
-  background: var(--post-color);
-  align-self: flex-end;
+/* Footer */
+.lp-cal-footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-xs);
+  padding: var(--space-lg) var(--space-xl);
+  border-top: 1px solid var(--lp-border);
+  color: var(--lp-accent-orange);
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+}
+
+.lp-cal-footer:hover {
+  opacity: 0.8;
 }
 
 @media (max-width: 768px) {
-  .lp-cal-grid {
-    grid-template-columns: repeat(5, 1fr);
-  }
-
-  .lp-cal-column:nth-child(n+6) {
-    display: none;
+  .lp-cal-mockup {
+    max-width: 100%;
   }
 }
 </style>

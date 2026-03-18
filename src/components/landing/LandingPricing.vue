@@ -102,8 +102,7 @@ useGsapSection(sectionRef, (el, gsapInstance) => {
           </ul>
 
           <button
-            class="lp-plan-cta"
-            :class="{ primary: plan.featured }"
+            class="lp-plan-cta primary"
             @click="scrollToWaitlist"
           >
             {{ t('appLanding.pricing.cta') }}
@@ -117,6 +116,8 @@ useGsapSection(sectionRef, (el, gsapInstance) => {
 <style scoped>
 .lp-pricing {
   padding: var(--lp-section-gap) var(--space-xl);
+  position: relative;
+  z-index: 2;
 }
 
 .lp-section-inner {
@@ -229,19 +230,28 @@ useGsapSection(sectionRef, (el, gsapInstance) => {
   transition: border-color 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease;
 }
 
-.lp-pricing-card:hover {
-  border-color: var(--lp-border-light);
-  transform: translateY(-4px);
+@media (hover: hover) {
+  .lp-pricing-card:hover {
+    border-color: var(--lp-border-light);
+    transform: translateY(-4px);
+  }
+}
+@media (hover: none) {
+  .lp-pricing-card:active { transform: scale(0.98); }
 }
 
 .lp-pricing-card.featured {
   border-color: var(--lp-accent-orange);
   box-shadow: 0 0 40px var(--lp-accent-orange-glow), var(--lp-shadow-card);
-  transform: scale(1.02);
 }
 
-.lp-pricing-card.featured:hover {
-  transform: scale(1.02) translateY(-4px);
+@media (hover: hover) {
+  .lp-pricing-card.featured:hover {
+    transform: translateY(-4px);
+  }
+}
+@media (hover: none) {
+  .lp-pricing-card.featured:active { transform: scale(0.98); }
 }
 
 .lp-popular-badge {
@@ -344,8 +354,11 @@ useGsapSection(sectionRef, (el, gsapInstance) => {
   color: var(--lp-text-primary);
 }
 
-.lp-plan-cta:hover {
-  background: var(--lp-bg-elevated);
+@media (hover: hover) {
+  .lp-plan-cta:hover { background: var(--lp-bg-elevated); }
+}
+@media (hover: none) {
+  .lp-plan-cta:active { background: var(--lp-bg-elevated); }
 }
 
 .lp-plan-cta.primary {
@@ -354,9 +367,16 @@ useGsapSection(sectionRef, (el, gsapInstance) => {
   color: #fff;
 }
 
-.lp-plan-cta.primary:hover {
-  background: var(--lp-accent-orange-hover);
-  box-shadow: 0 0 20px var(--lp-accent-orange-glow);
+@media (hover: hover) {
+  .lp-plan-cta.primary:hover {
+    background: var(--lp-accent-orange-hover);
+    box-shadow: 0 0 20px var(--lp-accent-orange-glow);
+  }
+}
+@media (hover: none) {
+  .lp-plan-cta.primary:active {
+    background: var(--lp-accent-orange-hover);
+  }
 }
 
 @media (max-width: 768px) {
@@ -371,8 +391,10 @@ useGsapSection(sectionRef, (el, gsapInstance) => {
     order: -1;
   }
 
-  .lp-pricing-card.featured:hover {
-    transform: translateY(-4px);
+  @media (hover: hover) {
+    .lp-pricing-card.featured:hover {
+      transform: translateY(-4px);
+    }
   }
 }
 </style>

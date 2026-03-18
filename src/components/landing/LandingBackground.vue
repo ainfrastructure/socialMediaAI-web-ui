@@ -13,6 +13,7 @@ const props = defineProps<{
   particleDensity?: number
   particleColorMode?: 'default' | 'adapt' | 'vortex'
   particleStyle?: 'flow' | 'swarm'
+  particleSpeed?: number
 }>()
 
 const canvasRef = ref<HTMLCanvasElement | null>(null)
@@ -24,6 +25,8 @@ let mx = 0.5, my = 0.5, pressing = false
 let burstStrength = 0
 let meshTime = 0
 let flowTime = 0
+let frameCount = 0
+let paused = false
 let flowParts: { x: number; y: number; px: number; py: number; age: number; speed: number; vx: number; vy: number; seed: number }[] = []
 
 const defaultFlowColors = [[139, 92, 246], [59, 130, 246], [6, 182, 212], [249, 115, 22]]
@@ -71,7 +74,8 @@ function resize() {
 // ── Wave Mesh (from demo drawMesh) ──
 function drawMesh() {
   if (!ctx) return
-  meshTime += 0.012
+  const speed = props.particleSpeed ?? 1
+  meshTime += 0.012 * speed
   ctx.clearRect(0, 0, W, H)
 
   const cols = 80, rows = 50
@@ -123,7 +127,7 @@ function flowNoise(x: number, y: number) {
 
 function initFlow() {
   const density = props.particleDensity ?? 1
-  const base = window.innerWidth < 768 ? 600 : 1500
+  const base = window.innerWidth < 768 ? 400 : 1500
   flowParts = Array.from({ length: Math.round(base * density) }, () => {
     const x = Math.random() * W, y = Math.random() * H
     return { x, y, px: x, py: y, age: Math.random() * 120, speed: 0.8, vx: 0, vy: 0, seed: Math.random() * 1000 }
@@ -133,7 +137,8 @@ function initFlow() {
 function drawFlow() {
   if (!ctx) return
   const density = props.particleDensity ?? 1
-  flowTime += 0.008
+  const speed = props.particleSpeed ?? 1
+  flowTime += 0.008 * speed
   burstStrength *= 0.88
   ctx.clearRect(0, 0, W, H)
 
@@ -166,9 +171,9 @@ function drawFlow() {
       const vortex = Math.atan2(dy, dx) + Math.PI / 2
       const bl = 1 - dist / 0.18, sb = bl * bl * (3 - 2 * bl)
       angle = angle * (1 - sb) + vortex * sb
-      p.speed = 0.8 + sb * (pressing ? 5 : 2.5)
+      p.speed = (0.8 + sb * (pressing ? 5 : 2.5)) * speed
     } else {
-      p.speed *= 0.995; p.speed = Math.max(0.8, p.speed)
+      p.speed *= 0.995; p.speed = Math.max(0.8 * speed, p.speed)
     }
 
     // Burst impulse — only on vortex particles
@@ -263,8 +268,21 @@ function startEffect() {
     ctx.clearRect(0, 0, W, H)
   }
 
+  const isMobile = window.innerWidth < 768
+
   function loop() {
-    if (myGen !== generation) return
+    if (myGen !== generation || paused) {
+      if (paused) raf = requestAnimationFrame(loop)
+      return
+    }
+    // Frame throttling on mobile — draw every 2nd frame
+    if (isMobile) {
+      frameCount++
+      if (frameCount % 2 !== 0) {
+        raf = requestAnimationFrame(loop)
+        return
+      }
+    }
     if (mode === 'wave') drawMesh()
     else drawFlow()
     raf = requestAnimationFrame(loop)
@@ -285,16 +303,27 @@ watch(() => props.particleDensity, () => {
 function onMM(e: MouseEvent) { mx = e.clientX / innerWidth; my = e.clientY / innerHeight }
 function onMD() { pressing = true; burstStrength = 1 }
 function onMU() { pressing = false }
+function onTS(e: TouchEvent) { const t = e.touches[0]; mx = t.clientX / innerWidth; my = t.clientY / innerHeight; pressing = true; burstStrength = 1 }
 function onTM(e: TouchEvent) { const t = e.touches[0]; mx = t.clientX / innerWidth; my = t.clientY / innerHeight; pressing = true }
 function onTE() { pressing = false }
 
+// ── Visibility ──
+function onVisibility() {
+  paused = document.hidden
+}
+
 onMounted(() => {
+  // Reduced motion — skip animation entirely
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+
   addEventListener('mousemove', onMM)
   addEventListener('mousedown', onMD)
   addEventListener('mouseup', onMU)
+  addEventListener('touchstart', onTS, { passive: true })
   addEventListener('touchmove', onTM, { passive: true })
   addEventListener('touchend', onTE)
   addEventListener('resize', resize)
+  document.addEventListener('visibilitychange', onVisibility)
   if (props.mode !== 'none') setTimeout(startEffect, 50)
 })
 
@@ -303,9 +332,11 @@ onUnmounted(() => {
   removeEventListener('mousemove', onMM)
   removeEventListener('mousedown', onMD)
   removeEventListener('mouseup', onMU)
+  removeEventListener('touchstart', onTS)
   removeEventListener('touchmove', onTM)
   removeEventListener('touchend', onTE)
   removeEventListener('resize', resize)
+  document.removeEventListener('visibilitychange', onVisibility)
 })
 </script>
 

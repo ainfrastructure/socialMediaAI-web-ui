@@ -10,7 +10,7 @@ const sectionRef = ref<HTMLElement | null>(null)
 const { email, loading, success, error, submit } = useLandingWaitlist('landing-final-cta')
 
 useGsapSection(sectionRef, (el, gsapInstance) => {
-  gsapInstance.from(el.querySelector('.lp-cta-card'), {
+  gsapInstance.from(el.querySelector('.lp-cta-content'), {
     scrollTrigger: { trigger: el, start: 'top 70%' },
     opacity: 0,
     y: 50,
@@ -22,12 +22,8 @@ useGsapSection(sectionRef, (el, gsapInstance) => {
 
 <template>
   <section id="lp-final-cta" ref="sectionRef" class="lp-final-cta">
-    <!-- Aurora background -->
-    <div class="lp-cta-aurora" />
-    <div class="lp-cta-aurora-2" />
-
     <div class="lp-section-inner">
-      <div class="lp-cta-card">
+      <div class="lp-cta-content">
         <h2 class="lp-cta-title">{{ t('appLanding.finalCta.title') }}</h2>
         <p class="lp-cta-sub">{{ t('appLanding.finalCta.subtitle') }}</p>
 
@@ -71,32 +67,6 @@ useGsapSection(sectionRef, (el, gsapInstance) => {
   overflow: hidden;
 }
 
-.lp-cta-aurora {
-  position: absolute;
-  width: 600px;
-  height: 600px;
-  border-radius: 50%;
-  background: var(--lp-accent-violet);
-  filter: blur(150px);
-  opacity: 0.12;
-  top: -20%;
-  left: -10%;
-  pointer-events: none;
-}
-
-.lp-cta-aurora-2 {
-  position: absolute;
-  width: 500px;
-  height: 500px;
-  border-radius: 50%;
-  background: var(--lp-accent-orange);
-  filter: blur(150px);
-  opacity: 0.08;
-  bottom: -20%;
-  right: -10%;
-  pointer-events: none;
-}
-
 .lp-section-inner {
   max-width: 720px;
   margin: 0 auto;
@@ -104,10 +74,7 @@ useGsapSection(sectionRef, (el, gsapInstance) => {
   z-index: 1;
 }
 
-.lp-cta-card {
-  background: var(--lp-bg-surface);
-  border: 1px solid var(--lp-border);
-  border-radius: var(--radius-2xl);
+.lp-cta-content {
   padding: var(--space-5xl) var(--space-3xl);
   text-align: center;
 }
@@ -237,7 +204,7 @@ useGsapSection(sectionRef, (el, gsapInstance) => {
     flex-direction: column;
   }
 
-  .lp-cta-card {
+  .lp-cta-content {
     padding: var(--space-3xl) var(--space-xl);
   }
 }

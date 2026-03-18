@@ -11,8 +11,10 @@ import MaterialIcon from '@/components/MaterialIcon.vue'
 import ShowcaseAnalyticsMockup from './ShowcaseAnalyticsMockup.vue'
 import ShowcaseCompetitorMockup from './ShowcaseCompetitorMockup.vue'
 import ShowcaseDesignMockup from './ShowcaseDesignMockup.vue'
-import ShowcaseBriefingMockup from './ShowcaseBriefingMockup.vue'
+import ShowcaseCalendarMockup from './ShowcaseCalendarMockup.vue'
+import ShowcaseAIMockup from './ShowcaseAIMockup.vue'
 import ShowcaseAdsMockup from './ShowcaseAdsMockup.vue'
+import ShowcasePublishingMockup from './ShowcasePublishingMockup.vue'
 
 const { t } = useI18n()
 const sectionRef = ref<HTMLElement | null>(null)
@@ -35,7 +37,9 @@ const features: Feature[] = [
   { id: 'competitor', icon: 'radar', tabKey: 'appLanding.featureShowcase.tabCompetitor', eyebrowKey: 'appLanding.competitor.eyebrow', titleKey: 'appLanding.competitor.title', subtitleKey: 'appLanding.competitor.subtitle' },
   { id: 'designBuilder', icon: 'palette', tabKey: 'appLanding.featureShowcase.tabDesignBuilder', eyebrowKey: 'appLanding.designBuilder.eyebrow', titleKey: 'appLanding.designBuilder.title', subtitleKey: 'appLanding.designBuilder.subtitle' },
   { id: 'ads', icon: 'campaign', tabKey: 'appLanding.featureShowcase.tabAds', eyebrowKey: 'appLanding.adsManager.eyebrow', titleKey: 'appLanding.adsManager.title', subtitleKey: 'appLanding.adsManager.subtitle' },
-  { id: 'briefing', icon: 'auto_awesome', tabKey: 'appLanding.featureShowcase.tabBriefing', eyebrowKey: 'appLanding.briefing.eyebrow', titleKey: 'appLanding.briefing.title', subtitleKey: 'appLanding.briefing.subtitle' },
+  { id: 'calendar', icon: 'calendar_month', tabKey: 'appLanding.featureShowcase.tabCalendar', eyebrowKey: 'appLanding.calendar.eyebrow', titleKey: 'appLanding.calendar.title', subtitleKey: 'appLanding.calendar.subtitle' },
+  { id: 'aiAssistant', icon: 'smart_toy', tabKey: 'appLanding.featureShowcase.tabAI', eyebrowKey: 'appLanding.aiAssistant.eyebrow', titleKey: 'appLanding.aiAssistant.title', subtitleKey: 'appLanding.aiAssistant.subtitle' },
+  { id: 'publishing', icon: 'rocket_launch', tabKey: 'appLanding.featureShowcase.tabPublishing', eyebrowKey: 'appLanding.publishing.eyebrow', titleKey: 'appLanding.publishing.title', subtitleKey: 'appLanding.publishing.subtitle' },
 ]
 
 const activeIndex = ref(0)
@@ -44,7 +48,6 @@ const isTransitioning = ref(false)
 
 const AUTO_INTERVAL = 6000
 const IDLE_RESUME = 10000
-let autoTimer: ReturnType<typeof setInterval> | null = null
 let idleTimer: ReturnType<typeof setTimeout> | null = null
 const progressRef = ref<HTMLElement | null>(null)
 let progressTween: gsap.core.Tween | null = null
@@ -66,8 +69,30 @@ const adsStats = [
 const layers = [
   { key: 'background', icon: 'wallpaper', color: 'var(--lp-accent-blue)' },
   { key: 'image', icon: 'image', color: 'var(--lp-accent-violet)' },
+  { key: 'video', icon: 'videocam', color: 'var(--lp-accent-cyan)' },
   { key: 'text', icon: 'title', color: 'var(--lp-accent-orange)' },
-  { key: 'branding', icon: 'palette', color: 'var(--lp-accent-cyan)' },
+  { key: 'branding', icon: 'palette', color: 'var(--lp-accent-violet)' },
+]
+
+const calendarFeatures = [
+  { key: 'autoSchedule', icon: 'schedule', color: 'var(--lp-accent-orange)' },
+  { key: 'multiPlatform', icon: 'device_hub', color: 'var(--lp-accent-blue)' },
+  { key: 'contentGoals', icon: 'flag', color: 'var(--lp-accent-violet)' },
+  { key: 'bulkImport', icon: 'upload_file', color: 'var(--lp-accent-cyan)' },
+]
+
+const aiFeatures = [
+  { key: 'smartCreation', icon: 'auto_awesome', color: 'var(--lp-accent-orange)' },
+  { key: 'brandVoice', icon: 'record_voice_over', color: 'var(--lp-accent-blue)' },
+  { key: 'multiFormat', icon: 'dashboard', color: 'var(--lp-accent-cyan)' },
+  { key: 'refinement', icon: 'tune', color: 'var(--lp-accent-violet)' },
+]
+
+const publishFeatures = [
+  { key: 'oneClick', icon: 'touch_app', color: 'var(--lp-accent-orange)' },
+  { key: 'platformOptimize', icon: 'tune', color: 'var(--lp-accent-blue)' },
+  { key: 'sixPlatforms', icon: 'hub', color: 'var(--lp-accent-cyan)' },
+  { key: 'smartTiming', icon: 'schedule', color: 'var(--lp-accent-violet)' },
 ]
 
 function positionIndicator(index: number, animate = false) {
@@ -78,7 +103,7 @@ function positionIndicator(index: number, animate = false) {
 
   const tabsRect = tabsRef.value.getBoundingClientRect()
   const tabRect = tab.getBoundingClientRect()
-  const targetLeft = tabRect.left - tabsRect.left
+  const targetLeft = tabRect.left - tabsRect.left + tabsRef.value.scrollLeft
   const targetWidth = tabRect.width
 
   if (!animate) {
@@ -102,6 +127,9 @@ function startProgress() {
     scaleX: 1,
     duration: AUTO_INTERVAL / 1000,
     ease: 'none',
+    onComplete() {
+      switchTo((activeIndex.value + 1) % features.length, false)
+    },
   })
 }
 
@@ -113,13 +141,9 @@ function stopProgress() {
 function startAutoPlay() {
   stopAutoPlay()
   startProgress()
-  autoTimer = setInterval(() => {
-    switchTo((activeIndex.value + 1) % features.length, false)
-  }, AUTO_INTERVAL)
 }
 
 function stopAutoPlay() {
-  if (autoTimer) { clearInterval(autoTimer); autoTimer = null }
   stopProgress()
 }
 
@@ -133,58 +157,113 @@ async function switchTo(index: number, userInitiated = true) {
   isTransitioning.value = true
 
   if (userInitiated) { stopAutoPlay(); scheduleResume() }
-  else { startProgress() }
 
-  // Animate stretchy pill
-  positionIndicator(index, true)
+  // Instantly jump indicator to new tab (no slide animation)
+  positionIndicator(index, false)
 
   const goingForward = index > activeIndex.value
-  const rotateOut = goingForward ? -45 : 45
+  const isMobile = window.innerWidth < 768
+  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
-  // ── EXIT: 3D rotate out (like a page turning) ──
-  await Promise.all([
-    gsap.to(textPanelRef.value, {
-      opacity: 0, rotationY: rotateOut, x: goingForward ? -60 : 60, scale: 0.85,
-      duration: 0.45, ease: 'power2.in',
-    }),
-    gsap.to(mockupPanelRef.value, {
-      opacity: 0, rotationY: rotateOut * 0.7, x: goingForward ? -40 : 40, scale: 0.9,
-      duration: 0.45, ease: 'power2.in',
-    }),
-  ])
-
-  // ── SWAP + wait for Vue render ──
-  activeIndex.value = index
-  await nextTick()
-
-  const rotateIn = goingForward ? 45 : -45
-
-  // ── ENTER: 3D rotate in from opposite side ──
-  if (textPanelRef.value) {
-    gsap.fromTo(textPanelRef.value,
-      { opacity: 0, rotationY: rotateIn, x: goingForward ? 60 : -60, scale: 0.85 },
-      {
-        opacity: 1, rotationY: 0, x: 0, scale: 1,
-        duration: 0.7, ease: 'power2.out',
-        onComplete() { gsap.set(textPanelRef.value, { clearProps: 'all' }) },
-      },
-    )
+  // Scroll active tab into view on mobile
+  if (isMobile && tabsRef.value) {
+    const tabs = tabsRef.value.querySelectorAll('.lp-showcase-tab')
+    const tab = tabs[index] as HTMLElement
+    if (tab) {
+      await nextTick()
+      tab.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' })
+    }
   }
 
-  if (mockupPanelRef.value) {
-    gsap.fromTo(mockupPanelRef.value,
-      { opacity: 0, rotationY: rotateIn * 0.7, x: goingForward ? 40 : -40, scale: 0.9 },
-      {
-        opacity: 1, rotationY: 0, x: 0, scale: 1,
-        duration: 0.8, ease: 'power2.out',
-        onComplete() {
-          gsap.set(mockupPanelRef.value, { clearProps: 'all' })
-          isTransitioning.value = false
-        },
-      },
-    )
-  } else {
+  // Reduced motion — instant swap
+  if (reducedMotion) {
+    activeIndex.value = index
     isTransitioning.value = false
+    if (!userInitiated) startProgress()
+    return
+  }
+
+  if (isMobile) {
+    // ── MOBILE: Simple crossfade + slide ──
+    await Promise.all([
+      gsap.to(textPanelRef.value, {
+        opacity: 0, x: goingForward ? -30 : 30,
+        duration: 0.3, ease: 'power2.in',
+      }),
+      gsap.to(mockupPanelRef.value, {
+        opacity: 0, x: goingForward ? -30 : 30,
+        duration: 0.3, ease: 'power2.in',
+      }),
+    ])
+
+    activeIndex.value = index
+    await nextTick()
+
+    if (textPanelRef.value) {
+      gsap.fromTo(textPanelRef.value,
+        { opacity: 0, x: goingForward ? 30 : -30 },
+        { opacity: 1, x: 0, duration: 0.4, ease: 'power2.out',
+          onComplete() { gsap.set(textPanelRef.value, { clearProps: 'all' }) } },
+      )
+    }
+    if (mockupPanelRef.value) {
+      gsap.fromTo(mockupPanelRef.value,
+        { opacity: 0, x: goingForward ? 30 : -30 },
+        { opacity: 1, x: 0, duration: 0.4, ease: 'power2.out',
+          onComplete() { gsap.set(mockupPanelRef.value, { clearProps: 'all' }); isTransitioning.value = false; if (!userInitiated) startProgress() } },
+      )
+    } else {
+      isTransitioning.value = false
+      if (!userInitiated) startProgress()
+    }
+  } else {
+    // ── DESKTOP: 3D flip ──
+    const rotateOut = goingForward ? -45 : 45
+
+    await Promise.all([
+      gsap.to(textPanelRef.value, {
+        opacity: 0, rotationY: rotateOut, x: goingForward ? -60 : 60, scale: 0.85,
+        duration: 0.45, ease: 'power2.in',
+      }),
+      gsap.to(mockupPanelRef.value, {
+        opacity: 0, rotationY: rotateOut * 0.7, x: goingForward ? -40 : 40, scale: 0.9,
+        duration: 0.45, ease: 'power2.in',
+      }),
+    ])
+
+    activeIndex.value = index
+    await nextTick()
+
+    const rotateIn = goingForward ? 45 : -45
+
+    if (textPanelRef.value) {
+      gsap.fromTo(textPanelRef.value,
+        { opacity: 0, rotationY: rotateIn, x: goingForward ? 60 : -60, scale: 0.85 },
+        {
+          opacity: 1, rotationY: 0, x: 0, scale: 1,
+          duration: 0.7, ease: 'power2.out',
+          onComplete() { gsap.set(textPanelRef.value, { clearProps: 'all' }) },
+        },
+      )
+    }
+
+    if (mockupPanelRef.value) {
+      gsap.fromTo(mockupPanelRef.value,
+        { opacity: 0, rotationY: rotateIn * 0.7, x: goingForward ? 40 : -40, scale: 0.9 },
+        {
+          opacity: 1, rotationY: 0, x: 0, scale: 1,
+          duration: 0.8, ease: 'power2.out',
+          onComplete() {
+            gsap.set(mockupPanelRef.value, { clearProps: 'all' })
+            isTransitioning.value = false
+            if (!userInitiated) startProgress()
+          },
+        },
+      )
+    } else {
+      isTransitioning.value = false
+      if (!userInitiated) startProgress()
+    }
   }
 }
 
@@ -265,6 +344,39 @@ onUnmounted(() => {
               <span class="lp-layer-num">{{ String(i + 1).padStart(2, '0') }}</span>
             </div>
           </div>
+
+          <div v-if="activeFeature.id === 'calendar'" class="lp-layers">
+            <div v-for="(feat, i) in calendarFeatures" :key="feat.key" class="lp-layer-item" :style="{ '--layer-color': feat.color }">
+              <div class="lp-layer-icon"><MaterialIcon :icon="feat.icon" size="sm" /></div>
+              <div class="lp-layer-info">
+                <span class="lp-layer-name">{{ t(`appLanding.calendar.${feat.key}`) }}</span>
+                <span class="lp-layer-desc">{{ t(`appLanding.calendar.${feat.key}Desc`) }}</span>
+              </div>
+              <span class="lp-layer-num">{{ String(i + 1).padStart(2, '0') }}</span>
+            </div>
+          </div>
+
+          <div v-if="activeFeature.id === 'aiAssistant'" class="lp-layers">
+            <div v-for="(item, i) in aiFeatures" :key="item.key" class="lp-layer-item" :style="{ '--layer-color': item.color }">
+              <div class="lp-layer-icon"><MaterialIcon :icon="item.icon" size="sm" /></div>
+              <div class="lp-layer-info">
+                <span class="lp-layer-name">{{ t(`appLanding.aiAssistant.${item.key}`) }}</span>
+                <span class="lp-layer-desc">{{ t(`appLanding.aiAssistant.${item.key}Desc`) }}</span>
+              </div>
+              <span class="lp-layer-num">{{ String(i + 1).padStart(2, '0') }}</span>
+            </div>
+          </div>
+
+          <div v-if="activeFeature.id === 'publishing'" class="lp-layers">
+            <div v-for="(item, i) in publishFeatures" :key="item.key" class="lp-layer-item" :style="{ '--layer-color': item.color }">
+              <div class="lp-layer-icon"><MaterialIcon :icon="item.icon" size="sm" /></div>
+              <div class="lp-layer-info">
+                <span class="lp-layer-name">{{ t(`appLanding.publishing.${item.key}`) }}</span>
+                <span class="lp-layer-desc">{{ t(`appLanding.publishing.${item.key}Desc`) }}</span>
+              </div>
+              <span class="lp-layer-num">{{ String(i + 1).padStart(2, '0') }}</span>
+            </div>
+          </div>
         </div>
 
         <div ref="mockupPanelRef" class="lp-showcase-mockup">
@@ -272,7 +384,9 @@ onUnmounted(() => {
           <ShowcaseCompetitorMockup v-if="activeFeature.id === 'competitor'" :visible="activeFeature.id === 'competitor'" />
           <ShowcaseDesignMockup v-if="activeFeature.id === 'designBuilder'" :visible="activeFeature.id === 'designBuilder'" />
           <ShowcaseAdsMockup v-if="activeFeature.id === 'ads'" :visible="activeFeature.id === 'ads'" />
-          <ShowcaseBriefingMockup v-if="activeFeature.id === 'briefing'" :visible="activeFeature.id === 'briefing'" />
+          <ShowcaseCalendarMockup v-if="activeFeature.id === 'calendar'" :visible="activeFeature.id === 'calendar'" />
+          <ShowcaseAIMockup v-if="activeFeature.id === 'aiAssistant'" :visible="activeFeature.id === 'aiAssistant'" />
+          <ShowcasePublishingMockup v-if="activeFeature.id === 'publishing'" :visible="activeFeature.id === 'publishing'" />
         </div>
       </div>
     </div>
@@ -285,40 +399,41 @@ onUnmounted(() => {
 
 .lp-showcase-tabs {
   display: flex; gap: var(--space-sm); justify-content: center;
-  margin-bottom: var(--space-4xl); flex-wrap: wrap; position: relative;
+  margin-bottom: var(--space-4xl); flex-wrap: nowrap; position: relative;
+  overflow-x: auto; scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
 }
+.lp-showcase-tabs::-webkit-scrollbar { display: none; }
 
 .lp-tab-indicator {
   position: absolute; top: 0; height: 100%;
   border-radius: var(--radius-full);
-  background: rgba(249, 115, 22, 0.1);
-  border: 1.5px solid var(--lp-accent-orange);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1.5px solid var(--lp-border-light);
   pointer-events: none; z-index: 0;
   overflow: hidden;
 }
 
 .lp-tab-progress {
   position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 3px;
-  background: var(--lp-accent-orange);
-  border-radius: 0 0 var(--radius-full) var(--radius-full);
+  inset: 0;
+  background: rgba(139, 92, 246, 0.15);
+  border-radius: inherit;
   transform-origin: left;
   transform: scaleX(0);
 }
 
 .lp-showcase-tab {
-  display: flex; align-items: center; gap: var(--space-sm);
-  padding: var(--space-md) var(--space-xl);
+  display: flex; align-items: center; gap: var(--space-xs);
+  padding: var(--space-sm) var(--space-lg);
   border: 1px solid transparent; border-radius: var(--radius-full);
   background: transparent; color: var(--lp-text-secondary);
   font-size: var(--text-sm); font-weight: var(--font-semibold);
   cursor: pointer; transition: color 0.3s ease;
-  position: relative; z-index: 1;
+  position: relative; z-index: 1; flex-shrink: 0;
 }
-.lp-showcase-tab:hover { color: var(--lp-text-primary); }
+@media (hover: hover) { .lp-showcase-tab:hover { color: var(--lp-text-primary); } }
+@media (hover: none) { .lp-showcase-tab:active { color: var(--lp-text-primary); } }
 .lp-showcase-tab.active { color: var(--lp-accent-orange); }
 .lp-tab-label { white-space: nowrap; }
 
@@ -352,7 +467,7 @@ onUnmounted(() => {
   background: var(--lp-bg-surface); border: 1px solid var(--lp-border);
   border-radius: var(--radius-lg); padding: var(--space-lg); transition: border-color 0.3s ease;
 }
-.lp-kpi-card:hover { border-color: var(--lp-border-light); }
+@media (hover: hover) { .lp-kpi-card:hover { border-color: var(--lp-border-light); } }
 .lp-kpi-icon {
   width: 36px; height: 36px; border-radius: var(--radius-md);
   background: rgba(249, 115, 22, 0.1); display: flex; align-items: center;
@@ -369,7 +484,7 @@ onUnmounted(() => {
   padding: var(--space-md) var(--space-lg); background: var(--lp-bg-surface);
   border: 1px solid var(--lp-border); border-radius: var(--radius-lg); transition: border-color 0.3s ease;
 }
-.lp-layer-item:hover { border-color: var(--layer-color, var(--lp-border-light)); }
+@media (hover: hover) { .lp-layer-item:hover { border-color: var(--layer-color, var(--lp-border-light)); } }
 .lp-layer-icon {
   width: 36px; height: 36px; border-radius: var(--radius-md);
   background: rgba(128, 128, 128, 0.1); display: flex; align-items: center;
@@ -381,15 +496,13 @@ onUnmounted(() => {
 .lp-layer-num { font-size: var(--text-xs); font-weight: var(--font-bold); color: var(--lp-text-muted); letter-spacing: 0.1em; }
 
 @media (max-width: 768px) {
-  .lp-showcase-tabs {
-    justify-content: flex-start; overflow-x: auto; flex-wrap: nowrap;
-    -webkit-overflow-scrolling: touch; scrollbar-width: none; padding-bottom: var(--space-sm);
-  }
-  .lp-showcase-tabs::-webkit-scrollbar { display: none; }
+  .lp-showcase-tabs { justify-content: flex-start; padding-bottom: var(--space-sm); }
   .lp-tab-indicator { display: none; }
   .lp-showcase-tab { border: 1px solid var(--lp-border); background: var(--lp-bg-surface); }
   .lp-showcase-tab.active { border-color: var(--lp-accent-orange); background: rgba(249, 115, 22, 0.06); }
-  .lp-showcase-content { grid-template-columns: 1fr; gap: var(--space-3xl); min-height: auto; }
+  .lp-showcase-content { grid-template-columns: 1fr; gap: var(--space-3xl); min-height: auto; perspective: none; }
+  .lp-showcase-text, .lp-showcase-mockup { transform-style: flat; }
+  .lp-showcase-tab { min-height: 44px; }
   .lp-kpi-grid { grid-template-columns: 1fr; }
 }
 </style>

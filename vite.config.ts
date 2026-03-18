@@ -38,6 +38,12 @@ export default defineConfig({
       'alifrontend.socialchef.ai',
       '.socialchef.ai'
     ],
+    proxy: {
+      '/api/contact': {
+        target: 'http://localhost:3000',
+        changeOrigin: true,
+      },
+    },
   },
   build: {
     // Enable source maps for Sentry
