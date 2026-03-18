@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 const { t } = useI18n()
@@ -12,39 +11,20 @@ const platforms = [
   { name: 'TikTok', icon: 'M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z', color: '#fe2c55' },
   { name: 'YouTube', icon: 'M23.498 6.186a3.016 3.016 0 00-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 00.502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 002.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 002.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z', color: '#ff0000' },
 ]
-
-const scrollRef = ref<HTMLElement | null>(null)
-let raf = 0
-let offset = 0
-const speed = 0.5 // px per frame
-
-onMounted(() => {
-  if (scrollRef.value) {
-    offset = -(scrollRef.value.scrollWidth / 2)
-  }
-  function tick() {
-    if (scrollRef.value) {
-      offset += speed
-      const halfWidth = scrollRef.value.scrollWidth / 2
-      if (offset >= 0) offset -= halfWidth
-      scrollRef.value.style.transform = `translateX(${offset}px)`
-    }
-    raf = requestAnimationFrame(tick)
-  }
-  raf = requestAnimationFrame(tick)
-})
-
-onUnmounted(() => {
-  cancelAnimationFrame(raf)
-})
 </script>
 
 <template>
   <section class="lp-marquee">
     <p class="lp-marquee-label">{{ t('appLanding.socialProof.platforms') }}</p>
     <div class="lp-marquee-track">
-      <div ref="scrollRef" class="lp-marquee-scroll">
-        <div v-for="(p, i) in [...platforms, ...platforms, ...platforms, ...platforms]" :key="`${p.name}-${i}`" class="lp-marquee-item">
+      <div class="lp-marquee-scroll">
+        <div v-for="(p, i) in [...platforms, ...platforms]" :key="`a-${p.name}-${i}`" class="lp-marquee-item">
+          <svg viewBox="0 0 24 24" width="20" height="20" :fill="p.color"><path :d="p.icon" /></svg>
+          <span>{{ p.name }}</span>
+        </div>
+      </div>
+      <div class="lp-marquee-scroll" aria-hidden="true">
+        <div v-for="(p, i) in [...platforms, ...platforms]" :key="`b-${p.name}-${i}`" class="lp-marquee-item">
           <svg viewBox="0 0 24 24" width="20" height="20" :fill="p.color"><path :d="p.icon" /></svg>
           <span>{{ p.name }}</span>
         </div>
@@ -55,7 +35,7 @@ onUnmounted(() => {
 
 <style scoped>
 .lp-marquee {
-  padding: var(--space-3xl) var(--space-xl);
+  padding: var(--space-3xl) 0;
   border-top: 1px solid var(--lp-border);
   border-bottom: 1px solid var(--lp-border);
   overflow: hidden;
@@ -71,16 +51,27 @@ onUnmounted(() => {
 }
 
 .lp-marquee-track {
+  display: flex;
   overflow: hidden;
-  mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
-  -webkit-mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+  mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transparent);
+  -webkit-mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transparent);
 }
 
 .lp-marquee-scroll {
   display: flex;
   gap: var(--space-3xl);
-  width: max-content;
-  will-change: transform;
+  flex-shrink: 0;
+  animation: marquee-scroll 30s linear infinite;
+  padding-right: var(--space-3xl);
+}
+
+@keyframes marquee-scroll {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-100%);
+  }
 }
 
 .lp-marquee-item {
@@ -106,5 +97,11 @@ onUnmounted(() => {
 
 .lp-marquee-item:hover {
   color: var(--lp-text-primary);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lp-marquee-scroll {
+    animation: none;
+  }
 }
 </style>

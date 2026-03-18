@@ -187,12 +187,12 @@ export const fontThemes: FontTheme[] = [
 ]
 
 const fontThemeId = ref('native')
-const activeThemeId = ref('orange')
+const activeThemeId = ref('ocean')
 const isDarkMode = ref(true)
-const bgMode = ref<BgMode>('none')
-const bgIntensity = ref(0.7)
-const bgParticleCount = ref(1)
-const bgParticleColorMode = ref<'default' | 'adapt' | 'vortex'>('default')
+const bgMode = ref<BgMode>('particles')
+const bgIntensity = ref(3)
+const bgParticleCount = ref(4)
+const bgParticleColorMode = ref<'default' | 'adapt' | 'vortex'>('vortex')
 const bgParticleStyle = ref<'flow' | 'swarm'>('flow')
 
 const activeTheme = computed(() =>

@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Animation Variant Demo</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #0a0a0a; color: #f4f4f5;
+    padding: 40px 20px;
+  }
+
+  h1 { text-align: center; margin-bottom: 60px; font-size: 28px; color: #f97316; }
+
+  .variant-section {
+    max-width: 900px; margin: 0 auto 80px; padding: 32px;
+    border: 1px solid rgba(255,255,255,0.08); border-radius: 16px;
+    background: rgba(255,255,255,0.02);
+  }
+
+  .variant-label {
+    text-align: center; font-size: 20px; font-weight: 700;
+    color: #f97316; margin-bottom: 24px;
+  }
+  .variant-desc {
+    text-align: center; font-size: 14px; color: #a1a1aa; margin-bottom: 32px;
+  }
+
+  .tabs {
+    display: flex; gap: 8px; justify-content: center;
+    margin-bottom: 32px; flex-wrap: wrap; position: relative;
+  }
+
+  .tab {
+    padding: 10px 24px; border-radius: 999px;
+    border: 1px solid rgba(255,255,255,0.1);
+    background: rgba(255,255,255,0.04); color: #a1a1aa;
+    font-size: 14px; font-weight: 600; cursor: pointer;
+    transition: color 0.2s, border-color 0.2s, background 0.2s;
+    position: relative; z-index: 1;
+  }
+  .tab:hover { color: #f4f4f5; border-color: rgba(255,255,255,0.2); }
+  .tab.active { color: #f97316; border-color: #f97316; background: rgba(249,115,22,0.08); }
+
+  /* Pill indicator for C & D */
+  .pill-indicator {
+    position: absolute; top: 0; height: 100%;
+    border-radius: 999px; background: rgba(249,115,22,0.1);
+    border: 1.5px solid #f97316; pointer-events: none; z-index: 0;
+  }
+  .tabs.has-pill .tab { border-color: transparent; background: transparent; }
+  .tabs.has-pill .tab.active { background: transparent; }
+
+  .content-area {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 40px;
+    align-items: center; min-height: 220px; overflow: visible;
+    perspective: 1200px;
+  }
+
+  .text-panel, .mockup-panel { will-change: transform, opacity; transform-style: preserve-3d; }
+
+  .eyebrow {
+    font-size: 11px; font-weight: 700; color: #f97316;
+    text-transform: uppercase; letter-spacing: 0.15em; margin-bottom: 12px;
+  }
+  .title {
+    font-size: 28px; font-weight: 800; margin-bottom: 12px;
+    letter-spacing: -0.02em;
+  }
+  .subtitle { font-size: 16px; color: #a1a1aa; line-height: 1.6; }
+
+  .mockup {
+    width: 100%; aspect-ratio: 4/3; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 48px; font-weight: 900; color: rgba(255,255,255,0.15);
+  }
+
+  .color-0 { background: linear-gradient(135deg, #1e3a5f, #0f2340); }
+  .color-1 { background: linear-gradient(135deg, #3a1e5f, #200f40); }
+  .color-2 { background: linear-gradient(135deg, #5f3a1e, #402f0f); }
+  .color-3 { background: linear-gradient(135deg, #1e5f3a, #0f4020); }
+  .color-4 { background: linear-gradient(135deg, #5f1e3a, #400f20); }
+
+  @media (max-width: 640px) {
+    .content-area { grid-template-columns: 1fr; gap: 20px; min-height: auto; }
+  }
+</style>
+</head>
+<body>
+
+<h1>Feature Showcase — Animation Variants</h1>
+
+<!-- ═══════════════════ VARIANT A ═══════════════════ -->
+<div class="variant-section" id="variant-a">
+  <div class="variant-label">A — Cinematic Crossfade</div>
+  <div class="variant-desc">Scale down + fade out → staggered children cascade up from below</div>
+  <div class="tabs" id="tabs-a"></div>
+  <div class="content-area">
+    <div class="text-panel" id="text-a"></div>
+    <div class="mockup-panel" id="mockup-a"></div>
+  </div>
+</div>
+
+<!-- ═══════════════════ VARIANT B ═══════════════════ -->
+<div class="variant-section" id="variant-b">
+  <div class="variant-label">B — Directional Slide</div>
+  <div class="variant-desc">Horizontal parallax slide — text & mockup at different speeds</div>
+  <div class="tabs" id="tabs-b"></div>
+  <div class="content-area">
+    <div class="text-panel" id="text-b"></div>
+    <div class="mockup-panel" id="mockup-b"></div>
+  </div>
+</div>
+
+<!-- ═══════════════════ VARIANT C ═══════════════════ -->
+<div class="variant-section" id="variant-c">
+  <div class="variant-label">C — Elastic Spring</div>
+  <div class="variant-desc">Flung out with skew → springs back with elastic overshoot + stretchy pill</div>
+  <div class="tabs has-pill" id="tabs-c"><div class="pill-indicator" id="pill-c"></div></div>
+  <div class="content-area">
+    <div class="text-panel" id="text-c"></div>
+    <div class="mockup-panel" id="mockup-c"></div>
+  </div>
+</div>
+
+<!-- ═══════════════════ VARIANT D ═══════════════════ -->
+<div class="variant-section" id="variant-d">
+  <div class="variant-label">D — 3D Flip</div>
+  <div class="variant-desc">Rotates out on Y-axis like a page turn → rotates in from other side + stretchy pill</div>
+  <div class="tabs has-pill" id="tabs-d"><div class="pill-indicator" id="pill-d"></div></div>
+  <div class="content-area" style="perspective: 1200px;">
+    <div class="text-panel" id="text-d"></div>
+    <div class="mockup-panel" id="mockup-d"></div>
+  </div>
+</div>
+
+<script>
+const features = [
+  { name: 'Analytics', eyebrow: 'Real-Time Data', title: 'Unified Analytics Dashboard', subtitle: 'Track followers, engagement, and reach across all platforms in one place.' },
+  { name: 'Competitor Intel', eyebrow: 'Spy Mode', title: 'Competitor Intelligence', subtitle: 'Monitor competitor strategies and benchmark your performance against theirs.' },
+  { name: 'Design Builder', eyebrow: 'Create', title: 'AI Design Builder', subtitle: 'Build stunning social media graphics with AI-powered templates and layers.' },
+  { name: 'Ads Manager', eyebrow: 'Campaigns', title: 'Cross-Platform Ads', subtitle: 'Manage Facebook, Instagram, and TikTok ads from a single dashboard.' },
+  { name: 'AI Briefing', eyebrow: 'Intelligence', title: 'Daily AI Briefing', subtitle: 'Get personalized insights and recommendations powered by AI every morning.' },
+];
+
+function renderContent(textEl, mockupEl, index) {
+  const f = features[index];
+  textEl.innerHTML = `
+    <div class="eyebrow">${f.eyebrow}</div>
+    <div class="title">${f.title}</div>
+    <div class="subtitle">${f.subtitle}</div>
+  `;
+  mockupEl.innerHTML = `<div class="mockup color-${index}">${index + 1}</div>`;
+}
+
+function createTabs(containerId, variant) {
+  const container = document.getElementById(containerId);
+  features.forEach((f, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'tab' + (i === 0 ? ' active' : '');
+    btn.textContent = f.name;
+    btn.dataset.index = i;
+    btn.addEventListener('click', () => variants[variant].switchTo(i, true));
+    container.appendChild(btn);
+  });
+}
+
+// ──── Pill indicator helper ────
+function positionPill(pillId, tabsId, index, animate) {
+  const pill = document.getElementById(pillId);
+  const tabs = document.getElementById(tabsId);
+  if (!pill || !tabs) return;
+
+  const tabBtns = tabs.querySelectorAll('.tab');
+  const tab = tabBtns[index];
+  if (!tab) return;
+
+  const tabsRect = tabs.getBoundingClientRect();
+  const tabRect = tab.getBoundingClientRect();
+  const targetLeft = tabRect.left - tabsRect.left;
+  const targetWidth = tabRect.width;
+
+  if (!animate) {
+    gsap.set(pill, { left: targetLeft, width: targetWidth });
+    return;
+  }
+
+  const currentLeft = parseFloat(gsap.getProperty(pill, 'left')) || 0;
+  const currentWidth = parseFloat(gsap.getProperty(pill, 'width')) || targetWidth;
+  const stretchLeft = Math.min(currentLeft, targetLeft);
+  const stretchRight = Math.max(currentLeft + currentWidth, targetLeft + targetWidth);
+
+  const tl = gsap.timeline();
+  tl.to(pill, { left: stretchLeft, width: stretchRight - stretchLeft, duration: 0.3, ease: 'power2.out' });
+  tl.to(pill, { left: targetLeft, width: targetWidth, duration: 0.5, ease: 'elastic.out(1, 0.5)' });
+}
+
+function updateTabsUI(tabsId, index) {
+  document.querySelectorAll(`#${tabsId} .tab`).forEach((t, i) => {
+    t.classList.toggle('active', i === index);
+  });
+}
+
+// ═══════════════════════════════════════
+// VARIANT A — Cinematic Crossfade
+// ═══════════════════════════════════════
+const variantA = (() => {
+  let active = 0, transitioning = false, timer = null;
+  const textEl = document.getElementById('text-a');
+  const mockupEl = document.getElementById('mockup-a');
+
+  async function switchTo(index, user) {
+    if (index === active || transitioning) return;
+    transitioning = true;
+    if (user) { clearInterval(timer); timer = null; }
+    updateTabsUI('tabs-a', index);
+
+    // EXIT: scale down + fade
+    await Promise.all([
+      gsap.to(textEl, { opacity: 0, scale: 0.92, y: 40, duration: 0.4, ease: 'power2.in' }),
+      gsap.to(mockupEl, { opacity: 0, scale: 0.85, y: 30, duration: 0.4, ease: 'power2.in' }),
+    ]);
+
+    // SWAP
+    active = index;
+    renderContent(textEl, mockupEl, index);
+
+    // ENTER: staggered cascade from below
+    gsap.set(textEl, { opacity: 1, scale: 1, y: 0 });
+    const children = Array.from(textEl.children);
+    gsap.fromTo(children,
+      { opacity: 0, y: 60 },
+      { opacity: 1, y: 0, duration: 0.6, stagger: 0.1, ease: 'power3.out' }
+    );
+    await gsap.fromTo(mockupEl,
+      { opacity: 0, scale: 0.7, y: 50 },
+      { opacity: 1, scale: 1, y: 0, duration: 0.8, ease: 'back.out(1.7)' }
+    );
+    gsap.set([textEl, mockupEl], { clearProps: 'all' });
+    transitioning = false;
+    if (user) startAuto();
+  }
+
+  function startAuto() {
+    clearInterval(timer);
+    timer = setInterval(() => switchTo((active + 1) % features.length, false), 5000);
+  }
+
+  return { switchTo, start() { renderContent(textEl, mockupEl, 0); startAuto(); } };
+})();
+
+// ═══════════════════════════════════════
+// VARIANT B — Directional Slide
+// ═══════════════════════════════════════
+const variantB = (() => {
+  let active = 0, transitioning = false, timer = null;
+  const textEl = document.getElementById('text-b');
+  const mockupEl = document.getElementById('mockup-b');
+
+  async function switchTo(index, user) {
+    if (index === active || transitioning) return;
+    transitioning = true;
+    if (user) { clearInterval(timer); timer = null; }
+    const fwd = index > active;
+    const exitDir = fwd ? -1 : 1;
+    updateTabsUI('tabs-b', index);
+
+    // EXIT: horizontal slide with parallax
+    await Promise.all([
+      gsap.to(textEl, { opacity: 0, x: exitDir * 120, duration: 0.4, ease: 'power3.in' }),
+      gsap.to(mockupEl, { opacity: 0, x: exitDir * 200, duration: 0.45, ease: 'power3.in' }),
+    ]);
+
+    active = index;
+    renderContent(textEl, mockupEl, index);
+    const enterDir = fwd ? 1 : -1;
+
+    // ENTER: slide in from opposite
+    gsap.fromTo(textEl,
+      { opacity: 0, x: enterDir * 120 },
+      { opacity: 1, x: 0, duration: 0.5, ease: 'power2.out' }
+    );
+    await gsap.fromTo(mockupEl,
+      { opacity: 0, x: enterDir * 200 },
+      { opacity: 1, x: 0, duration: 0.6, ease: 'power2.out' }
+    );
+    gsap.set([textEl, mockupEl], { clearProps: 'all' });
+    transitioning = false;
+    if (user) startAuto();
+  }
+
+  function startAuto() {
+    clearInterval(timer);
+    timer = setInterval(() => switchTo((active + 1) % features.length, false), 5000);
+  }
+
+  return { switchTo, start() { renderContent(textEl, mockupEl, 0); startAuto(); } };
+})();
+
+// ═══════════════════════════════════════
+// VARIANT C — Elastic Spring
+// ═══════════════════════════════════════
+const variantC = (() => {
+  let active = 0, transitioning = false, timer = null;
+  const textEl = document.getElementById('text-c');
+  const mockupEl = document.getElementById('mockup-c');
+
+  async function switchTo(index, user) {
+    if (index === active || transitioning) return;
+    transitioning = true;
+    if (user) { clearInterval(timer); timer = null; }
+    const fwd = index > active;
+    const exitDir = fwd ? -1 : 1;
+    const skew = fwd ? -8 : 8;
+    updateTabsUI('tabs-c', index);
+    positionPill('pill-c', 'tabs-c', index, true);
+
+    // EXIT: fling out with skew
+    await Promise.all([
+      gsap.to(textEl, { opacity: 0, x: exitDir * 150, skewX: skew, scale: 0.9, duration: 0.35, ease: 'power3.in' }),
+      gsap.to(mockupEl, { opacity: 0, y: 80, scale: 0.75, rotation: exitDir * 5, duration: 0.35, ease: 'power3.in' }),
+    ]);
+
+    active = index;
+    renderContent(textEl, mockupEl, index);
+    const enterDir = fwd ? 1 : -1;
+
+    // ENTER: elastic spring overshoot
+    gsap.fromTo(textEl,
+      { opacity: 0, x: enterDir * 150, skewX: -skew, scale: 0.9 },
+      { opacity: 1, x: 0, skewX: 0, scale: 1, duration: 0.8, ease: 'elastic.out(1, 0.6)' }
+    );
+    await gsap.fromTo(mockupEl,
+      { opacity: 0, y: -80, scale: 0.75, rotation: -exitDir * 5 },
+      { opacity: 1, y: 0, scale: 1, rotation: 0, duration: 0.9, ease: 'elastic.out(1, 0.5)' }
+    );
+    gsap.set([textEl, mockupEl], { clearProps: 'all' });
+    transitioning = false;
+    if (user) startAuto();
+  }
+
+  function startAuto() {
+    clearInterval(timer);
+    timer = setInterval(() => switchTo((active + 1) % features.length, false), 5000);
+  }
+
+  return { switchTo, start() { renderContent(textEl, mockupEl, 0); positionPill('pill-c', 'tabs-c', 0, false); startAuto(); } };
+})();
+
+// ═══════════════════════════════════════
+// VARIANT D — 3D Flip
+// ═══════════════════════════════════════
+const variantD = (() => {
+  let active = 0, transitioning = false, timer = null;
+  const textEl = document.getElementById('text-d');
+  const mockupEl = document.getElementById('mockup-d');
+
+  async function switchTo(index, user) {
+    if (index === active || transitioning) return;
+    transitioning = true;
+    if (user) { clearInterval(timer); timer = null; }
+    const fwd = index > active;
+    const rotOut = fwd ? -45 : 45;
+    updateTabsUI('tabs-d', index);
+    positionPill('pill-d', 'tabs-d', index, true);
+
+    // EXIT: 3D rotate out
+    await Promise.all([
+      gsap.to(textEl, { opacity: 0, rotationY: rotOut, x: fwd ? -60 : 60, scale: 0.85, duration: 0.45, ease: 'power2.in' }),
+      gsap.to(mockupEl, { opacity: 0, rotationY: rotOut * 0.7, x: fwd ? -40 : 40, scale: 0.9, duration: 0.45, ease: 'power2.in' }),
+    ]);
+
+    active = index;
+    renderContent(textEl, mockupEl, index);
+    const rotIn = fwd ? 45 : -45;
+
+    // ENTER: 3D rotate in from opposite
+    gsap.fromTo(textEl,
+      { opacity: 0, rotationY: rotIn, x: fwd ? 60 : -60, scale: 0.85 },
+      { opacity: 1, rotationY: 0, x: 0, scale: 1, duration: 0.7, ease: 'power2.out' }
+    );
+    await gsap.fromTo(mockupEl,
+      { opacity: 0, rotationY: rotIn * 0.7, x: fwd ? 40 : -40, scale: 0.9 },
+      { opacity: 1, rotationY: 0, x: 0, scale: 1, duration: 0.8, ease: 'power2.out' }
+    );
+    gsap.set([textEl, mockupEl], { clearProps: 'all' });
+    transitioning = false;
+    if (user) startAuto();
+  }
+
+  function startAuto() {
+    clearInterval(timer);
+    timer = setInterval(() => switchTo((active + 1) % features.length, false), 5000);
+  }
+
+  return { switchTo, start() { renderContent(textEl, mockupEl, 0); positionPill('pill-d', 'tabs-d', 0, false); startAuto(); } };
+})();
+
+const variants = { a: variantA, b: variantB, c: variantC, d: variantD };
+
+// Init
+['a', 'b', 'c', 'd'].forEach(v => {
+  createTabs(`tabs-${v}`, v);
+  variants[v].start();
+});
+</script>
+</body>
+</html>

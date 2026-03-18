@@ -366,6 +366,7 @@ useGsapSection(sectionRef, (el, g) => {
 .lp-ai-creation {
   padding: var(--lp-section-gap) var(--space-xl);
   min-height: 100vh;
+  background: transparent;
 }
 
 .lp-section-inner {
@@ -503,7 +504,7 @@ useGsapSection(sectionRef, (el, g) => {
   position: relative;
   height: 480px;
   border-radius: var(--radius-xl);
-  background: var(--lp-bg-surface);
+  background: rgba(255, 255, 255, 0.03);
   border: 1px solid var(--lp-border);
   overflow: hidden;
   perspective: 1200px;
@@ -987,5 +988,11 @@ img.lp-preview-img {
     height: 44px;
   }
 }
+</style>
 
+<style>
+/* Non-scoped: GSAP pin-spacer is injected outside Vue scoped styles */
+.pin-spacer:has(.lp-ai-creation) {
+  background: transparent !important;
+}
 </style>

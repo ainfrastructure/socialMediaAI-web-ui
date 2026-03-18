@@ -8,9 +8,9 @@ const { t } = useI18n()
 const sectionRef = ref<HTMLElement | null>(null)
 
 const testimonials = [
-  { key: 'testimonial1', name: 'Sarah K.', role: 'restaurantOwner', rating: 5, avatar: 'SK' },
-  { key: 'testimonial2', name: 'Marcus L.', role: 'fitnessCoach', rating: 5, avatar: 'ML' },
-  { key: 'testimonial3', name: 'Emma R.', role: 'ecommerceFounder', rating: 5, avatar: 'ER' },
+  { key: 'testimonial1', name: 'Taien Chaouch', role: 'ceoVetted', rating: 5, logo: '/example/vetted-logo.png' },
+  { key: 'testimonial2', name: 'Ali Sharghi', role: 'ceoOkam', rating: 5, logo: '/example/okam-logo.jpg' },
+  { key: 'testimonial3', name: 'Shane Le-reux', role: 'ceoBlueocean', rating: 5, logo: '/example/blueocean-logo.png' },
 ]
 
 useGsapSection(sectionRef, (el, gsapInstance) => {
@@ -43,7 +43,9 @@ useGsapSection(sectionRef, (el, gsapInstance) => {
           </blockquote>
 
           <div class="lp-test-author">
-            <div class="lp-test-avatar">{{ test.avatar }}</div>
+            <div class="lp-test-avatar">
+              <img :src="test.logo" :alt="test.name" class="lp-test-logo" />
+            </div>
             <div>
               <span class="lp-test-name">{{ test.name }}</span>
               <span class="lp-test-role">{{ t(`appLanding.testimonials.${test.role}`) }}</span>
@@ -144,9 +146,14 @@ useGsapSection(sectionRef, (el, gsapInstance) => {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: var(--text-xs);
-  font-weight: var(--font-bold);
-  color: var(--lp-text-secondary);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.lp-test-logo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .lp-test-name {

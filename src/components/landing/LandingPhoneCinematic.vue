@@ -5,9 +5,7 @@ import { gsap } from '@/composables/useGsapSection'
 import { useMagneticButton } from '@/composables/useMagneticButton'
 import PhoneMockup from '@/components/PhoneMockup.vue'
 import MaterialIcon from '@/components/MaterialIcon.vue'
-import PhoneScenarioChat from './PhoneScenarioChat.vue'
-import PhoneScenarioCalendar from './PhoneScenarioCalendar.vue'
-import PhoneScenarioAds from './PhoneScenarioAds.vue'
+import PhoneScenario7Steps from './PhoneScenario7Steps.vue'
 
 const { t } = useI18n()
 const sectionRef = ref<HTMLElement | null>(null)
@@ -22,8 +20,23 @@ function scrollToSection(sectionId: string) {
 
 const scenarioLabels = [
   { key: 'chat', icon: 'chat' },
-  { key: 'calendar', icon: 'calendar_month' },
-  { key: 'ads', icon: 'campaign' },
+  { key: 'strategy', icon: 'lightbulb' },
+  { key: 'design', icon: 'palette' },
+  { key: 'create', icon: 'auto_awesome' },
+  { key: 'adapt', icon: 'devices' },
+  { key: 'schedule', icon: 'calendar_month' },
+  { key: 'analytics', icon: 'insights' },
+]
+
+// Step accent colors for orb tinting
+const stepColors = [
+  'var(--lp-accent-orange)',
+  'var(--lp-accent-violet)',
+  'var(--lp-accent-cyan)',
+  'var(--lp-accent-violet)',
+  'var(--lp-accent-blue)',
+  'var(--lp-accent-orange)',
+  '#22c55e',
 ]
 
 let masterTl: gsap.core.Timeline | null = null
@@ -33,15 +46,28 @@ onMounted(async () => {
   const el = sectionRef.value
   if (!el) return
 
-  const scenarioChat = el.querySelector('.cine-scenario-chat')
-  const scenarioCal = el.querySelector('.cine-scenario-calendar')
-  const scenarioAds = el.querySelector('.cine-scenario-ads')
+  // Query all 7 step containers
+  const steps = [
+    el.querySelector('.ps-step-chat'),
+    el.querySelector('.ps-step-strategy'),
+    el.querySelector('.ps-step-design'),
+    el.querySelector('.ps-step-create'),
+    el.querySelector('.ps-step-adapt'),
+    el.querySelector('.ps-step-schedule'),
+    el.querySelector('.ps-step-analytics'),
+  ]
   const shimmer = el.querySelector('.cine-shimmer')
+  const orb1 = el.querySelector('.cine-orb-1')
+  const orb2 = el.querySelector('.cine-orb-2')
 
   // Set initial states
-  gsap.set(scenarioCal, { opacity: 0, visibility: 'hidden' })
-  gsap.set(scenarioAds, { opacity: 0, visibility: 'hidden' })
-  gsap.set(scenarioChat, { opacity: 1, visibility: 'visible' })
+  steps.forEach((s, i) => {
+    if (i === 0) {
+      gsap.set(s, { visibility: 'visible', opacity: 1 })
+    } else {
+      gsap.set(s, { visibility: 'hidden', opacity: 0 })
+    }
+  })
 
   // Hero entrance animation
   const entrance = gsap.timeline({ defaults: { ease: 'power3.out' }, delay: 0.1 })
@@ -54,251 +80,445 @@ onMounted(async () => {
     .fromTo(el.querySelector('.cine-phone-wrap'), { opacity: 0, x: 60 }, { opacity: 1, x: 0, duration: 1 }, '-=1.2')
     .fromTo(el.querySelector('.cine-pills'), { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.5 }, '-=0.5')
 
-  // Helper: build reset timeline to clear a scenario back to initial state
+  // ============ RESET HELPERS ============
   function resetChat() {
-    gsap.set(scenarioChat!.querySelector('.sc-user'), { opacity: 0 })
-    gsap.set(scenarioChat!.querySelector('.sc-ai'), { opacity: 0 })
-    gsap.set(scenarioChat!.querySelector('.sc-typing-dots'), { opacity: 1, height: 'auto' })
-    gsap.set(scenarioChat!.querySelector('.sc-ai-text'), { opacity: 0, maxHeight: 0 })
-    gsap.set(scenarioChat!.querySelector('.sc-post-card'), { opacity: 0, scale: 0.9, y: 0, rotation: 0 })
-    gsap.set(scenarioChat!.querySelector('.sc-btn-publish'), { boxShadow: 'none' })
-    gsap.set(scenarioChat!.querySelectorAll('.sc-confetti-dot'), { opacity: 0, x: 0, y: 0, scale: 1 })
-    gsap.set(scenarioChat!.querySelector('.sc-success-badge'), { opacity: 0 })
+    const s = steps[0]!
+    gsap.set(s.querySelector('.ps-chat-ai'), { opacity: 0, y: 15 })
+    gsap.set(s.querySelector('.ps-typing-dots'), { opacity: 1, height: 'auto' })
+    gsap.set(s.querySelector('.ps-chat-ai-text'), { opacity: 0, maxHeight: 0 })
+    gsap.set(s.querySelector('.ps-chat-user'), { opacity: 0, y: 10 })
+    gsap.set(s.querySelector('.ps-chat-user-text'), { maxWidth: '0%' })
+    gsap.set(s.querySelector('.ps-chat-send'), { opacity: 0, scale: 0.8 })
   }
 
-  function resetCalendar() {
-    gsap.set(scenarioCal!.querySelectorAll('.scal-day-label'), { opacity: 0 })
-    gsap.set(scenarioCal!.querySelectorAll('.scal-post'), { opacity: 0, y: -20 })
-    gsap.set(scenarioCal!.querySelector('.scal-view-link'), { opacity: 0 })
-    gsap.set(scenarioCal!.querySelector('.scal-week'), { x: '0%', opacity: 1 })
-    gsap.set(scenarioCal!.querySelector('.scal-month'), { opacity: 0 })
-    gsap.set(scenarioCal!.querySelectorAll('.scal-month-dot'), { opacity: 0, scale: 0 })
-    gsap.set(scenarioCal!.querySelector('.scal-detail-card'), { opacity: 0, y: 20 })
+  function resetStrategy() {
+    const s = steps[1]!
+    gsap.set(s.querySelector('.ps-strategy-response'), { opacity: 0, clipPath: 'inset(0 100% 0 0)' })
+    gsap.set(s.querySelectorAll('.ps-strategy-card'), { opacity: 0, x: -20 })
+    gsap.set(s.querySelector('.ps-strategy-cta'), { opacity: 0, y: 10, boxShadow: 'none' })
   }
 
-  function resetAds() {
-    gsap.set(scenarioAds!.querySelector('.sads-search'), { opacity: 0 })
-    gsap.set(scenarioAds!.querySelector('.sads-search-text'), { maxWidth: 0 })
-    gsap.set(scenarioAds!.querySelector('.sads-campaign'), { opacity: 0, y: 20 })
-    const sparkLine = scenarioAds!.querySelector('.sads-spark-line')
+  function resetDesign() {
+    const s = steps[2]!
+    gsap.set(s.querySelectorAll('.ps-design-card'), { opacity: 0, y: 30, rotation: -3 })
+    gsap.set(s.querySelectorAll('.ps-design-layer'), { opacity: 0, y: 12 })
+    gsap.set(s.querySelector('.ps-premium-tag'), { opacity: 0, x: -10 })
+  }
+
+  function resetCreate() {
+    const s = steps[3]!
+    gsap.set(s.querySelectorAll('.ps-shimmer'), { opacity: 1 })
+    gsap.set(s.querySelector('.ps-ring'), { opacity: 0 })
+    gsap.set(s.querySelector('.ps-ring-arc'), { strokeDashoffset: 100 })
+    gsap.set(s.querySelector('.ps-create-post'), { opacity: 0, clipPath: 'inset(0 0 100% 0)' })
+    gsap.set(s.querySelector('.ps-create-accent-bar'), { scaleX: 0 })
+    gsap.set(s.querySelector('.ps-create-tag'), { opacity: 0, scale: 0.5 })
+    gsap.set(s.querySelector('.ps-create-headline'), { opacity: 0, y: 8 })
+    gsap.set(s.querySelectorAll('.ps-hashtag'), { opacity: 0, y: 10 })
+    gsap.set(s.querySelector('.ps-sparkle-badge'), { opacity: 0, scale: 0 })
+    gsap.set(s.querySelectorAll('.ps-sparkle-dot'), { opacity: 0, x: 0, y: 0, scale: 1 })
+  }
+
+  function resetAdapt() {
+    const s = steps[4]!
+    gsap.set(s.querySelectorAll('.ps-adapt-card'), { opacity: 0, x: 0, rotation: 0, scale: 0.8 })
+    gsap.set(s.querySelectorAll('.ps-adapt-check'), { opacity: 0, scale: 0 })
+    gsap.set(s.querySelectorAll('.ps-confetti-dot'), { opacity: 0, x: 0, y: 0, scale: 1 })
+    const cc = s.querySelector('[data-charcount]') as HTMLElement | null
+    if (cc) cc.textContent = '0 / 3,000'
+  }
+
+  function resetSchedule() {
+    const s = steps[5]!
+    gsap.set(s.querySelector('.ps-schedule-grid'), { opacity: 0, y: 20 })
+    gsap.set(s.querySelectorAll('.ps-schedule-dot'), { opacity: 0 })
+    gsap.set(s.querySelector('.ps-schedule-highlight'), { opacity: 0, y: 15 })
+    gsap.set(s.querySelector('.ps-schedule-hl-time'), { opacity: 0 })
+    gsap.set(s.querySelectorAll('.ps-badge'), { x: 0, opacity: 0 })
+  }
+
+  function resetAnalytics() {
+    const s = steps[6]!
+    gsap.set(s.querySelectorAll('.ps-kpi'), { opacity: 0, y: 20 })
+    gsap.set(s.querySelectorAll('.ps-kpi-pct'), { opacity: 0, scale: 0 })
+    const sparkLine = s.querySelector('.ps-spark-line')
     if (sparkLine) gsap.set(sparkLine, { strokeDashoffset: 400 })
-    gsap.set(scenarioAds!.querySelectorAll('.sads-kpi'), { opacity: 0 })
-    // Reset KPI text
-    const kpiDefaults: Record<string, string> = { roas: '0x', cpc: '$0.00', conversions: '0', spend: '$0' }
+    gsap.set(s.querySelector('.ps-top-post'), { opacity: 0, scale: 0 })
+    gsap.set(s.querySelector('.ps-analytics-cta'), { opacity: 0, y: 10 })
+    // Reset KPI values
+    const kpiDefaults: Record<string, string> = { likes: '0', comments: '0', reach: '0', shares: '0' }
     Object.entries(kpiDefaults).forEach(([key, val]) => {
-      const kpiEl = scenarioAds!.querySelector(`[data-kpi="${key}"]`) as HTMLElement | null
+      const kpiEl = s.querySelector(`[data-kpi="${key}"]`) as HTMLElement | null
       if (kpiEl) kpiEl.textContent = val
     })
-    gsap.set(scenarioAds!.querySelector('.sads-kpi-highlight'), { boxShadow: 'none' })
   }
 
-  // Initialize all to reset state
-  resetChat()
-  resetCalendar()
-  resetAds()
+  const resets = [resetChat, resetStrategy, resetDesign, resetCreate, resetAdapt, resetSchedule, resetAnalytics]
+  resets.forEach((r) => r())
 
-  // ============================================
-  // Build the auto-playing master timeline (loops)
-  // ============================================
+  // Helper: transition between steps
+  function addTransition(tl: gsap.core.Timeline, fromStep: number, toStep: number, time: number) {
+    tl.to(steps[fromStep], { opacity: 0, scale: 0.95, duration: 0.4 }, time)
+    tl.set(steps[fromStep], { visibility: 'hidden' }, time + 0.4)
+    tl.call(() => resets[fromStep](), undefined, time + 0.4)
+    tl.fromTo(shimmer,
+      { opacity: 0, x: '-100%' },
+      { opacity: 0.6, x: '100%', duration: 0.5, ease: 'power2.inOut' },
+      time + 0.1,
+    )
+    tl.to(shimmer, { opacity: 0, duration: 0.1 }, time + 0.6)
+    tl.set(steps[toStep], { visibility: 'visible' }, time + 0.4)
+    tl.fromTo(steps[toStep],
+      { opacity: 0, scale: 1.02 },
+      { opacity: 1, scale: 1, duration: 0.4 },
+      time + 0.4,
+    )
+    // Tint orbs to match step color
+    if (orb1) tl.to(orb1, { background: stepColors[toStep], duration: 0.5 }, time)
+    if (orb2) tl.to(orb2, { background: stepColors[toStep], duration: 0.5 }, time + 0.2)
+  }
+
+  // ============ BUILD MASTER TIMELINE ============
   masterTl = gsap.timeline({
     repeat: -1,
-    delay: 1.5, // wait for entrance to finish
+    delay: 1.5,
     defaults: { ease: 'power2.out' },
   })
 
-  // ------------------------------------------
-  // SCENARIO 1: AI CHAT & PUBLISH (~0s – 6s)
-  // ------------------------------------------
-  // Set active pill
+  // ---- STEP 1: AI CHAT (0s – 4.5s) ----
   masterTl.call(() => { activeScenario.value = 0 })
+  const s1 = steps[0]!
 
-  // User message slides in
-  masterTl.to(scenarioChat!.querySelector('.sc-user'), { opacity: 1, duration: 0.4 }, 0.2)
+  // AI bubble slides up
+  masterTl.to(s1.querySelector('.ps-chat-ai'), {
+    opacity: 1, y: 0, duration: 0.25, ease: 'back.out(1.7)',
+  }, 0.2)
 
-  // AI bubble appears with typing dots
-  masterTl.to(scenarioChat!.querySelector('.sc-ai'), { opacity: 1, duration: 0.3 }, 0.8)
+  // Typing dots pulse then fade
+  masterTl.to(s1.querySelector('.ps-typing-dots'), {
+    opacity: 0, height: 0, duration: 0.2,
+  }, 1.0)
 
-  // Typing dots fade out, AI text streams in
-  masterTl.to(scenarioChat!.querySelector('.sc-typing-dots'), { opacity: 0, height: 0, duration: 0.2 }, 1.8)
-  masterTl.to(scenarioChat!.querySelector('.sc-ai-text'), { opacity: 1, maxHeight: 100, duration: 0.6, ease: 'none' }, 2.0)
+  // AI text reveals via clip-path
+  masterTl.to(s1.querySelector('.ps-chat-ai-text'), {
+    opacity: 1, maxHeight: 100, duration: 0.5, ease: 'none',
+  }, 1.2)
 
-  // Post card scales up
-  masterTl.to(scenarioChat!.querySelector('.sc-post-card'), { opacity: 1, scale: 1, duration: 0.5, ease: 'back.out(1.5)' }, 2.8)
+  // User bubble fades in
+  masterTl.to(s1.querySelector('.ps-chat-user'), {
+    opacity: 1, y: 0, duration: 0.15,
+  }, 1.9)
 
-  // Publish button glows
-  masterTl.to(scenarioChat!.querySelector('.sc-btn-publish'), {
-    boxShadow: '0 0 16px var(--lp-accent-orange)',
-    duration: 0.4,
-    yoyo: true,
-    repeat: 1,
-  }, 3.5)
+  // User text types
+  masterTl.to(s1.querySelector('.ps-chat-user-text'), {
+    maxWidth: '100%', duration: 0.6, ease: 'steps(40)',
+  }, 2.1)
 
-  // Post flies away
-  masterTl.to(scenarioChat!.querySelector('.sc-post-card'), { y: -200, rotation: -5, opacity: 0, duration: 0.5, ease: 'power2.in' }, 4.5)
+  // Send button bounces in
+  masterTl.to(s1.querySelector('.ps-chat-send'), {
+    opacity: 1, scale: 1, duration: 0.2, ease: 'back.out(2)',
+  }, 2.8)
 
-  // Confetti burst
-  const confettiDots = scenarioChat!.querySelectorAll('.sc-confetti-dot')
-  const angles = [0, 36, 72, 108, 144, 180, 216, 252, 288, 324]
-  confettiDots.forEach((dot, i) => {
-    const angle = angles[i] * (Math.PI / 180)
-    const dist = 40 + Math.random() * 30
+  // Transition 1→2
+  addTransition(masterTl, 0, 1, 4.0)
+
+  // ---- STEP 2: STRATEGY (4.8s – 9s) ----
+  const s2Start = 4.8
+  masterTl.call(() => { activeScenario.value = 1 }, undefined, s2Start)
+  const s2 = steps[1]!
+
+  // Response text wipe
+  masterTl.to(s2.querySelector('.ps-strategy-response'), {
+    opacity: 1, clipPath: 'inset(0 0% 0 0)', duration: 0.3, ease: 'power3.out',
+  }, s2Start + 0.2)
+
+  // Strategy cards stagger
+  masterTl.to(s2.querySelectorAll('.ps-strategy-card'), {
+    opacity: 1, x: 0, duration: 0.25, stagger: 0.12, ease: 'back.out(1.5)',
+  }, s2Start + 0.6)
+
+  // CTA button with glow pulse
+  masterTl.to(s2.querySelector('.ps-strategy-cta'), {
+    opacity: 1, y: 0, duration: 0.2,
+  }, s2Start + 1.4)
+  masterTl.to(s2.querySelector('.ps-strategy-cta'), {
+    boxShadow: '0 0 16px rgba(139,92,246,0.4)',
+    duration: 0.3, yoyo: true, repeat: 1,
+  }, s2Start + 1.7)
+
+  // Transition 2→3
+  addTransition(masterTl, 1, 2, 8.5)
+
+  // ---- STEP 3: DESIGN (9.3s – 13.5s) ----
+  const s3Start = 9.3
+  masterTl.call(() => { activeScenario.value = 2 }, undefined, s3Start)
+  const s3 = steps[2]!
+
+  // Template cards fan in from stacked
+  masterTl.to(s3.querySelectorAll('.ps-design-card'), {
+    opacity: 1, y: 0, rotation: 0, duration: 0.3, stagger: 0.1, ease: 'back.out(1.5)',
+  }, s3Start + 0.2)
+
+  // Selection ring pulses on middle card
+  masterTl.to(s3.querySelector('.ps-design-selected'), {
+    scale: 1.04, duration: 0.2, yoyo: true, repeat: 1, ease: 'power2.inOut',
+  }, s3Start + 0.9)
+
+  // Layer items stagger
+  masterTl.to(s3.querySelectorAll('.ps-design-layer'), {
+    opacity: 1, y: 0, duration: 0.2, stagger: 0.08, ease: 'power3.out',
+  }, s3Start + 1.2)
+
+  // Premium badge slides in
+  masterTl.to(s3.querySelector('.ps-premium-tag'), {
+    opacity: 1, x: 0, duration: 0.2, ease: 'power2.out',
+  }, s3Start + 1.8)
+
+  // Transition 3→4
+  addTransition(masterTl, 2, 3, 13.0)
+
+  // ---- STEP 4: CREATE (13.8s – 18s) ----
+  const s4Start = 13.8
+  masterTl.call(() => { activeScenario.value = 3 }, undefined, s4Start)
+  const s4 = steps[3]!
+
+  // Shimmers fade out
+  masterTl.to(s4.querySelectorAll('.ps-shimmer'), {
+    opacity: 0, y: -5, duration: 0.2, stagger: 0.15,
+  }, s4Start + 0.3)
+
+  // Processing ring appears and fills
+  masterTl.to(s4.querySelector('.ps-ring'), { opacity: 1, duration: 0.15 }, s4Start + 0.8)
+  masterTl.to(s4.querySelector('.ps-ring-arc'), {
+    strokeDashoffset: 0, duration: 0.4, ease: 'none',
+  }, s4Start + 0.9)
+  masterTl.to(s4.querySelector('.ps-ring'), { opacity: 0, duration: 0.15 }, s4Start + 1.4)
+
+  // Post card clip-path wipe from bottom
+  masterTl.to(s4.querySelector('.ps-create-post'), {
+    opacity: 1, clipPath: 'inset(0 0 0% 0)', duration: 0.35, ease: 'power3.out',
+  }, s4Start + 1.5)
+
+  // Accent bar, tag, headline
+  masterTl.to(s4.querySelector('.ps-create-accent-bar'), {
+    scaleX: 1, duration: 0.25, ease: 'power3.out',
+  }, s4Start + 1.8)
+  masterTl.to(s4.querySelector('.ps-create-tag'), {
+    opacity: 1, scale: 1, duration: 0.15, ease: 'back.out(2)',
+  }, s4Start + 2.0)
+  masterTl.to(s4.querySelector('.ps-create-headline'), {
+    opacity: 1, y: 0, duration: 0.2, ease: 'power2.out',
+  }, s4Start + 2.1)
+
+  // Hashtag pills elastic stagger
+  masterTl.to(s4.querySelectorAll('.ps-hashtag'), {
+    opacity: 1, y: 0, duration: 0.3, stagger: 0.06, ease: 'elastic.out(1, 0.5)',
+  }, s4Start + 2.4)
+
+  // Sparkle badge pops
+  masterTl.to(s4.querySelector('.ps-sparkle-badge'), {
+    opacity: 1, scale: 1, duration: 0.2, ease: 'back.out(3)',
+  }, s4Start + 2.8)
+
+  // Sparkle dots burst
+  const sparkleDots = s4.querySelectorAll('.ps-sparkle-dot')
+  sparkleDots.forEach((dot, i) => {
+    const angle = (i / 5) * 360 * (Math.PI / 180)
+    const dist = 40 + Math.random() * 20
     masterTl!.to(dot, {
-      opacity: 1,
-      x: Math.cos(angle) * dist,
-      y: Math.sin(angle) * dist,
-      scale: 1.5,
-      duration: 0.4,
-      ease: 'power2.out',
-    }, 5.0)
-    masterTl!.to(dot, { opacity: 0, duration: 0.3 }, 5.4)
+      opacity: 1, x: Math.cos(angle) * dist, y: Math.sin(angle) * dist, scale: 1.5,
+      duration: 0.4, ease: 'power2.out',
+    }, s4Start + 3.0)
+    masterTl!.to(dot, { opacity: 0, duration: 0.2 }, s4Start + 3.4)
   })
 
-  // Success badge
-  masterTl.to(scenarioChat!.querySelector('.sc-success-badge'), { opacity: 1, duration: 0.4 }, 5.2)
+  // Transition 4→5
+  addTransition(masterTl, 3, 4, 17.5)
 
-  // ------------------------------------------
-  // TRANSITION 1 → Calendar (~6.5s – 7.5s)
-  // ------------------------------------------
-  const t1Start = 7
-  masterTl.to(scenarioChat, { opacity: 0, scale: 0.95, duration: 0.4 }, t1Start)
-  masterTl.set(scenarioChat, { visibility: 'hidden' }, t1Start + 0.4)
-  masterTl.call(() => resetChat(), undefined, t1Start + 0.4)
-  masterTl.fromTo(shimmer,
-    { opacity: 0, x: '-100%' },
-    { opacity: 0.6, x: '100%', duration: 0.5, ease: 'power2.inOut' },
-    t1Start + 0.1,
-  )
-  masterTl.to(shimmer, { opacity: 0, duration: 0.1 }, t1Start + 0.6)
-  masterTl.set(scenarioCal, { visibility: 'visible' }, t1Start + 0.4)
-  masterTl.fromTo(scenarioCal,
-    { opacity: 0, scale: 1.02 },
-    { opacity: 1, scale: 1, duration: 0.4 },
-    t1Start + 0.4,
-  )
+  // ---- STEP 5: ADAPT (18.3s – 22.5s) ----
+  const s5Start = 18.3
+  masterTl.call(() => { activeScenario.value = 4 }, undefined, s5Start)
+  const s5 = steps[4]!
 
-  // ------------------------------------------
-  // SCENARIO 2: CALENDAR (~7.5s – 14s)
-  // ------------------------------------------
-  const s2Start = t1Start + 1
-  masterTl.call(() => { activeScenario.value = 1 }, undefined, s2Start)
-
-  // Week header day labels stagger in
-  masterTl.to(scenarioCal!.querySelectorAll('.scal-day-label'), { opacity: 1, stagger: 0.06, duration: 0.2 }, s2Start + 0.2)
-
-  // Posts bounce in
-  masterTl.to(scenarioCal!.querySelectorAll('.scal-post'), {
-    opacity: 1, y: 0, stagger: 0.1, duration: 0.4, ease: 'bounce.out',
-  }, s2Start + 0.8)
-
-  // View link fades in
-  masterTl.to(scenarioCal!.querySelector('.scal-view-link'), { opacity: 1, duration: 0.3 }, s2Start + 2)
-
-  // Week view slides left, month slides in
-  masterTl.to(scenarioCal!.querySelector('.scal-week'), { x: '-100%', opacity: 0, duration: 0.6 }, s2Start + 3)
-  masterTl.to(scenarioCal!.querySelector('.scal-month'), { opacity: 1, duration: 0.4 }, s2Start + 3.4)
-
-  // Month dots stagger in
-  masterTl.to(scenarioCal!.querySelectorAll('.scal-month-dot'), {
-    opacity: 1, scale: 1, stagger: 0.03, duration: 0.15, ease: 'back.out(3)',
-  }, s2Start + 3.8)
-
-  // Detail card slides up
-  masterTl.to(scenarioCal!.querySelector('.scal-detail-card'), { opacity: 1, y: 0, duration: 0.4 }, s2Start + 5)
-
-  // ------------------------------------------
-  // TRANSITION 2 → Ads (~14.5s – 15.5s)
-  // ------------------------------------------
-  const t2Start = s2Start + 6
-  masterTl.to(scenarioCal, { opacity: 0, scale: 0.95, duration: 0.4 }, t2Start)
-  masterTl.set(scenarioCal, { visibility: 'hidden' }, t2Start + 0.4)
-  masterTl.call(() => resetCalendar(), undefined, t2Start + 0.4)
-  masterTl.fromTo(shimmer,
-    { opacity: 0, x: '-100%' },
-    { opacity: 0.6, x: '100%', duration: 0.5, ease: 'power2.inOut' },
-    t2Start + 0.1,
-  )
-  masterTl.to(shimmer, { opacity: 0, duration: 0.1 }, t2Start + 0.6)
-  masterTl.set(scenarioAds, { visibility: 'visible' }, t2Start + 0.4)
-  masterTl.fromTo(scenarioAds,
-    { opacity: 0, scale: 1.02 },
-    { opacity: 1, scale: 1, duration: 0.4 },
-    t2Start + 0.4,
-  )
-
-  // ------------------------------------------
-  // SCENARIO 3: ADS MANAGER (~15.5s – 22s)
-  // ------------------------------------------
-  const s3Start = t2Start + 1
-  masterTl.call(() => { activeScenario.value = 2 }, undefined, s3Start)
-
-  // Search bar appears
-  masterTl.to(scenarioAds!.querySelector('.sads-search'), { opacity: 1, duration: 0.3 }, s3Start + 0.2)
-
-  // Typing in search
-  masterTl.to(scenarioAds!.querySelector('.sads-search-text'), { maxWidth: 200, duration: 0.8, ease: 'steps(20)' }, s3Start + 0.5)
-
-  // Campaign card slides up
-  masterTl.to(scenarioAds!.querySelector('.sads-campaign'), { opacity: 1, y: 0, duration: 0.4, ease: 'power2.out' }, s3Start + 1.5)
-
-  // Sparkline draws
-  const sparkLine = scenarioAds!.querySelector('.sads-spark-line')
-  if (sparkLine) {
-    masterTl.to(sparkLine, { strokeDashoffset: 0, duration: 1.2, ease: 'power2.inOut' }, s3Start + 2)
+  // Cards fan out from center
+  const adaptCards = s5.querySelectorAll('.ps-adapt-card')
+  if (adaptCards.length === 3) {
+    masterTl.to(adaptCards[0], {
+      opacity: 1, x: -80, rotation: -6, scale: 1, duration: 0.35, ease: 'back.out(1.5)',
+    }, s5Start + 0.2)
+    masterTl.to(adaptCards[1], {
+      opacity: 1, x: 0, scale: 1, duration: 0.35, ease: 'back.out(1.5)',
+    }, s5Start + 0.2)
+    masterTl.to(adaptCards[2], {
+      opacity: 1, x: 80, rotation: 6, scale: 1, duration: 0.35, ease: 'back.out(1.5)',
+    }, s5Start + 0.2)
   }
 
-  // KPI cards stagger in
-  masterTl.to(scenarioAds!.querySelectorAll('.sads-kpi'), { opacity: 1, stagger: 0.15, duration: 0.3 }, s3Start + 3)
+  // LinkedIn center card glow
+  masterTl.to(adaptCards[1], {
+    boxShadow: '0 0 20px rgba(10,102,194,0.4)',
+    duration: 0.3, yoyo: true, repeat: 1,
+  }, s5Start + 0.8)
 
-  // KPI number counting
+  // Checkmarks stagger
+  masterTl.to(s5.querySelectorAll('.ps-adapt-check'), {
+    opacity: 1, scale: 1, duration: 0.2, stagger: 0.2, ease: 'back.out(3)',
+  }, s5Start + 1.2)
+
+  // Character count proxy
+  const ccEl = s5.querySelector('[data-charcount]') as HTMLElement | null
+  if (ccEl) {
+    const ccProxy = { value: 0 }
+    masterTl.to(ccProxy, {
+      value: 2847, duration: 0.8, ease: 'power2.out',
+      onUpdate() {
+        ccEl.textContent = Math.round(ccProxy.value).toLocaleString('en-US') + ' / 3,000'
+      },
+    }, s5Start + 1.5)
+  }
+
+  // Confetti burst
+  const confettiDots = s5.querySelectorAll('.ps-confetti-dot')
+  const confettiAngles = [0, 36, 72, 108, 144, 180, 216, 252, 288, 324]
+  confettiDots.forEach((dot, i) => {
+    const angle = confettiAngles[i] * (Math.PI / 180)
+    const dist = 40 + Math.random() * 30
+    masterTl!.to(dot, {
+      opacity: 1, x: Math.cos(angle) * dist, y: Math.sin(angle) * dist, scale: 1.5,
+      duration: 0.5, ease: 'power2.out',
+    }, s5Start + 2.5)
+    masterTl!.to(dot, { opacity: 0, duration: 0.3 }, s5Start + 3.0)
+  })
+
+  // Transition 5→6
+  addTransition(masterTl, 4, 5, 22.0)
+
+  // ---- STEP 6: SCHEDULE (22.8s – 27s) ----
+  const s6Start = 22.8
+  masterTl.call(() => { activeScenario.value = 5 }, undefined, s6Start)
+  const s6 = steps[5]!
+
+  // Calendar grid fades in
+  masterTl.to(s6.querySelector('.ps-schedule-grid'), {
+    opacity: 1, y: 0, duration: 0.3, ease: 'power2.out',
+  }, s6Start + 0.2)
+
+  // Dots stagger
+  masterTl.to(s6.querySelectorAll('.ps-schedule-dot'), {
+    opacity: 1, duration: 0.15, stagger: 0.06, ease: 'back.out(3)',
+  }, s6Start + 0.6)
+
+  // Highlight card slides in
+  masterTl.to(s6.querySelector('.ps-schedule-highlight'), {
+    opacity: 1, y: 0, duration: 0.25, ease: 'back.out(2)',
+  }, s6Start + 1.1)
+
+  // Best time label fades in
+  masterTl.to(s6.querySelector('.ps-schedule-hl-time'), {
+    opacity: 1, duration: 0.2,
+  }, s6Start + 1.5)
+
+  // Badge carousel
+  const bScheduled = s6.querySelector('.ps-badge-scheduled')
+  const bPublished = s6.querySelector('.ps-badge-published')
+  const bCta = s6.querySelector('.ps-badge-cta-pill')
+
+  if (bScheduled) {
+    masterTl.fromTo(bScheduled,
+      { x: '-100vw', opacity: 0 },
+      { x: 0, opacity: 1, duration: 0.18, ease: 'power2.out', immediateRender: false },
+      s6Start + 1.8,
+    )
+    masterTl.to(bScheduled, { x: '100vw', opacity: 0, duration: 0.15, ease: 'power2.in' }, s6Start + 2.3)
+  }
+  if (bPublished) {
+    masterTl.fromTo(bPublished,
+      { x: '-100vw', opacity: 0 },
+      { x: 0, opacity: 1, duration: 0.18, ease: 'power2.out', immediateRender: false },
+      s6Start + 2.3,
+    )
+    masterTl.to(bPublished, { x: '100vw', opacity: 0, duration: 0.15, ease: 'power2.in' }, s6Start + 2.8)
+  }
+  if (bCta) {
+    masterTl.fromTo(bCta,
+      { x: '-100vw', opacity: 0 },
+      { x: 0, opacity: 1, duration: 0.18, ease: 'power2.out', immediateRender: false },
+      s6Start + 2.8,
+    )
+  }
+
+  // Transition 6→7
+  addTransition(masterTl, 5, 6, 26.5)
+
+  // ---- STEP 7: ANALYTICS (27.3s – 32s) ----
+  const s7Start = 27.3
+  masterTl.call(() => { activeScenario.value = 6 }, undefined, s7Start)
+  const s7 = steps[6]!
+
+  // KPI cards stagger
+  masterTl.to(s7.querySelectorAll('.ps-kpi'), {
+    opacity: 1, y: 0, duration: 0.25, stagger: 0.12, ease: 'back.out(1.7)',
+  }, s7Start + 0.2)
+
+  // KPI numbers count up
   const kpiTargets = [
-    { selector: '[data-kpi="roas"]', target: 4.2, suffix: 'x', decimals: 1 },
-    { selector: '[data-kpi="cpc"]', target: 0.42, prefix: '$', decimals: 2 },
-    { selector: '[data-kpi="conversions"]', target: 1847, decimals: 0, comma: true },
-    { selector: '[data-kpi="spend"]', target: 2340, prefix: '$', decimals: 0, comma: true },
+    { selector: '[data-kpi="likes"]', target: 2400, format: (v: number) => v >= 1000 ? (v / 1000).toFixed(1) + 'K' : String(Math.round(v)) },
+    { selector: '[data-kpi="comments"]', target: 847, format: (v: number) => String(Math.round(v)) },
+    { selector: '[data-kpi="reach"]', target: 12400, format: (v: number) => v >= 1000 ? (v / 1000).toFixed(1) + 'K' : String(Math.round(v)) },
+    { selector: '[data-kpi="shares"]', target: 392, format: (v: number) => String(Math.round(v)) },
   ]
   kpiTargets.forEach((kpi) => {
-    const kpiEl = scenarioAds!.querySelector(kpi.selector) as HTMLElement | null
+    const kpiEl = s7.querySelector(kpi.selector) as HTMLElement | null
     if (!kpiEl) return
     const proxy = { value: 0 }
     masterTl!.to(proxy, {
-      value: kpi.target,
-      duration: 1,
-      ease: 'power2.out',
-      onUpdate() {
-        let formatted = proxy.value.toFixed(kpi.decimals)
-        if (kpi.comma) {
-          formatted = Number(formatted).toLocaleString('en-US')
-        }
-        kpiEl.textContent = (kpi.prefix || '') + formatted + (kpi.suffix || '')
-      },
-    }, s3Start + 3.5)
+      value: kpi.target, duration: 1, ease: 'power2.out',
+      onUpdate() { kpiEl.textContent = kpi.format(proxy.value) },
+    }, s7Start + 0.5)
   })
 
-  // Conversions pulse green
-  masterTl.to(scenarioAds!.querySelector('.sads-kpi-highlight'), {
-    boxShadow: '0 0 20px rgba(34, 197, 94, 0.3)',
-    duration: 0.4,
-    yoyo: true,
-    repeat: 1,
-  }, s3Start + 5)
+  // Percentage badges pop
+  masterTl.to(s7.querySelectorAll('.ps-kpi-pct'), {
+    opacity: 1, scale: 1, duration: 0.2, stagger: 0.1, ease: 'back.out(2)',
+  }, s7Start + 1.3)
 
-  // ------------------------------------------
-  // TRANSITION 3 → Back to Chat (~22s – 23s)
-  // ------------------------------------------
-  const t3Start = s3Start + 6
-  masterTl.to(scenarioAds, { opacity: 0, scale: 0.95, duration: 0.4 }, t3Start)
-  masterTl.set(scenarioAds, { visibility: 'hidden' }, t3Start + 0.4)
-  masterTl.call(() => resetAds(), undefined, t3Start + 0.4)
+  // Sparkline draws
+  const sparkLine = s7.querySelector('.ps-spark-line')
+  if (sparkLine) {
+    masterTl.to(sparkLine, {
+      strokeDashoffset: 0, duration: 0.5, ease: 'power2.inOut',
+    }, s7Start + 1.5)
+  }
+
+  // Top post badge
+  masterTl.to(s7.querySelector('.ps-top-post'), {
+    opacity: 1, scale: 1, duration: 0.2, ease: 'back.out(2)',
+  }, s7Start + 2.2)
+
+  // CTA button fades up + persistent glow
+  masterTl.to(s7.querySelector('.ps-analytics-cta'), {
+    opacity: 1, y: 0, duration: 0.2,
+  }, s7Start + 2.5)
+  masterTl.set(s7.querySelector('.ps-analytics-cta'), {
+    animation: 'ps-cta-glow 2s ease-in-out infinite',
+  }, s7Start + 2.7)
+
+  // NO EXIT for last step — hold, then transition back to chat
+  // Transition 7→1 (loop restart)
+  const loopEnd = s7Start + 5
+  masterTl.to(steps[6], { opacity: 0, scale: 0.95, duration: 0.4 }, loopEnd)
+  masterTl.set(steps[6], { visibility: 'hidden' }, loopEnd + 0.4)
+  masterTl.call(() => resetAnalytics(), undefined, loopEnd + 0.4)
   masterTl.fromTo(shimmer,
     { opacity: 0, x: '-100%' },
     { opacity: 0.6, x: '100%', duration: 0.5, ease: 'power2.inOut' },
-    t3Start + 0.1,
+    loopEnd + 0.1,
   )
-  masterTl.to(shimmer, { opacity: 0, duration: 0.1 }, t3Start + 0.6)
-  // Re-show chat for the loop restart
-  masterTl.set(scenarioChat, { visibility: 'visible', opacity: 1, scale: 1 }, t3Start + 0.4)
-  // Small buffer before loop repeats
-  masterTl.to({}, { duration: 0.5 }, t3Start + 1)
+  masterTl.to(shimmer, { opacity: 0, duration: 0.1 }, loopEnd + 0.6)
+  masterTl.set(steps[0], { visibility: 'visible', opacity: 1, scale: 1 }, loopEnd + 0.4)
+  if (orb1) masterTl.to(orb1, { background: stepColors[0], duration: 0.5 }, loopEnd)
+  if (orb2) masterTl.to(orb2, { background: stepColors[0], duration: 0.5 }, loopEnd + 0.2)
+  masterTl.to({}, { duration: 0.5 }, loopEnd + 1)
 })
 
 onUnmounted(() => {
@@ -318,7 +538,7 @@ onUnmounted(() => {
     <div class="cine-grain" />
 
     <div class="cine-content">
-      <!-- Hero text (fades out on scroll) -->
+      <!-- Hero text -->
       <div class="cine-hero-text">
         <span class="cine-hero-badge">
           <span class="cine-badge-dot" />
@@ -358,23 +578,8 @@ onUnmounted(() => {
         <div class="cine-phone-glow" />
         <PhoneMockup size="lg" show-buttons>
           <div class="cine-phone-inner">
-            <!-- Shimmer overlay for transitions -->
             <div class="cine-shimmer" />
-
-            <!-- Scenario 1: Chat -->
-            <div class="cine-scenario cine-scenario-chat">
-              <PhoneScenarioChat />
-            </div>
-
-            <!-- Scenario 2: Calendar -->
-            <div class="cine-scenario cine-scenario-calendar">
-              <PhoneScenarioCalendar />
-            </div>
-
-            <!-- Scenario 3: Ads -->
-            <div class="cine-scenario cine-scenario-ads">
-              <PhoneScenarioAds />
-            </div>
+            <PhoneScenario7Steps />
           </div>
         </PhoneMockup>
 
@@ -675,16 +880,11 @@ onUnmounted(() => {
   pointer-events: none;
 }
 
-/* Phone inner content — stacking scenarios */
+/* Phone inner content */
 .cine-phone-inner {
   width: 100%;
   height: 100%;
   position: relative;
-}
-
-.cine-scenario {
-  position: absolute;
-  inset: 0;
 }
 
 /* Shimmer transition overlay */
@@ -697,24 +897,27 @@ onUnmounted(() => {
   opacity: 0;
 }
 
-/* Scenario pills */
+/* Scenario pills — 7 items */
 .cine-pills {
   display: flex;
-  gap: var(--space-sm);
+  gap: 4px;
+  flex-wrap: wrap;
+  justify-content: center;
 }
 
 .cine-pill {
   display: flex;
   align-items: center;
-  gap: var(--space-xs);
-  padding: var(--space-xs) var(--space-md);
+  gap: 3px;
+  padding: 4px 8px;
   border-radius: var(--radius-full);
-  font-size: var(--text-xs);
+  font-size: 10px;
   font-weight: var(--font-medium);
   color: var(--lp-text-muted);
   background: var(--lp-glass-bg);
   border: 1px solid var(--lp-border);
   transition: all 0.4s ease;
+  white-space: nowrap;
 }
 
 .cine-pill.active {
@@ -758,8 +961,17 @@ onUnmounted(() => {
   }
 
   .cine-pills {
-    flex-wrap: wrap;
-    justify-content: center;
+    gap: 3px;
+    max-width: 100%;
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: var(--space-xs);
+  }
+
+  .cine-pill {
+    flex-shrink: 0;
   }
 }
 

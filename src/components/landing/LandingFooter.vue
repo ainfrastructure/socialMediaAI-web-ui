@@ -13,6 +13,7 @@ const { t } = useI18n()
       </div>
 
       <div class="lp-footer-links">
+        <router-link to="/contact">{{ t('appLanding.footer.contact') }}</router-link>
         <router-link to="/privacy-policy">{{ t('appLanding.footer.privacy') }}</router-link>
         <router-link to="/terms">{{ t('appLanding.footer.terms') }}</router-link>
       </div>

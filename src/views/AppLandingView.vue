@@ -151,11 +151,6 @@ onUnmounted(() => {
   z-index: 2;
 }
 
-/* Pinned sections need an opaque background so content doesn't show through */
-.bg-active .lp-ai-creation {
-  background-color: var(--lp-bg-primary) !important;
-}
-
 /* Cards/mockups keep backgrounds for readability */
 .bg-active .lp-pricing-card,
 .bg-active .lp-step-indicator,

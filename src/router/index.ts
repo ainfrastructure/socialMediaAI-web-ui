@@ -19,6 +19,7 @@ const DeleteAccountView = () => import('../views/DeleteAccountView.vue')
 const GoodbyeView = () => import('../views/GoodbyeView.vue')
 const AnalyticsView = () => import('../views/AnalyticsView.vue')
 const ReferralLandingView = () => import('../views/ReferralLandingView.vue')
+const ContactView = () => import('../views/ContactView.vue')
 const AppLandingView = () => import('../views/AppLandingView.vue')
 
 const router = createRouter({
@@ -153,6 +154,11 @@ const router = createRouter({
       path: '/terms',
       name: 'terms',
       component: TermsView,
+    },
+    {
+      path: '/contact',
+      name: 'contact',
+      component: ContactView,
     },
     {
       path: '/delete-me',
