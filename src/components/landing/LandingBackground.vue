@@ -321,7 +321,7 @@ onMounted(() => {
   addEventListener('mouseup', onMU)
   addEventListener('resize', resize)
   document.addEventListener('visibilitychange', onVisibility)
-  if (props.mode !== 'none') setTimeout(startEffect, 50)
+  if (props.mode !== 'none') startEffect()
 })
 
 onUnmounted(() => {
@@ -346,7 +346,6 @@ onUnmounted(() => {
   inset: 0;
   z-index: 0;
   opacity: 0;
-  transition: opacity 0.5s ease;
 }
 .lp-bg-layer.active {
   opacity: 0.7; /* overridden by inline style when intensity prop is set */

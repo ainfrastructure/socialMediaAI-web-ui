@@ -4,8 +4,6 @@ import { createPinia } from 'pinia'
 import App from './App.vue'
 import router from './router'
 import i18n from './i18n'
-import { initSentry } from './config/sentry'
-import { initPostHog } from './config/posthog'
 import 'material-symbols/outlined.css'
 
 // Scroll to top on page refresh (before browser restores scroll position)
@@ -20,10 +18,11 @@ app.use(createPinia())
 app.use(router)
 app.use(i18n)
 
-// Initialize Sentry for error tracking and performance monitoring
-initSentry(app, router)
-
-// Initialize PostHog for analytics and user tracking
-initPostHog(router)
-
 app.mount('#app')
+
+// Defer Sentry + PostHog to after first paint (~80-130KB out of critical path)
+const ric = window.requestIdleCallback || ((cb: IdleRequestCallback) => setTimeout(cb, 2000))
+ric(() => {
+  import('./config/sentry').then(({ initSentry }) => initSentry(app, router))
+  import('./config/posthog').then(({ initPostHog }) => initPostHog(router))
+}, { timeout: 3000 })

@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { onMounted, nextTick } from 'vue'
-import { RouterView } from 'vue-router'
+import { computed, onMounted, nextTick } from 'vue'
+import { RouterView, useRoute } from 'vue-router'
 import GradientBackground from './components/GradientBackground.vue'
 import { useDomain } from '@/composables/useDomain'
 import { useLocaleStore } from '@/stores/locale'
@@ -8,6 +8,8 @@ import { setI18nLocale } from '@/i18n'
 
 const { initialize, domainConfig, redirectToOwnedTldIfNeeded } = useDomain()
 const localeStore = useLocaleStore()
+const route = useRoute()
+const showGradientBg = computed(() => route.name !== 'landing')
 
 onMounted(async () => {
   // Check if we need to redirect language subdomain to owned TLD
@@ -31,7 +33,7 @@ onMounted(async () => {
 </script>
 
 <template>
-  <GradientBackground />
+  <GradientBackground v-if="showGradientBg" />
   <RouterView />
 </template>
 

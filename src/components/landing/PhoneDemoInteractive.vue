@@ -31,6 +31,36 @@ let autoTimer: ReturnType<typeof setTimeout> | null = null
 const phaseStartTimes: number[] = []
 const prefersReducedMotion =
   typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
+const isMob = typeof window !== 'undefined' && window.innerWidth < 768
+
+// ── Swipe gesture support (mobile) ──
+let touchStartX = 0
+let touchStartY = 0
+let touchStartTime = 0
+
+function onTouchStart(e: TouchEvent) {
+  touchStartX = e.touches[0].clientX
+  touchStartY = e.touches[0].clientY
+  touchStartTime = Date.now()
+}
+
+function onTouchEnd(e: TouchEvent) {
+  const dx = e.changedTouches[0].clientX - touchStartX
+  const dy = e.changedTouches[0].clientY - touchStartY
+  const dt = Date.now() - touchStartTime
+
+  // Must be a horizontal swipe: fast enough, far enough, more horizontal than vertical
+  if (dt > 400 || Math.abs(dx) < 40 || Math.abs(dx) < Math.abs(dy) * 1.2) return
+
+  if (dx < 0) {
+    // Swipe left → next
+    skipToNext()
+  } else {
+    // Swipe right → previous
+    const prev = currentPhase.value - 1
+    if (prev >= 0) jumpToPhase(prev)
+  }
+}
 
 function q(selector: string): HTMLElement | null {
   return rootRef.value?.querySelector(selector) ?? null
@@ -291,13 +321,21 @@ function buildPhase3(tl: gsap.core.Timeline) {
   tl.addPause(offset + 4.5)
 }
 
-// Phase 4: Calendar — cross-fade in calendar
+// Phase 4: Calendar — slide/fade in calendar
 function buildPhase4(tl: gsap.core.Timeline) {
   const offset = tl.duration()
 
-  // Fade in calendar screen
+  // Slide in calendar screen from right on mobile, cross-fade on desktop
   const cal = q('[data-demo-calendar-screen]')
-  tl.to(cal, { opacity: 1, pointerEvents: 'auto', duration: 0.5, ease: 'power2.out' }, offset + 0.1)
+  if (isMob) {
+    tl.fromTo(cal,
+      { x: '30%', opacity: 0, scale: 0.96 },
+      { x: '0%', opacity: 1, scale: 1, pointerEvents: 'auto', duration: 0.6, ease: 'power3.out' },
+      offset + 0.1,
+    )
+  } else {
+    tl.to(cal, { opacity: 1, pointerEvents: 'auto', duration: 0.5, ease: 'power2.out' }, offset + 0.1)
+  }
 
   const header = q('[data-demo-cal-header]')
   if (header) tl.to(header, { opacity: 1, duration: 0.2 }, offset + 0.3)
@@ -348,17 +386,25 @@ function buildPhase4(tl: gsap.core.Timeline) {
   tl.addPause(offset + 2.2)
 }
 
-// Phase 5: Analytics — cross-fade calendar out, analytics in
+// Phase 5: Analytics — slide calendar out, analytics in
 function buildPhase5(tl: gsap.core.Timeline) {
   const offset = tl.duration()
 
-  // Calendar fades out
   const cal = q('[data-demo-calendar-screen]')
-  tl.to(cal, { opacity: 0, pointerEvents: 'none', duration: 0.35, ease: 'power2.in' }, offset + 0.1)
-
-  // Analytics fades in (overlapping)
   const analytics = q('[data-demo-analytics]')
-  tl.to(analytics, { opacity: 1, pointerEvents: 'auto', duration: 0.5, ease: 'power2.out' }, offset + 0.25)
+  if (isMob) {
+    // Calendar slides out left
+    tl.to(cal, { x: '-20%', opacity: 0, pointerEvents: 'none', duration: 0.5, ease: 'power3.inOut' }, offset + 0.1)
+    // Analytics slides in from right
+    tl.fromTo(analytics,
+      { x: '30%', opacity: 0, scale: 0.96 },
+      { x: '0%', opacity: 1, scale: 1, pointerEvents: 'auto', duration: 0.6, ease: 'power3.out' },
+      offset + 0.15,
+    )
+  } else {
+    tl.to(cal, { opacity: 0, pointerEvents: 'none', duration: 0.35, ease: 'power2.in' }, offset + 0.1)
+    tl.to(analytics, { opacity: 1, pointerEvents: 'auto', duration: 0.5, ease: 'power2.out' }, offset + 0.25)
+  }
 
   const platformFilters = qa('[data-demo-analytics] .da-platform-filter')
   tl.fromTo(platformFilters,
@@ -397,17 +443,23 @@ function buildPhase5(tl: gsap.core.Timeline) {
   tl.addPause(offset + 2.5)
 }
 
-// Phase 6: Ads — cross-fade analytics out, ads in + success with stats
+// Phase 6: Ads — slide analytics out, ads in + success with stats
 function buildPhase6(tl: gsap.core.Timeline) {
   const offset = tl.duration()
 
-  // Analytics fades out
   const analytics = q('[data-demo-analytics]')
-  tl.to(analytics, { opacity: 0, pointerEvents: 'none', duration: 0.35, ease: 'power2.in' }, offset + 0.1)
-
-  // Ads fades in (overlapping)
   const ads = q('[data-demo-ads]')
-  tl.to(ads, { opacity: 1, pointerEvents: 'auto', duration: 0.5, ease: 'power2.out' }, offset + 0.25)
+  if (isMob) {
+    tl.to(analytics, { x: '-20%', opacity: 0, pointerEvents: 'none', duration: 0.5, ease: 'power3.inOut' }, offset + 0.1)
+    tl.fromTo(ads,
+      { x: '30%', opacity: 0, scale: 0.96 },
+      { x: '0%', opacity: 1, scale: 1, pointerEvents: 'auto', duration: 0.6, ease: 'power3.out' },
+      offset + 0.15,
+    )
+  } else {
+    tl.to(analytics, { opacity: 0, pointerEvents: 'none', duration: 0.35, ease: 'power2.in' }, offset + 0.1)
+    tl.to(ads, { opacity: 1, pointerEvents: 'auto', duration: 0.5, ease: 'power2.out' }, offset + 0.25)
+  }
 
   const preview = q('[data-demo-ads-preview]')
   if (preview) {
@@ -462,17 +514,23 @@ function buildPhase6(tl: gsap.core.Timeline) {
   tl.addPause(offset + 3.5)
 }
 
-// Phase 7: CTA — cross-fade ads out, CTA slide in
+// Phase 7: CTA — slide ads out, CTA slide in
 function buildPhase7(tl: gsap.core.Timeline) {
   const offset = tl.duration()
 
-  // Ads fades out
   const ads = q('[data-demo-ads]')
-  tl.to(ads, { opacity: 0, pointerEvents: 'none', duration: 0.35, ease: 'power2.in' }, offset + 0.1)
-
-  // CTA fades in
   const cta = q('[data-demo-cta]')
-  tl.to(cta, { opacity: 1, pointerEvents: 'auto', duration: 0.5, ease: 'power2.out' }, offset + 0.25)
+  if (isMob) {
+    tl.to(ads, { x: '-20%', opacity: 0, pointerEvents: 'none', duration: 0.5, ease: 'power3.inOut' }, offset + 0.1)
+    tl.fromTo(cta,
+      { x: '30%', opacity: 0, scale: 0.96 },
+      { x: '0%', opacity: 1, scale: 1, pointerEvents: 'auto', duration: 0.6, ease: 'power3.out' },
+      offset + 0.15,
+    )
+  } else {
+    tl.to(ads, { opacity: 0, pointerEvents: 'none', duration: 0.35, ease: 'power2.in' }, offset + 0.1)
+    tl.to(cta, { opacity: 1, pointerEvents: 'auto', duration: 0.5, ease: 'power2.out' }, offset + 0.25)
+  }
 
   // Headline slides up
   const headline = q('[data-demo-cta-headline]')
@@ -549,7 +607,7 @@ function resetAll() {
   gsap.set(q('[data-demo-published-feedback]'), { opacity: 0 })
 
   // Reset calendar screen
-  gsap.set(q('[data-demo-calendar-screen]'), { opacity: 0, pointerEvents: 'none' })
+  gsap.set(q('[data-demo-calendar-screen]'), { opacity: 0, x: '0%', scale: 1, pointerEvents: 'none' })
   gsap.set(q('[data-demo-cal-header]'), { opacity: 0 })
   qa('[data-demo-cal-platforms] .dcal-platform').forEach((el) => gsap.set(el, { opacity: 0, scale: 0.8 }))
   gsap.set(q('[data-demo-cal-month]'), { opacity: 0 })
@@ -560,7 +618,7 @@ function resetAll() {
   qa('[data-demo-calendar-screen] .dcal-post-card').forEach((el) => gsap.set(el, { opacity: 0 }))
 
   // Reset analytics
-  gsap.set(q('[data-demo-analytics]'), { opacity: 0, pointerEvents: 'none' })
+  gsap.set(q('[data-demo-analytics]'), { opacity: 0, x: '0%', scale: 1, pointerEvents: 'none' })
   qa('[data-demo-analytics] .da-stat').forEach((el) => gsap.set(el, { opacity: 0, y: 8 }))
   qa('[data-demo-analytics] .da-platform-filter').forEach((el) => gsap.set(el, { opacity: 0, scale: 0.8 }))
   qa('[data-demo-analytics] .da-date-filter').forEach((el) => gsap.set(el, { opacity: 0 }))
@@ -569,7 +627,7 @@ function resetAll() {
   qa('[data-demo-analytics] .da-table-row').forEach((el) => gsap.set(el, { opacity: 0 }))
 
   // Reset ads
-  gsap.set(q('[data-demo-ads]'), { opacity: 0, pointerEvents: 'none' })
+  gsap.set(q('[data-demo-ads]'), { opacity: 0, x: '0%', scale: 1, pointerEvents: 'none' })
   gsap.set(q('[data-demo-ads-preview]'), { opacity: 0, y: 8 })
   gsap.set(q('[data-demo-ads-platform]'), { opacity: 0, y: 6 })
   gsap.set(q('[data-demo-ads-objective]'), { opacity: 0, y: 6 })
@@ -582,7 +640,7 @@ function resetAll() {
   gsap.set(q('[data-demo-ads-stats]'), { opacity: 0, y: 10 })
 
   // Reset CTA
-  gsap.set(q('[data-demo-cta]'), { opacity: 0, pointerEvents: 'none' })
+  gsap.set(q('[data-demo-cta]'), { opacity: 0, x: '0%', scale: 1, pointerEvents: 'none' })
   gsap.set(q('[data-demo-cta-headline]'), { opacity: 0, y: 12 })
   gsap.set(q('[data-demo-cta-subtext]'), { opacity: 0, y: 10 })
   gsap.set(q('[data-demo-cta-btn]'), { opacity: 0, scale: 0.9 })
@@ -715,6 +773,8 @@ defineExpose({ skipToNext, jumpToPhase })
     ref="rootRef"
     class="phone-demo-interactive"
     @pointerup="(e: PointerEvent) => { if (e.pointerType !== 'touch') skipToNext() }"
+    @touchstart.passive="onTouchStart"
+    @touchend="onTouchEnd"
   >
     <DemoChatScreen />
     <DemoDesignStudio />
@@ -733,5 +793,15 @@ defineExpose({ skipToNext, jumpToPhase })
   position: relative;
   overflow: hidden;
   cursor: pointer;
+}
+
+/* GPU-accelerate overlay screens for smooth mobile slide transitions */
+@media (max-width: 768px) {
+  .phone-demo-interactive :deep([data-demo-calendar-screen]),
+  .phone-demo-interactive :deep([data-demo-analytics]),
+  .phone-demo-interactive :deep([data-demo-ads]),
+  .phone-demo-interactive :deep([data-demo-cta]) {
+    will-change: transform, opacity;
+  }
 }
 </style>

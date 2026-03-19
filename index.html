@@ -6,6 +6,9 @@
       (function() {
         const theme = localStorage.getItem('theme') || 'dark';
         document.documentElement.setAttribute('data-theme', theme);
+        if (location.pathname === '/') {
+          document.documentElement.style.background = '#081418';
+        }
       })();
     </script>
     <style>

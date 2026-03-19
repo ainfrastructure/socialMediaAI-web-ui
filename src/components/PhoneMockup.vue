@@ -132,7 +132,7 @@ withDefaults(defineProps<Props>(), {
 
 @keyframes phone-float-anim {
   0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-16px); }
+  50% { transform: translateY(-10px); }
 }
 
 /* ===== Physical Side Buttons ===== */
@@ -375,10 +375,34 @@ withDefaults(defineProps<Props>(), {
   z-index: 8;
 }
 
+/* Slow screen shimmer — sweeping highlight across the glass */
+.phone-float .phone-reflection {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.12) 0%,
+    rgba(255, 255, 255, 0.04) 30%,
+    transparent 50%,
+    transparent 70%,
+    rgba(255, 255, 255, 0.02) 100%
+  );
+  background-size: 200% 200%;
+  animation: phone-shimmer 12s ease-in-out infinite;
+}
+
+@keyframes phone-shimmer {
+  0% { background-position: 100% 0%; }
+  50% { background-position: 0% 100%; }
+  100% { background-position: 100% 0%; }
+}
+
 /* ===== Reduced Motion ===== */
 @media (prefers-reduced-motion: reduce) {
   .phone-float .phone-bezel {
     animation: none;
+  }
+  .phone-float .phone-reflection {
+    animation: none;
+    background-size: 100% 100%;
   }
 }
 

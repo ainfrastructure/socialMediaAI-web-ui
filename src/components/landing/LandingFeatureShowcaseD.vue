@@ -22,6 +22,8 @@ const textPanelRef = ref<HTMLElement | null>(null)
 const mockupPanelRef = ref<HTMLElement | null>(null)
 const tabsRef = ref<HTMLElement | null>(null)
 const tabIndicatorRef = ref<HTMLElement | null>(null)
+const stepperLabelRef = ref<HTMLElement | null>(null)
+const segmentRefs = ref<(HTMLElement | null)[]>([])
 
 interface Feature {
   id: string
@@ -105,6 +107,7 @@ const publishFeatures = [
 const SLIDE_DURATION = 0.4
 
 function positionIndicator(index: number, animate = false, onComplete?: () => void) {
+  if (window.innerWidth < 768) { onComplete?.(); return }
   if (!tabsRef.value || !tabIndicatorRef.value) return
   const tabs = tabsRef.value.querySelectorAll('.lp-showcase-tab')
   const tab = tabs[index] as HTMLElement
@@ -132,22 +135,49 @@ function positionIndicator(index: number, animate = false, onComplete?: () => vo
 
 function startProgress(delay = 0) {
   stopProgress(false)
-  if (!progressRef.value) return
-  gsap.set(progressRef.value, { scaleX: 0 })
-  progressTween = gsap.to(progressRef.value, {
-    scaleX: 1,
-    duration: AUTO_INTERVAL / 1000,
-    delay,
-    ease: 'none',
-    onComplete() {
-      switchTo((activeIndex.value + 1) % features.length, false)
-    },
-  })
+  const isMobile = window.innerWidth < 768
+
+  if (isMobile) {
+    const segIdx = activeIndex.value
+    const segEl = segmentRefs.value[segIdx]
+    if (segEl) {
+      gsap.set(segEl, { scaleX: 0 })
+      progressTween = gsap.to(segEl, {
+        scaleX: 1,
+        duration: AUTO_INTERVAL / 1000,
+        delay,
+        ease: 'none',
+        onComplete() {
+          switchTo((activeIndex.value + 1) % features.length, false)
+        },
+      })
+    } else {
+      // Last node (index 6) has no segment after it — use delayed call
+      progressTween = gsap.delayedCall((AUTO_INTERVAL / 1000) + delay, () => {
+        switchTo((activeIndex.value + 1) % features.length, false)
+      }) as unknown as gsap.core.Tween
+    }
+  } else {
+    if (!progressRef.value) return
+    gsap.set(progressRef.value, { scaleX: 0 })
+    progressTween = gsap.to(progressRef.value, {
+      scaleX: 1,
+      duration: AUTO_INTERVAL / 1000,
+      delay,
+      ease: 'none',
+      onComplete() {
+        switchTo((activeIndex.value + 1) % features.length, false)
+      },
+    })
+  }
 }
 
 function stopProgress(resetBar = true) {
   if (progressTween) { progressTween.kill(); progressTween = null }
-  if (resetBar && progressRef.value) gsap.set(progressRef.value, { scaleX: 0 })
+  if (resetBar) {
+    if (progressRef.value) gsap.set(progressRef.value, { scaleX: 0 })
+    segmentRefs.value.forEach(el => { if (el) gsap.set(el, { scaleX: 0 }) })
+  }
 }
 
 function startAutoPlay() {
@@ -169,6 +199,8 @@ async function switchTo(index: number, userInitiated = true) {
   isTransitioning.value = true
 
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  const isMobile = window.innerWidth < 768
+  const isWrap = activeIndex.value === features.length - 1 && index === 0
 
   if (userInitiated) {
     stopAutoPlay()
@@ -183,25 +215,18 @@ async function switchTo(index: number, userInitiated = true) {
     })
   }
 
-  const goingForward = index > activeIndex.value
-  const isMobile = window.innerWidth < 768
+  const goingForward = isWrap || index > activeIndex.value
 
-  // Scroll active tab into view on mobile
-  if (isMobile && tabsRef.value) {
-    const tabs = tabsRef.value.querySelectorAll('.lp-showcase-tab')
-    const tab = tabs[index] as HTMLElement
-    if (tab) {
-      await nextTick()
-      if (userInitiated) {
-        // User tapped a tab — scrollIntoView is safe since they're already looking at this section
-        tab.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' })
-      } else {
-        // Auto-play — only scroll the horizontal tabs container, never the page
-        const tabRect = tab.getBoundingClientRect()
-        const containerRect = tabsRef.value.getBoundingClientRect()
-        const scrollLeft = tabsRef.value.scrollLeft + (tabRect.left - containerRect.left) - (containerRect.width - tabRect.width) / 2
-        tabsRef.value.scrollTo({ left: scrollLeft, behavior: 'smooth' })
-      }
+  // Mobile stepper: update segment fills
+  if (isMobile) {
+    if (isWrap) {
+      const segs = segmentRefs.value.slice().reverse().filter((el): el is HTMLElement => !!el)
+      if (segs.length) gsap.to(segs, { scaleX: 0, duration: 0.25, stagger: 0.05, ease: 'power2.inOut' })
+    } else {
+      segmentRefs.value.forEach((el, i) => {
+        if (!el) return
+        gsap.to(el, { scaleX: i < index ? 1 : 0, duration: 0.3, ease: 'power2.out' })
+      })
     }
   }
 
@@ -214,8 +239,8 @@ async function switchTo(index: number, userInitiated = true) {
   }
 
   if (isMobile) {
-    // ── MOBILE: Simple crossfade + slide ──
-    await Promise.all([
+    // ── MOBILE: Crossfade + slide with stepper animations ──
+    const fadeOuts: gsap.core.Tween[] = [
       gsap.to(textPanelRef.value, {
         opacity: 0, x: goingForward ? -30 : 30,
         duration: 0.3, ease: 'power2.in',
@@ -224,10 +249,24 @@ async function switchTo(index: number, userInitiated = true) {
         opacity: 0, x: goingForward ? -30 : 30,
         duration: 0.3, ease: 'power2.in',
       }),
-    ])
+    ]
+    if (stepperLabelRef.value) {
+      fadeOuts.push(gsap.to(stepperLabelRef.value, { opacity: 0, y: -6, duration: 0.2, ease: 'power2.in' }))
+    }
+    await Promise.all(fadeOuts)
 
     activeIndex.value = index
     await nextTick()
+
+    // Label crossfade in
+    if (stepperLabelRef.value) {
+      gsap.fromTo(stepperLabelRef.value, { opacity: 0, y: 6 }, { opacity: 1, y: 0, duration: 0.3, ease: 'power2.out' })
+    }
+    // Active node bounce
+    const activeNode = sectionRef.value?.querySelector('.lp-stepper-node.active') as HTMLElement | null
+    if (activeNode) {
+      gsap.fromTo(activeNode, { scale: 1.3 }, { scale: 1.15, duration: 0.5, ease: 'elastic.out(1, 0.5)' })
+    }
 
     if (textPanelRef.value) {
       gsap.fromTo(textPanelRef.value,
@@ -335,6 +374,33 @@ onUnmounted(() => {
           <MaterialIcon :icon="feature.icon" size="sm" />
           <span class="lp-tab-label">{{ t(feature.tabKey) }}</span>
         </button>
+      </div>
+
+      <div class="lp-mobile-stepper">
+        <div class="lp-stepper-track">
+          <template v-for="(feature, i) in features" :key="feature.id">
+            <button
+              class="lp-stepper-node"
+              :class="{ active: i === activeIndex, completed: i < activeIndex }"
+              @click="switchTo(i)"
+            >
+              <MaterialIcon :icon="feature.icon" size="sm" />
+              <div v-if="i === activeIndex" class="lp-stepper-glow" />
+            </button>
+            <div
+              v-if="i < features.length - 1"
+              class="lp-stepper-segment"
+            >
+              <div
+                class="lp-stepper-segment-fill"
+                :ref="(el) => { segmentRefs[i] = el as HTMLElement | null }"
+              />
+            </div>
+          </template>
+        </div>
+        <div ref="stepperLabelRef" class="lp-stepper-label">
+          {{ t(activeFeature.tabKey) }}
+        </div>
       </div>
 
       <div class="lp-showcase-content" role="tabpanel">
@@ -536,30 +602,97 @@ onUnmounted(() => {
 .lp-layer-desc { font-size: var(--text-xs); color: var(--lp-text-muted); }
 .lp-layer-num { font-size: var(--text-xs); font-weight: var(--font-bold); color: var(--lp-text-muted); letter-spacing: 0.1em; }
 
+.lp-mobile-stepper { display: none; }
+
+@keyframes stepper-pulse {
+  0%, 100% { opacity: 0.5; transform: scale(1); }
+  50% { opacity: 0.2; transform: scale(1.2); }
+}
+
 @media (max-width: 768px) {
   .lp-feature-showcase { padding: var(--space-2xl) var(--space-lg); overflow-x: clip; }
-  .lp-showcase-tabs {
-    justify-content: flex-start;
-    padding-bottom: var(--space-sm);
+  .lp-showcase-tabs { display: none; }
+
+  .lp-mobile-stepper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-md);
     margin-bottom: var(--space-xl);
-    /* Extend to screen edges for full-bleed scrolling */
-    margin-left: calc(-1 * var(--space-lg));
-    margin-right: calc(-1 * var(--space-lg));
-    padding-left: var(--space-lg);
-    padding-right: var(--space-lg);
-    /* Fade edges to hint at more tabs */
-    mask-image: linear-gradient(to right, transparent, black 8px, black calc(100% - 24px), transparent);
-    -webkit-mask-image: linear-gradient(to right, transparent, black 8px, black calc(100% - 24px), transparent);
   }
-  .lp-tab-indicator { display: none; }
-  .lp-showcase-tab {
-    border: 1px solid var(--lp-border);
+  .lp-stepper-track {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    padding: 0 var(--space-xs);
+  }
+  .lp-stepper-node {
+    position: relative;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 1.5px solid var(--lp-border-light);
     background: var(--lp-bg-surface);
-    padding: var(--space-xs) var(--space-md);
-    font-size: var(--text-xs);
-    min-height: 40px;
+    color: var(--lp-text-secondary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: all 0.3s ease;
+    padding: 0;
+    z-index: 1;
   }
-  .lp-showcase-tab.active { border-color: var(--lp-accent-blue); background: var(--lp-accent-blue); color: #fff; }
+  .lp-stepper-node::before {
+    content: '';
+    position: absolute;
+    inset: -4px;
+    border-radius: 50%;
+  }
+  .lp-stepper-node.active {
+    background: var(--lp-accent-blue);
+    border-color: var(--lp-accent-blue);
+    color: #fff;
+    transform: scale(1.15);
+    box-shadow: 0 0 16px rgba(99, 102, 241, 0.4);
+  }
+  .lp-stepper-node.completed {
+    border-color: rgba(99, 102, 241, 0.4);
+    background: rgba(99, 102, 241, 0.1);
+    color: var(--lp-accent-blue);
+  }
+  .lp-stepper-glow {
+    position: absolute;
+    inset: -4px;
+    border-radius: 50%;
+    border: 2px solid var(--lp-accent-blue);
+    opacity: 0.5;
+    animation: stepper-pulse 2s ease-in-out infinite;
+    pointer-events: none;
+  }
+  .lp-stepper-segment {
+    flex: 1;
+    height: 2px;
+    background: var(--lp-border);
+    position: relative;
+    overflow: hidden;
+    border-radius: 1px;
+  }
+  .lp-stepper-segment-fill {
+    position: absolute;
+    inset: 0;
+    background: var(--lp-accent-blue);
+    border-radius: inherit;
+    transform: scaleX(0);
+    transform-origin: left;
+  }
+  .lp-stepper-label {
+    font-size: var(--text-sm);
+    font-weight: var(--font-semibold);
+    color: var(--lp-text-primary);
+    text-align: center;
+    min-height: 1.4em;
+  }
   .lp-showcase-content { grid-template-columns: 1fr; gap: var(--space-xl); min-height: auto; perspective: none; align-items: start; }
   .lp-showcase-text { transform-style: flat; }
   .lp-showcase-mockup { transform-style: flat; overflow: visible; }
@@ -569,5 +702,9 @@ onUnmounted(() => {
   .lp-section-sub-left { font-size: var(--text-sm); margin-bottom: var(--space-md); }
   .lp-layers { display: none; }
   .lp-kpi-grid { display: none; }
+}
+
+@media (max-width: 768px) and (prefers-reduced-motion: reduce) {
+  .lp-stepper-glow { animation: none; }
 }
 </style>

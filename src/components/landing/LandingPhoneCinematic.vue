@@ -58,7 +58,7 @@ onMounted(async () => {
   }
 
   // Hero entrance animation
-  const entrance = gsap.timeline({ defaults: { ease: 'power3.out' }, delay: isMobile ? 0.5 : 0.1 })
+  const entrance = gsap.timeline({ defaults: { ease: 'power3.out' }, delay: isMobile ? 0.05 : 0.1 })
   if (isMobile) {
     // Text first, then phone (natural DOM order on mobile)
     entrance
@@ -113,7 +113,7 @@ onMounted(async () => {
       <!-- Phone -->
       <div class="cine-phone-wrap">
         <div class="cine-phone-glow" />
-        <PhoneMockup size="lg" show-buttons>
+        <PhoneMockup size="lg" show-buttons float>
           <PhoneDemoInteractive ref="demoRef" @phase="onPhaseChange" />
         </PhoneMockup>
 
@@ -152,6 +152,16 @@ onMounted(async () => {
   padding: 120px var(--space-xl) var(--space-3xl);
   position: relative;
   overflow: hidden;
+}
+
+/* Hidden by default — GSAP animates in; prevents flash on mobile refresh */
+.cine-hero-badge,
+.cine-hero-headline,
+.cine-hero-sub,
+.cine-hero-ctas,
+.cine-phone-wrap,
+.cine-feature-desc {
+  opacity: 0;
 }
 
 /* Layout */
@@ -326,6 +336,12 @@ onMounted(async () => {
   left: 50%;
   transform: translate(-50%, -50%);
   pointer-events: none;
+  animation: cine-glow-breathe 6s ease-in-out infinite;
+}
+
+@keyframes cine-glow-breathe {
+  0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.15; }
+  50% { transform: translate(-50%, -50%) scale(1.12); opacity: 0.22; }
 }
 
 /* Feature description area */
@@ -448,7 +464,7 @@ onMounted(async () => {
   }
 
   .cine-phone-wrap {
-    gap: var(--space-sm);
+    gap: var(--space-lg);
   }
 
   .cine-phone-glow {
@@ -460,15 +476,26 @@ onMounted(async () => {
   .cine-feature-desc {
     padding: var(--space-sm) var(--space-md);
     min-height: 56px;
+    margin-top: 0;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .cine-badge-dot { animation: none; }
   .cine-cta-primary::after { animation: none; }
+  .cine-phone-glow { animation: none; }
   .cine-slide-enter-active,
   .cine-slide-leave-active {
     transition-duration: 0.01ms !important;
+  }
+  .cine-hero-badge,
+  .cine-hero-headline,
+  .cine-hero-sub,
+  .cine-hero-ctas,
+  .cine-phone-wrap,
+  .cine-feature-desc {
+    opacity: 1;
+    transform: none;
   }
 }
 </style>

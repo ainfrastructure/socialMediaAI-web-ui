@@ -644,21 +644,21 @@ img[src*="socialchef_logo"],
   outline: none;
 }
 
-/* ===== LANDING PAGE DARK THEME ===== */
+/* ===== LANDING PAGE DARK THEME (Ocean) ===== */
 /* Scoped to landing page only — does not affect app-wide light theme */
 .landing-dark {
-  --lp-bg-primary: #09090B;
-  --lp-bg-surface: #18181B;
-  --lp-bg-elevated: #27272A;
-  --lp-bg-card: #1C1C1F;
-  --lp-accent-orange: #F97316;
-  --lp-accent-orange-hover: #EA580C;
-  --lp-accent-orange-glow: rgba(249, 115, 22, 0.25);
-  --lp-accent-violet: #8B5CF6;
-  --lp-accent-blue: #3B82F6;
-  --lp-accent-cyan: #06B6D4;
-  --lp-gradient-aurora: linear-gradient(135deg, #8B5CF6, #3B82F6, #06B6D4);
-  --lp-gradient-orange: linear-gradient(135deg, #F97316, #EA580C);
+  --lp-bg-primary: #081418;
+  --lp-bg-surface: #0E2230;
+  --lp-bg-card: #163040;
+  --lp-bg-elevated: #163040;
+  --lp-accent-orange: #3A9BC0;
+  --lp-accent-orange-hover: #2D7F9E;
+  --lp-accent-orange-glow: rgba(58, 155, 192, 0.25);
+  --lp-accent-violet: #2D7F9E;
+  --lp-accent-blue: #6EC0DE;
+  --lp-accent-cyan: #6EC0DE;
+  --lp-gradient-aurora: linear-gradient(135deg, #3A9BC0, #6EC0DE, #2D7F9E);
+  --lp-gradient-orange: linear-gradient(135deg, #3A9BC0, #2D7F9E);
   --lp-text-primary: #F4F4F5;
   --lp-text-secondary: #A1A1AA;
   --lp-text-muted: #71717A;
@@ -667,7 +667,7 @@ img[src*="socialchef_logo"],
   --lp-glass-bg: rgba(255, 255, 255, 0.03);
   --lp-glass-border: rgba(255, 255, 255, 0.06);
   --lp-shadow-card: 0 4px 24px rgba(0, 0, 0, 0.4);
-  --lp-shadow-glow: 0 0 40px rgba(249, 115, 22, 0.15);
+  --lp-shadow-glow: 0 0 40px rgba(58, 155, 192, 0.15);
   --lp-section-gap: 120px;
   --lp-max-width: 1200px;
 
