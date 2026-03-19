@@ -22,7 +22,6 @@ let W = 0, H = 0
 let raf = 0
 let generation = 0
 let mx = 0.5, my = 0.5, pressing = false
-let targetMx = 0.5, targetMy = 0.5
 let isMobileDevice = false
 let burstStrength = 0
 let meshTime = 0
@@ -284,9 +283,6 @@ function startEffect() {
         raf = requestAnimationFrame(loop)
         return
       }
-      // Smoothly interpolate vortex center toward tap position
-      mx += (targetMx - mx) * 0.08
-      my += (targetMy - my) * 0.08
     }
     if (mode === 'wave') drawMesh()
     else drawFlow()
@@ -308,20 +304,8 @@ watch(() => props.particleDensity, () => {
 function onMM(e: MouseEvent) { mx = e.clientX / innerWidth; my = e.clientY / innerHeight }
 function onMD() { pressing = true; burstStrength = 1 }
 function onMU() { pressing = false }
-function onTS(e: TouchEvent) {
-  const t = e.touches[0]
-  targetMx = t.clientX / innerWidth
-  targetMy = t.clientY / innerHeight
-  pressing = true
-  burstStrength = 1
-}
-function onTM(e: TouchEvent) {
-  const t = e.touches[0]
-  targetMx = t.clientX / innerWidth
-  targetMy = t.clientY / innerHeight
-  pressing = true
-}
-function onTE() { pressing = false }
+// Touch handlers removed — on mobile, tapping the canvas triggers text
+// selection / highlighting which is annoying. The vortex stays at center.
 
 // ── Visibility ──
 function onVisibility() {
@@ -335,19 +319,9 @@ onMounted(() => {
   addEventListener('mousemove', onMM)
   addEventListener('mousedown', onMD)
   addEventListener('mouseup', onMU)
-  addEventListener('touchstart', onTS, { passive: true })
-  addEventListener('touchmove', onTM, { passive: true })
-  addEventListener('touchend', onTE)
   addEventListener('resize', resize)
   document.addEventListener('visibilitychange', onVisibility)
-  if (props.mode !== 'none') {
-    // Defer canvas animation to idle time so the hero can render first
-    if ('requestIdleCallback' in window) {
-      (window as any).requestIdleCallback(() => startEffect(), { timeout: 2000 })
-    } else {
-      setTimeout(startEffect, 2000)
-    }
-  }
+  if (props.mode !== 'none') setTimeout(startEffect, 50)
 })
 
 onUnmounted(() => {
@@ -355,9 +329,6 @@ onUnmounted(() => {
   removeEventListener('mousemove', onMM)
   removeEventListener('mousedown', onMD)
   removeEventListener('mouseup', onMU)
-  removeEventListener('touchstart', onTS)
-  removeEventListener('touchmove', onTM)
-  removeEventListener('touchend', onTE)
   removeEventListener('resize', resize)
   document.removeEventListener('visibilitychange', onVisibility)
 })
