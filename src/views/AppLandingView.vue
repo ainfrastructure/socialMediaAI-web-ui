@@ -85,6 +85,10 @@ onUnmounted(() => {
 @media (prefers-reduced-motion: reduce) {
   .lp-cursor-glow { display: none; }
 }
+
+@media (max-width: 768px) {
+  .landing-dark { overflow-x: visible; overflow-y: visible; }
+}
 </style>
 
 <style>
@@ -151,8 +155,9 @@ onUnmounted(() => {
 }
 .bg-active .lp-showcase-tab { border: 1px solid var(--lp-border) !important; }
 .bg-active .lp-showcase-tab.active {
-  border-color: var(--lp-accent-orange) !important;
-  box-shadow: 0 0 12px rgba(249, 115, 22, 0.15) !important;
-  background-color: rgba(249, 115, 22, 0.12) !important;
+  border-color: var(--lp-accent-blue) !important;
+  box-shadow: 0 0 12px color-mix(in srgb, var(--lp-accent-blue) 30%, transparent) !important;
+  background-color: var(--lp-accent-blue) !important;
+  color: #fff !important;
 }
 </style>

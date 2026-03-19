@@ -138,7 +138,7 @@ withDefaults(defineProps<Props>(), {
 /* ===== Physical Side Buttons ===== */
 .phone-btn {
   position: absolute;
-  background: linear-gradient(180deg, #a8a8a8 0%, #8a8a8a 50%, #a0a0a0 100%);
+  background: linear-gradient(180deg, #2a2a2a 0%, #1a1a1a 50%, #222222 100%);
   border-radius: 2px;
   z-index: 2;
 }
@@ -190,16 +190,16 @@ withDefaults(defineProps<Props>(), {
   border-radius: var(--phone-radius);
   position: relative;
   overflow: hidden;
-  /* Titanium gradient */
+  /* Black bezel */
   background: linear-gradient(
     160deg,
-    #d4d4d4 0%,
-    #e8e8e8 15%,
-    #b0b0b0 30%,
-    #c8c8c8 50%,
-    #a0a0a0 70%,
-    #d0d0d0 85%,
-    #b8b8b8 100%
+    #1a1a1a 0%,
+    #2a2a2a 15%,
+    #111111 30%,
+    #222222 50%,
+    #0d0d0d 70%,
+    #252525 85%,
+    #181818 100%
   );
   padding: var(--phone-bezel);
   /* Multi-layered shadows */
@@ -211,8 +211,8 @@ withDefaults(defineProps<Props>(), {
     /* Distant shadow */
     0 48px 80px -16px rgba(0, 0, 0, 0.1),
     /* Inner bezel highlight */
-    inset 0 1px 2px rgba(255, 255, 255, 0.6),
-    inset 0 -1px 2px rgba(0, 0, 0, 0.15);
+    inset 0 1px 2px rgba(255, 255, 255, 0.15),
+    inset 0 -1px 2px rgba(0, 0, 0, 0.3);
 }
 
 /* Top edge highlight */
@@ -222,7 +222,7 @@ withDefaults(defineProps<Props>(), {
   left: 10%;
   right: 10%;
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.8), transparent);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
   z-index: 5;
 }
 
@@ -233,7 +233,7 @@ withDefaults(defineProps<Props>(), {
   left: 10%;
   right: 10%;
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(0, 0, 0, 0.15), transparent);
+  background: linear-gradient(90deg, transparent, rgba(0, 0, 0, 0.3), transparent);
   z-index: 5;
 }
 
@@ -385,13 +385,25 @@ withDefaults(defineProps<Props>(), {
 /* ===== Mobile responsive ===== */
 @media (max-width: 768px) {
   .phone-lg {
-    --phone-w: 250px;
-    --phone-h: 520px;
-    --phone-radius: 44px;
-    --phone-inner-radius: 40px;
-    --island-w: 90px;
-    --island-h: 26px;
-    --island-top: 11px;
+    --phone-w: 300px;
+    --phone-h: 620px;
+    --phone-radius: 52px;
+    --phone-inner-radius: 47px;
+    --island-w: 110px;
+    --island-h: 32px;
+    --island-top: 14px;
+  }
+}
+
+@media (max-width: 380px) {
+  .phone-lg {
+    --phone-w: 260px;
+    --phone-h: 540px;
+    --phone-radius: 46px;
+    --phone-inner-radius: 42px;
+    --island-w: 94px;
+    --island-h: 28px;
+    --island-top: 12px;
   }
 }
 </style>

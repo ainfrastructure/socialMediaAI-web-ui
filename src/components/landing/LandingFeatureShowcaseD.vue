@@ -74,6 +74,13 @@ const layers = [
   { key: 'branding', icon: 'palette', color: 'var(--lp-accent-violet)' },
 ]
 
+const competitorFeatures = [
+  { key: 'benchmarking', icon: 'compare_arrows', color: 'var(--lp-accent-orange)' },
+  { key: 'contentGaps', icon: 'search_insights', color: 'var(--lp-accent-blue)' },
+  { key: 'trendAlerts', icon: 'notifications_active', color: 'var(--lp-accent-violet)' },
+  { key: 'shareOfVoice', icon: 'pie_chart', color: 'var(--lp-accent-cyan)' },
+]
+
 const calendarFeatures = [
   { key: 'autoSchedule', icon: 'schedule', color: 'var(--lp-accent-orange)' },
   { key: 'multiPlatform', icon: 'device_hub', color: 'var(--lp-accent-blue)' },
@@ -95,7 +102,9 @@ const publishFeatures = [
   { key: 'smartTiming', icon: 'schedule', color: 'var(--lp-accent-violet)' },
 ]
 
-function positionIndicator(index: number, animate = false) {
+const SLIDE_DURATION = 0.4
+
+function positionIndicator(index: number, animate = false, onComplete?: () => void) {
   if (!tabsRef.value || !tabIndicatorRef.value) return
   const tabs = tabsRef.value.querySelectorAll('.lp-showcase-tab')
   const tab = tabs[index] as HTMLElement
@@ -108,24 +117,27 @@ function positionIndicator(index: number, animate = false) {
 
   if (!animate) {
     gsap.set(tabIndicatorRef.value, { left: targetLeft, width: targetWidth })
+    onComplete?.()
     return
   }
 
   gsap.to(tabIndicatorRef.value, {
     left: targetLeft,
     width: targetWidth,
-    duration: 0.4,
+    duration: SLIDE_DURATION,
     ease: 'power2.inOut',
+    onComplete,
   })
 }
 
-function startProgress() {
-  stopProgress()
+function startProgress(delay = 0) {
+  stopProgress(false)
   if (!progressRef.value) return
   gsap.set(progressRef.value, { scaleX: 0 })
   progressTween = gsap.to(progressRef.value, {
     scaleX: 1,
     duration: AUTO_INTERVAL / 1000,
+    delay,
     ease: 'none',
     onComplete() {
       switchTo((activeIndex.value + 1) % features.length, false)
@@ -133,9 +145,9 @@ function startProgress() {
   })
 }
 
-function stopProgress() {
+function stopProgress(resetBar = true) {
   if (progressTween) { progressTween.kill(); progressTween = null }
-  if (progressRef.value) gsap.set(progressRef.value, { scaleX: 0 })
+  if (resetBar && progressRef.value) gsap.set(progressRef.value, { scaleX: 0 })
 }
 
 function startAutoPlay() {
@@ -144,7 +156,7 @@ function startAutoPlay() {
 }
 
 function stopAutoPlay() {
-  stopProgress()
+  stopProgress(true)
 }
 
 function scheduleResume() {
@@ -156,14 +168,23 @@ async function switchTo(index: number, userInitiated = true) {
   if (index === activeIndex.value || isTransitioning.value) return
   isTransitioning.value = true
 
-  if (userInitiated) { stopAutoPlay(); scheduleResume() }
+  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
-  // Instantly jump indicator to new tab (no slide animation)
-  positionIndicator(index, false)
+  if (userInitiated) {
+    stopAutoPlay()
+    scheduleResume()
+    positionIndicator(index, false)
+  } else {
+    // Auto-play: keep progress bar full during slide, animate indicator
+    stopProgress(false)
+    positionIndicator(index, !reducedMotion, () => {
+      // After slide completes, reset progress bar
+      if (progressRef.value) gsap.set(progressRef.value, { scaleX: 0 })
+    })
+  }
 
   const goingForward = index > activeIndex.value
   const isMobile = window.innerWidth < 768
-  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
   // Scroll active tab into view on mobile
   if (isMobile && tabsRef.value) {
@@ -171,7 +192,16 @@ async function switchTo(index: number, userInitiated = true) {
     const tab = tabs[index] as HTMLElement
     if (tab) {
       await nextTick()
-      tab.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' })
+      if (userInitiated) {
+        // User tapped a tab — scrollIntoView is safe since they're already looking at this section
+        tab.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' })
+      } else {
+        // Auto-play — only scroll the horizontal tabs container, never the page
+        const tabRect = tab.getBoundingClientRect()
+        const containerRect = tabsRef.value.getBoundingClientRect()
+        const scrollLeft = tabsRef.value.scrollLeft + (tabRect.left - containerRect.left) - (containerRect.width - tabRect.width) / 2
+        tabsRef.value.scrollTo({ left: scrollLeft, behavior: 'smooth' })
+      }
     }
   }
 
@@ -324,6 +354,17 @@ onUnmounted(() => {
             </div>
           </div>
 
+          <div v-if="activeFeature.id === 'competitor'" class="lp-layers">
+            <div v-for="(feat, i) in competitorFeatures" :key="feat.key" class="lp-layer-item" :style="{ '--layer-color': feat.color }">
+              <div class="lp-layer-icon"><MaterialIcon :icon="feat.icon" size="sm" /></div>
+              <div class="lp-layer-info">
+                <span class="lp-layer-name">{{ t(`appLanding.competitor.${feat.key}`) }}</span>
+                <span class="lp-layer-desc">{{ t(`appLanding.competitor.${feat.key}Desc`) }}</span>
+              </div>
+              <span class="lp-layer-num">{{ String(i + 1).padStart(2, '0') }}</span>
+            </div>
+          </div>
+
           <div v-if="activeFeature.id === 'ads'" class="lp-kpi-grid">
             <div v-for="stat in adsStats" :key="stat.key" class="lp-kpi-card">
               <div class="lp-kpi-icon"><MaterialIcon :icon="stat.icon" size="sm" /></div>
@@ -417,7 +458,7 @@ onUnmounted(() => {
 .lp-tab-progress {
   position: absolute;
   inset: 0;
-  background: rgba(139, 92, 246, 0.15);
+  background: var(--lp-accent-blue);
   border-radius: inherit;
   transform-origin: left;
   transform: scaleX(0);
@@ -434,7 +475,7 @@ onUnmounted(() => {
 }
 @media (hover: hover) { .lp-showcase-tab:hover { color: var(--lp-text-primary); } }
 @media (hover: none) { .lp-showcase-tab:active { color: var(--lp-text-primary); } }
-.lp-showcase-tab.active { color: var(--lp-accent-orange); }
+.lp-showcase-tab.active { color: #fff; }
 .lp-tab-label { white-space: nowrap; }
 
 .lp-showcase-content {
@@ -496,13 +537,37 @@ onUnmounted(() => {
 .lp-layer-num { font-size: var(--text-xs); font-weight: var(--font-bold); color: var(--lp-text-muted); letter-spacing: 0.1em; }
 
 @media (max-width: 768px) {
-  .lp-showcase-tabs { justify-content: flex-start; padding-bottom: var(--space-sm); }
+  .lp-feature-showcase { padding: var(--space-2xl) var(--space-lg); overflow-x: clip; }
+  .lp-showcase-tabs {
+    justify-content: flex-start;
+    padding-bottom: var(--space-sm);
+    margin-bottom: var(--space-xl);
+    /* Extend to screen edges for full-bleed scrolling */
+    margin-left: calc(-1 * var(--space-lg));
+    margin-right: calc(-1 * var(--space-lg));
+    padding-left: var(--space-lg);
+    padding-right: var(--space-lg);
+    /* Fade edges to hint at more tabs */
+    mask-image: linear-gradient(to right, transparent, black 8px, black calc(100% - 24px), transparent);
+    -webkit-mask-image: linear-gradient(to right, transparent, black 8px, black calc(100% - 24px), transparent);
+  }
   .lp-tab-indicator { display: none; }
-  .lp-showcase-tab { border: 1px solid var(--lp-border); background: var(--lp-bg-surface); }
-  .lp-showcase-tab.active { border-color: var(--lp-accent-orange); background: rgba(249, 115, 22, 0.06); }
-  .lp-showcase-content { grid-template-columns: 1fr; gap: var(--space-3xl); min-height: auto; perspective: none; }
-  .lp-showcase-text, .lp-showcase-mockup { transform-style: flat; }
-  .lp-showcase-tab { min-height: 44px; }
-  .lp-kpi-grid { grid-template-columns: 1fr; }
+  .lp-showcase-tab {
+    border: 1px solid var(--lp-border);
+    background: var(--lp-bg-surface);
+    padding: var(--space-xs) var(--space-md);
+    font-size: var(--text-xs);
+    min-height: 40px;
+  }
+  .lp-showcase-tab.active { border-color: var(--lp-accent-blue); background: var(--lp-accent-blue); color: #fff; }
+  .lp-showcase-content { grid-template-columns: 1fr; gap: var(--space-xl); min-height: auto; perspective: none; align-items: start; }
+  .lp-showcase-text { transform-style: flat; }
+  .lp-showcase-mockup { transform-style: flat; overflow: visible; }
+  .lp-kpi-grid { grid-template-columns: 1fr 1fr; }
+  .lp-eyebrow { margin-bottom: var(--space-sm); }
+  .lp-section-title-left { font-size: clamp(1.5rem, 5vw, 2rem); margin-bottom: var(--space-sm); }
+  .lp-section-sub-left { font-size: var(--text-sm); margin-bottom: var(--space-md); }
+  .lp-layers { display: none; }
+  .lp-kpi-grid { display: none; }
 }
 </style>

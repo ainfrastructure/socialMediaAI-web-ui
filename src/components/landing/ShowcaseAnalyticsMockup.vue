@@ -79,4 +79,8 @@ const barData = [35, 52, 48, 65, 72, 58, 80]
   font-size: var(--text-xs);
   color: var(--lp-text-muted);
 }
+
+@media (max-width: 768px) {
+  .lp-bar-chart { height: 140px; }
+}
 </style>

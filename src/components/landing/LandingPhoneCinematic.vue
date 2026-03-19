@@ -52,7 +52,7 @@ onMounted(async () => {
 
   // Reduced motion — show everything statically
   if (reducedMotion) {
-    const heroEls = ['.cine-hero-badge', '.cine-hero-headline', '.cine-hero-sub', '.cine-hero-ctas', '.cine-hero-trust', '.cine-phone-wrap', '.cine-feature-desc']
+    const heroEls = ['.cine-hero-badge', '.cine-hero-headline', '.cine-hero-sub', '.cine-hero-ctas', '.cine-phone-wrap', '.cine-feature-desc']
     heroEls.forEach(sel => { const e = el.querySelector(sel) as HTMLElement; if (e) { e.style.opacity = '1'; e.style.transform = 'none' } })
     return
   }
@@ -60,21 +60,20 @@ onMounted(async () => {
   // Hero entrance animation
   const entrance = gsap.timeline({ defaults: { ease: 'power3.out' }, delay: isMobile ? 0.5 : 0.1 })
   if (isMobile) {
-    gsap.set(el.querySelector('.cine-hero-badge'), { opacity: 1, y: 0 })
-    gsap.set(el.querySelector('.cine-hero-trust'), { opacity: 1, y: 0 })
+    // Text first, then phone (natural DOM order on mobile)
     entrance
-      .fromTo(el.querySelector('.cine-phone-wrap'), { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.8 })
-      .fromTo(el.querySelector('.cine-hero-headline'), { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.7 }, '-=0.4')
+      .fromTo(el.querySelector('.cine-hero-badge'), { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.5 })
+      .fromTo(el.querySelector('.cine-hero-headline'), { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.7 }, '-=0.3')
       .fromTo(el.querySelector('.cine-hero-sub'), { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.5 }, '-=0.3')
       .fromTo(el.querySelector('.cine-hero-ctas'), { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.5 }, '-=0.2')
-      .fromTo(el.querySelector('.cine-feature-desc'), { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.4 }, '-=0.2')
+      .fromTo(el.querySelector('.cine-phone-wrap'), { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.8 }, '-=0.3')
+      .fromTo(el.querySelector('.cine-feature-desc'), { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.4 }, '-=0.4')
   } else {
     entrance
       .fromTo(el.querySelector('.cine-hero-badge'), { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.8 })
       .fromTo(el.querySelector('.cine-hero-headline'), { opacity: 0, y: 40 }, { opacity: 1, y: 0, duration: 0.9 }, '-=0.5')
       .fromTo(el.querySelector('.cine-hero-sub'), { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.7 }, '-=0.5')
       .fromTo(el.querySelector('.cine-hero-ctas'), { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.6 }, '-=0.3')
-      .fromTo(el.querySelector('.cine-hero-trust'), { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.6 }, '-=0.2')
       .fromTo(el.querySelector('.cine-phone-wrap'), { opacity: 0, x: 60 }, { opacity: 1, x: 0, duration: 1 }, '-=1.2')
       .fromTo(el.querySelector('.cine-feature-desc'), { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.5 }, '-=0.5')
   }
@@ -109,15 +108,6 @@ onMounted(async () => {
           </button>
         </div>
 
-        <div class="cine-hero-trust">
-          <div class="cine-trust-avatars">
-            <div class="cine-trust-avatar">JK</div>
-            <div class="cine-trust-avatar">ML</div>
-            <div class="cine-trust-avatar">RS</div>
-            <div class="cine-trust-avatar">+</div>
-          </div>
-          <span class="cine-trust-text">{{ t('appLanding.hero.trustSignal') }}</span>
-        </div>
       </div>
 
       <!-- Phone -->
@@ -315,40 +305,6 @@ onMounted(async () => {
   }
 }
 
-/* Trust */
-.cine-hero-trust {
-  display: flex;
-  align-items: center;
-  gap: var(--space-md);
-  margin-top: var(--space-3xl);
-}
-
-.cine-trust-avatars {
-  display: flex;
-}
-
-.cine-trust-avatar {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  background: var(--lp-bg-elevated);
-  border: 2px solid var(--lp-bg-primary);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 11px;
-  font-weight: var(--font-semibold);
-  color: var(--lp-text-secondary);
-  margin-left: -8px;
-}
-
-.cine-trust-avatar:first-child { margin-left: 0; }
-
-.cine-trust-text {
-  font-size: var(--text-sm);
-  color: var(--lp-text-muted);
-}
-
 /* Phone wrapper */
 .cine-phone-wrap {
   position: relative;
@@ -466,12 +422,13 @@ onMounted(async () => {
 /* Mobile */
 @media (max-width: 768px) {
   .cine-section {
-    padding: calc(100px + env(safe-area-inset-top)) var(--space-lg) var(--space-3xl);
+    min-height: auto;
+    padding: calc(80px + env(safe-area-inset-top)) var(--space-lg) var(--space-xl);
   }
 
   .cine-content {
     grid-template-columns: 1fr;
-    gap: var(--space-3xl);
+    gap: var(--space-lg);
     text-align: center;
   }
 
@@ -483,18 +440,26 @@ onMounted(async () => {
 
   .cine-hero-sub {
     max-width: 100%;
+    margin-bottom: var(--space-xl);
   }
 
   .cine-hero-ctas {
     justify-content: center;
   }
 
-  .cine-hero-trust {
-    justify-content: center;
+  .cine-phone-wrap {
+    gap: var(--space-sm);
   }
 
-  .cine-phone-wrap {
-    order: -1;
+  .cine-phone-glow {
+    width: 250px;
+    height: 250px;
+    filter: blur(80px);
+  }
+
+  .cine-feature-desc {
+    padding: var(--space-sm) var(--space-md);
+    min-height: 56px;
   }
 }
 

@@ -14,12 +14,12 @@ const dates = [16, 17, 18, 19, 20, 21, 22]
 const todayIndex = 2
 
 const posts = [
-  { platform: 'instagram' as const, type: 'reel',     day: 'Mon 10:00', titleKey: 'post1', image: '/example/example-gym.jpg' },
-  { platform: 'facebook' as const,  type: 'feed',     day: 'Mon 14:00', titleKey: 'post2', image: '/example/example-salon.jpg' },
-  { platform: 'instagram' as const, type: 'carousel', day: 'Tue 11:00', titleKey: 'post3', image: '/example/example-retail.jpg' },
-  { platform: 'tiktok' as const,    type: 'reel',     day: 'Tue 18:00', titleKey: 'post4', image: '/example/example-office.jpg' },
-  { platform: 'facebook' as const,  type: 'feed',     day: 'Wed 10:00', titleKey: 'post5', image: '/example/example-car.jpg' },
-  { platform: 'instagram' as const, type: 'story',    day: 'Wed 16:00', titleKey: 'post6', image: '/example/example-cafe.jpg' },
+  { platform: 'instagram' as const, type: 'reel',     day: 'Mon 10:00', titleKey: 'post1', image: '/example/cal-thumb-1.png' },
+  { platform: 'facebook' as const,  type: 'feed',     day: 'Mon 14:00', titleKey: 'post2', image: '/example/cal-thumb-2.png' },
+  { platform: 'instagram' as const, type: 'carousel', day: 'Tue 11:00', titleKey: 'post3', image: '/example/cal-thumb-3.png' },
+  { platform: 'tiktok' as const,    type: 'reel',     day: 'Tue 18:00', titleKey: 'post4', image: '/example/cal-thumb-4.png' },
+  { platform: 'facebook' as const,  type: 'feed',     day: 'Wed 10:00', titleKey: 'post5', image: '/example/cal-thumb-5.png' },
+  { platform: 'instagram' as const, type: 'story',    day: 'Wed 16:00', titleKey: 'post6', image: '/example/cal-thumb-6.png' },
 ]
 
 let tl: gsap.core.Timeline | null = null

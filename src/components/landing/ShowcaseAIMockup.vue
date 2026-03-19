@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
+import SocialChefMark from '@/components/SocialChefMark.vue'
 
 defineProps<{ visible: boolean }>()
 
@@ -17,7 +18,7 @@ const messages = [
 <template>
   <div class="lp-ai-chat">
     <div class="lp-ai-header">
-      <img src="@/assets/socialchef_logo.svg" alt="SocialChef" class="lp-ai-avatar" />
+      <SocialChefMark :size="36" class="lp-ai-avatar" />
       <div>
         <span class="lp-ai-name">SocialChef</span>
         <span class="lp-ai-status">Online</span>
@@ -31,7 +32,7 @@ const messages = [
         class="lp-ai-message"
         :class="{ 'lp-user-msg': !msg.isAI }"
       >
-        <img v-if="msg.isAI" src="@/assets/socialchef_logo.svg" alt="" class="lp-ai-msg-avatar" />
+        <SocialChefMark v-if="msg.isAI" :size="24" class="lp-ai-msg-avatar" />
         <div class="lp-ai-bubble" :class="{ 'lp-bubble-user': !msg.isAI }">
           {{ t(`appLanding.aiAssistant.${msg.key}`) }}
         </div>
@@ -39,7 +40,7 @@ const messages = [
 
       <!-- Typing indicator -->
       <div v-if="visible" class="lp-ai-message">
-        <img src="@/assets/socialchef_logo.svg" alt="" class="lp-ai-msg-avatar" />
+        <SocialChefMark :size="24" class="lp-ai-msg-avatar" />
         <div class="lp-ai-bubble">
           <div class="lp-typing-dots"><span /><span /><span /></div>
         </div>

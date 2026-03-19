@@ -2128,8 +2128,7 @@ export default {
       subheadline: 'From content creation to automatic posting — SocialChef handles your social media 24/7',
       ctaPrimary: 'Get Early Access',
       ctaSecondary: 'See How It Works',
-      floatingBadge1: 'Published to Instagram',
-      trustSignal: 'Join marketers on the whitelist'
+      floatingBadge1: 'Published to Instagram'
     },
     socialProof: {
       platforms: 'Works with'
@@ -2261,7 +2260,7 @@ export default {
       featureDescCta: 'Join businesses already saving hours each week.',
       ctaPhoneHeadline: 'What are you waiting for?',
       ctaPhoneSubtext: 'It won\'t publish itself without SocialChef.',
-      ctaPhoneButton: 'Get Started Free',
+      ctaPhoneButton: 'Get Started',
       chatAiGreeting: 'Hi! I analyzed your brand. Ready to create content that matches your voice?',
       chatUserReply1: 'Love it! Plan my week across all platforms',
       chatAiStrategy: 'Here\'s your optimized content plan for Vetted this week:',
@@ -2402,7 +2401,15 @@ export default {
       dashTitle: 'Competitor Dashboard',
       followers: 'Followers',
       engagement: 'Engagement',
-      postsMonth: 'Posts/mo'
+      postsMonth: 'Posts/mo',
+      benchmarking: 'Benchmarking',
+      benchmarkingDesc: 'Compare your metrics side-by-side with competitors',
+      contentGaps: 'Content Gaps',
+      contentGapsDesc: 'Discover topics your competitors cover that you don\'t',
+      trendAlerts: 'Trend Alerts',
+      trendAlertsDesc: 'Get notified when competitors change strategy',
+      shareOfVoice: 'Share of Voice',
+      shareOfVoiceDesc: 'Track your brand\'s visibility vs the competition'
     },
     aiAssistant: {
       eyebrow: 'AI Assistant',

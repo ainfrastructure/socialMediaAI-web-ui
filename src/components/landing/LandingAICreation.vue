@@ -1,11 +1,13 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, watch, onUnmounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useGsapSection, gsap } from '@/composables/useGsapSection'
 import MaterialIcon from '@/components/MaterialIcon.vue'
+import SocialChefMark from '@/components/SocialChefMark.vue'
 
 const { t } = useI18n()
 const sectionRef = ref<HTMLElement | null>(null)
+const stepsNavRef = ref<HTMLElement | null>(null)
 const activeStep = ref(0)
 
 const steps = [
@@ -17,6 +19,22 @@ const steps = [
 
 // 3D entrance configs per step — simplified on mobile
 const isMobile = typeof window !== 'undefined' && window.innerWidth < 768
+
+// Auto-scroll step tabs to keep active tab visible on mobile
+// Use manual container scroll instead of scrollIntoView to avoid page-level scroll jumps
+// during the pinned ScrollTrigger animation
+if (isMobile) {
+  watch(activeStep, (i) => {
+    const nav = stepsNavRef.value
+    if (!nav) return
+    const tab = nav.children[i] as HTMLElement | undefined
+    if (!tab) return
+    const tabRect = tab.getBoundingClientRect()
+    const navRect = nav.getBoundingClientRect()
+    const scrollLeft = nav.scrollLeft + (tabRect.left - navRect.left) - (navRect.width - tabRect.width) / 2
+    nav.scrollTo({ left: scrollLeft, behavior: 'smooth' })
+  })
+}
 
 const stepEntrance = isMobile
   ? [{ y: 30 }, { y: 30 }, { y: 30 }, { y: 30 }]
@@ -35,244 +53,270 @@ const stepEntranceTo = isMobile
     { scale: 1, z: 0 },
   ]
 
+// Mobile carousel state
+let mobileStepTls: ReturnType<typeof gsap.timeline>[] = []
+let mobileDelayCall: ReturnType<typeof gsap.delayedCall> | null = null
+let mobileProgressTween: gsap.core.Tween | null = null
+let mobileObserver: IntersectionObserver | null = null
+let mobileStarted = false
+let mobilePlayStep: ((i: number) => void) | null = null
+const STEP_DURATION = 4.5
+
+function buildStepTimeline(
+  i: number,
+  container: Element,
+  g: typeof gsap,
+  progressBar: Element | null,
+  forMobile: boolean,
+): ReturnType<typeof gsap.timeline> {
+  const tl = g.timeline({ paused: forMobile })
+  const fanX = isMobile ? 50 : 120
+
+  // Entrance: on mobile ALL steps get entrance (carousel loops); on desktop only steps 1+
+  if (forMobile || i > 0) {
+    tl.set(container, { visibility: 'visible' }, 0)
+    tl.fromTo(container,
+      { opacity: 0, y: 30, ...stepEntrance[i] },
+      { opacity: 1, y: 0, ...stepEntranceTo[i], duration: 0.3, ease: 'power2.out', immediateRender: false },
+      0,
+    )
+  }
+
+  // Progress bar fill — only on desktop (mobile handles separately)
+  if (!forMobile && progressBar) {
+    tl.fromTo(progressBar,
+      { scaleX: 0 },
+      { scaleX: 1, duration: 0.8, ease: 'none', immediateRender: i === 0 ? undefined : false },
+      i === 0 ? 0 : 0.3,
+    )
+  }
+
+  // Step-specific animations
+  if (i === 0) {
+    const aiBubble = container.querySelector('[data-ai-bubble]')
+    const suggestionCard = container.querySelector('[data-suggestion-card]')
+    const toneBadge = container.querySelector('[data-tone-badge]')
+    const chatActions = container.querySelectorAll('[data-chat-actions] .lp-chat-action-btn')
+
+    if (aiBubble) {
+      tl.fromTo(aiBubble,
+        { opacity: 0, y: 15 },
+        { opacity: 1, y: 0, duration: 0.3, ease: 'power2.out', immediateRender: false },
+        0.1,
+      )
+    }
+    if (suggestionCard) {
+      tl.fromTo(suggestionCard,
+        { opacity: 0, scale: 0.92 },
+        { opacity: 1, scale: 1, duration: 0.25, ease: 'power2.out', immediateRender: false },
+        0.35,
+      )
+    }
+    if (toneBadge) {
+      tl.fromTo(toneBadge,
+        { opacity: 0, scale: 0.7 },
+        { opacity: 1, scale: 1, duration: 0.15, ease: 'back.out(3)', immediateRender: false },
+        0.55,
+      )
+    }
+    if (chatActions.length) {
+      tl.fromTo(chatActions,
+        { opacity: 0, y: 8 },
+        { opacity: 1, y: 0, duration: 0.12, stagger: 0.05, ease: 'power2.out', immediateRender: false },
+        0.65,
+      )
+    }
+  } else if (i === 1) {
+    const shimmers = container.querySelectorAll('.lp-gen-shimmer')
+    const appHeader = container.querySelector('[data-post-header]')
+    const tabs = container.querySelectorAll('[data-post-tabs] .lp-post-tab')
+    const brandRow = container.querySelector('[data-post-brand]')
+    const imgPlaceholder = container.querySelector('[data-post-image]')
+    const captionArea = container.querySelector('[data-post-caption]')
+    const tags = container.querySelectorAll('[data-post-tags] .lp-gen-tag')
+    const actionBtns = container.querySelectorAll('[data-post-actions] .lp-post-btn')
+    const bottomBar = container.querySelector('[data-post-bottom]')
+
+    tl.fromTo(shimmers, { opacity: 1 }, { opacity: 0, duration: 0.25, stagger: 0.05, immediateRender: false }, 0.3)
+    if (appHeader) tl.fromTo(appHeader, { opacity: 0 }, { opacity: 1, duration: 0.2, immediateRender: false }, 0.35)
+    tl.fromTo(tabs, { opacity: 0, x: 20 }, { opacity: 1, x: 0, duration: 0.15, stagger: 0.05, immediateRender: false }, 0.4)
+    if (brandRow) tl.fromTo(brandRow, { opacity: 0 }, { opacity: 1, duration: 0.2, immediateRender: false }, 0.5)
+    const toneBadge = container.querySelector('[data-post-tone]')
+    if (toneBadge) tl.fromTo(toneBadge, { opacity: 0, scale: 0.9 }, { opacity: 1, scale: 1, duration: 0.15, ease: 'back.out(1.5)', immediateRender: false }, 0.52)
+    if (imgPlaceholder) {
+      tl.fromTo(imgPlaceholder,
+        { scale: 0.85, opacity: 0 },
+        { scale: 1, opacity: 1, duration: 0.25, ease: 'power2.out', immediateRender: false },
+        0.55,
+      )
+    }
+    if (captionArea) tl.fromTo(captionArea, { opacity: 0, y: 8 }, { opacity: 1, y: 0, duration: 0.2, immediateRender: false }, 0.6)
+    tl.fromTo(tags, { opacity: 0, y: 15 }, { opacity: 1, y: 0, duration: 0.15, stagger: 0.06, immediateRender: false }, 0.65)
+    tl.fromTo(actionBtns, { opacity: 0, scale: 0.9 }, { opacity: 1, scale: 1, duration: 0.15, stagger: 0.05, ease: 'back.out(1.5)', immediateRender: false }, 0.72)
+    if (bottomBar) tl.fromTo(bottomBar, { opacity: 0 }, { opacity: 1, duration: 0.15, immediateRender: false }, 0.8)
+  } else if (i === 2) {
+    const cards = container.querySelectorAll('.lp-platform-card')
+    const singleCheck = container.querySelector('.lp-fan-check')
+
+    if (cards.length === 3) {
+      tl.fromTo(cards[0], { x: 0, rotation: 0 }, { x: -fanX, rotation: -5, duration: 0.35, ease: 'power2.out', immediateRender: false }, 0.3)
+      tl.fromTo(cards[2], { x: 0, rotation: 0 }, { x: fanX, rotation: 5, duration: 0.35, ease: 'power2.out', immediateRender: false }, 0.3)
+    }
+    if (singleCheck) {
+      tl.fromTo(singleCheck, { scale: 0, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.25, ease: 'back.out(3)', immediateRender: false }, 0.6)
+    }
+  } else if (i === 3) {
+    const scheduleHeader = container.querySelector('[data-schedule-header]')
+    const formatPills = container.querySelectorAll('.lp-format-pill')
+    const calGrid = container.querySelector('.lp-cal-grid')
+    const badgeScheduled = container.querySelector('.lp-badge-scheduled')
+    const badgePublished = container.querySelector('.lp-badge-published')
+
+    if (scheduleHeader) tl.fromTo(scheduleHeader, { opacity: 0, y: -10 }, { opacity: 1, y: 0, duration: 0.2, immediateRender: false }, 0.15)
+    if (formatPills.length) tl.fromTo(formatPills, { opacity: 0, y: 8 }, { opacity: 1, y: 0, duration: 0.1, stagger: 0.04, immediateRender: false }, 0.25)
+    if (calGrid) {
+      tl.fromTo(calGrid, { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.15, immediateRender: false }, 0.3)
+      const dots = calGrid.querySelectorAll('.lp-cal-dot')
+      if (dots.length) tl.fromTo(dots, { opacity: 0, scale: 0 }, { opacity: 1, scale: 1, duration: 0.08, stagger: 0.03, ease: 'back.out(3)', immediateRender: false }, 0.38)
+    }
+    if (badgeScheduled) {
+      tl.fromTo(badgeScheduled, { x: '-120%', opacity: 0 }, { x: 0, opacity: 1, duration: 0.18, ease: 'power2.out', immediateRender: false }, 0.45)
+      tl.to(badgeScheduled, { x: '120%', opacity: 0, duration: 0.15, ease: 'power2.in' }, 0.60)
+    }
+    if (badgePublished) {
+      tl.fromTo(badgePublished, { x: '-120%', opacity: 0 }, { x: 0, opacity: 1, duration: 0.18, ease: 'power2.out', immediateRender: false }, 0.60)
+      tl.to(badgePublished, { x: '120%', opacity: 0, duration: 0.15, ease: 'power2.in' }, 0.76)
+    }
+  }
+
+  // Exit animation: only on desktop (mobile hides instantly before next step plays)
+  if (!forMobile && i < 3) {
+    tl.to(container, { opacity: 0, y: -20, duration: 0.2 }, 0.9)
+    tl.set(container, { visibility: 'hidden' }, 1.1)
+  }
+
+  return tl
+}
+
 useGsapSection(sectionRef, (el, g) => {
   const stageContainers = el.querySelectorAll('.lp-stage-step')
   const progressBars = el.querySelectorAll('.lp-step-progress-fill')
 
-  // Hard-set initial states including all transform properties
+  // Hard-set initial states
   stageContainers.forEach((c, i) => {
-    if (i === 0) {
+    if (i === 0 && !isMobile) {
       g.set(c, { visibility: 'visible', opacity: 1, y: 0, rotateX: 0, rotateY: 0, z: 0, scale: 1 })
     } else {
       g.set(c, { visibility: 'hidden', opacity: 0, y: 30, scale: 1 })
     }
   })
 
-  const master = g.timeline({
-    scrollTrigger: {
-      trigger: el,
-      start: 'top 10%',
-      end: isMobile ? '+=150%' : '+=200%',
-      pin: true,
-      scrub: 1,
-      onUpdate(self: { progress: number }) {
-        const p = self.progress
-        activeStep.value = p >= 0.75 ? 3 : p >= 0.5 ? 2 : p >= 0.25 ? 1 : 0
-      },
-    },
-  })
-
-  // Each step occupies 25% of master timeline
-  for (let i = 0; i < 4; i++) {
-    const container = stageContainers[i]
-    if (!container) continue
-    const stepTl = g.timeline()
-
-    // Entrance: visibility as instant set(), visual as fromTo()
-    if (i > 0) {
-      stepTl.set(container, { visibility: 'visible' }, 0)
-      stepTl.fromTo(container,
-        { opacity: 0, y: 30, ...stepEntrance[i] },
-        { opacity: 1, y: 0, ...stepEntranceTo[i], duration: 0.3, ease: 'power2.out', immediateRender: false },
-        0,
-      )
+  if (isMobile) {
+    // ── MOBILE: Timer-based auto-advancing carousel ──
+    mobileStepTls = []
+    for (let i = 0; i < 4; i++) {
+      const container = stageContainers[i]
+      if (!container) continue
+      mobileStepTls.push(buildStepTimeline(i, container, g, progressBars[i] || null, true))
     }
 
-    // Progress bar fill
-    if (progressBars[i]) {
-      stepTl.fromTo(progressBars[i],
-        { scaleX: 0 },
-        { scaleX: 1, duration: 0.8, ease: 'none', immediateRender: i === 0 ? undefined : false },
-        i === 0 ? 0 : 0.3,
-      )
+    function playStep(i: number) {
+      if (mobileDelayCall) { mobileDelayCall.kill(); mobileDelayCall = null }
+      if (mobileProgressTween) { mobileProgressTween.kill(); mobileProgressTween = null }
+
+      activeStep.value = i
+
+      // Hide all containers, reset all step timelines
+      stageContainers.forEach((c, idx) => {
+        g.set(c, { visibility: 'hidden', opacity: 0 })
+        mobileStepTls[idx]?.progress(0).pause()
+      })
+      // Reset all progress bars
+      progressBars.forEach(bar => g.set(bar, { scaleX: 0 }))
+
+      // Play target step
+      mobileStepTls[i].restart()
+
+      // Animate progress bar fill over STEP_DURATION
+      if (progressBars[i]) {
+        mobileProgressTween = g.fromTo(progressBars[i],
+          { scaleX: 0 },
+          { scaleX: 1, duration: STEP_DURATION, ease: 'none' },
+        )
+      }
+
+      // Schedule next step
+      mobileDelayCall = g.delayedCall(STEP_DURATION, () => {
+        playStep((i + 1) % 4)
+      })
     }
 
-    // Step-specific animations
-    if (i === 0) {
-      const aiBubble = container.querySelector('[data-ai-bubble]')
-      const suggestionCard = container.querySelector('[data-suggestion-card]')
-      const toneBadge = container.querySelector('[data-tone-badge]')
-      const chatActions = container.querySelectorAll('[data-chat-actions] .lp-chat-action-btn')
+    mobilePlayStep = playStep
 
-      if (aiBubble) {
-        stepTl.fromTo(aiBubble,
-          { opacity: 0, y: 15 },
-          { opacity: 1, y: 0, duration: 0.3, ease: 'power2.out', immediateRender: false },
-          0.1,
-        )
-      }
-      if (suggestionCard) {
-        stepTl.fromTo(suggestionCard,
-          { opacity: 0, scale: 0.92 },
-          { opacity: 1, scale: 1, duration: 0.25, ease: 'power2.out', immediateRender: false },
-          0.35,
-        )
-      }
-      if (toneBadge) {
-        stepTl.fromTo(toneBadge,
-          { opacity: 0, scale: 0.7 },
-          { opacity: 1, scale: 1, duration: 0.15, ease: 'back.out(3)', immediateRender: false },
-          0.55,
-        )
-      }
-      if (chatActions.length) {
-        stepTl.fromTo(chatActions,
-          { opacity: 0, y: 8 },
-          { opacity: 1, y: 0, duration: 0.12, stagger: 0.05, ease: 'power2.out', immediateRender: false },
-          0.65,
-        )
-      }
-    } else if (i === 1) {
-      const shimmers = container.querySelectorAll('.lp-gen-shimmer')
-      const appHeader = container.querySelector('[data-post-header]')
-      const tabs = container.querySelectorAll('[data-post-tabs] .lp-post-tab')
-      const brandRow = container.querySelector('[data-post-brand]')
-      const imgPlaceholder = container.querySelector('[data-post-image]')
-      const captionArea = container.querySelector('[data-post-caption]')
-      const tags = container.querySelectorAll('[data-post-tags] .lp-gen-tag')
-      const actionBtns = container.querySelectorAll('[data-post-actions] .lp-post-btn')
-      const bottomBar = container.querySelector('[data-post-bottom]')
-
-      // Shimmers fade out
-      stepTl.fromTo(shimmers, { opacity: 1 }, { opacity: 0, duration: 0.25, stagger: 0.05, immediateRender: false }, 0.3)
-
-      // App header fades in
-      if (appHeader) {
-        stepTl.fromTo(appHeader, { opacity: 0 }, { opacity: 1, duration: 0.2, immediateRender: false }, 0.35)
-      }
-
-      // Post type tabs slide in from right
-      stepTl.fromTo(tabs, { opacity: 0, x: 20 }, { opacity: 1, x: 0, duration: 0.15, stagger: 0.05, immediateRender: false }, 0.4)
-
-      // Brand row fades in
-      if (brandRow) {
-        stepTl.fromTo(brandRow, { opacity: 0 }, { opacity: 1, duration: 0.2, immediateRender: false }, 0.5)
-      }
-
-      // Tone badge pops in
-      const toneBadge = container.querySelector('[data-post-tone]')
-      if (toneBadge) {
-        stepTl.fromTo(toneBadge, { opacity: 0, scale: 0.9 }, { opacity: 1, scale: 1, duration: 0.15, ease: 'back.out(1.5)', immediateRender: false }, 0.52)
-      }
-
-      // Image scales in
-      if (imgPlaceholder) {
-        stepTl.fromTo(imgPlaceholder,
-          { scale: 0.85, opacity: 0 },
-          { scale: 1, opacity: 1, duration: 0.25, ease: 'power2.out', immediateRender: false },
-          0.55,
-        )
-      }
-
-      // Caption reveals
-      if (captionArea) {
-        stepTl.fromTo(captionArea, { opacity: 0, y: 8 }, { opacity: 1, y: 0, duration: 0.2, immediateRender: false }, 0.6)
-      }
-
-      // Tags stagger in
-      stepTl.fromTo(tags, { opacity: 0, y: 15 }, { opacity: 1, y: 0, duration: 0.15, stagger: 0.06, immediateRender: false }, 0.65)
-
-      // Action buttons pop in
-      stepTl.fromTo(actionBtns, { opacity: 0, scale: 0.9 }, { opacity: 1, scale: 1, duration: 0.15, stagger: 0.05, ease: 'back.out(1.5)', immediateRender: false }, 0.72)
-
-      // Bottom bar fades in
-      if (bottomBar) {
-        stepTl.fromTo(bottomBar, { opacity: 0 }, { opacity: 1, duration: 0.15, immediateRender: false }, 0.8)
-      }
-    } else if (i === 2) {
-      const cards = container.querySelectorAll('.lp-platform-card')
-      const singleCheck = container.querySelector('.lp-fan-check')
-
-      if (cards.length === 3) {
-        stepTl.fromTo(cards[0],
-          { x: 0, rotation: 0 },
-          { x: -120, rotation: -5, duration: 0.35, ease: 'power2.out', immediateRender: false },
-          0.3,
-        )
-        stepTl.fromTo(cards[2],
-          { x: 0, rotation: 0 },
-          { x: 120, rotation: 5, duration: 0.35, ease: 'power2.out', immediateRender: false },
-          0.3,
-        )
-      }
-      if (singleCheck) {
-        stepTl.fromTo(singleCheck,
-          { scale: 0, opacity: 0 },
-          { scale: 1, opacity: 1, duration: 0.25, ease: 'back.out(3)', immediateRender: false },
-          0.6,
-        )
-      }
-    } else if (i === 3) {
-      const scheduleHeader = container.querySelector('[data-schedule-header]')
-      const formatPills = container.querySelectorAll('.lp-format-pill')
-      const calGrid = container.querySelector('.lp-cal-grid')
-      const badgeScheduled = container.querySelector('.lp-badge-scheduled')
-      const badgePublished = container.querySelector('.lp-badge-published')
-      // Header fades in
-      if (scheduleHeader) {
-        stepTl.fromTo(scheduleHeader, { opacity: 0, y: -10 }, { opacity: 1, y: 0, duration: 0.2, immediateRender: false }, 0.15)
-      }
-
-      // Format pills stagger in
-      if (formatPills.length) {
-        stepTl.fromTo(formatPills, { opacity: 0, y: 8 }, { opacity: 1, y: 0, duration: 0.1, stagger: 0.04, immediateRender: false }, 0.25)
-      }
-
-      if (calGrid) {
-        stepTl.fromTo(calGrid, { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.15, immediateRender: false }, 0.3)
-
-        // Animate dots filling in with stagger
-        const dots = calGrid.querySelectorAll('.lp-cal-dot')
-        if (dots.length) {
-          stepTl.fromTo(dots,
-            { opacity: 0, scale: 0 },
-            { opacity: 1, scale: 1, duration: 0.08, stagger: 0.03, ease: 'back.out(3)', immediateRender: false },
-            0.38,
-          )
+    // IntersectionObserver: start/pause based on visibility
+    mobileObserver = new IntersectionObserver(
+      (entries) => {
+        const entry = entries[0]
+        if (entry.isIntersecting) {
+          if (!mobileStarted) {
+            mobileStarted = true
+            playStep(0)
+          } else {
+            mobileStepTls[activeStep.value]?.resume()
+            mobileProgressTween?.resume()
+            mobileDelayCall?.resume()
+          }
+        } else {
+          mobileStepTls[activeStep.value]?.pause()
+          mobileProgressTween?.pause()
+          mobileDelayCall?.pause()
         }
-      }
+      },
+      { threshold: 0.2 },
+    )
+    mobileObserver.observe(el)
 
-      // Badge 1: "Scheduled" — enter from left
-      if (badgeScheduled) {
-        stepTl.fromTo(badgeScheduled,
-          { x: '-100vw', opacity: 0 },
-          { x: 0, opacity: 1, duration: 0.18, ease: 'power2.out', immediateRender: false },
-          0.45,
-        )
-        // Badge 1: exit — pushed right off-screen
-        stepTl.to(badgeScheduled,
-          { x: '100vw', opacity: 0, duration: 0.15, ease: 'power2.in' },
-          0.60,
-        )
-      }
+  } else {
+    // ── DESKTOP: Scroll-pinned scrub (unchanged) ──
+    const master = g.timeline({
+      scrollTrigger: {
+        trigger: el,
+        start: 'top 10%',
+        end: '+=200%',
+        pin: true,
+        scrub: 1,
+        invalidateOnRefresh: true,
+        onUpdate(self: { progress: number }) {
+          const p = self.progress
+          activeStep.value = p >= 0.75 ? 3 : p >= 0.5 ? 2 : p >= 0.25 ? 1 : 0
+        },
+      },
+    })
 
-      // Badge 2: "Published" — enter from left, pushes Scheduled right
-      if (badgePublished) {
-        stepTl.fromTo(badgePublished,
-          { x: '-100vw', opacity: 0 },
-          { x: 0, opacity: 1, duration: 0.18, ease: 'power2.out', immediateRender: false },
-          0.60,
-        )
-        // Badge 2: exit — pushed right off-screen
-        stepTl.to(badgePublished,
-          { x: '100vw', opacity: 0, duration: 0.15, ease: 'power2.in' },
-          0.76,
-        )
-      }
-
+    for (let i = 0; i < 4; i++) {
+      const container = stageContainers[i]
+      if (!container) continue
+      master.add(buildStepTimeline(i, container, g, progressBars[i] || null, false), i)
     }
 
-    // Exit: opacity tween then instant visibility hide (except last step)
-    if (i < 3) {
-      stepTl.to(container, { opacity: 0, y: -20, duration: 0.2 }, 0.9)
-      stepTl.set(container, { visibility: 'hidden' }, 1.1)
-    }
-
-    master.add(stepTl, i)
+    master.progress(0, true)
   }
+})
 
-  // Force-render at position 0 to lock in initial states
-  master.progress(0, true)
+// Mobile: handle tab clicks
+function onStepClick(i: number) {
+  if (!isMobile || !mobilePlayStep) return
+  mobilePlayStep(i)
+}
+
+// Cleanup on unmount
+onUnmounted(() => {
+  mobileDelayCall?.kill()
+  mobileProgressTween?.kill()
+  mobileStepTls.forEach(tl => tl.kill())
+  mobileStepTls = []
+  mobileObserver?.disconnect()
+  mobileObserver = null
 })
 </script>
 
@@ -285,13 +329,14 @@ useGsapSection(sectionRef, (el, g) => {
 
       <div class="lp-split-panel">
         <!-- Left: Step Nav -->
-        <div class="lp-steps-nav">
+        <div ref="stepsNavRef" class="lp-steps-nav">
           <div
             v-for="(step, i) in steps"
             :key="step.key"
             class="lp-step-indicator"
             :class="{ active: activeStep === i, done: activeStep > i }"
             :style="{ '--step-color': step.color }"
+            @click="onStepClick(i)"
           >
             <div class="lp-step-head">
               <span class="lp-step-num">{{ step.number }}</span>
@@ -319,13 +364,13 @@ useGsapSection(sectionRef, (el, g) => {
           <div class="lp-stage-step lp-stage-prompt">
             <div class="lp-mock-chat">
               <div class="lp-chat-header">
-                <img src="@/assets/socialchef_logo.svg" alt="" class="lp-chat-logo" />
+                <SocialChefMark :size="20" class="lp-chat-logo" />
                 <span>SocialChef</span>
               </div>
               <div class="lp-chat-messages">
                 <div class="lp-chat-msg-ai" data-ai-bubble>
                   <div class="lp-chat-avatar">
-                    <img src="@/assets/socialchef_logo.svg" alt="" />
+                    <SocialChefMark :size="20" />
                   </div>
                   <div class="lp-chat-bubble">
                     <p>{{ t('appLanding.aiCreation.promptGreeting') }}</p>
@@ -785,8 +830,7 @@ useGsapSection(sectionRef, (el, g) => {
 
 .lp-chat-logo {
   width: 20px;
-  height: 20px;
-  border-radius: 4px;
+  height: 25px;
 }
 
 .lp-chat-messages {
@@ -804,18 +848,10 @@ useGsapSection(sectionRef, (el, g) => {
 }
 
 .lp-chat-avatar {
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  overflow: hidden;
+  width: 20px;
+  height: 25px;
   flex-shrink: 0;
   margin-top: 2px;
-}
-
-.lp-chat-avatar img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
 }
 
 .lp-chat-bubble {
@@ -1425,6 +1461,11 @@ img.lp-preview-img {
 
 /* ===== Mobile ===== */
 @media (max-width: 768px) {
+  .lp-ai-creation {
+    min-height: auto;
+    padding: var(--space-3xl) var(--space-lg);
+  }
+
   .lp-split-panel {
     grid-template-columns: 1fr;
     gap: var(--space-xl);
@@ -1436,11 +1477,15 @@ img.lp-preview-img {
     gap: var(--space-sm);
     padding-top: 0;
     -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
   }
+  .lp-steps-nav::-webkit-scrollbar { display: none; }
 
   .lp-step-indicator {
     flex-shrink: 0;
     padding: var(--space-sm) var(--space-md);
+    min-height: 44px;
+    cursor: pointer;
   }
 
   .lp-step-text p {
@@ -1454,31 +1499,22 @@ img.lp-preview-img {
 
   .lp-stage {
     height: 380px;
+    perspective: none;
+  }
+
+  .lp-stage-step {
+    /* inherits position: absolute; inset: 0 from base rule */
+    transform-style: flat;
+    padding: var(--space-lg);
   }
 
   .lp-platform-card {
     width: 140px;
   }
 
-  .lp-platforms-fan .lp-platform-card:first-child {
-    transform: translateX(-60px) rotate(-5deg) !important;
-  }
-
-  .lp-platforms-fan .lp-platform-card:last-child {
-    transform: translateX(60px) rotate(5deg) !important;
-  }
-
   .lp-cal-slot {
     width: 44px;
     height: 44px;
-  }
-
-  .lp-stage {
-    perspective: none;
-  }
-
-  .lp-stage-step {
-    transform-style: flat;
   }
 
   .lp-stage-orb {

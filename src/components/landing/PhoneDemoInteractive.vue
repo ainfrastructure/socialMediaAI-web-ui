@@ -93,7 +93,8 @@ function buildPhase1(tl: gsap.core.Timeline) {
 
   // Scroll messages up to make room
   const messages = q('[data-demo-messages]')
-  tl.to(messages, { y: -80, duration: 0.4, ease: 'power2.out' }, offset + 0.5)
+  const isMob = typeof window !== 'undefined' && window.innerWidth < 768
+  tl.to(messages, { y: isMob ? -55 : -80, duration: 0.4, ease: 'power2.out' }, offset + 0.5)
 
   // AI strategy message appears
   const strategy = q('[data-demo-strategy]')
@@ -200,7 +201,8 @@ function buildPhase3(tl: gsap.core.Timeline) {
 
   // Scroll messages up to make room for publish card
   const messages = q('[data-demo-messages]')
-  tl.to(messages, { y: -220, duration: 0.4, ease: 'power2.out' }, offset + 0.7)
+  const isMob = typeof window !== 'undefined' && window.innerWidth < 768
+  tl.to(messages, { y: isMob ? -155 : -220, duration: 0.4, ease: 'power2.out' }, offset + 0.7)
 
   // Post preview card fades in
   const publishCard = q('[data-demo-publish-card]')
@@ -250,7 +252,7 @@ function buildPhase3(tl: gsap.core.Timeline) {
   }
 
   // Scroll messages further up to reveal confirmation
-  tl.to(messages, { y: -340, duration: 0.4, ease: 'power2.out' }, offset + 2.8)
+  tl.to(messages, { y: isMob ? -240 : -340, duration: 0.4, ease: 'power2.out' }, offset + 2.8)
 
   // Published confirmation fades in
   const confirmed = q('[data-demo-published-confirm]')
@@ -504,13 +506,6 @@ function buildPhase7(tl: gsap.core.Timeline) {
 
   tl.call(() => scheduleAutoAdvance(), undefined, offset + 1.8)
   tl.addPause(offset + 1.8)
-
-  // Smooth fade-out before loop restarts
-  const fadeStart = offset + 1.8
-  tl.to(cta, { opacity: 0, duration: 0.6, ease: 'power2.in' }, fadeStart)
-  if (headline) tl.to(headline, { opacity: 0, y: -8, duration: 0.4 }, fadeStart)
-  if (subtext) tl.to(subtext, { opacity: 0, y: -6, duration: 0.4 }, fadeStart + 0.1)
-  if (btn) tl.to(btn, { opacity: 0, scale: 0.95, duration: 0.3 }, fadeStart + 0.15)
 }
 
 function resetAll() {
@@ -610,9 +605,7 @@ function buildTimeline() {
       resetAll()
       currentPhase.value = 0
       emit('phase', 0)
-      autoTimer = setTimeout(() => {
-        if (masterTl) masterTl.restart()
-      }, 800)
+      if (masterTl) masterTl.restart()
     },
   })
 
@@ -721,7 +714,7 @@ defineExpose({ skipToNext, jumpToPhase })
   <div
     ref="rootRef"
     class="phone-demo-interactive"
-    @click="skipToNext"
+    @pointerup="(e: PointerEvent) => { if (e.pointerType !== 'touch') skipToNext() }"
   >
     <DemoChatScreen />
     <DemoDesignStudio />

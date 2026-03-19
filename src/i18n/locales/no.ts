@@ -2055,8 +2055,7 @@ export default {
       subheadline: 'Fra innholdsproduksjon til automatisk publisering — SocialChef håndterer sosiale medier 24/7',
       ctaPrimary: 'Få tidlig tilgang',
       ctaSecondary: 'Se hvordan det fungerer',
-      floatingBadge1: 'Publisert til Instagram',
-      trustSignal: 'Bli med markedsførere på hvitelisten'
+      floatingBadge1: 'Publisert til Instagram'
     },
     socialProof: {
       platforms: 'Fungerer med'
@@ -2160,7 +2159,7 @@ export default {
       featureDescCta: 'Bli med bedrifter som allerede sparer timer hver uke.',
       ctaPhoneHeadline: 'Hva venter du på?',
       ctaPhoneSubtext: 'Det publiserer seg ikke selv uten SocialChef.',
-      ctaPhoneButton: 'Kom i gang gratis',
+      ctaPhoneButton: 'Kom i gang',
       chatAiGreeting: 'Hei! Jeg har analysert merkevaren din. Klar til å lage innhold som matcher stemmen din?',
       chatUserReply1: 'Flott! Planlegg uken min på alle plattformer',
       chatAiStrategy: 'Her er din optimaliserte innholdsplan for Vetted denne uken:',
@@ -2329,7 +2328,15 @@ export default {
       dashTitle: 'Konkurrentpanel',
       followers: 'Følgere',
       engagement: 'Engasjement',
-      postsMonth: 'Innlegg/md'
+      postsMonth: 'Innlegg/md',
+      benchmarking: 'Benchmarking',
+      benchmarkingDesc: 'Sammenlign dine tall side om side med konkurrentene',
+      contentGaps: 'Innholdsgap',
+      contentGapsDesc: 'Oppdag temaer konkurrentene dekker som du ikke gjør',
+      trendAlerts: 'Trendvarsler',
+      trendAlertsDesc: 'Bli varslet når konkurrenter endrer strategi',
+      shareOfVoice: 'Andel av stemme',
+      shareOfVoiceDesc: 'Følg merkevarens synlighet mot konkurrentene'
     },
     aiAssistant: {
       eyebrow: 'AI-assistent',

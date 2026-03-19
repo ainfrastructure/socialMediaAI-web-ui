@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
+import SocialChefLogo from '@/components/SocialChefLogo.vue'
 
 const { t } = useI18n()
 </script>
@@ -8,8 +9,7 @@ const { t } = useI18n()
   <footer class="lp-footer">
     <div class="lp-footer-inner">
       <div class="lp-footer-logo">
-        <img src="/mascot/socialchef_wave.png" alt="SocialChef" class="lp-footer-logo-img" />
-        <span class="lp-footer-logo-text">SocialChef</span>
+        <SocialChefLogo :mark-size="28" show-wordmark speed="slow" />
       </div>
 
       <div class="lp-footer-links">
@@ -45,19 +45,6 @@ const { t } = useI18n()
   display: flex;
   align-items: center;
   gap: var(--space-sm);
-}
-
-.lp-footer-logo-img {
-  width: 28px;
-  height: 28px;
-  object-fit: contain;
-}
-
-.lp-footer-logo-text {
-  font-family: var(--font-heading);
-  font-weight: var(--font-bold);
-  font-size: var(--text-base);
-  color: var(--lp-text-primary);
 }
 
 .lp-footer-links {

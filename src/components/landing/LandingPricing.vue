@@ -380,15 +380,60 @@ useGsapSection(sectionRef, (el, gsapInstance) => {
 }
 
 @media (max-width: 768px) {
+  .lp-pricing {
+    padding: var(--space-3xl) var(--space-lg);
+  }
+
+  .lp-billing-toggle {
+    margin-bottom: var(--space-2xl);
+  }
+
   .lp-pricing-grid {
     grid-template-columns: 1fr;
     max-width: 400px;
     margin: 0 auto;
+    gap: var(--space-lg);
+  }
+
+  .lp-pricing-card {
+    padding: var(--space-xl) var(--space-lg);
   }
 
   .lp-pricing-card.featured {
     transform: none;
     order: -1;
+  }
+
+  .lp-plan-icon {
+    width: 40px;
+    height: 40px;
+    margin-bottom: var(--space-md);
+  }
+
+  .lp-plan-name {
+    margin-bottom: var(--space-sm);
+  }
+
+  .lp-plan-price {
+    margin-bottom: var(--space-lg);
+  }
+
+  .lp-price-amount {
+    font-size: var(--text-3xl);
+  }
+
+  .lp-plan-features {
+    margin-bottom: var(--space-xl);
+  }
+
+  .lp-plan-features li {
+    padding: var(--space-xs) 0;
+    font-size: var(--text-xs);
+  }
+
+  /* Hide less important features on mobile — show max 4 */
+  .lp-plan-features li:nth-child(n+5) {
+    display: none;
   }
 
   @media (hover: hover) {

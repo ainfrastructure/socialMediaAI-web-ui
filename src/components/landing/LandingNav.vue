@@ -2,6 +2,7 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useMagneticButton } from '@/composables/useMagneticButton'
+import SocialChefLogo from '@/components/SocialChefLogo.vue'
 
 const { t } = useI18n()
 
@@ -38,8 +39,7 @@ onUnmounted(() => {
     <!-- Desktop -->
     <div class="lp-nav-inner lp-nav-desktop">
       <div class="lp-nav-logo">
-        <img src="/mascot/socialchef_wave.png" alt="SocialChef" class="lp-logo-img" />
-        <span class="lp-logo-text">SocialChef</span>
+        <SocialChefLogo :mark-size="36" show-wordmark />
       </div>
 
       <nav class="lp-nav-links">
@@ -62,8 +62,7 @@ onUnmounted(() => {
     <!-- Mobile -->
     <div class="lp-nav-inner lp-nav-mobile">
       <div class="lp-nav-logo">
-        <img src="/mascot/socialchef_wave.png" alt="SocialChef" class="lp-logo-img" />
-        <span class="lp-logo-text">SocialChef</span>
+        <SocialChefLogo :mark-size="36" show-wordmark />
       </div>
 
       <button
@@ -128,20 +127,6 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   gap: var(--space-sm);
-}
-
-.lp-logo-img {
-  width: 36px;
-  height: 36px;
-  object-fit: contain;
-}
-
-.lp-logo-text {
-  font-family: var(--font-heading);
-  font-weight: var(--font-bold);
-  font-size: var(--text-lg);
-  color: var(--lp-text-primary);
-  letter-spacing: -0.01em;
 }
 
 .lp-nav-links {

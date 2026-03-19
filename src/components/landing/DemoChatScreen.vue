@@ -2,6 +2,7 @@
 import { useI18n } from 'vue-i18n'
 import MaterialIcon from '@/components/MaterialIcon.vue'
 import PlatformLogo from '@/components/PlatformLogo.vue'
+import SocialChefMark from '@/components/SocialChefMark.vue'
 
 const { t } = useI18n()
 </script>
@@ -19,7 +20,7 @@ const { t } = useI18n()
     <div class="dc-messages" data-demo-messages>
       <!-- Phase 0: AI greeting -->
       <div class="dc-msg dc-msg-ai" data-demo-ai-greeting>
-        <img src="@/assets/socialchef_logo.svg" alt="" class="dc-avatar" />
+        <SocialChefMark :size="20" class="dc-avatar" />
         <div class="dc-bubble dc-bubble-ai">
           <div class="dc-typing" data-demo-typing>
             <span /><span /><span />
@@ -50,7 +51,7 @@ const { t } = useI18n()
 
       <!-- Phase 1: AI strategy response with calendar card + platform logos -->
       <div class="dc-msg dc-msg-ai" data-demo-strategy>
-        <img src="@/assets/socialchef_logo.svg" alt="" class="dc-avatar" />
+        <SocialChefMark :size="20" class="dc-avatar" />
         <div class="dc-bubble dc-bubble-ai">
           <div class="dc-text" data-demo-strategy-text>
             {{ t('appLanding.cinematic.chatAiStrategy') }}
@@ -106,7 +107,7 @@ const { t } = useI18n()
 
       <!-- Post Preview Card (inline publish) -->
       <div class="dc-msg dc-msg-ai" data-demo-publish-card>
-        <img src="@/assets/socialchef_logo.svg" alt="" class="dc-avatar" />
+        <SocialChefMark :size="20" class="dc-avatar" />
         <div class="dc-bubble dc-bubble-ai">
           <div class="dc-text dc-text-visible" data-demo-publish-intro>
             {{ t('appLanding.cinematic.publishCardIntro') }}
@@ -141,7 +142,7 @@ const { t } = useI18n()
 
       <!-- Published Confirmation -->
       <div class="dc-msg dc-msg-ai" data-demo-published-confirm>
-        <img src="@/assets/socialchef_logo.svg" alt="" class="dc-avatar" />
+        <SocialChefMark :size="20" class="dc-avatar" />
         <div class="dc-bubble dc-bubble-ai">
           <div class="dc-published-badge" data-demo-published-badge>
             <MaterialIcon icon="check_circle" size="xs" />
@@ -272,9 +273,7 @@ const { t } = useI18n()
 
 .dc-avatar {
   width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  object-fit: cover;
+  height: 25px;
   flex-shrink: 0;
 }
 
