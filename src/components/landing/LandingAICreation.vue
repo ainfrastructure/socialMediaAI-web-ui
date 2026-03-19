@@ -321,7 +321,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <section id="lp-how-it-works" ref="sectionRef" class="lp-ai-creation">
+  <section ref="sectionRef" class="lp-ai-creation">
     <div class="lp-section-inner">
       <span class="lp-eyebrow">{{ t('appLanding.aiCreation.eyebrow') }}</span>
       <h2 class="lp-section-title">{{ t('appLanding.aiCreation.title') }}</h2>
@@ -376,7 +376,7 @@ onUnmounted(() => {
                     <p>{{ t('appLanding.aiCreation.promptGreeting') }}</p>
                     <div class="lp-chat-suggestion" data-suggestion-card>
                       <div class="lp-suggestion-img">
-                        <img src="/example/example-pizza.jpg" alt="" />
+                        <img src="/example/example-pizza.jpg" alt="" loading="lazy" />
                       </div>
                       <div class="lp-suggestion-body">
                         <p class="lp-suggestion-caption">{{ t('appLanding.aiCreation.promptSuggestionCaption') }}</p>
@@ -443,7 +443,7 @@ onUnmounted(() => {
 
               <!-- Brand row -->
               <div class="lp-post-brand-row" data-post-brand>
-                <img src="/example/jungelpizza-logo.jpeg" alt="" class="lp-post-avatar-img" />
+                <img src="/example/jungelpizza-logo.jpeg" alt="" class="lp-post-avatar-img" loading="lazy" />
                 <div class="lp-post-brand-info">
                   <span class="lp-post-brand-name">Jungel Pizza</span>
                   <span class="lp-post-timestamp">{{ t('appLanding.aiCreation.postTimestamp') }}</span>
@@ -452,7 +452,7 @@ onUnmounted(() => {
 
               <!-- Image -->
               <div class="lp-gen-image" data-post-image>
-                <img src="/example/example-pizza.jpg" alt="" class="lp-gen-real-img" />
+                <img src="/example/example-pizza.jpg" alt="" class="lp-gen-real-img" loading="lazy" />
               </div>
 
               <!-- Tone badge -->
@@ -498,7 +498,7 @@ onUnmounted(() => {
               <div class="lp-platform-card" style="--brand: var(--gradient-instagram, #E4405F)">
                 <span class="lp-platform-label">Instagram</span>
                 <div class="lp-platform-preview">
-                  <img src="/example/example-pizza.jpg" alt="" class="lp-preview-img" />
+                  <img src="/example/example-pizza.jpg" alt="" class="lp-preview-img" loading="lazy" />
                   <div class="lp-preview-lines">
                     <div /><div class="short" />
                   </div>
@@ -507,7 +507,7 @@ onUnmounted(() => {
               <div class="lp-platform-card" style="--brand: var(--gradient-linkedin, #0A66C2)">
                 <span class="lp-platform-label">LinkedIn</span>
                 <div class="lp-platform-preview">
-                  <img src="/example/example-pizza.jpg" alt="" class="lp-preview-img" />
+                  <img src="/example/example-pizza.jpg" alt="" class="lp-preview-img" loading="lazy" />
                   <div class="lp-preview-lines">
                     <div /><div class="short" />
                   </div>
@@ -516,7 +516,7 @@ onUnmounted(() => {
               <div class="lp-platform-card" style="--brand: var(--gradient-facebook, #1877F2)">
                 <span class="lp-platform-label">Facebook</span>
                 <div class="lp-platform-preview">
-                  <img src="/example/example-pizza.jpg" alt="" class="lp-preview-img" />
+                  <img src="/example/example-pizza.jpg" alt="" class="lp-preview-img" loading="lazy" />
                   <div class="lp-preview-lines">
                     <div /><div class="short" />
                   </div>

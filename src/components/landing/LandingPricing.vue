@@ -53,7 +53,7 @@ useGsapSection(sectionRef, (el, gsapInstance) => {
 </script>
 
 <template>
-  <section id="lp-pricing" ref="sectionRef" class="lp-pricing">
+  <section ref="sectionRef" class="lp-pricing">
     <div class="lp-section-inner">
       <span class="lp-eyebrow">{{ t('appLanding.pricing.eyebrow') }}</span>
       <h2 class="lp-section-title">{{ t('appLanding.pricing.title') }}</h2>

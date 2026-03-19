@@ -34,7 +34,7 @@ const testimonials = [
 
           <div class="lp-test-author">
             <div class="lp-test-avatar">
-              <img :src="test.logo" :alt="test.name" class="lp-test-logo" />
+              <img :src="test.logo" :alt="test.name" class="lp-test-logo" loading="lazy" />
             </div>
             <div>
               <span class="lp-test-name">{{ test.name }}</span>
@@ -55,7 +55,7 @@ const testimonials = [
 
           <div class="lp-test-author">
             <div class="lp-test-avatar">
-              <img :src="test.logo" :alt="test.name" class="lp-test-logo" />
+              <img :src="test.logo" :alt="test.name" class="lp-test-logo" loading="lazy" />
             </div>
             <div>
               <span class="lp-test-name">{{ test.name }}</span>

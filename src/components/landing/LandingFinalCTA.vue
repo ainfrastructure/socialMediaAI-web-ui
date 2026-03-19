@@ -21,7 +21,7 @@ useGsapSection(sectionRef, (el, gsapInstance) => {
 </script>
 
 <template>
-  <section id="lp-final-cta" ref="sectionRef" class="lp-final-cta">
+  <section ref="sectionRef" class="lp-final-cta">
     <div class="lp-section-inner">
       <div class="lp-cta-content">
         <h2 class="lp-cta-title">{{ t('appLanding.finalCta.title') }}</h2>

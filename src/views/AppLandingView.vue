@@ -1,18 +1,20 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, nextTick } from 'vue'
+import { ref, defineAsyncComponent, onMounted, onUnmounted, nextTick } from 'vue'
 import { useCursorGlow } from '@/composables/useCursorGlow'
 import { useLandingTheme } from '@/composables/useLandingTheme'
 import LandingBackground from '@/components/landing/LandingBackground.vue'
 import LandingScrollProgress from '@/components/landing/LandingScrollProgress.vue'
 import LandingNav from '@/components/landing/LandingNav.vue'
 import LandingPhoneCinematic from '@/components/landing/LandingPhoneCinematic.vue'
-import LandingPlatformMarquee from '@/components/landing/LandingPlatformMarquee.vue'
-import LandingAICreation from '@/components/landing/LandingAICreation.vue'
-import LandingFeatureShowcase from '@/components/landing/LandingFeatureShowcaseD.vue'
-import LandingTestimonials from '@/components/landing/LandingTestimonials.vue'
-import LandingPricing from '@/components/landing/LandingPricing.vue'
-import LandingFinalCTA from '@/components/landing/LandingFinalCTA.vue'
-import LandingFooter from '@/components/landing/LandingFooter.vue'
+import LazySectionWrapper from '@/components/landing/LazySectionWrapper.vue'
+
+const LandingPlatformMarquee = defineAsyncComponent(() => import('@/components/landing/LandingPlatformMarquee.vue'))
+const LandingAICreation = defineAsyncComponent(() => import('@/components/landing/LandingAICreation.vue'))
+const LandingFeatureShowcase = defineAsyncComponent(() => import('@/components/landing/LandingFeatureShowcaseD.vue'))
+const LandingTestimonials = defineAsyncComponent(() => import('@/components/landing/LandingTestimonials.vue'))
+const LandingPricing = defineAsyncComponent(() => import('@/components/landing/LandingPricing.vue'))
+const LandingFinalCTA = defineAsyncComponent(() => import('@/components/landing/LandingFinalCTA.vue'))
+const LandingFooter = defineAsyncComponent(() => import('@/components/landing/LandingFooter.vue'))
 
 const wrapperRef = ref<HTMLElement | null>(null)
 
@@ -43,13 +45,34 @@ onUnmounted(() => {
     <LandingScrollProgress />
     <LandingNav />
     <LandingPhoneCinematic />
-    <LandingPlatformMarquee />
-    <LandingAICreation />
-    <LandingFeatureShowcase />
-    <LandingTestimonials />
-    <LandingPricing />
-    <LandingFinalCTA />
-    <LandingFooter />
+
+    <LazySectionWrapper min-height="120px" root-margin="100px 0px">
+      <LandingPlatformMarquee />
+    </LazySectionWrapper>
+
+    <LazySectionWrapper min-height="100vh" root-margin="300px 0px" id="lp-how-it-works">
+      <LandingAICreation />
+    </LazySectionWrapper>
+
+    <LazySectionWrapper min-height="700px" root-margin="300px 0px">
+      <LandingFeatureShowcase />
+    </LazySectionWrapper>
+
+    <LazySectionWrapper min-height="500px" root-margin="200px 0px">
+      <LandingTestimonials />
+    </LazySectionWrapper>
+
+    <LazySectionWrapper min-height="800px" root-margin="200px 0px" id="lp-pricing">
+      <LandingPricing />
+    </LazySectionWrapper>
+
+    <LazySectionWrapper min-height="400px" root-margin="200px 0px" id="lp-final-cta">
+      <LandingFinalCTA />
+    </LazySectionWrapper>
+
+    <LazySectionWrapper min-height="100px" root-margin="200px 0px">
+      <LandingFooter />
+    </LazySectionWrapper>
   </div>
 </template>
 

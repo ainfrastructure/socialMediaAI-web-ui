@@ -125,7 +125,7 @@ const row2 = [
       </div>
 
       <div class="dcal-post-card">
-        <img src="/example/vetted-wave-flow.png" alt="" class="dcal-post-img" />
+        <img src="/example/vetted-wave-flow.png" alt="" class="dcal-post-img" loading="lazy" />
         <div class="dcal-post-body">
           <span class="dcal-post-label">WEDNESDAY &rarr; FACEBOOK</span>
           <span class="dcal-post-title">{{ t('appLanding.cinematic.calPostTitle') }}</span>

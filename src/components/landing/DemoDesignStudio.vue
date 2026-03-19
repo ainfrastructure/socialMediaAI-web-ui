@@ -30,7 +30,7 @@ const colors = ['#FF6B35', '#8B5CF6', '#06B6D4', '#3B82F6', '#22C55E', '#EF4444'
 
     <!-- Image area -->
     <div class="dst-canvas" data-demo-studio-canvas>
-      <img src="/example/vetted-wave-flow.png" alt="" class="dst-canvas-img" />
+      <img src="/example/vetted-wave-flow.png" alt="" class="dst-canvas-img" loading="lazy" />
       <!-- Text overlay drawn on canvas -->
       <div class="dst-text-overlay" data-demo-studio-text-overlay>
         {{ t('appLanding.cinematic.designOverlayText') }}

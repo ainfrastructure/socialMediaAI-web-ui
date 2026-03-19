@@ -18,7 +18,7 @@ const { t } = useI18n()
     <!-- Post Preview Card -->
     <div class="da-post-preview" data-demo-ads-preview>
       <div class="da-preview-img">
-        <img src="/example/vetted-wave-flow.png" alt="" class="da-preview-real-img" />
+        <img src="/example/vetted-wave-flow.png" alt="" class="da-preview-real-img" loading="lazy" />
       </div>
       <div class="da-preview-body">
         <p class="da-preview-caption">{{ t('appLanding.aiCreation.postCaption') }}</p>

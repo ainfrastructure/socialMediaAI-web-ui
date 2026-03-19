@@ -22,6 +22,8 @@ let W = 0, H = 0
 let raf = 0
 let generation = 0
 let mx = 0.5, my = 0.5, pressing = false
+let targetMx = 0.5, targetMy = 0.5
+let isMobileDevice = false
 let burstStrength = 0
 let meshTime = 0
 let flowTime = 0
@@ -268,7 +270,7 @@ function startEffect() {
     ctx.clearRect(0, 0, W, H)
   }
 
-  const isMobile = window.innerWidth < 768
+  isMobileDevice = window.innerWidth < 768
 
   function loop() {
     if (myGen !== generation || paused) {
@@ -276,12 +278,15 @@ function startEffect() {
       return
     }
     // Frame throttling on mobile — draw every 2nd frame
-    if (isMobile) {
+    if (isMobileDevice) {
       frameCount++
       if (frameCount % 2 !== 0) {
         raf = requestAnimationFrame(loop)
         return
       }
+      // Smoothly interpolate vortex center toward tap position
+      mx += (targetMx - mx) * 0.08
+      my += (targetMy - my) * 0.08
     }
     if (mode === 'wave') drawMesh()
     else drawFlow()
@@ -303,8 +308,19 @@ watch(() => props.particleDensity, () => {
 function onMM(e: MouseEvent) { mx = e.clientX / innerWidth; my = e.clientY / innerHeight }
 function onMD() { pressing = true; burstStrength = 1 }
 function onMU() { pressing = false }
-function onTS(e: TouchEvent) { const t = e.touches[0]; mx = t.clientX / innerWidth; my = t.clientY / innerHeight; pressing = true; burstStrength = 1 }
-function onTM(e: TouchEvent) { const t = e.touches[0]; mx = t.clientX / innerWidth; my = t.clientY / innerHeight; pressing = true }
+function onTS(e: TouchEvent) {
+  const t = e.touches[0]
+  targetMx = t.clientX / innerWidth
+  targetMy = t.clientY / innerHeight
+  pressing = true
+  burstStrength = 1
+}
+function onTM(e: TouchEvent) {
+  const t = e.touches[0]
+  targetMx = t.clientX / innerWidth
+  targetMy = t.clientY / innerHeight
+  pressing = true
+}
 function onTE() { pressing = false }
 
 // ── Visibility ──
@@ -324,7 +340,14 @@ onMounted(() => {
   addEventListener('touchend', onTE)
   addEventListener('resize', resize)
   document.addEventListener('visibilitychange', onVisibility)
-  if (props.mode !== 'none') setTimeout(startEffect, 50)
+  if (props.mode !== 'none') {
+    // Defer canvas animation to idle time so the hero can render first
+    if ('requestIdleCallback' in window) {
+      (window as any).requestIdleCallback(() => startEffect(), { timeout: 2000 })
+    } else {
+      setTimeout(startEffect, 2000)
+    }
+  }
 })
 
 onUnmounted(() => {

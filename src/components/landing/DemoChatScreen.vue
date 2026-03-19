@@ -11,7 +11,7 @@ const { t } = useI18n()
   <div class="demo-chat">
     <!-- App header — brand name -->
     <div class="dc-header">
-      <img src="/example/vetted-logo.png" alt="" class="dc-brand-logo" />
+      <img src="/example/vetted-logo.png" alt="" class="dc-brand-logo" loading="lazy" />
       <span class="dc-header-title">Vetted</span>
     </div>
 
@@ -32,7 +32,7 @@ const { t } = useI18n()
           <!-- Suggestion card (image + caption) -->
           <div class="dc-suggestion" data-demo-suggestion>
             <div class="dc-suggestion-img">
-              <img src="/example/vetted-wave-flow.png" alt="" />
+              <img src="/example/vetted-wave-flow.png" alt="" loading="lazy" />
             </div>
             <div class="dc-suggestion-body">
               <p class="dc-suggestion-caption">{{ t('appLanding.aiCreation.promptSuggestionCaption') }}</p>
@@ -114,7 +114,7 @@ const { t } = useI18n()
           </div>
           <div class="dc-suggestion" data-demo-publish-preview>
             <div class="dc-suggestion-img">
-              <img src="/example/vetted-wave-flow.png" alt="" />
+              <img src="/example/vetted-wave-flow.png" alt="" loading="lazy" />
             </div>
             <div class="dc-suggestion-body">
               <p class="dc-suggestion-caption">{{ t('appLanding.aiCreation.postCaption') }}</p>
