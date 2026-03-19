@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, defineAsyncComponent, onMounted, onUnmounted, nextTick } from 'vue'
+import { ref, defineAsyncComponent, onMounted, onUnmounted } from 'vue'
 import { useCursorGlow } from '@/composables/useCursorGlow'
 import { useLandingTheme } from '@/composables/useLandingTheme'
 import LandingBackground from '@/components/landing/LandingBackground.vue'
@@ -20,13 +20,14 @@ const wrapperRef = ref<HTMLElement | null>(null)
 
 useCursorGlow(wrapperRef)
 
-const { activeTheme, bgMode, bgIntensity, bgParticleCount, bgParticleColorMode, bgParticleStyle, bgParticleSpeed, applyTheme } = useLandingTheme()
+const { activeTheme, bgMode, bgIntensity, bgParticleCount, bgParticleColorMode, bgParticleStyle, bgParticleSpeed, applyThemeGlobals, applyThemeElement } = useLandingTheme()
 
-let originalBg = ''
+// Set CSS vars synchronously before first render — no flash
+const originalBg = document.body.style.backgroundColor
+applyThemeGlobals()
 
 onMounted(() => {
-  originalBg = document.body.style.backgroundColor
-  nextTick(() => applyTheme(wrapperRef.value))
+  applyThemeElement(wrapperRef.value)
 })
 
 onUnmounted(() => {
@@ -50,7 +51,7 @@ onUnmounted(() => {
       <LandingPlatformMarquee />
     </LazySectionWrapper>
 
-    <LazySectionWrapper min-height="100vh" root-margin="300px 0px" id="lp-how-it-works">
+    <LazySectionWrapper min-height="700px" root-margin="300px 0px" id="lp-how-it-works">
       <LandingAICreation />
     </LazySectionWrapper>
 

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch, onUnmounted } from 'vue'
+import { ref, onUnmounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useGsapSection, gsap } from '@/composables/useGsapSection'
 import MaterialIcon from '@/components/MaterialIcon.vue'
@@ -8,6 +8,7 @@ import SocialChefMark from '@/components/SocialChefMark.vue'
 const { t } = useI18n()
 const sectionRef = ref<HTMLElement | null>(null)
 const stepsNavRef = ref<HTMLElement | null>(null)
+const trackRef = ref<HTMLElement | null>(null)
 const activeStep = ref(0)
 
 const steps = [
@@ -18,23 +19,8 @@ const steps = [
 ]
 
 // 3D entrance configs per step — simplified on mobile
-const isMobile = typeof window !== 'undefined' && window.innerWidth < 768
+const isMobile = typeof window !== 'undefined' && window.matchMedia('(max-width: 768px)').matches
 
-// Auto-scroll step tabs to keep active tab visible on mobile
-// Use manual container scroll instead of scrollIntoView to avoid page-level scroll jumps
-// during the pinned ScrollTrigger animation
-if (isMobile) {
-  watch(activeStep, (i) => {
-    const nav = stepsNavRef.value
-    if (!nav) return
-    const tab = nav.children[i] as HTMLElement | undefined
-    if (!tab) return
-    const tabRect = tab.getBoundingClientRect()
-    const navRect = nav.getBoundingClientRect()
-    const scrollLeft = nav.scrollLeft + (tabRect.left - navRect.left) - (navRect.width - tabRect.width) / 2
-    nav.scrollTo({ left: scrollLeft, behavior: 'smooth' })
-  })
-}
 
 const stepEntrance = isMobile
   ? [{ y: 30 }, { y: 30 }, { y: 30 }, { y: 30 }]
@@ -54,12 +40,8 @@ const stepEntranceTo = isMobile
   ]
 
 // Mobile carousel state
-let mobileStepTls: ReturnType<typeof gsap.timeline>[] = []
-let mobileDelayCall: ReturnType<typeof gsap.delayedCall> | null = null
-let mobileProgressTween: gsap.core.Tween | null = null
+let mobileMaster: ReturnType<typeof gsap.timeline> | null = null
 let mobileObserver: IntersectionObserver | null = null
-let mobileStarted = false
-let mobilePlayStep: ((i: number) => void) | null = null
 const STEP_DURATION = 4.5
 
 function buildStepTimeline(
@@ -199,78 +181,93 @@ function buildStepTimeline(
 }
 
 useGsapSection(sectionRef, (el, g) => {
+  // Re-evaluate: module-level check can be wrong before layout
+  const isMobileNow = window.matchMedia('(max-width: 768px)').matches
+
   const stageContainers = el.querySelectorAll('.lp-stage-step')
   const progressBars = el.querySelectorAll('.lp-step-progress-fill')
 
   // Hard-set initial states
   stageContainers.forEach((c, i) => {
-    if (i === 0 && !isMobile) {
+    if (i === 0 && !isMobileNow) {
       g.set(c, { visibility: 'visible', opacity: 1, y: 0, rotateX: 0, rotateY: 0, z: 0, scale: 1 })
     } else {
       g.set(c, { visibility: 'hidden', opacity: 0, y: 30, scale: 1 })
     }
   })
 
-  if (isMobile) {
-    // ── MOBILE: Timer-based auto-advancing carousel ──
-    mobileStepTls = []
-    for (let i = 0; i < 4; i++) {
+  if (isMobileNow) {
+    // ── MOBILE: Single master auto-play timeline ──
+    const totalSteps = 4
+    const segments = trackRef.value?.querySelectorAll('.lp-segment-fill')
+
+    // Reset all containers
+    stageContainers.forEach(c => {
+      g.set(c, { visibility: 'hidden', opacity: 0, y: 30, scale: 1 })
+    })
+
+    mobileMaster = g.timeline({
+      paused: true,
+      repeat: -1,
+      onRepeat() {
+        // Reset segment fills on loop
+        segments?.forEach(seg => g.set(seg, { scaleX: 0, opacity: 1 }))
+      },
+      onUpdate() {
+        // Track activeStep from master progress
+        const p = mobileMaster!.progress()
+        activeStep.value = Math.min(3, Math.floor(p * totalSteps))
+      },
+    })
+
+    for (let i = 0; i < totalSteps; i++) {
       const container = stageContainers[i]
       if (!container) continue
-      mobileStepTls.push(buildStepTimeline(i, container, g, progressBars[i] || null, true))
-    }
 
-    function playStep(i: number) {
-      if (mobileDelayCall) { mobileDelayCall.kill(); mobileDelayCall = null }
-      if (mobileProgressTween) { mobileProgressTween.kill(); mobileProgressTween = null }
+      const stepStart = i * STEP_DURATION
 
-      activeStep.value = i
+      // Entrance
+      mobileMaster.set(container, { visibility: 'visible' }, stepStart)
+      mobileMaster.fromTo(container,
+        { opacity: 0, y: 30, ...stepEntrance[i] },
+        { opacity: 1, y: 0, ...stepEntranceTo[i], duration: 0.6, ease: 'power2.out', immediateRender: false },
+        stepStart,
+      )
 
-      // Hide all containers, reset all step timelines
-      stageContainers.forEach((c, idx) => {
-        g.set(c, { visibility: 'hidden', opacity: 0 })
-        mobileStepTls[idx]?.progress(0).pause()
-      })
-      // Reset all progress bars
-      progressBars.forEach(bar => g.set(bar, { scaleX: 0 }))
+      // Step-specific content animations (reuse buildStepTimeline)
+      const contentTl = buildStepTimeline(i, container, g, null, true)
+      contentTl.paused(false)
+      contentTl.timeScale(0.5)
+      mobileMaster.add(contentTl, stepStart)
 
-      // Play target step
-      mobileStepTls[i].restart()
-
-      // Animate progress bar fill over STEP_DURATION
-      if (progressBars[i]) {
-        mobileProgressTween = g.fromTo(progressBars[i],
-          { scaleX: 0 },
-          { scaleX: 1, duration: STEP_DURATION, ease: 'none' },
+      // Segment fill progress
+      if (segments?.[i]) {
+        mobileMaster.fromTo(segments[i],
+          { scaleX: 0, opacity: 1 },
+          { scaleX: 1, duration: STEP_DURATION - 0.8, ease: 'none', immediateRender: false },
+          stepStart + 0.4,
         )
       }
 
-      // Schedule next step
-      mobileDelayCall = g.delayedCall(STEP_DURATION, () => {
-        playStep((i + 1) % 4)
-      })
+      // Exit fade-out
+      const exitStart = stepStart + STEP_DURATION - 0.5
+      mobileMaster.to(container,
+        { opacity: 0, y: -20, duration: 0.4, ease: 'power2.in' },
+        exitStart,
+      )
+      mobileMaster.set(container, { visibility: 'hidden' }, exitStart + 0.4)
+
+      // Mark segment as done
+      if (segments?.[i]) {
+        mobileMaster.set(segments[i], { opacity: 0.4 }, exitStart + 0.4)
+      }
     }
 
-    mobilePlayStep = playStep
-
-    // IntersectionObserver: start/pause based on visibility
+    // IntersectionObserver: play/pause
     mobileObserver = new IntersectionObserver(
       (entries) => {
-        const entry = entries[0]
-        if (entry.isIntersecting) {
-          if (!mobileStarted) {
-            mobileStarted = true
-            playStep(0)
-          } else {
-            mobileStepTls[activeStep.value]?.resume()
-            mobileProgressTween?.resume()
-            mobileDelayCall?.resume()
-          }
-        } else {
-          mobileStepTls[activeStep.value]?.pause()
-          mobileProgressTween?.pause()
-          mobileDelayCall?.pause()
-        }
+        if (entries[0].isIntersecting) mobileMaster!.play()
+        else mobileMaster!.pause()
       },
       { threshold: 0.2 },
     )
@@ -303,18 +300,18 @@ useGsapSection(sectionRef, (el, g) => {
   }
 })
 
+
 // Mobile: handle tab clicks
 function onStepClick(i: number) {
-  if (!isMobile || !mobilePlayStep) return
-  mobilePlayStep(i)
+  if (!mobileMaster) return
+  mobileMaster.time(i * STEP_DURATION)
+  mobileMaster.play()
 }
 
 // Cleanup on unmount
 onUnmounted(() => {
-  mobileDelayCall?.kill()
-  mobileProgressTween?.kill()
-  mobileStepTls.forEach(tl => tl.kill())
-  mobileStepTls = []
+  mobileMaster?.kill()
+  mobileMaster = null
   mobileObserver?.disconnect()
   mobileObserver = null
 })
@@ -326,6 +323,39 @@ onUnmounted(() => {
       <span class="lp-eyebrow">{{ t('appLanding.aiCreation.eyebrow') }}</span>
       <h2 class="lp-section-title">{{ t('appLanding.aiCreation.title') }}</h2>
       <p class="lp-section-sub">{{ t('appLanding.aiCreation.subtitle') }}</p>
+
+      <!-- Mobile: Segmented tide progress indicator -->
+      <div class="lp-mobile-progression">
+        <div class="lp-float-label">
+          <MaterialIcon :icon="steps[activeStep].icon" size="xs" />
+          <span class="lp-float-text">{{ t(`appLanding.aiCreation.${steps[activeStep].key}Title`) }}</span>
+          <div class="lp-float-caret" />
+        </div>
+
+        <div ref="trackRef" class="lp-step-track">
+          <div
+            v-for="(step, i) in steps"
+            :key="step.key"
+            class="lp-track-segment"
+            :class="{ active: activeStep === i, done: activeStep > i }"
+            @click="onStepClick(i)"
+          >
+            <div class="lp-segment-fill" />
+          </div>
+        </div>
+
+        <div class="lp-step-numbers">
+          <button
+            v-for="(step, i) in steps"
+            :key="step.key"
+            class="lp-step-number"
+            :class="{ active: activeStep === i }"
+            @click="onStepClick(i)"
+          >
+            {{ step.number }}
+          </button>
+        </div>
+      </div>
 
       <div class="lp-split-panel">
         <!-- Left: Step Nav -->
@@ -1459,6 +1489,9 @@ img.lp-preview-img {
 
 
 
+/* Hidden on desktop */
+.lp-mobile-progression { display: none; }
+
 /* ===== Mobile ===== */
 @media (max-width: 768px) {
   .lp-ai-creation {
@@ -1472,29 +1505,100 @@ img.lp-preview-img {
   }
 
   .lp-steps-nav {
-    flex-direction: row;
-    overflow-x: auto;
-    gap: var(--space-sm);
-    padding-top: 0;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
+    display: none;
   }
-  .lp-steps-nav::-webkit-scrollbar { display: none; }
 
-  .lp-step-indicator {
-    flex-shrink: 0;
-    padding: var(--space-sm) var(--space-md);
-    min-height: 44px;
+  .lp-mobile-progression {
+    display: block;
+    position: relative;
+    padding: 48px 0 var(--space-md);
+    margin-bottom: var(--space-lg);
+  }
+
+  .lp-step-track {
+    display: flex;
+    height: 6px;
+    background: var(--lp-border);
+    border-radius: 3px;
+    gap: 2px;
+  }
+
+  .lp-track-segment {
+    flex: 1;
+    position: relative;
+    border-radius: 3px;
+    overflow: hidden;
     cursor: pointer;
   }
 
-  .lp-step-text p {
-    display: none !important;
+  .lp-segment-fill {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, var(--lp-accent-orange), var(--lp-accent-blue));
+    border-radius: 3px;
+    transform-origin: left;
+    transform: scaleX(0);
   }
 
-  .lp-step-text h3 {
+  .lp-track-segment.done .lp-segment-fill {
+    transform: scaleX(1);
+    opacity: 0.4;
+  }
+
+  .lp-float-label {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+    padding: var(--space-xs) var(--space-md);
+    background: var(--lp-bg-card);
+    border: 1px solid color-mix(in srgb, var(--lp-accent-orange) 30%, transparent);
+    border-radius: var(--radius-full);
     font-size: var(--text-xs);
+    font-weight: 600;
+    color: var(--lp-text-primary);
     white-space: nowrap;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  .lp-float-caret {
+    position: absolute;
+    bottom: -5px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 8px;
+    height: 5px;
+    clip-path: polygon(0 0, 100% 0, 50% 100%);
+    background: var(--lp-bg-card);
+  }
+
+  .lp-step-numbers {
+    display: flex;
+  }
+
+  .lp-step-number {
+    flex: 1;
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--lp-text-muted);
+    letter-spacing: 0.1em;
+    background: none;
+    border: none;
+    padding: var(--space-sm) 0;
+    cursor: pointer;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.3s ease;
+  }
+
+  .lp-step-number.active {
+    color: var(--lp-accent-orange);
   }
 
   .lp-stage {
@@ -1541,5 +1645,14 @@ img.lp-preview-img {
 /* Non-scoped: GSAP pin-spacer is injected outside Vue scoped styles */
 .pin-spacer:has(.lp-ai-creation) {
   background: transparent !important;
+}
+
+@media (max-width: 768px) {
+  .pin-spacer:has(.lp-ai-creation) {
+    padding: 0 !important;
+    margin: 0 !important;
+    min-height: auto !important;
+    height: auto !important;
+  }
 }
 </style>
