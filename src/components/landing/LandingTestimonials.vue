@@ -5,9 +5,9 @@ import MaterialIcon from '@/components/MaterialIcon.vue'
 const { t } = useI18n()
 
 const testimonials = [
-  { key: 'testimonial1', name: 'Taieb Chaouch', role: 'decentralizedHiringCeo', rating: 5, logo: '/example/vetted-logo.png' },
-  { key: 'testimonial2', name: 'Alireza Sharghi', role: 'orderingPlatformCeo', rating: 5, logo: '/example/okam-logo.jpg' },
-  { key: 'testimonial3', name: 'Shane Le-reux', role: 'resortOwner', rating: 5, logo: '/example/blueocean-logo.png' },
+  { key: 'testimonial1', name: 'Taieb C.', role: 'decentralizedHiringCeo', rating: 5, logo: '/example/vetted-logo.png' },
+  { key: 'testimonial2', name: 'Alireza S.', role: 'orderingPlatformCeo', rating: 5, logo: '/example/okam-logo.jpg' },
+  { key: 'testimonial3', name: 'Shane L.', role: 'resortOwner', rating: 5, logo: '/example/blueocean-logo.png' },
   { key: 'testimonial4', name: 'Peter', role: 'businessOwner', rating: 5, logo: '/example/jungelpizza-logo.jpeg' },
   { key: 'testimonial5', name: 'Siamand', role: 'luxCarWashOwner', rating: 5, logo: '/example/luxbilpleie-logo.avif' },
 ]
