@@ -31,7 +31,7 @@ let autoTimer: ReturnType<typeof setTimeout> | null = null
 const phaseStartTimes: number[] = []
 const prefersReducedMotion =
   typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
-const isMob = typeof window !== 'undefined' && window.innerWidth < 768
+let isMob = false
 
 // ── Swipe gesture support (mobile) ──
 let touchStartX = 0
@@ -741,20 +741,38 @@ function jumpToPhase(targetIndex: number) {
   masterTl.play()
 }
 
+let startupTimer: ReturnType<typeof setTimeout> | null = null
+
+function onVisibilityChange() {
+  if (document.hidden) {
+    masterTl?.pause()
+    if (autoTimer) { clearTimeout(autoTimer); autoTimer = null }
+  } else {
+    if (masterTl?.paused()) {
+      scheduleAutoAdvance()
+    }
+  }
+}
+
 onMounted(async () => {
   await nextTick()
+  isMob = window.matchMedia('(max-width: 767px)').matches
   if (!rootRef.value || prefersReducedMotion) return
 
   resetAll()
   buildTimeline()
 
-  setTimeout(() => {
+  startupTimer = setTimeout(() => {
+    startupTimer = null
     emit('phase', 0)
     masterTl?.play()
   }, 500)
+
+  document.addEventListener('visibilitychange', onVisibilityChange)
 })
 
 onUnmounted(() => {
+  if (startupTimer) { clearTimeout(startupTimer); startupTimer = null }
   if (masterTl) {
     masterTl.kill()
     masterTl = null
@@ -763,6 +781,7 @@ onUnmounted(() => {
     clearTimeout(autoTimer)
     autoTimer = null
   }
+  document.removeEventListener('visibilitychange', onVisibilityChange)
 })
 
 defineExpose({ skipToNext, jumpToPhase })

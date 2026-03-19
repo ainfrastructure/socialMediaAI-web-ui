@@ -1,8 +1,29 @@
 <script setup lang="ts">
+import { ref, onMounted, onUnmounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import MaterialIcon from '@/components/MaterialIcon.vue'
 
 const { t } = useI18n()
+const trackRef = ref<HTMLElement | null>(null)
+let observer: IntersectionObserver | null = null
+
+onMounted(() => {
+  if (!trackRef.value) return
+  observer = new IntersectionObserver(
+    ([entry]) => {
+      const scrollEls = trackRef.value?.querySelectorAll('.lp-testimonials-scroll')
+      scrollEls?.forEach(el => {
+        ;(el as HTMLElement).style.animationPlayState = entry.isIntersecting ? 'running' : 'paused'
+      })
+    },
+    { threshold: 0 },
+  )
+  observer.observe(trackRef.value)
+})
+
+onUnmounted(() => {
+  observer?.disconnect()
+})
 
 const testimonials = [
   { key: 'testimonial1', name: 'Taieb C.', role: 'decentralizedHiringCeo', rating: 5, logo: '/example/vetted-logo.png' },
@@ -21,7 +42,7 @@ const testimonials = [
       <p class="lp-section-sub">{{ t('appLanding.testimonials.subtitle') }}</p>
     </div>
 
-    <div class="lp-testimonials-track">
+    <div ref="trackRef" class="lp-testimonials-track">
       <div class="lp-testimonials-scroll">
         <div v-for="(test, i) in [...testimonials, ...testimonials]" :key="`a-${test.key}-${i}`" class="lp-testimonial-card">
           <div class="lp-test-stars">

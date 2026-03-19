@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, nextTick, onMounted } from 'vue'
+import { ref, computed, nextTick, onMounted, onUnmounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { gsap } from '@/composables/useGsapSection'
 import { useMagneticButton } from '@/composables/useMagneticButton'
@@ -14,6 +14,8 @@ const demoRef = ref<InstanceType<typeof PhoneDemoInteractive> | null>(null)
 const activeScenario = ref(0)
 
 useMagneticButton(heroCta, 0.25)
+
+let entranceTl: gsap.core.Timeline | null = null
 
 function scrollToSection(sectionId: string) {
   document.getElementById(sectionId)?.scrollIntoView({ behavior: 'smooth' })
@@ -58,7 +60,8 @@ onMounted(async () => {
   }
 
   // Hero entrance animation
-  const entrance = gsap.timeline({ defaults: { ease: 'power3.out' }, delay: isMobile ? 0.05 : 0.1 })
+  entranceTl = gsap.timeline({ defaults: { ease: 'power3.out' }, delay: isMobile ? 0.05 : 0.1 })
+  const entrance = entranceTl
   if (isMobile) {
     // Text first, then phone (natural DOM order on mobile)
     entrance
@@ -77,6 +80,11 @@ onMounted(async () => {
       .fromTo(el.querySelector('.cine-phone-wrap'), { opacity: 0, x: 60 }, { opacity: 1, x: 0, duration: 1 }, '-=1.2')
       .fromTo(el.querySelector('.cine-feature-desc'), { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.5 }, '-=0.5')
   }
+})
+
+onUnmounted(() => {
+  entranceTl?.kill()
+  entranceTl = null
 })
 </script>
 
@@ -208,8 +216,8 @@ onMounted(async () => {
 }
 
 @keyframes cine-pulse {
-  0%, 100% { opacity: 1; box-shadow: 0 0 0 0 var(--lp-accent-orange); }
-  50% { opacity: 0.7; box-shadow: 0 0 0 6px transparent; }
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
 }
 
 .cine-hero-headline {
@@ -468,9 +476,9 @@ onMounted(async () => {
   }
 
   .cine-phone-glow {
-    width: 250px;
-    height: 250px;
-    filter: blur(80px);
+    width: 180px;
+    height: 180px;
+    filter: blur(60px);
   }
 
   .cine-feature-desc {

@@ -153,9 +153,12 @@ function startProgress(delay = 0) {
       })
     } else {
       // Last node (index 6) has no segment after it — use delayed call
-      progressTween = gsap.delayedCall((AUTO_INTERVAL / 1000) + delay, () => {
-        switchTo((activeIndex.value + 1) % features.length, false)
-      }) as unknown as gsap.core.Tween
+      progressTween = gsap.to({}, {
+        duration: (AUTO_INTERVAL / 1000) + delay,
+        onComplete() {
+          switchTo((activeIndex.value + 1) % features.length, false)
+        },
+      })
     }
   } else {
     if (!progressRef.value) return
@@ -181,6 +184,7 @@ function stopProgress(resetBar = true) {
 }
 
 function startAutoPlay() {
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
   stopAutoPlay()
   startProgress()
 }
@@ -344,13 +348,23 @@ function handleKeydown(e: KeyboardEvent) {
   }
 }
 
+function onVisibilityChange() {
+  if (document.hidden) {
+    stopAutoPlay()
+  } else {
+    startAutoPlay()
+  }
+}
+
 onMounted(() => {
   nextTick(() => positionIndicator(0))
   startAutoPlay()
+  document.addEventListener('visibilitychange', onVisibilityChange)
 })
 onUnmounted(() => {
   stopAutoPlay()
   if (idleTimer) clearTimeout(idleTimer)
+  document.removeEventListener('visibilitychange', onVisibilityChange)
 })
 </script>
 

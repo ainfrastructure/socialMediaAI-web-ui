@@ -3,7 +3,6 @@ import { ref, defineAsyncComponent, onMounted, onUnmounted } from 'vue'
 import { useCursorGlow } from '@/composables/useCursorGlow'
 import { useLandingTheme } from '@/composables/useLandingTheme'
 import LandingBackground from '@/components/landing/LandingBackground.vue'
-import LandingScrollProgress from '@/components/landing/LandingScrollProgress.vue'
 import LandingNav from '@/components/landing/LandingNav.vue'
 import LandingPhoneCinematic from '@/components/landing/LandingPhoneCinematic.vue'
 import LazySectionWrapper from '@/components/landing/LazySectionWrapper.vue'
@@ -43,7 +42,6 @@ onUnmounted(() => {
     <!-- Cursor glow -->
     <div class="lp-cursor-glow" />
 
-    <LandingScrollProgress />
     <LandingNav />
     <LandingPhoneCinematic />
 
@@ -156,7 +154,6 @@ onUnmounted(() => {
 .bg-active .lp-marquee {
   background: transparent !important;
   position: relative;
-  z-index: 2;
 }
 
 /* Cards/mockups keep backgrounds for readability */

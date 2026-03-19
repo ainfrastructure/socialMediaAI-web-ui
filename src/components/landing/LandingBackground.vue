@@ -23,6 +23,7 @@ let raf = 0
 let generation = 0
 let mx = 0.5, my = 0.5, pressing = false
 let isMobileDevice = false
+let resizeTimer: ReturnType<typeof setTimeout> | null = null
 let burstStrength = 0
 let meshTime = 0
 let flowTime = 0
@@ -62,14 +63,20 @@ function getAdaptiveColors(accent: string): { base: number[][]; hot: number[][] 
 }
 
 // ── Resize ──
-function resize() {
+function resizeImmediate() {
   if (!canvasRef.value) return
+  isMobileDevice = window.innerWidth < 768
   W = canvasRef.value.width = window.innerWidth
   H = canvasRef.value.height = window.innerHeight
   if (props.mode === 'particles') {
     initFlow()
     if (ctx) { ctx.clearRect(0, 0, W, H) }
   }
+}
+
+function resize() {
+  if (resizeTimer) clearTimeout(resizeTimer)
+  resizeTimer = setTimeout(resizeImmediate, 200)
 }
 
 // ── Wave Mesh (from demo drawMesh) ──
@@ -79,7 +86,7 @@ function drawMesh() {
   meshTime += 0.012 * speed
   ctx.clearRect(0, 0, W, H)
 
-  const cols = 80, rows = 50
+  const cols = isMobileDevice ? 40 : 80, rows = isMobileDevice ? 25 : 50
   const cw = W / cols, ch = H / rows
 
   function getZ(nx: number, ny: number) {
@@ -259,7 +266,7 @@ function startEffect() {
   ctx = canvasRef.value.getContext('2d')
   if (!ctx) return
 
-  resize()
+  resizeImmediate()
 
   if (mode === 'wave') {
     meshTime = 0
@@ -326,6 +333,7 @@ onMounted(() => {
 
 onUnmounted(() => {
   cancelAnimationFrame(raf)
+  if (resizeTimer) clearTimeout(resizeTimer)
   removeEventListener('mousemove', onMM)
   removeEventListener('mousedown', onMD)
   removeEventListener('mouseup', onMU)

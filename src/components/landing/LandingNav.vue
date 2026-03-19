@@ -101,6 +101,7 @@ onUnmounted(() => {
   left: 0;
   right: 0;
   z-index: var(--z-fixed);
+  padding-top: env(safe-area-inset-top, 0px);
   transition: background 0.4s ease, backdrop-filter 0.4s ease, box-shadow 0.4s ease;
 }
 

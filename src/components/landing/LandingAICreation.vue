@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, onUnmounted } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useGsapSection, gsap } from '@/composables/useGsapSection'
+import { useGsapSection, gsap, ScrollTrigger } from '@/composables/useGsapSection'
 import MaterialIcon from '@/components/MaterialIcon.vue'
 import SocialChefMark from '@/components/SocialChefMark.vue'
 
@@ -18,31 +18,26 @@ const steps = [
   { key: 'schedule', icon: 'schedule', color: 'var(--lp-accent-orange)', number: '04' },
 ]
 
-// 3D entrance configs per step — simplified on mobile
-const isMobile = typeof window !== 'undefined' && window.matchMedia('(max-width: 768px)').matches
-
-
-const stepEntrance = isMobile
-  ? [{ y: 30 }, { y: 30 }, { y: 30 }, { y: 30 }]
-  : [
-    { rotateY: -8, z: -50 },
-    { rotateY: 8, z: -50 },
-    { rotateX: 5, z: -80 },
-    { scale: 0.9, z: -60 },
-  ]
-const stepEntranceTo = isMobile
-  ? [{ y: 0 }, { y: 0 }, { y: 0 }, { y: 0 }]
-  : [
-    { rotateY: 0, z: 0 },
-    { rotateY: 0, z: 0 },
-    { rotateX: 0, z: 0 },
-    { scale: 1, z: 0 },
-  ]
-
 // Mobile carousel state
 let mobileMaster: ReturnType<typeof gsap.timeline> | null = null
 let mobileObserver: IntersectionObserver | null = null
 const STEP_DURATION = 4.5
+
+// Entrance configs — computed at mount time via getStepEntrance/To
+const ENTRANCE_MOBILE = [{ y: 30 }, { y: 30 }, { y: 30 }, { y: 30 }]
+const ENTRANCE_MOBILE_TO = [{ y: 0 }, { y: 0 }, { y: 0 }, { y: 0 }]
+const ENTRANCE_DESKTOP = [
+  { rotateY: -8, z: -50 },
+  { rotateY: 8, z: -50 },
+  { rotateX: 5, z: -80 },
+  { scale: 0.9, z: -60 },
+]
+const ENTRANCE_DESKTOP_TO = [
+  { rotateY: 0, z: 0 },
+  { rotateY: 0, z: 0 },
+  { rotateX: 0, z: 0 },
+  { scale: 1, z: 0 },
+]
 
 function buildStepTimeline(
   i: number,
@@ -50,9 +45,11 @@ function buildStepTimeline(
   g: typeof gsap,
   progressBar: Element | null,
   forMobile: boolean,
+  stepEntrance: Record<string, unknown>[],
+  stepEntranceTo: Record<string, unknown>[],
 ): ReturnType<typeof gsap.timeline> {
   const tl = g.timeline({ paused: forMobile })
-  const fanX = isMobile ? 50 : 120
+  const fanX = forMobile ? 50 : 120
 
   // Entrance: on mobile ALL steps get entrance (carousel loops); on desktop only steps 1+
   if (forMobile || i > 0) {
@@ -181,8 +178,10 @@ function buildStepTimeline(
 }
 
 useGsapSection(sectionRef, (el, g) => {
-  // Re-evaluate: module-level check can be wrong before layout
+  // Re-evaluate at mount time — module-level check can be wrong before layout
   const isMobileNow = window.matchMedia('(max-width: 768px)').matches
+  const stepEntrance = isMobileNow ? ENTRANCE_MOBILE : ENTRANCE_DESKTOP
+  const stepEntranceTo = isMobileNow ? ENTRANCE_MOBILE_TO : ENTRANCE_DESKTOP_TO
 
   const stageContainers = el.querySelectorAll('.lp-stage-step')
   const progressBars = el.querySelectorAll('.lp-step-progress-fill')
@@ -197,24 +196,21 @@ useGsapSection(sectionRef, (el, g) => {
   })
 
   if (isMobileNow) {
-    // ── MOBILE: Single master auto-play timeline ──
+    // ── MOBILE: Kill any stray ScrollTriggers that target this section ──
+    ScrollTrigger.getAll().forEach(st => {
+      if (st.trigger === el || el.contains(st.trigger as Element)) st.kill()
+    })
+
     const totalSteps = 4
     const segments = trackRef.value?.querySelectorAll('.lp-segment-fill')
-
-    // Reset all containers
-    stageContainers.forEach(c => {
-      g.set(c, { visibility: 'hidden', opacity: 0, y: 30, scale: 1 })
-    })
 
     mobileMaster = g.timeline({
       paused: true,
       repeat: -1,
       onRepeat() {
-        // Reset segment fills on loop
         segments?.forEach(seg => g.set(seg, { scaleX: 0, opacity: 1 }))
       },
       onUpdate() {
-        // Track activeStep from master progress
         const p = mobileMaster!.progress()
         activeStep.value = Math.min(3, Math.floor(p * totalSteps))
       },
@@ -226,16 +222,8 @@ useGsapSection(sectionRef, (el, g) => {
 
       const stepStart = i * STEP_DURATION
 
-      // Entrance
-      mobileMaster.set(container, { visibility: 'visible' }, stepStart)
-      mobileMaster.fromTo(container,
-        { opacity: 0, y: 30, ...stepEntrance[i] },
-        { opacity: 1, y: 0, ...stepEntranceTo[i], duration: 0.6, ease: 'power2.out', immediateRender: false },
-        stepStart,
-      )
-
-      // Step-specific content animations (reuse buildStepTimeline)
-      const contentTl = buildStepTimeline(i, container, g, null, true)
+      // Content animations include entrance (visibility, opacity, y) — no duplicate here
+      const contentTl = buildStepTimeline(i, container, g, null, true, stepEntrance, stepEntranceTo)
       contentTl.paused(false)
       contentTl.timeScale(0.5)
       mobileMaster.add(contentTl, stepStart)
@@ -274,7 +262,7 @@ useGsapSection(sectionRef, (el, g) => {
     mobileObserver.observe(el)
 
   } else {
-    // ── DESKTOP: Scroll-pinned scrub (unchanged) ──
+    // ── DESKTOP: Scroll-pinned scrub ──
     const master = g.timeline({
       scrollTrigger: {
         trigger: el,
@@ -293,7 +281,7 @@ useGsapSection(sectionRef, (el, g) => {
     for (let i = 0; i < 4; i++) {
       const container = stageContainers[i]
       if (!container) continue
-      master.add(buildStepTimeline(i, container, g, progressBars[i] || null, false), i)
+      master.add(buildStepTimeline(i, container, g, progressBars[i] || null, false, stepEntrance, stepEntranceTo), i)
     }
 
     master.progress(0, true)
@@ -1497,6 +1485,9 @@ img.lp-preview-img {
   .lp-ai-creation {
     min-height: auto;
     padding: var(--space-3xl) var(--space-lg);
+    overflow: clip;
+    position: relative;
+    z-index: 1;
   }
 
   .lp-split-panel {
