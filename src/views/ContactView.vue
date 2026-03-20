@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import BaseButton from '../components/BaseButton.vue'
@@ -21,11 +21,21 @@ const loading = ref(false)
 const success = ref(false)
 const error = ref('')
 const mounted = ref(false)
+const PAGE_BG = '#081418'
+let originalHtmlBg = ''
+let originalBodyBg = ''
 
 onMounted(() => {
-  // Set body bg for the ocean dark theme
-  document.body.style.backgroundColor = '#081418'
+  originalHtmlBg = document.documentElement.style.backgroundColor
+  originalBodyBg = document.body.style.backgroundColor
+  document.documentElement.style.backgroundColor = PAGE_BG
+  document.body.style.backgroundColor = PAGE_BG
   requestAnimationFrame(() => { mounted.value = true })
+})
+
+onUnmounted(() => {
+  document.documentElement.style.backgroundColor = originalHtmlBg
+  document.body.style.backgroundColor = originalBodyBg
 })
 
 const subjectOptions = computed(() => [

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useGsapSection } from '@/composables/useGsapSection'
 import MaterialIcon from '@/components/MaterialIcon.vue'
@@ -8,32 +8,33 @@ const { t } = useI18n()
 const sectionRef = ref<HTMLElement | null>(null)
 const isAnnual = ref(true)
 
-const plans = [
-  {
-    key: 'starter',
-    icon: 'rocket_launch',
-    monthlyPrice: 29,
-    annualPrice: 19,
-    featured: false,
-    features: ['starterF1', 'starterF2', 'starterF3', 'starterF4'],
-  },
-  {
-    key: 'pro',
-    icon: 'auto_awesome',
-    monthlyPrice: 79,
-    annualPrice: 59,
-    featured: true,
-    features: ['proF1', 'proF2', 'proF3', 'proF4', 'proF5'],
-  },
-  {
-    key: 'business',
-    icon: 'business',
-    monthlyPrice: 199,
-    annualPrice: 149,
-    featured: false,
-    features: ['businessF1', 'businessF2', 'businessF3', 'businessF4', 'businessF5'],
-  },
-]
+const TIERS = [
+  { key: 'pro', monthlyPrice: 79, annualPrice: 474, featured: true, savingsKey: 'yearlySavePro' },
+  { key: 'business', monthlyPrice: 149, annualPrice: 894, featured: false, savingsKey: 'yearlySaveBusiness' },
+] as const
+
+const FEATURES = [
+  { key: 'featureAiChat', pro: true, business: true },
+  { key: 'featurePlanning', pro: true, business: true },
+  { key: 'featurePublishing', pro: true, business: true },
+  { key: 'featureAnalytics', pro: true, business: true },
+  { key: 'featureDesign', pro: true, business: true },
+  { key: 'featureAds', pro: true, business: true },
+  { key: 'featureAssets', pro: true, business: true },
+  { key: 'featureTeam', pro: false, business: true },
+  { key: 'featureBrandVoice', pro: false, business: true },
+  { key: 'featureCompetitor', pro: false, business: true },
+  { key: 'featureMultiBrand', pro: false, business: true },
+  { key: 'featureSupport', pro: 'supportEmail', business: 'supportPriority' },
+] as const
+
+const priceDisplay = computed(() =>
+  TIERS.map((tier) => ({
+    ...tier,
+    price: isAnnual.value ? tier.annualPrice : tier.monthlyPrice,
+    period: isAnnual.value ? t('appLanding.pricing.year') : t('appLanding.pricing.month'),
+  }))
+)
 
 function scrollToWaitlist() {
   const el = document.getElementById('lp-final-cta')
@@ -41,13 +42,21 @@ function scrollToWaitlist() {
 }
 
 useGsapSection(sectionRef, (el, gsapInstance) => {
-  gsapInstance.from(el.querySelectorAll('.lp-pricing-card'), {
+  gsapInstance.from(el.querySelectorAll('.lp-comparison-table'), {
     scrollTrigger: { trigger: el, start: 'top 65%' },
     opacity: 0,
     y: 60,
-    stagger: 0.12,
     duration: 0.8,
     ease: 'power3.out',
+  })
+  gsapInstance.from(el.querySelectorAll('.lp-row-wrapper'), {
+    scrollTrigger: { trigger: el, start: 'top 65%' },
+    opacity: 0,
+    y: 20,
+    duration: 0.5,
+    stagger: 0.04,
+    ease: 'power3.out',
+    delay: 0.3,
   })
 })
 </script>
@@ -71,42 +80,81 @@ useGsapSection(sectionRef, (el, gsapInstance) => {
         </span>
       </div>
 
-      <div class="lp-pricing-grid">
-        <div
-          v-for="plan in plans"
-          :key="plan.key"
-          class="lp-pricing-card"
-          :class="{ featured: plan.featured }"
-        >
-          <div v-if="plan.featured" class="lp-popular-badge">
-            {{ t('appLanding.pricing.popular') }}
-          </div>
-
-          <div class="lp-plan-icon">
-            <MaterialIcon :icon="plan.icon" size="lg" />
-          </div>
-
-          <h3 class="lp-plan-name">{{ t(`appLanding.pricing.${plan.key}`) }}</h3>
-
-          <div class="lp-plan-price">
-            <span class="lp-price-currency">$</span>
-            <span class="lp-price-amount">{{ isAnnual ? plan.annualPrice : plan.monthlyPrice }}</span>
-            <span class="lp-price-period">/{{ t('appLanding.pricing.month') }}</span>
-          </div>
-
-          <ul class="lp-plan-features">
-            <li v-for="f in plan.features" :key="f">
-              <MaterialIcon icon="check" size="xs" />
-              {{ t(`appLanding.pricing.${f}`) }}
-            </li>
-          </ul>
-
-          <button
-            class="lp-plan-cta primary"
-            @click="scrollToWaitlist"
+      <!-- Comparison table -->
+      <div class="lp-comparison-table">
+        <!-- Header row -->
+        <div class="lp-row-wrapper lp-header-row">
+          <div class="lp-col-label" />
+          <div
+            v-for="tier in priceDisplay"
+            :key="tier.key"
+            class="lp-col-plan"
+            :class="{ featured: tier.featured }"
           >
-            {{ t('appLanding.pricing.cta') }}
-          </button>
+            <div class="lp-card-title-row">
+              <h3 class="lp-tier-name">{{ t(`appLanding.pricing.${tier.key}`) }}</h3>
+              <span v-if="tier.featured" class="lp-popular-badge">
+                {{ t('appLanding.pricing.popular') }}
+              </span>
+            </div>
+            <div class="lp-tier-price">
+              <span class="lp-price-currency">$</span>
+              <span class="lp-price-amount">{{ tier.price }}</span>
+              <span class="lp-price-period">/{{ tier.period }}</span>
+            </div>
+            <span v-if="isAnnual" class="lp-tier-savings">
+              {{ t(`appLanding.pricing.${tier.savingsKey}`) }}
+            </span>
+          </div>
+        </div>
+
+        <!-- Feature rows -->
+        <div
+          v-for="(feature, idx) in FEATURES"
+          :key="feature.key"
+          class="lp-row-wrapper"
+          :class="{ 'row-alt': idx % 2 === 1 }"
+        >
+          <div class="lp-col-label">
+            {{ typeof feature.pro === 'string' || typeof feature.business === 'string'
+              ? t(`appLanding.pricing.${feature.key}`)
+              : t(`appLanding.pricing.${feature.key}`) }}
+          </div>
+          <div
+            v-for="tier in TIERS"
+            :key="tier.key"
+            class="lp-col-plan lp-col-cell"
+            :class="{ featured: tier.featured }"
+          >
+            <template v-if="typeof feature[tier.key] === 'string'">
+              <span class="lp-cell-text">{{ t(`appLanding.pricing.${feature[tier.key]}`) }}</span>
+            </template>
+            <template v-else-if="feature[tier.key] === true">
+              <MaterialIcon icon="check_circle" size="sm" color="var(--lp-accent-blue)" />
+            </template>
+            <template v-else>
+              <span class="lp-cell-dash">&mdash;</span>
+            </template>
+          </div>
+        </div>
+
+        <!-- CTA row -->
+        <div class="lp-row-wrapper lp-cta-row">
+          <div class="lp-col-label" />
+          <div
+            v-for="tier in TIERS"
+            :key="tier.key"
+            class="lp-col-plan"
+            :class="{ featured: tier.featured }"
+          >
+            <button
+              class="lp-card-cta"
+              :class="{ primary: tier.featured }"
+              @click="scrollToWaitlist"
+            >
+              {{ t('appLanding.pricing.cta') }}
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -200,7 +248,7 @@ useGsapSection(sectionRef, (el, gsapInstance) => {
 
 .lp-save-badge {
   display: inline-block;
-  background: rgba(249, 115, 22, 0.15);
+  background: color-mix(in srgb, var(--lp-accent-orange) 15%, transparent);
   color: var(--lp-accent-orange);
   font-size: var(--text-xs);
   font-weight: var(--font-semibold);
@@ -209,89 +257,100 @@ useGsapSection(sectionRef, (el, gsapInstance) => {
   margin-left: var(--space-xs);
 }
 
-/* Grid */
-.lp-pricing-grid {
+/* Comparison table */
+.lp-comparison-table {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: var(--space-2xl);
-  align-items: stretch;
-}
-
-.lp-pricing-card {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  padding: var(--space-3xl) var(--space-2xl);
-  border-radius: var(--radius-xl);
-  background: var(--lp-bg-surface);
+  grid-template-columns: 1.2fr 1fr 1fr;
+  max-width: 880px;
+  margin: 0 auto;
+  background: var(--lp-glass-bg);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   border: 1px solid var(--lp-border);
-  position: relative;
-  transition: border-color 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease;
+  border-radius: var(--radius-xl);
+  overflow: hidden;
 }
 
-@media (hover: hover) {
-  .lp-pricing-card:hover {
-    border-color: var(--lp-border-light);
-    transform: translateY(-4px);
-  }
-}
-@media (hover: none) {
-  .lp-pricing-card:active { transform: scale(0.98); }
-}
-
-.lp-pricing-card.featured {
-  border-color: var(--lp-accent-orange);
-  box-shadow: 0 0 40px var(--lp-accent-orange-glow), var(--lp-shadow-card);
+/* Row wrapper — each row spans all 3 columns and uses subgrid */
+.lp-row-wrapper {
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: subgrid;
+  align-items: center;
+  transition: background 0.15s ease;
 }
 
-@media (hover: hover) {
-  .lp-pricing-card.featured:hover {
-    transform: translateY(-4px);
-  }
+.lp-row-wrapper:not(.lp-header-row):not(.lp-cta-row):hover {
+  background: rgba(255, 255, 255, 0.03);
 }
-@media (hover: none) {
-  .lp-pricing-card.featured:active { transform: scale(0.98); }
+
+.row-alt {
+  background: rgba(255, 255, 255, 0.015);
+}
+
+/* Header row */
+.lp-header-row {
+  border-bottom: 1px solid var(--lp-border);
+}
+
+.lp-header-row .lp-col-plan {
+  padding: var(--space-2xl) var(--space-xl);
+}
+
+/* Columns */
+.lp-col-label {
+  padding: var(--space-sm) var(--space-xl);
+  text-align: left;
+  font-size: var(--text-sm);
+  color: var(--lp-text-secondary);
+  line-height: 1.4;
+}
+
+.lp-col-plan {
+  padding: var(--space-sm) var(--space-lg);
+  text-align: center;
+}
+
+/* Featured column accent */
+.lp-col-plan.featured {
+  background: color-mix(in srgb, var(--lp-accent-orange) 4%, transparent);
+}
+
+/* Header content */
+.lp-card-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-md);
+}
+
+.lp-tier-name {
+  font-family: var(--font-heading);
+  font-size: var(--text-2xl);
+  font-weight: var(--font-bold);
+  color: var(--lp-text-primary);
+  margin: 0;
 }
 
 .lp-popular-badge {
-  position: absolute;
-  top: -12px;
+  display: inline-block;
   background: var(--lp-accent-orange);
   color: #fff;
   font-size: var(--text-xs);
   font-weight: var(--font-bold);
-  padding: 4px 16px;
+  padding: 4px 12px;
   border-radius: var(--radius-full);
   text-transform: uppercase;
   letter-spacing: 0.08em;
 }
 
-.lp-plan-icon {
-  width: 48px;
-  height: 48px;
-  border-radius: var(--radius-lg);
-  background: linear-gradient(135deg, rgba(249, 115, 22, 0.15), rgba(139, 92, 246, 0.1));
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: var(--space-xl);
-  color: var(--lp-accent-orange);
-}
-
-.lp-plan-name {
-  font-family: var(--font-body);
-  font-size: var(--text-xl);
-  font-weight: var(--font-semibold);
-  color: var(--lp-text-primary);
-  margin: 0 0 var(--space-lg);
-}
-
-.lp-plan-price {
+.lp-tier-price {
   display: flex;
   align-items: baseline;
+  justify-content: center;
   gap: 2px;
-  margin-bottom: var(--space-2xl);
+  margin-bottom: var(--space-sm);
 }
 
 .lp-price-currency {
@@ -312,34 +371,44 @@ useGsapSection(sectionRef, (el, gsapInstance) => {
   color: var(--lp-text-muted);
 }
 
-.lp-plan-features {
-  list-style: none;
-  padding: 0;
-  margin: 0 0 var(--space-3xl);
-  width: 100%;
-  text-align: left;
+.lp-tier-savings {
+  display: inline-block;
+  background: color-mix(in srgb, var(--lp-accent-orange) 15%, transparent);
+  color: var(--lp-accent-blue);
+  font-size: var(--text-xs);
+  font-weight: var(--font-semibold);
+  padding: 2px 10px;
+  border-radius: var(--radius-full);
+  margin-top: var(--space-xs);
 }
 
-.lp-plan-features li {
-  display: flex;
-  align-items: center;
-  gap: var(--space-sm);
-  padding: var(--space-sm) 0;
+/* Feature cells */
+.lp-col-cell {
+  padding: var(--space-md) var(--space-lg);
+}
+
+.lp-cell-dash {
+  color: var(--lp-text-muted);
+  font-size: var(--text-lg);
+  opacity: 0.5;
+}
+
+.lp-cell-text {
   font-size: var(--text-sm);
   color: var(--lp-text-secondary);
-  border-bottom: 1px solid var(--lp-border);
+  font-weight: var(--font-medium);
 }
 
-.lp-plan-features li:last-child {
-  border-bottom: none;
+/* CTA row */
+.lp-cta-row {
+  border-top: 1px solid var(--lp-border);
 }
 
-.lp-plan-features li .material-icon {
-  color: #22c55e;
-  flex-shrink: 0;
+.lp-cta-row .lp-col-plan {
+  padding: var(--space-xl);
 }
 
-.lp-plan-cta {
+.lp-card-cta {
   width: 100%;
   padding: var(--space-md) var(--space-xl);
   border-radius: var(--radius-lg);
@@ -348,98 +417,115 @@ useGsapSection(sectionRef, (el, gsapInstance) => {
   font-weight: var(--font-semibold);
   cursor: pointer;
   transition: all 0.25s ease;
-  margin-top: auto;
   background: transparent;
   border: 1px solid var(--lp-border-light);
   color: var(--lp-text-primary);
 }
 
-@media (hover: hover) {
-  .lp-plan-cta:hover { background: var(--lp-bg-elevated); }
-}
-@media (hover: none) {
-  .lp-plan-cta:active { background: var(--lp-bg-elevated); }
-}
-
-.lp-plan-cta.primary {
+.lp-card-cta.primary {
   background: var(--lp-accent-orange);
   border-color: var(--lp-accent-orange);
   color: #fff;
 }
 
+/* Hover effects (desktop only) */
 @media (hover: hover) {
-  .lp-plan-cta.primary:hover {
+  .lp-card-cta:hover {
+    background: color-mix(in srgb, var(--lp-accent-orange) 8%, transparent);
+  }
+
+  .lp-card-cta.primary:hover {
     background: var(--lp-accent-orange-hover);
     box-shadow: 0 0 20px var(--lp-accent-orange-glow);
   }
 }
+
 @media (hover: none) {
-  .lp-plan-cta.primary:active {
+  .lp-card-cta.primary:active {
     background: var(--lp-accent-orange-hover);
   }
 }
 
+/* Mobile responsive */
 @media (max-width: 768px) {
   .lp-pricing {
-    padding: var(--space-3xl) var(--space-lg);
+    padding: var(--space-3xl) var(--space-md);
   }
 
   .lp-billing-toggle {
     margin-bottom: var(--space-2xl);
   }
 
-  .lp-pricing-grid {
-    grid-template-columns: 1fr;
-    max-width: 400px;
-    margin: 0 auto;
-    gap: var(--space-lg);
+  .lp-comparison-table {
+    grid-template-columns: 1.4fr 1fr 1fr;
   }
 
-  .lp-pricing-card {
-    padding: var(--space-xl) var(--space-lg);
+  .lp-header-row .lp-col-plan {
+    padding: var(--space-lg) var(--space-sm);
   }
 
-  .lp-pricing-card.featured {
-    transform: none;
-    order: -1;
+  .lp-col-label {
+    padding: var(--space-sm) var(--space-md);
+    font-size: var(--text-xs);
   }
 
-  .lp-plan-icon {
-    width: 40px;
-    height: 40px;
-    margin-bottom: var(--space-md);
+  .lp-col-plan {
+    padding: var(--space-sm);
   }
 
-  .lp-plan-name {
-    margin-bottom: var(--space-sm);
+  .lp-col-cell {
+    padding: var(--space-sm);
   }
 
-  .lp-plan-price {
-    margin-bottom: var(--space-lg);
+  .lp-tier-name {
+    font-size: var(--text-lg);
   }
 
   .lp-price-amount {
     font-size: var(--text-3xl);
   }
 
-  .lp-plan-features {
-    margin-bottom: var(--space-xl);
+  .lp-price-currency {
+    font-size: var(--text-base);
   }
 
-  .lp-plan-features li {
-    padding: var(--space-xs) 0;
+  .lp-price-period {
     font-size: var(--text-xs);
   }
 
-  /* Hide less important features on mobile — show max 4 */
-  .lp-plan-features li:nth-child(n+5) {
-    display: none;
+  .lp-popular-badge {
+    font-size: 9px;
+    padding: 2px 6px;
   }
 
-  @media (hover: hover) {
-    .lp-pricing-card.featured:hover {
-      transform: translateY(-4px);
-    }
+  .lp-card-title-row {
+    flex-direction: column;
+    gap: var(--space-xs);
+  }
+
+  .lp-cta-row .lp-col-plan {
+    padding: var(--space-md) var(--space-sm);
+  }
+
+  .lp-card-cta {
+    padding: var(--space-sm) var(--space-md);
+    font-size: var(--text-sm);
+  }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .lp-row-wrapper {
+    transition: none;
+  }
+
+  .lp-card-cta {
+    transition: none;
+  }
+
+  .lp-toggle,
+  .lp-toggle-dot {
+    transition: none;
   }
 }
 </style>

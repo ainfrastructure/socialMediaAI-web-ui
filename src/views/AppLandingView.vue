@@ -22,7 +22,8 @@ useCursorGlow(wrapperRef)
 const { activeTheme, bgMode, bgIntensity, bgParticleCount, bgParticleColorMode, bgParticleStyle, bgParticleSpeed, applyThemeGlobals, applyThemeElement } = useLandingTheme()
 
 // Set CSS vars synchronously before first render — no flash
-const originalBg = document.body.style.backgroundColor
+const originalBodyBg = document.body.style.backgroundColor
+const originalHtmlBg = document.documentElement.style.backgroundColor
 applyThemeGlobals()
 
 onMounted(() => {
@@ -30,7 +31,8 @@ onMounted(() => {
 })
 
 onUnmounted(() => {
-  document.body.style.backgroundColor = originalBg
+  document.documentElement.style.backgroundColor = originalHtmlBg
+  document.body.style.backgroundColor = originalBodyBg
 })
 </script>
 

@@ -91,6 +91,7 @@ export function useLandingTheme() {
       root.style.setProperty(prop, value)
     }
 
+    document.documentElement.style.backgroundColor = bg
     document.body.style.backgroundColor = bg
   }
 
