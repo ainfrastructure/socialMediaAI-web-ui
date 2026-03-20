@@ -49,22 +49,38 @@ useGsapSection(sectionRef, (el, gsap) => {
     const isReversed = i % 2 === 1
 
     if (isMobile) {
-      // Mobile: per-row trigger, animate in only (no leave callbacks = stays visible)
-      if (text) gsap.set(text, { opacity: 0, y: 30 })
-      if (mockup) gsap.set(mockup, { opacity: 0, y: 30 })
+      // Mobile: bidirectional zigzag animation with smaller offsets for narrow screens
+      if (text) gsap.set(text, { opacity: 0, x: isReversed ? 40 : -40, scale: 0.95, filter: 'blur(4px)' })
+      if (mockup) gsap.set(mockup, { opacity: 0, x: isReversed ? -40 : 40, scale: 0.95, filter: 'blur(4px)' })
 
-      const animateIn = () => {
-        visibleRows.add(i)
-        if (text) gsap.to(text, { opacity: 1, y: 0, duration: 0.6, ease: 'power4.out' })
-        if (mockup) gsap.to(mockup, { opacity: 1, y: 0, duration: 0.6, delay: 0.15, ease: 'power4.out' })
-      }
+      const enterProps = { opacity: 1, x: 0, y: 0, scale: 1, filter: 'blur(0px)' }
+      const leaveText = { opacity: 0, x: isReversed ? 40 : -40, scale: 0.95, filter: 'blur(4px)' }
+      const leaveMockup = { opacity: 0, x: isReversed ? -40 : 40, scale: 0.95, filter: 'blur(4px)' }
 
       ScrollTrigger.create({
         trigger: row as HTMLElement,
-        start: 'top 90%',
-        end: 'bottom top',
-        onEnter: animateIn,
-        onEnterBack: animateIn,
+        start: 'top 85%',
+        end: 'bottom 15%',
+        onEnter: () => {
+          visibleRows.add(i)
+          if (text) gsap.to(text, { ...enterProps, duration: 0.6, ease: 'power4.out' })
+          if (mockup) gsap.to(mockup, { ...enterProps, duration: 0.6, delay: 0.1, ease: 'power4.out' })
+        },
+        onLeave: () => {
+          visibleRows.delete(i)
+          if (text) gsap.to(text, { ...leaveText, duration: 0.4, ease: 'power2.in' })
+          if (mockup) gsap.to(mockup, { ...leaveMockup, duration: 0.4, ease: 'power2.in' })
+        },
+        onEnterBack: () => {
+          visibleRows.add(i)
+          if (text) gsap.to(text, { ...enterProps, duration: 0.6, ease: 'power4.out' })
+          if (mockup) gsap.to(mockup, { ...enterProps, duration: 0.6, delay: 0.1, ease: 'power4.out' })
+        },
+        onLeaveBack: () => {
+          visibleRows.delete(i)
+          if (text) gsap.to(text, { ...leaveText, duration: 0.4, ease: 'power2.in' })
+          if (mockup) gsap.to(mockup, { ...leaveMockup, duration: 0.4, ease: 'power2.in' })
+        },
       })
     } else {
       // Desktop: bidirectional zigzag animation

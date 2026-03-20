@@ -49,7 +49,7 @@ const steps: Step[] = [
 ]
 
 /* ── State ──────────────────────────────────────────── */
-const DURATION = 6000
+const DURATION = 3000
 const current = ref(0)
 const progress = ref(0)
 const paused = ref(false)
