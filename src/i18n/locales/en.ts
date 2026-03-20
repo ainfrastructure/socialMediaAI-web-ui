@@ -2125,10 +2125,30 @@ export default {
       badge: 'Coming Soon to iOS & Android',
       headline: 'Your Autonomous Social Media Employee,',
       headlineAccent: 'in Your Pocket',
-      subheadline: 'From content creation to automatic posting — SocialChef handles your social media 24/7',
+      subheadline: 'Built for small business owners who\'d rather run their business than run their Instagram.',
       ctaPrimary: 'Get Early Access',
       ctaSecondary: 'See How It Works',
-      floatingBadge1: 'Published to Instagram'
+      floatingBadge1: 'Published to Instagram',
+      proofQuote: 'SocialChef saved me 15 hours a week on content creation. It\'s like having a full marketing team.',
+      proofAuthor: 'Taieb C.',
+      proofRole: 'CEO, Hiring Platform'
+    },
+    builtFor: {
+      eyebrow: 'Built For You',
+      title: 'Designed for Businesses Like Yours',
+      subtitle: 'Whether you run a restaurant, a car wash, or a growing startup — SocialChef handles your social media so you don\'t have to.',
+      persona1Title: 'Restaurant & Hospitality',
+      persona1Pain: 'Too busy in the kitchen to think about Instagram.',
+      persona1Result: 'SocialChef posts mouth-watering content on autopilot.',
+      persona2Title: 'Local Service Businesses',
+      persona2Pain: 'Hands are always full — no time for social media.',
+      persona2Result: 'Customers find you online without you lifting a finger.',
+      persona3Title: 'Growing Startups',
+      persona3Pain: 'Need a marketing presence but can\'t afford a team.',
+      persona3Result: 'Professional social media presence from day one.',
+      persona4Title: 'Multi-Location Brands',
+      persona4Pain: 'Managing multiple brands across platforms is a nightmare.',
+      persona4Result: 'One dashboard to manage all your brands effortlessly.'
     },
     socialProof: {
       platforms: 'Works with'
@@ -2169,8 +2189,8 @@ export default {
       subtitle: 'From a simple prompt to published content — see the smart creation pipeline in action',
       promptTitle: 'AI-Powered Suggestions',
       promptDesc: 'SocialChef proactively creates post ideas based on your brand, audience, and trending topics.',
-      promptGreeting: 'Hey! I put together a post idea for you today. What do you think?',
-      promptSuggestionCaption: 'The future of hiring — personalized, decentralized, vetted',
+      promptGreeting: 'Hey! I put together a post idea for Jungel Pizza today. What do you think?',
+      promptSuggestionCaption: 'Friday vibes & your best pizza yet — fresh from the stone oven',
       promptToneBadge: 'Professional',
       generateTitle: 'Smart Content Generation',
       generateDesc: 'SocialChef writes copy, selects images, and crafts platform-optimized posts.',
@@ -2194,13 +2214,49 @@ export default {
       postTabCarousel: 'Carousel',
       postTabText: 'Text',
       adaptPublishAnywhere: 'Publish anywhere, any time',
-      postToneBadge: 'Professional',
-      postCaption: 'The future of hiring — personalized, decentralized, vetted',
-      postCaptionMore: 'How decentralized verification is reshaping talent acquisition.',
+      postToneBadge: 'Casual',
+      postCaption: 'Friday vibes & your best pizza yet — fresh from the stone oven every weekend',
+      postCaptionMore: 'Come try our new truffle pizza this Friday!',
       postPublishNow: 'Publish Now',
       postSchedule: 'Schedule',
       postEdit: 'Edit',
       postInputPlaceholder: 'Message...',
+      // Tab labels
+      promptTab: 'AI Suggests',
+      generateTab: 'Generate Post',
+      adaptTab: 'Adapt Platforms',
+      scheduleTab: 'Schedule & Publish',
+      // Step pills
+      promptPill1: 'Brand voice',
+      promptPill2: 'Trending topics',
+      promptPill3: 'Audience data',
+      generatePill1: 'AI copywriting',
+      generatePill2: 'Hashtag AI',
+      generatePill3: 'Multi-format',
+      adaptPill1: 'Instagram',
+      adaptPill2: 'Facebook',
+      adaptPill3: 'LinkedIn',
+      adaptPill4: 'TikTok',
+      schedulePill1: 'Best-time AI',
+      schedulePill2: 'All platforms',
+      schedulePill3: 'Auto-publish',
+      // Pause hint
+      pauseHint: 'paused',
+      // Adapt footer
+      adaptFooter: 'Adapted for every platform, automatically',
+      adaptChip1: 'Caption length',
+      adaptChip2: 'Hashtag count',
+      adaptChip3: 'Image crop',
+      adaptChip4: 'Tone',
+      // Calendar
+      calTitle: 'Schedule & Publish',
+      calSubtitle: 'AI picks the best time for your audience',
+      // Chat actions
+      chatUseThis: 'Use this',
+      chatRegenerate: 'Regenerate',
+      chatTyping: 'Love it! Schedule this for tomorrow on Facebook, Instagram, and LinkedIn',
+      // Editor
+      genEditorTitle: 'New Post — Jungel Pizza',
     },
     calendar: {
       eyebrow: 'Content Calendar',
@@ -2350,6 +2406,9 @@ export default {
       publishedLessLikeThis: 'Less like this',
     },
     featureShowcase: {
+      eyebrow: 'SMART CONTENT ENGINE',
+      title: 'Watch Your Content Come to Life',
+      subtitle: 'From a simple prompt to published content — see the smart creation pipeline in action.',
       tabAnalytics: 'Analytics',
       tabCalendar: 'Calendar',
       tabCompetitor: 'Competitor Intel',
@@ -2383,7 +2442,19 @@ export default {
       tplpremiumName: 'Premium',
       tplpremiumEyebrow: 'Brand Identity',
       tplpremiumHeadline: 'Elevate Your Brand Presence',
-      tplpremiumSubline: 'Luxury templates with your colors, fonts, and logo built in'
+      tplpremiumSubline: 'Luxury templates with your colors, fonts, and logo built in',
+      formatimage: 'Image',
+      formatvideo: 'Video',
+      formatcarousel: 'Carousel',
+      designCafeBrand: 'The Corner Café',
+      designCafeHeadline: 'Fresh Summer Menu',
+      designCafeSubline: 'New seasonal dishes — book your table today',
+      designSalonBrand: 'Glow Studio',
+      designSalonHeadline: 'Transform Your Look',
+      designSalonSubline: 'Watch our latest styling tutorial',
+      designRetailBrand: 'Urban Threads',
+      designRetailHeadline: 'New Arrivals Drop',
+      designRetailSubline: 'Swipe through this week\'s collection'
     },
     analytics: {
       eyebrow: 'Analytics Dashboard',
@@ -2474,8 +2545,11 @@ export default {
     },
     finalCta: {
       title: "Ready to Automate Your Social Media?",
-      subtitle: 'Join thousands of marketers who are getting early access to SocialChef.',
-      cta: 'Get Early Access'
+      subtitle: 'Join marketers who are getting early access to SocialChef.',
+      cta: 'Get Early Access',
+      proofQuote: 'My online bookings have doubled since I started using SocialChef.',
+      proofAuthor: 'Peter',
+      proofRole: 'Business Owner'
     },
     footer: {
       copyright: '© {year} SocialChef. All rights reserved.',

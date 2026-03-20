@@ -29,36 +29,11 @@ function runEntrance() {
   tl?.kill()
   tl = gsap.timeline()
 
-  tl.fromTo(containerRef.value, { opacity: 0, y: 24, scale: 0.97 }, { opacity: 1, y: 0, scale: 1, duration: 0.5, ease: 'power2.out' })
-
-  const badge = containerRef.value.querySelector('.lp-cal-count')
-  if (badge) {
-    tl.fromTo(badge, { scale: 0 }, { scale: 1, duration: 0.4, ease: 'back.out(2)' }, '-=0.2')
-  }
-
-  const dayEls = containerRef.value.querySelectorAll('.lp-cal-day')
-  if (dayEls.length) {
-    tl.fromTo(dayEls, { opacity: 0, y: -10 }, { opacity: 1, y: 0, duration: 0.3, stagger: 0.04, ease: 'power2.out' }, '-=0.3')
-  }
-
-  const todayEl = containerRef.value.querySelector('.lp-cal-today')
-  if (todayEl) {
-    tl.fromTo(todayEl, { scale: 0.4, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.5, ease: 'back.out(1.7)' }, '-=0.15')
-  }
+  tl.fromTo(containerRef.value, { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: 0.2, ease: 'power2.out' })
 
   const rows = containerRef.value.querySelectorAll('.lp-cal-post')
   if (rows.length) {
-    tl.fromTo(rows, { opacity: 0, x: -24, scale: 0.96 }, { opacity: 1, x: 0, scale: 1, duration: 0.4, stagger: 0.07, ease: 'power2.out' }, '-=0.15')
-  }
-
-  const thumbs = containerRef.value.querySelectorAll('.lp-cal-thumb')
-  if (thumbs.length) {
-    tl.fromTo(thumbs, { opacity: 0, scale: 0.7, rotate: -4 }, { opacity: 1, scale: 1, rotate: 0, duration: 0.35, stagger: 0.07, ease: 'back.out(1.3)' }, '-=0.9')
-  }
-
-  const footer = containerRef.value.querySelector('.lp-cal-footer')
-  if (footer) {
-    tl.fromTo(footer, { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: 0.4, ease: 'power2.out' }, '-=0.2')
+    tl.fromTo(rows, { opacity: 0, x: -8 }, { opacity: 1, x: 0, duration: 0.15, stagger: 0.02, ease: 'power2.out' }, '-=0.1')
   }
 }
 

@@ -27,6 +27,12 @@ useGsapSection(sectionRef, (el, gsapInstance) => {
         <h2 class="lp-cta-title">{{ t('appLanding.finalCta.title') }}</h2>
         <p class="lp-cta-sub">{{ t('appLanding.finalCta.subtitle') }}</p>
 
+        <!-- Social proof snippet -->
+        <div class="lp-cta-proof">
+          <span class="lp-cta-proof-quote">"{{ t('appLanding.finalCta.proofQuote') }}"</span>
+          <span class="lp-cta-proof-author">— {{ t('appLanding.finalCta.proofAuthor') }}, {{ t('appLanding.finalCta.proofRole') }}</span>
+        </div>
+
         <div v-if="!success" class="lp-cta-form">
           <form @submit.prevent="submit" class="lp-form-row">
             <input
@@ -91,8 +97,39 @@ useGsapSection(sectionRef, (el, gsapInstance) => {
 .lp-cta-sub {
   font-size: var(--text-lg);
   color: var(--lp-text-secondary);
-  margin: 0 0 var(--space-3xl);
+  margin: 0 0 var(--space-2xl);
   line-height: 1.6;
+}
+
+/* Social proof snippet */
+.lp-cta-proof {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-xs);
+  margin-bottom: var(--space-2xl);
+  padding: var(--space-md) var(--space-xl);
+  background: var(--lp-glass-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--lp-glass-border);
+  border-radius: var(--radius-lg);
+  max-width: 480px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.lp-cta-proof-quote {
+  font-size: var(--text-sm);
+  color: var(--lp-text-secondary);
+  font-style: italic;
+  line-height: 1.5;
+}
+
+.lp-cta-proof-author {
+  font-size: var(--text-xs);
+  color: var(--lp-text-muted);
+  font-weight: var(--font-medium);
 }
 
 .lp-form-row {
@@ -106,20 +143,21 @@ useGsapSection(sectionRef, (el, gsapInstance) => {
   flex: 1;
   padding: var(--space-md) var(--space-lg);
   border-radius: var(--radius-lg);
-  border: 1px solid var(--lp-border-light);
-  background: var(--lp-bg-primary);
-  color: var(--lp-text-primary);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
   font-family: var(--font-body);
   font-size: var(--text-base);
   outline: none;
-  transition: border-color 0.25s ease;
+  transition: border-color 0.25s ease, background 0.25s ease;
 }
 
 .lp-form-input::placeholder {
-  color: var(--lp-text-muted);
+  color: rgba(255, 255, 255, 0.6);
 }
 
 .lp-form-input:focus {
+  background: rgba(255, 255, 255, 0.18);
   border-color: var(--lp-accent-orange);
 }
 

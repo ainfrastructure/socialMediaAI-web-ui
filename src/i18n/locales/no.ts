@@ -2052,10 +2052,30 @@ export default {
       badge: 'Kommer snart til iOS og Android',
       headline: 'Din autonome ansatt for sosiale medier,',
       headlineAccent: 'i lommen din',
-      subheadline: 'Fra innholdsproduksjon til automatisk publisering — SocialChef håndterer sosiale medier 24/7',
+      subheadline: 'Bygget for småbedriftseiere som heller vil drive sin bedrift enn sin Instagram.',
       ctaPrimary: 'Få tidlig tilgang',
       ctaSecondary: 'Se hvordan det fungerer',
-      floatingBadge1: 'Publisert til Instagram'
+      floatingBadge1: 'Publisert til Instagram',
+      proofQuote: 'SocialChef sparte meg 15 timer i uken på innholdsproduksjon. Det er som å ha et helt markedsføringsteam.',
+      proofAuthor: 'Taieb C.',
+      proofRole: 'CEO, Rekrutteringsplattform'
+    },
+    builtFor: {
+      eyebrow: 'Bygget for deg',
+      title: 'Designet for bedrifter som din',
+      subtitle: 'Enten du driver en restaurant, en bilvask eller en voksende startup — SocialChef håndterer sosiale medier slik at du slipper.',
+      persona1Title: 'Restaurant og servering',
+      persona1Pain: 'For opptatt på kjøkkenet til å tenke på Instagram.',
+      persona1Result: 'SocialChef poster fristende innhold på autopilot.',
+      persona2Title: 'Lokale tjenestebedrifter',
+      persona2Pain: 'Hendene er alltid fulle — ingen tid til sosiale medier.',
+      persona2Result: 'Kunder finner deg på nett uten at du løfter en finger.',
+      persona3Title: 'Voksende startups',
+      persona3Pain: 'Trenger markedsføring, men har ikke råd til et team.',
+      persona3Result: 'Profesjonell tilstedeværelse på sosiale medier fra dag én.',
+      persona4Title: 'Flerlokasjon-merkevarer',
+      persona4Pain: 'Å administrere flere merkevarer på tvers av plattformer er et mareritt.',
+      persona4Result: 'Ett dashbord for å håndtere alle merkevarene dine enkelt.'
     },
     socialProof: {
       platforms: 'Fungerer med'
@@ -2096,8 +2116,8 @@ export default {
       subtitle: 'Fra en enkel beskrivelse til publisert innhold — se den smarte produksjonslinjen i aksjon',
       promptTitle: 'AI-drevne forslag',
       promptDesc: 'SocialChef lager proaktivt innleggsideer basert på merkevaren din, publikum og trender.',
-      promptGreeting: 'Hei! Jeg har satt sammen en innleggsidé for deg i dag. Hva synes du?',
-      promptSuggestionCaption: 'Fremtiden for rekruttering — personlig, desentralisert, verifisert',
+      promptGreeting: 'Hei! Jeg har satt sammen en innleggsidé for Jungel Pizza i dag. Hva synes du?',
+      promptSuggestionCaption: 'Fredagsvibes & din beste pizza — fersk fra steinovnen',
       promptToneBadge: 'Profesjonell',
       generateTitle: 'Smart innholdsgenerering',
       generateDesc: 'SocialChef skriver tekst, velger bilder og lager plattformoptimaliserte innlegg.',
@@ -2121,13 +2141,49 @@ export default {
       postTabCarousel: 'Karusell',
       postTabText: 'Tekst',
       adaptPublishAnywhere: 'Publiser overalt, når som helst',
-      postToneBadge: 'Profesjonell',
-      postCaption: 'Fremtiden for rekruttering — personlig, desentralisert, verifisert',
-      postCaptionMore: 'Hvordan desentralisert verifisering endrer talentrekruttering.',
+      postToneBadge: 'Uformell',
+      postCaption: 'Fredagsvibes & din beste pizza — fersk fra steinovnen hver helg',
+      postCaptionMore: 'Kom og prøv vår nye trøffelpizza denne fredagen!',
       postPublishNow: 'Publiser nå',
       postSchedule: 'Planlegg',
       postEdit: 'Rediger',
       postInputPlaceholder: 'Melding...',
+      // Tab labels
+      promptTab: 'AI foreslår',
+      generateTab: 'Lag innlegg',
+      adaptTab: 'Tilpass plattformer',
+      scheduleTab: 'Planlegg og publiser',
+      // Step pills
+      promptPill1: 'Merkevare-stemme',
+      promptPill2: 'Trender',
+      promptPill3: 'Målgruppedata',
+      generatePill1: 'AI-tekstskriving',
+      generatePill2: 'Hashtag-AI',
+      generatePill3: 'Flerformat',
+      adaptPill1: 'Instagram',
+      adaptPill2: 'Facebook',
+      adaptPill3: 'LinkedIn',
+      adaptPill4: 'TikTok',
+      schedulePill1: 'Beste-tid AI',
+      schedulePill2: 'Alle plattformer',
+      schedulePill3: 'Auto-publisering',
+      // Pause hint
+      pauseHint: 'pauset',
+      // Adapt footer
+      adaptFooter: 'Tilpasset for hver plattform, automatisk',
+      adaptChip1: 'Tekstlengde',
+      adaptChip2: 'Antall hashtags',
+      adaptChip3: 'Bildebeskjæring',
+      adaptChip4: 'Tone',
+      // Calendar
+      calTitle: 'Planlegg og publiser',
+      calSubtitle: 'AI velger det beste tidspunktet for publikummet ditt',
+      // Chat actions
+      chatUseThis: 'Bruk dette',
+      chatRegenerate: 'Regenerer',
+      chatTyping: 'Perfekt! Planlegg dette til i morgen på Facebook, Instagram og LinkedIn',
+      // Editor
+      genEditorTitle: 'Nytt innlegg — Jungel Pizza',
     },
     adsManager: {
       eyebrow: 'Annonseadministrasjon',
@@ -2249,6 +2305,9 @@ export default {
       publishedLessLikeThis: 'Mindre som dette',
     },
     featureShowcase: {
+      eyebrow: 'SMART INNHOLDSMOTOR',
+      title: 'Se innholdet ditt bli til',
+      subtitle: 'Fra en enkel beskrivelse til publisert innhold — se den smarte produksjonslinjen i aksjon.',
       tabAnalytics: 'Analyser',
       tabCalendar: 'Kalender',
       tabCompetitor: 'Konkurrentinnsikt',
@@ -2282,7 +2341,19 @@ export default {
       tplpremiumName: 'Premium',
       tplpremiumEyebrow: 'Merkevareidentitet',
       tplpremiumHeadline: 'Løft merkevarens tilstedeværelse',
-      tplpremiumSubline: 'Eksklusive maler med dine farger, fonter og logo innebygd'
+      tplpremiumSubline: 'Eksklusive maler med dine farger, fonter og logo innebygd',
+      formatimage: 'Bilde',
+      formatvideo: 'Video',
+      formatcarousel: 'Karusell',
+      designCafeBrand: 'Hjørnekafeen',
+      designCafeHeadline: 'Ny sommermeny',
+      designCafeSubline: 'Nye sesongbaserte retter — bestill bord i dag',
+      designSalonBrand: 'Glow Studio',
+      designSalonHeadline: 'Forvandle stilen din',
+      designSalonSubline: 'Se vår nyeste stylingvideo',
+      designRetailBrand: 'Urban Threads',
+      designRetailHeadline: 'Nye produkter ute nå',
+      designRetailSubline: 'Sveip gjennom ukens kolleksjon'
     },
     calendar: {
       eyebrow: 'Innholdskalender',
@@ -2401,8 +2472,11 @@ export default {
     },
     finalCta: {
       title: 'Klar til å automatisere sosiale medier?',
-      subtitle: 'Bli med tusenvis av markedsførere som får tidlig tilgang til SocialChef.',
-      cta: 'Få tidlig tilgang'
+      subtitle: 'Bli med markedsførere som får tidlig tilgang til SocialChef.',
+      cta: 'Få tidlig tilgang',
+      proofQuote: 'Mine online-bestillinger har doblet seg siden jeg begynte å bruke SocialChef.',
+      proofAuthor: 'Peter',
+      proofRole: 'Bedriftseier'
     },
     footer: {
       copyright: '© {year} SocialChef. Alle rettigheter forbeholdt.',

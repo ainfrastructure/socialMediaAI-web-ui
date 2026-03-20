@@ -54,7 +54,7 @@ onMounted(async () => {
 
   // Reduced motion — show everything statically
   if (reducedMotion) {
-    const heroEls = ['.cine-hero-badge', '.cine-hero-headline', '.cine-hero-sub', '.cine-hero-ctas', '.cine-phone-wrap', '.cine-feature-desc']
+    const heroEls = ['.cine-hero-badge', '.cine-hero-headline', '.cine-hero-sub', '.cine-hero-ctas', '.cine-hero-proof', '.cine-phone-wrap', '.cine-feature-desc']
     heroEls.forEach(sel => { const e = el.querySelector(sel) as HTMLElement; if (e) { e.style.opacity = '1'; e.style.transform = 'none' } })
     return
   }
@@ -69,6 +69,7 @@ onMounted(async () => {
       .fromTo(el.querySelector('.cine-hero-headline'), { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.7 }, '-=0.3')
       .fromTo(el.querySelector('.cine-hero-sub'), { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.5 }, '-=0.3')
       .fromTo(el.querySelector('.cine-hero-ctas'), { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.5 }, '-=0.2')
+      .fromTo(el.querySelector('.cine-hero-proof'), { opacity: 0, y: 15 }, { opacity: 1, y: 0, duration: 0.5 }, '-=0.1')
       .fromTo(el.querySelector('.cine-phone-wrap'), { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.8 }, '-=0.3')
       .fromTo(el.querySelector('.cine-feature-desc'), { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.4 }, '-=0.4')
   } else {
@@ -77,6 +78,7 @@ onMounted(async () => {
       .fromTo(el.querySelector('.cine-hero-headline'), { opacity: 0, y: 40 }, { opacity: 1, y: 0, duration: 0.9 }, '-=0.5')
       .fromTo(el.querySelector('.cine-hero-sub'), { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.7 }, '-=0.5')
       .fromTo(el.querySelector('.cine-hero-ctas'), { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.6 }, '-=0.3')
+      .fromTo(el.querySelector('.cine-hero-proof'), { opacity: 0, y: 15 }, { opacity: 1, y: 0, duration: 0.5 }, '-=0.1')
       .fromTo(el.querySelector('.cine-phone-wrap'), { opacity: 0, x: 60 }, { opacity: 1, x: 0, duration: 1 }, '-=1.2')
       .fromTo(el.querySelector('.cine-feature-desc'), { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.5 }, '-=0.5')
   }
@@ -114,6 +116,16 @@ onUnmounted(() => {
             <MaterialIcon icon="play_circle" size="sm" />
             {{ t('appLanding.hero.ctaSecondary') }}
           </button>
+        </div>
+
+        <!-- Social proof quote -->
+        <div class="cine-hero-proof">
+          <div class="cine-proof-quote">"{{ t('appLanding.hero.proofQuote') }}"</div>
+          <div class="cine-proof-author">
+            <img src="/example/vetted-logo.png" alt="" class="cine-proof-avatar" loading="lazy" />
+            <span class="cine-proof-name">{{ t('appLanding.hero.proofAuthor') }}</span>
+            <span class="cine-proof-role">{{ t('appLanding.hero.proofRole') }}</span>
+          </div>
         </div>
 
       </div>
@@ -167,6 +179,7 @@ onUnmounted(() => {
 .cine-hero-headline,
 .cine-hero-sub,
 .cine-hero-ctas,
+.cine-hero-proof,
 .cine-phone-wrap,
 .cine-feature-desc {
   opacity: 0;
@@ -321,6 +334,56 @@ onUnmounted(() => {
     border-color: var(--lp-border-light);
     color: var(--lp-text-primary);
   }
+}
+
+/* Hero social proof */
+.cine-hero-proof {
+  margin-top: var(--space-2xl);
+  padding: var(--space-lg);
+  background: var(--lp-glass-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--lp-glass-border);
+  border-radius: var(--radius-xl);
+  max-width: 420px;
+}
+
+.cine-proof-quote {
+  font-size: var(--text-sm);
+  color: var(--lp-text-secondary);
+  line-height: 1.6;
+  font-style: italic;
+  margin-bottom: var(--space-md);
+}
+
+.cine-proof-author {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.cine-proof-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  object-fit: contain;
+  background: var(--lp-bg-elevated);
+}
+
+.cine-proof-name {
+  font-size: var(--text-xs);
+  font-weight: var(--font-semibold);
+  color: var(--lp-text-primary);
+}
+
+.cine-proof-role {
+  font-size: var(--text-xs);
+  color: var(--lp-text-muted);
+}
+
+.cine-proof-role::before {
+  content: '·';
+  margin-right: var(--space-xs);
 }
 
 /* Phone wrapper */
@@ -500,6 +563,7 @@ onUnmounted(() => {
   .cine-hero-headline,
   .cine-hero-sub,
   .cine-hero-ctas,
+  .cine-hero-proof,
   .cine-phone-wrap,
   .cine-feature-desc {
     opacity: 1;

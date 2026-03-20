@@ -10,6 +10,7 @@ import LazySectionWrapper from '@/components/landing/LazySectionWrapper.vue'
 const LandingPlatformMarquee = defineAsyncComponent(() => import('@/components/landing/LandingPlatformMarquee.vue'))
 const LandingAICreation = defineAsyncComponent(() => import('@/components/landing/LandingAICreation.vue'))
 const LandingFeatureShowcase = defineAsyncComponent(() => import('@/components/landing/LandingFeatureShowcaseD.vue'))
+const LandingBuiltFor = defineAsyncComponent(() => import('@/components/landing/LandingBuiltFor.vue'))
 const LandingTestimonials = defineAsyncComponent(() => import('@/components/landing/LandingTestimonials.vue'))
 const LandingPricing = defineAsyncComponent(() => import('@/components/landing/LandingPricing.vue'))
 const LandingFinalCTA = defineAsyncComponent(() => import('@/components/landing/LandingFinalCTA.vue'))
@@ -51,6 +52,10 @@ onUnmounted(() => {
       <LandingPlatformMarquee />
     </LazySectionWrapper>
 
+    <LazySectionWrapper min-height="500px" root-margin="200px 0px">
+      <LandingBuiltFor />
+    </LazySectionWrapper>
+
     <LazySectionWrapper min-height="700px" root-margin="300px 0px" id="lp-how-it-works">
       <LandingAICreation />
     </LazySectionWrapper>
@@ -59,7 +64,7 @@ onUnmounted(() => {
       <LandingFeatureShowcase />
     </LazySectionWrapper>
 
-    <LazySectionWrapper min-height="500px" root-margin="200px 0px">
+    <LazySectionWrapper min-height="600px" root-margin="200px 0px">
       <LandingTestimonials />
     </LazySectionWrapper>
 
@@ -130,23 +135,25 @@ onUnmounted(() => {
 }
 
 /* Restore stage container and internal borders (revert doesn't work — goes to UA, not component CSS) */
-.bg-active .lp-stage { border: 1px solid var(--lp-border) !important; }
-.bg-active .lp-stage .lp-mock-chat,
-.bg-active .lp-stage .lp-gen-container,
-.bg-active .lp-stage .lp-platform-card,
-.bg-active .lp-stage .lp-cal-slot,
-.bg-active .lp-stage .lp-gen-image,
-.bg-active .lp-stage .lp-chat-input-row,
-.bg-active .lp-stage .lp-published-badge { border: 1px solid var(--lp-border-light) !important; }
-.bg-active .lp-stage .lp-chat-header { border-bottom: 1px solid var(--lp-border) !important; }
-.bg-active .lp-stage {
+.bg-active .cp-stage { border: 1px solid var(--lp-border) !important; }
+.bg-active .cp-stage .cp-mock-chat,
+.bg-active .cp-stage .cp-gen-container,
+.bg-active .cp-stage .cp-platform-card,
+.bg-active .cp-stage .cp-cal-slot,
+.bg-active .cp-stage .cp-gen-image,
+.bg-active .cp-stage .cp-chat-input-row,
+.bg-active .cp-stage .cp-suggestion,
+.bg-active .cp-stage .cp-cal-badge { border: 1px solid var(--lp-border-light) !important; }
+.bg-active .cp-stage .cp-chat-header { border-bottom: 1px solid var(--lp-border) !important; }
+.bg-active .cp-stage .cp-left { border-right: 1px solid var(--lp-border) !important; }
+.bg-active .cp-stage {
   box-shadow: var(--lp-shadow-card), 0 0 60px rgba(139,92,246,0.08),
               inset 0 1px 0 rgba(255,255,255,0.05) !important;
 }
-.bg-active .lp-stage .lp-mock-chat,
-.bg-active .lp-stage .lp-gen-container,
-.bg-active .lp-stage .lp-platform-card,
-.bg-active .lp-stage .lp-cal-slot { box-shadow: 0 8px 32px rgba(0,0,0,0.3) !important; }
+.bg-active .cp-stage .cp-mock-chat,
+.bg-active .cp-stage .cp-gen-container,
+.bg-active .cp-stage .cp-platform-card,
+.bg-active .cp-stage .cp-cal-slot { box-shadow: 0 8px 32px rgba(0,0,0,0.3) !important; }
 
 .bg-active section,
 .bg-active footer,
@@ -159,17 +166,20 @@ onUnmounted(() => {
 }
 
 /* Cards/mockups keep backgrounds for readability */
+.bg-active .lp-persona-card,
 .bg-active .lp-pricing-card,
 .bg-active .lp-step-indicator,
-.bg-active .lp-stage,
+.bg-active .cp-stage,
 .bg-active .lp-kpi-card,
 .bg-active .lp-testimonial-card,
-.bg-active .lp-competitor-row,
-.bg-active .lp-spy-dashboard,
 .bg-active .lp-brief-chat,
 .bg-active .lp-cal-mockup,
-.bg-active .lp-ads-card,
 .bg-active .lp-chart-mockup,
+.bg-active .lp-ai-chat,
+.bg-active .lp-publish-card,
+.bg-active .lp-spy-dashboard,
+.bg-active .lp-ads-card,
+.bg-active .lp-design-card,
 .bg-active .lp-canvas,
 .bg-active .lp-template-card,
 .bg-active .lp-layer-item,
