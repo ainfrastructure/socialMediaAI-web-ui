@@ -354,6 +354,7 @@ onUnmounted(() => {
   inset: 0;
   z-index: 0;
   opacity: 0;
+  pointer-events: none;
 }
 .lp-bg-layer.active {
   opacity: 0.7; /* overridden by inline style when intensity prop is set */

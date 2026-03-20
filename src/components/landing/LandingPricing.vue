@@ -29,11 +29,15 @@ const FEATURES = [
 ] as const
 
 const priceDisplay = computed(() =>
-  TIERS.map((tier) => ({
-    ...tier,
-    price: isAnnual.value ? tier.annualPrice : tier.monthlyPrice,
-    period: isAnnual.value ? t('appLanding.pricing.year') : t('appLanding.pricing.month'),
-  }))
+  TIERS.map((tier) => {
+    const perMonth = Math.floor(tier.annualPrice / 12)
+    return {
+      ...tier,
+      price: isAnnual.value ? perMonth : tier.monthlyPrice,
+      period: t('appLanding.pricing.month'),
+      totalAnnual: tier.annualPrice,
+    }
+  })
 )
 
 function scrollToWaitlist() {
@@ -98,6 +102,7 @@ useGsapSection(sectionRef, (el, gsapInstance) => {
               </span>
             </div>
             <div class="lp-tier-price">
+              <span v-if="isAnnual" class="lp-price-original">${{ tier.monthlyPrice }}</span>
               <span class="lp-price-currency">$</span>
               <span class="lp-price-amount">{{ tier.price }}</span>
               <span class="lp-price-period">/{{ tier.period }}</span>
@@ -369,6 +374,14 @@ useGsapSection(sectionRef, (el, gsapInstance) => {
 .lp-price-period {
   font-size: var(--text-sm);
   color: var(--lp-text-muted);
+}
+
+.lp-price-original {
+  font-size: var(--text-xl);
+  color: var(--lp-text-muted);
+  text-decoration: line-through;
+  margin-right: var(--space-xs);
+  opacity: 0.6;
 }
 
 .lp-tier-savings {

@@ -52,9 +52,12 @@ onMounted(async () => {
   const isMobile = window.innerWidth < 768
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
+  // Clear CSS fallback animation so GSAP (or reduced-motion handler) has full control
+  const heroEls = ['.cine-hero-badge', '.cine-hero-headline', '.cine-hero-sub', '.cine-hero-ctas', '.cine-hero-proof', '.cine-phone-wrap', '.cine-feature-desc']
+  heroEls.forEach(sel => { const e = el.querySelector(sel) as HTMLElement; if (e) e.style.animation = 'none' })
+
   // Reduced motion — show everything statically
   if (reducedMotion) {
-    const heroEls = ['.cine-hero-badge', '.cine-hero-headline', '.cine-hero-sub', '.cine-hero-ctas', '.cine-hero-proof', '.cine-phone-wrap', '.cine-feature-desc']
     heroEls.forEach(sel => { const e = el.querySelector(sel) as HTMLElement; if (e) { e.style.opacity = '1'; e.style.transform = 'none' } })
     return
   }
@@ -174,7 +177,9 @@ onUnmounted(() => {
   overflow: hidden;
 }
 
-/* Hidden by default — GSAP animates in; prevents flash on mobile refresh */
+/* Hidden by default — GSAP animates in; prevents flash on mobile refresh.
+   CSS fallback: delayed animation ensures content shows even if GSAP never runs.
+   GSAP overrides both opacity and animation when it initialises. */
 .cine-hero-badge,
 .cine-hero-headline,
 .cine-hero-sub,
@@ -183,6 +188,12 @@ onUnmounted(() => {
 .cine-phone-wrap,
 .cine-feature-desc {
   opacity: 0;
+  animation: cine-fallback-show 0.6s ease forwards;
+  animation-delay: 1.2s;
+}
+
+@keyframes cine-fallback-show {
+  to { opacity: 1; }
 }
 
 /* Layout */

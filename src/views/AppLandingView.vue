@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { ref, defineAsyncComponent, onMounted, onUnmounted } from 'vue'
 import { useCursorGlow } from '@/composables/useCursorGlow'
-import { useLandingTheme } from '@/composables/useLandingTheme'
 import LandingBackground from '@/components/landing/LandingBackground.vue'
 import LandingNav from '@/components/landing/LandingNav.vue'
 import LandingPhoneCinematic from '@/components/landing/LandingPhoneCinematic.vue'
@@ -20,15 +19,15 @@ const wrapperRef = ref<HTMLElement | null>(null)
 
 useCursorGlow(wrapperRef)
 
-const { activeTheme, bgMode, bgIntensity, bgParticleCount, bgParticleColorMode, bgParticleStyle, bgParticleSpeed, applyThemeGlobals, applyThemeElement } = useLandingTheme()
-
-// Set CSS vars synchronously before first render — no flash
 const originalBodyBg = document.body.style.backgroundColor
 const originalHtmlBg = document.documentElement.style.backgroundColor
-applyThemeGlobals()
 
 onMounted(() => {
-  applyThemeElement(wrapperRef.value)
+  document.documentElement.style.backgroundColor = '#081418'
+  document.body.style.backgroundColor = '#081418'
+  if (wrapperRef.value) {
+    wrapperRef.value.style.colorScheme = 'dark'
+  }
 })
 
 onUnmounted(() => {
@@ -40,7 +39,7 @@ onUnmounted(() => {
 <template>
   <div ref="wrapperRef" class="landing-dark bg-active">
     <!-- Interactive canvas background (z-index: 0, behind everything) -->
-    <LandingBackground :mode="bgMode" :accent-color="activeTheme.accent" :intensity="bgIntensity" :particle-density="bgParticleCount" :particle-color-mode="bgParticleColorMode" :particle-style="bgParticleStyle" :particle-speed="bgParticleSpeed" />
+    <LandingBackground mode="particles" accent-color="#3A9BC0" :intensity="3" :particle-density="4" particle-color-mode="vortex" particle-style="flow" :particle-speed="1" />
 
     <!-- Cursor glow -->
     <div class="lp-cursor-glow" />
@@ -84,6 +83,32 @@ onUnmounted(() => {
 
 <style scoped>
 .landing-dark {
+  /* Landing page CSS variables (formerly from useLandingTheme) */
+  --lp-bg-primary: #081418;
+  --lp-bg-surface: #0E2230;
+  --lp-bg-card: #163040;
+  --lp-bg-elevated: #163040;
+  --lp-accent-orange: #3A9BC0;
+  --lp-accent-orange-hover: #2D7F9E;
+  --lp-accent-orange-glow: #3A9BC040;
+  --lp-accent-violet: #2D7F9E;
+  --lp-accent-blue: #6EC0DE;
+  --lp-accent-cyan: #6EC0DE;
+  --lp-gradient-aurora: linear-gradient(135deg, #3A9BC0, #6EC0DE, #2D7F9E);
+  --lp-gradient-orange: linear-gradient(135deg, #3A9BC0, #2D7F9E);
+  --lp-text-primary: #F4F4F5;
+  --lp-text-secondary: #A1A1AA;
+  --lp-text-muted: #71717A;
+  --lp-border: rgba(255,255,255,0.06);
+  --lp-border-light: rgba(255,255,255,0.1);
+  --lp-glass-bg: rgba(255,255,255,0.03);
+  --lp-glass-border: rgba(255,255,255,0.06);
+  --lp-shadow-card: 0 4px 24px rgba(0,0,0,0.4);
+  --lp-shadow-glow: 0 0 40px #3A9BC026;
+  --lp-nav-scrolled-bg: rgba(8,20,24,0.8);
+  --lp-nav-mobile-bg: rgba(8,20,24,0.95);
+  --lp-hover-overlay: rgba(255,255,255,0.06);
+
   min-height: 100vh;
   min-height: 100dvh;
   font-family: var(--font-body);
@@ -91,7 +116,6 @@ onUnmounted(() => {
   position: relative;
   background: var(--lp-bg-primary);
   color: var(--lp-text-primary);
-  transition: background 0.4s ease, color 0.4s ease;
 }
 
 .lp-cursor-glow {

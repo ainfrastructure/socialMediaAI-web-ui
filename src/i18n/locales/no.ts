@@ -2052,7 +2052,7 @@ export default {
       badge: 'Kommer snart til iOS og Android',
       headline: 'Din autonome ansatt for sosiale medier,',
       headlineAccent: 'i lommen din',
-      subheadline: 'Bygget for småbedriftseiere som heller vil drive sin bedrift enn sin Instagram.',
+      subheadline: 'Bygget for bedriftseiere som heller vil drive sin bedrift enn sin Instagram.',
       ctaPrimary: 'Få tidlig tilgang',
       ctaSecondary: 'Se hvordan det fungerer',
       floatingBadge1: 'Publisert til Instagram',

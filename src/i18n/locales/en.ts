@@ -2125,7 +2125,7 @@ export default {
       badge: 'Coming Soon to iOS & Android',
       headline: 'Your Autonomous Social Media Employee,',
       headlineAccent: 'in Your Pocket',
-      subheadline: 'Built for small business owners who\'d rather run their business than run their Instagram.',
+      subheadline: 'Built for business owners who\'d rather run their business than run their Instagram.',
       ctaPrimary: 'Get Early Access',
       ctaSecondary: 'See How It Works',
       floatingBadge1: 'Published to Instagram',
