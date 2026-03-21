@@ -1,0 +1,31 @@
+# SocialChef
+
+> AI-powered social media management for restaurants and local businesses
+
+SocialChef is a social media automation platform that generates, schedules, and publishes content across Instagram, Facebook, TikTok, X, LinkedIn, and Pinterest. Designed for business owners who lack time or expertise for social media marketing, SocialChef acts as an autonomous social media employee — creating on-brand content, adapting it for each platform's format, and publishing it on an optimized schedule.
+
+## Features
+
+- AI Chat Assistant: Conversational interface for content creation, strategy questions, and campaign planning
+- Smart Content Engine: Generates post ideas based on brand voice, audience, and trending topics
+- Built-In Design Studio: Create and edit visual content with templates, AI image generation, and brand assets
+- One-Click Publishing: Publish to 6 platforms simultaneously with automatic format adaptation (feed, reel, story, carousel)
+- Visual Content Calendar: Drag-and-drop scheduling with AI-optimized posting times
+- Real-Time Analytics: Track engagement, reach, and growth across all connected accounts
+- Ad Campaign Manager: Create and manage paid social campaigns with budget optimization and ROAS tracking
+- Competitor Intelligence: Monitor competitor social activity and benchmark performance
+- Multi-Brand Support: Manage multiple business profiles from a single dashboard
+
+## Built For
+
+- Restaurants and hospitality businesses
+- Local service businesses (salons, gyms, clinics, agencies)
+- Growing startups and small businesses
+- Multi-location brands
+
+## Links
+
+- Website: https://socialchef.ai
+- Contact: https://socialchef.ai/contact
+- Privacy Policy: https://socialchef.ai/privacy-policy
+- Terms of Service: https://socialchef.ai/terms

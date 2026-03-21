@@ -1,6 +1,6 @@
 import { next, rewrite } from '@vercel/edge'
 
-const BOT_AGENTS = /googlebot|bingbot|yandexbot|duckduckbot|slurp|baiduspider|facebookexternalhit|twitterbot|linkedinbot|embedly|quora link preview|showyoubot|outbrain|pinterest|applebot/i
+const BOT_AGENTS = /googlebot|bingbot|yandexbot|duckduckbot|slurp|baiduspider|facebookexternalhit|twitterbot|linkedinbot|embedly|quora link preview|showyoubot|outbrain|pinterest|applebot|gptbot|oai-searchbot|claudebot|perplexitybot|anthropic-ai/i
 
 export default function middleware(request: Request) {
   const url = new URL(request.url)

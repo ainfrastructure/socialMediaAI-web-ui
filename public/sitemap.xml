@@ -2,22 +2,26 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://socialchef.ai/</loc>
-    <changefreq>weekly</changefreq>
-    <priority>1.0</priority>
+    <lastmod>2026-03-21</lastmod>
+  </url>
+  <url>
+    <loc>https://socialchef.ai/plans</loc>
+    <lastmod>2026-03-21</lastmod>
   </url>
   <url>
     <loc>https://socialchef.ai/contact</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.5</priority>
+    <lastmod>2026-03-21</lastmod>
+  </url>
+  <url>
+    <loc>https://socialchef.ai/join</loc>
+    <lastmod>2026-03-21</lastmod>
   </url>
   <url>
     <loc>https://socialchef.ai/privacy-policy</loc>
-    <changefreq>yearly</changefreq>
-    <priority>0.3</priority>
+    <lastmod>2026-03-21</lastmod>
   </url>
   <url>
     <loc>https://socialchef.ai/terms</loc>
-    <changefreq>yearly</changefreq>
-    <priority>0.3</priority>
+    <lastmod>2026-03-21</lastmod>
   </url>
 </urlset>
