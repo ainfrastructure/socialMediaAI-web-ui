@@ -18,6 +18,7 @@ const TermsView = () => import('../views/TermsView.vue')
 const DeleteAccountView = () => import('../views/DeleteAccountView.vue')
 const GoodbyeView = () => import('../views/GoodbyeView.vue')
 const AnalyticsView = () => import('../views/AnalyticsView.vue')
+const ScheduleAnalysisView = () => import('../views/ScheduleAnalysisView.vue')
 const ReferralLandingView = () => import('../views/ReferralLandingView.vue')
 const ContactView = () => import('../views/ContactView.vue')
 const AppLandingView = () => import('../views/AppLandingView.vue')
@@ -131,6 +132,12 @@ const router = createRouter({
       path: '/analytics',
       name: 'analytics',
       component: AnalyticsView,
+      meta: { requiresAuth: true, requiresSubscription: true },
+    },
+    {
+      path: '/schedule-analysis',
+      name: 'schedule-analysis',
+      component: ScheduleAnalysisView,
       meta: { requiresAuth: true, requiresSubscription: true },
     },
     {
